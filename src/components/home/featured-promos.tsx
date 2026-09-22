@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import {
   HOME_PROMO_MAX_POOL,
   HOME_PROMO_ROTATE_MS,
-  HOME_PROMO_VISIBLE,
   type HomePromo,
 } from "@/lib/promo-rotate";
 
@@ -42,8 +41,8 @@ export async function FeaturedPromos() {
         </Link>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        {HOME_PROMO_VISIBLE}칸을 유지하고 {seconds}초마다 한 칸씩 왼쪽으로 넘어갑니다. 풀은 최대{" "}
-        {HOME_PROMO_MAX_POOL}장입니다.
+        들어올 때마다 순서가 바뀌고, {seconds}초마다 한 칸씩 왼쪽으로 밀립니다. 마우스를 올리면
+        화살표로도 넘길 수 있습니다.
       </p>
       <FeaturedPromoRotator pool={pool} />
     </section>

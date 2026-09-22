@@ -10,24 +10,12 @@ import {
   buildLoopTrack,
   carouselCloneCount,
   loopTrackStartIndex,
+  shuffleInPlaceCopy,
   snapLoopIndex,
   type HomePromo,
 } from "@/lib/promo-rotate";
 
-function shuffle<T>(items: T[]) {
-  const copy = items.slice();
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
 const POSTER_FRAME = "aspect-[5/7]";
-
-function prefersReducedMotion() {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 function posterMark(tag?: string | null, isPaid?: boolean) {
   if (isPaid) return "AD";
@@ -36,91 +24,13 @@ function posterMark(tag?: string | null, isPaid?: boolean) {
 }
 
 export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
-  const [deck, setDeck] = useState(pool);
-  const cloneCount = carouselCloneCount(deck.length);
-  const track = useMemo(() => buildLoopTrack(deck, cloneCount), [deck, cloneCount]);
-  const startIndex = loopTrackStartIndex(cloneCount);
-
-  const [index, setIndex] = useState(startIndex);
-  const [instant, setInstant] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const lockedRef = useRef(false);
-  const indexRef = useRef(index);
+  const [deck, setDeck] = useState<HomePromo[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setDeck(shuffle(pool));
+    setDeck(shuffleInPlaceCopy(pool));
+    setReady(true);
   }, [pool]);
-
-  useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
-
-  useEffect(() => {
-    setIndex(startIndex);
-    setInstant(true);
-    lockedRef.current = false;
-    const reset = window.setTimeout(() => setInstant(false), 0);
-    return () => window.clearTimeout(reset);
-  }, [deck, startIndex]);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduceMotion(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, []);
-
-  const finishLoop = useCallback(
-    (nextIndex: number) => {
-      const snapped = snapLoopIndex(nextIndex, deck.length, cloneCount);
-      if (snapped === null) {
-        lockedRef.current = false;
-        return;
-      }
-      setInstant(true);
-      setIndex(snapped);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setInstant(false);
-          lockedRef.current = false;
-        });
-      });
-    },
-    [cloneCount, deck.length],
-  );
-
-  const move = useCallback(
-    (delta: number) => {
-      if (deck.length <= 1 || lockedRef.current) return;
-      lockedRef.current = true;
-      const nextIndex = indexRef.current + delta;
-      if (reduceMotion || prefersReducedMotion()) {
-        const snapped = snapLoopIndex(nextIndex, deck.length, cloneCount) ?? nextIndex;
-        setInstant(true);
-        setIndex(snapped);
-        requestAnimationFrame(() => {
-          setInstant(false);
-          lockedRef.current = false;
-        });
-        return;
-      }
-      setIndex(nextIndex);
-    },
-    [cloneCount, deck.length, reduceMotion],
-  );
-
-  useEffect(() => {
-    if (paused || reduceMotion || deck.length <= 1) return;
-
-    const timer = window.setInterval(() => {
-      if (document.hidden) return;
-      move(1);
-    }, HOME_PROMO_ROTATE_MS);
-
-    return () => window.clearInterval(timer);
-  }, [paused, reduceMotion, deck.length, move]);
 
   if (pool.length === 0) {
     return (
@@ -136,32 +46,94 @@ export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
     );
   }
 
+  if (!ready || deck.length === 0) {
+    return <div className="h-[28rem] sm:h-auto" aria-hidden />;
+  }
+
+  return <PromoCarousel deck={deck} />;
+}
+
+function PromoCarousel({ deck }: { deck: HomePromo[] }) {
+  const cloneCount = carouselCloneCount(deck.length);
+  const track = useMemo(() => buildLoopTrack(deck, cloneCount), [deck, cloneCount]);
+  const startIndex = loopTrackStartIndex(cloneCount);
+
+  const [index, setIndex] = useState(startIndex);
+  const [animate, setAnimate] = useState(true);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const lockedRef = useRef(false);
+  const indexRef = useRef(startIndex);
+  const unlockTimer = useRef<number>(0);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  const settle = useCallback(() => {
+    const snapped = snapLoopIndex(indexRef.current, deck.length, cloneCount);
+    if (snapped !== null) {
+      setAnimate(false);
+      indexRef.current = snapped;
+      setIndex(snapped);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setAnimate(true));
+      });
+    }
+    lockedRef.current = false;
+  }, [cloneCount, deck.length]);
+
+  const move = useCallback(
+    (delta: number) => {
+      if (deck.length <= 1 || lockedRef.current) return;
+      lockedRef.current = true;
+      const next = indexRef.current + delta;
+      indexRef.current = next;
+      setIndex(next);
+
+      window.clearTimeout(unlockTimer.current);
+      if (reduceMotion) {
+        settle();
+        return;
+      }
+      unlockTimer.current = window.setTimeout(settle, HOME_PROMO_SLIDE_MS);
+    },
+    [deck.length, reduceMotion, settle],
+  );
+
+  useEffect(() => {
+    if (reduceMotion || deck.length <= 1) return;
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      move(1);
+    }, HOME_PROMO_ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [deck.length, move, reduceMotion]);
+
+  useEffect(() => () => window.clearTimeout(unlockTimer.current), []);
+
   const canSlide = deck.length > 1;
-  const duration = instant || reduceMotion ? 0 : HOME_PROMO_SLIDE_MS;
+  const duration = animate && !reduceMotion ? HOME_PROMO_SLIDE_MS : 0;
 
   return (
-    <div
-      className="group/promo relative"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <div className="group/promo relative">
       <div className="overflow-hidden">
         <ul
-          className="flex [--promo-step:100%] sm:[--promo-step:33.333333%]"
+          className="flex [--visible:1] sm:[--visible:3]"
           style={{
-            transform: `translate3d(calc(-1 * ${index} * var(--promo-step)), 0, 0)`,
-            transition: duration > 0 ? `transform ${duration}ms ease-in-out` : "none",
-          }}
-          onTransitionEnd={(event) => {
-            if (event.target !== event.currentTarget) return;
-            if (event.propertyName !== "transform") return;
-            finishLoop(index);
+            width: `calc(${track.length} * 100% / var(--visible))`,
+            transform: `translate3d(calc(-1 * ${index} * 100% / ${track.length}), 0, 0)`,
+            transition: duration > 0 ? `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1)` : "none",
           }}
         >
           {track.map((banner, trackIndex) => (
             <li
               key={`${banner.key}-${trackIndex}`}
-              className="w-full shrink-0 px-1.5 sm:w-1/3"
+              className="shrink-0 px-1.5"
+              style={{ width: `${100 / track.length}%` }}
             >
               <div className="mx-auto w-full max-w-[280px] sm:max-w-none">
                 <PosterCard banner={banner} />
@@ -172,30 +144,24 @@ export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
       </div>
 
       {canSlide ? (
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 top-0 z-10 h-0 pb-[140%] sm:pb-[46.666%]",
-            "opacity-100 transition-opacity duration-200",
-            "group-focus-within/promo:opacity-100 group-hover/promo:opacity-100",
-            "[@media(hover:hover)_and_(pointer:fine)]:opacity-0",
-            "[@media(hover:hover)_and_(pointer:fine)]:group-focus-within/promo:opacity-100",
-            "[@media(hover:hover)_and_(pointer:fine)]:group-hover/promo:opacity-100",
-          )}
-        >
-          <div className="absolute inset-0 flex items-center justify-between px-0.5 sm:px-1">
-            <CarouselArrow
-              label="이전 포스터"
-              onClick={() => move(-1)}
-            >
-              <ChevronLeftIcon className="size-6" />
-            </CarouselArrow>
-            <CarouselArrow
-              label="다음 포스터"
-              onClick={() => move(1)}
-            >
-              <ChevronRightIcon className="size-6" />
-            </CarouselArrow>
-          </div>
+        <div className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-between px-1 sm:flex sm:opacity-0 sm:transition-opacity sm:duration-200 sm:group-hover/promo:opacity-100 sm:focus-within:opacity-100">
+          <CarouselArrow label="이전 포스터" onClick={() => move(-1)}>
+            <ChevronLeftIcon className="size-7" />
+          </CarouselArrow>
+          <CarouselArrow label="다음 포스터" onClick={() => move(1)}>
+            <ChevronRightIcon className="size-7" />
+          </CarouselArrow>
+        </div>
+      ) : null}
+
+      {canSlide ? (
+        <div className="mt-3 flex justify-center gap-8 sm:hidden">
+          <CarouselArrow label="이전 포스터" onClick={() => move(-1)}>
+            <ChevronLeftIcon className="size-6" />
+          </CarouselArrow>
+          <CarouselArrow label="다음 포스터" onClick={() => move(1)}>
+            <ChevronRightIcon className="size-6" />
+          </CarouselArrow>
         </div>
       ) : null}
     </div>
@@ -220,7 +186,11 @@ function CarouselArrow({
         event.stopPropagation();
         onClick();
       }}
-      className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-black/55 text-white shadow-md ring-1 ring-white/25 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className={cn(
+        "pointer-events-auto flex size-12 items-center justify-center rounded-full",
+        "bg-black/60 text-white shadow-lg ring-1 ring-white/30 backdrop-blur-sm",
+        "hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+      )}
     >
       {children}
     </button>

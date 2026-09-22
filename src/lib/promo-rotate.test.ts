@@ -14,11 +14,11 @@ import {
 } from "./promo-rotate";
 
 describe("home promo carousel", () => {
-  it("keeps 3 visible, pool cap 9, 3s step, ~500ms slide", () => {
+  it("keeps 3 visible, pool cap 9, 3s step, ~650ms slide", () => {
     assert.equal(HOME_PROMO_VISIBLE, 3);
     assert.equal(HOME_PROMO_MAX_POOL, 9);
     assert.equal(HOME_PROMO_ROTATE_MS, 3000);
-    assert.equal(HOME_PROMO_SLIDE_MS, 500);
+    assert.equal(HOME_PROMO_SLIDE_MS, 650);
   });
 
   it("wraps indexes in both directions", () => {
