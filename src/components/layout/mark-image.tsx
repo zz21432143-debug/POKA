@@ -31,7 +31,7 @@ export function MarkImage({
       alt={alt}
       width={size}
       height={size}
-      className={cn("shrink-0 rounded-full", className)}
+      className={cn("shrink-0 rounded-md object-contain", className)}
     />
   );
 }

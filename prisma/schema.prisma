@@ -39,6 +39,12 @@ enum MemberKind {
   INDIVIDUAL
 }
 
+enum MarkCategory {
+  TEAM
+  LEVEL
+  SPECIAL
+}
+
 model User {
   id                  String   @id @default(cuid())
   nickname            String   @unique
@@ -283,14 +289,15 @@ model BannerSlot {
 }
 
 model Mark {
-  id          String     @id @default(cuid())
-  slug        String     @unique
+  id          String       @id @default(cuid())
+  slug        String       @unique
   name        String
   imageUrl    String
   pricePoints Int
-  minLevel    Int        @default(1)
+  minLevel    Int          @default(1)
+  category    MarkCategory @default(SPECIAL)
   owners      UserMark[]
-  equippedBy  User[]     @relation("EquippedMark")
+  equippedBy  User[]       @relation("EquippedMark")
 }
 
 model UserMark {

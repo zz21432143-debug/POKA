@@ -19,6 +19,7 @@ import {
   MessageCircleIcon,
   ShieldIcon,
   SpadeIcon,
+  AwardIcon,
 } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
@@ -39,6 +40,7 @@ const ICONS: Record<SidebarIcon, LucideIcon> = {
   shield: ShieldIcon,
   check: CheckCircle2Icon,
   spade: SpadeIcon,
+  badge: AwardIcon,
 };
 
 export function BoardNav({

@@ -64,12 +64,24 @@ export function ProfileWidget({
           <span className="ml-2">{profile.progressPercent}%</span>
         </p>
       </div>
-      <Link
-        href={meHref}
-        className="touch-target mt-4 flex min-h-11 items-center justify-center rounded-full border border-primary text-sm font-semibold text-primary hover:bg-emerald-50"
-      >
-        내 프로필 보기 →
-      </Link>
+      <p className="mt-3 text-sm">
+        보유 포인트{" "}
+        <strong className="font-semibold text-foreground">{profile.points.toLocaleString()} P</strong>
+      </p>
+      <div className="mt-3 grid grid-cols-1 gap-2">
+        <Link
+          href="/shop"
+          className="touch-target flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          마크 상점
+        </Link>
+        <Link
+          href={meHref}
+          className="touch-target flex min-h-11 items-center justify-center rounded-full border border-primary text-sm font-semibold text-primary hover:bg-emerald-50"
+        >
+          내 프로필 보기 →
+        </Link>
+      </div>
     </section>
   );
 }

@@ -61,13 +61,19 @@ async function main() {
 
   const marks = await Promise.all(
     [
-      { slug: "dealer", name: "딜러 스타", imageUrl: "/marks/dealer.svg", pricePoints: 0, minLevel: 1 },
-      { slug: "chip", name: "칩", imageUrl: "/marks/chip.svg", pricePoints: 120, minLevel: 1 },
-      { slug: "ace", name: "에이스", imageUrl: "/marks/ace.svg", pricePoints: 400, minLevel: 3 },
-      { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: 280, minLevel: 2 },
-      { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: 280, minLevel: 2 },
-      { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: 280, minLevel: 2 },
-      { slug: "crown", name: "크라운", imageUrl: "/marks/crown.svg", pricePoints: 900, minLevel: 8 },
+      { slug: "dealer", name: "딜러 스타", imageUrl: "/marks/dealer.svg", pricePoints: 0, minLevel: 1, category: "LEVEL" as const },
+      { slug: "crown", name: "크라운", imageUrl: "/marks/crown.svg", pricePoints: 900, minLevel: 8, category: "LEVEL" as const },
+      { slug: "chip", name: "칩", imageUrl: "/marks/chip.svg", pricePoints: 120, minLevel: 1, category: "SPECIAL" as const },
+      { slug: "ace", name: "에이스", imageUrl: "/marks/ace.svg", pricePoints: 400, minLevel: 3, category: "SPECIAL" as const },
+      { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+      { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+      { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+      { slug: "team-a", name: "팀 마크 A", imageUrl: "/images/badges/team_1.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-b", name: "팀 마크 B", imageUrl: "/images/badges/team_2.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-c", name: "팀 마크 C", imageUrl: "/images/badges/team_3.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-d", name: "팀 마크 D", imageUrl: "/images/badges/team_4.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-e", name: "팀 마크 E", imageUrl: "/images/badges/team_5.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-f", name: "팀 마크 F", imageUrl: "/images/badges/team_6.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
     ].map((data) => prisma.mark.create({ data })),
   );
   const bySlug = Object.fromEntries(marks.map((mark) => [mark.slug, mark]));
@@ -86,7 +92,7 @@ async function main() {
         equippedMarkId: markList[index % markList.length].id,
         level: nickname === "펠트딜러" ? 8 : 1 + (index % 7),
         exp: nickname === "펠트딜러" ? 7400 : 40 + index * 80,
-        points: nickname === "펠트딜러" ? 1840 : 10 + index * 15,
+        points: nickname === "펠트딜러" ? 8200 : 10 + index * 15,
         isDealerVerified: verified,
         isAdmin: nickname === "펠트딜러",
         memberKind: verified ? MemberKind.COMPANY : MemberKind.INDIVIDUAL,

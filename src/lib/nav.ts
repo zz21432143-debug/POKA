@@ -36,7 +36,8 @@ export type SidebarIcon =
   | "bell"
   | "shield"
   | "check"
-  | "spade";
+  | "spade"
+  | "badge";
 
 export type SidebarItem = NavItem & { icon: SidebarIcon };
 
@@ -76,6 +77,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "기타",
     items: [
+      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/advertise", label: "제휴 · 광고", hint: "단가 · 문의", icon: "megaphone" },
       { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },
