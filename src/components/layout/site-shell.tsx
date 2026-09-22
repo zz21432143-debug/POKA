@@ -56,7 +56,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {children}
           <div className="mt-5 xl:hidden">
-            <SponsorBanner />
+            <SponsorBanner placement="feed" />
           </div>
         </main>
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">

@@ -51,8 +51,8 @@ export function AdPlacementMap() {
             </div>
           </div>
         </div>
-        <p className="mt-2 rounded-md bg-sky-50 px-2 py-2 text-[10px] text-sky-900 sm:hidden">
-          모바일에서는 A 배너가 본문 맨 아래로 내려갑니다.
+        <p className="mt-2 rounded-md bg-sky-50 px-2 py-2 text-[10px] text-sky-900">
+          화면이 좁아 오른쪽 칼럼이 없으면 A 배너는 목록 맨 아래로 내려갑니다. 크기는 300×150으로 유지합니다.
         </p>
       </div>
     </figure>
