@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { PlusIcon } from "lucide-react";
 import { SIDEBAR_SPONSORS, type SidebarSponsor } from "@/lib/sponsor";
+import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 
 function SlotCard({ slot }: { slot: SidebarSponsor }) {
   const filled = Boolean(slot.imageUrl);
@@ -25,18 +25,7 @@ function SlotCard({ slot }: { slot: SidebarSponsor }) {
           </span>
         </Link>
       ) : (
-        <Link
-          href="/advertise"
-          className="touch-target group relative flex aspect-[2/1] w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-primary/50 bg-emerald-50/80 px-2 text-center hover:border-primary hover:bg-emerald-50"
-        >
-          <span className="absolute top-1.5 left-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
-            AD
-          </span>
-          <span className="flex size-7 items-center justify-center rounded-full border border-primary text-primary sm:size-8">
-            <PlusIcon className="size-4" />
-          </span>
-          <p className="mt-1 text-xs font-semibold text-emerald-900 sm:text-sm">제휴 문의</p>
-        </Link>
+        <GoogleAdUnit slot={slot.slot} />
       )}
     </div>
   );
@@ -44,15 +33,23 @@ function SlotCard({ slot }: { slot: SidebarSponsor }) {
 
 export function SponsorBanner() {
   return (
-    <section aria-label="스폰서 배너 가로 3구좌">
-      <p className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground">
-        A1–A3 · 300×150 가로 3칸
-      </p>
+    <section aria-label="본문 하단 광고 가로 3구좌">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">
+          A1–A3 · 300×150 가로 3칸
+        </p>
+        <Link href="/advertise" className="text-[11px] font-medium text-primary hover:underline">
+          직판 제휴 문의
+        </Link>
+      </div>
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {SIDEBAR_SPONSORS.map((slot) => (
           <SlotCard key={slot.slot} slot={slot} />
         ))}
       </div>
+      <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+        직판이 없는 칸은 구글이 채웁니다. 구글이 연락하는 방식이 아닙니다.
+      </p>
     </section>
   );
 }

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
+import { adsensePublisherId } from "@/lib/adsense";
 import "./globals.css";
 
 const sans = Noto_Sans_KR({
@@ -34,12 +36,21 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const adsense = adsensePublisherId();
   return (
     <html
       lang="ko"
       className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {adsense ? (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsense}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
         <SiteShell>{children}</SiteShell>
       </body>
     </html>

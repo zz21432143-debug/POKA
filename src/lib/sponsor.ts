@@ -9,7 +9,7 @@ export type SidebarSponsor = {
   mark: SponsorMark;
 };
 
-/** 본문 아래 300×150 가로 3칸. imageUrl이 없으면 빈 구좌. */
+/** 본문 아래 300×150 가로 3칸. imageUrl이 없으면 구글 잔여(AdSense)가 채움. */
 export const SIDEBAR_SPONSORS: SidebarSponsor[] = [
   { slot: 1, imageUrl: null, href: "/advertise", title: "스폰서 배너 1", advertiser: "", mark: "AD" },
   { slot: 2, imageUrl: null, href: "/advertise", title: "스폰서 배너 2", advertiser: "", mark: "AD" },
@@ -33,7 +33,7 @@ export const AD_PRODUCTS = [
     weekly: "주 35,000원",
     exclusive: "칸마다 1팀 · 한 줄에 3칸",
     where: "게시판·글 본문이 끝난 바로 아래, 가로로 A1 A2 A3가 나란히 붙습니다. 오른쪽 프로필 칼럼이 아닙니다.",
-    why: "세 장을 세로로 쌓으면 목록이 길어져 보이지 않습니다. 같은 300×150을 가로 한 줄로 두면 한 화면에 세 팀이 들어가고, 칸당 월 12만으로 나눕니다. 3칸을 한 팀이 쓰면 월 36만입니다.",
+    why: "세 장을 세로로 쌓으면 목록이 길어져 보이지 않습니다. 같은 300×150을 가로 한 줄로 두면 한 화면에 세 팀이 들어가고, 칸당 월 12만으로 나눕니다. 3칸을 한 팀이 쓰면 월 36만입니다. 안 팔린 칸은 구글이 채우므로 빈 문의 버튼으로 두지 않습니다.",
   },
   {
     id: "home-card",
@@ -65,7 +65,7 @@ export const AD_PRODUCTS = [
     price: "월 700,000원",
     weekly: "주 단위 없음",
     exclusive: "묶음 계약 · 따로 사면 월 79만",
-    where: "사이드바 1칸 + 홈 포스터 1칸 + 인피드 1줄 + 공식 홍보 글 1회입니다. 사이드바 3칸 모두는 문의 때 따로 받습니다.",
-    why: "사이드바 1칸(12만) + 포스터(45만) + 인피드(22만)를 따로 사면 월 79만입니다. 한 달 묶음은 70만입니다.",
+    where: "본문 하단 배너 1칸 + 홈 포스터 1칸 + 인피드 1줄 + 공식 홍보 글 1회입니다. 하단 3칸 모두는 문의 때 따로 받습니다.",
+    why: "하단 배너 1칸(12만) + 포스터(45만) + 인피드(22만)를 따로 사면 월 79만입니다. 한 달 묶음은 70만입니다.",
   },
 ] as const;

@@ -52,7 +52,7 @@ export function AdPlacementMap() {
           </div>
         </div>
         <p className="mt-2 rounded-md bg-sky-50 px-2 py-2 text-[10px] text-sky-900">
-          A1–A3는 글 목록 아래 가로 한 줄입니다. 비율은 300×150(2:1)입니다.
+          A1–A3는 글 목록 아래 가로 한 줄입니다. 직판이 없으면 그 칸은 구글 디스플레이가 채웁니다.
         </p>
       </div>
     </figure>
