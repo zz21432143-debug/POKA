@@ -23,27 +23,22 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params;
   const viewer = await getCurrentUser().catch(() => null);
-  let post = null;
-  try {
-    post = await prisma.post.findUnique({
-      where: { id },
-      include: {
-        author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
-        comments: {
-          where: { isAttendanceCheck: false },
-          include: {
-            author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
-            votes: viewer ? { where: { userId: viewer.id }, select: { id: true } } : false,
-          },
-          orderBy: { createdAt: "asc" },
+  const post = await prisma.post.findUnique({
+    where: { id },
+    include: {
+      author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
+      comments: {
+        where: { isAttendanceCheck: false },
+        include: {
+          author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
+          votes: viewer ? { where: { userId: viewer.id }, select: { id: true } } : false,
         },
-        votes: viewer ? { where: { userId: viewer.id } } : false,
-        _count: { select: { reports: true } },
+        orderBy: { createdAt: "asc" },
       },
-    });
-  } catch {
-    post = null;
-  }
+      votes: viewer ? { where: { userId: viewer.id } } : false,
+      _count: { select: { reports: true } },
+    },
+  });
   if (!post) notFound();
   if (post.isAttendanceThread) redirect("/attendance");
   if (post.hidden && !viewer?.isAdmin) notFound();
