@@ -4,7 +4,6 @@ import { HomeLatest } from "@/components/home/home-latest";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import type { PostSummary } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
-import { INFO_PAGES } from "@/lib/info-pages";
 
 export const dynamic = "force-dynamic";
 
@@ -86,17 +85,11 @@ export default async function HomePage() {
     all = [];
   }
 
-  const tips = INFO_PAGES.tips.slice(0, 6).map((row) => ({
-    title: row.title,
-    href: "/info/tips",
-    hint: "팁 & 노하우",
-  }));
-
   return (
     <div className="flex flex-col gap-5">
       <FeaturedPromos />
       <HomeShortcuts />
-      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} tips={tips} />
+      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} />
     </div>
   );
 }

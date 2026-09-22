@@ -1,16 +1,14 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { cn } from "cn";
-import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
 
 const TABS = [
   { key: "all", label: "전체" },
   { key: "free", label: "자유" },
   { key: "jobs", label: "구인/구직" },
-  { key: "tips", label: "노하우" },
   { key: "issues", label: "이슈" },
 ] as const;
 
@@ -21,13 +19,11 @@ export function HomeLatest({
   free,
   jobs,
   issues,
-  tips,
 }: {
   all: PostSummary[];
   free: PostSummary[];
   jobs: PostSummary[];
   issues: PostSummary[];
-  tips: { title: string; href: string; hint: string }[];
 }) {
   const [tab, setTab] = useState<Tab>("all");
   const posts = useMemo(() => {
@@ -58,26 +54,7 @@ export function HomeLatest({
           더보기
         </Link>
       </div>
-      {tab === "tips" ? (
-        <ul className="divide-y divide-border">
-          {tips.map((row, index) => (
-            <Fragment key={row.title}>
-              {index === 3 ? <SponsoredPostLine /> : null}
-              <li>
-                <Link href={row.href} className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
-                    노하우
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{row.title}</span>
-                  <span className="hidden text-xs text-muted-foreground sm:inline">{row.hint}</span>
-                </Link>
-              </li>
-            </Fragment>
-          ))}
-        </ul>
-      ) : (
-        <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard framed={false} />
-      )}
+      <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard framed={false} />
     </section>
   );
 }

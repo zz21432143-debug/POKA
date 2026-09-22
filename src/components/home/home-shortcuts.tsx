@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
+  BookOpenIcon,
   BriefcaseIcon,
   CalendarDaysIcon,
-  LightbulbIcon,
   MegaphoneIcon,
 } from "lucide-react";
 
@@ -29,10 +29,10 @@ export function HomeShortcuts() {
           icon: BriefcaseIcon,
         },
         {
-          href: "/info/tips",
-          title: "노하우 & 팁",
-          body: "선배 딜러들의 경험에서 얻는 실전 노하우를 확인하세요.",
-          icon: LightbulbIcon,
+          href: "/info/guide",
+          title: "딜러 가이드",
+          body: "홀덤 딜러의 기본 룰과 테이블 진행을 한눈에 봅니다.",
+          icon: BookOpenIcon,
         },
         {
           href: "/boards/schedule",

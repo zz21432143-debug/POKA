@@ -1,10 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { INFO_PAGES, type InfoKey } from "@/lib/info-pages";
-
-const TITLES: Record<"guide" | "tips", { title: string; body: string }> = {
-  guide: { title: "딜러 가이드", body: "입문 딜러를 위한 매너와 테이블 운영." },
-  tips: { title: "팁 & 노하우", body: "현장에서 바로 쓰는 실전 팁." },
-};
+import { INFO_PAGES } from "@/lib/info-pages";
 
 export default async function InfoArticlePage({
   params,
@@ -12,30 +7,28 @@ export default async function InfoArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (slug === "news") redirect("/info");
-  if (slug !== "guide" && slug !== "tips") notFound();
-  const key = slug as "guide" | "tips";
-  const meta = TITLES[key];
-  const rows = INFO_PAGES[key as InfoKey];
+  if (slug === "news" || slug === "tips") redirect("/info/guide");
+  if (slug !== "guide") notFound();
+  const rows = INFO_PAGES.guide;
 
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">{meta.title}</h1>
+        <h1 className="text-2xl font-semibold">딜러 가이드</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {meta.body} · {rows.length}편
+          홀덤 딜러가 테이블에서 바로 쓰는 기본 룰입니다. 하우스 룰이 있으면 플로어 판정이 우선입니다.
         </p>
       </header>
-      <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white">
+      <ol className="grid gap-4">
         {rows.map((row, index) => (
-          <li key={row.title} className="px-4 py-4">
-            <p className="font-medium">
+          <li key={row.title} className="rounded-2xl border border-border bg-white px-4 py-5 shadow-sm">
+            <h2 className="text-base font-semibold">
               {index + 1}. {row.title}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">{row.body}</p>
+            </h2>
+            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-foreground/90">{row.body}</p>
           </li>
         ))}
-      </ul>
+      </ol>
     </div>
   );
 }

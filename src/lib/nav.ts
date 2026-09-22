@@ -68,8 +68,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "정보센터",
     items: [
-      { href: "/info/guide", label: "딜러 가이드", hint: "입문 · 매너", icon: "book" },
-      { href: "/info/tips", label: "팁 & 노하우", hint: "현장 팁", icon: "lightbulb" },
+      { href: "/info/guide", label: "딜러 가이드", hint: "홀덤 기본 룰", icon: "book" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],
