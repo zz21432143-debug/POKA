@@ -12,6 +12,15 @@ import {
   type HomePromo,
 } from "@/lib/promo-rotate";
 
+function shuffle<T>(items: T[]) {
+  const copy = items.slice();
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 const POSTER_FRAME = "aspect-[5/7]";
 
 function posterMark(tag?: string | null, isPaid?: boolean) {
@@ -21,14 +30,14 @@ function posterMark(tag?: string | null, isPaid?: boolean) {
 }
 
 export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
-  const start = useMemo(() => pool.slice(0, HOME_PROMO_VISIBLE), [pool]);
+  const start = useMemo(() => shuffle(pool).slice(0, HOME_PROMO_VISIBLE), [pool]);
   const [visible, setVisible] = useState(start);
   const [flashSlot, setFlashSlot] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const slotRef = useRef(0);
 
   useEffect(() => {
-    setVisible(pool.slice(0, HOME_PROMO_VISIBLE));
+    setVisible(shuffle(pool).slice(0, HOME_PROMO_VISIBLE));
     slotRef.current = 0;
   }, [pool]);
 
