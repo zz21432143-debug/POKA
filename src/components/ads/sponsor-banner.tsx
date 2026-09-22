@@ -2,14 +2,11 @@ import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { SIDEBAR_SPONSORS, type SidebarSponsor } from "@/lib/sponsor";
 
-function SlotCard({ slot, feed }: { slot: SidebarSponsor; feed: boolean }) {
+function SlotCard({ slot }: { slot: SidebarSponsor }) {
   const filled = Boolean(slot.imageUrl);
   return (
-    <div>
-      <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
-        A{slot.slot} · 300×150
-        {feed ? " · 목록 아래" : " · 프로필 아래"}
-      </p>
+    <div className="min-w-0">
+      <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">A{slot.slot}</p>
       {filled ? (
         <Link
           href={slot.href}
@@ -23,39 +20,39 @@ function SlotCard({ slot, feed }: { slot: SidebarSponsor; feed: boolean }) {
             height={150}
             className="aspect-[2/1] w-full object-cover"
           />
-          <span className="absolute top-2 left-2 rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
+          <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
             {slot.mark}
           </span>
         </Link>
       ) : (
         <Link
           href="/advertise"
-          className="touch-target group relative flex aspect-[2/1] w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-primary/50 bg-emerald-50/80 px-3 text-center hover:border-primary hover:bg-emerald-50"
+          className="touch-target group relative flex aspect-[2/1] w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-primary/50 bg-emerald-50/80 px-2 text-center hover:border-primary hover:bg-emerald-50"
         >
-          <span className="absolute top-2 left-2 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
+          <span className="absolute top-1.5 left-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
             AD
           </span>
-          <span className="flex size-8 items-center justify-center rounded-full border border-primary text-primary">
+          <span className="flex size-7 items-center justify-center rounded-full border border-primary text-primary sm:size-8">
             <PlusIcon className="size-4" />
           </span>
-          <p className="mt-1.5 text-sm font-semibold text-emerald-900">제휴 문의하기</p>
-          <p className="text-[11px] text-emerald-800/80">빈 구좌 {slot.slot}/3</p>
+          <p className="mt-1 text-xs font-semibold text-emerald-900 sm:text-sm">제휴 문의</p>
         </Link>
       )}
     </div>
   );
 }
 
-export function SponsorBanner({ placement = "sidebar" }: { placement?: "sidebar" | "feed" }) {
-  const feed = placement === "feed";
+export function SponsorBanner() {
   return (
-    <section
-      aria-label="스폰서 배너 3구좌"
-      className={feed ? "mx-auto flex w-full max-w-[300px] flex-col gap-3" : "flex w-full flex-col gap-3"}
-    >
-      {SIDEBAR_SPONSORS.map((slot) => (
-        <SlotCard key={slot.slot} slot={slot} feed={feed} />
-      ))}
+    <section aria-label="스폰서 배너 가로 3구좌">
+      <p className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground">
+        A1–A3 · 300×150 가로 3칸
+      </p>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {SIDEBAR_SPONSORS.map((slot) => (
+          <SlotCard key={slot.slot} slot={slot} />
+        ))}
+      </div>
     </section>
   );
 }

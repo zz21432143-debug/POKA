@@ -9,7 +9,7 @@ export type SidebarSponsor = {
   mark: SponsorMark;
 };
 
-/** 우측 300×150 세로 3단. imageUrl이 없으면 빈 구좌. */
+/** 본문 아래 300×150 가로 3칸. imageUrl이 없으면 빈 구좌. */
 export const SIDEBAR_SPONSORS: SidebarSponsor[] = [
   { slot: 1, imageUrl: null, href: "/advertise", title: "스폰서 배너 1", advertiser: "", mark: "AD" },
   { slot: 2, imageUrl: null, href: "/advertise", title: "스폰서 배너 2", advertiser: "", mark: "AD" },
@@ -27,13 +27,13 @@ export const AD_PRODUCTS = [
   {
     id: "sidebar",
     code: "A1–A3",
-    name: "사이드바 배너 1칸",
-    size: "300 × 150 px · 세로 3단 중 1칸",
+    name: "본문 하단 배너 1칸",
+    size: "300 × 150 비율 · 가로 3칸 중 1칸",
     price: "월 120,000원",
     weekly: "주 35,000원",
-    exclusive: "칸마다 1팀 · 한 화면에 최대 3칸",
-    where: "PC 넓은 화면에서는 오른쪽 칼럼, 프로필 아래 300×150이 세로로 세 장 쌓입니다. 화면이 좁아 오른쪽 칼럼이 없으면 목록 맨 아래에 같은 세 장이 내려갑니다.",
-    why: "한 칸만 두면 자리가 남고, 세 칸을 나눠 팔면 단가를 낮출 수 있습니다. 칸당 월 12만은 예전 단독 18만보다 낮고, 3칸을 한 팀이 다 쓰면 월 36만입니다.",
+    exclusive: "칸마다 1팀 · 한 줄에 3칸",
+    where: "게시판·글 본문이 끝난 바로 아래, 가로로 A1 A2 A3가 나란히 붙습니다. 오른쪽 프로필 칼럼이 아닙니다.",
+    why: "세 장을 세로로 쌓으면 목록이 길어져 보이지 않습니다. 같은 300×150을 가로 한 줄로 두면 한 화면에 세 팀이 들어가고, 칸당 월 12만으로 나눕니다. 3칸을 한 팀이 쓰면 월 36만입니다.",
   },
   {
     id: "home-card",

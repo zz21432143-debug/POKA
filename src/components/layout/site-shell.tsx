@@ -55,14 +55,13 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {children}
-          <div className="mt-5 xl:hidden">
-            <SponsorBanner placement="feed" />
+          <div className="mt-5">
+            <SponsorBanner />
           </div>
         </main>
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <ProfileWidget profile={profile} accounts={accounts} />
-            <SponsorBanner />
             <PromoApplyCta />
             <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />
             <PopularPosts />

@@ -37,30 +37,22 @@ export function AdPlacementMap() {
               C · 네이티브 인피드 (3번째와 4번째 사이)
             </div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 4</div>
+            <div className="grid grid-cols-3 gap-1 rounded-md bg-sky-50 p-1 ring-2 ring-sky-400">
+              {["A1", "A2", "A3"].map((label) => (
+                <div key={label} className="rounded bg-sky-100 py-3 text-center text-[10px] font-semibold text-sky-900">
+                  {label}
+                  <span className="mt-0.5 block font-normal">300×150</span>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="col-span-12 space-y-2 sm:col-span-3">
-            <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">
-              프로필
-            </div>
-            <div className="rounded-md bg-sky-100 px-2 py-2 text-center text-[10px] font-semibold text-sky-900 ring-2 ring-sky-400">
-              A1
-              <span className="block font-normal">300×150</span>
-            </div>
-            <div className="rounded-md bg-sky-100 px-2 py-2 text-center text-[10px] font-semibold text-sky-900 ring-2 ring-sky-400">
-              A2
-              <span className="block font-normal">300×150</span>
-            </div>
-            <div className="rounded-md bg-sky-100 px-2 py-2 text-center text-[10px] font-semibold text-sky-900 ring-2 ring-sky-400">
-              A3
-              <span className="block font-normal">300×150</span>
-            </div>
-            <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">
-              공지 · 인기글
-            </div>
+            <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">프로필</div>
+            <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">공지 · 인기글</div>
           </div>
         </div>
         <p className="mt-2 rounded-md bg-sky-50 px-2 py-2 text-[10px] text-sky-900">
-          화면이 좁아 오른쪽 칼럼이 없으면 A1–A3가 목록 맨 아래로 내려갑니다. 한 장 크기는 300×150입니다.
+          A1–A3는 글 목록 아래 가로 한 줄입니다. 비율은 300×150(2:1)입니다.
         </p>
       </div>
     </figure>
