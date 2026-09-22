@@ -41,8 +41,15 @@ export function FeaturedPromos() {
                 <div className="absolute -right-6 -bottom-10 size-36 rounded-full bg-white/10 blur-2xl" />
                 <div className="absolute top-6 right-8 size-16 rounded-full border border-white/20" />
               </div>
-              <span className="relative z-[1] inline-flex w-fit rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold">
-                {card.tag}
+              <span className="relative z-[1] inline-flex items-center gap-1.5">
+                <span className="inline-flex w-fit rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold">
+                  {card.tag}
+                </span>
+                {"sponsorMark" in card && card.sponsorMark ? (
+                  <span className="inline-flex rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/35">
+                    {card.sponsorMark}
+                  </span>
+                ) : null}
               </span>
               <h3 className="relative z-[1] mt-3 whitespace-pre-line text-[15px] font-bold leading-snug">
                 {card.title}

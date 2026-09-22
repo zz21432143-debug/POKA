@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { cn } from "cn";
+import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
 
 const TABS = [
   { key: "all", label: "전체" },
@@ -59,16 +60,19 @@ export function HomeLatest({
       </div>
       {tab === "tips" ? (
         <ul className="divide-y divide-border">
-          {tips.map((row) => (
-            <li key={row.title}>
-              <Link href={row.href} className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
-                  노하우
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{row.title}</span>
-                <span className="hidden text-xs text-muted-foreground sm:inline">{row.hint}</span>
-              </Link>
-            </li>
+          {tips.map((row, index) => (
+            <Fragment key={row.title}>
+              {index === 3 ? <SponsoredPostLine /> : null}
+              <li>
+                <Link href={row.href} className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted/50">
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                    노하우
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{row.title}</span>
+                  <span className="hidden text-xs text-muted-foreground sm:inline">{row.hint}</span>
+                </Link>
+              </li>
+            </Fragment>
           ))}
         </ul>
       ) : (

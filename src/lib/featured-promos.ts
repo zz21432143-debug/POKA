@@ -8,6 +8,7 @@ export const FEATURED_PROMOS = [
     cta: "자세히 보기",
     href: "/boards/jobs/fixed",
     tone: "city",
+    sponsorMark: "제휴" as const,
   },
   {
     id: "spring",
@@ -18,6 +19,7 @@ export const FEATURED_PROMOS = [
     cta: "자세히 보기",
     href: "/boards/schedule",
     tone: "spring",
+    sponsorMark: "제휴" as const,
   },
   {
     id: "dealer-fit",
@@ -28,6 +30,7 @@ export const FEATURED_PROMOS = [
     cta: "자세히 보기",
     href: "/boards/official",
     tone: "fit",
+    sponsorMark: "AD" as const,
   },
   {
     id: "gangnam",
@@ -38,6 +41,7 @@ export const FEATURED_PROMOS = [
     cta: "자세히 보기",
     href: "/boards/jobs/apply",
     tone: "hotel",
+    sponsorMark: "AD" as const,
   },
   {
     id: "english",

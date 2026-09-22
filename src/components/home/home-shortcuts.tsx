@@ -11,7 +11,7 @@ export function HomeShortcuts() {
     <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <li className="col-span-2 sm:col-span-1">
         <Link
-          href="/boards/official/write"
+          href="/advertise"
           className="navy-panel touch-target flex h-full min-h-[8.25rem] flex-col rounded-2xl p-4 text-white"
         >
           <MegaphoneIcon className="size-5 text-emerald-300" />

@@ -11,7 +11,7 @@ export function PromoApplyCta() {
         보상을 받아보세요!
       </p>
       <Link
-        href="/boards/official/write"
+        href="/advertise"
         className="touch-target inline-flex h-9 shrink-0 items-center rounded-full bg-primary px-3 text-xs font-semibold text-white"
       >
         홍보하기

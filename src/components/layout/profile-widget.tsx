@@ -70,11 +70,6 @@ export function ProfileWidget({
       >
         내 프로필 보기 →
       </Link>
-      {profile.isAdmin ? (
-        <Link href="/admin/banners" className="mt-2 block text-center text-[11px] text-muted-foreground hover:text-primary">
-          관리자 · 배너 구좌
-        </Link>
-      ) : null}
     </section>
   );
 }

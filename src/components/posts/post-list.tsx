@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { EyeIcon, MessageCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { AdSlot } from "@/components/ads/ad-slot";
 import { RatingStamp } from "@/components/reviews/rating-stamp";
 import { type PublicAuthor } from "@/components/posts/author-chip";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { isAnonymousBoard } from "@/lib/request";
 import { formatRelativeKst } from "@/lib/dates";
 import { Fragment } from "react";
+import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
 
 export type PostSummary = {
   id: string;
@@ -56,11 +56,7 @@ export function PostList({
         const name = anonymous || !post.author ? "익명" : post.author.nickname;
         return (
           <Fragment key={post.id}>
-            {index === 3 ? (
-              <li>
-                <AdSlot placement="infeed" />
-              </li>
-            ) : null}
+            {index === 3 ? <SponsoredPostLine /> : null}
             <li>
               <Link
                 href={`/posts/${post.id}`}
