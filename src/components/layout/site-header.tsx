@@ -4,6 +4,7 @@ import { BellIcon, SearchIcon, UserRoundIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
+import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import type { ViewerProfile } from "@/lib/profile";
 import type { SwitchAccount } from "@/lib/switch-account";
 
@@ -38,7 +39,10 @@ export function SiteHeader({
             />
           </label>
         </form>
-        <div className="ml-auto flex shrink-0 items-center gap-0.5 lg:ml-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
+          <span className="xl:hidden">
+            <KakaoOpenChatCta compact />
+          </span>
           <Link
             href="/search"
             aria-label="검색"

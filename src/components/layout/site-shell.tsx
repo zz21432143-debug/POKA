@@ -5,8 +5,8 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PopularPosts } from "@/components/layout/popular-posts";
 import { NoticeWidget } from "@/components/layout/notice-widget";
+import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
-import { TalkCta } from "@/components/layout/talk-cta";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
@@ -68,12 +68,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </main>
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
+            <KakaoOpenChatCta />
             <ProfileWidget profile={profile} accounts={accounts} />
             <SidebarSponsorCard unit={sidebarSponsor} />
             <PromoApplyCta />
             <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />
             <PopularPosts />
-            <TalkCta />
             <GoogleAdUnit placement="sidebar" />
           </div>
         </aside>
