@@ -1,7 +1,10 @@
-import { PostList } from "@/components/posts/post-list";
-import { prisma } from "@/lib/db";
-import { JOB_KINDS } from "@/lib/nav";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JobCards } from "@/components/jobs/job-cards";
+import { buttonVariants } from "@/components/ui/button";
+import { prisma } from "@/lib/db";
+import { resolveJobKind } from "@/lib/nav";
+import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
 
@@ -11,44 +14,62 @@ export default async function JobBoardPage({
   params: Promise<{ kind: string }>;
 }) {
   const { kind } = await params;
-  const job = JOB_KINDS[kind as keyof typeof JOB_KINDS];
+  const job = resolveJobKind(kind);
   if (!job) notFound();
 
-  let posts: {
+  let jobs: {
     id: string;
-    boardType: string;
     title: string;
+    jobKind: string | null;
+    jobLocation: string | null;
+    jobPay: string | null;
+    jobSchedule: string | null;
+    jobHeadcount: string | null;
+    isPaid: boolean;
     authorNickname: string | null;
-    upvoteCount: number;
-    createdAt: string;
+    authorLevel: number | null;
+    authorMark: string | null;
   }[] = [];
   try {
     const rows = await prisma.post.findMany({
-      where: { boardType: "JOBS" },
-      orderBy: { createdAt: "desc" },
-      include: { author: { select: { nickname: true } } },
+      where: { boardType: "JOBS", jobKind: job.kind },
+      orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
+      include: { author: { select: { nickname: true, level: true, profileMarkImageUrl: true } } },
     });
-    posts = rows.map((post) => ({
+    jobs = rows.map((post) => ({
       id: post.id,
-      boardType: post.boardType,
       title: post.title,
+      jobKind: post.jobKind,
+      jobLocation: post.jobLocation,
+      jobPay: post.jobPay,
+      jobSchedule: post.jobSchedule,
+      jobHeadcount: post.jobHeadcount,
+      isPaid: post.isPaid,
       authorNickname: post.author?.nickname ?? null,
-      upvoteCount: post.upvoteCount,
-      createdAt: post.createdAt.toISOString(),
+      authorLevel: post.author?.level ?? null,
+      authorMark: post.author?.profileMarkImageUrl ?? null,
     }));
   } catch {
-    posts = [];
+    jobs = [];
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">{job.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {job.blurb}. 구인 3종 세부는 레이아웃 단계에서 메뉴로 분리했습니다.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">{job.title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {job.blurb}. 유료 고정(is_paid) 글이 위에 표시됩니다.
+          </p>
+        </div>
+        <Link
+          href={`/boards/jobs/${kind}/write`}
+          className={cn(buttonVariants({ size: "touch" }), "inline-flex")}
+        >
+          구인 등록
+        </Link>
       </header>
-      <PostList posts={posts} emptyText="등록된 구인 글이 없습니다." />
+      <JobCards jobs={jobs} />
     </div>
   );
 }

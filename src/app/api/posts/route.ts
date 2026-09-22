@@ -3,10 +3,12 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { grantRewards } from "@/lib/exp";
 import { parseHandReview, validateHandReview } from "@/lib/hand-review";
+import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
-import type { BoardType } from "@/generated/prisma/enums";
+import type { BoardType, JobKind } from "@/generated/prisma/enums";
 
 const BOARDS: BoardType[] = ["FREE", "HAND_REVIEW", "ANONYMOUS_REVIEW", "JOBS", "PROMO"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +22,14 @@ export async function POST(request: Request) {
       title?: string;
       content?: string;
       handReview?: unknown;
+      jobKind?: JobKind;
+      jobLocation?: string;
+      jobPay?: string;
+      jobSchedule?: string;
+      jobHeadcount?: string;
+      isPaid?: boolean;
+      bannerSlot?: number | null;
+      bannerImageUrl?: string;
     };
 
     const boardType = body.boardType;
@@ -46,23 +56,58 @@ export async function POST(request: Request) {
       handReviewJson = JSON.stringify(parsed);
     }
 
+    let jobKind: JobKind | null = null;
+    if (boardType === "JOBS") {
+      if (!body.jobKind || !JOB_KINDS.includes(body.jobKind)) {
+        return NextResponse.json({ error: "구인 종류를 선택하세요." }, { status: 400 });
+      }
+      jobKind = body.jobKind;
+    }
+
+    let bannerSlot: number | null = null;
+    let bannerImageUrl: string | null = null;
+    if (boardType === "PROMO" && body.bannerSlot) {
+      const slot = Number(body.bannerSlot);
+      if (!Number.isInteger(slot) || slot < 1 || slot > 6) {
+        return NextResponse.json({ error: "배너 구좌는 1~6만 가능합니다." }, { status: 400 });
+      }
+      const taken = await prisma.post.findFirst({ where: { bannerSlot: slot } });
+      if (taken) {
+        return NextResponse.json({ error: `${slot}번 구좌는 이미 사용 중입니다.` }, { status: 409 });
+      }
+      bannerSlot = slot;
+      bannerImageUrl = body.bannerImageUrl?.trim() || `/banners/slot-${slot}.svg`;
+    }
+
     const post = await prisma.post.create({
       data: {
         boardType,
-        authorId: boardType === "ANONYMOUS_REVIEW" ? null : user.id,
+        authorId: user.id,
         title,
         content,
         handReviewJson,
-        authorIp: "127.0.0.1",
+        authorIp: clientIp(request),
+        jobKind,
+        jobLocation: body.jobLocation?.trim() || null,
+        jobPay: body.jobPay?.trim() || null,
+        jobSchedule: body.jobSchedule?.trim() || null,
+        jobHeadcount: body.jobHeadcount?.trim() || null,
+        isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
+        bannerSlot,
+        bannerImageUrl,
       },
     });
 
     await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
 
-    return NextResponse.json({ id: post.id, exp: POST_EXP[boardType], points: POST_POINTS[boardType] });
+    return NextResponse.json({
+      id: post.id,
+      exp: POST_EXP[boardType],
+      points: POST_POINTS[boardType],
+      anonymous: boardType === "ANONYMOUS_REVIEW",
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "저장에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

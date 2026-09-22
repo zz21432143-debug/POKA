@@ -11,7 +11,7 @@ export default async function HomePage() {
     id: string;
     boardType: string;
     title: string;
-    authorNickname: string | null;
+    author: { nickname: string; profileMarkImageUrl: string | null; level: number } | null;
     upvoteCount: number;
     createdAt: string;
   }[] = [];
@@ -20,13 +20,13 @@ export default async function HomePage() {
       orderBy: { createdAt: "desc" },
       take: 8,
       where: { isAttendanceThread: false },
-      include: { author: { select: { nickname: true } } },
+      include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
     });
     posts = rows.map((post) => ({
       id: post.id,
       boardType: post.boardType,
       title: post.title,
-      authorNickname: post.author?.nickname ?? null,
+      author: post.author,
       upvoteCount: post.upvoteCount,
       createdAt: post.createdAt.toISOString(),
     }));

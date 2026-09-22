@@ -22,3 +22,5 @@ export const ATTENDANCE_POINTS = 10;
 export const COMMENT_EXP = 3;
 export const COMMENT_POINTS = 1;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;
+export const UPVOTE_RECEIVED_EXP = 10;
+export const UPVOTE_RECEIVED_POINTS = 2;

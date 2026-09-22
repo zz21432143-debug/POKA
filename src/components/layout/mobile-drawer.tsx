@@ -44,6 +44,13 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
           >
             메인
           </Link>
+          <Link
+            href="/shop"
+            onClick={() => setOpen(false)}
+            className="touch-target flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted"
+          >
+            마크 상점
+          </Link>
           <BoardNav onNavigate={() => setOpen(false)} />
           <ProfileWidget profile={profile} />
         </div>
