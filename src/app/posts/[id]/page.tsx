@@ -85,7 +85,11 @@ export default async function PostDetailPage({
       {post.jobKind ? (
         <section className="rounded-xl border border-border bg-card p-3">
           <p className="mb-2 text-xs text-muted-foreground">연락처</p>
-          <ContactReveal contact={post.jobContact} loggedIn={Boolean(viewer)} />
+          <ContactReveal
+            postId={post.id}
+            hasContact={Boolean(post.jobContact)}
+            loggedIn={Boolean(viewer)}
+          />
         </section>
       ) : null}
 

@@ -4,15 +4,19 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ContactReveal({
-  contact,
+  postId,
+  hasContact,
   loggedIn,
 }: {
-  contact: string | null;
+  postId: string;
+  hasContact: boolean;
   loggedIn: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [contact, setContact] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  if (!contact) {
+  if (!hasContact) {
     return <p className="text-sm text-muted-foreground">등록된 연락처가 없습니다.</p>;
   }
 
@@ -24,17 +28,37 @@ export function ContactReveal({
     );
   }
 
-  if (!open) {
+  if (contact) {
     return (
-      <Button type="button" size="touch" variant="outline" onClick={() => setOpen(true)}>
-        로그인 후 연락처 보기
-      </Button>
+      <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-3 font-medium">
+        {contact}
+      </p>
     );
   }
 
+  async function reveal() {
+    setPending(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/posts/${postId}/contact`);
+      const payload = (await response.json()) as { contact?: string; error?: string };
+      if (!response.ok || !payload.contact) {
+        throw new Error(payload.error ?? "연락처를 불러오지 못했습니다.");
+      }
+      setContact(payload.contact);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "연락처를 불러오지 못했습니다.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-3 font-medium">
-      {contact}
-    </p>
+    <div className="flex flex-col gap-2">
+      <Button type="button" size="touch" variant="outline" disabled={pending} onClick={() => void reveal()}>
+        {pending ? "불러오는 중…" : "로그인 후 연락처 보기"}
+      </Button>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+    </div>
   );
 }
