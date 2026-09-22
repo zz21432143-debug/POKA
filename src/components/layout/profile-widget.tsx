@@ -1,5 +1,6 @@
 import { cn } from "cn";
 import type { ViewerProfile } from "@/lib/profile";
+import { MarkShop } from "@/components/shop/mark-shop";
 
 export function MarkImage({
   src,
@@ -102,6 +103,9 @@ export function ProfileWidget({
           />
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">{nextLabel}</p>
+      </div>
+      <div className="mt-3">
+        <MarkShop triggerClassName="w-full" />
       </div>
     </section>
   );

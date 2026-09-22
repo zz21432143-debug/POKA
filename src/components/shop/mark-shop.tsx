@@ -16,9 +16,11 @@ import type { MarkCatalog, MarkCatalogItem } from "@/lib/marks";
 export function MarkShop({
   asPage = false,
   initial,
+  triggerClassName,
 }: {
   asPage?: boolean;
   initial?: MarkCatalog;
+  triggerClassName?: string;
 }) {
   const router = useRouter();
   const [catalog, setCatalog] = useState<MarkCatalog | null>(initial ?? null);
@@ -63,7 +65,9 @@ export function MarkShop({
         if (open) void load();
       }}
     >
-      <DialogTrigger render={<Button variant="outline" size="touch" />}>마크 상점</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" size="touch" className={triggerClassName} />}>
+        마크 상점
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>마크 상점</DialogTitle>

@@ -71,20 +71,24 @@ export default async function PostDetailPage({
       {post.jobKind ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-4">
           <div>
-            <dt className="text-xs text-muted-foreground">지역</dt>
+            <dt className="text-xs text-muted-foreground">근무지</dt>
             <dd>{post.jobLocation || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">조건</dt>
+            <dt className="text-xs text-muted-foreground">급여형태</dt>
             <dd>{post.jobPay || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">일정</dt>
+            <dt className="text-xs text-muted-foreground">근무일수</dt>
             <dd>{post.jobSchedule || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">인원</dt>
-            <dd>{post.jobHeadcount || "—"}</dd>
+            <dt className="text-xs text-muted-foreground">복리후생</dt>
+            <dd>{post.jobBenefits || "—"}</dd>
+          </div>
+          <div className="col-span-2 sm:col-span-4">
+            <dt className="text-xs text-muted-foreground">팀 목표</dt>
+            <dd>{post.jobTeamGoal || "—"}</dd>
           </div>
         </dl>
       ) : null}

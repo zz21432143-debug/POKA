@@ -22,9 +22,10 @@ export function BoardWriteForm({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [jobLocation, setJobLocation] = useState("");
-  const [jobPay, setJobPay] = useState("");
+  const [jobPay, setJobPay] = useState("월급");
   const [jobSchedule, setJobSchedule] = useState("");
-  const [jobHeadcount, setJobHeadcount] = useState("");
+  const [jobBenefits, setJobBenefits] = useState("");
+  const [jobTeamGoal, setJobTeamGoal] = useState("");
   const [isPaid, setIsPaid] = useState(false);
   const [bannerSlot, setBannerSlot] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,8 @@ export function BoardWriteForm({
           jobLocation,
           jobPay,
           jobSchedule,
-          jobHeadcount,
+          jobBenefits,
+          jobTeamGoal,
           isPaid,
           bannerSlot: bannerSlot ? Number(bannerSlot) : null,
         }),
@@ -71,10 +73,27 @@ export function BoardWriteForm({
       </div>
       {boardType === "JOBS" ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="지역" value={jobLocation} onChange={setJobLocation} placeholder="강남" />
-          <Field label="페이/조건" value={jobPay} onChange={setJobPay} placeholder="시급 또는 세션비" />
-          <Field label="일정" value={jobSchedule} onChange={setJobSchedule} placeholder="금·토 야간" />
-          <Field label="인원" value={jobHeadcount} onChange={setJobHeadcount} placeholder="1명" />
+          <Field label="근무지" value={jobLocation} onChange={setJobLocation} placeholder="강남" />
+          <div className="grid gap-2">
+            <Label htmlFor="pay-type">급여형태</Label>
+            <select
+              id="pay-type"
+              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
+              value={jobPay}
+              onChange={(event) => setJobPay(event.target.value)}
+            >
+              <option value="월급">월급</option>
+              <option value="연봉">연봉</option>
+            </select>
+          </div>
+          <Field label="근무일수" value={jobSchedule} onChange={setJobSchedule} placeholder="주5일" />
+          <Field label="복리후생" value={jobBenefits} onChange={setJobBenefits} placeholder="식대 · 기숙사" />
+          <Field
+            label="팀 목표"
+            value={jobTeamGoal}
+            onChange={setJobTeamGoal}
+            placeholder="캐주얼 테이블 안정 운영"
+          />
           <label className="col-span-full flex min-h-11 items-center gap-2 text-sm">
             <input
               type="checkbox"

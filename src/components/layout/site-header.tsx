@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { ProfileWidget } from "@/components/layout/profile-widget";
-import { MarkShop } from "@/components/shop/mark-shop";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
@@ -27,15 +26,6 @@ export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
               관리
             </Link>
           ) : null}
-          <Link
-            href="/shop"
-            className="touch-target inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium hover:bg-muted lg:hidden"
-          >
-            상점
-          </Link>
-          <div className="hidden lg:block">
-            <MarkShop />
-          </div>
           <div className="lg:hidden">
             <ProfileWidget profile={profile} variant="compact" />
           </div>

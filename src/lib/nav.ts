@@ -22,9 +22,9 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "구인 3종",
     items: [
-      { href: "/boards/jobs/fixed", label: "고정구인", hint: "상시 · 고정 자리" },
-      { href: "/boards/jobs/apply", label: "지원구인", hint: "지원서형 모집" },
-      { href: "/boards/jobs/team", label: "팀구인", hint: "세션 · 팀 구성" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정 자리" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "지원서형 모집" },
+      { href: "/boards/jobs/team", label: "딜러 팀 구인", hint: "세션 · 팀 구성" },
     ],
   },
   {
@@ -52,18 +52,18 @@ export const BOARD_SLUGS = {
 
 export const JOB_KINDS = {
   fixed: {
-    title: "고정구인",
-    blurb: "룸/클럽의 상시 고정 자리 모집",
+    title: "고정 직원 구인",
+    blurb: "룸/클럽의 상시 고정 직원 모집",
     kind: "FIXED" as const,
   },
   apply: {
-    title: "지원구인",
-    blurb: "지원서를 받는 딜러·스태프 모집",
+    title: "지원 딜러 구인",
+    blurb: "지원서를 받는 딜러 모집",
     kind: "APPLY" as const,
   },
   team: {
-    title: "팀구인",
-    blurb: "캐주얼 세션·스터디 팀 구성",
+    title: "딜러 팀 구인",
+    blurb: "캐주얼 세션·스터디 딜러 팀 구성",
     kind: "TEAM" as const,
   },
 } as const;
@@ -80,7 +80,7 @@ export function resolveJobKind(kind: string) {
 }
 
 export const JOB_KIND_LABEL = {
-  FIXED: "고정구인",
-  APPLY: "지원구인",
-  TEAM: "팀구인",
+  FIXED: "고정 직원 구인",
+  APPLY: "지원 딜러 구인",
+  TEAM: "딜러 팀 구인",
 } as const;

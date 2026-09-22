@@ -31,6 +31,8 @@ export async function POST(request: Request) {
       jobPay?: string;
       jobSchedule?: string;
       jobHeadcount?: string;
+      jobBenefits?: string;
+      jobTeamGoal?: string;
       isPaid?: boolean;
       bannerSlot?: number | null;
       bannerImageUrl?: string;
@@ -103,6 +105,8 @@ export async function POST(request: Request) {
         jobPay: body.jobPay?.trim() || null,
         jobSchedule: body.jobSchedule?.trim() || null,
         jobHeadcount: body.jobHeadcount?.trim() || null,
+        jobBenefits: body.jobBenefits?.trim() || null,
+        jobTeamGoal: body.jobTeamGoal?.trim() || null,
         isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,

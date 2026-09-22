@@ -12,7 +12,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { BoardNav } from "@/components/layout/board-nav";
-import { ProfileWidget } from "@/components/layout/profile-widget";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
@@ -70,7 +69,6 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
             </>
           ) : null}
           <BoardNav onNavigate={() => setOpen(false)} />
-          <ProfileWidget profile={profile} />
         </div>
       </SheetContent>
     </Sheet>

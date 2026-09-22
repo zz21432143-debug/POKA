@@ -24,7 +24,8 @@ export default async function JobBoardPage({
     jobLocation: string | null;
     jobPay: string | null;
     jobSchedule: string | null;
-    jobHeadcount: string | null;
+    jobBenefits: string | null;
+    jobTeamGoal: string | null;
     isPaid: boolean;
     authorNickname: string | null;
     authorLevel: number | null;
@@ -43,7 +44,8 @@ export default async function JobBoardPage({
       jobLocation: post.jobLocation,
       jobPay: post.jobPay,
       jobSchedule: post.jobSchedule,
-      jobHeadcount: post.jobHeadcount,
+      jobBenefits: post.jobBenefits,
+      jobTeamGoal: post.jobTeamGoal,
       isPaid: post.isPaid,
       authorNickname: post.author?.nickname ?? null,
       authorLevel: post.author?.level ?? null,
