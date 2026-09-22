@@ -20,7 +20,6 @@ import {
   NewspaperIcon,
   ShieldIcon,
   SpadeIcon,
-  UserRoundIcon,
 } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
@@ -29,7 +28,6 @@ const ICONS: Record<SidebarIcon, LucideIcon> = {
   home: HomeIcon,
   message: MessageCircleIcon,
   camera: CameraIcon,
-  user: UserRoundIcon,
   briefcase: BriefcaseIcon,
   help: HelpCircleIcon,
   heart: HeartHandshakeIcon,
@@ -96,10 +94,13 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <p className="mt-8 px-3 pb-2 text-xs leading-5 text-muted-foreground">
-        좋은 사람들과
+      <p
+        className="mt-8 px-3 pb-3 text-[15px] leading-6 text-emerald-600"
+        style={{ fontFamily: "var(--font-script), cursive" }}
+      >
+        함께하는
         <br />
-        더 나은 내일을
+        딜러들의 더 나은 내일
       </p>
     </nav>
   );

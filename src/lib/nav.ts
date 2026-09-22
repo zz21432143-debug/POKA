@@ -25,7 +25,6 @@ export type SidebarIcon =
   | "home"
   | "message"
   | "camera"
-  | "user"
   | "briefcase"
   | "help"
   | "heart"
@@ -58,7 +57,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
-      { href: "/intro", label: "자기소개", hint: "회원 소개", icon: "user" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/boards/anonymous", label: "고민 상담", hint: "익명", icon: "heart" },

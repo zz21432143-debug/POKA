@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PopularPosts } from "@/components/layout/popular-posts";
 import { NoticeWidget } from "@/components/layout/notice-widget";
+import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { TalkCta } from "@/components/layout/talk-cta";
 import { getViewerProfile } from "@/lib/profile";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
@@ -30,9 +31,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   }
 
   const fallbackNotices = [
-    { id: "n1", title: "게시판 이용 규칙 안내", date: "2026.04.10", href: "/terms" },
-    { id: "n2", title: "운영진 가입 안내 공지", date: "2026.04.05", href: "/about" },
-    { id: "n3", title: "포카 커뮤니티 이벤트 안내", date: "2026.03.28", href: "/boards/schedule" },
+    { id: "n1", title: "2025년 4월 운영 정책 안내", date: "2025.04.10", href: "/terms" },
+    { id: "n2", title: "게시판 이용 규칙 안내", date: "2025.04.05", href: "/about" },
+    { id: "n3", title: "포카 커뮤니티 이벤트 안내", date: "2025.03.28", href: "/boards/schedule" },
   ];
 
   return (
@@ -50,8 +51,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <ProfileWidget profile={profile} />
-            <PopularPosts />
+            <PromoApplyCta />
             <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />
+            <PopularPosts />
             <TalkCta />
           </div>
         </aside>
