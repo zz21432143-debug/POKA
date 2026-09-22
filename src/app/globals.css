@@ -192,3 +192,17 @@
     animation: none;
   }
 }
+
+/* 프로필 마크 슬롯. 프레임·이펙트 cssClass가 붙으면 테두리/후광을 그립니다. */
+.profile-mark {
+  position: relative;
+}
+
+.profile-mark.frame-gold {
+  box-shadow: 0 0 0 2px #e8c36a, 0 0 0 4px #fff6d6;
+  border-radius: 0.5rem;
+}
+
+.profile-mark.effect-halo {
+  filter: drop-shadow(0 0 6px rgb(16 185 129 / 0.7));
+}

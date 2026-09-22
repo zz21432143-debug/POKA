@@ -52,7 +52,11 @@ async function main() {
   await prisma.comment.deleteMany();
   await prisma.post.deleteMany();
   await prisma.userMark.deleteMany();
-  await prisma.user.updateMany({ data: { equippedMarkId: null } });
+  await prisma.userCosmetic.deleteMany();
+  await prisma.user.updateMany({
+    data: { equippedMarkId: null, equippedFrameId: null, equippedEffectId: null },
+  });
+  await prisma.profileCosmetic.deleteMany();
   await prisma.mark.deleteMany();
   await prisma.user.deleteMany();
   await prisma.levelExp.deleteMany();

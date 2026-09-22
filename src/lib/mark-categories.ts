@@ -6,6 +6,14 @@ export const MARK_CATEGORIES = [
 
 export type MarkCategoryId = (typeof MARK_CATEGORIES)[number]["id"];
 
+export const SHOP_KINDS = [
+  { id: "MARK" as const, label: "마크" },
+  { id: "FRAME" as const, label: "프레임" },
+  { id: "EFFECT" as const, label: "이펙트" },
+];
+
+export type ShopKindId = (typeof SHOP_KINDS)[number]["id"];
+
 export type MarkCatalogItem = {
   id: string;
   slug: string;
@@ -18,11 +26,28 @@ export type MarkCatalogItem = {
   equipped: boolean;
 };
 
+export type CosmeticCatalogItem = {
+  id: string;
+  slug: string;
+  name: string;
+  kind: "FRAME" | "EFFECT";
+  imageUrl: string | null;
+  cssClass: string | null;
+  pricePoints: number;
+  minLevel: number;
+  owned: boolean;
+  equipped: boolean;
+};
+
 export type MarkCatalog = {
   points: number;
   level: number;
   equippedMarkId: string | null;
+  equippedFrameId: string | null;
+  equippedEffectId: string | null;
   marks: MarkCatalogItem[];
+  frames: CosmeticCatalogItem[];
+  effects: CosmeticCatalogItem[];
 };
 
 export function marksInCategory(marks: MarkCatalogItem[], category: MarkCategoryId) {

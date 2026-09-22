@@ -13,7 +13,13 @@ export default async function MemberPage({
 }) {
   const { nickname } = await params;
   const decoded = decodeURIComponent(nickname);
-  const user = await prisma.user.findUnique({ where: { nickname: decoded } });
+  const user = await prisma.user.findUnique({
+    where: { nickname: decoded },
+    include: {
+      equippedFrame: { select: { cssClass: true } },
+      equippedEffect: { select: { cssClass: true } },
+    },
+  });
   if (!user) notFound();
 
   const posts = await prisma.post.findMany({
@@ -35,6 +41,10 @@ export default async function MemberPage({
             isDealerVerified: user.isDealerVerified,
             isAdmin: user.isAdmin,
             attendanceStreak: user.attendanceStreak,
+            equippedFrameId: user.equippedFrameId,
+            equippedEffectId: user.equippedEffectId,
+            equippedFrame: user.equippedFrame,
+            equippedEffect: user.equippedEffect,
           }}
           size="lg"
         />

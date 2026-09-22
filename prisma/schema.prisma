@@ -45,12 +45,25 @@ enum MarkCategory {
   SPECIAL
 }
 
+/// 상점 상위 카테고리. 마크는 Mark 테이블, 프레임·이펙트는 ProfileCosmetic.
+enum CosmeticKind {
+  FRAME
+  EFFECT
+}
+
 model User {
   id                  String   @id @default(cuid())
   nickname            String   @unique
   profileMarkImageUrl String?
+  /// 착용 중인 마크(뱃지). API/문서의 equipped_badge_id
   equippedMarkId      String?
   equippedMark        Mark?    @relation("EquippedMark", fields: [equippedMarkId], references: [id], onDelete: SetNull)
+  /// 착용 중인 프로필 프레임(테두리). 추후 상점 판매
+  equippedFrameId     String?
+  equippedFrame       ProfileCosmetic? @relation("EquippedFrame", fields: [equippedFrameId], references: [id], onDelete: SetNull)
+  /// 착용 중인 후광·모션 이펙트. 추후 상점 판매
+  equippedEffectId    String?
+  equippedEffect      ProfileCosmetic? @relation("EquippedEffect", fields: [equippedEffectId], references: [id], onDelete: SetNull)
   level               Int      @default(1)
   exp                 Int      @default(0)
   points              Int      @default(0)
@@ -68,6 +81,7 @@ model User {
   comments         Comment[]
   dailyAttendances DailyAttendance[]
   ownedMarks       UserMark[]
+  ownedCosmetics   UserCosmetic[]
   votes            PostVote[]
   commentVotes     CommentVote[]
   reports          Report[]
@@ -308,6 +322,33 @@ model UserMark {
   purchasedAt DateTime @default(now())
 
   @@id([userId, markId])
+}
+
+/// 프레임·이펙트 상품. 마크와 분리해 착용 슬롯을 독립적으로 유지합니다.
+model ProfileCosmetic {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  kind        CosmeticKind
+  imageUrl    String?
+  cssClass    String?
+  pricePoints Int
+  minLevel    Int          @default(1)
+  owners      UserCosmetic[]
+  equippedAsFrame  User[]  @relation("EquippedFrame")
+  equippedAsEffect User[]  @relation("EquippedEffect")
+
+  @@index([kind])
+}
+
+model UserCosmetic {
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cosmeticId  String
+  cosmetic    ProfileCosmetic @relation(fields: [cosmeticId], references: [id], onDelete: Cascade)
+  purchasedAt DateTime        @default(now())
+
+  @@id([userId, cosmeticId])
 }
 
 model LevelExp {

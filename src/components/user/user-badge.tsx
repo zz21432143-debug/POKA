@@ -9,6 +9,10 @@ export type BadgeUser = {
   isDealerVerified?: boolean;
   isAdmin?: boolean;
   attendanceStreak?: number;
+  equippedFrameId?: string | null;
+  equippedEffectId?: string | null;
+  equippedFrame?: { cssClass: string | null } | null;
+  equippedEffect?: { cssClass: string | null } | null;
 };
 
 export const AUTHOR_SELECT = {
@@ -18,6 +22,10 @@ export const AUTHOR_SELECT = {
   isDealerVerified: true,
   isAdmin: true,
   attendanceStreak: true,
+  equippedFrameId: true,
+  equippedEffectId: true,
+  equippedFrame: { select: { cssClass: true } },
+  equippedEffect: { select: { cssClass: true } },
 } as const;
 
 export function levelTitle(level: number) {
@@ -32,9 +40,9 @@ export function isOpenChatStar(user: Pick<BadgeUser, "level" | "attendanceStreak
 }
 
 const SIZE = {
-  sm: { mark: 18, nick: "text-xs", pad: "h-5 px-1.5 text-[10px]" },
-  md: { mark: 28, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
-  lg: { mark: 48, nick: "text-base", pad: "h-6 px-2 text-[11px]" },
+  sm: { mark: 28, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
+  md: { mark: 32, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
+  lg: { mark: 48, nick: "text-base", pad: "h-7 px-2 text-xs" },
 } as const;
 
 export function UserBadge({
@@ -51,6 +59,8 @@ export function UserBadge({
   className?: string;
 }) {
   const spec = SIZE[size];
+  const frameClass = user.equippedFrame?.cssClass;
+  const effectClass = user.equippedEffect?.cssClass;
   const title = levelTitle(user.level);
   const openChat = isOpenChatStar(user);
   const extras = size !== "sm";
@@ -92,6 +102,8 @@ export function UserBadge({
           src={user.profileMarkImageUrl}
           alt={`${user.nickname} 마크`}
           size={spec.mark}
+          frameClass={frameClass}
+          effectClass={effectClass}
           className="ring-2 ring-white shadow-sm"
         />
         <span className="min-w-0 flex-1">
@@ -118,6 +130,8 @@ export function UserBadge({
         src={user.profileMarkImageUrl}
         alt={`${user.nickname} 마크`}
         size={spec.mark}
+        frameClass={frameClass}
+        effectClass={effectClass}
         className="ring-1 ring-border"
       />
       {showNickname ? (

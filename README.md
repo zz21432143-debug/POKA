@@ -25,7 +25,7 @@ PC와 모바일 브라우저(Android Chrome / iOS Safari)에서 같은 반응형
 
 사이드바는 `SIDEBAR_NAV`, 피드 게시판은 `BOARD_NAV` (`src/lib/nav.ts`)입니다. 각 게시판은 시드 글 20개와 무한 스크롤(페이지 10개)을 사용합니다.
 
-**마크 상점** (`/shop`)은 사이드바 기타 메뉴와 우측 프로필 카드의 [마크 상점]에서 들어갑니다. 팀 마크 이미지는 `public/images/badges/team_1.png` ~ `team_6.png` 이며 웹 경로는 `/images/badges/team_1.png` 입니다. 장착한 마크는 `equippedMarkId`와 `profileMarkImageUrl`로 게시글·댓글 닉네임 옆에 바로 반영됩니다.
+**마크 상점** (`/shop`)은 사이드바 기타 메뉴와 우측 프로필 카드의 [마크 상점]에서 들어갑니다. 상위 탭은 마크 / 프레임 / 이펙트입니다. 팀 마크 이미지는 `public/images/badges/team_1.png` ~ `team_6.png` 이며 웹 경로는 `/images/badges/team_1.png` 입니다. 착용 슬롯은 `equippedMarkId`(뱃지), `equippedFrameId`(테두리), `equippedEffectId`(후광·모션)입니다. 마크 장착은 `profileMarkImageUrl`로 게시글·댓글 닉네임 옆에 바로 반영됩니다.
 
 
 스키마 확인은 `/schema` 입니다. 작성자 IP는 관리자에게만 표시됩니다.

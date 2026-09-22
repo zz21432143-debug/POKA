@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { MARK_CATEGORIES, marksInCategory, type MarkCatalogItem } from "./mark-categories";
+import { MARK_CATEGORIES, SHOP_KINDS, marksInCategory, type MarkCatalogItem } from "./mark-categories";
 
 function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "name" | "category">): MarkCatalogItem {
   return {
@@ -15,6 +15,13 @@ function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "
 }
 
 describe("mark shop catalog", () => {
+  it("exposes 마크 / 프레임 / 이펙트 shop kinds", () => {
+    assert.deepEqual(
+      SHOP_KINDS.map((tab) => tab.label),
+      ["마크", "프레임", "이펙트"],
+    );
+  });
+
   it("exposes 팀 / 레벨 / 특수 tabs", () => {
     assert.deepEqual(
       MARK_CATEGORIES.map((tab) => tab.label),
