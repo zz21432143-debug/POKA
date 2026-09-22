@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#111827"/>
+  <rect width="800" height="600" fill="url(#g1)"/>
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="800" y2="600">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="744" height="544" rx="28" stroke="#fbbf24" stroke-width="6"/>
+  <circle cx="640" cy="140" r="90" fill="#fbbf24" opacity="0.2"/>
+  <circle cx="640" cy="140" r="42" fill="#fbbf24"/>
+  <text x="64" y="120" fill="#fbbf24" font-family="Noto Sans KR, sans-serif" font-size="22" font-weight="700" letter-spacing="6">OFFICIAL POSTER 01</text>
+  <text x="64" y="250" fill="#fff7ed" font-family="Noto Sans KR, sans-serif" font-size="54" font-weight="800">® ê¸º</text>
+  <text x="64" y="320" fill="#fbbf24" font-family="Noto Sans KR, sans-serif" font-size="54" font-weight="800">òt∏</text>
+  <text x="64" y="400" fill="#e5e7eb" font-family="Noto Sans KR, sans-serif" font-size="22">‰¸ ∑† 22:00 ∑ tx ©200,000</text>
+  <text x="64" y="520" fill="#fde68a" font-family="Noto Sans KR, sans-serif" font-size="18">POKA ı› MÙ ∑ ®</text>
+</svg>

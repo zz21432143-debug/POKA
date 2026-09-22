@@ -357,7 +357,7 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     authorNickname: "펠트딜러",
     daysAgo: i,
     upvoteCount: 6,
-    bannerImageUrl: `/banners/slot-${(i % 6) + 1}.svg`,
+    bannerImageUrl: `/images/posters/official-${(i % 6) + 1}.svg`,
     promoLocation: LOCS[i],
     promoTag: ["나이트", "제휴", "협찬", "멤버십", "교육"][i % 5],
     storeVerified: true,

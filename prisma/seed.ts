@@ -180,16 +180,24 @@ async function main() {
   }
 
   await prisma.bannerSlot.deleteMany();
-  const promoNight = createdPosts.find((post) => post.title === "강남 캐주얼 나이트");
+  const promoTitles = [
+    "강남 캐주얼 나이트",
+    "주말 딜러 오픈 데이",
+    "핸드스터디 시즌2",
+    "룸 투어 위크",
+    "출석 더블 EXP 제휴",
+    "클럽 멤버십 안내",
+  ];
+  const promoByTitle = Object.fromEntries(
+    createdPosts.filter((post) => promoTitles.includes(post.title)).map((post) => [post.title, post]),
+  );
   await prisma.bannerSlot.createMany({
-    data: [
-      { slot: 1, mode: "MANUAL", enabled: true, postId: promoNight?.id ?? null },
-      { slot: 2, mode: "AUTO", enabled: true },
-      { slot: 3, mode: "AUTO", enabled: true },
-      { slot: 4, mode: "AUTO", enabled: true },
-      { slot: 5, mode: "AUTO", enabled: true },
-      { slot: 6, mode: "AUTO", enabled: true },
-    ],
+    data: promoTitles.map((title, index) => ({
+      slot: index + 1,
+      mode: "MANUAL",
+      enabled: true,
+      postId: promoByTitle[title]?.id ?? null,
+    })),
   });
 
   const attendancePost = await prisma.post.create({
