@@ -30,12 +30,10 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
               href={`/posts/${post.id}`}
               className="touch-target group block overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/50"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={image}
-                alt={post.title}
-                className="aspect-[4/3] w-full object-cover transition-transform group-hover:scale-[1.03]"
-              />
+              <div className="flex aspect-[4/3] items-center justify-center bg-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image} alt={post.title} className="max-h-full max-w-full object-contain" />
+              </div>
               <div className="p-3">
                 <h2 className="text-lg font-semibold">{post.title}</h2>
                 <div className="mt-2 flex flex-wrap gap-1.5">

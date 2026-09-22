@@ -46,15 +46,14 @@ export async function FeaturedPromos() {
             ) : (
               <Link
                 href={banner.href}
-                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-slate-900 shadow-sm"
+                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-black shadow-sm"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={banner.image}
                   alt={banner.title}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                  className="h-full w-full object-contain"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
                 <div className="absolute top-3 left-3 flex items-center gap-1.5">
                   <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
                     {banner.tag || "홍보"}
@@ -63,7 +62,7 @@ export async function FeaturedPromos() {
                     {posterMark(banner.tag, banner.isPaid)}
                   </span>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-white">
                   <h3 className="text-[15px] font-bold leading-snug">{banner.title}</h3>
                   <p className="mt-1 truncate text-[11px] text-white/75">
                     {[banner.location, banner.sponsor].filter(Boolean).join(" · ")}

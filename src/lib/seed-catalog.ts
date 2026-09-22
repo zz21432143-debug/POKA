@@ -1,6 +1,7 @@
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import { buildJobTitle } from "./jobs";
 import type { FeedKey } from "./feed";
+import { FEATURED_OFFICIAL_POSTERS, OFFICIAL_POSTER_IMAGES } from "./official-posters";
 
 export const SEED_PER_BOARD = 20;
 
@@ -329,39 +330,39 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     };
   });
 
-  const official: CatalogPost[] = times((i) => ({
-    boardType: "PROMO",
-    title: [
-      "강남 캐주얼 나이트",
-      "주말 딜러 오픈 데이",
-      "핸드스터디 시즌2",
-      "룸 투어 위크",
-      "출석 더블 EXP 제휴",
-      "클럽 멤버십 안내",
-      "딜러 아카데미 설명회",
-      "첫방문 칩 패키지",
-      "브랜드 스폰서 나잇",
-      "팀 유니폼 협찬",
-      "샷클락 장비 지원",
-      "하이폴더 초대권",
-      "서머 토너 얼리버드",
-      "인증 매장 감사제",
-      "야간 뷔페 이벤트",
-      "주차 2시간 무료",
-      "생일 바운티 칩",
-      "스태프 채용 설명",
-      "프로 플레이어 사인회",
-      "시즌 랭킹 시상식",
-    ][i],
-    content: `${LOCS[i]} 공식 홍보·제휴 소식입니다.`,
-    authorNickname: "펠트딜러",
-    daysAgo: i,
-    upvoteCount: 6,
-    bannerImageUrl: `/images/posters/official-${(i % 6) + 1}.svg`,
-    promoLocation: LOCS[i],
-    promoTag: ["나이트", "제휴", "협찬", "멤버십", "교육"][i % 5],
-    storeVerified: true,
-  }));
+  const official: CatalogPost[] = times((i) => {
+    const featured = FEATURED_OFFICIAL_POSTERS[i];
+    return {
+      boardType: "PROMO",
+      title: featured
+        ? featured.title
+        : [
+            "딜러 아카데미 설명회",
+            "첫방문 칩 패키지",
+            "브랜드 스폰서 나잇",
+            "팀 유니폼 협찬",
+            "샷클락 장비 지원",
+            "하이폴더 초대권",
+            "서머 토너 얼리버드",
+            "인증 매장 감사제",
+            "야간 뷔페 이벤트",
+            "주차 2시간 무료",
+            "생일 바운티 칩",
+            "스태프 채용 설명",
+            "프로 플레이어 사인회",
+            "시즌 랭킹 시상식",
+          ][i - 6],
+      content: featured ? featured.content : `${LOCS[i]} 공식 홍보·제휴 소식입니다.`,
+      authorNickname: "펠트딜러",
+      daysAgo: i,
+      upvoteCount: 6,
+      bannerImageUrl: featured ? featured.image : OFFICIAL_POSTER_IMAGES[i % OFFICIAL_POSTER_IMAGES.length],
+      promoLocation: featured ? featured.location : LOCS[i],
+      promoTag: featured ? featured.tag : ["나이트", "제휴", "협찬", "멤버십", "교육"][i % 5],
+      storeVerified: true,
+      isPaid: featured ? featured.isPaid : false,
+    };
+  });
 
   const jobsFixed: CatalogPost[] = times((i) => {
     const company = ["POKA 펍", "에이스 룸", "펠트하우스", "미드나잇", "골드칩"][i % 5];

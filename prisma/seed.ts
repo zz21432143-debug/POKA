@@ -4,6 +4,7 @@ import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
 import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 import { ATTENDANCE_LINES, catalogPosts, SEED_NICKNAMES } from "../src/lib/seed-catalog";
+import { FEATURED_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -180,14 +181,7 @@ async function main() {
   }
 
   await prisma.bannerSlot.deleteMany();
-  const promoTitles = [
-    "강남 캐주얼 나이트",
-    "주말 딜러 오픈 데이",
-    "핸드스터디 시즌2",
-    "룸 투어 위크",
-    "출석 더블 EXP 제휴",
-    "클럽 멤버십 안내",
-  ];
+  const promoTitles = FEATURED_OFFICIAL_POSTERS.map((row) => row.title);
   const promoByTitle = Object.fromEntries(
     createdPosts.filter((post) => promoTitles.includes(post.title)).map((post) => [post.title, post]),
   );
