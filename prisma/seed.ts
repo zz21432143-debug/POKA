@@ -174,6 +174,33 @@ async function main() {
   await prisma.sponsorUnit.createMany({
     data: [
       {
+        placement: "A1",
+        imageUrl: null,
+        href: "/advertise",
+        title: "",
+        advertiser: "",
+        mark: "AD",
+        enabled: true,
+      },
+      {
+        placement: "A2",
+        imageUrl: null,
+        href: "/advertise",
+        title: "",
+        advertiser: "",
+        mark: "AD",
+        enabled: true,
+      },
+      {
+        placement: "A3",
+        imageUrl: null,
+        href: "/advertise",
+        title: "",
+        advertiser: "",
+        mark: "AD",
+        enabled: true,
+      },
+      {
         placement: "SIDEBAR",
         imageUrl: null,
         href: "/advertise",

@@ -8,6 +8,7 @@ import {
 
 export {
   SPONSOR_PLACEMENTS,
+  PLACEMENT_META,
   normalizeMark,
   isDirectFilled,
   pickFill,
@@ -27,9 +28,9 @@ function asCreative(
   } | null,
 ): DirectCreative | null {
   if (!row) return null;
-  if (row.placement !== "SIDEBAR" && row.placement !== "NATIVE") return null;
+  if (!(SPONSOR_PLACEMENTS as readonly string[]).includes(row.placement)) return null;
   return {
-    placement: row.placement,
+    placement: row.placement as SponsorPlacement,
     imageUrl: row.imageUrl,
     href: row.href || "/advertise",
     title: row.title,
@@ -64,4 +65,15 @@ export async function getSponsorCreative(placement: SponsorPlacement): Promise<D
   } catch {
     return null;
   }
+}
+
+export async function getFeedCreatives(): Promise<
+  [DirectCreative | null, DirectCreative | null, DirectCreative | null]
+> {
+  const [a1, a2, a3] = await Promise.all([
+    getSponsorCreative("A1"),
+    getSponsorCreative("A2"),
+    getSponsorCreative("A3"),
+  ]);
+  return [a1, a2, a3];
 }

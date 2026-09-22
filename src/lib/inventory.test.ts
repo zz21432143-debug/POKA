@@ -33,6 +33,18 @@ describe("ad inventory fill", () => {
     assert.ok(!isDirectFilled({ enabled: true, imageUrl: null, title: "" }, true));
   });
 
+  it("fills empty A1–A3 feed slots with AdSense", () => {
+    const emptyA: DirectCreative = {
+      placement: "A1",
+      imageUrl: null,
+      href: "/advertise",
+      title: "",
+      advertiser: "",
+      mark: "AD",
+    };
+    assert.equal(pickFill(emptyA, "adsense", true).kind, "adsense");
+  });
+
   it("hides native rows without a title", () => {
     assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null, title: "" }, "hide").kind, "hide");
     assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null }, "hide").kind, "direct");

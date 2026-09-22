@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PLACEMENT_META, SPONSOR_PLACEMENTS, type SponsorPlacement } from "@/lib/inventory-policy";
 
 type Unit = {
   placement: string;
@@ -52,16 +53,18 @@ export function SponsorAdmin({ units }: { units: Unit[] }) {
     <div className="flex flex-col gap-3">
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <ul className="grid gap-3">
-        {units.map((unit) => (
+        {[...units]
+          .sort(
+            (a, b) =>
+              SPONSOR_PLACEMENTS.indexOf(a.placement as SponsorPlacement) -
+              SPONSOR_PLACEMENTS.indexOf(b.placement as SponsorPlacement),
+          )
+          .map((unit) => {
+            const meta = PLACEMENT_META[unit.placement as SponsorPlacement];
+            return (
           <li key={unit.placement} className="rounded-xl border border-border bg-card p-3">
-            <p className="font-medium">
-              {unit.placement === "SIDEBAR" ? "사이드바 배너 (S)" : "네이티브 인피드 (C)"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {unit.placement === "SIDEBAR"
-                ? "이미지 URL이 없으면 문의 CTA. 구글은 이 칸을 쓰지 않습니다."
-                : "제목이 있으면 목록 3~4번째 사이에 한 줄. 없으면 숨깁니다."}
-            </p>
+            <p className="font-medium">{meta?.name ?? unit.placement}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{meta?.hint}</p>
             <form
               className="mt-3 grid gap-2"
               onSubmit={(event) => {
@@ -87,7 +90,9 @@ export function SponsorAdmin({ units }: { units: Unit[] }) {
                 />
               </div>
               <div>
-                <Label htmlFor={`${unit.placement}-image`}>이미지 URL (사이드바 300×250)</Label>
+                <Label htmlFor={`${unit.placement}-image`}>
+                  이미지 URL{unit.placement.startsWith("A") ? " (300×150)" : unit.placement === "SIDEBAR" ? " (300×250)" : " (선택)"}
+                </Label>
                 <Input
                   id={`${unit.placement}-image`}
                   name="imageUrl"
@@ -117,7 +122,8 @@ export function SponsorAdmin({ units }: { units: Unit[] }) {
               </Button>
             </form>
           </li>
-        ))}
+            );
+          })}
       </ul>
     </div>
   );

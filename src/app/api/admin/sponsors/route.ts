@@ -26,7 +26,7 @@ export async function PATCH(request: Request) {
   };
   const placement = body.placement as SponsorPlacement;
   if (!SPONSOR_PLACEMENTS.includes(placement)) {
-    return NextResponse.json({ error: "placement은 SIDEBAR 또는 NATIVE입니다." }, { status: 400 });
+    return NextResponse.json({ error: "placement이 올바르지 않습니다." }, { status: 400 });
   }
   await ensureSponsorUnits();
   const updated = await prisma.sponsorUnit.update({

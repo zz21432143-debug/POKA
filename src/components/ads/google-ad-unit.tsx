@@ -14,6 +14,9 @@ const SIZE: Record<AdSensePlacement, string> = {
   "post-top": "min-h-[90px] w-full",
   "post-bottom": "min-h-[90px] w-full",
   sidebar: "mx-auto min-h-[250px] w-full max-w-[300px]",
+  a1: "aspect-[2/1] w-full",
+  a2: "aspect-[2/1] w-full",
+  a3: "aspect-[2/1] w-full",
 };
 
 export function GoogleAdUnit({
@@ -48,7 +51,7 @@ export function GoogleAdUnit({
           style={{ display: "block" }}
           data-ad-client={client}
           data-ad-slot={unit}
-          data-ad-format={placement === "sidebar" ? "rectangle" : "horizontal"}
+          data-ad-format={placement === "sidebar" ? "rectangle" : placement.startsWith("a") ? "rectangle" : "horizontal"}
           data-full-width-responsive="true"
         />
       </aside>

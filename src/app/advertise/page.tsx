@@ -14,8 +14,8 @@ export default function AdvertisePage() {
         <p className="text-xs font-semibold tracking-wide text-primary">SPONSOR</p>
         <h1 className="mt-1 text-2xl font-semibold">제휴 및 광고 안내</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          직판 제휴(홈 3×2, 사이드바, 인피드)가 있으면 그 소재가 먼저 붙습니다. 구글 애드센스는 글 본문
-          위·아래와 사이드바 맨 아래, 제휴가 없는 잔여에만 들어갑니다.
+          직판 제휴(홈 3×2, 사이드바, 인피드, 본문 하단 A칸)가 있으면 그 소재가 먼저 붙습니다. A1–A3가
+          비면 구글이 채우고, 글 본문 위·아래와 사이드바 맨 아래에도 구글이 있습니다.
         </p>
       </header>
 
@@ -24,11 +24,12 @@ export default function AdvertisePage() {
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-foreground/90">
           <li>직접 수주한 제휴 소재(이미지·제목)가 있으면 그 칸은 제휴만 보여 줍니다.</li>
           <li>프리미엄 6칸과 사이드바는 월정액 전용입니다. 비어 있으면 구글이 아니라 문의 버튼입니다.</li>
+          <li>본문 하단 A1–A3는 제휴 이미지가 있으면 제휴, 없으면 구글입니다. 홈과 모든 게시판 아래에 가로 한 줄입니다.</li>
           <li>인피드도 제휴 문장이 있을 때만 한 줄을 넣습니다. 없으면 목록을 비우지 않습니다.</li>
           <li>
             구글은 게시자 코드로 들어옵니다. AdSense ID를{" "}
-            <code className="text-xs">NEXT_PUBLIC_ADSENSE_CLIENT</code>에 넣으면 본문 상·하단과 사이드바
-            하단 데모가 실제 광고로 바뀝니다.
+            <code className="text-xs">NEXT_PUBLIC_ADSENSE_CLIENT</code>에 넣으면 본문 상·하단, 사이드바
+            하단, A1–A3 데모가 실제 광고로 바뀝니다.
           </li>
         </ol>
         <p className="mt-3 text-xs leading-5 text-muted-foreground">

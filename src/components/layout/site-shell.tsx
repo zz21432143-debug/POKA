@@ -8,6 +8,7 @@ import { NoticeWidget } from "@/components/layout/notice-widget";
 import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { TalkCta } from "@/components/layout/talk-cta";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
+import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { getViewerProfile } from "@/lib/profile";
 import { listSwitchableUsers } from "@/lib/current-user";
@@ -60,6 +61,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {children}
+          <FeedAdRow />
           <div className="mt-5 xl:hidden">
             <SidebarSponsorCard unit={sidebarSponsor} />
           </div>

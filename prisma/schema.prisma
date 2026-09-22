@@ -302,7 +302,7 @@ model BannerSlot {
   updatedAt DateTime @updatedAt
 }
 
-/// 직판 제휴 소재. placement: SIDEBAR | NATIVE. 비어 있으면 사이드바는 CTA, 인피드는 숨김.
+/// 직판 제휴 소재. placement: A1 | A2 | A3 | SIDEBAR | NATIVE.
 model SponsorUnit {
   placement  String   @id
   imageUrl   String?

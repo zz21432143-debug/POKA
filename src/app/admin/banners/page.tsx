@@ -33,8 +33,8 @@ export default async function AdminBannersPage() {
       <header>
         <h1 className="text-2xl font-semibold">배너 구좌 관리</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          메인 3×2(B1–B6)는 홍보글로 채우고, 사이드바·인피드는 직판 소재로 지정합니다. 제휴가 없는
-          프리미엄·사이드바는 문의 CTA, 구글은 본문·사이드바 하단에만 붙습니다.
+          메인 3×2(B1–B6)는 홍보글로 채우고, A1–A3·사이드바·인피드는 직판 소재로 지정합니다. A칸이 비면
+          구글이 채웁니다. 프리미엄·사이드바 공석은 문의 CTA입니다.
         </p>
         <Link href="/admin/reports" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary">
           신고 처리
