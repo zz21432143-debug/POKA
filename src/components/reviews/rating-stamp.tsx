@@ -6,7 +6,7 @@ export function RatingStamp({ ratings, size = "md" }: { ratings: ReviewRatings; 
   const box = size === "sm" ? "size-11 text-sm" : "size-14 text-base";
   return (
     <span
-      className={`inline-flex ${box} shrink-0 rotate-[-8deg] items-center justify-center rounded-full border-2 border-primary bg-primary/15 font-bold text-primary shadow-[0_0_0_3px_oklch(0.22_0.04_80/0.4)]`}
+      className={`inline-flex ${box} shrink-0 rotate-[-8deg] items-center justify-center rounded-full border-2 border-primary bg-primary/15 font-bold text-primary shadow-[0_0_0_3px_#121315]`}
       title={`종합 ${score}`}
     >
       {score.toFixed(1)}

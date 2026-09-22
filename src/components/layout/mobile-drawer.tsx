@@ -35,7 +35,7 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
       <SheetContent side="left" className="w-[min(100%,20rem)] p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <PokaLogo className="h-8 w-auto" />
+            <PokaLogo className="text-lg" />
             <span>전체 게시판</span>
           </SheetTitle>
         </SheetHeader>

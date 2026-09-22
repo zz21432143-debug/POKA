@@ -10,46 +10,51 @@ export type NavGroup = {
   title: string;
   href: string;
   hint: string;
+  accent: "emerald" | "gold";
   items: NavItem[];
 };
 
 /** 사이드바 · 드로어 · 홈 바로가기의 단일 출처 (헤더는 로고/프로필만) */
 export const BOARD_NAV: NavGroup[] = [
   {
-    title: "🗓️ 대회 일정",
+    title: "대회 일정",
     href: "/boards/schedule",
     hint: "일자별 / 월별 일정표",
+    accent: "emerald",
     items: [],
   },
   {
-    title: "📢 공식 홍보",
+    title: "공식 홍보",
     href: "/boards/official",
     hint: "제휴 · 협찬 소식",
+    accent: "emerald",
     items: [],
   },
   {
-    title: "💬 커뮤니티",
+    title: "커뮤니티",
     href: "/attendance",
     hint: "출석부터 익명까지",
+    accent: "emerald",
     items: [
-      { href: "/attendance", label: "✅ 출석체크", hint: "매일 출석 EXP" },
-      { href: "/boards/rules", label: "❓ 이게 맞나요?", hint: "룰 · 판정" },
-      { href: "/boards/sketch", label: "📸 현장 스케치", hint: "현장 사진" },
-      { href: "/boards/free", label: "🗣️ 자유게시판", hint: "잡담 · 수다" },
-      { href: "/boards/hand-review", label: "🎴 핸드리뷰", hint: "투표 · 스팟" },
-      { href: "/boards/anonymous", label: "🤫 익명 게시판", hint: "닉네임 비공개" },
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
+      { href: "/boards/rules", label: "이게 맞나요?", hint: "룰 · 판정" },
+      { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
+      { href: "/boards/free", label: "자유게시판", hint: "잡담 · 수다" },
+      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
+      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개" },
     ],
   },
   {
-    title: "💼 구인 / 구직",
+    title: "구인 / 구직",
     href: "/boards/jobs/fixed",
     hint: "고정부터 개인 구직",
+    accent: "gold",
     items: [
-      { href: "/boards/jobs/fixed", label: "🏢 고정 직원 구인", hint: "상시 · 고정" },
-      { href: "/boards/jobs/apply", label: "📋 지원 딜러 구인", hint: "단기 · 스팟" },
-      { href: "/boards/jobs/team", label: "👥 팀 구인", hint: "팀원 모집" },
-      { href: "/boards/jobs/urgent", label: "⚡ 급구 / 대타", hint: "당일 · 긴급" },
-      { href: "/boards/jobs/seek", label: "🙋 개인 구직", hint: "이력 · 희망 조건" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
+      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
+      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
+      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건" },
     ],
   },
 ];

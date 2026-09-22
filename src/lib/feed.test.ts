@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { FEED_BY_HREF, PAGE_SIZE, feedWhere, parseFeedKey } from "./feed";
-import { flattenNavItems } from "./nav";
+import { flattenNavItems, BOARD_NAV } from "./nav";
 import { ATTENDANCE_LINES, SEED_PER_BOARD, catalogPosts, seedCountByFeed } from "./seed-catalog";
 
 describe("board feed keys", () => {
@@ -26,8 +26,28 @@ describe("board feed keys", () => {
     });
   });
 
+  it("uses gold dots only on jobs, emerald elsewhere", () => {
+    for (const group of BOARD_NAV) {
+      if (group.href.startsWith("/boards/jobs")) {
+        assert.equal(group.accent, "gold");
+      } else {
+        assert.equal(group.accent, "emerald");
+      }
+    }
+  });
+
   it("keeps page size at 10 for infinite scroll", () => {
     assert.equal(PAGE_SIZE, 10);
+  });
+
+  it("strips emoji from nav copy", () => {
+    const emoji = /[\u{1F300}-\u{1FAFF}]/u;
+    for (const group of BOARD_NAV) {
+      assert.equal(emoji.test(group.title), false, group.title);
+      for (const item of group.items) {
+        assert.equal(emoji.test(item.label), false, item.label);
+      }
+    }
   });
 });
 

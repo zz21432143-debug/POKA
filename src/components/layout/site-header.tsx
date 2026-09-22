@@ -11,8 +11,11 @@ export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
     <header className="border-b border-border/80 bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-2 px-3 sm:h-[4.5rem] sm:px-4 lg:h-20">
         <MobileDrawer profile={profile} />
-        <Link href="/" className="touch-target flex min-h-11 min-w-0 items-center rounded-lg px-1">
-          <PokaLogo className="h-12 w-auto sm:h-14 lg:h-16" />
+        <Link
+          href="/"
+          className="touch-target flex min-h-12 min-w-[10.5rem] items-center rounded-lg px-1 sm:min-w-[13rem]"
+        >
+          <PokaLogo className="text-[1.65rem] sm:text-[1.9rem] lg:text-[2.15rem]" />
           <span className="sr-only">POKA 홈</span>
         </Link>
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
