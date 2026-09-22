@@ -42,8 +42,8 @@ export async function FeaturedPromos() {
         </Link>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        {HOME_PROMO_VISIBLE}칸을 유지하고 {seconds}초마다 한 장씩 바꿉니다. 풀은 최대 {HOME_PROMO_MAX_POOL}
-        장입니다.
+        {HOME_PROMO_VISIBLE}칸을 유지하고 {seconds}초마다 한 칸씩 왼쪽으로 넘어갑니다. 풀은 최대{" "}
+        {HOME_PROMO_MAX_POOL}장입니다.
       </p>
       <FeaturedPromoRotator pool={pool} />
     </section>

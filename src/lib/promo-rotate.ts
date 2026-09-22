@@ -1,8 +1,10 @@
 export const HOME_PROMO_VISIBLE = 3;
 /** 홈 로테이션 풀 상한. 3칸 노출 + 대기분이 너무 많으면 한 장이 다시 보이기까지 오래 걸립니다. */
 export const HOME_PROMO_MAX_POOL = 9;
-/** 한 칸이 바뀌는 간격. 포스터를 읽을 시간(약 6초)을 주고 다음 칸으로 넘어갑니다. */
-export const HOME_PROMO_ROTATE_MS = 6000;
+/** 한 칸씩 왼쪽으로 넘어가는 간격. */
+export const HOME_PROMO_ROTATE_MS = 3000;
+/** 카드가 한 칸 이동하는 CSS 슬라이드 시간. */
+export const HOME_PROMO_SLIDE_MS = 500;
 
 export type HomePromo = {
   key: string;
@@ -14,27 +16,39 @@ export type HomePromo = {
   isPaid?: boolean;
 };
 
-export function initialVisiblePromos(pool: HomePromo[], visibleCount = HOME_PROMO_VISIBLE) {
-  return pool.slice(0, Math.min(visibleCount, pool.length));
+export function wrapIndex(index: number, length: number) {
+  if (length <= 0) return 0;
+  return ((index % length) + length) % length;
 }
 
-export function pickReplacement(
-  visible: HomePromo[],
-  pool: HomePromo[],
-  slot: number,
-  random = Math.random,
-): HomePromo | null {
-  if (pool.length === 0 || visible.length === 0) return null;
-  const shown = new Set(visible.map((item) => item.key));
-  const waiting = pool.filter((item) => !shown.has(item.key));
-  if (waiting.length === 0) return null;
-  const pick = waiting[Math.floor(random() * waiting.length)] ?? null;
-  if (!pick) return null;
-  if (visible[slot] && visible[slot].key === pick.key) return null;
-  return pick;
+export function shiftCarouselIndex(index: number, delta: number, length: number) {
+  return wrapIndex(index + delta, length);
 }
 
-export function nextRotateSlot(slot: number, visibleCount = HOME_PROMO_VISIBLE) {
-  if (visibleCount <= 0) return 0;
-  return (slot + 1) % visibleCount;
+/** 루프용 가장자리 복제 장 수. 3칸 뷰포트가 비지 않도록 풀 길이를 넘지 않게 잡습니다. */
+export function carouselCloneCount(length: number, visible = HOME_PROMO_VISIBLE) {
+  if (length <= 1) return 0;
+  return Math.min(visible, length);
+}
+
+export function buildLoopTrack<T>(items: T[], cloneCount: number): T[] {
+  if (items.length === 0 || cloneCount <= 0) return items.slice();
+  return [...items.slice(-cloneCount), ...items, ...items.slice(0, cloneCount)];
+}
+
+export function loopTrackStartIndex(cloneCount: number) {
+  return Math.max(0, cloneCount);
+}
+
+/**
+ * 복제 구간으로 슬라이드한 뒤, 같은 실카드를 가리키는 인덱스로 점프합니다.
+ * 이미 실구간이면 null.
+ */
+export function snapLoopIndex(index: number, length: number, cloneCount: number): number | null {
+  if (length <= 0 || cloneCount <= 0) return null;
+  const start = cloneCount;
+  const end = cloneCount + length;
+  if (index >= end) return start + (index - end);
+  if (index < start) return end - (start - index);
+  return null;
 }

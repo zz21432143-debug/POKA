@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { PlusIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { cn } from "cn";
 import {
   HOME_PROMO_ROTATE_MS,
-  HOME_PROMO_VISIBLE,
-  nextRotateSlot,
-  pickReplacement,
+  HOME_PROMO_SLIDE_MS,
+  buildLoopTrack,
+  carouselCloneCount,
+  loopTrackStartIndex,
+  snapLoopIndex,
   type HomePromo,
 } from "@/lib/promo-rotate";
 
@@ -23,6 +25,10 @@ function shuffle<T>(items: T[]) {
 
 const POSTER_FRAME = "aspect-[5/7]";
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function posterMark(tag?: string | null, isPaid?: boolean) {
   if (isPaid) return "AD";
   if (tag === "제휴" || tag === "협찬") return "제휴";
@@ -30,46 +36,91 @@ function posterMark(tag?: string | null, isPaid?: boolean) {
 }
 
 export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
-  const start = useMemo(() => shuffle(pool).slice(0, HOME_PROMO_VISIBLE), [pool]);
-  const [visible, setVisible] = useState(start);
-  const [flashSlot, setFlashSlot] = useState<number | null>(null);
+  const [deck, setDeck] = useState(pool);
+  const cloneCount = carouselCloneCount(deck.length);
+  const track = useMemo(() => buildLoopTrack(deck, cloneCount), [deck, cloneCount]);
+  const startIndex = loopTrackStartIndex(cloneCount);
+
+  const [index, setIndex] = useState(startIndex);
+  const [instant, setInstant] = useState(false);
   const [paused, setPaused] = useState(false);
-  const slotRef = useRef(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const lockedRef = useRef(false);
+  const indexRef = useRef(index);
 
   useEffect(() => {
-    setVisible(shuffle(pool).slice(0, HOME_PROMO_VISIBLE));
-    slotRef.current = 0;
+    setDeck(shuffle(pool));
   }, [pool]);
 
   useEffect(() => {
-    if (paused || pool.length <= HOME_PROMO_VISIBLE) return;
-    const reduce =
-      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-
-    const tick = () => {
-      if (document.hidden) return;
-      const currentSlot = slotRef.current;
-      setVisible((current) => {
-        const incoming = pickReplacement(current, pool, currentSlot);
-        if (!incoming) return current;
-        const next = [...current];
-        next[currentSlot] = incoming;
-        setFlashSlot(currentSlot);
-        return next;
-      });
-      slotRef.current = nextRotateSlot(currentSlot, HOME_PROMO_VISIBLE);
-    };
-
-    const timer = window.setInterval(tick, HOME_PROMO_ROTATE_MS);
-    return () => window.clearInterval(timer);
-  }, [paused, pool]);
+    indexRef.current = index;
+  }, [index]);
 
   useEffect(() => {
-    if (flashSlot === null) return;
-    const timer = window.setTimeout(() => setFlashSlot(null), 700);
-    return () => window.clearTimeout(timer);
-  }, [flashSlot]);
+    setIndex(startIndex);
+    setInstant(true);
+    lockedRef.current = false;
+    const reset = window.setTimeout(() => setInstant(false), 0);
+    return () => window.clearTimeout(reset);
+  }, [deck, startIndex]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  const finishLoop = useCallback(
+    (nextIndex: number) => {
+      const snapped = snapLoopIndex(nextIndex, deck.length, cloneCount);
+      if (snapped === null) {
+        lockedRef.current = false;
+        return;
+      }
+      setInstant(true);
+      setIndex(snapped);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setInstant(false);
+          lockedRef.current = false;
+        });
+      });
+    },
+    [cloneCount, deck.length],
+  );
+
+  const move = useCallback(
+    (delta: number) => {
+      if (deck.length <= 1 || lockedRef.current) return;
+      lockedRef.current = true;
+      const nextIndex = indexRef.current + delta;
+      if (reduceMotion || prefersReducedMotion()) {
+        const snapped = snapLoopIndex(nextIndex, deck.length, cloneCount) ?? nextIndex;
+        setInstant(true);
+        setIndex(snapped);
+        requestAnimationFrame(() => {
+          setInstant(false);
+          lockedRef.current = false;
+        });
+        return;
+      }
+      setIndex(nextIndex);
+    },
+    [cloneCount, deck.length, reduceMotion],
+  );
+
+  useEffect(() => {
+    if (paused || reduceMotion || deck.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      if (document.hidden) return;
+      move(1);
+    }, HOME_PROMO_ROTATE_MS);
+
+    return () => window.clearInterval(timer);
+  }, [paused, reduceMotion, deck.length, move]);
 
   if (pool.length === 0) {
     return (
@@ -85,27 +136,94 @@ export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
     );
   }
 
+  const canSlide = deck.length > 1;
+  const duration = instant || reduceMotion ? 0 : HOME_PROMO_SLIDE_MS;
+
   return (
-    <ul
-      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    <div
+      className="group/promo relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {visible.map((banner, index) => (
-        <li key={`slot-${index}`} className="mx-auto w-full max-w-[280px] sm:max-w-none">
-          <div className="overflow-hidden rounded-2xl">
-            <div
-              key={banner.key}
-              className={cn(
-                flashSlot === index ? "animate-in fade-in slide-in-from-bottom-4 duration-500" : null,
-              )}
+      <div className="overflow-hidden">
+        <ul
+          className="flex [--promo-step:100%] sm:[--promo-step:33.333333%]"
+          style={{
+            transform: `translate3d(calc(-1 * ${index} * var(--promo-step)), 0, 0)`,
+            transition: duration > 0 ? `transform ${duration}ms ease-in-out` : "none",
+          }}
+          onTransitionEnd={(event) => {
+            if (event.target !== event.currentTarget) return;
+            if (event.propertyName !== "transform") return;
+            finishLoop(index);
+          }}
+        >
+          {track.map((banner, trackIndex) => (
+            <li
+              key={`${banner.key}-${trackIndex}`}
+              className="w-full shrink-0 px-1.5 sm:w-1/3"
             >
-              <PosterCard banner={banner} />
-            </div>
+              <div className="mx-auto w-full max-w-[280px] sm:max-w-none">
+                <PosterCard banner={banner} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {canSlide ? (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 z-10 h-0 pb-[140%] sm:pb-[46.666%]",
+            "opacity-100 transition-opacity duration-200",
+            "group-focus-within/promo:opacity-100 group-hover/promo:opacity-100",
+            "[@media(hover:hover)_and_(pointer:fine)]:opacity-0",
+            "[@media(hover:hover)_and_(pointer:fine)]:group-focus-within/promo:opacity-100",
+            "[@media(hover:hover)_and_(pointer:fine)]:group-hover/promo:opacity-100",
+          )}
+        >
+          <div className="absolute inset-0 flex items-center justify-between px-0.5 sm:px-1">
+            <CarouselArrow
+              label="이전 포스터"
+              onClick={() => move(-1)}
+            >
+              <ChevronLeftIcon className="size-6" />
+            </CarouselArrow>
+            <CarouselArrow
+              label="다음 포스터"
+              onClick={() => move(1)}
+            >
+              <ChevronRightIcon className="size-6" />
+            </CarouselArrow>
           </div>
-        </li>
-      ))}
-    </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CarouselArrow({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick();
+      }}
+      className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-black/55 text-white shadow-md ring-1 ring-white/25 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
+      {children}
+    </button>
   );
 }
 
