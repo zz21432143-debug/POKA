@@ -15,17 +15,16 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "공식",
     items: [
-      { href: "/boards/events", label: "🏆 대회 & 이벤트", hint: "관리자 포스터" },
-      { href: "/boards/official", label: "📢 공식 홍보", hint: "관리자 포스터" },
-      { href: "/boards/schedule", label: "📅 전국 대회 일정", hint: "달력" },
+      { href: "/boards/official", label: "📢 공식 홍보", hint: "검증 매장" },
+      { href: "/boards/schedule", label: "📅 전국 대회 일정", hint: "관리자" },
     ],
   },
   {
-    title: "구인·구직",
+    title: "구인 3종",
     items: [
-      { href: "/boards/hire", label: "🤝 구인 게시판", hint: "기업·팀" },
-      { href: "/boards/talent", label: "🙋 구직 / 인재 등록", hint: "개인" },
-      { href: "/boards/pickup", label: "⚡ 급구 / 단기 픽업", hint: "전체 회원" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
+      { href: "/boards/jobs/team", label: "딜러 팀 구인", hint: "팀원 모집" },
     ],
   },
   {
@@ -51,38 +50,17 @@ export const BOARD_SLUGS = {
     boardType: "ANONYMOUS_REVIEW" as const,
     writeHref: "/boards/store-review/write",
   },
-  promo: { title: "프리미엄 배너", boardType: "PROMO" as const, writeHref: "/boards/promo/write" },
-  events: {
-    title: "대회 & 이벤트 포스터",
-    boardType: "EVENT_POSTER" as const,
-    writeHref: "/boards/events/write",
-    gallery: true,
-    adminOnly: true,
-  },
   official: {
-    title: "공식 홍보 포스터",
-    boardType: "OFFICIAL_POSTER" as const,
+    title: "공식 홍보",
+    boardType: "PROMO" as const,
     writeHref: "/boards/official/write",
     gallery: true,
-    adminOnly: true,
   },
-  hire: {
-    title: "구인 게시판",
-    boardType: "JOBS" as const,
-    writeHref: "/boards/hire/write",
-    listing: "hire" as const,
-  },
-  talent: {
-    title: "구직 / 인재 등록",
-    boardType: "TALENT" as const,
-    writeHref: "/boards/talent/write",
-    listing: "talent" as const,
-  },
-  pickup: {
-    title: "급구 / 단기 픽업",
-    boardType: "PICKUP" as const,
-    writeHref: "/boards/pickup/write",
-    listing: "pickup" as const,
+  promo: {
+    title: "공식 홍보",
+    boardType: "PROMO" as const,
+    writeHref: "/boards/official/write",
+    gallery: true,
   },
   schedule: {
     title: "전국 대회 일정",
@@ -102,17 +80,17 @@ export function resolveBoardSlug(slug: string) {
 export const JOB_KINDS = {
   fixed: {
     title: "고정 직원 구인",
-    blurb: "레거시 고정 공고",
+    blurb: "룸·펍의 상시 고정 직원 모집",
     kind: "FIXED" as const,
   },
   apply: {
     title: "지원 딜러 구인",
-    blurb: "레거시 지원 공고",
+    blurb: "단기·스팟 딜러 지원자 전용",
     kind: "APPLY" as const,
   },
   team: {
     title: "딜러 팀 구인",
-    blurb: "레거시 팀 공고",
+    blurb: "딜러 팀원 모집",
     kind: "TEAM" as const,
   },
 } as const;
@@ -135,11 +113,8 @@ export const JOB_KIND_LABEL = {
 } as const;
 
 export const WRITE_HINT: Partial<Record<BoardType, string>> = {
-  EVENT_POSTER: "관리자만 공식 대회 포스터를 올립니다.",
-  OFFICIAL_POSTER: "관리자만 제휴·스폰서 포스터를 올립니다.",
-  JOBS: "기업·팀 회원의 정식 구인 공고입니다.",
-  TALENT: "딜러·플로어·칩스 스태프가 이력을 올립니다.",
-  PICKUP: "대타·주말 단기 스태프 급구입니다.",
-  SCHEDULE: "날짜별 전국 토너먼트·카지노 이벤트입니다.",
+  PROMO: "검증된 매장의 공식 홍보물만 등록합니다. 배너 구좌 1~6과 연동됩니다.",
+  SCHEDULE: "관리자만 메이저·지역 홀덤 대회 일정을 올립니다.",
+  JOBS: "제목은 지역·상호(조건)로 자동 생성됩니다.",
   FREE: "현장 후기, 룰 질문, 자유 수다.",
 };

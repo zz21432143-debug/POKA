@@ -12,7 +12,8 @@ import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { parseHandReview } from "@/lib/hand-review";
 import { getCurrentUser } from "@/lib/current-user";
 import { isAnonymousBoard } from "@/lib/request";
-import { ListingFacts, isListingPost } from "@/components/listing/listing-facts";
+import { JOB_KIND_LABEL } from "@/lib/nav";
+import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import Link from "next/link";
 
@@ -60,7 +61,11 @@ export default async function PostDetailPage({
           <Badge variant="secondary">
             {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
           </Badge>
-          {post.jobWorkType ? <Badge variant="outline">{post.jobWorkType}</Badge> : null}
+          {post.jobKind ? (
+            <Badge variant="outline">
+              {JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL]}
+            </Badge>
+          ) : null}
           {post.isPaid ? <Badge>유료 고정</Badge> : null}
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
         </div>
@@ -75,25 +80,55 @@ export default async function PostDetailPage({
         </div>
       </header>
 
-      {isListingPost(post) ? <ListingFacts post={post} /> : null}
+      {post.jobKind ? <JobFacts job={post} /> : null}
 
-      {isListingPost(post) && post.jobApplyMethod && post.jobApplyMethod !== "사이트 내 직접 지원" ? (
+      {post.boardType === "SCHEDULE" ? (
+        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-xs text-muted-foreground">개최 장소</dt>
+            <dd>{post.promoLocation || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">일정</dt>
+            <dd>
+              {post.eventDate || "—"}
+              {post.eventEndDate && post.eventEndDate !== post.eventDate ? ` ~ ${post.eventEndDate}` : ""}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">총상금</dt>
+            <dd>{post.eventPrize || "—"}</dd>
+          </div>
+          {post.eventLink ? (
+            <div className="col-span-full">
+              <dt className="text-xs text-muted-foreground">공식 링크</dt>
+              <dd>
+                <a href={post.eventLink} className="text-primary" target="_blank" rel="noreferrer">
+                  {post.eventLink}
+                </a>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
+
+      {post.boardType === "SCHEDULE" && post.bannerImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={post.bannerImageUrl} alt={post.title} className="w-full rounded-2xl border border-border object-cover" />
+      ) : null}
+
+      {post.jobKind ? (
         <section className="rounded-xl border border-border bg-card p-3">
-          <p className="mb-2 text-xs text-muted-foreground">지원 정보</p>
+          <p className="mb-2 text-xs text-muted-foreground">연락처</p>
           <ContactReveal
             postId={post.id}
-            hasContact={Boolean(post.jobApplyValue || post.jobContact)}
+            hasContact={Boolean(post.jobContact)}
             loggedIn={Boolean(viewer)}
           />
         </section>
-      ) : isListingPost(post) && post.jobApplyMethod === "사이트 내 직접 지원" ? (
-        <p className="rounded-xl border border-border bg-card px-3 py-3 text-sm">
-          사이트 내 직접 지원 — 아래 댓글로 지원하세요.
-        </p>
       ) : null}
 
-      {(post.boardType === "JOBS" || post.boardType === "PICKUP") &&
-      (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+      {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
         <HireButton postId={post.id} filled={post.jobFilled} />
       ) : post.jobFilled ? (
         <p className="text-sm text-primary">채용이 완료된 공고입니다.</p>

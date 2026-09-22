@@ -3,13 +3,13 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { grantRewards } from "@/lib/exp";
 import { parseHandReview, validateHandReview } from "@/lib/hand-review";
-import { listingFromBody } from "@/lib/listing";
+import { jobFieldsFromBody } from "@/lib/job-fields";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
 import { ensureBannerSlots } from "@/lib/premium-banners";
-import type { BoardType } from "@/generated/prisma/enums";
+import type { BoardType, JobKind } from "@/generated/prisma/enums";
 
 const BOARDS: BoardType[] = [
   "FREE",
@@ -24,7 +24,7 @@ const BOARDS: BoardType[] = [
   "SCHEDULE",
 ];
 
-const LISTING_BOARDS: BoardType[] = ["JOBS", "TALENT", "PICKUP"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
 
 export async function POST(request: Request) {
   try {
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     const content = typeof body.content === "string" ? body.content.trim() : "";
     let title = body.title?.trim() ?? "";
-    if (title.length < 2) {
+    if (boardType !== "JOBS" && title.length < 2) {
       return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
     }
 
@@ -73,8 +73,17 @@ export async function POST(request: Request) {
       handReviewJson = JSON.stringify(parsed);
     }
 
-    const listing = LISTING_BOARDS.includes(boardType) ? listingFromBody(body) : null;
-    if (listing) title = listing.title || title;
+    let jobKind: JobKind | null = null;
+    let jobData: ReturnType<typeof jobFieldsFromBody> | null = null;
+    if (boardType === "JOBS") {
+      const kind = body.jobKind as JobKind | undefined;
+      if (!kind || !JOB_KINDS.includes(kind)) {
+        return NextResponse.json({ error: "구인 종류를 선택하세요." }, { status: 400 });
+      }
+      jobKind = kind;
+      jobData = jobFieldsFromBody(body, jobKind);
+      title = jobData.title;
+    }
 
     let bannerSlot: number | null = null;
     let bannerImageUrl: string | null = body.bannerImageUrl?.trim() || null;
@@ -109,28 +118,36 @@ export async function POST(request: Request) {
         content,
         handReviewJson,
         authorIp: ip,
-        jobKind: null,
-        jobLocation: listing?.jobLocation ?? (typeof body.promoLocation === "string" ? body.promoLocation : null),
-        jobPay: listing?.jobPay ?? null,
-        jobBenefits: listing?.jobBenefits ?? null,
-        jobPayType: listing?.jobPayType ?? null,
-        jobPayAmount: listing?.jobPayAmount ?? null,
-        jobExperience: listing?.jobExperience ?? null,
-        jobContact: listing?.jobContact ?? null,
-        jobWorkDate: listing?.jobWorkDate ?? null,
-        jobDateFlexible: listing?.jobDateFlexible ?? false,
-        jobApplyMethod: listing?.jobApplyMethod ?? null,
-        jobApplyValue: listing?.jobApplyValue ?? null,
-        jobPositions: listing?.jobPositions ?? null,
-        jobWorkType: listing?.jobWorkType ?? null,
-        jobAlwaysOpen: listing?.jobAlwaysOpen ?? false,
-        eventDate: typeof body.eventDate === "string" ? body.eventDate : listing?.jobWorkDate,
-        isPaid: false,
+        jobKind,
+        jobLocation: jobData?.jobLocation ?? (typeof body.promoLocation === "string" ? body.promoLocation.trim() : null),
+        jobPay: jobData?.jobPay ?? null,
+        jobSchedule: jobData?.jobSchedule ?? null,
+        jobBenefits: jobData?.jobBenefits ?? null,
+        jobCompanyName: jobData?.jobCompanyName ?? null,
+        jobPayType: jobData?.jobPayType ?? null,
+        jobPayAmount: jobData?.jobPayAmount ?? null,
+        jobWorkHours: jobData?.jobWorkHours ?? null,
+        jobExperience: jobData?.jobExperience ?? null,
+        jobContact: jobData?.jobContact ?? null,
+        jobWorkDate: jobData?.jobWorkDate ?? null,
+        jobDateFlexible: jobData?.jobDateFlexible ?? false,
+        jobGuaranteedHours: jobData?.jobGuaranteedHours ?? null,
+        jobOvertime: jobData?.jobOvertime ?? null,
+        jobTravelPay: jobData?.jobTravelPay ?? false,
+        jobSnacks: jobData?.jobSnacks ?? false,
+        jobDressCode: jobData?.jobDressCode ?? null,
+        jobApplyMethod: jobData?.jobApplyMethod ?? null,
+        eventDate: typeof body.eventDate === "string" ? body.eventDate : null,
+        eventEndDate: typeof body.eventEndDate === "string" ? body.eventEndDate : null,
+        eventPrize: typeof body.eventPrize === "string" ? body.eventPrize.trim() || null : null,
+        eventLink: typeof body.eventLink === "string" ? body.eventLink.trim() || null : null,
+        storeVerified: boardType === "PROMO" ? Boolean(body.storeVerified ?? true) : false,
+        isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,
         promoLocation:
           boardType === "PROMO" || boardType === "SCHEDULE"
-            ? body.promoLocation?.trim() || listing?.jobLocation || null
+            ? (typeof body.promoLocation === "string" ? body.promoLocation.trim() : null) || null
             : null,
         promoTag: boardType === "PROMO" ? body.promoTag?.trim() || null : null,
       },

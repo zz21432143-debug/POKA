@@ -10,8 +10,8 @@ export async function PromoBanners() {
           <h2 className="text-xl font-semibold sm:text-2xl">프리미엄 홍보</h2>
           <p className="text-sm text-muted-foreground">메인 6구좌 · 3열 2줄</p>
         </div>
-        <Link href="/boards/promo/write" className="touch-target inline-flex min-h-11 items-center text-sm text-primary">
-          배너 등록
+        <Link href="/boards/official/write" className="touch-target inline-flex min-h-11 items-center text-sm text-primary">
+          공식 홍보 등록
         </Link>
       </div>
       <ul className="grid grid-cols-3 gap-2 sm:gap-4">
@@ -19,7 +19,7 @@ export async function PromoBanners() {
           <li key={banner.id}>
             {banner.vacant ? (
               <Link
-                href="/boards/promo/write"
+                href="/boards/official/write"
                 className="touch-target flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-primary/50 bg-card px-2 py-6 text-center hover:bg-muted/50 sm:min-h-64"
               >
                 <span className="flex size-12 items-center justify-center rounded-full border border-primary text-2xl text-primary sm:size-14">

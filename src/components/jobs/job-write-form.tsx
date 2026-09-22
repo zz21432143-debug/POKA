@@ -208,7 +208,7 @@ export function JobWriteForm({
       {jobKind === "TEAM" ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="팀 명" value={form.jobCompanyName} onChange={(v) => set("jobCompanyName", v)} placeholder="ACE 딜러팀" />
-          <Field label="주요 근무 지역" value={form.jobLocation} onChange={(v) => set("jobLocation", v)} placeholder="서울 전역" />
+          <Field label="주요 활동 지역" value={form.jobLocation} onChange={(v) => set("jobLocation", v)} placeholder="서울 전역" />
           <Field
             label="주요 이력 및 대회 수상 경력"
             value={form.jobExperience}

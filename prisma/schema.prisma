@@ -111,8 +111,13 @@ model Post {
   /// 정규팀 소속 / 정기 프리랜서 / 단기 이벤트 스태프
   jobWorkType        String?
   jobAlwaysOpen      Boolean   @default(false)
-  /// 대회 일정 YYYY-MM-DD
+  /// 대회 일정 YYYY-MM-DD (시작)
   eventDate          String?
+  eventEndDate       String?
+  eventPrize         String?
+  eventLink          String?
+  /// 검증 매장 공식 홍보
+  storeVerified      Boolean   @default(false)
   /// 유료 상단 고정(추후 결제 연동)
   isPaid             Boolean   @default(false)
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.

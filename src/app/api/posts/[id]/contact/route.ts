@@ -16,14 +16,10 @@ export async function GET(
       where: { id },
       select: { boardType: true, hidden: true, jobContact: true, jobApplyValue: true, jobApplyMethod: true },
     });
-    const listing = post && ["JOBS", "TALENT", "PICKUP"].includes(post.boardType);
-    if (!post || !listing || post.hidden) {
+    if (!post || post.boardType !== "JOBS" || post.hidden) {
       return NextResponse.json({ error: "구인 글을 찾을 수 없습니다." }, { status: 404 });
     }
-    if (post.jobApplyMethod === "사이트 내 직접 지원") {
-      return NextResponse.json({ contact: "이 공고는 게시글 댓글로 직접 지원합니다." });
-    }
-    const contact = post.jobApplyValue || post.jobContact;
+    const contact = post.jobContact || post.jobApplyValue;
     if (!contact) {
       return NextResponse.json({ error: "등록된 연락처가 없습니다." }, { status: 404 });
     }

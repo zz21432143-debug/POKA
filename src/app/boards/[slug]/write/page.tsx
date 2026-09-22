@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
-import { HireForm } from "@/components/listing/hire-form";
-import { BoardListingForm } from "@/components/listing/board-listing-form";
+import { notFound, redirect } from "next/navigation";
+import { ScheduleForm } from "@/components/listing/schedule-form";
+import { OfficialPromoForm } from "@/components/promo/official-promo-form";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { WRITE_HINT, resolveBoardSlug } from "@/lib/nav";
@@ -8,15 +8,24 @@ import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
+const ALIASES: Record<string, string> = {
+  hire: "/boards/jobs/fixed/write",
+  pickup: "/boards/jobs/apply/write",
+  talent: "/boards/jobs/team/write",
+  events: "/boards/schedule/write",
+  promo: "/boards/official/write",
+};
+
 export default async function BoardWritePage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  if (ALIASES[slug]) redirect(ALIASES[slug]);
   const board = resolveBoardSlug(slug);
   if (!board) notFound();
-  if (slug === "free" || slug === "hand-review" || slug === "store-review" || slug === "promo") {
+  if (slug === "free" || slug === "hand-review" || slug === "store-review") {
     notFound();
   }
 
@@ -34,16 +43,10 @@ export default async function BoardWritePage({
         <p className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
           {writeDeniedMessage(board.boardType)}
         </p>
-      ) : "listing" in board && board.listing === "hire" ? (
-        <HireForm hint={hint} />
-      ) : "listing" in board && board.listing === "talent" ? (
-        <BoardListingForm boardType="TALENT" hint={hint} mode="talent" />
-      ) : "listing" in board && board.listing === "pickup" ? (
-        <BoardListingForm boardType="PICKUP" hint={hint} mode="pickup" />
-      ) : "gallery" in board && board.gallery ? (
-        <BoardListingForm boardType={board.boardType} hint={hint} mode="poster" />
       ) : "calendar" in board && board.calendar ? (
-        <BoardListingForm boardType="SCHEDULE" hint={hint} mode="schedule" />
+        <ScheduleForm hint={hint} />
+      ) : "gallery" in board && board.gallery ? (
+        <OfficialPromoForm hint={hint} />
       ) : (
         <BoardWriteForm boardType={board.boardType} hint={hint} />
       )}

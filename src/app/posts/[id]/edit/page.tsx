@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { HireForm } from "@/components/listing/hire-form";
+import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
-import { splitCsv, type CareerReq, type HireListing, type PayType, type WorkType, type ApplyMethod } from "@/lib/listing";
 
 export const dynamic = "force-dynamic";
 
@@ -14,34 +13,43 @@ export default async function EditJobPage({
   const { id } = await params;
   const viewer = await getCurrentUser();
   const post = await prisma.post.findUnique({ where: { id } });
-  if (!post || post.boardType !== "JOBS") notFound();
+  if (!post || post.boardType !== "JOBS" || !post.jobKind) notFound();
   if (!viewer || (post.authorId !== viewer.id && !viewer.isAdmin)) {
     redirect(`/posts/${id}`);
   }
 
-  const initial: Partial<HireListing> = {
-    title: post.title,
-    content: post.content,
-    jobPositions: splitCsv(post.jobPositions),
-    jobLocation: splitCsv(post.jobLocation),
-    jobWorkType: (post.jobWorkType as WorkType) || "",
-    jobExperience: (post.jobExperience as CareerReq) || "",
-    jobPayType: (post.jobPayType as PayType) || "",
-    jobPayAmount: post.jobPayAmount ?? "",
-    jobBenefits: splitCsv(post.jobBenefits),
-    jobApplyMethod: (post.jobApplyMethod as ApplyMethod) || "",
-    jobApplyValue: post.jobApplyValue ?? post.jobContact ?? "",
-    jobWorkDate: post.jobWorkDate ?? "",
-    jobAlwaysOpen: post.jobAlwaysOpen,
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">구인 공고 수정</h1>
-        <p className="mt-1 text-sm text-muted-foreground">포지션·지역·급여 조건을 다시 저장합니다.</p>
+        <h1 className="text-2xl font-semibold">구인 글 수정</h1>
+        <p className="mt-1 text-sm text-muted-foreground">제목은 입력값을 기준으로 다시 만들어집니다.</p>
       </header>
-      <HireForm hint="수정 후에도 목록 카드에 같은 조건이 표시됩니다." postId={post.id} initial={initial} />
+      <JobWriteForm
+        jobKind={post.jobKind}
+        hint="저장하면 목록 제목도 함께 갱신됩니다."
+        postId={post.id}
+        initial={{
+          jobLocation: post.jobLocation ?? "",
+          jobCompanyName: post.jobCompanyName ?? "",
+          jobPayType: post.jobPayType ?? (post.jobKind === "APPLY" ? "시급" : "월급"),
+          jobPayAmount: post.jobPayAmount ?? "",
+          jobSchedule: post.jobSchedule ?? "",
+          jobWorkHours: post.jobWorkHours ?? "",
+          jobBenefits: post.jobBenefits ?? "",
+          jobExperience: post.jobExperience ?? "",
+          jobContact: post.jobContact ?? "",
+          jobWorkDate: post.jobWorkDate ?? "",
+          jobDateFlexible: post.jobDateFlexible,
+          jobGuaranteedHours: post.jobGuaranteedHours ?? "",
+          jobOvertime: post.jobOvertime ?? "가능",
+          jobTravelPay: post.jobTravelPay,
+          jobSnacks: post.jobSnacks,
+          jobDressCode: post.jobDressCode ?? "",
+          jobApplyMethod: post.jobApplyMethod ?? "",
+          content: post.content,
+          isPaid: post.isPaid,
+        }}
+      />
     </div>
   );
 }

@@ -75,7 +75,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
           ]
         : [
             ["팀 명", job.jobCompanyName],
-            ["주요 근무 지역", job.jobLocation],
+            ["주요 활동 지역", job.jobLocation],
             ["이력·수상", job.jobExperience],
             ["근무 혜택", job.jobBenefits],
             ["지원 방법", job.jobApplyMethod],

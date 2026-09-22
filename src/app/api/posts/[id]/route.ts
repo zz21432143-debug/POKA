@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
-import { listingFromBody } from "@/lib/listing";
+import { jobFieldsFromBody } from "@/lib/job-fields";
+import type { JobKind } from "@/generated/prisma/enums";
+
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
 
 export async function PATCH(
   request: Request,
@@ -24,31 +27,36 @@ export async function PATCH(
       return NextResponse.json({ error: "이 글은 구인 수정만 지원합니다." }, { status: 400 });
     }
 
-    const body = (await request.json()) as Record<string, unknown> & { content?: string };
-    const listing = listingFromBody(body);
-    if (!listing.title || listing.title.length < 2) {
-      return NextResponse.json({ error: "공고 제목을 입력하세요." }, { status: 400 });
+    const body = (await request.json()) as Record<string, unknown> & { jobKind?: JobKind; content?: string };
+    const jobKind = (body.jobKind && JOB_KINDS.includes(body.jobKind) ? body.jobKind : post.jobKind) as JobKind | null;
+    if (!jobKind) {
+      return NextResponse.json({ error: "구인 종류를 확인하세요." }, { status: 400 });
     }
+    const jobData = jobFieldsFromBody(body, jobKind);
     const updated = await prisma.post.update({
       where: { id },
       data: {
-        title: listing.title,
+        title: jobData.title,
         content: typeof body.content === "string" ? body.content : post.content,
-        jobKind: null,
-        jobLocation: listing.jobLocation,
-        jobPay: listing.jobPay,
-        jobBenefits: listing.jobBenefits,
-        jobPayType: listing.jobPayType,
-        jobPayAmount: listing.jobPayAmount,
-        jobExperience: listing.jobExperience,
-        jobContact: listing.jobContact,
-        jobWorkDate: listing.jobWorkDate,
-        jobDateFlexible: listing.jobDateFlexible,
-        jobApplyMethod: listing.jobApplyMethod,
-        jobApplyValue: listing.jobApplyValue,
-        jobPositions: listing.jobPositions,
-        jobWorkType: listing.jobWorkType,
-        jobAlwaysOpen: listing.jobAlwaysOpen,
+        jobKind,
+        jobLocation: jobData.jobLocation,
+        jobCompanyName: jobData.jobCompanyName,
+        jobPayType: jobData.jobPayType,
+        jobPayAmount: jobData.jobPayAmount,
+        jobSchedule: jobData.jobSchedule,
+        jobWorkHours: jobData.jobWorkHours,
+        jobBenefits: jobData.jobBenefits,
+        jobExperience: jobData.jobExperience,
+        jobContact: jobData.jobContact,
+        jobWorkDate: jobData.jobWorkDate,
+        jobDateFlexible: jobData.jobDateFlexible,
+        jobGuaranteedHours: jobData.jobGuaranteedHours,
+        jobOvertime: jobData.jobOvertime,
+        jobTravelPay: jobData.jobTravelPay,
+        jobSnacks: jobData.jobSnacks,
+        jobDressCode: jobData.jobDressCode,
+        jobApplyMethod: jobData.jobApplyMethod,
+        jobPay: jobData.jobPay,
       },
     });
     return NextResponse.json({ id: updated.id });

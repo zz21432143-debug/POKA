@@ -29,7 +29,7 @@ export async function getPremiumBanners(): Promise<
         include: { post: true },
       }),
       prisma.post.findMany({
-        where: { boardType: "PROMO", hidden: false },
+        where: { boardType: "PROMO", hidden: false, storeVerified: true },
         orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
       }),
     ]);
@@ -42,7 +42,7 @@ export async function getPremiumBanners(): Promise<
       if (!slot || !slot.enabled) {
         return {
           ...fallback,
-          href: "/boards/promo/write",
+          href: "/boards/official/write",
           title: "홍보 등록 문의",
           sponsor: `구좌 ${fallback.id}`,
           mode: slot?.mode ?? "AUTO",
@@ -86,7 +86,7 @@ export async function getPremiumBanners(): Promise<
 
       return {
         ...fallback,
-        href: "/boards/promo/write",
+        href: "/boards/official/write",
         title: "홍보 등록 문의",
         sponsor: `구좌 ${fallback.id}`,
         mode: "AUTO",
