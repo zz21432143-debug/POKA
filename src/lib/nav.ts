@@ -16,9 +16,9 @@ export type NavGroup = {
 
 export const TOP_NAV = [
   { href: "/", label: "홈" },
-  { href: "/boards/free", label: "게시판" },
-  { href: "/info", label: "정보센터" },
   { href: "/community", label: "커뮤니티" },
+  { href: "/info", label: "정보센터" },
+  { href: "/boards/jobs", label: "구인" },
 ] as const;
 
 export type SidebarIcon =
@@ -108,9 +108,9 @@ export const BOARD_NAV: NavGroup[] = [
     accent: "emerald",
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
-      { href: "/boards/rules", label: "이게 맞나요?", hint: "룰 · 판정" },
+      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
-      { href: "/boards/free", label: "자유게시판", hint: "잡담 · 수다" },
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
       { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개" },
     ],

@@ -1,14 +1,18 @@
 import type { ViewerProfile } from "@/lib/profile";
+import type { SwitchAccount } from "@/lib/switch-account";
 import { MarkImage } from "@/components/layout/mark-image";
+import { AccountSwitcher } from "@/components/layout/account-switcher";
 import Link from "next/link";
 
 export { MarkImage };
 
 export function ProfileWidget({
   profile,
+  accounts = [],
   variant = "full",
 }: {
   profile: ViewerProfile | null;
+  accounts?: SwitchAccount[];
   variant?: "full" | "compact";
 }) {
   if (!profile) {
@@ -68,6 +72,7 @@ export function ProfileWidget({
         보유 포인트{" "}
         <strong className="font-semibold text-foreground">{profile.points.toLocaleString()} P</strong>
       </p>
+      {accounts.length > 0 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
       <div className="mt-3 grid grid-cols-1 gap-2">
         <Link
           href="/shop"

@@ -1,12 +1,21 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { FEATURED_OFFICIAL_POSTERS, OFFICIAL_POSTER_IMAGES } from "../src/lib/official-posters";
+import { HOME_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
 });
 const prisma = new PrismaClient({ adapter });
+
+const TEAM_NAMES = [
+  { slug: "team-a", name: "TOP" },
+  { slug: "team-b", name: "PLIME" },
+  { slug: "team-c", name: "HAM" },
+  { slug: "team-d", name: "ROCKET" },
+  { slug: "team-e", name: "GUNNER" },
+  { slug: "team-f", name: "DOO" },
+] as const;
 
 async function main() {
   const dealer =
@@ -14,8 +23,9 @@ async function main() {
     (await prisma.user.findFirst({ where: { isDealerVerified: true } }));
   if (!dealer) throw new Error("시드 회원이 없습니다. prisma db seed 를 먼저 실행하세요.");
 
+  const visible = [...HOME_OFFICIAL_POSTERS, ...PUBLIC_OFFICIAL_POSTERS.filter((row) => !row.onHome)];
   const ids: string[] = [];
-  for (const [index, poster] of FEATURED_OFFICIAL_POSTERS.entries()) {
+  for (const [index, poster] of visible.entries()) {
     const existing = await prisma.post.findFirst({
       where: { boardType: "PROMO", title: poster.title },
     });
@@ -38,32 +48,27 @@ async function main() {
     ids.push(post.id);
   }
 
+  const publicTitles = PUBLIC_OFFICIAL_POSTERS.map((row) => row.title);
+  await prisma.post.updateMany({
+    where: { boardType: "PROMO", title: { notIn: [...publicTitles] } },
+    data: { hidden: true },
+  });
+
   await prisma.bannerSlot.deleteMany();
   await prisma.bannerSlot.createMany({
-    data: ids.map((postId, index) => ({
-      slot: index + 1,
+    data: [1, 2, 3, 4, 5, 6].map((slot) => ({
+      slot,
       mode: "MANUAL",
       enabled: true,
-      postId,
+      postId: ids[slot - 1] ?? null,
     })),
   });
 
-  const rest = await prisma.post.findMany({
-    where: { boardType: "PROMO", id: { notIn: ids } },
-    orderBy: { createdAt: "desc" },
-  });
-  for (const [index, post] of rest.entries()) {
-    await prisma.post.update({
-      where: { id: post.id },
-      data: {
-        bannerImageUrl: OFFICIAL_POSTER_IMAGES[index % OFFICIAL_POSTER_IMAGES.length],
-        storeVerified: true,
-        hidden: false,
-      },
-    });
+  for (const row of TEAM_NAMES) {
+    await prisma.mark.updateMany({ where: { slug: row.slug }, data: { name: row.name } });
   }
 
-  console.log(`Official posters ready: ${ids.length} featured, ${rest.length} extra`);
+  console.log(`Visible official posters: ${ids.length}`);
 }
 
 main()

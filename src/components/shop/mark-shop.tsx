@@ -146,7 +146,12 @@ function ShopBody({
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Tabs value={kind} onValueChange={(value) => onKind(value as ShopKindId)} className="gap-4">
         <TabsList className="h-auto w-full flex-wrap justify-start gap-1 p-1">
-          {SHOP_KINDS.map((tab) => (
+          {SHOP_KINDS.filter(
+            (tab) =>
+              tab.id === "MARK" ||
+              (tab.id === "FRAME" && catalog.frames.length > 0) ||
+              (tab.id === "EFFECT" && catalog.effects.length > 0),
+          ).map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id} className="min-h-11 flex-none px-4">
               {tab.label}
             </TabsTrigger>

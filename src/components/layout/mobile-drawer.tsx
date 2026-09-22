@@ -11,10 +11,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { BoardNav } from "@/components/layout/board-nav";
+import { ProfileWidget } from "@/components/layout/profile-widget";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import type { ViewerProfile } from "@/lib/profile";
+import type { SwitchAccount } from "@/lib/switch-account";
 
-export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
+export function MobileDrawer({
+  profile,
+  accounts = [],
+}: {
+  profile: ViewerProfile | null;
+  accounts?: SwitchAccount[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -38,6 +46,9 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
           </SheetTitle>
         </SheetHeader>
         <div className="flex flex-1 flex-col overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="mb-3">
+            <ProfileWidget profile={profile} accounts={accounts} />
+          </div>
           <BoardNav onNavigate={() => setOpen(false)} />
           {profile?.isAdmin ? (
             <p className="mt-4 px-3 text-xs text-muted-foreground">관리자 메뉴는 헤더에서 열 수 있습니다.</p>

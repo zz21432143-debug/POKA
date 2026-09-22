@@ -27,11 +27,14 @@ export async function FeaturedPromos() {
         </Link>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        메인 6구좌는 공식 홍보·스폰서 포스터입니다. 빈 칸은 제휴 문의로 연결됩니다.
+        홈에는 진행 중 포스터 3장만 보여 줍니다. 나머지는 공식 홍보 게시판에서 볼 수 있습니다.
       </p>
-      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {banners.map((banner) => (
-          <li key={banner.id} className="mx-auto w-full max-w-[280px] sm:max-w-[320px]">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {banners
+          .filter((banner) => !banner.vacant)
+          .slice(0, 3)
+          .map((banner) => (
+          <li key={banner.id} className="mx-auto w-full max-w-[280px] sm:max-w-none">
             {banner.vacant ? (
               <Link
                 href="/advertise"

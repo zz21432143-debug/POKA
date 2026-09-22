@@ -4,7 +4,7 @@ import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
 import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 import { ATTENDANCE_LINES, catalogPosts, SEED_NICKNAMES } from "../src/lib/seed-catalog";
-import { FEATURED_OFFICIAL_POSTERS } from "../src/lib/official-posters";
+import { HOME_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -73,12 +73,12 @@ async function main() {
       { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
       { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
       { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
-      { slug: "team-a", name: "팀 마크 A", imageUrl: "/images/badges/team_1.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-b", name: "팀 마크 B", imageUrl: "/images/badges/team_2.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-c", name: "팀 마크 C", imageUrl: "/images/badges/team_3.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-d", name: "팀 마크 D", imageUrl: "/images/badges/team_4.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-e", name: "팀 마크 E", imageUrl: "/images/badges/team_5.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-f", name: "팀 마크 F", imageUrl: "/images/badges/team_6.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-a", name: "TOP", imageUrl: "/images/badges/team_1.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-b", name: "PLIME", imageUrl: "/images/badges/team_2.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-c", name: "HAM", imageUrl: "/images/badges/team_3.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-d", name: "ROCKET", imageUrl: "/images/badges/team_4.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-e", name: "GUNNER", imageUrl: "/images/badges/team_5.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+      { slug: "team-f", name: "DOO", imageUrl: "/images/badges/team_6.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
     ].map((data) => prisma.mark.create({ data })),
   );
   const bySlug = Object.fromEntries(marks.map((mark) => [mark.slug, mark]));
@@ -181,17 +181,22 @@ async function main() {
   }
 
   await prisma.bannerSlot.deleteMany();
-  const promoTitles = FEATURED_OFFICIAL_POSTERS.map((row) => row.title);
+  const slotPosters = [...HOME_OFFICIAL_POSTERS, ...PUBLIC_OFFICIAL_POSTERS.filter((row) => !row.onHome)];
   const promoByTitle = Object.fromEntries(
-    createdPosts.filter((post) => promoTitles.includes(post.title)).map((post) => [post.title, post]),
+    createdPosts.filter((post) => slotPosters.some((row) => row.title === post.title)).map((post) => [post.title, post]),
   );
   await prisma.bannerSlot.createMany({
-    data: promoTitles.map((title, index) => ({
-      slot: index + 1,
+    data: [1, 2, 3, 4, 5, 6].map((slot) => ({
+      slot,
       mode: "MANUAL",
       enabled: true,
-      postId: promoByTitle[title]?.id ?? null,
+      postId: promoByTitle[slotPosters[slot - 1]?.title]?.id ?? null,
     })),
+  });
+  const publicTitles = PUBLIC_OFFICIAL_POSTERS.map((row) => row.title);
+  await prisma.post.updateMany({
+    where: { boardType: "PROMO", title: { notIn: [...publicTitles] } },
+    data: { hidden: true },
   });
 
   const attendancePost = await prisma.post.create({

@@ -31,13 +31,13 @@ describe("mark shop catalog", () => {
 
   it("filters team marks for the shop grid", () => {
     const marks = [
-      item({ id: "team-a", name: "팀 마크 A", category: "TEAM" }),
+      item({ id: "team-a", name: "TOP", category: "TEAM" }),
       item({ id: "crown", name: "크라운", category: "LEVEL", pricePoints: 900 }),
       item({ id: "chip", name: "칩", category: "SPECIAL", pricePoints: 120 }),
     ];
     const team = marksInCategory(marks, "TEAM");
     assert.equal(team.length, 1);
-    assert.equal(team[0].name, "팀 마크 A");
+    assert.equal(team[0].name, "TOP");
     assert.equal(team[0].pricePoints, 2000);
   });
 });

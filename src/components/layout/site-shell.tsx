@@ -9,16 +9,23 @@ import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { TalkCta } from "@/components/layout/talk-cta";
 import { SponsorBanner } from "@/components/ads/sponsor-banner";
 import { getViewerProfile } from "@/lib/profile";
+import { listSwitchableUsers } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
 import { getTickerEvents } from "@/lib/ticker";
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   let profile = null;
+  let accounts: Awaited<ReturnType<typeof listSwitchableUsers>> = [];
   let notices: { id: string; title: string; date: string; href: string }[] = [];
   try {
     await ensureTodayAttendancePost();
-    const [viewer, events] = await Promise.all([getViewerProfile(), getTickerEvents()]);
+    const [viewer, events, switchAccounts] = await Promise.all([
+      getViewerProfile(),
+      getTickerEvents(),
+      listSwitchableUsers().catch(() => []),
+    ]);
     profile = viewer;
+    accounts = switchAccounts;
     notices = events.slice(0, 4).map((event) => ({
       id: event.id,
       title: event.message.replace(/^[^ ]+\s/, "").slice(0, 28),
@@ -40,7 +47,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-white [transform:translateZ(0)]">
-        <SiteHeader profile={profile} noticeCount={notices.length || 3} />
+        <SiteHeader profile={profile} accounts={accounts} noticeCount={notices.length || 3} />
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
@@ -54,7 +61,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </main>
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
-            <ProfileWidget profile={profile} />
+            <ProfileWidget profile={profile} accounts={accounts} />
             <SponsorBanner />
             <PromoApplyCta />
             <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />

@@ -5,19 +5,22 @@ import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
 import type { ViewerProfile } from "@/lib/profile";
+import type { SwitchAccount } from "@/lib/switch-account";
 
 export function SiteHeader({
   profile,
+  accounts = [],
   noticeCount = 0,
 }: {
   profile: ViewerProfile | null;
+  accounts?: SwitchAccount[];
   noticeCount?: number;
 }) {
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
     <header className="border-b border-border bg-white pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.25rem] sm:px-5">
-        <MobileDrawer profile={profile} />
+        <MobileDrawer profile={profile} accounts={accounts} />
         <Link href="/" className="touch-target flex min-h-11 shrink-0 items-center rounded-lg pr-2">
           <PokaLogo className="text-[1.55rem] sm:text-[1.7rem]" />
           <span className="sr-only">POKA 홈</span>
