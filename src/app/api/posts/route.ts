@@ -7,6 +7,7 @@ import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
 import { ensureBannerSlots } from "@/lib/premium-banners";
+import { jobFieldsFromBody } from "@/lib/job-fields";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 
 const BOARDS: BoardType[] = ["FREE", "HAND_REVIEW", "ANONYMOUS_REVIEW", "JOBS", "PROMO"];
@@ -27,12 +28,6 @@ export async function POST(request: Request) {
       content?: string;
       handReview?: unknown;
       jobKind?: JobKind;
-      jobLocation?: string;
-      jobPay?: string;
-      jobSchedule?: string;
-      jobHeadcount?: string;
-      jobBenefits?: string;
-      jobTeamGoal?: string;
       isPaid?: boolean;
       bannerSlot?: number | null;
       bannerImageUrl?: string;
@@ -45,9 +40,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "게시판을 확인하세요." }, { status: 400 });
     }
 
-    const title = body.title?.trim() ?? "";
     const content = body.content?.trim() ?? "";
-    if (title.length < 2) {
+    let title = body.title?.trim() ?? "";
+    if (boardType !== "JOBS" && title.length < 2) {
       return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
     }
 
@@ -65,11 +60,14 @@ export async function POST(request: Request) {
     }
 
     let jobKind: JobKind | null = null;
+    let jobData: ReturnType<typeof jobFieldsFromBody> | null = null;
     if (boardType === "JOBS") {
       if (!body.jobKind || !JOB_KINDS.includes(body.jobKind)) {
         return NextResponse.json({ error: "구인 종류를 선택하세요." }, { status: 400 });
       }
       jobKind = body.jobKind;
+      jobData = jobFieldsFromBody(body as Record<string, unknown>, jobKind);
+      title = jobData.title;
     }
 
     let bannerSlot: number | null = null;
@@ -103,12 +101,26 @@ export async function POST(request: Request) {
         handReviewJson,
         authorIp: ip,
         jobKind,
-        jobLocation: body.jobLocation?.trim() || null,
-        jobPay: body.jobPay?.trim() || null,
-        jobSchedule: body.jobSchedule?.trim() || null,
-        jobHeadcount: body.jobHeadcount?.trim() || null,
-        jobBenefits: body.jobBenefits?.trim() || null,
-        jobTeamGoal: body.jobTeamGoal?.trim() || null,
+        jobLocation: jobData?.jobLocation ?? null,
+        jobPay: jobData?.jobPay ?? null,
+        jobSchedule: jobData?.jobSchedule ?? null,
+        jobHeadcount: null,
+        jobBenefits: jobData?.jobBenefits ?? null,
+        jobTeamGoal: null,
+        jobCompanyName: jobData?.jobCompanyName ?? null,
+        jobPayType: jobData?.jobPayType ?? null,
+        jobPayAmount: jobData?.jobPayAmount ?? null,
+        jobWorkHours: jobData?.jobWorkHours ?? null,
+        jobExperience: jobData?.jobExperience ?? null,
+        jobContact: jobData?.jobContact ?? null,
+        jobWorkDate: jobData?.jobWorkDate ?? null,
+        jobDateFlexible: jobData?.jobDateFlexible ?? false,
+        jobGuaranteedHours: jobData?.jobGuaranteedHours ?? null,
+        jobOvertime: jobData?.jobOvertime ?? null,
+        jobTravelPay: jobData?.jobTravelPay ?? false,
+        jobSnacks: jobData?.jobSnacks ?? false,
+        jobDressCode: jobData?.jobDressCode ?? null,
+        jobApplyMethod: jobData?.jobApplyMethod ?? null,
         isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,

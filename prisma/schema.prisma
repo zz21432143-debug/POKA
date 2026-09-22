@@ -73,13 +73,27 @@ model Post {
   attendanceDate     String?   @unique
   jobKind            JobKind?
   jobLocation        String?
-  /// 급여형태: 월급 / 연봉
+  /// 레거시 급여 태그. 신규 글은 jobPayType과 동일하게 채웁니다.
   jobPay             String?
   /// 근무일수: 주5일 등
   jobSchedule        String?
   jobHeadcount       String?
   jobBenefits        String?
   jobTeamGoal        String?
+  jobCompanyName     String?
+  jobPayType         String?
+  jobPayAmount       String?
+  jobWorkHours       String?
+  jobExperience      String?
+  jobContact         String?
+  jobWorkDate        String?
+  jobDateFlexible    Boolean   @default(false)
+  jobGuaranteedHours String?
+  jobOvertime        String?
+  jobTravelPay       Boolean   @default(false)
+  jobSnacks          Boolean   @default(false)
+  jobDressCode       String?
+  jobApplyMethod     String?
   /// 유료 상단 고정(추후 결제 연동)
   isPaid             Boolean   @default(false)
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.

@@ -58,7 +58,7 @@ export const JOB_KINDS = {
   },
   apply: {
     title: "지원 딜러 구인",
-    blurb: "지원서를 받는 딜러 모집",
+    blurb: "단기·스팟 딜러 지원자 모집",
     kind: "APPLY" as const,
   },
   team: {

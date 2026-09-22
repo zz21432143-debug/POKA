@@ -13,6 +13,9 @@ import { parseHandReview } from "@/lib/hand-review";
 import { getCurrentUser } from "@/lib/current-user";
 import { isAnonymousBoard } from "@/lib/request";
 import { JOB_KIND_LABEL } from "@/lib/nav";
+import { JobFacts } from "@/components/jobs/job-facts";
+import { ContactReveal } from "@/components/jobs/contact-reveal";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -67,34 +70,23 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
         </div>
         <h1 className="mt-2 text-2xl font-semibold">{post.title}</h1>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <AuthorChip author={post.author} anonymous={anonymous} />
+          {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+            <Link href={`/posts/${post.id}/edit`} className="text-sm text-primary">
+              수정
+            </Link>
+          ) : null}
         </div>
       </header>
 
+      {post.jobKind ? <JobFacts job={post} /> : null}
+
       {post.jobKind ? (
-        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-4">
-          <div>
-            <dt className="text-xs text-muted-foreground">근무지</dt>
-            <dd>{post.jobLocation || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">급여형태</dt>
-            <dd>{post.jobPay || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">근무일수</dt>
-            <dd>{post.jobSchedule || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">복리후생</dt>
-            <dd>{post.jobBenefits || "—"}</dd>
-          </div>
-          <div className="col-span-2 sm:col-span-4">
-            <dt className="text-xs text-muted-foreground">팀 목표</dt>
-            <dd>{post.jobTeamGoal || "—"}</dd>
-          </div>
-        </dl>
+        <section className="rounded-xl border border-border bg-card p-3">
+          <p className="mb-2 text-xs text-muted-foreground">연락처</p>
+          <ContactReveal contact={post.jobContact} loggedIn={Boolean(viewer)} />
+        </section>
       ) : null}
 
       {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (

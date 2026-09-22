@@ -17,43 +17,35 @@ export default async function JobBoardPage({
   const job = resolveJobKind(kind);
   if (!job) notFound();
 
-  let jobs: {
-    id: string;
-    title: string;
-    jobKind: string | null;
-    jobLocation: string | null;
-    jobPay: string | null;
-    jobSchedule: string | null;
-    jobBenefits: string | null;
-    jobTeamGoal: string | null;
-    isPaid: boolean;
-    authorNickname: string | null;
-    authorLevel: number | null;
-    authorMark: string | null;
-  }[] = [];
-  try {
-    const rows = await prisma.post.findMany({
-      where: { boardType: "JOBS", jobKind: job.kind, hidden: false },
-      orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
-      include: { author: { select: { nickname: true, level: true, profileMarkImageUrl: true } } },
-    });
-    jobs = rows.map((post) => ({
-      id: post.id,
-      title: post.title,
-      jobKind: post.jobKind,
-      jobLocation: post.jobLocation,
-      jobPay: post.jobPay,
-      jobSchedule: post.jobSchedule,
-      jobBenefits: post.jobBenefits,
-      jobTeamGoal: post.jobTeamGoal,
-      isPaid: post.isPaid,
-      authorNickname: post.author?.nickname ?? null,
-      authorLevel: post.author?.level ?? null,
-      authorMark: post.author?.profileMarkImageUrl ?? null,
-    }));
-  } catch {
-    jobs = [];
-  }
+  const rows = await prisma.post.findMany({
+    where: { boardType: "JOBS", jobKind: job.kind, hidden: false },
+    orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
+    include: { author: { select: { nickname: true, level: true, profileMarkImageUrl: true } } },
+  });
+  const jobs = rows.map((post) => ({
+    id: post.id,
+    title: post.title,
+    isPaid: post.isPaid,
+    authorNickname: post.author?.nickname ?? null,
+    authorLevel: post.author?.level ?? null,
+    jobKind: post.jobKind,
+    jobLocation: post.jobLocation,
+    jobCompanyName: post.jobCompanyName,
+    jobPayType: post.jobPayType,
+    jobPayAmount: post.jobPayAmount,
+    jobSchedule: post.jobSchedule,
+    jobWorkHours: post.jobWorkHours,
+    jobBenefits: post.jobBenefits,
+    jobExperience: post.jobExperience,
+    jobWorkDate: post.jobWorkDate,
+    jobDateFlexible: post.jobDateFlexible,
+    jobGuaranteedHours: post.jobGuaranteedHours,
+    jobOvertime: post.jobOvertime,
+    jobTravelPay: post.jobTravelPay,
+    jobSnacks: post.jobSnacks,
+    jobDressCode: post.jobDressCode,
+    jobApplyMethod: post.jobApplyMethod,
+  }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,7 +53,7 @@ export default async function JobBoardPage({
         <div>
           <h1 className="text-2xl font-semibold">{job.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {job.blurb}. 유료 고정(is_paid) 글이 위에 표시됩니다.
+            {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다.
           </p>
         </div>
         <Link

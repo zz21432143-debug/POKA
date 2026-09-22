@@ -6,27 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { BoardType, JobKind } from "@/generated/prisma/enums";
+import type { BoardType } from "@/generated/prisma/enums";
 import { POST_EXP } from "@/lib/rewards";
 
 export function BoardWriteForm({
   boardType,
-  jobKind,
   hint,
 }: {
   boardType: BoardType;
-  jobKind?: JobKind;
   hint: string;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [jobLocation, setJobLocation] = useState("");
-  const [jobPay, setJobPay] = useState("월급");
-  const [jobSchedule, setJobSchedule] = useState("");
-  const [jobBenefits, setJobBenefits] = useState("");
-  const [jobTeamGoal, setJobTeamGoal] = useState("");
-  const [isPaid, setIsPaid] = useState(false);
   const [bannerSlot, setBannerSlot] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [promoLocation, setPromoLocation] = useState("");
@@ -45,13 +37,6 @@ export function BoardWriteForm({
           boardType,
           title,
           content,
-          jobKind,
-          jobLocation,
-          jobPay,
-          jobSchedule,
-          jobBenefits,
-          jobTeamGoal,
-          isPaid,
           bannerSlot: bannerSlot ? Number(bannerSlot) : null,
           bannerImageUrl,
           promoLocation,
@@ -77,40 +62,6 @@ export function BoardWriteForm({
         <Label htmlFor="title">제목</Label>
         <Input id="title" className="h-11" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
-      {boardType === "JOBS" ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="근무지" value={jobLocation} onChange={setJobLocation} placeholder="강남" />
-          <div className="grid gap-2">
-            <Label htmlFor="pay-type">급여형태</Label>
-            <select
-              id="pay-type"
-              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
-              value={jobPay}
-              onChange={(event) => setJobPay(event.target.value)}
-            >
-              <option value="월급">월급</option>
-              <option value="연봉">연봉</option>
-            </select>
-          </div>
-          <Field label="근무일수" value={jobSchedule} onChange={setJobSchedule} placeholder="주5일" />
-          <Field label="복리후생" value={jobBenefits} onChange={setJobBenefits} placeholder="식대 · 기숙사" />
-          <Field
-            label="팀 목표"
-            value={jobTeamGoal}
-            onChange={setJobTeamGoal}
-            placeholder="캐주얼 테이블 안정 운영"
-          />
-          <label className="col-span-full flex min-h-11 items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={isPaid}
-              onChange={(event) => setIsPaid(event.target.checked)}
-              className="size-5"
-            />
-            유료 상단 고정 플래그 (is_paid, 결제 연동 예정)
-          </label>
-        </div>
-      ) : null}
       {boardType === "PROMO" ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="매장/장소" value={promoLocation} onChange={setPromoLocation} placeholder="강남" />
