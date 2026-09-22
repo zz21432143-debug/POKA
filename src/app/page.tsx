@@ -1,9 +1,7 @@
 import { PromoBanners } from "@/components/home/promo-banners";
-import { LedTicker } from "@/components/home/led-ticker";
 import { PostList } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
 import { BOARD_NAV } from "@/lib/nav";
-import { getTickerEvents } from "@/lib/ticker";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -17,17 +15,13 @@ export default async function HomePage() {
     upvoteCount: number;
     createdAt: string;
   }[] = [];
-  let ticker: { id: string; message: string; href: string }[] = [];
   try {
-    const [rows, events] = await Promise.all([
-      prisma.post.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 8,
-        where: { isAttendanceThread: false, hidden: false },
-        include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
-      }),
-      getTickerEvents(),
-    ]);
+    const rows = await prisma.post.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      where: { isAttendanceThread: false, hidden: false },
+      include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
+    });
     posts = rows.map((post) => ({
       id: post.id,
       boardType: post.boardType,
@@ -36,18 +30,12 @@ export default async function HomePage() {
       upvoteCount: post.upvoteCount,
       createdAt: post.createdAt.toISOString(),
     }));
-    ticker = events.map((event) => ({
-      id: event.id,
-      message: event.message,
-      href: event.href,
-    }));
   } catch {
     posts = [];
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <LedTicker items={ticker} />
       <PromoBanners />
       <section>
         <div className="mb-3 flex items-center justify-between">

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "펠트클럽 — 포커·딜러 커뮤니티",
-  description: "포커 플레이어와 딜러를 위한 반응형 커뮤니티.",
+  title: "POKA — 포커·딜러 커뮤니티",
+  description: "POKA는 포커 플레이어와 딜러를 위한 반응형 커뮤니티입니다.",
 };
 
 export const viewport: Viewport = {

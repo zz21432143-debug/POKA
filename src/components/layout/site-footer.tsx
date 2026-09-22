@@ -10,7 +10,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border/80 bg-background/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        <p className="text-sm text-muted-foreground">펠트클럽 · 포커·딜러 커뮤니티</p>
+        <p className="text-sm text-muted-foreground">POKA · 포커·딜러 커뮤니티</p>
         <nav aria-label="약관 및 소개" className="flex flex-wrap gap-x-4 gap-y-2">
           {LINKS.map((link) => (
             <Link

@@ -1,4 +1,4 @@
-// Felt Club — 포커/딜러 커뮤니티 스키마
+// POKA — 포커/딜러 커뮤니티 스키마
 // SQLite는 로컬 개발용. 이후 PostgreSQL로 전환해도 모델 구조는 동일하게 유지합니다.
 
 generator client {

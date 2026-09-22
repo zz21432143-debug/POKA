@@ -5,7 +5,7 @@ export default function PrivacyPage() {
       <p className="mt-3 text-sm text-muted-foreground">시행일 2026-09-22</p>
       <section className="mt-6 space-y-4 text-[15px] leading-7">
         <p>
-          펠트클럽은 서비스 제공을 위해 닉네임, 레벨·경험치, 출석 기록, 그리고 게시 시
+          POKA는 서비스 제공을 위해 닉네임, 레벨·경험치, 출석 기록, 그리고 게시 시
           접속 IP를 처리합니다.
         </p>
         <p>
