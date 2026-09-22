@@ -136,3 +136,8 @@
     radial-gradient(circle at 1px 1px, oklch(1 0 0 / 0.04) 1px, transparent 0);
   background-size: auto, 18px 18px;
 }
+
+.touch-target {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

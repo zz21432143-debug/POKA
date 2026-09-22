@@ -28,7 +28,7 @@ async function main() {
         nickname: "펠트딜러",
         profileMarkImageUrl: "/marks/dealer.svg",
         level: 8,
-        exp: 6200,
+        exp: 7400,
         points: 1840,
         isDealerVerified: true,
       },
