@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { grantRewards } from "@/lib/exp";
 import { COMMENT_EXP, COMMENT_POINTS } from "@/lib/rewards";
 import { checkInAttendance } from "@/lib/attendance";
+import { clientIp } from "@/lib/request";
+import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
 
 export async function POST(
   request: Request,
@@ -26,11 +28,22 @@ export async function POST(
     if (!post) {
       return NextResponse.json({ error: "게시글을 찾을 수 없습니다." }, { status: 404 });
     }
+    if (post.hidden) {
+      return NextResponse.json({ error: "숨김 처리된 글입니다." }, { status: 403 });
+    }
 
     if (post.isAttendanceThread) {
       const result = await checkInAttendance(user.id, content);
       return NextResponse.json({ attendance: true, ...result });
     }
+
+    const ip = clientIp(request);
+    await assertWriteCooldown({
+      kind: "comment",
+      userId: user.id,
+      ip,
+      isAdmin: user.isAdmin,
+    });
 
     const comment = await prisma.comment.create({
       data: {
@@ -41,8 +54,24 @@ export async function POST(
       },
     });
     await grantRewards(user.id, COMMENT_EXP, COMMENT_POINTS);
+    await prisma.user.update({ where: { id: user.id }, data: { lastCommentAt: new Date() } });
+    if (post.boardType === "ANONYMOUS_REVIEW") {
+      await writeAudit({
+        kind: "ANONYMOUS_COMMENT",
+        userId: user.id,
+        ip,
+        postId: post.id,
+        detail: content.slice(0, 80),
+      });
+    }
     return NextResponse.json({ id: comment.id, exp: COMMENT_EXP });
   } catch (error) {
+    if (error instanceof CoolDownError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
+      );
+    }
     const message = error instanceof Error ? error.message : "댓글 작성에 실패했습니다.";
     const status = message.includes("이미 출석") ? 409 : 400;
     return NextResponse.json({ error: message }, { status });

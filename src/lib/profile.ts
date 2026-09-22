@@ -7,6 +7,7 @@ export type ViewerProfile = {
   exp: number;
   points: number;
   isDealerVerified: boolean;
+  isAdmin: boolean;
   attendanceStreak: number;
   lastAttendanceDate: string | null;
   currentLevelExp: number;
@@ -26,6 +27,7 @@ export async function toViewerProfile(user: {
   exp: number;
   points: number;
   isDealerVerified: boolean;
+  isAdmin?: boolean;
   attendanceStreak?: number;
   lastAttendanceDate?: string | null;
 }): Promise<ViewerProfile> {
@@ -47,6 +49,7 @@ export async function toViewerProfile(user: {
     exp: user.exp,
     points: user.points,
     isDealerVerified: user.isDealerVerified,
+    isAdmin: Boolean(user.isAdmin),
     attendanceStreak: user.attendanceStreak ?? 0,
     lastAttendanceDate: user.lastAttendanceDate ?? null,
     currentLevelExp,

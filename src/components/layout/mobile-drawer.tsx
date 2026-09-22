@@ -51,6 +51,24 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
           >
             마크 상점
           </Link>
+          {profile?.isAdmin ? (
+            <>
+              <Link
+                href="/admin/banners"
+                onClick={() => setOpen(false)}
+                className="touch-target flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted"
+              >
+                배너 구좌
+              </Link>
+              <Link
+                href="/admin/reports"
+                onClick={() => setOpen(false)}
+                className="touch-target flex min-h-11 items-center rounded-lg px-3 text-sm font-medium hover:bg-muted"
+              >
+                신고 처리
+              </Link>
+            </>
+          ) : null}
           <BoardNav onNavigate={() => setOpen(false)} />
           <ProfileWidget profile={profile} />
         </div>

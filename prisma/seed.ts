@@ -38,6 +38,9 @@ const SAMPLE_HAND = {
 };
 
 async function main() {
+  await prisma.writeThrottle.deleteMany();
+  await prisma.auditLog.deleteMany();
+  await prisma.bannerSlot.deleteMany();
   await prisma.postVote.deleteMany();
   await prisma.report.deleteMany();
   await prisma.dailyAttendance.deleteMany();
@@ -76,6 +79,7 @@ async function main() {
       exp: 7400,
       points: 1840,
       isDealerVerified: true,
+      isAdmin: true,
       lastAttendanceDate: yesterday,
       attendanceStreak: 5,
     },
@@ -138,7 +142,7 @@ async function main() {
     },
   });
 
-  await prisma.post.create({
+  const reviewPost = await prisma.post.create({
     data: {
       boardType: BoardType.ANONYMOUS_REVIEW,
       authorId: newbie.id,
@@ -147,6 +151,24 @@ async function main() {
       upvoteCount: 9,
       downvoteCount: 2,
       authorIp: "198.51.100.44",
+    },
+  });
+  await prisma.auditLog.create({
+    data: {
+      kind: "ANONYMOUS_POST",
+      userId: newbie.id,
+      ip: "198.51.100.44",
+      postId: reviewPost.id,
+      detail: reviewPost.title,
+    },
+  });
+  await prisma.report.create({
+    data: {
+      postId: reviewPost.id,
+      reporterId: regular.id,
+      reason: "사실 확인이 필요한 루머로 보입니다.",
+      reporterIp: "203.0.113.10",
+      status: "PENDING",
     },
   });
 
@@ -204,7 +226,7 @@ async function main() {
       authorIp: "192.0.2.8",
     },
   });
-  await prisma.post.create({
+  const promoNight = await prisma.post.create({
     data: {
       boardType: BoardType.PROMO,
       authorId: dealer.id,
@@ -225,6 +247,16 @@ async function main() {
       bannerImageUrl: "/banners/slot-2.svg",
       authorIp: "203.0.113.21",
     },
+  });
+  await prisma.bannerSlot.createMany({
+    data: [
+      { slot: 1, mode: "MANUAL", enabled: true, postId: promoNight.id },
+      { slot: 2, mode: "AUTO", enabled: true },
+      { slot: 3, mode: "AUTO", enabled: true },
+      { slot: 4, mode: "AUTO", enabled: true },
+      { slot: 5, mode: "AUTO", enabled: false },
+      { slot: 6, mode: "AUTO", enabled: true },
+    ],
   });
 
   const attendancePost = await prisma.post.create({

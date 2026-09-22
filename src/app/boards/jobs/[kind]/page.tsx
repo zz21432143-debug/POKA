@@ -32,7 +32,7 @@ export default async function JobBoardPage({
   }[] = [];
   try {
     const rows = await prisma.post.findMany({
-      where: { boardType: "JOBS", jobKind: job.kind },
+      where: { boardType: "JOBS", jobKind: job.kind, hidden: false },
       orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
       include: { author: { select: { nickname: true, level: true, profileMarkImageUrl: true } } },
     });

@@ -120,7 +120,7 @@ export function HandEditor() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex max-w-full flex-col gap-6 overflow-x-clip">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
         핸드리뷰 작성 시 EXP <strong>+{POST_EXP.HAND_REVIEW}</strong> (전체 게시판 중 최고)
       </p>
@@ -157,20 +157,20 @@ export function HandEditor() {
           ))}
         </div>
 
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <span className="text-xs text-muted-foreground">Hero</span>
+        <div className="mb-3 flex max-w-full flex-wrap items-center gap-2 overflow-x-clip sm:gap-3">
+          <span className="shrink-0 text-xs text-muted-foreground">Hero</span>
           {hand.heroCards.map((code) => (
             <PlayingCard key={code} code={code} onClick={() => removeFrom("hero", code)} />
           ))}
           {hand.heroCards.length < 2 ? <CardSlot label="+" onClick={() => setSlot("hero")} /> : null}
-          <span className="ml-2 text-xs text-muted-foreground">보드</span>
+          <span className="ml-2 shrink-0 text-xs text-muted-foreground">보드</span>
           {hand.board.map((code) => (
             <PlayingCard key={code} code={code} onClick={() => removeFrom("board", code)} />
           ))}
           {hand.board.length < 5 ? <CardSlot label="+" onClick={() => setSlot("board")} /> : null}
         </div>
         {hand.villainCards.length > 0 || slot === "villain" ? (
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="mb-3 flex max-w-full flex-wrap items-center gap-2 overflow-x-clip sm:gap-3">
             <span className="text-xs text-muted-foreground">Villain</span>
             {hand.villainCards.map((code) => (
               <PlayingCard key={code} code={code} onClick={() => removeFrom("villain", code)} />
@@ -182,7 +182,7 @@ export function HandEditor() {
           {SUITS.map((suit) => (
             <div key={suit.code} className="flex items-center gap-2">
               <span className="w-6 text-center text-sm">{suit.label}</span>
-              <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto pb-1">
+              <div className="card-scroller flex min-w-0 flex-1 gap-1 overflow-x-auto pb-1">
                 {allCardCodes()
                   .filter((code) => code.endsWith(suit.code))
                   .map((code) => (
@@ -206,7 +206,7 @@ export function HandEditor() {
           <div>
             <Label>Hero 포지션</Label>
             <select
-              className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-2"
+              className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
               value={hand.heroPosition}
               onChange={(event) => setHand((prev) => ({ ...prev, heroPosition: event.target.value }))}
             >
@@ -218,7 +218,7 @@ export function HandEditor() {
           <div>
             <Label>Villain 포지션</Label>
             <select
-              className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-2"
+              className="mt-1 h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
               value={hand.villainPosition}
               onChange={(event) =>
                 setHand((prev) => ({ ...prev, villainPosition: event.target.value }))

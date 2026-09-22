@@ -35,6 +35,9 @@ model User {
   exp                 Int      @default(0)
   points              Int      @default(0)
   isDealerVerified    Boolean  @default(false)
+  isAdmin             Boolean  @default(false)
+  lastPostAt          DateTime?
+  lastCommentAt       DateTime?
   lastAttendanceDate  String?
   attendanceStreak    Int      @default(0)
   createdAt           DateTime @default(now())
@@ -49,6 +52,7 @@ model User {
 
   @@index([level])
   @@index([isDealerVerified])
+  @@index([isAdmin])
 }
 
 model Post {
@@ -75,6 +79,7 @@ model Post {
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.
   bannerSlot         Int?      @unique
   bannerImageUrl     String?
+  hidden             Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -82,11 +87,14 @@ model Post {
   dailyAttendances DailyAttendance[]
   votes            PostVote[]
   reports          Report[]
+  bannerSlots      BannerSlot[]
 
   @@index([boardType, createdAt])
   @@index([authorId])
   @@index([isAttendanceThread, attendanceDate])
   @@index([jobKind, isPaid])
+  @@index([hidden, boardType, createdAt])
+  @@index([authorIp, createdAt])
 }
 
 model Comment {
@@ -140,9 +148,41 @@ model Report {
   reporterId String
   reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
   reason     String
+  reporterIp String?
+  status     String   @default("PENDING")
   createdAt  DateTime @default(now())
 
   @@unique([postId, reporterId])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  kind      String
+  userId    String?
+  ip        String
+  postId    String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([kind, createdAt])
+  @@index([ip, createdAt])
+  @@index([userId, createdAt])
+}
+
+model WriteThrottle {
+  key    String   @id
+  lastAt DateTime
+}
+
+/// 메인 프리미엄 배너 1~6 구좌. MANUAL은 지정 글, AUTO는 최신 홍보글.
+model BannerSlot {
+  slot      Int      @id
+  mode      String   @default("AUTO")
+  enabled   Boolean  @default(true)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+  updatedAt DateTime @updatedAt
 }
 
 model Mark {

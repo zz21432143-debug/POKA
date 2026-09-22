@@ -5,6 +5,8 @@ import { grantRewards } from "@/lib/exp";
 import { parseHandReview, validateHandReview } from "@/lib/hand-review";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
+import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
+import { ensureBannerSlots } from "@/lib/premium-banners";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 
 const BOARDS: BoardType[] = ["FREE", "HAND_REVIEW", "ANONYMOUS_REVIEW", "JOBS", "PROMO"];
@@ -16,6 +18,8 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "로그인된 회원이 없습니다." }, { status: 401 });
     }
+
+    const ip = clientIp(request);
 
     const body = (await request.json()) as {
       boardType?: BoardType;
@@ -79,6 +83,13 @@ export async function POST(request: Request) {
       bannerImageUrl = body.bannerImageUrl?.trim() || `/banners/slot-${slot}.svg`;
     }
 
+    await assertWriteCooldown({
+      kind: "post",
+      userId: user.id,
+      ip,
+      isAdmin: user.isAdmin,
+    });
+
     const post = await prisma.post.create({
       data: {
         boardType,
@@ -86,7 +97,7 @@ export async function POST(request: Request) {
         title,
         content,
         handReviewJson,
-        authorIp: clientIp(request),
+        authorIp: ip,
         jobKind,
         jobLocation: body.jobLocation?.trim() || null,
         jobPay: body.jobPay?.trim() || null,
@@ -99,6 +110,25 @@ export async function POST(request: Request) {
     });
 
     await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
+    await prisma.user.update({ where: { id: user.id }, data: { lastPostAt: new Date() } });
+
+    if (boardType === "ANONYMOUS_REVIEW") {
+      await writeAudit({
+        kind: "ANONYMOUS_POST",
+        userId: user.id,
+        ip,
+        postId: post.id,
+        detail: title.slice(0, 80),
+      });
+    }
+
+    if (bannerSlot) {
+      await ensureBannerSlots();
+      await prisma.bannerSlot.update({
+        where: { slot: bannerSlot },
+        data: { mode: "MANUAL", postId: post.id, enabled: true },
+      });
+    }
 
     return NextResponse.json({
       id: post.id,
@@ -107,6 +137,12 @@ export async function POST(request: Request) {
       anonymous: boardType === "ANONYMOUS_REVIEW",
     });
   } catch (error) {
+    if (error instanceof CoolDownError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
+      );
+    }
     const message = error instanceof Error ? error.message : "저장에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -41,6 +41,7 @@ export default async function PostDetailPage({
   }
   if (!post) notFound();
   if (post.isAttendanceThread) redirect("/attendance");
+  if (post.hidden && !viewer?.isAdmin) notFound();
 
   const anonymous = isAnonymousBoard(post.boardType);
   const hand = parseHandReview(post.handReviewJson);

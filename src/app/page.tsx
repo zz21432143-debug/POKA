@@ -19,7 +19,7 @@ export default async function HomePage() {
     const rows = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
-      where: { isAttendanceThread: false },
+      where: { isAttendanceThread: false, hidden: false },
       include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
     });
     posts = rows.map((post) => ({

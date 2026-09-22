@@ -16,9 +16,9 @@ export function PlayingCard({
 }) {
   const parsed = parseCard(code);
   const sizes = {
-    sm: "h-11 w-8 text-[11px]",
-    md: "h-14 w-10 text-sm",
-    lg: "h-20 w-14 text-base",
+    sm: "h-11 min-h-11 w-8 shrink-0 text-[11px]",
+    md: "h-12 min-h-11 w-9 shrink-0 text-sm sm:h-14 sm:w-10",
+    lg: "h-12 min-h-11 w-9 shrink-0 text-sm sm:h-20 sm:w-14 sm:text-base",
   };
 
   const inner = parsed ? (
@@ -61,7 +61,7 @@ export function CardSlot({
     <button
       type="button"
       onClick={onClick}
-      className="touch-target inline-flex h-14 w-10 flex-col items-center justify-center rounded-md border border-dashed border-muted-foreground/50 text-[10px] text-muted-foreground"
+      className="touch-target inline-flex h-12 w-9 shrink-0 flex-col items-center justify-center rounded-md border border-dashed border-muted-foreground/50 text-[10px] text-muted-foreground sm:h-14 sm:w-10"
     >
       {label}
     </button>

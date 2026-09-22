@@ -28,7 +28,7 @@ export default async function BoardPage({
   }[] = [];
   try {
     const rows = await prisma.post.findMany({
-      where: { boardType: board.boardType, isAttendanceThread: false },
+      where: { boardType: board.boardType, isAttendanceThread: false, hidden: false },
       orderBy: { createdAt: "desc" },
       include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
     });

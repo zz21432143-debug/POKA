@@ -125,7 +125,15 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
   }
 }
 
@@ -140,4 +148,17 @@
 .touch-target {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+.card-scroller {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+input,
+select,
+textarea,
+button {
+  touch-action: manipulation;
 }

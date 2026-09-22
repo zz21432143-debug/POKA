@@ -9,7 +9,7 @@ import {
 
 export function HandViewer({ hand }: { hand: HandReviewData }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
+    <section className="max-w-full overflow-x-clip rounded-xl border border-border bg-card p-3 sm:p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs text-primary">그래픽 핸드 뷰어</p>
@@ -18,7 +18,7 @@ export function HandViewer({ hand }: { hand: HandReviewData }) {
             {hand.effectiveBb ? ` · ${hand.effectiveBb}bb` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex max-w-full flex-wrap items-center gap-2 overflow-x-clip">
           <span className="text-xs text-muted-foreground">Hero</span>
           {hand.heroCards.map((code) => (
             <PlayingCard key={code} code={code} size="lg" />
@@ -51,7 +51,7 @@ export function HandViewer({ hand }: { hand: HandReviewData }) {
               {actions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">액션 없음</p>
               ) : (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="card-scroller flex max-w-full flex-nowrap items-center gap-2 overflow-x-auto">
                   {actions.map((row, index) => (
                     <div key={`${street}-${index}`} className="flex items-center gap-2">
                       {index > 0 ? (

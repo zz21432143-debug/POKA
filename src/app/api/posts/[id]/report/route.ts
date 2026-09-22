@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
+import { clientIp } from "@/lib/request";
+import {
+  CoolDownError,
+  REPORT_HIDE_THRESHOLD,
+  assertWriteCooldown,
+  writeAudit,
+} from "@/lib/security";
 
 export async function POST(
   request: Request,
@@ -29,17 +36,50 @@ export async function POST(
       return NextResponse.json({ error: "내 글은 신고할 수 없습니다." }, { status: 400 });
     }
 
+    const ip = clientIp(request);
+    await assertWriteCooldown({
+      kind: "report",
+      userId: user.id,
+      ip,
+      isAdmin: user.isAdmin,
+    });
     try {
       await prisma.report.create({
-        data: { postId: id, reporterId: user.id, reason },
+        data: { postId: id, reporterId: user.id, reason, reporterIp: ip, status: "PENDING" },
       });
     } catch {
       return NextResponse.json({ error: "이미 신고한 글입니다." }, { status: 409 });
     }
 
+    await writeAudit({
+      kind: "REPORT",
+      userId: user.id,
+      ip,
+      postId: id,
+      detail: reason.slice(0, 200),
+    });
+
     const count = await prisma.report.count({ where: { postId: id } });
-    return NextResponse.json({ ok: true, count });
+    if (count >= REPORT_HIDE_THRESHOLD && !post.hidden) {
+      await prisma.post.update({ where: { id }, data: { hidden: true } });
+      await prisma.report.updateMany({ where: { postId: id }, data: { status: "HIDDEN" } });
+      await writeAudit({
+        kind: "AUTO_HIDE",
+        userId: user.id,
+        ip,
+        postId: id,
+        detail: `신고 ${count}건으로 숨김`,
+      });
+    }
+
+    return NextResponse.json({ ok: true, count, hidden: count >= REPORT_HIDE_THRESHOLD });
   } catch (error) {
+    if (error instanceof CoolDownError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
+      );
+    }
     const message = error instanceof Error ? error.message : "신고에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

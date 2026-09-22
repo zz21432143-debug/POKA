@@ -1,5 +1,6 @@
 import { SchemaDashboard } from "@/components/schema-dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import type { SchemaSnapshot } from "@/lib/types";
 
@@ -16,6 +17,7 @@ const EMPTY: SchemaSnapshot = {
 export default async function SchemaPage() {
   let data = EMPTY;
   let error: string | null = null;
+  const viewer = await getCurrentUser().catch(() => null);
   try {
     const [users, posts, comments, levels, attendance] = await Promise.all([
       prisma.user.findMany({ orderBy: { level: "desc" } }),
@@ -53,7 +55,7 @@ export default async function SchemaPage() {
         content: post.content,
         upvoteCount: post.upvoteCount,
         downvoteCount: post.downvoteCount,
-        authorIp: post.authorIp,
+        authorIp: viewer?.isAdmin ? post.authorIp : null,
         createdAt: post.createdAt.toISOString(),
       })),
       comments: comments.map((comment) => ({
