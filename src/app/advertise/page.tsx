@@ -14,8 +14,8 @@ export default function AdvertisePage() {
         <p className="text-xs font-semibold tracking-wide text-primary">SPONSOR</p>
         <h1 className="mt-1 text-2xl font-semibold">제휴 및 광고 안내</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          구좌는 세 곳입니다. 홈 포스터, 오른쪽 사이드바, 글 목록 한 줄. 아래 지도에서 A·B·C로 표시했습니다.
-          금액은 오픈 시즌 가이드이며, 방문 수가 안정되면 다시 공지합니다.
+          구좌는 홈 포스터, 오른쪽 사이드바 300×150 세 칸, 글 목록 한 줄입니다. 지도의 A1–A3·B·C가 실제
+          자리입니다. 금액은 오픈 시즌 가이드입니다.
         </p>
       </header>
 
@@ -62,10 +62,10 @@ export default function AdvertisePage() {
         <h2 className="text-lg font-semibold">단가를 이렇게 잡았습니다</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-foreground/90">
           <li>비교 대상은 대형 포털이 아니라 지역 홀덤 카페 배너·게시글형 홍보입니다.</li>
-          <li>사이드바는 매 페이지 고정이지만 본문보다 시선이 약해서 가장 낮습니다.</li>
+          <li>사이드바는 300×150 세로 3칸입니다. 칸당 월 12만, 3칸을 한 팀이 쓰면 월 36만입니다.</li>
           <li>홈 포스터는 첫 화면이지만 3칸이 최대 9장과 돌아가므로 카페 메인 고정보다 낮습니다.</li>
           <li>인피드는 목록을 읽다 한 줄만 보이므로 배너와 포스터 사이입니다.</li>
-          <li>패키지는 따로 살 때(월 85만)보다 약 18% 낮춘 월 70만입니다.</li>
+          <li>패키지(사이드바 1칸+포스터+인피드)는 따로 살 때(월 79만)보다 낮춘 월 70만입니다.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           트래픽 리포트(노출·클릭)는 계약 기간에 주 1회 공유하는 것을 기본으로 합니다. 공식 홍보 글만 직접

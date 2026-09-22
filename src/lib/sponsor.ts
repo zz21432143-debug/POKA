@@ -1,6 +1,7 @@
 export type SponsorMark = "AD" | "제휴";
 
 export type SidebarSponsor = {
+  slot: 1 | 2 | 3;
   imageUrl: string | null;
   href: string;
   title: string;
@@ -8,14 +9,12 @@ export type SidebarSponsor = {
   mark: SponsorMark;
 };
 
-/** 우측 300×150 구좌. imageUrl이 없으면 제휴 문의 플레이스홀더. */
-export const SIDEBAR_SPONSOR: SidebarSponsor = {
-  imageUrl: null,
-  href: "/advertise",
-  title: "스폰서 배너",
-  advertiser: "",
-  mark: "AD",
-};
+/** 우측 300×150 세로 3단. imageUrl이 없으면 빈 구좌. */
+export const SIDEBAR_SPONSORS: SidebarSponsor[] = [
+  { slot: 1, imageUrl: null, href: "/advertise", title: "스폰서 배너 1", advertiser: "", mark: "AD" },
+  { slot: 2, imageUrl: null, href: "/advertise", title: "스폰서 배너 2", advertiser: "", mark: "AD" },
+  { slot: 3, imageUrl: null, href: "/advertise", title: "스폰서 배너 3", advertiser: "", mark: "AD" },
+];
 
 export const NATIVE_SPONSOR = {
   title: "딜러 전용 유니폼, 지금 런칭 혜택으로 맞추세요",
@@ -27,14 +26,14 @@ export const NATIVE_SPONSOR = {
 export const AD_PRODUCTS = [
   {
     id: "sidebar",
-    code: "A",
-    name: "사이드바 배너",
-    size: "300 × 150 px",
-    price: "월 180,000원",
-    weekly: "주 50,000원",
-    exclusive: "해당 기간 1팀 단독",
-    where: "PC 넓은 화면(약 1280px 이상)에서는 오른쪽 칼럼, 프로필 카드 바로 아래입니다. 그보다 좁으면 오른쪽 칼럼이 사라져서, 지금 보신 것처럼 게시판·글 목록 맨 아래로 내려갑니다. 크기는 항상 300×150입니다.",
-    why: "페이지마다 보이지만 시선은 본문보다 약합니다. 지역 홀덤 카페 우측 배너가 보통 월 20~40만 원대라, 트래픽이 아직 검증되지 않은 오픈 시즌에는 그 아래인 월 18만으로 잡았습니다.",
+    code: "A1–A3",
+    name: "사이드바 배너 1칸",
+    size: "300 × 150 px · 세로 3단 중 1칸",
+    price: "월 120,000원",
+    weekly: "주 35,000원",
+    exclusive: "칸마다 1팀 · 한 화면에 최대 3칸",
+    where: "PC 넓은 화면에서는 오른쪽 칼럼, 프로필 아래 300×150이 세로로 세 장 쌓입니다. 화면이 좁아 오른쪽 칼럼이 없으면 목록 맨 아래에 같은 세 장이 내려갑니다.",
+    why: "한 칸만 두면 자리가 남고, 세 칸을 나눠 팔면 단가를 낮출 수 있습니다. 칸당 월 12만은 예전 단독 18만보다 낮고, 3칸을 한 팀이 다 쓰면 월 36만입니다.",
   },
   {
     id: "home-card",
@@ -65,8 +64,8 @@ export const AD_PRODUCTS = [
     size: "배너 + 포스터 + 인피드 + 공식 홍보 글 1회",
     price: "월 700,000원",
     weekly: "주 단위 없음",
-    exclusive: "묶음 계약 · 따로 사면 월 85만",
-    where: "위 세 자리를 동시에 쓰고, 공식 홍보 게시판에 협찬 글 1개를 올립니다.",
-    why: "세 구좌를 따로 사면 월 85만입니다. 한 달 단위로 묶으면 약 18% 낮춘 70만입니다. 오픈 시즌 한정 가이드가이며, 방문 수가 안정되면 단가를 다시 공지합니다.",
+    exclusive: "묶음 계약 · 따로 사면 월 79만",
+    where: "사이드바 1칸 + 홈 포스터 1칸 + 인피드 1줄 + 공식 홍보 글 1회입니다. 사이드바 3칸 모두는 문의 때 따로 받습니다.",
+    why: "사이드바 1칸(12만) + 포스터(45만) + 인피드(22만)를 따로 사면 월 79만입니다. 한 달 묶음은 70만입니다.",
   },
 ] as const;
