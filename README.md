@@ -73,7 +73,8 @@ SQLite는 로컬/단일 인스턴스용입니다. 트래픽이 늘면 `DATABASE_
 | `npm start` | 프로덕션 서버 (포트 43123) |
 | `npm run db:migrate` | 개발 마이그레이션 |
 | `npm run db:deploy` | 프로덕션 마이그레이션 |
-| `npm run db:seed` | 샘플 회원·게시글·레벨·배너 구좌 |
+| `npm run db:seed` | 샘플 회원·게시글(게시판별 20개)·레벨·배너 구좌 |
+| `npm test` | 게시판 피드 키·시드 카탈로그 단위 테스트 |
 | `npm run db:reset` | DB 초기화 후 시드 |
 
 스키마 원본은 `prisma/schema.prisma` 입니다.

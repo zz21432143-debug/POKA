@@ -33,13 +33,13 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <LedTicker items={ticker} />
       </div>
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 items-start gap-0 lg:gap-4 lg:px-4">
-        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-6.75rem)] w-60 shrink-0 overflow-y-auto py-4 lg:block">
+        <aside className="sticky top-[8.25rem] hidden h-[calc(100dvh-8.25rem)] w-60 shrink-0 overflow-y-auto py-4 lg:block">
           <BoardNav />
         </aside>
         <main className="min-w-0 flex-1 px-3 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4">
           {children}
         </main>
-        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-6.75rem)] w-60 shrink-0 py-4 lg:flex">
+        <aside className="sticky top-[8.25rem] hidden h-[calc(100dvh-8.25rem)] w-60 shrink-0 py-4 lg:flex">
           <div className="flex h-full min-h-0 w-full flex-col gap-4">
             <ProfileWidget profile={profile} />
             <PopularPosts />

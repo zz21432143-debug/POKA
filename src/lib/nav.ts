@@ -13,7 +13,7 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-/** 상단 대메뉴 · 사이드바 · 드로어 · 홈 바로가기의 단일 출처 */
+/** 사이드바 · 드로어 · 홈 바로가기의 단일 출처 (헤더는 로고/프로필만) */
 export const BOARD_NAV: NavGroup[] = [
   {
     title: "🗓️ 대회 일정",

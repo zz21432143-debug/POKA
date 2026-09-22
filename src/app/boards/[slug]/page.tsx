@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ScheduleBoard } from "@/components/listing/schedule-board";
-import { PostList } from "@/components/posts/post-list";
 import { PromoGallery } from "@/components/promo/promo-gallery";
+import { InfinitePostList } from "@/components/posts/infinite-post-list";
 import { buttonVariants } from "@/components/ui/button";
-import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { BOARD_DESCRIPTIONS } from "@/lib/boards";
 import { getCurrentUser } from "@/lib/current-user";
+import { FEED_BY_HREF } from "@/lib/feed";
+import { loadFeedPage } from "@/lib/load-feed";
 import { resolveBoardSlug } from "@/lib/nav";
 import { canWriteBoard } from "@/lib/permissions";
 import { POST_EXP } from "@/lib/rewards";
-import { prisma } from "@/lib/db";
+import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
@@ -34,21 +35,13 @@ export default async function BoardPage({
   if (!board) notFound();
   const viewer = await getCurrentUser().catch(() => null);
   const canWrite = canWriteBoard(viewer, board.boardType);
-
-    const rows = await prisma.post.findMany({
-    where: {
-      boardType: board.boardType,
-      isAttendanceThread: false,
-      hidden: false,
-      ...(board.boardType === "PROMO" ? { storeVerified: true } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    include: { author: { select: AUTHOR_SELECT } },
-  });
-
+  const canonical = slug === "promo" ? "official" : slug;
+  const feedKey = FEED_BY_HREF[`/boards/${canonical}`];
+  if (!feedKey) notFound();
   const gallery = "gallery" in board && board.gallery;
   const calendar = "calendar" in board && board.calendar;
   const now = new Date();
+  const page = await loadFeedPage(feedKey, 0, calendar || gallery ? 50 : PAGE_SIZE);
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,6 +50,7 @@ export default async function BoardPage({
           <h1 className="text-2xl font-semibold">{board.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {BOARD_DESCRIPTIONS[board.boardType]} · 작성 EXP {POST_EXP[board.boardType]}
+            {page.total ? ` · ${page.total}개` : ""}
           </p>
         </div>
         {canWrite ? (
@@ -75,45 +69,15 @@ export default async function BoardPage({
       </header>
 
       {gallery ? (
-        <PromoGallery
-          posts={rows.map((post) => ({
-            id: post.id,
-            title: post.title,
-            bannerImageUrl: post.bannerImageUrl,
-            promoLocation: post.promoLocation,
-            promoTag: post.promoTag,
-            content: post.content,
-          }))}
-        />
+        <PromoGallery posts={page.gallery} />
       ) : calendar ? (
-        <ScheduleBoard
-          year={now.getFullYear()}
-          month={now.getMonth()}
-          events={rows.map((post) => ({
-            id: post.id,
-            title: post.title,
-            eventDate: post.eventDate,
-            eventEndDate: post.eventEndDate,
-            eventPrize: post.eventPrize,
-            poster: post.bannerImageUrl,
-            promoLocation: post.promoLocation,
-            jobLocation: post.jobLocation,
-          }))}
-        />
+        <ScheduleBoard year={now.getFullYear()} month={now.getMonth()} events={page.events} />
       ) : (
-        <PostList
-          posts={rows.map((post) => ({
-            id: post.id,
-            boardType: post.boardType,
-            title: post.title,
-            author: post.author,
-            upvoteCount: post.upvoteCount,
-            createdAt: post.createdAt.toISOString(),
-            ratingManner: post.ratingManner,
-            ratingService: post.ratingService,
-            ratingFacility: post.ratingFacility,
-            ratingAtmosphere: post.ratingAtmosphere,
-          }))}
+        <InfinitePostList
+          feedKey={feedKey}
+          initialItems={page.posts}
+          initialTotal={page.total}
+          initialNextOffset={page.nextOffset}
           emptyText="이 게시판에 글이 없습니다."
         />
       )}
