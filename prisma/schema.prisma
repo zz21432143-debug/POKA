@@ -1,0 +1,87 @@
+// Felt Club — 포커/딜러 커뮤니티 1단계 스키마
+// SQLite는 로컬 개발용. 이후 PostgreSQL로 전환해도 모델 구조는 동일하게 유지합니다.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// 게시판 분류. 게시글마다 하나의 보드만 지정합니다.
+enum BoardType {
+  FREE
+  HAND_REVIEW
+  ANONYMOUS_REVIEW
+  JOBS
+  PROMO
+}
+
+/// 회원. 레벨/경험치/포인트와 딜러 인증을 커뮤니티 활동의 기준으로 둡니다.
+model User {
+  id                  String   @id @default(cuid())
+  nickname            String   @unique
+  /// 현재 장착 중인 프로필 마크 이미지 경로 또는 URL
+  profileMarkImageUrl String?
+  level               Int      @default(1)
+  exp                 Int      @default(0)
+  points              Int      @default(0)
+  isDealerVerified    Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  posts    Post[]
+  comments Comment[]
+
+  @@index([level])
+  @@index([isDealerVerified])
+}
+
+/// 게시글. 익명 후기는 authorId를 비우고 authorIp만 남깁니다.
+model Post {
+  id            String    @id @default(cuid())
+  boardType     BoardType
+  authorId      String?
+  author        User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  title         String
+  content       String
+  upvoteCount   Int       @default(0)
+  downvoteCount Int       @default(0)
+  /// 익명 후기 식별·운영용. 일반 게시판에서도 기록할 수 있습니다.
+  authorIp      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  comments Comment[]
+
+  @@index([boardType, createdAt])
+  @@index([authorId])
+}
+
+/// 댓글과 출석체크를 한 테이블에서 관리합니다.
+/// 출석체크는 일일 출석 스레드에 달리거나, postId 없이 독립 기록될 수 있습니다.
+model Comment {
+  id                String   @id @default(cuid())
+  postId            String?
+  post              Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId          String?
+  author            User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  content           String
+  isAttendanceCheck Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([postId])
+  @@index([authorId, isAttendanceCheck, createdAt])
+}
+
+/// 레벨별 누적 필요 경험치와 해당 레벨 마크 구매 포인트.
+model LevelExp {
+  level              Int @id
+  /// 이 레벨에 도달하기 위한 누적 EXP
+  requiredExp        Int
+  /// 이 레벨 프로필 마크를 구매하는 데 필요한 포인트
+  markPurchasePoints Int
+}
