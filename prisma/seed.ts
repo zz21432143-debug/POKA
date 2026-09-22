@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient, BoardType } from "../src/generated/prisma/client";
+import { todayKstDate, yesterdayKstDate } from "../src/lib/dates";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -14,13 +15,39 @@ const LEVELS = Array.from({ length: 20 }, (_, i) => {
   return { level, requiredExp, markPurchasePoints };
 });
 
+const SAMPLE_HAND = {
+  heroPosition: "BTN",
+  villainPosition: "BB",
+  heroCards: ["Ah", "Js"],
+  villainCards: [],
+  board: ["Kh", "7s", "2d"],
+  effectiveBb: 100,
+  streets: {
+    preflop: [
+      { actor: "Villain", action: "raise", amount: 2.5 },
+      { actor: "Hero", action: "raise", amount: 9 },
+      { actor: "Villain", action: "call" },
+    ],
+    flop: [
+      { actor: "Villain", action: "bet", amount: 33 },
+      { actor: "Hero", action: "call" },
+    ],
+    turn: [],
+    river: [],
+  },
+};
+
 async function main() {
+  await prisma.dailyAttendance.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.post.deleteMany();
   await prisma.user.deleteMany();
   await prisma.levelExp.deleteMany();
 
   await prisma.levelExp.createMany({ data: LEVELS });
+
+  const today = todayKstDate();
+  const yesterday = yesterdayKstDate(today);
 
   const [dealer, regular, newbie] = await Promise.all([
     prisma.user.create({
@@ -31,6 +58,8 @@ async function main() {
         exp: 7400,
         points: 1840,
         isDealerVerified: true,
+        lastAttendanceDate: yesterday,
+        attendanceStreak: 5,
       },
     }),
     prisma.user.create({
@@ -41,6 +70,8 @@ async function main() {
         exp: 1450,
         points: 320,
         isDealerVerified: false,
+        lastAttendanceDate: today,
+        attendanceStreak: 3,
       },
     }),
     prisma.user.create({
@@ -74,7 +105,8 @@ async function main() {
       authorId: dealer.id,
       title: "BTN vs BB, 100bb, AJs 3bet pot",
       content:
-        "프리플랍 BB 오픈, BTN 3bet AJs, 콜. 플롭 Kh 7s 2d. 상대 donk 33%. 여기서 콜/레이즈 기준을 정리하고 싶습니다.",
+        "플롭 donk 33% 스팟입니다. Hero가 콜한 뒤 턴 텍스처별 플랜을 정리하고 싶습니다.",
+      handReviewJson: JSON.stringify(SAMPLE_HAND),
       upvoteCount: 28,
       downvoteCount: 0,
       authorIp: "203.0.113.21",
@@ -119,6 +151,35 @@ async function main() {
     },
   });
 
+  const attendancePost = await prisma.post.create({
+    data: {
+      boardType: BoardType.FREE,
+      title: `${today} 오늘의 출석체크`,
+      content:
+        "스팸 클릭을 막기 위해 이 글에 댓글을 남기면 출석으로 인정합니다. 하루 한 번만 가능합니다.",
+      isAttendanceThread: true,
+      attendanceDate: today,
+    },
+  });
+
+  const hunterComment = await prisma.comment.create({
+    data: {
+      postId: attendancePost.id,
+      authorId: regular.id,
+      content: "오늘도 핸드 공부합니다.",
+      isAttendanceCheck: true,
+    },
+  });
+
+  await prisma.dailyAttendance.create({
+    data: {
+      userId: regular.id,
+      date: today,
+      postId: attendancePost.id,
+      commentId: hunterComment.id,
+    },
+  });
+
   await prisma.comment.createMany({
     data: [
       {
@@ -133,22 +194,10 @@ async function main() {
         content: "비슷한 런 저도 당했습니다. 핸드히스토리 더 올려주시면 같이 볼게요.",
         isAttendanceCheck: false,
       },
-      {
-        postId: null,
-        authorId: dealer.id,
-        content: "2026-09-22 출석",
-        isAttendanceCheck: true,
-      },
-      {
-        postId: null,
-        authorId: regular.id,
-        content: "오늘도 출석합니다.",
-        isAttendanceCheck: true,
-      },
     ],
   });
 
-  console.log("Seed complete: 20 levels, 3 users, 5 posts, 4 comments.");
+  console.log("Seed complete.");
 }
 
 main()

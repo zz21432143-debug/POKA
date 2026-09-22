@@ -3,10 +3,12 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteHeader } from "@/components/layout/site-header";
 import { getViewerProfile } from "@/lib/profile";
+import { ensureTodayAttendancePost } from "@/lib/attendance";
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   let profile = null;
   try {
+    await ensureTodayAttendancePost();
     profile = await getViewerProfile();
   } catch {
     profile = null;

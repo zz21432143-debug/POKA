@@ -1,7 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { HandViewer } from "@/components/hand/hand-viewer";
+import { CommentForm } from "@/components/posts/comment-form";
 import { prisma } from "@/lib/db";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
+import { parseHandReview } from "@/lib/hand-review";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +31,9 @@ export default async function PostDetailPage({
     post = null;
   }
   if (!post) notFound();
+  if (post.isAttendanceThread) redirect("/attendance");
+
+  const hand = parseHandReview(post.handReviewJson);
 
   return (
     <article className="flex flex-col gap-4">
@@ -40,11 +46,19 @@ export default async function PostDetailPage({
           {post.author?.nickname ?? "익명"} · 추천 {post.upvoteCount} · 비추 {post.downvoteCount}
         </p>
       </header>
-      <div className="rounded-xl border border-border bg-card p-4 text-[15px] leading-7 whitespace-pre-wrap">
-        {post.content}
-      </div>
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">댓글 {post.comments.length}</h2>
+      {hand ? <HandViewer hand={hand} /> : null}
+      {post.content ? (
+        <div className="rounded-xl border border-border bg-card p-4 text-[15px] leading-7 whitespace-pre-wrap">
+          {post.content}
+        </div>
+      ) : null}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">댓글 {post.comments.length}</h2>
+        <CommentForm
+          postId={post.id}
+          submitLabel="댓글 등록"
+          placeholder="라인 피드백을 남겨 주세요."
+        />
         {post.comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
         ) : (

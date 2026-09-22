@@ -7,29 +7,27 @@ export type ViewerProfile = {
   exp: number;
   points: number;
   isDealerVerified: boolean;
+  attendanceStreak: number;
+  lastAttendanceDate: string | null;
   currentLevelExp: number;
   nextLevelExp: number | null;
   progressPercent: number;
 };
 
 export async function getViewerProfile(): Promise<ViewerProfile | null> {
-  const user =
-    (await prisma.user.findFirst({
-      where: { isDealerVerified: true },
-      orderBy: { level: "desc" },
-    })) ?? (await prisma.user.findFirst({ orderBy: { createdAt: "asc" } }));
-
-  if (!user) return null;
-  return toViewerProfile(user);
+  const { getCurrentUser } = await import("@/lib/current-user");
+  return getCurrentUser();
 }
 
-async function toViewerProfile(user: {
+export async function toViewerProfile(user: {
   nickname: string;
   profileMarkImageUrl: string | null;
   level: number;
   exp: number;
   points: number;
   isDealerVerified: boolean;
+  attendanceStreak?: number;
+  lastAttendanceDate?: string | null;
 }): Promise<ViewerProfile> {
   const [current, next] = await Promise.all([
     prisma.levelExp.findUnique({ where: { level: user.level } }),
@@ -49,6 +47,8 @@ async function toViewerProfile(user: {
     exp: user.exp,
     points: user.points,
     isDealerVerified: user.isDealerVerified,
+    attendanceStreak: user.attendanceStreak ?? 0,
+    lastAttendanceDate: user.lastAttendanceDate ?? null,
     currentLevelExp,
     nextLevelExp,
     progressPercent,

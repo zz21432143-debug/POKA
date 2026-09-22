@@ -79,6 +79,7 @@ export function ProfileWidget({
           <p className="text-sm text-muted-foreground">
             Lv.{profile.level}
             {profile.isDealerVerified ? " · 딜러 인증" : ""}
+            {profile.attendanceStreak ? ` · 연속 ${profile.attendanceStreak}일` : ""}
           </p>
         </div>
       </div>
