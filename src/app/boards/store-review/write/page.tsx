@@ -11,7 +11,7 @@ export default function StoreReviewWritePage() {
       </header>
       <BoardWriteForm
         boardType="ANONYMOUS_REVIEW"
-        hint="닉네임·마크는 공개되지 않습니다"
+        hint="매너·서비스·시설·분위기 별점을 모두 남기면 익명으로 등록됩니다"
       />
     </div>
   );

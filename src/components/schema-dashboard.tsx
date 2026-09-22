@@ -41,6 +41,8 @@ const COLUMN_DOCS = {
     ["title / content", "제목과 본문"],
     ["upvoteCount / downvoteCount", "추천·비추천 수"],
     ["authorIp", "작성자 IP (익명 후기 운영용)"],
+    ["ratingManner/Service/Facility/Atmosphere", "매장후기 4항목 별점 (1~5)"],
+    ["pollVotes", "핸드리뷰 Fold/Check/Call/Raise 투표"],
   ],
   comments: [
     ["postId", "대상 게시글. 독립 출석 기록은 null 허용"],

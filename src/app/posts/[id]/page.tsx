@@ -1,7 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
-import { AuthorChip } from "@/components/posts/author-chip";
+import { AUTHOR_SELECT, AuthorChip } from "@/components/posts/author-chip";
+import { HandPoll } from "@/components/hand/hand-poll";
+import { RatingStamp } from "@/components/reviews/rating-stamp";
+import { REVIEW_AXES } from "@/lib/ratings";
+import { POLL_CHOICES } from "@/lib/poll";
 import { CommentForm } from "@/components/posts/comment-form";
 import { CommentThread } from "@/components/posts/comment-thread";
 import { HireButton } from "@/components/jobs/hire-button";
@@ -29,11 +33,11 @@ export default async function PostDetailPage({
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
-      author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
+      author: { select: AUTHOR_SELECT },
       comments: {
         where: { isAttendanceCheck: false },
         include: {
-          author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
+          author: { select: AUTHOR_SELECT },
           votes: viewer ? { where: { userId: viewer.id }, select: { id: true } } : false,
         },
         orderBy: { createdAt: "asc" },
@@ -54,6 +58,25 @@ export default async function PostDetailPage({
   const hand = parseHandReview(post.handReviewJson);
   const myVote = Array.isArray(post.votes) ? (post.votes[0]?.value ?? 0) : 0;
 
+  const pollCounts: Record<string, number> = Object.fromEntries(
+    POLL_CHOICES.map((choice) => [choice.id, 0]),
+  );
+  let myPollChoice: string | null = null;
+  if (post.boardType === "HAND_REVIEW") {
+    const rows = await prisma.handPollVote.groupBy({
+      by: ["choice"],
+      where: { postId: post.id },
+      _count: { _all: true },
+    });
+    for (const row of rows) pollCounts[row.choice] = row._count._all;
+    if (viewer) {
+      const mine = await prisma.handPollVote.findUnique({
+        where: { postId_userId: { postId: post.id, userId: viewer.id } },
+      });
+      myPollChoice = mine?.choice ?? null;
+    }
+  }
+
   return (
     <article className="flex flex-col gap-4">
       <header className="rounded-xl border border-border bg-card p-4">
@@ -69,7 +92,19 @@ export default async function PostDetailPage({
           {post.isPaid ? <Badge>유료 고정</Badge> : null}
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
         </div>
-        <h1 className="mt-2 text-2xl font-semibold">{post.title}</h1>
+        <div className="mt-2 flex items-start gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl font-semibold">{post.title}</h1>
+          {post.boardType === "ANONYMOUS_REVIEW" ? (
+            <RatingStamp
+              ratings={{
+                ratingManner: post.ratingManner,
+                ratingService: post.ratingService,
+                ratingFacility: post.ratingFacility,
+                ratingAtmosphere: post.ratingAtmosphere,
+              }}
+            />
+          ) : null}
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <AuthorChip author={post.author} anonymous={anonymous} />
           {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
@@ -135,6 +170,26 @@ export default async function PostDetailPage({
       ) : null}
 
       {hand ? <HandViewer hand={hand} /> : null}
+
+      {post.boardType === "HAND_REVIEW" ? (
+        <HandPoll postId={post.id} initialCounts={pollCounts} initialChoice={myPollChoice} />
+      ) : null}
+
+      {post.boardType === "ANONYMOUS_REVIEW" ? (
+        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-4">
+          {REVIEW_AXES.map((axis) => (
+            <div key={axis.key}>
+              <dt className="text-xs text-muted-foreground">{axis.label}</dt>
+              <dd className="text-primary">
+                {"★".repeat(post[axis.key] ?? 0)}
+                {"☆".repeat(5 - (post[axis.key] ?? 0))}
+                <span className="ml-1 text-foreground">{post[axis.key] ?? "—"}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
       {post.content ? (
         <div className="rounded-xl border border-border bg-card p-4 text-[15px] leading-7 whitespace-pre-wrap">
           {post.content}

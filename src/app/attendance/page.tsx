@@ -1,9 +1,9 @@
+import { AuthorChip } from "@/components/posts/author-chip";
 import { CommentForm } from "@/components/posts/comment-form";
 import { getAttendanceStats } from "@/lib/attendance";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatKstLabel } from "@/lib/dates";
 import { ATTENDANCE_EXP, ATTENDANCE_POINTS } from "@/lib/rewards";
-import { MarkImage } from "@/components/layout/profile-widget";
 
 export const dynamic = "force-dynamic";
 
@@ -51,13 +51,8 @@ export default async function AttendancePage() {
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {stats.comments.map((row) => (
               <li key={row.id} className="flex min-h-12 items-center gap-3 px-3 py-3">
-                <MarkImage
-                  src={row.author?.profileMarkImageUrl ?? null}
-                  alt={row.author?.nickname ?? "회원"}
-                  size={32}
-                />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{row.author?.nickname ?? "익명"}</p>
+                  <AuthorChip author={row.author} anonymous={false} />
                   <p className="truncate text-sm text-muted-foreground">{row.content}</p>
                 </div>
               </li>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { AdSlot } from "@/components/ads/ad-slot";
+import { RatingStamp } from "@/components/reviews/rating-stamp";
 import { AuthorChip, type PublicAuthor } from "@/components/posts/author-chip";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { isAnonymousBoard } from "@/lib/request";
@@ -13,6 +14,10 @@ export type PostSummary = {
   author: PublicAuthor;
   upvoteCount: number;
   createdAt: string;
+  ratingManner?: number | null;
+  ratingService?: number | null;
+  ratingFacility?: number | null;
+  ratingAtmosphere?: number | null;
 };
 
 export function PostList({
@@ -58,6 +63,17 @@ export function PostList({
                   <span>추천 {post.upvoteCount}</span>
                 </div>
               </div>
+              {post.boardType === "ANONYMOUS_REVIEW" ? (
+                <RatingStamp
+                  size="sm"
+                  ratings={{
+                    ratingManner: post.ratingManner ?? null,
+                    ratingService: post.ratingService ?? null,
+                    ratingFacility: post.ratingFacility ?? null,
+                    ratingAtmosphere: post.ratingAtmosphere ?? null,
+                  }}
+                />
+              ) : null}
             </Link>
           </li>
         </Fragment>

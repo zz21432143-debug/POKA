@@ -31,8 +31,8 @@ export const BOARD_NAV: NavGroup[] = [
     title: "커뮤니티",
     items: [
       { href: "/boards/free", label: "💬 딜러 커뮤니티", hint: "후기·룰·수다" },
-      { href: "/boards/hand-review", label: "핸드리뷰", hint: "스팟 분석" },
-      { href: "/boards/store-review", label: "매장후기", hint: "익명 후기" },
+      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표·스팟" },
+      { href: "/boards/store-review", label: "매장후기", hint: "4항목 별점" },
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
     ],
   },

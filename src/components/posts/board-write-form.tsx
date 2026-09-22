@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BoardType } from "@/generated/prisma/enums";
 import { POST_EXP } from "@/lib/rewards";
+import { StarPicker } from "@/components/reviews/star-picker";
 
 export function BoardWriteForm({
   boardType,
@@ -23,6 +24,12 @@ export function BoardWriteForm({
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [promoLocation, setPromoLocation] = useState("");
   const [promoTag, setPromoTag] = useState("");
+  const [ratings, setRatings] = useState({
+    ratingManner: 0,
+    ratingService: 0,
+    ratingFacility: 0,
+    ratingAtmosphere: 0,
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -41,6 +48,7 @@ export function BoardWriteForm({
           bannerImageUrl,
           promoLocation,
           promoTag,
+          ...ratings,
         }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
@@ -84,6 +92,12 @@ export function BoardWriteForm({
             />
           </div>
         </div>
+      ) : null}
+      {boardType === "ANONYMOUS_REVIEW" ? (
+        <StarPicker
+          values={ratings}
+          onChange={(key, value) => setRatings((prev) => ({ ...prev, [key]: value }))}
+        />
       ) : null}
       <div className="grid gap-2">
         <Label htmlFor="content">내용</Label>

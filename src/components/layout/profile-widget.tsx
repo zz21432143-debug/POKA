@@ -1,42 +1,9 @@
-import { cn } from "cn";
 import type { ViewerProfile } from "@/lib/profile";
 import { MarkShop } from "@/components/shop/mark-shop";
+import { ProfileBadges } from "@/components/posts/author-chip";
+import { MarkImage } from "@/components/layout/mark-image";
 
-export function MarkImage({
-  src,
-  alt,
-  size = 32,
-  className,
-}: {
-  src: string | null;
-  alt: string;
-  size?: number;
-  className?: string;
-}) {
-  if (!src) {
-    return (
-      <span
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground",
-          className,
-        )}
-        style={{ width: size, height: size }}
-      >
-        {alt.slice(0, 1)}
-      </span>
-    );
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      width={size}
-      height={size}
-      className={cn("shrink-0 rounded-full", className)}
-    />
-  );
-}
+export { MarkImage };
 
 export function ProfileWidget({
   profile,
@@ -59,7 +26,10 @@ export function ProfileWidget({
         <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={36} />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
-          <p className="text-xs text-primary">Lv.{profile.level}</p>
+          <ProfileBadges
+            isDealerVerified={profile.isDealerVerified}
+            level={profile.level}
+          />
         </div>
       </div>
     );
@@ -77,10 +47,12 @@ export function ProfileWidget({
         <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={48} />
         <div className="min-w-0">
           <p className="truncate font-semibold">{profile.nickname}</p>
-          <p className="text-sm text-muted-foreground">
-            Lv.{profile.level}
-            {profile.isDealerVerified ? " · 딜러 인증" : ""}
-            {profile.attendanceStreak ? ` · 연속 ${profile.attendanceStreak}일` : ""}
+          <ProfileBadges
+            isDealerVerified={profile.isDealerVerified}
+            level={profile.level}
+          />
+          <p className="mt-1 text-sm text-muted-foreground">
+            {profile.attendanceStreak ? `연속 출석 ${profile.attendanceStreak}일` : "오늘 출석 전"}
           </p>
         </div>
       </div>

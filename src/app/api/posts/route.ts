@@ -26,6 +26,12 @@ const BOARDS: BoardType[] = [
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
 
+function clampStar(value: unknown) {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > 5) return null;
+  return n;
+}
+
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -73,6 +79,17 @@ export async function POST(request: Request) {
       handReviewJson = JSON.stringify(parsed);
     }
 
+    if (boardType === "ANONYMOUS_REVIEW") {
+      const stars = [
+        clampStar(body.ratingManner),
+        clampStar(body.ratingService),
+        clampStar(body.ratingFacility),
+        clampStar(body.ratingAtmosphere),
+      ];
+      if (stars.some((star) => star == null)) {
+        return NextResponse.json({ error: "매너·서비스·시설·분위기 별점을 모두 입력하세요." }, { status: 400 });
+      }
+    }
     let jobKind: JobKind | null = null;
     let jobData: ReturnType<typeof jobFieldsFromBody> | null = null;
     if (boardType === "JOBS") {
@@ -142,6 +159,10 @@ export async function POST(request: Request) {
         eventPrize: typeof body.eventPrize === "string" ? body.eventPrize.trim() || null : null,
         eventLink: typeof body.eventLink === "string" ? body.eventLink.trim() || null : null,
         storeVerified: boardType === "PROMO" ? Boolean(body.storeVerified ?? true) : false,
+        ratingManner: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingManner) : null,
+        ratingService: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingService) : null,
+        ratingFacility: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingFacility) : null,
+        ratingAtmosphere: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingAtmosphere) : null,
         isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,

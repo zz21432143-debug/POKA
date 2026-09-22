@@ -61,6 +61,7 @@ model User {
   votes            PostVote[]
   commentVotes     CommentVote[]
   reports          Report[]
+  pollVotes        HandPollVote[]
 
   @@index([level])
   @@index([isDealerVerified])
@@ -127,6 +128,10 @@ model Post {
   promoTag           String?
   jobFilled          Boolean   @default(false)
   hidden             Boolean   @default(false)
+  ratingManner       Int?
+  ratingService      Int?
+  ratingFacility     Int?
+  ratingAtmosphere   Int?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -135,6 +140,7 @@ model Post {
   votes            PostVote[]
   reports          Report[]
   bannerSlots      BannerSlot[]
+  pollVotes        HandPollVote[]
 
   @@index([boardType, createdAt])
   @@index([authorId])
@@ -201,6 +207,19 @@ model DailyAttendance {
 
   @@unique([userId, date])
   @@index([date])
+}
+
+model HandPollVote {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice    String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId, choice])
 }
 
 model PostVote {

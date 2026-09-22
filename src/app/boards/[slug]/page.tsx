@@ -4,12 +4,13 @@ import { ScheduleBoard } from "@/components/listing/schedule-board";
 import { PostList } from "@/components/posts/post-list";
 import { PromoGallery } from "@/components/promo/promo-gallery";
 import { buttonVariants } from "@/components/ui/button";
-import { prisma } from "@/lib/db";
+import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { BOARD_DESCRIPTIONS } from "@/lib/boards";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveBoardSlug } from "@/lib/nav";
 import { canWriteBoard } from "@/lib/permissions";
 import { POST_EXP } from "@/lib/rewards";
+import { prisma } from "@/lib/db";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function BoardPage({
       ...(board.boardType === "PROMO" ? { storeVerified: true } : {}),
     },
     orderBy: { createdAt: "desc" },
-    include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
+    include: { author: { select: AUTHOR_SELECT } },
   });
 
   const gallery = "gallery" in board && board.gallery;
@@ -107,6 +108,10 @@ export default async function BoardPage({
             author: post.author,
             upvoteCount: post.upvoteCount,
             createdAt: post.createdAt.toISOString(),
+            ratingManner: post.ratingManner,
+            ratingService: post.ratingService,
+            ratingFacility: post.ratingFacility,
+            ratingAtmosphere: post.ratingAtmosphere,
           }))}
           emptyText="이 게시판에 글이 없습니다."
         />

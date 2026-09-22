@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { ProfileWidget } from "@/components/layout/profile-widget";
+import { PokaLogo } from "@/components/brand/poka-logo";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
@@ -8,11 +9,9 @@ export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
     <header className="border-b border-border/80 bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-2 px-3 sm:px-4 lg:h-16">
         <MobileDrawer profile={profile} />
-        <Link
-          href="/"
-          className="touch-target flex min-h-11 min-w-0 items-center rounded-lg px-1"
-        >
-          <span className="text-lg font-bold tracking-[0.28em] text-primary">POKA</span>
+        <Link href="/" className="touch-target flex min-h-11 min-w-0 items-center rounded-lg px-1">
+          <PokaLogo className="h-9 w-auto sm:h-11" />
+          <span className="sr-only">POKA 홈</span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
           {profile?.isAdmin ? (

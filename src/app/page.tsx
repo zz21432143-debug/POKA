@@ -1,5 +1,6 @@
 import { PromoBanners } from "@/components/home/promo-banners";
-import { PostList } from "@/components/posts/post-list";
+import { PostList, type PostSummary } from "@/components/posts/post-list";
+import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
 import { BOARD_NAV } from "@/lib/nav";
 import Link from "next/link";
@@ -7,20 +8,13 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let posts: {
-    id: string;
-    boardType: string;
-    title: string;
-    author: { nickname: string; profileMarkImageUrl: string | null; level: number } | null;
-    upvoteCount: number;
-    createdAt: string;
-  }[] = [];
+  let posts: PostSummary[] = [];
   try {
     const rows = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
       where: { isAttendanceThread: false, hidden: false },
-      include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
+      include: { author: { select: AUTHOR_SELECT } },
     });
     posts = rows.map((post) => ({
       id: post.id,
@@ -29,6 +23,10 @@ export default async function HomePage() {
       author: post.author,
       upvoteCount: post.upvoteCount,
       createdAt: post.createdAt.toISOString(),
+      ratingManner: post.ratingManner,
+      ratingService: post.ratingService,
+      ratingFacility: post.ratingFacility,
+      ratingAtmosphere: post.ratingAtmosphere,
     }));
   } catch {
     posts = [];

@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { BoardNav } from "@/components/layout/board-nav";
+import { PokaLogo } from "@/components/brand/poka-logo";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
@@ -33,7 +34,10 @@ export function MobileDrawer({ profile }: { profile: ViewerProfile | null }) {
       </SheetTrigger>
       <SheetContent side="left" className="w-[min(100%,20rem)] p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
-          <SheetTitle>전체 게시판</SheetTitle>
+          <SheetTitle className="flex items-center gap-2">
+            <PokaLogo className="h-8 w-auto" />
+            <span>전체 게시판</span>
+          </SheetTitle>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Link

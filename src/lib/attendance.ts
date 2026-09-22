@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { todayKstDate, yesterdayKstDate } from "@/lib/dates";
 import { grantRewards } from "@/lib/exp";
+import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { ATTENDANCE_EXP, ATTENDANCE_MIN_COMMENT_LENGTH, ATTENDANCE_POINTS, LUCKY_ATTENDANCE_POINTS, STREAK_BONUS_EXP } from "@/lib/rewards";
 
 export async function ensureTodayAttendancePost() {
@@ -118,7 +119,7 @@ export async function getAttendanceStats(userId?: string) {
     prisma.comment.findMany({
       where: { postId: post.id, isAttendanceCheck: true },
       orderBy: { createdAt: "asc" },
-      include: { author: { select: { nickname: true, profileMarkImageUrl: true } } },
+      include: { author: { select: AUTHOR_SELECT } },
     }),
   ]);
 

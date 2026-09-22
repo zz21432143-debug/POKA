@@ -17,13 +17,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "POKA — 포커·딜러 커뮤니티",
   description: "POKA는 포커 플레이어와 딜러를 위한 반응형 커뮤니티입니다.",
+  icons: { icon: "/brand/poka-logo.png", apple: "/brand/poka-logo.png" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1b3328",
+  themeColor: "#c97a1a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

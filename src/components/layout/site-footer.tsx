@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PokaLogo } from "@/components/brand/poka-logo";
 
 const LINKS = [
   { href: "/about", label: "사이트 소개" },
@@ -11,7 +12,10 @@ export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border/80 bg-background/80 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        <p className="text-sm text-muted-foreground">POKA · 포커·딜러 커뮤니티</p>
+        <div className="flex items-center gap-3">
+          <PokaLogo className="h-10 w-auto" />
+          <p className="text-sm text-muted-foreground">포커·딜러 커뮤니티</p>
+        </div>
         <nav aria-label="약관 및 소개" className="flex flex-wrap gap-x-4 gap-y-2">
           {LINKS.map((link) => (
             <Link

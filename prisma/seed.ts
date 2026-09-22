@@ -158,6 +158,25 @@ async function main() {
       upvoteCount: 9,
       downvoteCount: 2,
       authorIp: "198.51.100.44",
+      ratingManner: 5,
+      ratingService: 4,
+      ratingFacility: 4,
+      ratingAtmosphere: 5,
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.ANONYMOUS_REVIEW,
+      authorId: regular.id,
+      title: "홍대 라이브 룸 시설 후기",
+      content: "테이블 간격은 좁지만 환기와 조명이 안정적이었습니다. 서비스는 보통.",
+      upvoteCount: 4,
+      downvoteCount: 0,
+      authorIp: "203.0.113.10",
+      ratingManner: 4,
+      ratingService: 3,
+      ratingFacility: 4,
+      ratingAtmosphere: 3,
     },
   });
   await prisma.auditLog.create({
@@ -378,6 +397,12 @@ async function main() {
     data: [
       {
         postId: handReview.id,
+        authorId: dealer.id,
+        content: "인증 딜러 입장에서 이 스팟은 Raise 빈도를 조금 낮추고 Call 위주로 갑니다.",
+        upvoteCount: 14,
+      },
+      {
+        postId: handReview.id,
         authorId: regular.id,
         content: "플롭 donk 상대면 AJs는 대체로 콜하고 턴 텍스처 보고 결정하는 편입니다.",
         upvoteCount: 9,
@@ -394,6 +419,14 @@ async function main() {
         content: "비슷한 런 저도 당했습니다.",
         upvoteCount: 1,
       },
+    ],
+  });
+
+  await prisma.handPollVote.createMany({
+    data: [
+      { postId: handReview.id, userId: dealer.id, choice: "RAISE" },
+      { postId: handReview.id, userId: regular.id, choice: "CALL" },
+      { postId: handReview.id, userId: newbie.id, choice: "FOLD" },
     ],
   });
 
