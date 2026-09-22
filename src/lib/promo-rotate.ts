@@ -4,7 +4,7 @@ export const HOME_PROMO_MAX_POOL = 9;
 /** 한 칸씩 왼쪽으로 넘어가는 간격. */
 export const HOME_PROMO_ROTATE_MS = 3000;
 /** 카드가 한 칸 이동하는 CSS 슬라이드 시간. */
-export const HOME_PROMO_SLIDE_MS = 650;
+export const HOME_PROMO_SLIDE_MS = 800;
 
 export function shuffleInPlaceCopy<T>(items: T[]) {
   const copy = items.slice();

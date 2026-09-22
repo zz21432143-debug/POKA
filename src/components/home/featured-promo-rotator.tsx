@@ -47,18 +47,9 @@ function PromoCarousel({ deck }: { deck: HomePromo[] }) {
 
   const [index, setIndex] = useState(startIndex);
   const [animate, setAnimate] = useState(true);
-  const [reduceMotion, setReduceMotion] = useState(false);
   const lockedRef = useRef(false);
   const indexRef = useRef(startIndex);
   const unlockTimer = useRef<number>(0);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduceMotion(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
-  }, []);
 
   const settle = useCallback(() => {
     const snapped = snapLoopIndex(indexRef.current, deck.length, cloneCount);
@@ -80,30 +71,25 @@ function PromoCarousel({ deck }: { deck: HomePromo[] }) {
       const next = indexRef.current + delta;
       indexRef.current = next;
       setIndex(next);
-
       window.clearTimeout(unlockTimer.current);
-      if (reduceMotion) {
-        settle();
-        return;
-      }
       unlockTimer.current = window.setTimeout(settle, HOME_PROMO_SLIDE_MS);
     },
-    [deck.length, reduceMotion, settle],
+    [deck.length, settle],
   );
 
   useEffect(() => {
-    if (reduceMotion || deck.length <= 1) return;
+    if (deck.length <= 1) return;
     const timer = window.setInterval(() => {
       if (document.hidden) return;
       move(1);
     }, HOME_PROMO_ROTATE_MS);
     return () => window.clearInterval(timer);
-  }, [deck.length, move, reduceMotion]);
+  }, [deck.length, move]);
 
   useEffect(() => () => window.clearTimeout(unlockTimer.current), []);
 
   const canSlide = deck.length > 1;
-  const duration = animate && !reduceMotion ? HOME_PROMO_SLIDE_MS : 0;
+  const duration = animate ? HOME_PROMO_SLIDE_MS : 0;
 
   return (
     <div className="group/promo relative">
@@ -113,7 +99,8 @@ function PromoCarousel({ deck }: { deck: HomePromo[] }) {
           style={{
             width: `calc(${track.length} * 100% / var(--visible))`,
             transform: `translate3d(calc(-1 * ${index} * 100% / ${track.length}), 0, 0)`,
-            transition: duration > 0 ? `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1)` : "none",
+            transition: duration > 0 ? `transform ${duration}ms ease-in-out` : "none",
+            willChange: "transform",
           }}
         >
           {track.map((banner, trackIndex) => (
