@@ -259,6 +259,60 @@ async function main() {
   });
   await prisma.post.create({
     data: {
+      boardType: BoardType.RULE_QA,
+      authorId: regular.id,
+      title: "스트래들 이후 액션 순서가 맞나요?",
+      content: "UTG가 스트래들 올린 뒤 버튼이 먼저 말하는 룸이 있습니다. 표준 진행이 맞는지 확인 부탁합니다.",
+      upvoteCount: 7,
+      authorIp: "203.0.113.10",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.SKETCH,
+      authorId: dealer.id,
+      title: "코엑스 위클리 파이널 테이블",
+      content: "오늘 파이널 분위기. 딜러 진행이 깔끔했습니다.",
+      bannerImageUrl: "/banners/slot-3.svg",
+      upvoteCount: 5,
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.JOBS,
+      jobKind: JobKind.URGENT,
+      authorId: dealer.id,
+      title: "[서울 홍대] 급구 / 대타 (2026-09-23)",
+      content: "오늘 밤 대타 한 분 급구합니다. 올블랙.",
+      jobLocation: "서울 홍대",
+      jobPayType: "시급",
+      jobPayAmount: "25000",
+      jobWorkDate: "2026-09-23",
+      jobWorkHours: "22:00–06:00",
+      jobExperience: "대타 경험",
+      jobContact: "010-2000-4444",
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.JOBS,
+      jobKind: JobKind.SEEKING,
+      authorId: newbie.id,
+      title: "[서울 · 경기] 신입버튼 - 개인 구직",
+      content: "주말 야간 가능합니다. 캐주얼부터 배우고 싶습니다.",
+      jobLocation: "서울 · 경기",
+      jobCompanyName: "신입버튼",
+      jobPayAmount: "시급 2만원대",
+      jobSchedule: "주말 · 야간",
+      jobExperience: "아카데미 수료",
+      jobContact: "010-4000-5555",
+      authorIp: "198.51.100.44",
+    },
+  });
+  await prisma.post.create({
+    data: {
       boardType: BoardType.SCHEDULE,
       authorId: dealer.id,
       title: "서울 홀덤 위클리",

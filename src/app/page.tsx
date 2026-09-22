@@ -2,7 +2,7 @@ import { PromoBanners } from "@/components/home/promo-banners";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
-import { BOARD_NAV } from "@/lib/nav";
+import { flattenNavItems } from "@/lib/nav";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export default async function HomePage() {
             href="/boards/free"
             className="touch-target inline-flex min-h-11 items-center text-sm text-primary"
           >
-            딜러 커뮤니티
+            자유게시판
           </Link>
         </div>
         <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard />
@@ -50,8 +50,7 @@ export default async function HomePage() {
       <section className="lg:hidden">
         <h2 className="mb-2 text-lg font-semibold">게시판 바로가기</h2>
         <div className="grid grid-cols-2 gap-2">
-          {BOARD_NAV.flatMap((group) =>
-            group.items.map((item) => (
+          {flattenNavItems().map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -59,8 +58,7 @@ export default async function HomePage() {
               >
                 {item.label}
               </Link>
-            )),
-          )}
+            ))}
         </div>
       </section>
     </div>

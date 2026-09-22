@@ -7,15 +7,17 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
     return typeof value === "string" ? value.trim() || null : null;
   };
   const bool = (key: string) => Boolean(body[key]);
-  const payType = jobKind === "APPLY" ? "시급" : str("jobPayType");
+  const payType = jobKind === "APPLY" || jobKind === "URGENT" ? "시급" : str("jobPayType");
   const location = str("jobLocation");
   const company = str("jobCompanyName");
   const amount = str("jobPayAmount");
+  const workDate = str("jobWorkDate");
   return {
     title: buildJobTitle(jobKind, {
       location,
       companyName: company,
       payAmount: amount,
+      workDate,
     }),
     jobLocation: location,
     jobCompanyName: company,

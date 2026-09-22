@@ -60,7 +60,7 @@ export default async function JobBoardPage({
           href={`/boards/jobs/${kind}/write`}
           className={cn(buttonVariants({ size: "touch" }), "inline-flex")}
         >
-          구인 등록
+          {job.cta}
         </Link>
       </header>
       <JobCards jobs={jobs} />

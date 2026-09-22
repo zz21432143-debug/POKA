@@ -13,6 +13,8 @@ import type { BoardType, JobKind } from "@/generated/prisma/enums";
 
 const BOARDS: BoardType[] = [
   "FREE",
+  "RULE_QA",
+  "SKETCH",
   "HAND_REVIEW",
   "ANONYMOUS_REVIEW",
   "JOBS",
@@ -24,7 +26,7 @@ const BOARDS: BoardType[] = [
   "SCHEDULE",
 ];
 
-const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
 
 function clampStar(value: unknown) {
   const n = Number(value);
@@ -86,8 +88,9 @@ export async function POST(request: Request) {
         clampStar(body.ratingFacility),
         clampStar(body.ratingAtmosphere),
       ];
-      if (stars.some((star) => star == null)) {
-        return NextResponse.json({ error: "매너·서비스·시설·분위기 별점을 모두 입력하세요." }, { status: 400 });
+      const filled = stars.filter((star) => star != null).length;
+      if (filled > 0 && filled < 4) {
+        return NextResponse.json({ error: "별점을 남기려면 매너·서비스·시설·분위기를 모두 입력하세요." }, { status: 400 });
       }
     }
     let jobKind: JobKind | null = null;

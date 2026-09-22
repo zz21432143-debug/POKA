@@ -10,10 +10,11 @@ export const dynamic = "force-dynamic";
 
 const ALIASES: Record<string, string> = {
   hire: "/boards/jobs/fixed/write",
-  pickup: "/boards/jobs/apply/write",
-  talent: "/boards/jobs/team/write",
+  pickup: "/boards/jobs/urgent/write",
+  talent: "/boards/jobs/seek/write",
   events: "/boards/schedule/write",
   promo: "/boards/official/write",
+  "store-review": "/boards/anonymous/write",
 };
 
 export default async function BoardWritePage({
@@ -25,7 +26,7 @@ export default async function BoardWritePage({
   if (ALIASES[slug]) redirect(ALIASES[slug]);
   const board = resolveBoardSlug(slug);
   if (!board) notFound();
-  if (slug === "free" || slug === "hand-review" || slug === "store-review") {
+  if (slug === "free" || slug === "hand-review" || slug === "store-review" || slug === "anonymous") {
     notFound();
   }
 

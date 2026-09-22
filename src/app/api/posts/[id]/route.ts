@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { jobFieldsFromBody } from "@/lib/job-fields";
 import type { JobKind } from "@/generated/prisma/enums";
 
-const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
 
 export async function PATCH(
   request: Request,

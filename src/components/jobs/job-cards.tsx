@@ -16,7 +16,7 @@ export function JobCards({ jobs }: { jobs: JobCardData[] }) {
   if (jobs.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-        등록된 구인 글이 없습니다.
+        등록된 글이 없습니다.
       </p>
     );
   }

@@ -43,6 +43,19 @@ export function jobTags(job: JobFactsPost): string[] {
       job.jobDressCode,
     ].filter((value): value is string => Boolean(value));
   }
+  if (job.jobKind === "URGENT") {
+    return [
+      formatWon(job.jobPayAmount) ? `시급 ${formatWon(job.jobPayAmount)}` : null,
+      job.jobDateFlexible ? "즉시/협의" : job.jobWorkDate,
+      job.jobWorkHours,
+      job.jobExperience,
+    ].filter((value): value is string => Boolean(value));
+  }
+  if (job.jobKind === "SEEKING") {
+    return [job.jobLocation, job.jobPayAmount, job.jobSchedule, job.jobExperience].filter(
+      (value): value is string => Boolean(value),
+    );
+  }
   return [job.jobLocation, job.jobBenefits, job.jobExperience, job.jobApplyMethod].filter(
     (value): value is string => Boolean(value),
   );
@@ -73,6 +86,22 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["복장 규정", job.jobDressCode],
             ["경력 사항", job.jobExperience],
           ]
+      : job.jobKind === "URGENT"
+        ? [
+            ["근무지", job.jobLocation],
+            ["필요 날짜", job.jobDateFlexible ? "즉시 / 날짜 협의" : job.jobWorkDate],
+            ["시급", formatWon(job.jobPayAmount) || job.jobPayAmount],
+            ["근무 시간", job.jobWorkHours],
+            ["경력 요구조건", job.jobExperience],
+          ]
+        : job.jobKind === "SEEKING"
+          ? [
+              ["표시 이름", job.jobCompanyName],
+              ["희망 지역", job.jobLocation],
+              ["희망 급여", job.jobPayAmount],
+              ["가능 일정", job.jobSchedule],
+              ["경력", job.jobExperience],
+            ]
         : [
             ["팀 명", job.jobCompanyName],
             ["주요 활동 지역", job.jobLocation],

@@ -166,7 +166,9 @@ export default async function PostDetailPage({
       {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
         <HireButton postId={post.id} filled={post.jobFilled} />
       ) : post.jobFilled ? (
-        <p className="text-sm text-primary">채용이 완료된 공고입니다.</p>
+        <p className="text-sm text-primary">
+          {post.jobKind === "SEEKING" ? "구직이 마감된 글입니다." : "채용이 완료된 공고입니다."}
+        </p>
       ) : null}
 
       {hand ? <HandViewer hand={hand} /> : null}
@@ -175,7 +177,8 @@ export default async function PostDetailPage({
         <HandPoll postId={post.id} initialCounts={pollCounts} initialChoice={myPollChoice} />
       ) : null}
 
-      {post.boardType === "ANONYMOUS_REVIEW" ? (
+      {post.boardType === "ANONYMOUS_REVIEW" &&
+      (post.ratingManner || post.ratingService || post.ratingFacility || post.ratingAtmosphere) ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-4">
           {REVIEW_AXES.map((axis) => (
             <div key={axis.key}>
@@ -188,6 +191,15 @@ export default async function PostDetailPage({
             </div>
           ))}
         </dl>
+      ) : null}
+
+      {post.boardType === "SKETCH" && post.bannerImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={post.bannerImageUrl}
+          alt={post.title}
+          className="w-full rounded-2xl border border-border object-cover"
+        />
       ) : null}
 
       {post.content ? (

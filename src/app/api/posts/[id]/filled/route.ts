@@ -18,8 +18,8 @@ export async function POST(
       where: { id },
       include: { author: { select: { nickname: true } } },
     });
-    if (!post || (post.boardType !== "JOBS" && post.boardType !== "PICKUP")) {
-      return NextResponse.json({ error: "구인 글이 아닙니다." }, { status: 404 });
+    if (!post || post.boardType !== "JOBS") {
+      return NextResponse.json({ error: "구인·구직 글이 아닙니다." }, { status: 404 });
     }
     if (post.authorId !== user.id && !user.isAdmin) {
       return NextResponse.json({ error: "작성자만 채용 완료할 수 있습니다." }, { status: 403 });

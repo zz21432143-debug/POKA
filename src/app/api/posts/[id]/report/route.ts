@@ -30,7 +30,7 @@ export async function POST(
       return NextResponse.json({ error: "게시글을 찾을 수 없습니다." }, { status: 404 });
     }
     if (post.boardType !== "ANONYMOUS_REVIEW") {
-      return NextResponse.json({ error: "매장후기만 신고할 수 있습니다." }, { status: 400 });
+      return NextResponse.json({ error: "익명 게시판만 신고할 수 있습니다." }, { status: 400 });
     }
     if (post.authorId === user.id) {
       return NextResponse.json({ error: "내 글은 신고할 수 없습니다." }, { status: 400 });

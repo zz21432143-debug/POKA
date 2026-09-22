@@ -15,6 +15,8 @@ export default async function JobWritePage({
     FIXED: "근무지와 상호명으로 제목이 만들어집니다. 연락처는 로그인 회원만 볼 수 있습니다.",
     APPLY: "희망 근무지와 시급으로 제목이 만들어집니다.",
     TEAM: "주요 활동 지역과 팀 명으로 제목이 만들어집니다.",
+    URGENT: "근무지와 필요 날짜로 제목이 만들어집니다. 당일 대타·급구용입니다.",
+    SEEKING: "희망 지역과 표시 이름으로 제목이 만들어집니다.",
   } as const;
 
   return (

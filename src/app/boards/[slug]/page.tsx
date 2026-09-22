@@ -17,9 +17,10 @@ export const dynamic = "force-dynamic";
 
 const ALIASES: Record<string, string> = {
   hire: "/boards/jobs/fixed",
-  pickup: "/boards/jobs/apply",
-  talent: "/boards/jobs/team",
+  pickup: "/boards/jobs/urgent",
+  talent: "/boards/jobs/seek",
   events: "/boards/schedule",
+  "store-review": "/boards/anonymous",
 };
 
 export default async function BoardPage({

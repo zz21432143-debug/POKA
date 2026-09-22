@@ -17,6 +17,8 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   TALENT: "member",
   PICKUP: "member",
   FREE: "member",
+  RULE_QA: "member",
+  SKETCH: "member",
   HAND_REVIEW: "member",
   ANONYMOUS_REVIEW: "member",
 };

@@ -36,12 +36,12 @@ const COLUMN_DOCS = {
     ["isDealerVerified", "딜러 인증 여부"],
   ],
   posts: [
-    ["boardType", "FREE / JOBS / TALENT / PICKUP / EVENT_POSTER / OFFICIAL_POSTER / SCHEDULE 등"],
+    ["boardType", "FREE / RULE_QA / SKETCH / HAND_REVIEW / ANONYMOUS_REVIEW / JOBS / PROMO / SCHEDULE 등"],
     ["authorId", "작성자. 익명 후기는 null"],
     ["title / content", "제목과 본문"],
     ["upvoteCount / downvoteCount", "추천·비추천 수"],
     ["authorIp", "작성자 IP (익명 후기 운영용)"],
-    ["ratingManner/Service/Facility/Atmosphere", "매장후기 4항목 별점 (1~5)"],
+    ["ratingManner/Service/Facility/Atmosphere", "익명 게시판 매장후기 4항목 별점 (1~5)"],
     ["pollVotes", "핸드리뷰 Fold/Check/Call/Raise 투표"],
   ],
   comments: [

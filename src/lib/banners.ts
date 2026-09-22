@@ -9,7 +9,7 @@ export type PromoBanner = {
 export const PREMIUM_BANNERS: PromoBanner[] = [
   {
     id: 1,
-    href: "/boards/promo",
+    href: "/boards/official",
     title: "강남 캐주얼 나이트",
     sponsor: "프리미엄 A",
     image: "/banners/slot-1.svg",
@@ -30,7 +30,7 @@ export const PREMIUM_BANNERS: PromoBanner[] = [
   },
   {
     id: 4,
-    href: "/boards/store-review",
+    href: "/boards/anonymous",
     title: "룸 투어 위크",
     sponsor: "프리미엄 D",
     image: "/banners/slot-4.svg",
@@ -44,7 +44,7 @@ export const PREMIUM_BANNERS: PromoBanner[] = [
   },
   {
     id: 6,
-    href: "/boards/promo",
+    href: "/boards/official",
     title: "클럽 멤버십",
     sponsor: "프리미엄 F",
     image: "/banners/slot-6.svg",

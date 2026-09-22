@@ -94,10 +94,16 @@ export function BoardWriteForm({
         </div>
       ) : null}
       {boardType === "ANONYMOUS_REVIEW" ? (
-        <StarPicker
-          values={ratings}
-          onChange={(key, value) => setRatings((prev) => ({ ...prev, [key]: value }))}
-        />
+        <div className="grid gap-2">
+          <p className="text-sm text-muted-foreground">매장 후기라면 별점(선택, 4항목 모두)</p>
+          <StarPicker
+            values={ratings}
+            onChange={(key, value) => setRatings((prev) => ({ ...prev, [key]: value }))}
+          />
+        </div>
+      ) : null}
+      {boardType === "SKETCH" ? (
+        <Field label="사진 URL" value={bannerImageUrl} onChange={setBannerImageUrl} placeholder="/banners/slot-4.svg" />
       ) : null}
       <div className="grid gap-2">
         <Label htmlFor="content">내용</Label>

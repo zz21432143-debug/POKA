@@ -4,6 +4,8 @@ import type { BoardType } from "@/generated/prisma/enums";
 export const POST_EXP: Record<BoardType, number> = {
   HAND_REVIEW: 80,
   ANONYMOUS_REVIEW: 22,
+  RULE_QA: 14,
+  SKETCH: 14,
   FREE: 12,
   JOBS: 16,
   TALENT: 12,
@@ -17,6 +19,8 @@ export const POST_EXP: Record<BoardType, number> = {
 export const POST_POINTS: Record<BoardType, number> = {
   HAND_REVIEW: 20,
   ANONYMOUS_REVIEW: 8,
+  RULE_QA: 5,
+  SKETCH: 5,
   FREE: 4,
   JOBS: 6,
   TALENT: 4,

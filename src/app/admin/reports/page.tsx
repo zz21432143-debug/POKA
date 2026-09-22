@@ -20,7 +20,7 @@ export default async function AdminReportsPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">매장후기 신고</h1>
+        <h1 className="text-2xl font-semibold">익명 게시판 신고</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           작성자 계정/IP는 관리자에게만 보입니다. 3건 이상 신고 시 자동 숨김됩니다.
         </p>
