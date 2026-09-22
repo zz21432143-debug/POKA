@@ -92,7 +92,7 @@ function CommentItem({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {best ? <Badge>베스트 댓글</Badge> : null}
-          <AuthorChip author={comment.author} anonymous={anonymous} />
+          <AuthorChip author={comment.author} anonymous={anonymous} size="sm" />
           <span className="text-xs text-primary">추천 {count}</span>
         </div>
         <Button

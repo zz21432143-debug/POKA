@@ -91,7 +91,7 @@ async function main() {
         isAdmin: nickname === "펠트딜러",
         memberKind: verified ? MemberKind.COMPANY : MemberKind.INDIVIDUAL,
         lastAttendanceDate: index < 20 ? today : yesterday,
-        attendanceStreak: index < 20 ? 1 + (index % 6) : 0,
+        attendanceStreak: nickname === "펠트딜러" ? 14 : index < 20 ? 1 + (index % 6) : 0,
       },
     });
     users.push(user);

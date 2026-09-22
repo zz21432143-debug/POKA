@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobTagList, jobTags } from "@/components/jobs/job-facts";
 import { JOB_KIND_LABEL } from "@/lib/nav";
 import type { JobFactsPost } from "@/components/jobs/job-facts";
+import { AuthorChip } from "@/components/posts/author-chip";
 
 export type JobCardData = JobFactsPost & {
   id: string;
@@ -10,6 +11,7 @@ export type JobCardData = JobFactsPost & {
   isPaid: boolean;
   authorNickname: string | null;
   authorLevel: number | null;
+  author: import("@/components/posts/author-chip").PublicAuthor;
 };
 
 export function JobCards({ jobs }: { jobs: JobCardData[] }) {
@@ -37,10 +39,9 @@ export function JobCards({ jobs }: { jobs: JobCardData[] }) {
             </div>
             <p className="mt-2 text-lg font-semibold">{job.title}</p>
             <JobTagList tags={jobTags(job)} />
-            <p className="mt-2 text-xs text-muted-foreground">
-              {job.authorNickname ?? "회원"}
-              {job.authorLevel ? ` · Lv.${job.authorLevel}` : ""}
-            </p>
+            <div className="mt-2">
+              <AuthorChip author={job.author} anonymous={false} size="sm" />
+            </div>
           </Link>
         </li>
       ))}

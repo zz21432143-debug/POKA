@@ -40,6 +40,7 @@ export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) 
     isPaid: post.isPaid,
     authorNickname: post.author?.nickname ?? null,
     authorLevel: post.author?.level ?? null,
+    author: post.author,
     jobKind: post.jobKind,
     jobLocation: post.jobLocation,
     jobCompanyName: post.jobCompanyName,

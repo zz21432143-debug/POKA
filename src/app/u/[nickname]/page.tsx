@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { MarkImage } from "@/components/layout/mark-image";
-import { AUTHOR_SELECT, ProfileBadges } from "@/components/posts/author-chip";
+import { UserBadge } from "@/components/user/user-badge";
+import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PostList } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
 
@@ -25,15 +25,20 @@ export default async function MemberPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-        <MarkImage src={user.profileMarkImageUrl} alt={user.nickname} size={56} />
-        <div>
-          <h1 className="text-2xl font-semibold">{user.nickname}</h1>
-          <div className="mt-1">
-            <ProfileBadges isDealerVerified={user.isDealerVerified} level={user.level} />
-          </div>
-          <p className="text-sm text-muted-foreground">연속 출석 {user.attendanceStreak}일</p>
-        </div>
+      <header className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+        <h1 className="sr-only">{user.nickname}</h1>
+        <UserBadge
+          user={{
+            nickname: user.nickname,
+            profileMarkImageUrl: user.profileMarkImageUrl,
+            level: user.level,
+            isDealerVerified: user.isDealerVerified,
+            isAdmin: user.isAdmin,
+            attendanceStreak: user.attendanceStreak,
+          }}
+          size="lg"
+        />
+        <p className="text-sm text-muted-foreground">연속 출석 {user.attendanceStreak}일</p>
       </header>
       <PostList
         posts={posts.map((post) => ({

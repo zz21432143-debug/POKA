@@ -89,7 +89,7 @@ export function InfiniteAttendanceList({
         {items.map((row) => (
           <li key={row.id} className="flex min-h-12 items-center gap-3 px-3 py-3">
             <div className="min-w-0 flex-1">
-              <AuthorChip author={row.author} anonymous={false} />
+              <AuthorChip author={row.author} anonymous={false} size="sm" />
               <p className="truncate text-sm text-muted-foreground">{row.content || row.title}</p>
             </div>
           </li>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EyeIcon, MessageCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RatingStamp } from "@/components/reviews/rating-stamp";
-import { type PublicAuthor } from "@/components/posts/author-chip";
+import { AuthorChip, type PublicAuthor } from "@/components/posts/author-chip";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { isAnonymousBoard } from "@/lib/request";
 import { formatRelativeKst } from "@/lib/dates";
@@ -53,7 +53,6 @@ export function PostList({
     >
       {posts.map((post, index) => {
         const anonymous = isAnonymousBoard(post.boardType);
-        const name = anonymous || !post.author ? "익명" : post.author.nickname;
         return (
           <Fragment key={post.id}>
             {index === 3 ? <SponsoredPostLine /> : null}
@@ -72,11 +71,10 @@ export function PostList({
                 ) : null}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{post.title}</p>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {name}
-                    {" · "}
-                    {formatRelativeKst(post.createdAt)}
-                  </p>
+                  <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
+                    <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
+                    <span className="text-xs text-muted-foreground">{formatRelativeKst(post.createdAt)}</span>
+                  </div>
                 </div>
                 {post.boardType === "ANONYMOUS_REVIEW" ? (
                   <RatingStamp

@@ -105,10 +105,10 @@ export default async function PostDetailPage({
             />
           ) : null}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <AuthorChip author={post.author} anonymous={anonymous} />
+        <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
+          <AuthorChip author={post.author} anonymous={anonymous} size="lg" />
           {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
-            <Link href={`/posts/${post.id}/edit`} className="text-sm text-primary">
+            <Link href={`/posts/${post.id}/edit`} className="mt-2 inline-block text-sm text-primary">
               수정
             </Link>
           ) : null}
