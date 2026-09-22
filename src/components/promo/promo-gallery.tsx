@@ -20,22 +20,22 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
   }
 
   return (
-    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {posts.map((post) => {
-        const image = post.bannerImageUrl || "/banners/slot-1.svg";
+        const image = post.bannerImageUrl || "/images/posters/official-6.jpg";
         const summary = post.promoTag || post.content.slice(0, 24);
         return (
-          <li key={post.id}>
+          <li key={post.id} className="mx-auto w-full max-w-[320px]">
             <Link
               href={`/posts/${post.id}`}
               className="touch-target group block overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/50"
             >
-              <div className="flex aspect-[4/3] items-center justify-center bg-black">
+              <div className="flex aspect-[5/7] items-center justify-center bg-black">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image} alt={post.title} className="max-h-full max-w-full object-contain" />
+                <img src={image} alt={post.title} className="h-full w-full object-contain" />
               </div>
               <div className="p-3">
-                <h2 className="text-lg font-semibold">{post.title}</h2>
+                <h2 className="text-base font-semibold leading-snug">{post.title}</h2>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {post.promoLocation ? <Badge variant="secondary">{post.promoLocation}</Badge> : null}
                   {summary ? <Badge variant="outline">{summary}</Badge> : null}

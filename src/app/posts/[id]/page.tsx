@@ -147,6 +147,13 @@ export default async function PostDetailPage({
         </dl>
       ) : null}
 
+      {post.boardType === "PROMO" && post.bannerImageUrl ? (
+        <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-border bg-black">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={post.bannerImageUrl} alt={post.title} className="mx-auto max-h-[720px] w-full object-contain" />
+        </div>
+      ) : null}
+
       {post.boardType === "SCHEDULE" && post.bannerImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={post.bannerImageUrl} alt={post.title} className="w-full rounded-2xl border border-border object-cover" />

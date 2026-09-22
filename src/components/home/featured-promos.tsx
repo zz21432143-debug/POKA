@@ -2,6 +2,9 @@ import Link from "next/link";
 import { MegaphoneIcon, PlusIcon } from "lucide-react";
 import { getPremiumBanners } from "@/lib/premium-banners";
 
+/** 왕좌의 게임 포스터(약 998×1397)에 맞춘 세로형 비율 */
+const POSTER_FRAME = "aspect-[5/7]";
+
 function posterMark(tag?: string | null, isPaid?: boolean) {
   if (isPaid) return "AD";
   if (tag === "제휴" || tag === "협찬") return "제휴";
@@ -26,13 +29,13 @@ export async function FeaturedPromos() {
       <p className="mb-3 text-xs text-muted-foreground">
         메인 6구좌는 공식 홍보·스폰서 포스터입니다. 빈 칸은 제휴 문의로 연결됩니다.
       </p>
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {banners.map((banner) => (
-          <li key={banner.id}>
+          <li key={banner.id} className="mx-auto w-full max-w-[280px] sm:max-w-[320px]">
             {banner.vacant ? (
               <Link
                 href="/advertise"
-                className="touch-target group relative flex aspect-[4/3] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-primary/45 bg-emerald-50/80 px-4 text-center hover:border-primary"
+                className={`touch-target group relative flex ${POSTER_FRAME} flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-primary/45 bg-emerald-50/80 px-4 text-center hover:border-primary`}
               >
                 <span className="absolute top-3 left-3 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
                   AD
@@ -46,28 +49,30 @@ export async function FeaturedPromos() {
             ) : (
               <Link
                 href={banner.href}
-                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-black shadow-sm"
+                className="group block overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:border-primary/50"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={banner.image}
-                  alt={banner.title}
-                  className="h-full w-full object-contain"
-                />
-                <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
-                    {banner.tag || "홍보"}
-                  </span>
-                  <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/30">
-                    {posterMark(banner.tag, banner.isPaid)}
-                  </span>
+                <div className={`relative ${POSTER_FRAME} bg-black`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="h-full w-full object-contain"
+                  />
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
+                      {banner.tag || "홍보"}
+                    </span>
+                    <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/30">
+                      {posterMark(banner.tag, banner.isPaid)}
+                    </span>
+                  </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-white">
-                  <h3 className="text-[15px] font-bold leading-snug">{banner.title}</h3>
-                  <p className="mt-1 truncate text-[11px] text-white/75">
+                <div className="p-2.5">
+                  <h3 className="text-sm font-bold leading-snug">{banner.title}</h3>
+                  <p className="mt-1 truncate text-[11px] text-muted-foreground">
                     {[banner.location, banner.sponsor].filter(Boolean).join(" · ")}
                   </p>
-                  <span className="mt-2 inline-flex h-7 items-center rounded-full bg-primary px-3 text-[11px] font-semibold">
+                  <span className="mt-2 inline-flex h-8 items-center rounded-full bg-primary px-3 text-[11px] font-semibold text-white">
                     자세히 보기 →
                   </span>
                 </div>
