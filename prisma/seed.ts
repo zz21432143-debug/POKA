@@ -5,6 +5,7 @@ import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 import { ATTENDANCE_LINES, catalogPosts, SEED_NICKNAMES } from "../src/lib/seed-catalog";
 import { HOME_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
+import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -17,28 +18,6 @@ const LEVELS = Array.from({ length: 20 }, (_, i) => {
   const markPurchasePoints = 200 + (level - 1) * 150;
   return { level, requiredExp, markPurchasePoints };
 });
-
-const SAMPLE_HAND = {
-  heroPosition: "BTN",
-  villainPosition: "BB",
-  heroCards: ["Ah", "Js"],
-  villainCards: [],
-  board: ["Kh", "7s", "2d"],
-  effectiveBb: 100,
-  streets: {
-    preflop: [
-      { actor: "Villain", action: "raise", amount: 2.5 },
-      { actor: "Hero", action: "raise", amount: 9 },
-      { actor: "Villain", action: "call" },
-    ],
-    flop: [
-      { actor: "Villain", action: "bet", amount: 33 },
-      { actor: "Hero", action: "call" },
-    ],
-    turn: [],
-    river: [],
-  },
-};
 
 async function main() {
   await prisma.tickerEvent.deleteMany();
@@ -140,7 +119,7 @@ async function main() {
           eventEndDate: row.eventEndDate,
           eventPrize: row.eventPrize,
           eventLink: row.eventLink,
-          handReviewJson: row.handReview ? JSON.stringify(SAMPLE_HAND) : null,
+          handReviewJson: row.handReview ? JSON.stringify(SAMPLE_TABLE_HAND) : null,
           ratingManner: row.ratings?.[0],
           ratingService: row.ratings?.[1],
           ratingFacility: row.ratings?.[2],

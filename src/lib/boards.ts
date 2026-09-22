@@ -19,7 +19,7 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   FREE: "자유 수다와 잡담",
   RULE_QA: "룰·판정·진행이 맞는지 질문",
   SKETCH: "현장 사진과 스케치",
-  HAND_REVIEW: "핸드히스토리와 스팟 분석. 본문에 Fold/Check/Call/Raise 원클릭 투표",
+  HAND_REVIEW: "테이블·액션 로그로 핸드를 공유하고, 상대 핸드를 공개할 수 있습니다.",
   ANONYMOUS_REVIEW: "닉네임 비공개. 매장 후기라면 매너·서비스·시설·분위기 별점",
   JOBS: "고정 직원 · 지원 딜러 · 팀 · 급구/대타 · 개인 구직",
   PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬 · 메인 프리미엄 6구좌 연동",

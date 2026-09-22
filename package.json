@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start --hostname 0.0.0.0 --port 43123",
     "lint": "eslint",
-    "test": "tsx --test src/lib/feed.test.ts src/lib/marks.test.ts src/lib/promo-rotate.test.ts",
+    "test": "tsx --test src/lib/feed.test.ts src/lib/marks.test.ts src/lib/promo-rotate.test.ts src/lib/hand-review.test.ts",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
