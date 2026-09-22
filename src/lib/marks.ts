@@ -1,20 +1,12 @@
 import { prisma } from "@/lib/db";
 import {
-  MARK_CATEGORIES,
-  marksInCategory,
+  type MarkCatalog,
   type MarkCatalogItem,
   type MarkCategoryId,
 } from "@/lib/mark-categories";
 
-export { MARK_CATEGORIES, marksInCategory };
-export type { MarkCatalogItem, MarkCategoryId };
-
-export type MarkCatalog = {
-  points: number;
-  level: number;
-  equippedMarkId: string | null;
-  marks: MarkCatalogItem[];
-};
+export type { MarkCatalog, MarkCatalogItem, MarkCategoryId };
+export { MARK_CATEGORIES, marksInCategory } from "@/lib/mark-categories";
 
 export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
   const [marks, dbUser, owned] = await Promise.all([

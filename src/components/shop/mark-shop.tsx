@@ -18,7 +18,7 @@ import {
   type MarkCatalog,
   type MarkCatalogItem,
   type MarkCategoryId,
-} from "@/lib/marks";
+} from "@/lib/mark-categories";
 
 export function MarkShop({
   asPage = false,

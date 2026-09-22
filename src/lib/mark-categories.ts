@@ -18,6 +18,13 @@ export type MarkCatalogItem = {
   equipped: boolean;
 };
 
+export type MarkCatalog = {
+  points: number;
+  level: number;
+  equippedMarkId: string | null;
+  marks: MarkCatalogItem[];
+};
+
 export function marksInCategory(marks: MarkCatalogItem[], category: MarkCategoryId) {
   return marks.filter((mark) => mark.category === category);
 }
