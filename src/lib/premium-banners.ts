@@ -19,6 +19,7 @@ export async function getPremiumBanners(): Promise<
     vacant: boolean;
     location?: string | null;
     tag?: string | null;
+    isPaid?: boolean;
   })[]
 > {
   try {
@@ -64,6 +65,7 @@ export async function getPremiumBanners(): Promise<
           vacant: false,
           location: slot.post.promoLocation,
           tag: slot.post.promoTag,
+          isPaid: slot.post.isPaid,
         };
       }
 
@@ -81,6 +83,7 @@ export async function getPremiumBanners(): Promise<
           vacant: false,
           location: auto.promoLocation,
           tag: auto.promoTag,
+          isPaid: auto.isPaid,
         };
       }
 

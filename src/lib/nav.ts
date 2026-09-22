@@ -31,7 +31,6 @@ export type SidebarIcon =
   | "alert"
   | "book"
   | "lightbulb"
-  | "newspaper"
   | "calendar"
   | "megaphone"
   | "bell"
@@ -59,7 +58,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
-      { href: "/boards/anonymous", label: "고민 상담", hint: "익명", icon: "heart" },
+      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개", icon: "heart" },
       { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
@@ -70,8 +69,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/info/guide", label: "딜러 가이드", hint: "입문 · 매너", icon: "book" },
       { href: "/info/tips", label: "팁 & 노하우", hint: "현장 팁", icon: "lightbulb" },
-      { href: "/info/news", label: "업계 뉴스", hint: "소식", icon: "newspaper" },
-      { href: "/boards/schedule", label: "이벤트", hint: "대회 일정", icon: "calendar" },
+      { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],
   },
@@ -88,7 +86,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
 /** 피드 키 연결용 게시판 트리 (사이드바 시안과 별개) */
 export const BOARD_NAV: NavGroup[] = [
   {
-    title: "대회 일정",
+    title: "대회 스케줄",
     href: "/boards/schedule",
     hint: "일자별 / 월별 일정표",
     accent: "emerald",
@@ -165,7 +163,7 @@ export const BOARD_SLUGS = {
     writeHref: "/boards/hand-review/write",
   },
   anonymous: {
-    title: "고민 상담",
+    title: "익명 게시판",
     boardType: "ANONYMOUS_REVIEW" as const,
     writeHref: "/boards/anonymous/write",
   },
@@ -187,7 +185,7 @@ export const BOARD_SLUGS = {
     gallery: true,
   },
   schedule: {
-    title: "대회 일정",
+    title: "대회 스케줄",
     boardType: "SCHEDULE" as const,
     writeHref: "/boards/schedule/write",
     calendar: true,

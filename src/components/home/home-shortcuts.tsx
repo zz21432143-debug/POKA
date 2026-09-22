@@ -36,8 +36,8 @@ export function HomeShortcuts() {
         },
         {
           href: "/boards/schedule",
-          title: "이벤트",
-          body: "다양한 이벤트와 소식을 가장 빠르게 만나보세요.",
+          title: "대회 스케줄",
+          body: "일자별 · 월별 토너먼트 일정을 가장 빠르게 확인하세요.",
           icon: CalendarDaysIcon,
         },
       ].map((card) => (

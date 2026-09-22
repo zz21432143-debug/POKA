@@ -1,10 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { INFO_PAGES, type InfoKey } from "@/lib/info-pages";
 
-const TITLES: Record<InfoKey, { title: string; body: string }> = {
+const TITLES: Record<"guide" | "tips", { title: string; body: string }> = {
   guide: { title: "딜러 가이드", body: "입문 딜러를 위한 매너와 테이블 운영." },
   tips: { title: "팁 & 노하우", body: "현장에서 바로 쓰는 실전 팁." },
-  news: { title: "업계 뉴스", body: "룸·펍·토너먼트 소식." },
 };
 
 export default async function InfoArticlePage({
@@ -13,10 +12,11 @@ export default async function InfoArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const key = slug as InfoKey;
+  if (slug === "news") redirect("/info");
+  if (slug !== "guide" && slug !== "tips") notFound();
+  const key = slug as "guide" | "tips";
   const meta = TITLES[key];
-  const rows = INFO_PAGES[key];
-  if (!meta || !rows) notFound();
+  const rows = INFO_PAGES[key as InfoKey];
 
   return (
     <div className="flex flex-col gap-4">

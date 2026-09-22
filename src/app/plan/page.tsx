@@ -37,13 +37,13 @@ export default function PlanPage() {
       <section className="rounded-2xl border border-border bg-card p-4 text-sm leading-7">
         <h2 className="text-lg font-semibold">메뉴 구조</h2>
         <p className="mt-2 text-muted-foreground">
-          게시판 트리는 대회 일정, 공식 홍보, 커뮤니티, 구인/구직 네 갈래입니다. 커뮤니티는 출석체크,
+          게시판 트리는 대회 스케줄, 공식 홍보, 커뮤니티, 구인/구직 네 갈래입니다. 커뮤니티는 출석체크,
           이게 맞나요?, 현장 스케치, 자유게시판, 핸드리뷰, 익명 게시판입니다. 구인/구직은 고정 직원,
           지원 딜러, 팀, 급구/대타, 개인 구직입니다.
         </p>
         <p className="mt-3 text-muted-foreground">
           구인 글은 제목 입력란이 없고 지역·상호(조건)로 자동 생성됩니다. 연락처는 로그인 후 공개.
-          공식 홍보는 팀·브랜드·제휴 소식과 메인 프리미엄 3×2(6구좌)를 연동합니다. 대회 일정은
+          공식 홍보는 팀·브랜드·제휴 소식과 메인 프리미엄 3×2(6구좌)를 연동합니다. 대회 스케줄은
           관리자가 일자별·월별 달력으로 올립니다.
         </p>
       </section>

@@ -1,67 +1,79 @@
 import Link from "next/link";
-import { FEATURED_PROMOS } from "@/lib/featured-promos";
-import { MegaphoneIcon } from "lucide-react";
-import { cn } from "cn";
+import { MegaphoneIcon, PlusIcon } from "lucide-react";
+import { getPremiumBanners } from "@/lib/premium-banners";
 
-const TONE: Record<string, string> = {
-  city: "from-[#1a1430] via-[#3b2a1a] to-[#0f172a]",
-  spring: "from-[#4c1d3d] via-[#7a2e4d] to-[#1f2933]",
-  fit: "from-[#111827] via-[#1f2937] to-[#0b1220]",
-  hotel: "from-[#1e1b16] via-[#3f3a2e] to-[#0f172a]",
-  paper: "from-[#3f3a32] via-[#6b6256] to-[#1f2937]",
-  welcome: "from-[#052e1c] via-[#064e3b] to-[#022c22]",
-};
+function posterMark(tag?: string | null, isPaid?: boolean) {
+  if (isPaid) return "AD";
+  if (tag === "제휴" || tag === "협찬") return "제휴";
+  if (tag === "나이트" || tag === "멤버십") return "AD";
+  return "제휴";
+}
 
-export function FeaturedPromos() {
+export async function FeaturedPromos() {
+  const banners = await getPremiumBanners();
+
   return (
     <section>
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <MegaphoneIcon className="size-4 text-primary" />
-          지금, 진행중인 홍보 게시물
+          지금, 진행중인 홍보 포스터
         </h2>
         <Link href="/boards/official" className="text-xs text-muted-foreground hover:text-primary">
           전체보기
         </Link>
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        딜러들을 위한 다양한 채용 · 모집 · 이벤트 소식을 확인해보세요!
+        메인 6구좌는 공식 홍보·스폰서 포스터입니다. 빈 칸은 제휴 문의로 연결됩니다.
       </p>
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {FEATURED_PROMOS.map((card) => (
-          <li key={card.id}>
-            <Link
-              href={card.href}
-              className={cn(
-                "group relative flex min-h-[11.5rem] flex-col overflow-hidden rounded-2xl bg-gradient-to-br p-4 text-white shadow-sm",
-                TONE[card.tone],
-              )}
-            >
-              <div className="pointer-events-none absolute inset-0 opacity-40">
-                <div className="absolute -right-6 -bottom-10 size-36 rounded-full bg-white/10 blur-2xl" />
-                <div className="absolute top-6 right-8 size-16 rounded-full border border-white/20" />
-              </div>
-              <span className="relative z-[1] inline-flex items-center gap-1.5">
-                <span className="inline-flex w-fit rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold">
-                  {card.tag}
+        {banners.map((banner) => (
+          <li key={banner.id}>
+            {banner.vacant ? (
+              <Link
+                href="/advertise"
+                className="touch-target group relative flex aspect-[4/3] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-primary/45 bg-emerald-50/80 px-4 text-center hover:border-primary"
+              >
+                <span className="absolute top-3 left-3 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  AD
                 </span>
-                {"sponsorMark" in card && card.sponsorMark ? (
-                  <span className="inline-flex rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/35">
-                    {card.sponsorMark}
+                <span className="flex size-10 items-center justify-center rounded-full border border-primary text-primary">
+                  <PlusIcon className="size-5" />
+                </span>
+                <p className="mt-2 text-sm font-semibold text-emerald-900">홍보 포스터 구좌 {banner.id}</p>
+                <p className="mt-1 text-xs text-emerald-800/80">제휴 문의하기</p>
+              </Link>
+            ) : (
+              <Link
+                href={banner.href}
+                className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-slate-900 shadow-sm"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={banner.image}
+                  alt={banner.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
+                <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
+                    {banner.tag || "홍보"}
                   </span>
-                ) : null}
-              </span>
-              <h3 className="relative z-[1] mt-3 whitespace-pre-line text-[15px] font-bold leading-snug">
-                {card.title}
-              </h3>
-              <p className="relative z-[1] mt-2 text-xs text-white/80">{card.desc}</p>
-              <div className="relative z-[1] mt-auto flex items-end justify-between gap-2 pt-4">
-                <p className="text-[10px] text-white/60">{card.meta}</p>
-                <span className="inline-flex h-7 items-center rounded-full bg-primary px-3 text-[11px] font-semibold">
-                  {card.cta} →
-                </span>
-              </div>
-            </Link>
+                  <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/30">
+                    {posterMark(banner.tag, banner.isPaid)}
+                  </span>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                  <h3 className="text-[15px] font-bold leading-snug">{banner.title}</h3>
+                  <p className="mt-1 truncate text-[11px] text-white/75">
+                    {[banner.location, banner.sponsor].filter(Boolean).join(" · ")}
+                  </p>
+                  <span className="mt-2 inline-flex h-7 items-center rounded-full bg-primary px-3 text-[11px] font-semibold">
+                    자세히 보기 →
+                  </span>
+                </div>
+              </Link>
+            )}
           </li>
         ))}
       </ul>

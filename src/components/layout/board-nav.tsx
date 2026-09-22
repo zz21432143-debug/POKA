@@ -17,7 +17,6 @@ import {
   LightbulbIcon,
   MegaphoneIcon,
   MessageCircleIcon,
-  NewspaperIcon,
   ShieldIcon,
   SpadeIcon,
 } from "lucide-react";
@@ -34,7 +33,6 @@ const ICONS: Record<SidebarIcon, LucideIcon> = {
   alert: AlertTriangleIcon,
   book: BookOpenIcon,
   lightbulb: LightbulbIcon,
-  newspaper: NewspaperIcon,
   calendar: CalendarDaysIcon,
   megaphone: MegaphoneIcon,
   bell: BellIcon,

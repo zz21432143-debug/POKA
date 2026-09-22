@@ -1,12 +1,12 @@
 import { INFO_PAGES } from "@/lib/info-pages";
 import Link from "next/link";
-import { BookOpenIcon, CalendarDaysIcon, LightbulbIcon, NewspaperIcon } from "lucide-react";
+import { BookOpenIcon, CalendarDaysIcon, LightbulbIcon, MegaphoneIcon } from "lucide-react";
 
 const CARDS = [
   { href: "/info/guide", title: "딜러 가이드", body: "입문, 매너, 테이블 운영의 기본.", icon: BookOpenIcon },
   { href: "/info/tips", title: "팁 & 노하우", body: "현장에서 쌓인 실전 팁.", icon: LightbulbIcon },
-  { href: "/info/news", title: "업계 뉴스", body: "룸·펍·토너먼트 소식.", icon: NewspaperIcon },
-  { href: "/boards/schedule", title: "이벤트", body: "대회 일정과 이벤트.", icon: CalendarDaysIcon },
+  { href: "/boards/schedule", title: "대회 스케줄", body: "일자별 · 월별 토너먼트 일정.", icon: CalendarDaysIcon },
+  { href: "/boards/official", title: "공식 홍보", body: "제휴 · 협찬 포스터.", icon: MegaphoneIcon },
 ] as const;
 
 export default function InfoHubPage() {
@@ -15,7 +15,7 @@ export default function InfoHubPage() {
       <header>
         <h1 className="text-2xl font-semibold">정보센터</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          딜러 가이드부터 업계 뉴스, 이벤트까지 모았습니다. 등록 글 {INFO_PAGES.guide.length * 3}편.
+          딜러 가이드, 팁, 대회 스케줄, 공식 홍보를 모았습니다. 가이드·팁 {INFO_PAGES.guide.length + INFO_PAGES.tips.length}편.
         </p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">

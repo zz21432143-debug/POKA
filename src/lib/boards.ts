@@ -3,14 +3,14 @@ export const BOARD_LABELS = {
   RULE_QA: "질문 & 답변",
   SKETCH: "현장 스케치",
   HAND_REVIEW: "핸드리뷰",
-  ANONYMOUS_REVIEW: "고민 상담",
+  ANONYMOUS_REVIEW: "익명 게시판",
   JOBS: "구인 / 구직",
   PROMO: "공식 홍보",
   EVENT_POSTER: "대회 포스터",
   OFFICIAL_POSTER: "공식 홍보",
   TALENT: "개인 구직",
   PICKUP: "급구 / 대타",
-  SCHEDULE: "대회 일정",
+  SCHEDULE: "대회 스케줄",
 } as const;
 
 export type BoardTypeKey = keyof typeof BOARD_LABELS;
