@@ -53,7 +53,7 @@ export function AdPlacementMap() {
             <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">프로필</div>
             <div className="rounded-md bg-sky-100 px-2 py-6 text-center text-[10px] font-semibold text-sky-900 ring-2 ring-sky-400">
               S · 300×250
-              <span className="mt-1 block font-normal">없으면 문의 CTA</span>
+              <span className="mt-1 block font-normal">노출 1순위 · 스크롤 고정</span>
             </div>
             <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">공지 · 인기글</div>
             <div className="rounded-md bg-neutral-200 px-2 py-3 text-center text-[10px] font-semibold text-neutral-700">

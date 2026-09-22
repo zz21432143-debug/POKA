@@ -37,7 +37,7 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
       aria-label="사이드바 제휴 배너 공석"
       className="mx-auto flex min-h-[150px] w-full max-w-[300px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/45 bg-emerald-50/80 px-3 py-6"
     >
-      <p className="mb-3 text-xs font-semibold text-emerald-900">300×150 / 300×250 제휴 구좌</p>
+      <p className="mb-3 text-xs font-semibold text-emerald-900">S · 전 페이지 고정 · 월 45만</p>
       <AdvertiseInquiryCta />
     </section>
   );

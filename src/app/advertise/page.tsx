@@ -77,11 +77,11 @@ export default function AdvertisePage() {
       <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
         <h2 className="text-lg font-semibold">단가를 이렇게 잡았습니다</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-foreground/90">
-          <li>비교 대상은 대형 포털이 아니라 지역 홀덤 카페 배너·게시글형 홍보입니다.</li>
-          <li>홈 3×2는 고정 월정액이라 순환 포스터보다 높고, 카페 메인 고정보다는 낮습니다.</li>
-          <li>사이드바는 프로필 아래 반복 노출이지만 본문을 밀지 않아 월 18만입니다.</li>
-          <li>인피드는 목록을 읽다 한 줄만 보이므로 프리미엄과 사이드바 사이입니다.</li>
-          <li>패키지(프리미엄 1칸+사이드바+인피드)는 따로 살 때(월 78만)보다 낮춘 월 70만입니다.</li>
+          <li>사이드바(S)는 PC에서 모든 페이지 옆에 고정입니다. 제일 많이 보이므로 월 45만입니다.</li>
+          <li>홈 3×2(B)는 첫 화면이지만 홈에서만 보여서 S보다 낮게 월 38만입니다.</li>
+          <li>본문 하단 A는 모든 페이지지만 목록을 다 내린 뒤라 칸당 월 12만입니다.</li>
+          <li>인피드(C)는 스크롤 중 한 줄이라 월 22만입니다.</li>
+          <li>패키지(사이드바+프리미엄 1칸+인피드)는 따로 살 때(월 105만)보다 낮춘 월 95만입니다.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           트래픽 리포트는 계약 기간에 주 1회 공유하는 것을 기본으로 합니다. 공식 홍보 글만 직접 올리려면{" "}
