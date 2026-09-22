@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 /** 보안 헤더. 작성 쿨다운은 SQLite 상태 때문에 API 레이어(`assertWriteCooldown`)에서 처리합니다. */
-export function middleware() {
+export function proxy() {
   const response = NextResponse.next();
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");

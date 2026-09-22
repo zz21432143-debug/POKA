@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
+  allowedDevOrigins: ["127.0.0.1"],
   serverExternalPackages: [
     "@prisma/client",
     "@prisma/adapter-better-sqlite3",
