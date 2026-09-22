@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { todayKstDate, yesterdayKstDate } from "@/lib/dates";
 import { grantRewards } from "@/lib/exp";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
+import { PAGE_SIZE } from "@/lib/feed";
 import { ATTENDANCE_EXP, ATTENDANCE_MIN_COMMENT_LENGTH, ATTENDANCE_POINTS, LUCKY_ATTENDANCE_POINTS, STREAK_BONUS_EXP } from "@/lib/rewards";
 
 export async function ensureTodayAttendancePost() {
@@ -118,7 +119,8 @@ export async function getAttendanceStats(userId?: string) {
       : Promise.resolve(null),
     prisma.comment.findMany({
       where: { postId: post.id, isAttendanceCheck: true },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
+      take: PAGE_SIZE,
       include: { author: { select: AUTHOR_SELECT } },
     }),
   ]);

@@ -1,8 +1,9 @@
-import { AuthorChip } from "@/components/posts/author-chip";
 import { CommentForm } from "@/components/posts/comment-form";
+import { InfiniteAttendanceList } from "@/components/posts/infinite-attendance-list";
 import { getAttendanceStats } from "@/lib/attendance";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatKstLabel } from "@/lib/dates";
+import { PAGE_SIZE } from "@/lib/feed";
 import { ATTENDANCE_EXP, ATTENDANCE_POINTS } from "@/lib/rewards";
 
 export const dynamic = "force-dynamic";
@@ -43,22 +44,16 @@ export default async function AttendancePage() {
 
       <section>
         <h2 className="mb-2 text-lg font-semibold">오늘 출석 현황</h2>
-        {stats.comments.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-            아직 오늘 출석한 회원이 없습니다.
-          </p>
-        ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-            {stats.comments.map((row) => (
-              <li key={row.id} className="flex min-h-12 items-center gap-3 px-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <AuthorChip author={row.author} anonymous={false} />
-                  <p className="truncate text-sm text-muted-foreground">{row.content}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <InfiniteAttendanceList
+          initialItems={stats.comments.slice(0, PAGE_SIZE).map((row) => ({
+            id: row.id,
+            title: row.content,
+            content: row.content,
+            author: row.author,
+          }))}
+          initialTotal={stats.todayCount}
+          initialNextOffset={stats.todayCount > PAGE_SIZE ? PAGE_SIZE : null}
+        />
       </section>
     </div>
   );

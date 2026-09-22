@@ -169,6 +169,7 @@ async function main() {
     }
   }
 
+  await prisma.bannerSlot.deleteMany();
   const promoNight = createdPosts.find((post) => post.title === "강남 캐주얼 나이트");
   await prisma.bannerSlot.createMany({
     data: [

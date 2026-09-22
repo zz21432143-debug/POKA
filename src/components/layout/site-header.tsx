@@ -13,9 +13,9 @@ export function SiteHeader({ profile }: { profile: ViewerProfile | null }) {
         <MobileDrawer profile={profile} />
         <Link
           href="/"
-          className="touch-target flex min-h-12 min-w-[10.5rem] items-center rounded-lg px-1 sm:min-w-[13rem]"
+          className="touch-target flex min-h-12 min-w-[14rem] flex-1 items-center rounded-lg px-2 sm:min-w-[18rem] lg:min-w-[22rem] lg:flex-none"
         >
-          <PokaLogo className="text-[1.65rem] sm:text-[1.9rem] lg:text-[2.15rem]" />
+          <PokaLogo className="text-[1.85rem] sm:text-[2.15rem] lg:text-[2.45rem]" />
           <span className="sr-only">POKA 홈</span>
         </Link>
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">

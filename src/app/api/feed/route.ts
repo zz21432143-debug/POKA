@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
-import { feedWhere, isJobFeed, PAGE_SIZE, parseFeedKey } from "@/lib/feed";
+import { todayKstDate } from "@/lib/dates";
+import { PAGE_SIZE, feedWhere, isJobFeed, parseFeedKey } from "@/lib/feed";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,8 @@ export async function GET(request: Request) {
   const offset = Math.max(Number(url.searchParams.get("offset") ?? 0) || 0, 0);
 
   if (key === "attendance") {
-    const datePost = await prisma.post.findFirst({
-      where: { isAttendanceThread: true },
-      orderBy: { createdAt: "desc" },
+    const datePost = await prisma.post.findUnique({
+      where: { attendanceDate: todayKstDate() },
     });
     if (!datePost) {
       return NextResponse.json({ key, total: 0, offset, items: [], nextOffset: null });

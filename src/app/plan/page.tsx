@@ -37,7 +37,7 @@ export default function PlanPage() {
       <section className="rounded-2xl border border-border bg-card p-4 text-sm leading-7">
         <h2 className="text-lg font-semibold">메뉴 구조</h2>
         <p className="mt-2 text-muted-foreground">
-          상단 대메뉴는 대회 일정, 공식 홍보, 커뮤니티, 구인/구직 네 갈래입니다. 커뮤니티는 출석체크,
+          게시판 트리는 대회 일정, 공식 홍보, 커뮤니티, 구인/구직 네 갈래입니다. 커뮤니티는 출석체크,
           이게 맞나요?, 현장 스케치, 자유게시판, 핸드리뷰, 익명 게시판입니다. 구인/구직은 고정 직원,
           지원 딜러, 팀, 급구/대타, 개인 구직입니다.
         </p>
