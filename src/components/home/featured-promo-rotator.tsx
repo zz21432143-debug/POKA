@@ -10,7 +10,6 @@ import {
   buildLoopTrack,
   carouselCloneCount,
   loopTrackStartIndex,
-  shuffleInPlaceCopy,
   snapLoopIndex,
   type HomePromo,
 } from "@/lib/promo-rotate";
@@ -24,14 +23,6 @@ function posterMark(tag?: string | null, isPaid?: boolean) {
 }
 
 export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
-  const [deck, setDeck] = useState<HomePromo[]>([]);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setDeck(shuffleInPlaceCopy(pool));
-    setReady(true);
-  }, [pool]);
-
   if (pool.length === 0) {
     return (
       <Link
@@ -46,11 +37,7 @@ export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
     );
   }
 
-  if (!ready || deck.length === 0) {
-    return <div className="h-[28rem] sm:h-auto" aria-hidden />;
-  }
-
-  return <PromoCarousel deck={deck} />;
+  return <PromoCarousel deck={pool} />;
 }
 
 function PromoCarousel({ deck }: { deck: HomePromo[] }) {
@@ -144,7 +131,7 @@ function PromoCarousel({ deck }: { deck: HomePromo[] }) {
       </div>
 
       {canSlide ? (
-        <div className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-between px-1 sm:flex sm:opacity-0 sm:transition-opacity sm:duration-200 sm:group-hover/promo:opacity-100 sm:focus-within:opacity-100">
+        <div className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-between px-1 sm:flex">
           <CarouselArrow label="이전 포스터" onClick={() => move(-1)}>
             <ChevronLeftIcon className="size-7" />
           </CarouselArrow>
