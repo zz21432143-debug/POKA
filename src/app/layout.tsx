@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
+import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import "./globals.css";
 
@@ -14,6 +14,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const script = Caveat({
+  variable: "--font-script",
+  subsets: ["latin"],
+  weight: ["600"],
+});
+
 export const metadata: Metadata = {
   title: "POKA — 포커·딜러 커뮤니티",
   description: "POKA는 포커 플레이어와 딜러를 위한 반응형 커뮤니티입니다.",
@@ -24,14 +30,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#121315",
+  themeColor: "#f4f7f8",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${sans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteShell>{children}</SiteShell>

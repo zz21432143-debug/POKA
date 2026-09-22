@@ -13,6 +13,7 @@ export async function getPopularPosts(limit = 5) {
         boardType: true,
         upvoteCount: true,
         viewCount: true,
+        createdAt: true,
       },
     });
   } catch {

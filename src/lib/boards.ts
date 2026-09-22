@@ -1,9 +1,9 @@
 export const BOARD_LABELS = {
   FREE: "자유게시판",
-  RULE_QA: "이게 맞나요?",
+  RULE_QA: "질문 & 답변",
   SKETCH: "현장 스케치",
   HAND_REVIEW: "핸드리뷰",
-  ANONYMOUS_REVIEW: "익명 게시판",
+  ANONYMOUS_REVIEW: "고민 상담",
   JOBS: "구인 / 구직",
   PROMO: "공식 홍보",
   EVENT_POSTER: "대회 포스터",

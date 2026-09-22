@@ -34,7 +34,7 @@ export function ProfileBadges({
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
       {isDealerVerified ? (
-        <span className="inline-flex items-center rounded-full border border-[#e2b84a] bg-[#e2b84a]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#f3d27a]">
+        <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
           ★ 인증 딜러
         </span>
       ) : null}

@@ -49,72 +49,72 @@
 }
 
 :root {
-  --background: #121315;
-  --foreground: #f4f5f6;
-  --card: #1c1e22;
-  --card-foreground: #f4f5f6;
-  --popover: #1c1e22;
-  --popover-foreground: #f4f5f6;
-  --primary: #10b981;
-  --primary-foreground: #04281c;
-  --secondary: #25272c;
-  --secondary-foreground: #e8eaed;
-  --muted: #25272c;
-  --muted-foreground: #9aa0a8;
-  --accent: #10b981;
-  --accent-foreground: #04281c;
+  --background: #f4f7f8;
+  --foreground: #1a2433;
+  --card: #ffffff;
+  --card-foreground: #1a2433;
+  --popover: #ffffff;
+  --popover-foreground: #1a2433;
+  --primary: #22c55e;
+  --primary-foreground: #ffffff;
+  --secondary: #eef7f1;
+  --secondary-foreground: #14532d;
+  --muted: #f1f4f6;
+  --muted-foreground: #7b8794;
+  --accent: #e7f8ee;
+  --accent-foreground: #166534;
   --destructive: #ef4444;
-  --border: color-mix(in srgb, #10b981 22%, #1c1e22);
-  --input: #2a2d33;
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #34d399;
-  --chart-3: #065f46;
-  --chart-4: #6ee7b7;
-  --chart-5: #1c1e22;
-  --radius: 0.625rem;
-  --sidebar: #1c1e22;
-  --sidebar-foreground: #f4f5f6;
-  --sidebar-primary: #10b981;
-  --sidebar-primary-foreground: #04281c;
-  --sidebar-accent: #25272c;
-  --sidebar-accent-foreground: #10b981;
-  --sidebar-border: color-mix(in srgb, #10b981 18%, #1c1e22);
-  --sidebar-ring: #10b981;
+  --border: #e4ebee;
+  --input: #e4ebee;
+  --ring: #22c55e;
+  --chart-1: #22c55e;
+  --chart-2: #16324f;
+  --chart-3: #86efac;
+  --chart-4: #38bdf8;
+  --chart-5: #fbbf24;
+  --radius: 0.9rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a2433;
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7f8ee;
+  --sidebar-accent-foreground: #166534;
+  --sidebar-border: #e4ebee;
+  --sidebar-ring: #22c55e;
 }
 
 .dark {
-  --background: #121315;
-  --foreground: #f4f5f6;
-  --card: #1c1e22;
-  --card-foreground: #f4f5f6;
-  --popover: #1c1e22;
-  --popover-foreground: #f4f5f6;
-  --primary: #10b981;
-  --primary-foreground: #04281c;
-  --secondary: #25272c;
-  --secondary-foreground: #e8eaed;
-  --muted: #25272c;
-  --muted-foreground: #9aa0a8;
-  --accent: #10b981;
-  --accent-foreground: #04281c;
-  --destructive: #f87171;
-  --border: color-mix(in srgb, #10b981 22%, #1c1e22);
-  --input: #2a2d33;
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #34d399;
-  --chart-3: #065f46;
-  --chart-4: #6ee7b7;
-  --chart-5: #1c1e22;
-  --sidebar: #1c1e22;
-  --sidebar-foreground: #f4f5f6;
-  --sidebar-primary: #10b981;
-  --sidebar-primary-foreground: #04281c;
-  --sidebar-accent: #25272c;
-  --sidebar-accent-foreground: #10b981;
-  --sidebar-border: color-mix(in srgb, #10b981 18%, #1c1e22);
-  --sidebar-ring: #10b981;
+  --background: #f4f7f8;
+  --foreground: #1a2433;
+  --card: #ffffff;
+  --card-foreground: #1a2433;
+  --popover: #ffffff;
+  --popover-foreground: #1a2433;
+  --primary: #22c55e;
+  --primary-foreground: #ffffff;
+  --secondary: #eef7f1;
+  --secondary-foreground: #14532d;
+  --muted: #f1f4f6;
+  --muted-foreground: #7b8794;
+  --accent: #e7f8ee;
+  --accent-foreground: #166534;
+  --destructive: #ef4444;
+  --border: #e4ebee;
+  --input: #e4ebee;
+  --ring: #22c55e;
+  --chart-1: #22c55e;
+  --chart-2: #16324f;
+  --chart-3: #86efac;
+  --chart-4: #38bdf8;
+  --chart-5: #fbbf24;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a2433;
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7f8ee;
+  --sidebar-accent-foreground: #166534;
+  --sidebar-border: #e4ebee;
+  --sidebar-ring: #22c55e;
 }
 
 @layer base {
@@ -138,12 +138,18 @@
 }
 
 .felt-bg {
-  background-color: #121315;
-  background-image:
-    radial-gradient(ellipse 70% 42% at 10% -8%, rgb(16 185 129 / 0.16), transparent 58%),
-    radial-gradient(ellipse 48% 36% at 94% 4%, rgb(16 185 129 / 0.08), transparent 55%),
-    radial-gradient(circle at 1px 1px, rgb(16 185 129 / 0.05) 1px, transparent 0);
-  background-size: auto, auto, 18px 18px;
+  background-color: #f4f7f8;
+}
+
+.hero-mint {
+  background:
+    radial-gradient(ellipse 80% 120% at 88% 20%, rgb(187 247 208 / 0.9), transparent 55%),
+    radial-gradient(ellipse 50% 80% at 100% 100%, rgb(167 243 208 / 0.55), transparent 50%),
+    linear-gradient(105deg, #f7fffb 0%, #e9fbf1 48%, #dff7ea 100%);
+}
+
+.navy-panel {
+  background: linear-gradient(180deg, #1b3a5a 0%, #152c45 100%);
 }
 
 .touch-target {

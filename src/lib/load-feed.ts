@@ -16,7 +16,7 @@ export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) 
       orderBy,
       skip: offset,
       take: limit,
-      include: { author: { select: AUTHOR_SELECT } },
+      include: { author: { select: AUTHOR_SELECT }, _count: { select: { comments: true } } },
     }),
   ]);
   const nextOffset = offset + rows.length < total ? offset + rows.length : null;
@@ -27,6 +27,8 @@ export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) 
     author: post.author,
     upvoteCount: post.upvoteCount,
     createdAt: post.createdAt.toISOString(),
+    viewCount: post.viewCount,
+    commentCount: post._count.comments,
     ratingManner: post.ratingManner,
     ratingService: post.ratingService,
     ratingFacility: post.ratingFacility,

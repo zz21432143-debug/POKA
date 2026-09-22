@@ -1,8 +1,8 @@
-import { PromoBanners } from "@/components/home/promo-banners";
+import { HomeHero } from "@/components/home/home-hero";
+import { HomeShortcuts } from "@/components/home/home-shortcuts";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
-import { flattenNavItems } from "@/lib/nav";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +12,12 @@ export default async function HomePage() {
   try {
     const rows = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 7,
       where: { isAttendanceThread: false, hidden: false },
-      include: { author: { select: AUTHOR_SELECT } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
     });
     posts = rows.map((post) => ({
       id: post.id,
@@ -23,6 +26,8 @@ export default async function HomePage() {
       author: post.author,
       upvoteCount: post.upvoteCount,
       createdAt: post.createdAt.toISOString(),
+      viewCount: post.viewCount,
+      commentCount: post._count.comments,
       ratingManner: post.ratingManner,
       ratingService: post.ratingService,
       ratingFacility: post.ratingFacility,
@@ -33,33 +38,17 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <PromoBanners />
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">최근 글</h2>
-          <Link
-            href="/boards/free"
-            className="touch-target inline-flex min-h-11 items-center text-sm text-primary"
-          >
-            자유게시판
+    <div className="flex flex-col gap-5">
+      <HomeHero />
+      <HomeShortcuts />
+      <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h2 className="text-base font-semibold">최신 게시글</h2>
+          <Link href="/boards/free" className="text-sm text-muted-foreground hover:text-primary">
+            전체보기
           </Link>
         </div>
-        <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard />
-      </section>
-      <section className="lg:hidden">
-        <h2 className="mb-2 text-lg font-semibold">게시판 바로가기</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {flattenNavItems().map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="touch-target flex min-h-11 items-center justify-center rounded-xl border border-border bg-card px-3 text-center text-sm font-medium"
-              >
-                {item.label}
-              </Link>
-            ))}
-        </div>
+        <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard framed={false} />
       </section>
     </div>
   );

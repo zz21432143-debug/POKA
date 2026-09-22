@@ -14,7 +14,79 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-/** 사이드바 · 드로어 · 홈 바로가기의 단일 출처 (헤더는 로고/프로필만) */
+export const TOP_NAV = [
+  { href: "/", label: "홈" },
+  { href: "/boards/free", label: "게시판" },
+  { href: "/info", label: "정보센터" },
+  { href: "/community", label: "커뮤니티" },
+] as const;
+
+export type SidebarIcon =
+  | "home"
+  | "message"
+  | "camera"
+  | "user"
+  | "briefcase"
+  | "help"
+  | "heart"
+  | "alert"
+  | "book"
+  | "lightbulb"
+  | "newspaper"
+  | "calendar"
+  | "megaphone"
+  | "bell"
+  | "shield"
+  | "check"
+  | "spade";
+
+export type SidebarItem = NavItem & { icon: SidebarIcon };
+
+export type SidebarGroup = {
+  title: string | null;
+  items: SidebarItem[];
+};
+
+/** 홈 사이드바(시안). 피드 검증용 BOARD_NAV와 분리 */
+export const SIDEBAR_NAV: SidebarGroup[] = [
+  {
+    title: null,
+    items: [{ href: "/", label: "홈", hint: "커뮤니티 홈", icon: "home" }],
+  },
+  {
+    title: "커뮤니티",
+    items: [
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
+      { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
+      { href: "/intro", label: "자기소개", hint: "회원 소개", icon: "user" },
+      { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
+      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
+      { href: "/boards/anonymous", label: "고민 상담", hint: "익명", icon: "heart" },
+      { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
+      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
+    ],
+  },
+  {
+    title: "정보센터",
+    items: [
+      { href: "/info/guide", label: "딜러 가이드", hint: "입문 · 매너", icon: "book" },
+      { href: "/info/tips", label: "팁 & 노하우", hint: "현장 팁", icon: "lightbulb" },
+      { href: "/info/news", label: "업계 뉴스", hint: "소식", icon: "newspaper" },
+      { href: "/boards/schedule", label: "이벤트", hint: "대회 일정", icon: "calendar" },
+      { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
+    ],
+  },
+  {
+    title: "기타",
+    items: [
+      { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
+      { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },
+    ],
+  },
+];
+
+/** 피드 키 연결용 게시판 트리 (사이드바 시안과 별개) */
 export const BOARD_NAV: NavGroup[] = [
   {
     title: "대회 일정",
@@ -79,7 +151,7 @@ export function navGroupActive(pathname: string, group: NavGroup) {
 export const BOARD_SLUGS = {
   free: { title: "자유게시판", boardType: "FREE" as const, writeHref: "/boards/free/write" },
   rules: {
-    title: "이게 맞나요?",
+    title: "질문 & 답변",
     boardType: "RULE_QA" as const,
     writeHref: "/boards/rules/write",
   },
@@ -94,7 +166,7 @@ export const BOARD_SLUGS = {
     writeHref: "/boards/hand-review/write",
   },
   anonymous: {
-    title: "익명 게시판",
+    title: "고민 상담",
     boardType: "ANONYMOUS_REVIEW" as const,
     writeHref: "/boards/anonymous/write",
   },
