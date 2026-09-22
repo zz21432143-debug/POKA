@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ListingCards } from "@/components/listing/listing-cards";
+import { ScheduleCalendar } from "@/components/listing/schedule-calendar";
 import { PostList } from "@/components/posts/post-list";
 import { PromoGallery } from "@/components/promo/promo-gallery";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
-import { BOARD_SLUGS } from "@/lib/nav";
+import { BOARD_DESCRIPTIONS } from "@/lib/boards";
+import { getCurrentUser } from "@/lib/current-user";
+import { resolveBoardSlug } from "@/lib/nav";
+import { canWriteBoard } from "@/lib/permissions";
 import { POST_EXP } from "@/lib/rewards";
 import { cn } from "cn";
 
@@ -16,42 +21,21 @@ export default async function BoardPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const board = BOARD_SLUGS[slug as keyof typeof BOARD_SLUGS];
+  const board = resolveBoardSlug(slug);
   if (!board) notFound();
+  const viewer = await getCurrentUser().catch(() => null);
+  const canWrite = canWriteBoard(viewer, board.boardType);
 
-  let posts: {
-    id: string;
-    boardType: string;
-    title: string;
-    author: { nickname: string; profileMarkImageUrl: string | null; level: number } | null;
-    upvoteCount: number;
-    createdAt: string;
-    bannerImageUrl: string | null;
-    promoLocation: string | null;
-    promoTag: string | null;
-    content: string;
-  }[] = [];
-  try {
-    const rows = await prisma.post.findMany({
-      where: { boardType: board.boardType, isAttendanceThread: false, hidden: false },
-      orderBy: { createdAt: "desc" },
-      include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
-    });
-    posts = rows.map((post) => ({
-      id: post.id,
-      boardType: post.boardType,
-      title: post.title,
-      author: post.author,
-      upvoteCount: post.upvoteCount,
-      createdAt: post.createdAt.toISOString(),
-      bannerImageUrl: post.bannerImageUrl,
-      promoLocation: post.promoLocation,
-      promoTag: post.promoTag,
-      content: post.content,
-    }));
-  } catch {
-    posts = [];
-  }
+  const rows = await prisma.post.findMany({
+    where: { boardType: board.boardType, isAttendanceThread: false, hidden: false },
+    orderBy: { createdAt: "desc" },
+    include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
+  });
+
+  const gallery = "gallery" in board && board.gallery;
+  const calendar = "calendar" in board && board.calendar;
+  const listing = "listing" in board && board.listing;
+  const now = new Date();
 
   return (
     <div className="flex flex-col gap-4">
@@ -59,21 +43,78 @@ export default async function BoardPage({
         <div>
           <h1 className="text-2xl font-semibold">{board.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {board.boardType === "HAND_REVIEW"
-              ? `핸드리뷰 작성 시 EXP ${POST_EXP.HAND_REVIEW} (최고 지급)`
-              : board.boardType === "ANONYMOUS_REVIEW"
-                ? "익명 공개 · 계정/IP는 서버에만 저장 · 신고 가능"
-                : `글 작성 시 EXP ${POST_EXP[board.boardType]}`}
+            {BOARD_DESCRIPTIONS[board.boardType]} · 작성 EXP {POST_EXP[board.boardType]}
           </p>
         </div>
-        <Link href={board.writeHref} className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>
-          글쓰기
-        </Link>
+        {canWrite ? (
+          <Link href={board.writeHref} className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>
+            {listing === "hire" ? "공고 등록" : "글쓰기"}
+          </Link>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {"adminOnly" in board && board.adminOnly
+              ? "관리자만 작성할 수 있습니다."
+              : listing === "hire"
+                ? "기업·팀 회원만 등록할 수 있습니다."
+                : listing === "talent"
+                  ? "개인 회원만 등록할 수 있습니다."
+                  : null}
+          </p>
+        )}
       </header>
-      {board.boardType === "PROMO" ? (
-        <PromoGallery posts={posts} />
+
+      {gallery ? (
+        <PromoGallery
+          posts={rows.map((post) => ({
+            id: post.id,
+            title: post.title,
+            bannerImageUrl: post.bannerImageUrl,
+            promoLocation: post.promoLocation,
+            promoTag: post.promoTag,
+            content: post.content,
+          }))}
+        />
+      ) : calendar ? (
+        <ScheduleCalendar
+          year={now.getFullYear()}
+          month={now.getMonth()}
+          events={rows.map((post) => ({
+            id: post.id,
+            title: post.title,
+            eventDate: post.eventDate,
+            promoLocation: post.promoLocation,
+            jobLocation: post.jobLocation,
+          }))}
+        />
+      ) : listing ? (
+        <ListingCards
+          emptyText="등록된 글이 없습니다."
+          items={rows.map((post) => ({
+            id: post.id,
+            title: post.title,
+            jobPositions: post.jobPositions,
+            jobLocation: post.jobLocation,
+            jobWorkType: post.jobWorkType,
+            jobPayType: post.jobPayType,
+            jobPayAmount: post.jobPayAmount,
+            jobAlwaysOpen: post.jobAlwaysOpen,
+            jobWorkDate: post.jobWorkDate,
+            jobFilled: post.jobFilled,
+            authorNickname: post.author?.nickname ?? null,
+          }))}
+        />
       ) : (
-        <PostList posts={posts} emptyText="이 게시판에 글이 없습니다." />
+        <PostList
+          posts={rows.map((post) => ({
+            id: post.id,
+            boardType: post.boardType,
+            title: post.title,
+            author: post.author,
+            upvoteCount: post.upvoteCount,
+            createdAt: post.createdAt.toISOString(),
+          }))}
+          emptyText="이 게시판에 글이 없습니다."
+        />
       )}
     </div>
   );

@@ -14,7 +14,7 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
   if (posts.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-        등록된 홍보글이 없습니다.
+        등록된 포스터가 없습니다.
       </p>
     );
   }

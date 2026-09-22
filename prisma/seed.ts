@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { BoardType, JobKind, PrismaClient } from "../src/generated/prisma/client";
+import { BoardType, MemberKind, PrismaClient } from "../src/generated/prisma/client";
 import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 
@@ -83,6 +83,7 @@ async function main() {
       points: 1840,
       isDealerVerified: true,
       isAdmin: true,
+      memberKind: MemberKind.COMPANY,
       lastAttendanceDate: yesterday,
       attendanceStreak: 5,
     },
@@ -96,6 +97,7 @@ async function main() {
       exp: 1450,
       points: 320,
       isDealerVerified: false,
+      memberKind: MemberKind.INDIVIDUAL,
       lastAttendanceDate: today,
       attendanceStreak: 3,
     },
@@ -108,6 +110,7 @@ async function main() {
       exp: 40,
       points: 10,
       isDealerVerified: false,
+      memberKind: MemberKind.INDIVIDUAL,
     },
   });
 
@@ -179,60 +182,101 @@ async function main() {
   await prisma.post.create({
     data: {
       boardType: BoardType.JOBS,
-      jobKind: JobKind.FIXED,
-      isPaid: true,
       authorId: dealer.id,
-      title: "[서울 강남] POKA 펍 - 고정 직원 모집",
-      content: "주말 포함 고정 딜러를 구합니다. 라이브 경험 우대.",
-      jobLocation: "서울 강남",
-      jobCompanyName: "POKA 펍",
-      jobPayType: "월급",
-      jobPayAmount: "3200000",
-      jobSchedule: "주5일",
-      jobWorkHours: "20:00–04:00",
-      jobBenefits: "식대 · 교통비",
-      jobExperience: "라이브 1년 이상",
-      jobContact: "010-2000-1111",
+      title: "TOT 딜러팀 정규 Dealer 모집",
+      content: "캐주얼·토너먼트 정규 소속 딜러를 찾습니다. 주 5일, 교육 지원.",
+      jobPositions: "Dealer,Floor",
+      jobLocation: "수도권",
+      jobWorkType: "정규팀 소속",
+      jobExperience: "경력자 우대",
+      jobPayType: "일급",
+      jobPayAmount: "250000",
+      jobBenefits: "숙소 제공,교통비 지원,식사 제공",
+      jobApplyMethod: "카카오톡 ID·링크",
+      jobApplyValue: "tot_dealer",
+      jobAlwaysOpen: true,
+      jobDateFlexible: true,
       upvoteCount: 6,
       authorIp: "203.0.113.21",
     },
   });
   await prisma.post.create({
     data: {
-      boardType: BoardType.JOBS,
-      jobKind: JobKind.APPLY,
+      boardType: BoardType.TALENT,
+      authorId: regular.id,
+      title: "라이브 1년차 Floor · 주말 세션 가능",
+      content: "강남·분당 이동 가능. 캐주얼 플로어 경험 있습니다.",
+      jobPositions: "Floor,Dealer",
+      jobLocation: "수도권",
+      jobApplyMethod: "전화·문자",
+      jobApplyValue: "010-3000-3333",
+      jobContact: "010-3000-3333",
+      authorIp: "203.0.113.10",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.PICKUP,
       authorId: dealer.id,
-      title: "[경기 분당] 지원 딜러 (시급 20,000원)",
-      content: "주말 스팟 딜러 지원을 받습니다.",
-      jobLocation: "경기 분당",
+      title: "9/27 분당 캐주얼 대타 Chips 급구",
+      content: "토요일 나이트 칩스 스태프 한 자리 급구입니다.",
+      jobPositions: "Chips",
+      jobLocation: "수도권",
+      jobWorkType: "단기 이벤트 스태프",
       jobPayType: "시급",
       jobPayAmount: "20000",
-      jobDateFlexible: false,
-      jobWorkDate: "2026-10-03",
-      jobGuaranteedHours: "6시간",
-      jobOvertime: "가능",
-      jobTravelPay: true,
-      jobSnacks: true,
-      jobDressCode: "올블랙",
-      jobExperience: "스팟 딜러 경험",
-      jobContact: "010-2000-2222",
+      jobWorkDate: "2026-09-27",
+      jobApplyMethod: "카카오톡 ID·링크",
+      jobApplyValue: "poka_pickup",
       authorIp: "203.0.113.21",
     },
   });
   await prisma.post.create({
     data: {
-      boardType: BoardType.JOBS,
-      jobKind: JobKind.TEAM,
-      authorId: regular.id,
-      title: "[서울 전역] ACE 딜러팀 - 딜러 팀원 모집",
-      content: "캐주얼·토너먼트 함께 도는 팀을 꾸립니다.",
-      jobLocation: "서울 전역",
-      jobCompanyName: "ACE 딜러팀",
-      jobExperience: "WSOP 서킷 스태프",
-      jobBenefits: "세션비 · 숙소",
-      jobApplyMethod: "프로필 회신",
-      jobContact: "010-3000-3333",
-      authorIp: "203.0.113.10",
+      boardType: BoardType.EVENT_POSTER,
+      authorId: dealer.id,
+      title: "POKA Cup 메인 이벤트",
+      content: "9월 메인 토너먼트 공식 포스터입니다.",
+      bannerImageUrl: "/banners/slot-1.svg",
+      promoLocation: "수도권",
+      promoTag: "메인 이벤트",
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.OFFICIAL_POSTER,
+      authorId: dealer.id,
+      title: "TOT 스폰서십 안내",
+      content: "제휴 딜러팀 공식 홍보 포스터입니다.",
+      bannerImageUrl: "/banners/slot-2.svg",
+      promoLocation: "전국",
+      promoTag: "스폰서",
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.SCHEDULE,
+      authorId: dealer.id,
+      title: "서울 홀덤 위클리",
+      content: "캐주얼 위클리 토너먼트.",
+      eventDate: "2026-09-22",
+      promoLocation: "수도권",
+      jobLocation: "수도권",
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.SCHEDULE,
+      authorId: dealer.id,
+      title: "부산 오픈 메인",
+      content: "영남권 메인 이벤트.",
+      eventDate: "2026-09-27",
+      promoLocation: "영남권",
+      jobLocation: "영남권",
+      authorIp: "203.0.113.21",
     },
   });
 
@@ -394,8 +438,8 @@ async function main() {
       },
       {
         kind: "HIRE:seed-fixed",
-        message: "🤝 [강남]에서 고정 직원 채용을 완료하셨습니다!",
-        href: "/boards/jobs/fixed",
+        message: "🤝 [수도권]에서 TOT 딜러팀 채용을 완료하셨습니다!",
+        href: "/boards/hire",
       },
       {
         kind: `LUCKY:${today}:${regular.id}`,

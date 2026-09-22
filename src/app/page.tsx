@@ -44,7 +44,7 @@ export default async function HomePage() {
             href="/boards/free"
             className="touch-target inline-flex min-h-11 items-center text-sm text-primary"
           >
-            자유게시판
+            딜러 커뮤니티
           </Link>
         </div>
         <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard />

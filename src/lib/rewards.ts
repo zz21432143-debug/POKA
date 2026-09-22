@@ -5,7 +5,12 @@ export const POST_EXP: Record<BoardType, number> = {
   HAND_REVIEW: 80,
   ANONYMOUS_REVIEW: 22,
   FREE: 12,
-  JOBS: 12,
+  JOBS: 16,
+  TALENT: 12,
+  PICKUP: 10,
+  EVENT_POSTER: 8,
+  OFFICIAL_POSTER: 8,
+  SCHEDULE: 8,
   PROMO: 8,
 };
 
@@ -13,7 +18,12 @@ export const POST_POINTS: Record<BoardType, number> = {
   HAND_REVIEW: 20,
   ANONYMOUS_REVIEW: 8,
   FREE: 4,
-  JOBS: 4,
+  JOBS: 6,
+  TALENT: 4,
+  PICKUP: 3,
+  EVENT_POSTER: 3,
+  OFFICIAL_POSTER: 3,
+  SCHEDULE: 3,
   PROMO: 3,
 };
 

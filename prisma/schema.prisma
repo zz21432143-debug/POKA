@@ -16,13 +16,23 @@ enum BoardType {
   ANONYMOUS_REVIEW
   JOBS
   PROMO
+  EVENT_POSTER
+  OFFICIAL_POSTER
+  TALENT
+  PICKUP
+  SCHEDULE
 }
 
-/// 구인 3종: 고정구인 / 지원구인 / 팀구인
+/// 레거시 구인 3종. 신규 구인 공고는 BoardType.JOBS + listing 필드를 씁니다.
 enum JobKind {
   FIXED
   APPLY
   TEAM
+}
+
+enum MemberKind {
+  COMPANY
+  INDIVIDUAL
 }
 
 model User {
@@ -36,6 +46,7 @@ model User {
   points              Int      @default(0)
   isDealerVerified    Boolean  @default(false)
   isAdmin             Boolean  @default(false)
+  memberKind          MemberKind @default(INDIVIDUAL)
   lastPostAt          DateTime?
   lastCommentAt       DateTime?
   lastAttendanceDate  String?
@@ -94,6 +105,14 @@ model Post {
   jobSnacks          Boolean   @default(false)
   jobDressCode       String?
   jobApplyMethod     String?
+  jobApplyValue      String?
+  /// Dealer / Floor / Chips / 기타 스태프 (콤마)
+  jobPositions       String?
+  /// 정규팀 소속 / 정기 프리랜서 / 단기 이벤트 스태프
+  jobWorkType        String?
+  jobAlwaysOpen      Boolean   @default(false)
+  /// 대회 일정 YYYY-MM-DD
+  eventDate          String?
   /// 유료 상단 고정(추후 결제 연동)
   isPaid             Boolean   @default(false)
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.
@@ -116,6 +135,8 @@ model Post {
   @@index([authorId])
   @@index([isAttendanceThread, attendanceDate])
   @@index([jobKind, isPaid])
+  @@index([eventDate])
+  @@index([jobWorkType])
   @@index([hidden, boardType, createdAt])
   @@index([authorIp, createdAt])
   @@index([upvoteCount, viewCount])

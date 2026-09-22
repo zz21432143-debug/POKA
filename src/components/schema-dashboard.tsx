@@ -36,7 +36,7 @@ const COLUMN_DOCS = {
     ["isDealerVerified", "딜러 인증 여부"],
   ],
   posts: [
-    ["boardType", "게시판 분류 플래그 (FREE / HAND_REVIEW / ANONYMOUS_REVIEW / JOBS / PROMO)"],
+    ["boardType", "FREE / JOBS / TALENT / PICKUP / EVENT_POSTER / OFFICIAL_POSTER / SCHEDULE 등"],
     ["authorId", "작성자. 익명 후기는 null"],
     ["title / content", "제목과 본문"],
     ["upvoteCount / downvoteCount", "추천·비추천 수"],
