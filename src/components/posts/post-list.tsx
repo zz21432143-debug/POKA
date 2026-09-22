@@ -8,6 +8,7 @@ import { isAnonymousBoard } from "@/lib/request";
 import { formatRelativeKst } from "@/lib/dates";
 import { Fragment } from "react";
 import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
+import type { DirectCreative } from "@/lib/inventory-policy";
 
 export type PostSummary = {
   id: string;
@@ -29,11 +30,13 @@ export function PostList({
   emptyText,
   showBoard = false,
   framed = true,
+  nativeSponsor = null,
 }: {
   posts: PostSummary[];
   emptyText: string;
   showBoard?: boolean;
   framed?: boolean;
+  nativeSponsor?: DirectCreative | null;
 }) {
   if (posts.length === 0) {
     return (
@@ -55,7 +58,7 @@ export function PostList({
         const anonymous = isAnonymousBoard(post.boardType);
         return (
           <Fragment key={post.id}>
-            {index === 3 ? <SponsoredPostLine /> : null}
+            {index === 3 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
             <li>
               <Link
                 href={`/posts/${post.id}`}
@@ -103,6 +106,7 @@ export function PostList({
           </Fragment>
         );
       })}
+      {posts.length > 0 && posts.length < 4 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
     </ul>
   );
 }

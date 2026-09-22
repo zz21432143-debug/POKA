@@ -7,25 +7,30 @@ import { PopularPosts } from "@/components/layout/popular-posts";
 import { NoticeWidget } from "@/components/layout/notice-widget";
 import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { TalkCta } from "@/components/layout/talk-cta";
-import { SponsorBanner } from "@/components/ads/sponsor-banner";
+import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
+import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { getViewerProfile } from "@/lib/profile";
 import { listSwitchableUsers } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
 import { getTickerEvents } from "@/lib/ticker";
+import { getSponsorCreative } from "@/lib/inventory";
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   let profile = null;
   let accounts: Awaited<ReturnType<typeof listSwitchableUsers>> = [];
   let notices: { id: string; title: string; date: string; href: string }[] = [];
+  let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
   try {
     await ensureTodayAttendancePost();
-    const [viewer, events, switchAccounts] = await Promise.all([
+    const [viewer, events, switchAccounts, sidebar] = await Promise.all([
       getViewerProfile(),
       getTickerEvents(),
       listSwitchableUsers().catch(() => []),
+      getSponsorCreative("SIDEBAR").catch(() => null),
     ]);
     profile = viewer;
     accounts = switchAccounts;
+    sidebarSponsor = sidebar;
     notices = events.slice(0, 4).map((event) => ({
       id: event.id,
       title: event.message.replace(/^[^ ]+\s/, "").slice(0, 28),
@@ -55,17 +60,19 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {children}
-          <div className="mt-5">
-            <SponsorBanner />
+          <div className="mt-5 xl:hidden">
+            <SidebarSponsorCard unit={sidebarSponsor} />
           </div>
         </main>
         <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <ProfileWidget profile={profile} accounts={accounts} />
+            <SidebarSponsorCard unit={sidebarSponsor} />
             <PromoApplyCta />
             <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />
             <PopularPosts />
             <TalkCta />
+            <GoogleAdUnit placement="sidebar" />
           </div>
         </aside>
       </div>

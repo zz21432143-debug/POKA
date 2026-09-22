@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { HOME_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
+import { FEATURED_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -23,7 +23,7 @@ async function main() {
     (await prisma.user.findFirst({ where: { isDealerVerified: true } }));
   if (!dealer) throw new Error("시드 회원이 없습니다. prisma db seed 를 먼저 실행하세요.");
 
-  const visible = [...HOME_OFFICIAL_POSTERS, ...PUBLIC_OFFICIAL_POSTERS.filter((row) => !row.onHome)];
+  const visible = [...FEATURED_OFFICIAL_POSTERS];
   const ids: string[] = [];
   for (const [index, poster] of visible.entries()) {
     const existing = await prisma.post.findFirst({
@@ -48,7 +48,7 @@ async function main() {
     ids.push(post.id);
   }
 
-  const publicTitles = PUBLIC_OFFICIAL_POSTERS.map((row) => row.title);
+  const publicTitles = FEATURED_OFFICIAL_POSTERS.map((row) => row.title);
   await prisma.post.updateMany({
     where: { boardType: "PROMO", title: { notIn: [...publicTitles] } },
     data: { hidden: true },

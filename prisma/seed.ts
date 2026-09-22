@@ -4,7 +4,7 @@ import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
 import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 import { ATTENDANCE_LINES, catalogPosts, SEED_NICKNAMES } from "../src/lib/seed-catalog";
-import { HOME_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
+import { FEATURED_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
 
 const adapter = new PrismaBetterSqlite3({
@@ -24,6 +24,7 @@ async function main() {
   await prisma.writeThrottle.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.bannerSlot.deleteMany();
+  await prisma.sponsorUnit.deleteMany();
   await prisma.handPollVote.deleteMany();
   await prisma.commentVote.deleteMany();
   await prisma.postVote.deleteMany();
@@ -160,17 +161,37 @@ async function main() {
   }
 
   await prisma.bannerSlot.deleteMany();
-  const slotPosters = [...HOME_OFFICIAL_POSTERS, ...PUBLIC_OFFICIAL_POSTERS.filter((row) => !row.onHome)];
-  const promoByTitle = Object.fromEntries(
-    createdPosts.filter((post) => slotPosters.some((row) => row.title === post.title)).map((post) => [post.title, post]),
-  );
+  await prisma.sponsorUnit.deleteMany();
+  const promoByTitle = Object.fromEntries(createdPosts.map((post) => [post.title, post]));
   await prisma.bannerSlot.createMany({
-    data: [1, 2, 3, 4, 5, 6].map((slot) => ({
-      slot,
-      mode: "MANUAL",
+    data: FEATURED_OFFICIAL_POSTERS.map((poster, index) => ({
+      slot: index + 1,
+      mode: "MANUAL" as const,
       enabled: true,
-      postId: promoByTitle[slotPosters[slot - 1]?.title]?.id ?? null,
+      postId: promoByTitle[poster.title]?.id ?? null,
     })),
+  });
+  await prisma.sponsorUnit.createMany({
+    data: [
+      {
+        placement: "SIDEBAR",
+        imageUrl: null,
+        href: "/advertise",
+        title: "",
+        advertiser: "",
+        mark: "제휴",
+        enabled: true,
+      },
+      {
+        placement: "NATIVE",
+        imageUrl: null,
+        href: "/advertise",
+        title: "딜러 전용 유니폼, 지금 런칭 혜택으로 맞추세요",
+        advertiser: "DEALER FIT",
+        mark: "제휴",
+        enabled: true,
+      },
+    ],
   });
   const publicTitles = PUBLIC_OFFICIAL_POSTERS.map((row) => row.title);
   await prisma.post.updateMany({

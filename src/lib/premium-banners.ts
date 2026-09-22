@@ -1,5 +1,16 @@
 import { prisma } from "@/lib/db";
 import { PREMIUM_BANNERS, type PromoBanner } from "@/lib/banners";
+import { normalizeMark } from "@/lib/inventory-policy";
+
+export type PremiumBannerCard = PromoBanner & {
+  mode: string;
+  enabled: boolean;
+  vacant: boolean;
+  location?: string | null;
+  tag?: string | null;
+  isPaid?: boolean;
+  mark: "AD" | "제휴";
+};
 
 export async function ensureBannerSlots() {
   const existing = await prisma.bannerSlot.findMany();
@@ -12,16 +23,7 @@ export async function ensureBannerSlots() {
   }
 }
 
-export async function getPremiumBanners(): Promise<
-  (PromoBanner & {
-    mode: string;
-    enabled: boolean;
-    vacant: boolean;
-    location?: string | null;
-    tag?: string | null;
-    isPaid?: boolean;
-  })[]
-> {
+export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
   try {
     await ensureBannerSlots();
     const [slots, promoPosts] = await Promise.all([
@@ -43,12 +45,13 @@ export async function getPremiumBanners(): Promise<
       if (!slot || !slot.enabled) {
         return {
           ...fallback,
-          href: "/boards/official/write",
-          title: "홍보 등록 문의",
+          href: "/advertise",
+          title: "제휴 / 광고 문의하기",
           sponsor: `구좌 ${fallback.id}`,
           mode: slot?.mode ?? "AUTO",
           enabled: false,
           vacant: true,
+          mark: "제휴" as const,
         };
       }
 
@@ -58,7 +61,7 @@ export async function getPremiumBanners(): Promise<
           id: fallback.id,
           href: `/posts/${slot.post.id}`,
           title: slot.post.title,
-          sponsor: `구좌 ${fallback.id} · 수동`,
+          sponsor: `구좌 ${fallback.id} · 월정액`,
           image: slot.post.bannerImageUrl || fallback.image,
           mode: "MANUAL",
           enabled: true,
@@ -66,6 +69,7 @@ export async function getPremiumBanners(): Promise<
           location: slot.post.promoLocation,
           tag: slot.post.promoTag,
           isPaid: slot.post.isPaid,
+          mark: normalizeMark(slot.post.promoTag, slot.post.isPaid),
         };
       }
 
@@ -76,7 +80,7 @@ export async function getPremiumBanners(): Promise<
           id: fallback.id,
           href: `/posts/${auto.id}`,
           title: auto.title,
-          sponsor: `구좌 ${fallback.id} · 자동`,
+          sponsor: `구좌 ${fallback.id} · 월정액`,
           image: auto.bannerImageUrl || fallback.image,
           mode: "AUTO",
           enabled: true,
@@ -84,17 +88,19 @@ export async function getPremiumBanners(): Promise<
           location: auto.promoLocation,
           tag: auto.promoTag,
           isPaid: auto.isPaid,
+          mark: normalizeMark(auto.promoTag, auto.isPaid),
         };
       }
 
       return {
         ...fallback,
-        href: "/boards/official/write",
-        title: "홍보 등록 문의",
+        href: "/advertise",
+        title: "제휴 / 광고 문의하기",
         sponsor: `구좌 ${fallback.id}`,
         mode: "AUTO",
         enabled: true,
         vacant: true,
+        mark: "제휴" as const,
       };
     });
   } catch {
@@ -103,6 +109,7 @@ export async function getPremiumBanners(): Promise<
       mode: "AUTO",
       enabled: true,
       vacant: true,
+      mark: "제휴" as const,
     }));
   }
 }

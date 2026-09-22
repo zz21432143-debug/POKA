@@ -3,7 +3,7 @@ export function AdPlacementMap() {
     <figure className="overflow-hidden rounded-2xl border border-border bg-white p-4 shadow-sm">
       <figcaption className="mb-3 text-sm font-semibold">화면에서 구좌가 붙는 위치</figcaption>
       <p className="mb-4 text-xs leading-5 text-muted-foreground">
-        아래는 지금 사이트 레이아웃을 축소한 그림입니다. A·B·C가 실제 광고가 들어가는 자리입니다.
+        직판(B·S·C)이 있으면 그 소재가 우선입니다. 구글(G)은 본문 상·하단과 사이드바 맨 아래에만 둡니다.
       </p>
       <div className="rounded-xl bg-[#f4f7f8] p-3">
         <div className="mb-2 rounded-md bg-white px-3 py-2 text-center text-[11px] font-medium text-muted-foreground">
@@ -17,9 +17,9 @@ export function AdPlacementMap() {
           </div>
           <div className="col-span-12 space-y-2 sm:col-span-7">
             <div className="rounded-md ring-2 ring-primary">
-              <p className="px-2 pt-2 text-[10px] font-semibold text-primary">B · 홈 홍보 포스터</p>
+              <p className="px-2 pt-2 text-[10px] font-semibold text-primary">B · 메인 3×2 프리미엄</p>
               <div className="grid grid-cols-3 gap-1 p-2">
-                {["1칸", "2칸", "3칸"].map((label) => (
+                {["B1", "B2", "B3", "B4", "B5", "B6"].map((label) => (
                   <div
                     key={label}
                     className="flex aspect-[5/7] items-center justify-center rounded bg-emerald-100 text-[10px] font-semibold text-emerald-800"
@@ -28,7 +28,7 @@ export function AdPlacementMap() {
                   </div>
                 ))}
               </div>
-              <p className="px-2 pb-2 text-[10px] text-muted-foreground">홈 맨 위 · 3초마다 한 칸 이동</p>
+              <p className="px-2 pb-2 text-[10px] text-muted-foreground">월정액 · [AD]/[제휴] · 빈 칸은 문의 CTA</p>
             </div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 1</div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 2</div>
@@ -37,23 +37,22 @@ export function AdPlacementMap() {
               C · 네이티브 인피드 (3번째와 4번째 사이)
             </div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 4</div>
-            <div className="grid grid-cols-3 gap-1 rounded-md bg-sky-50 p-1 ring-2 ring-sky-400">
-              {["A1", "A2", "A3"].map((label) => (
-                <div key={label} className="rounded bg-sky-100 py-3 text-center text-[10px] font-semibold text-sky-900">
-                  {label}
-                  <span className="mt-0.5 block font-normal">300×150</span>
-                </div>
-              ))}
+            <div className="rounded-md bg-neutral-200 px-2 py-2 text-center text-[10px] font-semibold text-neutral-700">
+              G · 글 상세 본문 상·하단 애드센스
             </div>
           </div>
           <div className="col-span-12 space-y-2 sm:col-span-3">
             <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">프로필</div>
+            <div className="rounded-md bg-sky-100 px-2 py-6 text-center text-[10px] font-semibold text-sky-900 ring-2 ring-sky-400">
+              S · 300×250
+              <span className="mt-1 block font-normal">없으면 문의 CTA</span>
+            </div>
             <div className="rounded-md bg-white px-2 py-3 text-center text-[10px] text-muted-foreground">공지 · 인기글</div>
+            <div className="rounded-md bg-neutral-200 px-2 py-3 text-center text-[10px] font-semibold text-neutral-700">
+              G · 애드센스
+            </div>
           </div>
         </div>
-        <p className="mt-2 rounded-md bg-sky-50 px-2 py-2 text-[10px] text-sky-900">
-          A1–A3는 글 목록 아래 가로 한 줄입니다. 직판이 없으면 그 칸은 구글 디스플레이가 채웁니다.
-        </p>
       </div>
     </figure>
   );

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
+import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 const TABS = [
@@ -19,11 +20,13 @@ export function HomeLatest({
   free,
   jobs,
   issues,
+  nativeSponsor = null,
 }: {
   all: PostSummary[];
   free: PostSummary[];
   jobs: PostSummary[];
   issues: PostSummary[];
+  nativeSponsor?: DirectCreative | null;
 }) {
   const [tab, setTab] = useState<Tab>("all");
   const posts = useMemo(() => {
@@ -54,7 +57,13 @@ export function HomeLatest({
           더보기
         </Link>
       </div>
-      <PostList posts={posts} emptyText="아직 게시글이 없습니다." showBoard framed={false} />
+      <PostList
+        posts={posts}
+        emptyText="아직 게시글이 없습니다."
+        showBoard
+        framed={false}
+        nativeSponsor={nativeSponsor}
+      />
     </section>
   );
 }

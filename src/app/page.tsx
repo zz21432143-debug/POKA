@@ -1,9 +1,10 @@
-import { FeaturedPromos } from "@/components/home/featured-promos";
+import { PromoBanners } from "@/components/home/promo-banners";
 import { HomeShortcuts } from "@/components/home/home-shortcuts";
 import { HomeLatest } from "@/components/home/home-latest";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import type { PostSummary } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
+import { getSponsorCreative } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,7 @@ export default async function HomePage() {
   let free: PostSummary[] = [];
   let jobs: PostSummary[] = [];
   let issues: PostSummary[] = [];
+  const nativeSponsor = await getSponsorCreative("NATIVE").catch(() => null);
   try {
     const [allRows, freeRows, jobRows, issueRows] = await Promise.all([
       prisma.post.findMany({
@@ -87,9 +89,9 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <FeaturedPromos />
+      <PromoBanners />
       <HomeShortcuts />
-      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} />
+      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
     </div>
   );
 }

@@ -49,7 +49,7 @@ export const FEATURED_OFFICIAL_POSTERS = [
     content: "공식 홍보 구좌 시안 확인용 포스터입니다.",
     isPaid: false,
     onHome: false,
-    publicBoard: false,
+    publicBoard: true,
   },
   {
     title: "왕좌의 게임 3,000만 GTD",

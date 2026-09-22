@@ -1,0 +1,40 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { isDirectFilled, normalizeMark, pickFill, type DirectCreative } from "./inventory-policy";
+
+const sample: DirectCreative = {
+  placement: "SIDEBAR",
+  imageUrl: "/ads/sidebar.png",
+  href: "/posts/1",
+  title: "뉴스톤 토너먼트",
+  advertiser: "뉴스톤",
+  mark: "제휴",
+};
+
+describe("ad inventory fill", () => {
+  it("tags paid creatives as AD and the rest as 제휴", () => {
+    assert.equal(normalizeMark("토너먼트", true), "AD");
+    assert.equal(normalizeMark("제휴", false), "제휴");
+    assert.equal(normalizeMark("AD", false), "AD");
+  });
+
+  it("prefers a direct sponsor over AdSense or CTA", () => {
+    assert.equal(pickFill(sample, "adsense", true).kind, "direct");
+    assert.equal(pickFill(sample, "cta", true).kind, "direct");
+  });
+
+  it("falls back to AdSense only when the exclusive slot is empty", () => {
+    assert.equal(pickFill(null, "adsense", true).kind, "adsense");
+    assert.equal(pickFill({ ...sample, imageUrl: null }, "adsense", true).kind, "adsense");
+  });
+
+  it("uses a CTA on unpaid exclusive inventory instead of Google", () => {
+    assert.equal(pickFill(null, "cta", true).kind, "cta");
+    assert.ok(!isDirectFilled({ enabled: true, imageUrl: null, title: "" }, true));
+  });
+
+  it("hides native rows without a title", () => {
+    assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null, title: "" }, "hide").kind, "hide");
+    assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null }, "hide").kind, "direct");
+  });
+});

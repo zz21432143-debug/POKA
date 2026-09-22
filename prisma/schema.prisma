@@ -302,6 +302,18 @@ model BannerSlot {
   updatedAt DateTime @updatedAt
 }
 
+/// 직판 제휴 소재. placement: SIDEBAR | NATIVE. 비어 있으면 사이드바는 CTA, 인피드는 숨김.
+model SponsorUnit {
+  placement  String   @id
+  imageUrl   String?
+  href       String   @default("/advertise")
+  title      String   @default("")
+  advertiser String   @default("")
+  mark       String   @default("제휴")
+  enabled    Boolean  @default(true)
+  updatedAt  DateTime @updatedAt
+}
+
 model Mark {
   id          String       @id @default(cuid())
   slug        String       @unique

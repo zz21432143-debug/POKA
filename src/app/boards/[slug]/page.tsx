@@ -13,6 +13,7 @@ import { canWriteBoard } from "@/lib/permissions";
 import { POST_EXP } from "@/lib/rewards";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
+import { getSponsorCreative } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function BoardPage({
   const calendar = "calendar" in board && board.calendar;
   const now = new Date();
   const page = await loadFeedPage(feedKey, 0, calendar || gallery ? 50 : PAGE_SIZE);
+  const nativeSponsor = gallery || calendar ? null : await getSponsorCreative("NATIVE").catch(() => null);
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,6 +81,7 @@ export default async function BoardPage({
           initialTotal={page.total}
           initialNextOffset={page.nextOffset}
           emptyText="이 게시판에 글이 없습니다."
+          nativeSponsor={nativeSponsor}
         />
       )}
     </div>

@@ -19,6 +19,7 @@ import { isAnonymousBoard } from "@/lib/request";
 import { JOB_KIND_LABEL } from "@/lib/nav";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
+import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -116,6 +117,8 @@ export default async function PostDetailPage({
       </header>
 
       {post.jobKind ? <JobFacts job={post} /> : null}
+
+      <GoogleAdUnit placement="post-top" />
 
       {post.boardType === "SCHEDULE" ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
@@ -224,6 +227,8 @@ export default async function PostDetailPage({
         />
         {anonymous ? <ReportButton postId={post.id} /> : null}
       </div>
+
+      <GoogleAdUnit placement="post-bottom" />
       {anonymous ? (
         <p className="text-xs text-muted-foreground">
           이 글은 익명입니다. 신고 시 운영자가 내부 계정/IP를 확인할 수 있습니다.
