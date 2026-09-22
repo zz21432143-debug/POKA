@@ -28,6 +28,9 @@ export function BoardWriteForm({
   const [jobTeamGoal, setJobTeamGoal] = useState("");
   const [isPaid, setIsPaid] = useState(false);
   const [bannerSlot, setBannerSlot] = useState("");
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [promoLocation, setPromoLocation] = useState("");
+  const [promoTag, setPromoTag] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -50,6 +53,9 @@ export function BoardWriteForm({
           jobTeamGoal,
           isPaid,
           bannerSlot: bannerSlot ? Number(bannerSlot) : null,
+          bannerImageUrl,
+          promoLocation,
+          promoTag,
         }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
@@ -106,16 +112,26 @@ export function BoardWriteForm({
         </div>
       ) : null}
       {boardType === "PROMO" ? (
-        <div className="grid gap-2">
-          <Label htmlFor="slot">프리미엄 배너 구좌 (선택, 1~6)</Label>
-          <Input
-            id="slot"
-            className="h-11"
-            inputMode="numeric"
-            value={bannerSlot}
-            onChange={(e) => setBannerSlot(e.target.value)}
-            placeholder="비우면 일반 홍보글"
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="매장/장소" value={promoLocation} onChange={setPromoLocation} placeholder="강남" />
+          <Field label="이벤트 태그" value={promoTag} onChange={setPromoTag} placeholder="나이트 · 첫방문 칩" />
+          <Field
+            label="대표 이미지 URL"
+            value={bannerImageUrl}
+            onChange={setBannerImageUrl}
+            placeholder="/banners/slot-1.svg"
           />
+          <div className="grid gap-2">
+            <Label htmlFor="slot">프리미엄 배너 구좌 (선택, 1~6)</Label>
+            <Input
+              id="slot"
+              className="h-11"
+              inputMode="numeric"
+              value={bannerSlot}
+              onChange={(e) => setBannerSlot(e.target.value)}
+              placeholder="비우면 일반 홍보글"
+            />
+          </div>
         </div>
       ) : null}
       <div className="grid gap-2">

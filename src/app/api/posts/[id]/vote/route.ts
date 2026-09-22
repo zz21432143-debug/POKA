@@ -64,6 +64,8 @@ export async function POST(
     const newlyUpvoted = value === 1 && existing?.value !== 1;
     if (newlyUpvoted && post.authorId) {
       await grantRewards(post.authorId, UPVOTE_RECEIVED_EXP, UPVOTE_RECEIVED_POINTS);
+      const { maybePopularPost } = await import("@/lib/ticker");
+      await maybePopularPost(id);
     }
 
     return NextResponse.json({ upvoteCount, downvoteCount, myVote: value });

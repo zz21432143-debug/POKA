@@ -48,6 +48,7 @@ model User {
   dailyAttendances DailyAttendance[]
   ownedMarks       UserMark[]
   votes            PostVote[]
+  commentVotes     CommentVote[]
   reports          Report[]
 
   @@index([level])
@@ -66,6 +67,7 @@ model Post {
   handReviewJson     String?
   upvoteCount        Int       @default(0)
   downvoteCount      Int       @default(0)
+  viewCount          Int       @default(0)
   authorIp           String?
   isAttendanceThread Boolean   @default(false)
   attendanceDate     String?   @unique
@@ -83,6 +85,9 @@ model Post {
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.
   bannerSlot         Int?      @unique
   bannerImageUrl     String?
+  promoLocation      String?
+  promoTag           String?
+  jobFilled          Boolean   @default(false)
   hidden             Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -99,6 +104,7 @@ model Post {
   @@index([jobKind, isPaid])
   @@index([hidden, boardType, createdAt])
   @@index([authorIp, createdAt])
+  @@index([upvoteCount, viewCount])
 }
 
 model Comment {
@@ -109,13 +115,37 @@ model Comment {
   author            User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
   content           String
   isAttendanceCheck Boolean  @default(false)
+  upvoteCount       Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   dailyAttendance DailyAttendance?
+  votes           CommentVote[]
 
   @@index([postId])
+  @@index([postId, upvoteCount])
   @@index([authorId, isAttendanceCheck, createdAt])
+}
+
+model CommentVote {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+}
+
+model TickerEvent {
+  id        String   @id @default(cuid())
+  kind      String   @unique
+  message   String
+  href      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model DailyAttendance {

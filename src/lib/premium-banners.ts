@@ -13,7 +13,13 @@ export async function ensureBannerSlots() {
 }
 
 export async function getPremiumBanners(): Promise<
-  (PromoBanner & { mode: string; enabled: boolean; vacant: boolean })[]
+  (PromoBanner & {
+    mode: string;
+    enabled: boolean;
+    vacant: boolean;
+    location?: string | null;
+    tag?: string | null;
+  })[]
 > {
   try {
     await ensureBannerSlots();
@@ -56,6 +62,8 @@ export async function getPremiumBanners(): Promise<
           mode: "MANUAL",
           enabled: true,
           vacant: false,
+          location: slot.post.promoLocation,
+          tag: slot.post.promoTag,
         };
       }
 
@@ -71,6 +79,8 @@ export async function getPremiumBanners(): Promise<
           mode: "AUTO",
           enabled: true,
           vacant: false,
+          location: auto.promoLocation,
+          tag: auto.promoTag,
         };
       }
 

@@ -36,6 +36,8 @@ export async function POST(request: Request) {
       isPaid?: boolean;
       bannerSlot?: number | null;
       bannerImageUrl?: string;
+      promoLocation?: string;
+      promoTag?: string;
     };
 
     const boardType = body.boardType;
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     let bannerSlot: number | null = null;
-    let bannerImageUrl: string | null = null;
+    let bannerImageUrl: string | null = body.bannerImageUrl?.trim() || null;
     if (boardType === "PROMO" && body.bannerSlot) {
       const slot = Number(body.bannerSlot);
       if (!Number.isInteger(slot) || slot < 1 || slot > 6) {
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: `${slot}번 구좌는 이미 사용 중입니다.` }, { status: 409 });
       }
       bannerSlot = slot;
-      bannerImageUrl = body.bannerImageUrl?.trim() || `/banners/slot-${slot}.svg`;
+      bannerImageUrl = bannerImageUrl || `/banners/slot-${slot}.svg`;
     }
 
     await assertWriteCooldown({
@@ -110,6 +112,8 @@ export async function POST(request: Request) {
         isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,
+        promoLocation: boardType === "PROMO" ? body.promoLocation?.trim() || null : null,
+        promoTag: boardType === "PROMO" ? body.promoTag?.trim() || null : null,
       },
     });
 

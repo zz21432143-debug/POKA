@@ -16,7 +16,7 @@ export function AdSlot({
       className={cn(
         "flex flex-col items-center justify-center border border-dashed border-border/80 bg-muted/30 text-center text-muted-foreground",
         sidebar
-          ? "min-h-[320px] flex-1 rounded-xl px-3 py-6"
+          ? "min-h-[140px] flex-1 rounded-xl px-3 py-4"
           : "min-h-20 rounded-none px-3 py-4",
         className,
       )}

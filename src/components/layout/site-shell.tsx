@@ -3,6 +3,7 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { PopularPosts } from "@/components/layout/popular-posts";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { getViewerProfile } from "@/lib/profile";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
@@ -29,6 +30,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-60 shrink-0 py-4 lg:flex">
           <div className="flex h-full min-h-0 w-full flex-col gap-4">
             <ProfileWidget profile={profile} />
+            <PopularPosts />
             <AdSlot placement="sidebar" />
           </div>
         </aside>

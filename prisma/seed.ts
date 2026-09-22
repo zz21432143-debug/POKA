@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { BoardType, JobKind, PrismaClient } from "../src/generated/prisma/client";
-import { todayKstDate, yesterdayKstDate } from "../src/lib/dates";
+import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
+import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -38,9 +39,11 @@ const SAMPLE_HAND = {
 };
 
 async function main() {
+  await prisma.tickerEvent.deleteMany();
   await prisma.writeThrottle.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.bannerSlot.deleteMany();
+  await prisma.commentVote.deleteMany();
   await prisma.postVote.deleteMany();
   await prisma.report.deleteMany();
   await prisma.dailyAttendance.deleteMany();
@@ -138,6 +141,7 @@ async function main() {
       handReviewJson: JSON.stringify(SAMPLE_HAND),
       upvoteCount: 28,
       downvoteCount: 0,
+      viewCount: 412,
       authorIp: "203.0.113.21",
     },
   });
@@ -226,6 +230,9 @@ async function main() {
       authorId: newbie.id,
       title: "스터디 그룹 첫 모임 안내",
       content: "핸드리뷰 위주 온라인 스터디입니다.",
+      bannerImageUrl: "/banners/slot-3.svg",
+      promoLocation: "온라인",
+      promoTag: "스터디 오픈",
       authorIp: "192.0.2.8",
     },
   });
@@ -237,6 +244,8 @@ async function main() {
       content: "프리미엄 배너 1구좌 연동 홍보글입니다.",
       bannerSlot: 1,
       bannerImageUrl: "/banners/slot-1.svg",
+      promoLocation: "강남",
+      promoTag: "나이트 · 첫방문 칩",
       authorIp: "203.0.113.21",
     },
   });
@@ -248,6 +257,32 @@ async function main() {
       content: "프리미엄 배너 2구좌.",
       bannerSlot: 2,
       bannerImageUrl: "/banners/slot-2.svg",
+      promoLocation: "홍대",
+      promoTag: "주말 오픈",
+      authorIp: "203.0.113.21",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.PROMO,
+      authorId: regular.id,
+      title: "송파 캐주얼 클럽",
+      content: "평일 미드 스테이크 세션 홍보.",
+      bannerImageUrl: "/banners/slot-4.svg",
+      promoLocation: "송파",
+      promoTag: "평일 미드",
+      authorIp: "203.0.113.10",
+    },
+  });
+  await prisma.post.create({
+    data: {
+      boardType: BoardType.PROMO,
+      authorId: dealer.id,
+      title: "딜러 아카데미 설명회",
+      content: "인증 딜러 과정 설명회.",
+      bannerImageUrl: "/banners/slot-6.svg",
+      promoLocation: "강남",
+      promoTag: "교육 설명회",
       authorIp: "203.0.113.21",
     },
   });
@@ -295,11 +330,65 @@ async function main() {
         postId: handReview.id,
         authorId: regular.id,
         content: "플롭 donk 상대면 AJs는 대체로 콜하고 턴 텍스처 보고 결정하는 편입니다.",
+        upvoteCount: 9,
+      },
+      {
+        postId: handReview.id,
+        authorId: newbie.id,
+        content: "BB 입장에선 턴 텍스처 보고 포기하는 라인도 좋아 보입니다.",
+        upvoteCount: 2,
       },
       {
         postId: freePost.id,
         authorId: newbie.id,
         content: "비슷한 런 저도 당했습니다.",
+        upvoteCount: 1,
+      },
+    ],
+  });
+
+  const week = weekStartKst(today);
+  await prisma.tickerEvent.createMany({
+    data: [
+      {
+        kind: `LEVEL:${regular.id}:4`,
+        message: `🎉 ${regular.nickname}님이 Lv.4을 달성하셨습니다!`,
+        href: `/u/${encodeURIComponent(regular.nickname)}`,
+      },
+      {
+        kind: `STREAK:${regular.id}:${today}`,
+        message: `🔥 ${regular.nickname}님이 7일 연속 출석 달성! (경험치 보너스 획득)`,
+        href: "/attendance",
+      },
+      {
+        kind: `POPULAR:${handReview.id}`,
+        message: `⭐ ${dealer.nickname}님의 [${handReview.title}]이 인기 게시물로 선정되었습니다!`,
+        href: `/posts/${handReview.id}`,
+      },
+      {
+        kind: `MARK:${dealer.id}:ace`,
+        message: `🎰 ${dealer.nickname}님이 마크 상점에서 [에이스]를 구매하셨습니다!`,
+        href: "/shop",
+      },
+      {
+        kind: `DEALER:${dealer.id}`,
+        message: `👑 ${dealer.nickname}님이 '인증 딜러' 자격을 획득하셨습니다!`,
+        href: `/u/${encodeURIComponent(dealer.nickname)}`,
+      },
+      {
+        kind: `WEEKLY_HAND:${week}`,
+        message: `♠️ ${dealer.nickname}님의 핸드리뷰가 주간 '최고의 분석글'로 선정되어 +${WEEKLY_HAND_EXP.toLocaleString()} EXP를 획득하셨습니다!`,
+        href: `/posts/${handReview.id}`,
+      },
+      {
+        kind: "HIRE:seed-fixed",
+        message: "🤝 [강남]에서 고정 직원 채용을 완료하셨습니다!",
+        href: "/boards/jobs/fixed",
+      },
+      {
+        kind: `LUCKY:${today}:${regular.id}`,
+        message: `🎁 ${regular.nickname}님이 오늘 1번째 출석자로 행운의 보너스 포인트를 획득하셨습니다!`,
+        href: "/attendance",
       },
     ],
   });

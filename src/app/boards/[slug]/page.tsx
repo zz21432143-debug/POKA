@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PostList } from "@/components/posts/post-list";
+import { PromoGallery } from "@/components/promo/promo-gallery";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { BOARD_SLUGS } from "@/lib/nav";
@@ -25,6 +26,10 @@ export default async function BoardPage({
     author: { nickname: string; profileMarkImageUrl: string | null; level: number } | null;
     upvoteCount: number;
     createdAt: string;
+    bannerImageUrl: string | null;
+    promoLocation: string | null;
+    promoTag: string | null;
+    content: string;
   }[] = [];
   try {
     const rows = await prisma.post.findMany({
@@ -39,6 +44,10 @@ export default async function BoardPage({
       author: post.author,
       upvoteCount: post.upvoteCount,
       createdAt: post.createdAt.toISOString(),
+      bannerImageUrl: post.bannerImageUrl,
+      promoLocation: post.promoLocation,
+      promoTag: post.promoTag,
+      content: post.content,
     }));
   } catch {
     posts = [];
@@ -61,7 +70,11 @@ export default async function BoardPage({
           글쓰기
         </Link>
       </header>
-      <PostList posts={posts} emptyText="이 게시판에 글이 없습니다." />
+      {board.boardType === "PROMO" ? (
+        <PromoGallery posts={posts} />
+      ) : (
+        <PostList posts={posts} emptyText="이 게시판에 글이 없습니다." />
+      )}
     </div>
   );
 }

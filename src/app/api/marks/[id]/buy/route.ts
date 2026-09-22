@@ -38,6 +38,13 @@ export async function POST(
       prisma.userMark.create({ data: { userId: user.id, markId: id } }),
     ]);
 
+    const { pushTicker } = await import("@/lib/ticker");
+    await pushTicker({
+      kind: `MARK:${user.id}:${mark.id}`,
+      message: `🎰 ${user.nickname}님이 마크 상점에서 [${mark.name}]를 구매하셨습니다!`,
+      href: "/shop",
+    });
+
     return NextResponse.json({ ok: true, spent: mark.pricePoints });
   } catch (error) {
     const message = error instanceof Error ? error.message : "구매에 실패했습니다.";

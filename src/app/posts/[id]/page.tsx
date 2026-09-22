@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
 import { AuthorChip } from "@/components/posts/author-chip";
 import { CommentForm } from "@/components/posts/comment-form";
+import { CommentThread } from "@/components/posts/comment-thread";
+import { HireButton } from "@/components/jobs/hire-button";
 import { ReportButton } from "@/components/posts/report-button";
 import { VoteButtons } from "@/components/posts/vote-buttons";
 import { prisma } from "@/lib/db";
@@ -29,7 +31,10 @@ export default async function PostDetailPage({
         author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
         comments: {
           where: { isAttendanceCheck: false },
-          include: { author: { select: { nickname: true, profileMarkImageUrl: true, level: true } } },
+          include: {
+            author: { select: { nickname: true, profileMarkImageUrl: true, level: true } },
+            votes: viewer ? { where: { userId: viewer.id }, select: { id: true } } : false,
+          },
           orderBy: { createdAt: "asc" },
         },
         votes: viewer ? { where: { userId: viewer.id } } : false,
@@ -42,6 +47,10 @@ export default async function PostDetailPage({
   if (!post) notFound();
   if (post.isAttendanceThread) redirect("/attendance");
   if (post.hidden && !viewer?.isAdmin) notFound();
+
+  void prisma.post
+    .update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } })
+    .catch(() => undefined);
 
   const anonymous = isAnonymousBoard(post.boardType);
   const hand = parseHandReview(post.handReviewJson);
@@ -93,6 +102,12 @@ export default async function PostDetailPage({
         </dl>
       ) : null}
 
+      {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+        <HireButton postId={post.id} filled={post.jobFilled} />
+      ) : post.jobFilled ? (
+        <p className="text-sm text-primary">채용이 완료된 공고입니다.</p>
+      ) : null}
+
       {hand ? <HandViewer hand={hand} /> : null}
       {post.content ? (
         <div className="rounded-xl border border-border bg-card p-4 text-[15px] leading-7 whitespace-pre-wrap">
@@ -126,14 +141,16 @@ export default async function PostDetailPage({
         {post.comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-            {post.comments.map((comment) => (
-              <li key={comment.id} className="px-3 py-3">
-                <AuthorChip author={comment.author} anonymous={anonymous} />
-                <p className="mt-1 text-sm">{comment.content}</p>
-              </li>
-            ))}
-          </ul>
+          <CommentThread
+            anonymous={anonymous}
+            comments={post.comments.map((comment) => ({
+              id: comment.id,
+              content: comment.content,
+              upvoteCount: comment.upvoteCount,
+              author: comment.author,
+              liked: Array.isArray(comment.votes) && comment.votes.length > 0,
+            }))}
+          />
         )}
       </section>
     </article>

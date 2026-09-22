@@ -15,7 +15,7 @@ export async function grantRewards(userId: string, exp: number, points: number) 
     level = next.level;
   }
 
-  return prisma.user.update({
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: {
       exp: newExp,
@@ -23,4 +23,15 @@ export async function grantRewards(userId: string, exp: number, points: number) 
       level,
     },
   });
+
+  if (level > user.level) {
+    const { pushTicker } = await import("@/lib/ticker");
+    await pushTicker({
+      kind: `LEVEL:${userId}:${level}`,
+      message: `🎉 ${user.nickname}님이 Lv.${level}을 달성하셨습니다!`,
+      href: `/u/${encodeURIComponent(user.nickname)}`,
+    });
+  }
+
+  return updated;
 }
