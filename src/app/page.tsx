@@ -7,7 +7,8 @@ import type { PostSummary } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
 import { getSponsorCreative } from "@/lib/inventory";
 import { todayKstDate } from "@/lib/dates";
-import { getTodayHandSpotlight, getWeeklyHubPost } from "@/lib/growth-ops";
+import { getTodayHandSpotlight, getWeeklyHubPost, getVerifiedDealers } from "@/lib/growth-ops";
+import { VerifiedDealerStrip } from "@/components/home/verified-dealer-strip";
 
 export const dynamic = "force-dynamic";
 
@@ -56,9 +57,10 @@ export default async function HomePage() {
   let issues: PostSummary[] = [];
   const nativeSponsor = await getSponsorCreative("NATIVE").catch(() => null);
   const today = todayKstDate();
-  const [handSpot, hub] = await Promise.all([
+  const [handSpot, hub, dealers] = await Promise.all([
     getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
     getWeeklyHubPost().catch(() => null),
+    getVerifiedDealers().catch(() => []),
   ]);
   try {
     const [allRows, freeRows, jobRows, issueRows] = await Promise.all([
@@ -99,6 +101,7 @@ export default async function HomePage() {
     <div className="flex flex-col gap-5">
       <PromoBanners />
       <HomeShortcuts />
+      <VerifiedDealerStrip dealers={dealers} />
       <GrowthHomePanel
         today={today}
         hand={

@@ -3,7 +3,12 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
 import { todayKstDate, weekStartKst, yesterdayKstDate, shiftDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
-import { ATTENDANCE_LINES, catalogPosts, DEALER_CREW_NICKNAMES, SEED_NICKNAMES } from "../src/lib/seed-catalog";
+import {
+  ATTENDANCE_LINES,
+  catalogPosts,
+  SEED_NICKNAMES,
+  VERIFIED_DEALER_NICKNAMES,
+} from "../src/lib/seed-catalog";
 import { FEATURED_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
 import { weeklyHubContent, weeklyHubTitle } from "../src/lib/growth";
@@ -70,15 +75,13 @@ async function main() {
 
   const users = [];
   for (const [index, nickname] of SEED_NICKNAMES.entries()) {
-    const verified = DEALER_CREW_NICKNAMES.includes(
-      nickname as (typeof DEALER_CREW_NICKNAMES)[number],
-    );
+    const verified = (VERIFIED_DEALER_NICKNAMES as readonly string[]).includes(nickname);
     const user = await prisma.user.create({
       data: {
         nickname,
         profileMarkImageUrl: markList[index % markList.length].imageUrl,
         equippedMarkId: markList[index % markList.length].id,
-        level: nickname === "펠트딜러" ? 8 : 1 + (index % 7),
+        level: nickname === "펠트딜러" ? 8 : verified ? 5 + (index % 3) : 1 + (index % 7),
         exp: nickname === "펠트딜러" ? 7400 : 40 + index * 80,
         points: nickname === "펠트딜러" ? 8200 : 10 + index * 15,
         isDealerVerified: verified,

@@ -24,8 +24,7 @@ const script = Caveat({
 
 export const metadata: Metadata = {
   title: "POKA — 홀덤·딜러 커뮤니티",
-  description:
-    "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기. 바카라·카지노 테이블 게임은 다루지 않습니다.",
+  description: "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기.",
   icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
 };
 

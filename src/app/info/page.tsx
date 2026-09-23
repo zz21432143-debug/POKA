@@ -3,8 +3,8 @@ import Link from "next/link";
 import { BookOpenIcon, CalendarDaysIcon, MegaphoneIcon, UsersIcon } from "lucide-react";
 
 const CARDS = [
-  { href: "/info/guide", title: "홀덤 딜러 가이드", body: "검색용 상설 글 10편. 홀덤만.", icon: BookOpenIcon },
-  { href: "/info/dealers", title: "인증 딜러", body: "주 1회 핸드리뷰 또는 현장 스케치.", icon: UsersIcon },
+  { href: "/info/guide", title: "홀덤 딜러 가이드", body: "검색용 상설 글 10편.", icon: BookOpenIcon },
+  { href: "/info/dealers", title: "인증 딜러", body: "골드 뱃지 딜러와 최근 핸드.", icon: UsersIcon },
   { href: "/boards/schedule", title: "홀덤 대회 스케줄", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
   { href: "/boards/official", title: "공식 홍보", body: "제휴 · 협찬 포스터.", icon: MegaphoneIcon },
 ] as const;
@@ -15,7 +15,7 @@ export default function InfoHubPage() {
       <header>
         <h1 className="text-2xl font-semibold">정보센터</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          홀덤 가이드 {GUIDE_ARTICLES.length}편, 인증 딜러, 대회 일정, 공식 홍보. 바카라는 없습니다.
+          홀덤 가이드 {GUIDE_ARTICLES.length}편, 인증 딜러, 대회 일정, 공식 홍보.
         </p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">

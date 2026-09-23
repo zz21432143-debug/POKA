@@ -1,6 +1,7 @@
-/** POKA는 홀덤만. 바카라·카지노 테이블 게임은 받지 않습니다. */
+const REJECT_MESSAGE = "이 내용은 등록할 수 없습니다.";
+
 export class HoldemOnlyError extends Error {
-  constructor(message = "POKA는 홀덤 커뮤니티입니다. 바카라·블랙잭·룰렛·슬롯 같은 내용은 올리지 마세요.") {
+  constructor(message = REJECT_MESSAGE) {
     super(message);
     this.name = "HoldemOnlyError";
   }
@@ -10,9 +11,7 @@ const BANNED =
   /바카라|baccarat|블랙잭|blackjack|룰렛|roulette|슬롯머신|카지노\s*딜러|카지노딜러|카지노\s*테이블/i;
 
 export function holdemOnlyViolation(text: string): string | null {
-  if (BANNED.test(text)) {
-    return new HoldemOnlyError().message;
-  }
+  if (BANNED.test(text)) return REJECT_MESSAGE;
   return null;
 }
 

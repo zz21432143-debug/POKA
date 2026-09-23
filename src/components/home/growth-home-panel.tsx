@@ -62,7 +62,7 @@ export function GrowthHomePanel({
           )}
         </h2>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          홀덤 토너먼트만 모았습니다. 달력에서 일자별로 이어집니다.
+          달력에서 일자별로 이어집니다.
         </p>
         <Link href="/boards/schedule" className="mt-auto pt-3 text-sm font-semibold text-primary">
           달력 보기

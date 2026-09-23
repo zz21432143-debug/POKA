@@ -1,12 +1,7 @@
 import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst, shiftDate } from "@/lib/dates";
-import {
-  DEALER_CREW_NICKNAMES,
-  WEEKLY_HUB_PREFIX,
-  kstDayStart,
-  weeklyHubContent,
-  weeklyHubTitle,
-} from "@/lib/growth";
+import { WEEKLY_HUB_PREFIX, kstDayStart, weeklyHubContent, weeklyHubTitle } from "@/lib/growth";
+import { holdemOnlyViolation } from "@/lib/holdem-only";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 
 export async function ensureWeeklyScheduleHub() {
@@ -16,7 +11,7 @@ export async function ensureWeeklyScheduleHub() {
     where: { boardType: "SCHEDULE", hidden: false, title },
   });
   if (existing) {
-    if (existing.content.includes("바카라")) {
+    if (holdemOnlyViolation(existing.content)) {
       const weekEnd = shiftDate(week, 6);
       const events = await prisma.post.findMany({
         where: {
@@ -104,56 +99,40 @@ export async function getWeeklyHubPost() {
   });
 }
 
-export async function getDealerCrew() {
-  const weekStart = kstDayStart(weekStartKst());
+export async function getVerifiedDealers() {
   const dealers = await prisma.user.findMany({
-    where: {
-      OR: [{ isDealerVerified: true }, { nickname: { in: [...DEALER_CREW_NICKNAMES] } }],
-    },
-    orderBy: [{ isDealerVerified: "desc" }, { level: "desc" }],
-    take: 10,
+    where: { isDealerVerified: true },
+    orderBy: [{ level: "desc" }, { nickname: "asc" }],
+    take: 12,
     select: {
       id: true,
       nickname: true,
-      isDealerVerified: true,
       level: true,
       profileMarkImageUrl: true,
     },
   });
   const ids = dealers.map((row) => row.id);
-  const posts =
+  const hands =
     ids.length === 0
       ? []
       : await prisma.post.findMany({
           where: {
             authorId: { in: ids },
             hidden: false,
-            boardType: { in: ["HAND_REVIEW", "SKETCH"] },
-            createdAt: { gte: weekStart },
+            boardType: "HAND_REVIEW",
           },
-          select: { authorId: true },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, title: true, authorId: true, upvoteCount: true },
         });
-  const countByAuthor = new Map<string, number>();
-  for (const post of posts) {
-    if (!post.authorId) continue;
-    countByAuthor.set(post.authorId, (countByAuthor.get(post.authorId) ?? 0) + 1);
+  const latestByAuthor = new Map<string, (typeof hands)[number]>();
+  for (const hand of hands) {
+    if (!hand.authorId || latestByAuthor.has(hand.authorId)) continue;
+    latestByAuthor.set(hand.authorId, hand);
   }
   return dealers.map((dealer) => ({
     ...dealer,
-    weeklyOpsPosts: countByAuthor.get(dealer.id) ?? 0,
-    weeklyOk: (countByAuthor.get(dealer.id) ?? 0) >= 1,
+    latestHand: latestByAuthor.get(dealer.id) ?? null,
   }));
-}
-
-export async function countWeeklyOpsPosts(userId: string) {
-  return prisma.post.count({
-    where: {
-      authorId: userId,
-      hidden: false,
-      boardType: { in: ["HAND_REVIEW", "SKETCH"] },
-      createdAt: { gte: kstDayStart(weekStartKst()) },
-    },
-  });
 }
 
 export function todayKstLabel() {

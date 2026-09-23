@@ -4,7 +4,7 @@ import { GUIDE_ARTICLES } from "@/lib/info-pages";
 
 export const metadata: Metadata = {
   title: "홀덤 딜러 가이드 — POKA",
-  description: "홀덤 딜러가 테이블에서 바로 쓰는 기본 룰 10편. 바카라·카지노 게임은 다루지 않습니다.",
+  description: "홀덤 딜러가 테이블에서 바로 쓰는 기본 룰 10편.",
 };
 
 export default function GuideHubPage() {

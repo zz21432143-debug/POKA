@@ -8,9 +8,9 @@ import {
   normalizeHandTitle,
   normalizeReviewTitle,
 } from "./holdem-only";
-import { DEALER_CREW_NICKNAMES, weeklyHubContent, weeklyHubTitle } from "./growth";
+import { weeklyHubContent, weeklyHubTitle } from "./growth";
 import { GUIDE_ARTICLES, getGuideArticle } from "./info-pages";
-import { catalogPosts } from "./seed-catalog";
+import { catalogPosts, VERIFIED_DEALER_NICKNAMES } from "./seed-catalog";
 
 describe("holdem-only", () => {
   it("rejects baccarat and casino-dealer copy", () => {
@@ -54,7 +54,7 @@ describe("weekly hub and kakao lines", () => {
   });
 });
 
-describe("evergreen guides and crew", () => {
+describe("evergreen guides and verified dealers", () => {
   it("has ten indexed holdem guides", () => {
     assert.equal(GUIDE_ARTICLES.length, 10);
     assert.ok(getGuideArticle("hand-rankings"));
@@ -64,8 +64,10 @@ describe("evergreen guides and crew", () => {
     }
   });
 
-  it("keeps a ten-dealer crew", () => {
-    assert.equal(DEALER_CREW_NICKNAMES.length, 10);
+  it("seeds a small verified-dealer roster", () => {
+    assert.ok(VERIFIED_DEALER_NICKNAMES.includes("펠트딜러"));
+    assert.ok(VERIFIED_DEALER_NICKNAMES.length >= 4);
+    assert.equal(VERIFIED_DEALER_NICKNAMES.length, new Set(VERIFIED_DEALER_NICKNAMES).size);
   });
 
   it("seeds holdem-only catalog titles", () => {

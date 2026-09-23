@@ -27,5 +27,5 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   OFFICIAL_POSTER: "공식 홍보 (검증 매장 게시판으로 이전)",
   TALENT: "개인 구직 (구인/구직 > 개인 구직으로 이전)",
   PICKUP: "급구 / 대타 (구인/구직 > 급구/대타로 이전)",
-  SCHEDULE: "홀덤 토너먼트만. 매주 '이번 주 홀덤 대회 일정' 허브가 자동으로 생깁니다.",
+  SCHEDULE: "매주 '이번 주 홀덤 대회 일정' 허브가 자동으로 생깁니다.",
 };

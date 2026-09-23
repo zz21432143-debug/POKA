@@ -1,12 +1,18 @@
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
-import { DEALER_CREW_NICKNAMES } from "./growth";
 import { buildJobTitle } from "./jobs";
 import type { FeedKey } from "./feed";
 import { FEATURED_OFFICIAL_POSTERS, OFFICIAL_POSTER_IMAGES } from "./official-posters";
 
-export { DEALER_CREW_NICKNAMES };
-
 export const SEED_PER_BOARD = 20;
+
+export const VERIFIED_DEALER_NICKNAMES = [
+  "펠트딜러",
+  "크라운딜러",
+  "샷클락",
+  "나이트시프트",
+  "토너스태프",
+  "주말스팟",
+] as const;
 
 export const SEED_NICKNAMES = [
   "펠트딜러",
@@ -254,7 +260,8 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
         ? `오늘의 홀덤 핸드리뷰 | ${today} | ${handSpots[0]}`
         : `홀덤 핸드리뷰 | ${handSpots[i]}`,
     content: `홀덤 핸드입니다. Fold/Check/Call/Raise 투표 부탁합니다. 유효스택 ${80 + i}bb, ${LOCS[i]} 테이블.`,
-    authorNickname: nick(i),
+    authorNickname:
+      i < VERIFIED_DEALER_NICKNAMES.length ? VERIFIED_DEALER_NICKNAMES[i] : nick(i),
     daysAgo: i,
     upvoteCount: 8 + (i % 20),
     handReview: true,

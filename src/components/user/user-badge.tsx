@@ -92,8 +92,11 @@ export function UserBadge({
       ) : null}
     </span>
   ) : showExtras && user.isDealerVerified ? (
-    <StarIcon className="size-3.5 shrink-0 fill-amber-400 text-amber-400" aria-label="인증 딜러" />
-  ) : null;
+        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+          <StarIcon className="size-3 fill-amber-400 text-amber-400" />
+          인증
+        </span>
+      ) : null;
 
   if (size === "lg") {
     return (
@@ -104,7 +107,7 @@ export function UserBadge({
           size={spec.mark}
           frameClass={frameClass}
           effectClass={effectClass}
-          className="ring-2 ring-white shadow-sm"
+          className={user.isDealerVerified ? "ring-2 ring-amber-400 shadow-sm" : "ring-2 ring-white shadow-sm"}
         />
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-1.5">
@@ -132,7 +135,7 @@ export function UserBadge({
         size={spec.mark}
         frameClass={frameClass}
         effectClass={effectClass}
-        className="ring-1 ring-border"
+        className={user.isDealerVerified ? "ring-2 ring-amber-400" : "ring-1 ring-border"}
       />
       {showNickname ? (
         <span className={cn("truncate font-semibold text-foreground", spec.nick)}>{user.nickname}</span>

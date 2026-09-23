@@ -47,9 +47,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   }
 
   const fallbackNotices = [
-    { id: "n1", title: "POKA는 홀덤만 다룹니다", date: "2026.09.22", href: "/about" },
+    { id: "n1", title: "홀덤 핸드리뷰 · 구인 · 대회", date: "2026.09.22", href: "/about" },
     { id: "n2", title: "POKA 공식 오픈채팅방 참여하기", date: "2026.09.22", href: "https://open.kakao.com/o/gewUD9jc" },
-    { id: "n3", title: "인증 딜러 주 1회 핸드/현장글", date: "2026.09.22", href: "/info/dealers" },
+    { id: "n3", title: "인증 딜러 골드 뱃지", date: "2026.09.22", href: "/info/dealers" },
   ];
 
   return (

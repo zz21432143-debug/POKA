@@ -5,7 +5,7 @@ import { BriefcaseIcon } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "홀덤펍 딜러 구인 · 구직 — POKA",
-  description: "지역이 제목에 붙는 홀덤 딜러 구인. 바카라 구인은 받지 않습니다.",
+  description: "지역이 제목에 붙는 홀덤 딜러 구인.",
 };
 
 export default function JobsHubPage() {
@@ -15,7 +15,7 @@ export default function JobsHubPage() {
       <header>
         <h1 className="text-2xl font-semibold">홀덤 딜러 구인 · 구직</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          제목에 지역이 붙습니다. 홀덤펍 딜러·스태프만 받습니다. 바카라 구인은 올리지 마세요.
+          제목에 지역이 붙습니다. 홀덤펍 딜러·스태프 구인입니다.
         </p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">
