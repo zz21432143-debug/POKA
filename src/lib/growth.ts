@@ -1,5 +1,4 @@
 import { shiftDate, todayKstDate, weekStartKst } from "./dates";
-import { KAKAO_OPEN_CHAT_URL } from "./kakao";
 
 export const WEEKLY_HUB_PREFIX = "이번 주 홀덤 대회 일정";
 
@@ -38,24 +37,26 @@ ${list}
 개별 대회 글과 달력은 대회 스케줄 게시판에서 이어서 보세요.`;
 }
 
-export function kakaoDailyLines(input: {
-  today?: string;
-  attendancePath?: string;
-  handPath?: string;
-  weekPath?: string;
-  siteOrigin?: string;
-}) {
-  const today = input.today ?? todayKstDate();
+export const KAKAO_LINE_PATHS = {
+  attendance: "/attendance",
+  hand: "/boards/hand-review",
+  schedule: "/boards/schedule",
+} as const;
+
+/** 오픈채팅에 붙이는 실제 세 줄. 긴 글 ID는 넣지 않습니다. */
+export function kakaoDailyLines(input: { today?: string; siteOrigin?: string } = {}) {
+  const today = (input.today ?? todayKstDate()).replaceAll("-", ".");
   const origin = (input.siteOrigin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const link = (path: string) => (origin ? `${origin}${path}` : path);
   return [
-    `[POKA ${today.replaceAll("-", ".")}] 홀덤만`,
-    `1. 출석 ${link(input.attendancePath ?? "/attendance")}`,
-    `2. 오늘의 핸드 ${link(input.handPath ?? "/boards/hand-review")}`,
-    `3. 이번 주 대회 ${link(input.weekPath ?? "/boards/schedule")}`,
-    `오픈채팅 ${KAKAO_OPEN_CHAT_URL}`,
-    "투표·검색·후기는 사이트에서.",
+    `1. 출석 ${link(KAKAO_LINE_PATHS.attendance)}`,
+    `2. 핸드 ${link(KAKAO_LINE_PATHS.hand)}`,
+    `3. 대회 ${link(KAKAO_LINE_PATHS.schedule)}`,
   ].join("\n");
+}
+
+export function kakaoDailyHeadline(today = todayKstDate()) {
+  return `[POKA ${today.replaceAll("-", ".")}] 홀덤만`;
 }
 
 export function kstDayStart(date = todayKstDate()) {

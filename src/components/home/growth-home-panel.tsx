@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CopyTextButton } from "@/components/growth/copy-text-button";
-import { kakaoDailyLines } from "@/lib/growth";
+import { kakaoDailyHeadline, kakaoDailyLines } from "@/lib/growth";
 import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
 import { formatKstLabel } from "@/lib/dates";
 import { MarkImage } from "@/components/layout/mark-image";
@@ -27,26 +27,24 @@ export function GrowthHomePanel({
     profileMarkImageUrl: string | null;
   }[];
 }) {
-  const handPath = hand ? `/posts/${hand.id}` : "/boards/hand-review";
-  const weekPath = hub ? `/posts/${hub.id}` : "/boards/schedule";
-  const lines = kakaoDailyLines({
-    today,
-    handPath,
-    weekPath,
-  });
+  const handHref = hand ? `/posts/${hand.id}` : "/boards/hand-review";
+  const weekHref = hub ? `/posts/${hub.id}` : "/boards/schedule";
+  const lines = kakaoDailyLines({ today });
+  const headline = kakaoDailyHeadline(today);
+  const handSpot = hand?.title.split("|").map((part) => part.trim()).at(-1) || hand?.title;
 
   return (
     <section className="flex flex-col gap-3">
       <div className="grid gap-3 lg:grid-cols-3">
-        <article className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <article className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <SpadeIcon className="size-4 text-primary" />
+            <SpadeIcon className="size-4 shrink-0 text-primary" />
             {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}
           </p>
-          <h2 className="mt-2 text-base font-semibold leading-snug">
+          <h2 className="mt-2 text-base font-semibold leading-snug break-keep">
             {hand ? (
-              <Link href={handPath} className="hover:text-primary">
-                {hand.title}
+              <Link href={handHref} className="hover:text-primary" title={hand.title}>
+                {handSpot}
               </Link>
             ) : (
               "아직 오늘의 핸드가 없습니다"
@@ -60,15 +58,15 @@ export function GrowthHomePanel({
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <article className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <CalendarDaysIcon className="size-4 text-primary" />
+            <CalendarDaysIcon className="size-4 shrink-0 text-primary" />
             이번 주 홀덤 대회
           </p>
-          <h2 className="mt-2 text-base font-semibold leading-snug">
+          <h2 className="mt-2 text-base font-semibold leading-snug break-keep">
             {hub ? (
-              <Link href={weekPath} className="hover:text-primary">
-                {hub.title}
+              <Link href={weekHref} className="hover:text-primary">
+                {hub.title.match(/\(([^)]+)\)/)?.[1] ?? hub.title}
               </Link>
             ) : (
               "주간 허브를 준비하고 있습니다"
@@ -82,13 +80,18 @@ export function GrowthHomePanel({
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-[#FEE500] bg-[#FEE500]/30 p-4 shadow-sm">
+        <article className="min-w-0 rounded-2xl border border-[#FEE500] bg-[#FEE500]/30 p-4 shadow-sm">
           <p className="text-xs font-semibold text-[#191919]/70">오픈채팅에 붙일 세 줄</p>
-          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap font-sans text-xs leading-5 text-[#191919]">
-            {lines}
-          </pre>
+          <p className="mt-1 text-[11px] text-[#191919]/60">{headline}</p>
+          <ol className="mt-2 space-y-1.5 font-sans text-sm leading-6 text-[#191919]">
+            {lines.split("\n").map((line) => (
+              <li key={line} className="truncate tabular-nums">
+                {line}
+              </li>
+            ))}
+          </ol>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <CopyTextButton text={lines} label="세 줄 복사" />
+            <CopyTextButton text={`${headline}\n${lines}`} label="세 줄 복사" />
             <a
               href={KAKAO_OPEN_CHAT_URL}
               target="_blank"

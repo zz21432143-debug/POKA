@@ -53,16 +53,16 @@ describe("weekly hub and kakao lines", () => {
     assert.equal(body.includes("이번 주 홀덤 대회 일정 (x)"), false);
   });
 
-  it("prints three site links for kakao", () => {
+  it("prints three short site lines for kakao", () => {
     const text = kakaoDailyLines({
       today: "2026-09-22",
       siteOrigin: "https://poka.example",
-      handPath: "/posts/h1",
-      weekPath: "/posts/w1",
     });
-    assert.match(text, /홀덤만/);
-    assert.match(text, /https:\/\/poka.example\/attendance/);
-    assert.match(text, /오늘의 핸드/);
+    assert.equal(text.split("\n").length, 3);
+    assert.match(text, /1\. 출석 https:\/\/poka.example\/attendance/);
+    assert.match(text, /2\. 핸드 https:\/\/poka.example\/boards\/hand-review/);
+    assert.match(text, /3\. 대회 https:\/\/poka.example\/boards\/schedule/);
+    assert.equal(text.includes("/posts/"), false);
   });
 });
 
