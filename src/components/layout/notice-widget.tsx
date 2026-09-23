@@ -1,5 +1,30 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Volume2Icon } from "lucide-react";
+
+function NoticeLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  const external = href.startsWith("http://") || href.startsWith("https://");
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 export function NoticeWidget({
   items,
@@ -23,12 +48,12 @@ export function NoticeWidget({
         <ul className="flex flex-col gap-2.5">
           {items.map((item) => (
             <li key={item.id}>
-              <Link href={item.href} className="flex items-start justify-between gap-2 text-sm">
+              <NoticeLink href={item.href} className="flex items-start justify-between gap-2 text-sm">
                 <span className="min-w-0 truncate text-foreground/90 hover:text-primary">
                   · {item.title}
                 </span>
                 <span className="shrink-0 text-[11px] text-muted-foreground">{item.date}</span>
-              </Link>
+              </NoticeLink>
             </li>
           ))}
         </ul>

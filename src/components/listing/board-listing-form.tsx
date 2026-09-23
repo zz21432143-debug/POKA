@@ -23,7 +23,7 @@ export function BoardListingForm({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [positions, setPositions] = useState<string[]>([]);
-  const [region, setRegion] = useState(REGIONS[0]);
+  const [region, setRegion] = useState<(typeof REGIONS)[number]>(REGIONS[0]);
   const [payType, setPayType] = useState<(typeof PAY_TYPES)[number]>("일급");
   const [payAmount, setPayAmount] = useState("");
   const [applyMethod, setApplyMethod] = useState<(typeof APPLY_METHODS)[number]>("카카오톡 ID·링크");

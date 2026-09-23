@@ -56,7 +56,10 @@ export async function GET(request: Request) {
       orderBy,
       skip: offset,
       take: limit,
-      include: { author: { select: AUTHOR_SELECT } },
+      include: {
+        author: { select: AUTHOR_SELECT },
+        _count: { select: { comments: true } },
+      },
     }),
   ]);
 
@@ -68,6 +71,8 @@ export async function GET(request: Request) {
     author: post.author,
     upvoteCount: post.upvoteCount,
     createdAt: post.createdAt.toISOString(),
+    viewCount: post.viewCount,
+    commentCount: post._count.comments,
     ratingManner: post.ratingManner,
     ratingService: post.ratingService,
     ratingFacility: post.ratingFacility,

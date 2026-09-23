@@ -31,7 +31,7 @@ function ActionPill({ row, hand }: { row: StreetAction; hand: HandReviewData }) 
 function ActionLog({ hand }: { hand: HandReviewData }) {
   const [open, setOpen] = useState(true);
   const columns = [
-    { key: "blinds", label: "Blinds (Ante)", pot: null as number | undefined, rows: hand.blinds },
+    { key: "blinds", label: "Blinds (Ante)", pot: undefined, rows: hand.blinds },
     { key: "preflop", label: STREET_LABEL.preflop, pot: hand.streetPots?.preflop, rows: hand.streets.preflop },
     { key: "flop", label: STREET_LABEL.flop, pot: hand.streetPots?.flop, rows: hand.streets.flop },
     { key: "turn", label: STREET_LABEL.turn, pot: hand.streetPots?.turn, rows: hand.streets.turn },

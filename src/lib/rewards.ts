@@ -41,3 +41,5 @@ export const LUCKY_ATTENDANCE_POINTS = 30;
 export const STREAK_BONUS_EXP = 20;
 export const POPULAR_UPVOTE_THRESHOLD = 5;
 export const BEST_COMMENT_MIN = 2;
+export const UPVOTE_RECEIVED_EXP = 2;
+export const UPVOTE_RECEIVED_POINTS = 1;

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getTickerEvents } from "@/lib/ticker";
 import { formatRelativeKst } from "@/lib/dates";
 
@@ -23,14 +22,20 @@ export default async function NoticesPage() {
       <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white">
         {rows.map((row) => (
           <li key={row.id}>
-            <Link href={row.href} className="touch-target flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50">
+            <a
+              href={row.href}
+              {...(row.href.startsWith("http")
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
+              className="touch-target flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50"
+            >
               <span className="min-w-0 truncate text-sm font-medium">{row.message}</span>
               <span className="shrink-0 text-xs text-muted-foreground">
                 {"createdAt" in row && row.createdAt
                   ? formatRelativeKst(row.createdAt.toISOString())
                   : ""}
               </span>
-            </Link>
+            </a>
           </li>
         ))}
       </ul>

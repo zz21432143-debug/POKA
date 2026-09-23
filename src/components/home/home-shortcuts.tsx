@@ -57,8 +57,8 @@ export function HomeShortcuts() {
             </span>
           </Link>
         </li>
-      ))}
-    </ul>
+        ))}
+      </ul>
     </div>
   );
 }

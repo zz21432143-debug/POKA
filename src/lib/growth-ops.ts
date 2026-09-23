@@ -15,7 +15,27 @@ export async function ensureWeeklyScheduleHub() {
   const existing = await prisma.post.findFirst({
     where: { boardType: "SCHEDULE", hidden: false, title },
   });
-  if (existing) return existing;
+  if (existing) {
+    if (existing.content.includes("바카라")) {
+      const weekEnd = shiftDate(week, 6);
+      const events = await prisma.post.findMany({
+        where: {
+          boardType: "SCHEDULE",
+          hidden: false,
+          eventDate: { gte: week, lte: weekEnd },
+          NOT: { title: { startsWith: WEEKLY_HUB_PREFIX } },
+        },
+        orderBy: { eventDate: "asc" },
+        take: 40,
+        select: { title: true, eventDate: true, promoLocation: true },
+      });
+      return prisma.post.update({
+        where: { id: existing.id },
+        data: { content: weeklyHubContent(events) },
+      });
+    }
+    return existing;
+  }
 
   const weekEnd = shiftDate(week, 6);
   const events = await prisma.post.findMany({

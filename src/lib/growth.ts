@@ -30,7 +30,7 @@ export function weeklyHubContent(events: { title: string; eventDate?: string | n
       return `- ${when}${where} — ${event.title}`;
     });
   const list = lines.length > 0 ? lines.join("\n") : "- 아직 등록된 홀덤 대회가 없습니다. 관리자가 일정을 올리면 여기에 모입니다.";
-  return `한국 홀덤 토너먼트만 모은 주간 허브입니다. 바카라·카지노 일정은 다루지 않습니다.
+  return `한국 홀덤 토너먼트만 모은 주간 허브입니다. 홀덤 외 일정은 다루지 않습니다.
 
 ${list}
 
