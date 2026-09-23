@@ -15,22 +15,22 @@ export function buildJobTitle(kind: JobKind, fields: {
   const loc = fields.location?.trim() || "미정";
   if (kind === "FIXED") {
     const name = fields.companyName?.trim() || "상호 미입력";
-    return `[${loc}] ${name} - 고정 직원 모집`;
+    return `[${loc}] 홀덤펍 딜러 구인 · ${name}`;
   }
   if (kind === "APPLY") {
     const pay = formatWon(fields.payAmount) || "미정";
-    return `[${loc}] 지원 딜러 (시급 ${pay})`;
+    return `[${loc}] 홀덤 스팟 딜러 구인 (시급 ${pay})`;
   }
   if (kind === "URGENT") {
     const when = fields.workDate?.trim() || "즉시";
-    return `[${loc}] 급구 / 대타 (${when})`;
+    return `[${loc}] 홀덤펍 급구/대타 (${when})`;
   }
   if (kind === "SEEKING") {
     const name = fields.companyName?.trim() || "닉네임 미입력";
-    return `[${loc}] ${name} - 개인 구직`;
+    return `[${loc}] 홀덤 딜러 구직 · ${name}`;
   }
   const team = fields.companyName?.trim() || "팀명 미입력";
-  return `[${loc}] ${team} - 딜러 팀원 모집`;
+  return `[${loc}] 홀덤 딜러팀 모집 · ${team}`;
 }
 
 export type JobFormPayload = {

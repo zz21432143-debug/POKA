@@ -5,9 +5,9 @@ import { formatRelativeKst } from "@/lib/dates";
 export const dynamic = "force-dynamic";
 
 const FALLBACK = [
-  { id: "1", message: "게시판 이용 규칙 안내", href: "/terms", createdAt: new Date("2026-04-10") },
-  { id: "2", message: "운영진 가입 안내 공지", href: "/about", createdAt: new Date("2026-04-05") },
-  { id: "3", message: "포카 커뮤니티 이벤트 안내", href: "/boards/schedule", createdAt: new Date("2026-03-28") },
+  { id: "1", message: "POKA는 홀덤만 다룹니다. 바카라·카지노 글은 받지 않습니다.", href: "/about", createdAt: new Date("2026-09-22") },
+  { id: "2", message: "오픈채팅 고정: 출석 · 오늘의 핸드 · 이번 주 대회는 사이트에서", href: "/", createdAt: new Date("2026-09-22") },
+  { id: "3", message: "인증 딜러는 주 1회 핸드리뷰 또는 현장 스케치", href: "/info/dealers", createdAt: new Date("2026-09-22") },
 ];
 
 export default async function NoticesPage() {

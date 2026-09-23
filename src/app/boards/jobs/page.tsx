@@ -1,15 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { JOB_KINDS } from "@/lib/nav";
 import { BriefcaseIcon } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "홀덤펍 딜러 구인 · 구직 — POKA",
+  description: "지역이 제목에 붙는 홀덤 딜러 구인. 바카라 구인은 받지 않습니다.",
+};
 
 export default function JobsHubPage() {
   const kinds = Object.entries(JOB_KINDS);
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-2xl font-semibold">딜러 구인 · 구직</h1>
+        <h1 className="text-2xl font-semibold">홀덤 딜러 구인 · 구직</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          고정 직원부터 급구·개인 구직까지, 현장 구인을 한곳에서 봅니다.
+          제목에 지역이 붙습니다. 홀덤펍 딜러·스태프만 받습니다. 바카라 구인은 올리지 마세요.
         </p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">

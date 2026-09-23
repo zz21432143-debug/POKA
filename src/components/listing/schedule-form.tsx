@@ -60,7 +60,13 @@ export function ScheduleForm({ hint }: { hint: string }) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="name">대회명</Label>
-          <Input id="name" className="h-11" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input
+            id="name"
+            className="h-11"
+            value={title}
+            placeholder="예: 서울 홀덤 위클리"
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </div>
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="venue">개최 장소</Label>

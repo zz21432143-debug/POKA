@@ -3,6 +3,7 @@ import { UserBadge } from "@/components/user/user-badge";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PostList } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
+import { countWeeklyOpsPosts } from "@/lib/growth-ops";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ export default async function MemberPage({
     include: { author: { select: AUTHOR_SELECT } },
   });
 
+  const weeklyOps = user.isDealerVerified ? await countWeeklyOpsPosts(user.id) : 0;
+
   return (
     <div className="flex flex-col gap-4">
       <header className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
@@ -49,6 +52,12 @@ export default async function MemberPage({
           size="lg"
         />
         <p className="text-sm text-muted-foreground">연속 출석 {user.attendanceStreak}일</p>
+        {user.isDealerVerified ? (
+          <p className="text-sm text-muted-foreground">
+            인증 딜러 · 이번 주 핸드/현장글 {weeklyOps}편
+            {weeklyOps >= 1 ? " (유지)" : " (주 1회 권장)"}
+          </p>
+        ) : null}
       </header>
       <PostList
         posts={posts.map((post) => ({

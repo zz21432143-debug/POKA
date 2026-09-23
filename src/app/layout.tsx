@@ -23,8 +23,9 @@ const script = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "POKA — 포커·딜러 커뮤니티",
-  description: "POKA는 포커 플레이어와 딜러를 위한 반응형 커뮤니티입니다.",
+  title: "POKA — 홀덤·딜러 커뮤니티",
+  description:
+    "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기. 바카라·카지노 테이블 게임은 다루지 않습니다.",
   icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
 };
 

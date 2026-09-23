@@ -1,6 +1,6 @@
 # POKA
 
-포커 플레이어와 딜러를 위한 커뮤니티 웹사이트입니다.
+포커 플레이어와 딜러를 위한 홀덤 커뮤니티 웹사이트입니다. 바카라 등 다른 테이블 게임은 범위 밖입니다.
 
 PC와 모바일 브라우저(Android Chrome / iOS Safari)에서 같은 반응형 웹으로 접속합니다.
 
@@ -23,6 +23,16 @@ PC와 모바일 브라우저(Android Chrome / iOS Safari)에서 같은 반응형
 홈 홍보는 진행 중 포스터 3장만 보여 주고, 공식 홍보 게시판에는 공개 포스터만 남깁니다.
 
 이 IA 정리를 되돌리려면 `git revert`로 해당 커밋을 되돌리면 됩니다.
+
+트래픽 운영(홈 핸드/주간대회/인증딜러/SEO 제목)을 넣기 **직전** 복원 기점은 태그 `restore-pre-traffic-20260923` 입니다.
+
+```bash
+git switch --detach restore-pre-traffic-20260923
+# 또는 해당 커밋으로 브랜치를 되돌릴 때
+git reset --hard restore-pre-traffic-20260923
+```
+
+POKA는 홀덤만 다룹니다. 바카라·블랙잭·룰렛 글은 작성 API에서 거절합니다.
 
 
 ## 화면 구조

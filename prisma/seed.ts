@@ -1,11 +1,12 @@
 import "dotenv/config";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
-import { todayKstDate, weekStartKst, yesterdayKstDate } from "../src/lib/dates";
+import { todayKstDate, weekStartKst, yesterdayKstDate, shiftDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
-import { ATTENDANCE_LINES, catalogPosts, SEED_NICKNAMES } from "../src/lib/seed-catalog";
+import { ATTENDANCE_LINES, catalogPosts, DEALER_CREW_NICKNAMES, SEED_NICKNAMES } from "../src/lib/seed-catalog";
 import { FEATURED_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/official-posters";
 import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
+import { weeklyHubContent, weeklyHubTitle } from "../src/lib/growth";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -69,7 +70,9 @@ async function main() {
 
   const users = [];
   for (const [index, nickname] of SEED_NICKNAMES.entries()) {
-    const verified = nickname === "펠트딜러" || nickname === "크라운딜러";
+    const verified = DEALER_CREW_NICKNAMES.includes(
+      nickname as (typeof DEALER_CREW_NICKNAMES)[number],
+    );
     const user = await prisma.user.create({
       data: {
         nickname,
@@ -275,6 +278,30 @@ async function main() {
   }
 
   const week = weekStartKst(today);
+  const weekEnd = shiftDate(week, 6);
+  const weekEvents = createdPosts.filter((post) => {
+    if (post.boardType !== "SCHEDULE") return false;
+    const full = catalog.schedule.find((row) => row.title === post.title);
+    const eventDate = full?.eventDate;
+    return Boolean(eventDate && eventDate >= week && eventDate <= weekEnd);
+  });
+  await prisma.post.create({
+    data: {
+      boardType: "SCHEDULE",
+      title: weeklyHubTitle(week),
+      content: weeklyHubContent(
+        weekEvents.map((post) => {
+          const row = catalog.schedule.find((item) => item.title === post.title);
+          return { title: post.title, eventDate: row?.eventDate, promoLocation: row?.promoLocation };
+        }),
+      ),
+      authorId: dealer.id,
+      eventDate: week,
+      eventEndDate: weekEnd,
+      promoLocation: "전국 홀덤",
+      isPaid: true,
+    },
+  });
   await prisma.tickerEvent.createMany({
     data: [
       {

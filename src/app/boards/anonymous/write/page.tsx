@@ -6,8 +6,8 @@ export default function AnonymousWritePage() {
       <header>
         <h1 className="text-2xl font-semibold">익명 게시판 작성</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          화면에는 익명으로 표시됩니다. 분쟁 대비를 위해 계정과 작성 IP는 서버에만 저장됩니다.
-          매장 후기라면 4항목 별점도 남겨 주세요.
+          화면에는 익명으로 표시됩니다. 홀덤펍 후기라면 제목에 지역을 넣고 4항목 별점도 남겨 주세요.
+          바카라·카지노 매장 글은 받지 않습니다.
         </p>
       </header>
       <BoardWriteForm

@@ -191,7 +191,7 @@ export function HandEditor() {
           id="hand-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          placeholder="예: BB vs UTG, KQs 리버 벳"
+          placeholder="예: BTN vs BB AJs 3벳팟"
           className="h-11"
         />
       </div>

@@ -69,6 +69,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "정보센터",
     items: [
       { href: "/info/guide", label: "딜러 가이드", hint: "홀덤 기본 룰", icon: "book" },
+      { href: "/info/dealers", label: "인증 딜러", hint: "주 1회 핸드·현장", icon: "badge" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],
@@ -203,31 +204,31 @@ export function resolveBoardSlug(slug: string) {
 export const JOB_KINDS = {
   fixed: {
     title: "고정 직원 구인",
-    blurb: "룸·펍의 상시 고정 직원 모집",
+    blurb: "홀덤펍 상시 고정 딜러·스태프 모집",
     kind: "FIXED" as const,
     cta: "구인 등록",
   },
   apply: {
     title: "지원 딜러 구인",
-    blurb: "단기·스팟 딜러 지원자 전용",
+    blurb: "홀덤 단기·스팟 딜러 지원",
     kind: "APPLY" as const,
     cta: "구인 등록",
   },
   team: {
     title: "팀 구인",
-    blurb: "딜러 팀원 모집",
+    blurb: "홀덤 딜러 팀원 모집",
     kind: "TEAM" as const,
     cta: "구인 등록",
   },
   urgent: {
     title: "급구 / 대타",
-    blurb: "당일·긴급 대타와 급구 공고",
+    blurb: "홀덤펍 당일·긴급 대타",
     kind: "URGENT" as const,
     cta: "급구 등록",
   },
   seek: {
     title: "개인 구직",
-    blurb: "딜러·스태프 개인 구직 이력",
+    blurb: "홀덤 딜러·스태프 개인 구직",
     kind: "SEEKING" as const,
     cta: "구직 등록",
   },
@@ -256,11 +257,13 @@ export const JOB_KIND_LABEL: Record<JobKind, string> = {
 
 export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬 소식만 등록합니다. 배너 구좌 1~6과 연동됩니다.",
-  SCHEDULE: "관리자가 일자별·월별 주요 토너먼트 일정을 올립니다.",
-  JOBS: "제목은 지역·상호(조건)로 자동 생성됩니다.",
+  SCHEDULE: "관리자가 홀덤 토너먼트만 올립니다. 주간 허브 글이 매주 자동으로 생깁니다.",
+  JOBS: "제목은 [지역] 홀덤펍 딜러 구인 형식으로 자동 생성됩니다.",
   FREE: "자유 수다, 잡담, 현장 이야기.",
   RULE_QA: "룰·판정·진행이 맞는지 질문하세요.",
   SKETCH: "현장 사진과 스케치를 공유하세요.",
-  ANONYMOUS_REVIEW: "닉네임은 공개되지 않습니다. 매장 후기라면 별점도 남겨 주세요.",
-  HAND_REVIEW: "테이블에 핸드를 그리고 상대 핸드를 공개할 수 있습니다. 등록 후 투표가 붙습니다.",
+  ANONYMOUS_REVIEW:
+    "닉네임은 공개되지 않습니다. 매장 후기 제목은 '지역 홀덤펍 후기' 형식을 권장합니다.",
+  HAND_REVIEW:
+    "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 Fold/Check/Call/Raise 투표가 열립니다.",
 };

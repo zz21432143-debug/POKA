@@ -10,6 +10,12 @@ import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
 import { ensureBannerSlots } from "@/lib/premium-banners";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
+import {
+  HoldemOnlyError,
+  assertHoldemOnly,
+  normalizeHandTitle,
+  normalizeReviewTitle,
+} from "@/lib/holdem-only";
 
 const BOARDS: BoardType[] = [
   "FREE",
@@ -67,6 +73,15 @@ export async function POST(request: Request) {
     if (boardType !== "JOBS" && title.length < 2) {
       return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
     }
+    if (boardType === "HAND_REVIEW") {
+      title = normalizeHandTitle(title);
+    }
+    if (boardType === "ANONYMOUS_REVIEW") {
+      const hasRatings = [body.ratingManner, body.ratingService, body.ratingFacility, body.ratingAtmosphere].every(
+        (star) => clampStar(star) != null,
+      );
+      title = normalizeReviewTitle(title, hasRatings);
+    }
 
     let handReviewJson: string | null = null;
     if (boardType === "HAND_REVIEW") {
@@ -122,6 +137,14 @@ export async function POST(request: Request) {
     if ((boardType === "EVENT_POSTER" || boardType === "OFFICIAL_POSTER") && !bannerImageUrl) {
       bannerImageUrl = boardType === "EVENT_POSTER" ? "/banners/slot-1.svg" : "/banners/slot-2.svg";
     }
+
+    assertHoldemOnly(
+      title,
+      content,
+      jobData?.jobLocation,
+      jobData?.jobCompanyName,
+      typeof body.promoLocation === "string" ? body.promoLocation : null,
+    );
 
     await assertWriteCooldown({
       kind: "post",
@@ -210,6 +233,9 @@ export async function POST(request: Request) {
         { error: error.message },
         { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
       );
+    }
+    if (error instanceof HoldemOnlyError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     const message = error instanceof Error ? error.message : "저장에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });

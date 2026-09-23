@@ -68,7 +68,19 @@ export function BoardWriteForm({
       </p>
       <div className="grid gap-2">
         <Label htmlFor="title">제목</Label>
-        <Input id="title" className="h-11" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Input
+          id="title"
+          className="h-11"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={
+            boardType === "ANONYMOUS_REVIEW"
+              ? "예: 서울 강남 홀덤펍 후기"
+              : boardType === "HAND_REVIEW"
+                ? "예: BTN vs BB AJs 3벳팟"
+                : undefined
+          }
+        />
       </div>
       {boardType === "PROMO" ? (
         <div className="grid gap-3 sm:grid-cols-2">

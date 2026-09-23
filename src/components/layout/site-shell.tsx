@@ -13,6 +13,7 @@ import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { getViewerProfile } from "@/lib/profile";
 import { listSwitchableUsers } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
+import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
 import { getTickerEvents } from "@/lib/ticker";
 import { getSponsorCreative } from "@/lib/inventory";
 
@@ -23,6 +24,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
   try {
     await ensureTodayAttendancePost();
+    await ensureWeeklyScheduleHub().catch(() => null);
     const [viewer, events, switchAccounts, sidebar] = await Promise.all([
       getViewerProfile(),
       getTickerEvents(),
@@ -45,9 +47,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   }
 
   const fallbackNotices = [
-    { id: "n1", title: "2025년 4월 운영 정책 안내", date: "2025.04.10", href: "/terms" },
-    { id: "n2", title: "게시판 이용 규칙 안내", date: "2025.04.05", href: "/about" },
-    { id: "n3", title: "포카 커뮤니티 이벤트 안내", date: "2025.03.28", href: "/boards/schedule" },
+    { id: "n1", title: "POKA는 홀덤만 다룹니다", date: "2026.09.22", href: "/about" },
+    { id: "n2", title: "오픈채팅 고정: 출석 · 핸드 · 대회", date: "2026.09.22", href: "/" },
+    { id: "n3", title: "인증 딜러 주 1회 핸드/현장글", date: "2026.09.22", href: "/info/dealers" },
   ];
 
   return (
