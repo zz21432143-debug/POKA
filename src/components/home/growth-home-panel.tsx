@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import { formatKstLabel } from "@/lib/dates";
-import { MarkImage } from "@/components/layout/mark-image";
-import { SpadeIcon, CalendarDaysIcon, UsersIcon } from "lucide-react";
+import { SpadeIcon, CalendarDaysIcon } from "lucide-react";
 
 export function GrowthHomePanel({
   today,
   hand,
   hub,
-  dealers,
 }: {
   today: string;
   hand: {
@@ -17,103 +14,59 @@ export function GrowthHomePanel({
     isToday: boolean;
   } | null;
   hub: { id: string; title: string } | null;
-  dealers: {
-    nickname: string;
-    isDealerVerified: boolean;
-    weeklyOk: boolean;
-    weeklyOpsPosts: number;
-    profileMarkImageUrl: string | null;
-  }[];
 }) {
   const handHref = hand ? `/posts/${hand.id}` : "/boards/hand-review";
   const weekHref = hub ? `/posts/${hub.id}` : "/boards/schedule";
   const handSpot = hand?.title.split("|").map((part) => part.trim()).at(-1) || hand?.title;
+  const weekLabel = hub?.title.match(/\(([^)]+)\)/)?.[1] ?? hub?.title ?? "이번 주 일정";
 
   return (
-    <section className="flex flex-col gap-3">
-      <div className="grid gap-3 lg:grid-cols-3">
-        <article className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
-          <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <SpadeIcon className="size-4 shrink-0 text-primary" />
-            {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}
-          </p>
-          <h2 className="mt-2 text-base font-semibold leading-snug break-keep">
-            {hand ? (
-              <Link href={handHref} className="hover:text-primary" title={hand.title}>
-                {handSpot}
-              </Link>
-            ) : (
-              "아직 오늘의 핸드가 없습니다"
-            )}
-          </h2>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {formatKstLabel(today)} · Fold/Check/Call/Raise 투표는 글에서.
-          </p>
-          <Link href="/boards/hand-review/write" className="mt-3 inline-flex text-sm font-semibold text-primary">
-            오늘 핸드 올리기
-          </Link>
-        </article>
+    <section className="grid gap-3 sm:grid-cols-2">
+      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <SpadeIcon className="size-4 shrink-0 text-primary" />
+          {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}
+        </p>
+        <h2 className="mt-2 text-sm font-semibold leading-snug break-keep sm:text-base">
+          {hand ? (
+            <Link href={handHref} className="hover:text-primary" title={hand.title}>
+              {handSpot}
+            </Link>
+          ) : (
+            "아직 오늘의 핸드가 없습니다"
+          )}
+        </h2>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          {formatKstLabel(today)} · Fold/Check/Call/Raise 투표는 글에서.
+        </p>
+        <Link
+          href={hand ? handHref : "/boards/hand-review/write"}
+          className="mt-auto pt-3 text-sm font-semibold text-primary"
+        >
+          {hand ? "투표하러 가기" : "오늘 핸드 올리기"}
+        </Link>
+      </article>
 
-        <article className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
-          <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <CalendarDaysIcon className="size-4 shrink-0 text-primary" />
-            이번 주 홀덤 대회
-          </p>
-          <h2 className="mt-2 text-base font-semibold leading-snug break-keep">
-            {hub ? (
-              <Link href={weekHref} className="hover:text-primary">
-                {hub.title.match(/\(([^)]+)\)/)?.[1] ?? hub.title}
-              </Link>
-            ) : (
-              "주간 허브를 준비하고 있습니다"
-            )}
-          </h2>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            홀덤 토너먼트만 모았습니다. 달력은 대회 스케줄에서 이어집니다.
-          </p>
-          <Link href="/boards/schedule" className="mt-3 inline-flex text-sm font-semibold text-primary">
-            달력 보기
-          </Link>
-        </article>
-
-        <article className="min-w-0">
-          <KakaoOpenChatCta className="h-full min-h-[8.5rem]" />
-        </article>
-      </div>
-
-      <article className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <UsersIcon className="size-4 text-primary" />
-              인증 딜러 운영팀
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              골드 뱃지는 주 1회 핸드리뷰 또는 현장 스케치를 올리면 유지됩니다. 홀덤만.
-            </p>
-          </div>
-          <Link href="/info/dealers" className="text-sm font-semibold text-primary">
-            운영 규칙
-          </Link>
-        </div>
-        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {dealers.map((dealer) => (
-            <li key={dealer.nickname}>
-              <Link
-                href={`/u/${encodeURIComponent(dealer.nickname)}`}
-                className="touch-target flex min-h-14 items-center gap-2 rounded-xl border border-border px-2 py-2 hover:border-primary/40"
-              >
-                <MarkImage src={dealer.profileMarkImageUrl} alt="" size={28} />
-                <span className="min-w-0">
-                  <span className="block truncate text-xs font-semibold">{dealer.nickname}</span>
-                  <span className="block text-[10px] text-muted-foreground">
-                    {dealer.weeklyOk ? `이번 주 ${dealer.weeklyOpsPosts}편` : "이번 주 미작성"}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+          <CalendarDaysIcon className="size-4 shrink-0 text-primary" />
+          이번 주 홀덤 대회
+        </p>
+        <h2 className="mt-2 text-sm font-semibold leading-snug break-keep sm:text-base">
+          {hub ? (
+            <Link href={weekHref} className="hover:text-primary">
+              {weekLabel}
+            </Link>
+          ) : (
+            "주간 허브를 준비하고 있습니다"
+          )}
+        </h2>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          홀덤 토너먼트만 모았습니다. 달력에서 일자별로 이어집니다.
+        </p>
+        <Link href="/boards/schedule" className="mt-auto pt-3 text-sm font-semibold text-primary">
+          달력 보기
+        </Link>
       </article>
     </section>
   );

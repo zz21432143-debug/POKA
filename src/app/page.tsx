@@ -7,7 +7,7 @@ import type { PostSummary } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
 import { getSponsorCreative } from "@/lib/inventory";
 import { todayKstDate } from "@/lib/dates";
-import { getDealerCrew, getTodayHandSpotlight, getWeeklyHubPost } from "@/lib/growth-ops";
+import { getTodayHandSpotlight, getWeeklyHubPost } from "@/lib/growth-ops";
 
 export const dynamic = "force-dynamic";
 
@@ -56,10 +56,9 @@ export default async function HomePage() {
   let issues: PostSummary[] = [];
   const nativeSponsor = await getSponsorCreative("NATIVE").catch(() => null);
   const today = todayKstDate();
-  const [handSpot, hub, dealers] = await Promise.all([
+  const [handSpot, hub] = await Promise.all([
     getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
     getWeeklyHubPost().catch(() => null),
-    getDealerCrew().catch(() => []),
   ]);
   try {
     const [allRows, freeRows, jobRows, issueRows] = await Promise.all([
@@ -99,6 +98,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-5">
       <PromoBanners />
+      <HomeShortcuts />
       <GrowthHomePanel
         today={today}
         hand={
@@ -107,9 +107,7 @@ export default async function HomePage() {
             : null
         }
         hub={hub}
-        dealers={dealers}
       />
-      <HomeShortcuts />
       <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
     </div>
   );

@@ -31,13 +31,13 @@ export function HomeShortcuts() {
         {
           href: "/info/guide",
           title: "홀덤 딜러 가이드",
-          body: "검색용 상설 글 10편. 홀덤 룰만 다룹니다.",
+          body: "홀덤 딜러의 기본 룰과 테이블 진행을 한눈에 봅니다.",
           icon: BookOpenIcon,
         },
         {
           href: "/boards/schedule",
-          title: "이번 주 홀덤 대회",
-          body: "주간 허브와 일자별 · 월별 토너먼트 달력입니다.",
+          title: "대회 스케줄",
+          body: "일자별 · 월별 토너먼트 일정을 가장 빠르게 확인하세요.",
           icon: CalendarDaysIcon,
         },
       ].map((card) => (
