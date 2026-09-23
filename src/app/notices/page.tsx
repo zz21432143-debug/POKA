@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const FALLBACK = [
   { id: "1", message: "POKA는 홀덤만 다룹니다. 바카라·카지노 글은 받지 않습니다.", href: "/about", createdAt: new Date("2026-09-22") },
-  { id: "2", message: "오픈채팅 고정: 출석 · 오늘의 핸드 · 이번 주 대회는 사이트에서", href: "/", createdAt: new Date("2026-09-22") },
+  { id: "2", message: "POKA 공식 오픈채팅방 참여하기", href: "https://open.kakao.com/o/gewUD9jc", createdAt: new Date("2026-09-22") },
   { id: "3", message: "인증 딜러는 주 1회 핸드리뷰 또는 현장 스케치", href: "/info/dealers", createdAt: new Date("2026-09-22") },
 ];
 

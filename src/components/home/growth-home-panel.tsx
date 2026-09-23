@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { CopyTextButton } from "@/components/growth/copy-text-button";
-import { kakaoDailyHeadline, kakaoDailyLines } from "@/lib/growth";
-import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
+import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import { formatKstLabel } from "@/lib/dates";
 import { MarkImage } from "@/components/layout/mark-image";
 import { SpadeIcon, CalendarDaysIcon, UsersIcon } from "lucide-react";
@@ -29,8 +27,6 @@ export function GrowthHomePanel({
 }) {
   const handHref = hand ? `/posts/${hand.id}` : "/boards/hand-review";
   const weekHref = hub ? `/posts/${hub.id}` : "/boards/schedule";
-  const lines = kakaoDailyLines({ today });
-  const headline = kakaoDailyHeadline(today);
   const handSpot = hand?.title.split("|").map((part) => part.trim()).at(-1) || hand?.title;
 
   return (
@@ -80,27 +76,8 @@ export function GrowthHomePanel({
           </Link>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-[#FEE500] bg-[#FEE500]/30 p-4 shadow-sm">
-          <p className="text-xs font-semibold text-[#191919]/70">오픈채팅에 붙일 세 줄</p>
-          <p className="mt-1 text-[11px] text-[#191919]/60">{headline}</p>
-          <ol className="mt-2 space-y-1.5 font-sans text-sm leading-6 text-[#191919]">
-            {lines.split("\n").map((line) => (
-              <li key={line} className="truncate tabular-nums">
-                {line}
-              </li>
-            ))}
-          </ol>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <CopyTextButton text={`${headline}\n${lines}`} label="세 줄 복사" />
-            <a
-              href={KAKAO_OPEN_CHAT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-[#191919] underline-offset-2 hover:underline"
-            >
-              오픈채팅 열기
-            </a>
-          </div>
+        <article className="min-w-0">
+          <KakaoOpenChatCta className="h-full min-h-[8.5rem]" />
         </article>
       </div>
 

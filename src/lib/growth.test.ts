@@ -8,7 +8,7 @@ import {
   normalizeHandTitle,
   normalizeReviewTitle,
 } from "./holdem-only";
-import { DEALER_CREW_NICKNAMES, kakaoDailyLines, weeklyHubContent, weeklyHubTitle } from "./growth";
+import { DEALER_CREW_NICKNAMES, weeklyHubContent, weeklyHubTitle } from "./growth";
 import { GUIDE_ARTICLES, getGuideArticle } from "./info-pages";
 import { catalogPosts } from "./seed-catalog";
 
@@ -51,18 +51,6 @@ describe("weekly hub and kakao lines", () => {
     ]);
     assert.match(body, /서울 홀덤 위클리/);
     assert.equal(body.includes("이번 주 홀덤 대회 일정 (x)"), false);
-  });
-
-  it("prints three short site lines for kakao", () => {
-    const text = kakaoDailyLines({
-      today: "2026-09-22",
-      siteOrigin: "https://poka.example",
-    });
-    assert.equal(text.split("\n").length, 3);
-    assert.match(text, /1\. 출석 https:\/\/poka.example\/attendance/);
-    assert.match(text, /2\. 핸드 https:\/\/poka.example\/boards\/hand-review/);
-    assert.match(text, /3\. 대회 https:\/\/poka.example\/boards\/schedule/);
-    assert.equal(text.includes("/posts/"), false);
   });
 });
 

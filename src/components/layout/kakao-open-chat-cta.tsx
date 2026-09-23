@@ -12,7 +12,13 @@ function KakaoBubbleIcon({ className }: { className?: string }) {
   );
 }
 
-export function KakaoOpenChatCta({ compact = false }: { compact?: boolean }) {
+export function KakaoOpenChatCta({
+  compact = false,
+  className,
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
   if (compact) {
     return (
       <a
@@ -20,7 +26,10 @@ export function KakaoOpenChatCta({ compact = false }: { compact?: boolean }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="POKA 공식 오픈채팅방 참여하기"
-        className="touch-target inline-flex h-11 max-w-[11.5rem] items-center gap-1.5 rounded-full bg-[#FEE500] px-3 text-[13px] font-bold text-[#191919] shadow-sm hover:bg-[#f5dc00]"
+        className={cn(
+          "touch-target inline-flex h-11 max-w-[11.5rem] items-center gap-1.5 rounded-full bg-[#FEE500] px-3 text-[13px] font-bold text-[#191919] shadow-sm hover:bg-[#f5dc00]",
+          className,
+        )}
       >
         <KakaoBubbleIcon className="size-5 shrink-0" />
         <span className="truncate">오픈채팅</span>
@@ -36,6 +45,7 @@ export function KakaoOpenChatCta({ compact = false }: { compact?: boolean }) {
       className={cn(
         "touch-target flex w-full items-center gap-3 rounded-2xl bg-[#FEE500] px-4 py-3.5 text-[#191919]",
         "shadow-sm ring-1 ring-black/5 hover:bg-[#f5dc00]",
+        className,
       )}
     >
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#191919] text-[#FEE500]">
