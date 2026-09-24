@@ -125,8 +125,7 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
-    overflow-x: auto;
+    @apply font-sans overflow-x-clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }

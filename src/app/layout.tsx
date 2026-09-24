@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: 1280,
+  width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#f4f7f8",
@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ko"
       className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
-      <body className="min-h-full min-w-[1180px] flex flex-col">
+      <body className="min-h-full flex flex-col">
         {adsense ? (
           <Script
             async
