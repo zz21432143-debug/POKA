@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
+import { PcClass } from "@/components/layout/pc-class";
 import { adsensePublisherId } from "@/lib/adsense";
 import "./globals.css";
 
@@ -43,6 +44,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <Script id="poka-pc" strategy="beforeInteractive">
+          {`(function(){try{var p=window.matchMedia("(hover: hover) and (pointer: fine)").matches||screen.width>=1100||innerWidth>=900;document.documentElement.classList.toggle("is-pc",p);}catch(e){}})();`}
+        </Script>
+        <PcClass />
         {adsense ? (
           <Script
             async

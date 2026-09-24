@@ -136,6 +136,28 @@
   }
 }
 
+html.is-pc {
+  overflow-x: auto;
+}
+html.is-pc .felt-bg {
+  min-width: 1180px;
+}
+html.is-pc .pc-aside-left {
+  display: block !important;
+}
+html.is-pc .pc-aside-right {
+  display: flex !important;
+}
+html.is-pc .pc-nav {
+  display: flex !important;
+}
+html.is-pc .pc-search {
+  display: flex !important;
+}
+html.is-pc .pc-mobile {
+  display: none !important;
+}
+
 .felt-bg {
   background-color: #f4f7f8;
 }

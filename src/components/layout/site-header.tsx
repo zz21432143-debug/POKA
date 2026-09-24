@@ -32,7 +32,7 @@ export function SiteHeader({
           <span className="sr-only">POKA 홈</span>
         </Link>
         <TopNav />
-        <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
+        <form action="/search" className="pc-search ml-auto hidden min-w-0 flex-1 items-center justify-end md:flex">
           <label className="relative w-full max-w-sm">
             <span className="sr-only">검색</span>
             <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -44,14 +44,14 @@ export function SiteHeader({
             />
           </label>
         </form>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
-          <span className="lg:hidden">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-2">
+          <span className="pc-mobile md:hidden">
             <KakaoOpenChatCta compact />
           </span>
           <Link
             href="/search"
             aria-label="검색"
-            className="touch-target inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted lg:hidden"
+            className="pc-mobile touch-target inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted md:hidden"
           >
             <SearchIcon className="size-5" />
           </Link>
