@@ -9,18 +9,19 @@ export type TickerItem = {
 };
 
 export function LedTicker({ items }: { items: TickerItem[] }) {
-  if (items.length === 0) {
-    return (
-      <div className="led-board w-full overflow-hidden px-3 py-2.5 text-sm text-[#ffe566]">
-        POKA 전광판 — 출석·레벨·인기글 소식이 여기 흐릅니다.
-      </div>
-    );
-  }
+  const source =
+    items.length > 0
+      ? items
+      : [{ id: "empty", message: "POKA 전광판 — 글 작성 · 레벨업 · 마크 구매 소식이 여기 흐릅니다", href: "/" }];
+  const copies = source.length < 4 ? 4 : 2;
+  const loop = Array.from({ length: copies }, () => source).flat();
 
-  const loop = [...items, ...items];
   return (
     <div className="led-board relative w-full overflow-hidden" aria-label="POKA 실시간 전광판">
-      <div className="led-marquee flex w-max gap-10 py-2.5 pl-4">
+      <div className="pointer-events-none absolute top-0 left-0 z-10 px-2 py-1.5 text-[10px] font-bold tracking-[0.2em] text-[#e8c36a]">
+        LIVE
+      </div>
+      <div className="led-marquee flex w-max gap-12 py-2 pl-14">
         {loop.map((item, index) => (
           <Link
             key={`${item.id}-${index}`}

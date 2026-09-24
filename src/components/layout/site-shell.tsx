@@ -10,6 +10,7 @@ import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
+import { LedTicker } from "@/components/home/led-ticker";
 import { getViewerProfile } from "@/lib/profile";
 import { listSwitchableUsers } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
@@ -20,6 +21,7 @@ import { getSponsorCreative } from "@/lib/inventory";
 export async function SiteShell({ children }: { children: ReactNode }) {
   let profile = null;
   let accounts: Awaited<ReturnType<typeof listSwitchableUsers>> = [];
+  let ticker: { id: string; message: string; href: string }[] = [];
   let notices: { id: string; title: string; date: string; href: string }[] = [];
   let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
   try {
@@ -33,6 +35,11 @@ export async function SiteShell({ children }: { children: ReactNode }) {
     profile = viewer;
     accounts = viewer?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];
     sidebarSponsor = sidebar;
+    ticker = events.map((event) => ({
+      id: event.id,
+      message: event.message,
+      href: event.href,
+    }));
     notices = events.slice(0, 4).map((event) => ({
       id: event.id,
       title: event.message.replace(/^[^ ]+\s/, "").slice(0, 28),
@@ -53,11 +60,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-white [transform:translateZ(0)]">
+      <div className="sticky top-0 z-40 bg-[#0f1728] [transform:translateZ(0)]">
         <SiteHeader profile={profile} accounts={accounts} noticeCount={notices.length || 3} />
+        <LedTicker items={ticker} />
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
-        <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
+        <aside className="sticky top-[8.75rem] hidden h-[calc(100dvh-9rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
@@ -67,7 +75,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             <SidebarSponsorCard unit={sidebarSponsor} />
           </div>
         </main>
-        <aside className="sticky top-[5.25rem] hidden h-[calc(100dvh-5.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
+        <aside className="sticky top-[8.75rem] hidden h-[calc(100dvh-9rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
             <ProfileWidget profile={profile} accounts={accounts} />

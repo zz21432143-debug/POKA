@@ -1,23 +1,18 @@
 import { cn } from "cn";
 
 export function PokaLogo({
-  className = "text-2xl",
-  alt = "POKA",
+  className = "text-[1.85rem]",
+  compact = false,
 }: {
   className?: string;
-  alt?: string;
+  compact?: boolean;
 }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5 text-foreground", className)}>
-      <span className="relative font-black tracking-tight leading-none">
-        <span className="absolute -top-2.5 left-0 text-[0.45em] text-amber-400">♛</span>
-        {alt}
+    <span className={cn("poka-sign inline-flex items-center gap-2", compact && "poka-sign-compact", className)}>
+      <span className="poka-sign-crown" aria-hidden>
+        ♛
       </span>
-      <span className="hidden text-[9px] leading-3 font-semibold tracking-[0.12em] text-muted-foreground sm:block">
-        BETTER PEOPLE
-        <br />
-        BIGGER OPPORTUNITIES
-      </span>
+      <span className="poka-sign-letters">POKA</span>
     </span>
   );
 }

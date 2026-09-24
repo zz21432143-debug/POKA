@@ -43,7 +43,7 @@ export async function getTickerEvents() {
     await ensureWeeklyBestHand();
     return await prisma.tickerEvent.findMany({
       orderBy: { createdAt: "desc" },
-      take: 12,
+      take: 24,
     });
   } catch {
     return [];

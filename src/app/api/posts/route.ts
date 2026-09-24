@@ -8,6 +8,7 @@ import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
+import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { ensureBannerSlots } from "@/lib/premium-banners";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import {
@@ -202,6 +203,17 @@ export async function POST(request: Request) {
 
     await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
     await prisma.user.update({ where: { id: user.id }, data: { lastPostAt: new Date() } });
+
+    const { pushTicker } = await import("@/lib/ticker");
+    const boardLabel = BOARD_LABELS[boardType as BoardTypeKey] ?? "게시판";
+    await pushTicker({
+      kind: `POST:${post.id}`,
+      message:
+        boardType === "ANONYMOUS_REVIEW"
+          ? `📝 익명 게시판에 새 글이 올라왔습니다`
+          : `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${title.slice(0, 28)}`,
+      href: `/posts/${post.id}`,
+    });
 
     if (boardType === "ANONYMOUS_REVIEW") {
       await writeAudit({

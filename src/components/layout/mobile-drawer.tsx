@@ -13,7 +13,6 @@ import {
 import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { PokaLogo } from "@/components/brand/poka-logo";
-import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import type { ViewerProfile } from "@/lib/profile";
 import type { SwitchAccount } from "@/lib/switch-account";
 
@@ -33,7 +32,7 @@ export function MobileDrawer({
           <Button
             variant="ghost"
             size="icon-touch"
-            className="lg:hidden"
+            className="lg:hidden text-white hover:bg-white/10 hover:text-white"
             aria-label="메뉴 열기"
           />
         }
@@ -43,13 +42,10 @@ export function MobileDrawer({
       <SheetContent side="left" className="w-[min(100%,20rem)] bg-white p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <PokaLogo className="text-lg" />
+            <PokaLogo compact className="text-lg" />
           </SheetTitle>
         </SheetHeader>
         <div className="flex flex-1 flex-col overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="mb-3">
-            <KakaoOpenChatCta />
-          </div>
           <div className="mb-3">
             <ProfileWidget profile={profile} accounts={accounts} />
           </div>

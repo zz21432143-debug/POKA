@@ -55,6 +55,9 @@ model User {
   id                  String   @id @default(cuid())
   nickname            String   @unique
   passwordHash        String?
+  kakaoId             String?  @unique
+  resetCodeHash       String?
+  resetCodeExpires    DateTime?
   profileMarkImageUrl String?
   /// 착용 중인 마크(뱃지). API/문서의 equipped_badge_id
   equippedMarkId      String?

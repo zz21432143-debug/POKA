@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 export const POST_COOLDOWN_MS = 60_000;
 export const COMMENT_COOLDOWN_MS = 20_000;
 export const REPORT_COOLDOWN_MS = 30_000;
+export const REGISTER_COOLDOWN_MS = 45_000;
 export const REPORT_HIDE_THRESHOLD = 3;
 
 export class CoolDownError extends Error {
@@ -35,8 +36,8 @@ async function hit(key: string, windowMs: number, label: string) {
 }
 
 export async function assertWriteCooldown(options: {
-  kind: "post" | "comment" | "report";
-  userId: string;
+  kind: "post" | "comment" | "report" | "register";
+  userId?: string;
   ip: string;
   isAdmin?: boolean;
 }) {
@@ -46,10 +47,20 @@ export async function assertWriteCooldown(options: {
       ? POST_COOLDOWN_MS
       : options.kind === "report"
         ? REPORT_COOLDOWN_MS
-        : COMMENT_COOLDOWN_MS;
+        : options.kind === "register"
+          ? REGISTER_COOLDOWN_MS
+          : COMMENT_COOLDOWN_MS;
   const label =
-    options.kind === "post" ? "글 작성" : options.kind === "report" ? "신고" : "댓글 작성";
-  await hit(`${options.kind}:user:${options.userId}`, windowMs, label);
+    options.kind === "post"
+      ? "글 작성"
+      : options.kind === "report"
+        ? "신고"
+        : options.kind === "register"
+          ? "가입"
+          : "댓글 작성";
+  if (options.userId) {
+    await hit(`${options.kind}:user:${options.userId}`, windowMs, label);
+  }
   await hit(`${options.kind}:ip:${options.ip}`, windowMs, label);
 }
 

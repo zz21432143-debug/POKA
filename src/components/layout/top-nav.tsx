@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "cn";
 import { TOP_NAV } from "@/lib/nav";
 
-export function TopNav() {
+export function TopNav({ onDark = false }: { onDark?: boolean }) {
   const pathname = usePathname();
   return (
     <nav aria-label="주요 메뉴" className="hidden items-center gap-1 md:flex">
@@ -20,12 +20,18 @@ export function TopNav() {
             href={item.href}
             className={cn(
               "relative touch-target inline-flex min-h-11 items-center px-3 text-sm font-medium",
-              active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              onDark
+                ? active
+                  ? "text-white"
+                  : "text-white/65 hover:text-white"
+                : active
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
             )}
           >
             {item.label}
             {active ? (
-              <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary" />
+              <span className={cn("absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full", onDark ? "bg-amber-300" : "bg-primary")} />
             ) : null}
           </Link>
         );

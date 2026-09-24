@@ -106,9 +106,17 @@ async function main() {
 
   const catalog = catalogPosts(today);
   const createdPosts: { id: string; title: string; boardType: string }[] = [];
+  const officialTitles = new Set<string>(PUBLIC_OFFICIAL_POSTERS.map((row) => row.title));
+  const slim = [
+    ...catalog.official.filter((row) => officialTitles.has(row.title)),
+    catalog["hand-review"][0],
+    catalog.schedule[0],
+    catalog.schedule[1],
+    catalog["jobs/urgent"][0],
+    catalog["jobs/fixed"][0],
+  ].filter(Boolean);
 
-  for (const rows of Object.values(catalog)) {
-    for (const row of rows) {
+  for (const row of slim) {
       const author = byNick[row.authorNickname] ?? dealer;
       const createdAt = new Date(Date.now() - row.daysAgo * 86_400_000 - 60_000);
       const post = await prisma.post.create({
@@ -167,7 +175,6 @@ async function main() {
         });
       }
     }
-  }
 
   await prisma.bannerSlot.deleteMany();
   await prisma.sponsorUnit.deleteMany();
@@ -245,7 +252,7 @@ async function main() {
     },
   });
 
-  for (const [index, line] of ATTENDANCE_LINES.entries()) {
+  for (const [index, line] of ATTENDANCE_LINES.slice(0, 5).entries()) {
     const user = users[index];
     const comment = await prisma.comment.create({
       data: {
@@ -331,6 +338,16 @@ async function main() {
         href: `/u/${encodeURIComponent(dealer.nickname)}`,
       },
       {
+        kind: `MARK:${dealer.id}:dealer`,
+        message: `🎰 ${dealer.nickname}님이 마크 상점에서 [딜러 스타]를 구매하셨습니다!`,
+        href: "/shop",
+      },
+      {
+        kind: `POST:${handReview?.id ?? "hand"}`,
+        message: `📝 ${dealer.nickname}님이 [핸드리뷰]에 글을 남겼습니다 — ${handReview?.title.slice(0, 28) ?? "오늘의 핸드"}`,
+        href: handReview ? `/posts/${handReview.id}` : "/boards/hand-review",
+      },
+      {
         kind: `WEEKLY_HAND:${week}`,
         message: `♠️ ${dealer.nickname}님의 핸드리뷰가 주간 최고의 분석글로 선정되어 +${WEEKLY_HAND_EXP.toLocaleString()} EXP를 획득하셨습니다!`,
         href: "/boards/hand-review",
@@ -338,7 +355,7 @@ async function main() {
     ],
   });
 
-  console.log(`Seed complete. posts=${createdPosts.length} attendance=${ATTENDANCE_LINES.length}`);
+  console.log(`Seed complete. posts=${createdPosts.length} attendance=5`);
 }
 
 main()
