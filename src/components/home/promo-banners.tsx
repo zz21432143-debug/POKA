@@ -9,7 +9,7 @@ export async function PromoBanners() {
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold sm:text-2xl">프리미엄 제휴</h2>
-          <p className="text-sm text-muted-foreground">메인 상단 3×2 · 월정액 6구좌</p>
+          <p className="text-sm text-muted-foreground">홈 3×2 · 월정액 6구좌</p>
         </div>
         <Link href="/advertise" className="touch-target inline-flex min-h-11 items-center text-sm text-primary">
           구좌 안내
@@ -19,10 +19,10 @@ export async function PromoBanners() {
         {banners.map((banner) => (
           <li key={banner.id}>
             {banner.vacant ? (
-              <div className="touch-target flex min-h-40 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-emerald-50/70 px-2 py-6 text-center sm:min-h-64">
+              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-emerald-50/70 px-2 text-center">
                 <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">B{banner.id}</p>
-                <p className="mt-2 text-sm font-semibold text-emerald-900">제휴 구좌 비어 있음</p>
-                <div className="mt-3">
+                <p className="mt-1 text-sm font-semibold text-emerald-900">제휴 구좌 비어 있음</p>
+                <div className="mt-2">
                   <AdvertiseInquiryDialog triggerClassName="inline-flex min-h-10 items-center rounded-full bg-primary px-3 text-xs font-semibold text-white" />
                 </div>
               </div>
@@ -31,27 +31,22 @@ export async function PromoBanners() {
                 href={banner.href}
                 className="touch-target group block overflow-hidden rounded-2xl border border-border bg-card focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <div className="relative aspect-[5/7] bg-black">
+                <div className="relative aspect-[4/5] bg-black">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={banner.image}
                     alt={`${banner.sponsor} — ${banner.title}`}
-                    className="h-full w-full object-contain transition-transform group-hover:scale-[1.03]"
+                    className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
                   />
-                  <span className="absolute top-2 left-2 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/30">
+                  <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ring-1 ring-white/30">
                     {banner.mark}
                   </span>
                 </div>
-                <div className="min-h-14 px-2 py-2 sm:px-3 sm:py-3">
-                  <p className="text-[11px] text-primary sm:text-xs">
+                <div className="px-2 py-1.5 sm:px-2.5 sm:py-2">
+                  <p className="truncate text-[11px] text-primary">
                     B{banner.id} · {banner.sponsor}
                   </p>
-                  <p className="text-sm font-semibold leading-snug sm:text-base">{banner.title}</p>
-                  {banner.location || banner.tag ? (
-                    <p className="mt-1 truncate text-[11px] text-muted-foreground sm:text-sm">
-                      {[banner.location, banner.tag].filter(Boolean).join(" · ")}
-                    </p>
-                  ) : null}
+                  <p className="line-clamp-1 text-sm font-semibold leading-snug">{banner.title}</p>
                 </div>
               </Link>
             )}

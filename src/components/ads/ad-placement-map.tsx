@@ -22,7 +22,7 @@ export function AdPlacementMap() {
                 {["B1", "B2", "B3", "B4", "B5", "B6"].map((label) => (
                   <div
                     key={label}
-                    className="flex aspect-[5/7] items-center justify-center rounded bg-emerald-100 text-[10px] font-semibold text-emerald-800"
+                    className="flex aspect-[4/5] items-center justify-center rounded bg-emerald-100 text-[10px] font-semibold text-emerald-800"
                   >
                     {label}
                   </div>
