@@ -1,6 +1,7 @@
 import { PromoBanners } from "@/components/home/promo-banners";
 import { HomeShortcuts } from "@/components/home/home-shortcuts";
 import { HomeLatest } from "@/components/home/home-latest";
+import { HomeUrgentJobs, type HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import type { PostSummary } from "@/components/posts/post-list";
@@ -55,6 +56,7 @@ export default async function HomePage() {
   let free: PostSummary[] = [];
   let jobs: PostSummary[] = [];
   let issues: PostSummary[] = [];
+  let urgent: HomeUrgentJob[] = [];
   const nativeSponsor = await getSponsorCreative("NATIVE").catch(() => null);
   const today = todayKstDate();
   const [handSpot, hub, dealers] = await Promise.all([
@@ -63,7 +65,7 @@ export default async function HomePage() {
     getVerifiedDealers().catch(() => []),
   ]);
   try {
-    const [allRows, freeRows, jobRows, issueRows] = await Promise.all([
+    const [allRows, freeRows, jobRows, issueRows, urgentRows] = await Promise.all([
       prisma.post.findMany({
         where: base,
         orderBy: { createdAt: "desc" },
@@ -88,19 +90,41 @@ export default async function HomePage() {
         take: 6,
         include,
       }),
+      prisma.post.findMany({
+        where: { ...base, boardType: "JOBS", jobKind: "URGENT" },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          jobLocation: true,
+          jobWorkDate: true,
+          jobPayAmount: true,
+        },
+      }),
     ]);
     all = allRows.map(toSummary);
     free = freeRows.map(toSummary);
     jobs = jobRows.map(toSummary);
     issues = issueRows.map(toSummary);
+    urgent = urgentRows;
   } catch {
     all = [];
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <PromoBanners />
       <HomeShortcuts />
+      <HomeUrgentJobs
+        jobs={urgent.map((row) => ({
+          id: row.id,
+          title: row.title,
+          jobLocation: row.jobLocation,
+          jobWorkDate: row.jobWorkDate,
+          jobPayAmount: row.jobPayAmount,
+        }))}
+      />
+      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
       <VerifiedDealerStrip dealers={dealers} />
       <GrowthHomePanel
         today={today}
@@ -111,7 +135,7 @@ export default async function HomePage() {
         }
         hub={hub}
       />
-      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
+      <PromoBanners />
     </div>
   );
 }

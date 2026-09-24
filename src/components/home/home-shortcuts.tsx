@@ -10,7 +10,9 @@ import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 export function HomeShortcuts() {
   return (
     <div className="flex flex-col gap-3">
-      <KakaoOpenChatCta />
+      <div className="xl:hidden">
+        <KakaoOpenChatCta />
+      </div>
       <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <li className="col-span-2 sm:col-span-1">
         <Link
