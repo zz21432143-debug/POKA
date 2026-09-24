@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Caveat, Geist_Mono, Noto_Sans_KR, Oswald } from "next/font/google";
+import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { adsensePublisherId } from "@/lib/adsense";
 import "./globals.css";
@@ -22,12 +22,6 @@ const script = Caveat({
   weight: ["600"],
 });
 
-const logo = Oswald({
-  variable: "--font-logo",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
 export const metadata: Metadata = {
   title: "POKA — 홀덤·딜러 커뮤니티",
   description: "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기.",
@@ -46,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${sans.variable} ${geistMono.variable} ${script.variable} ${logo.variable} h-full antialiased`}
+      className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {adsense ? (
