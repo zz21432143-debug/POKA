@@ -19,23 +19,23 @@ export function SiteHeader({
 }) {
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
-    <header className="border-b border-border bg-[#0f1728] pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-[4.25rem] max-w-[1320px] items-center gap-3 px-3 sm:h-[4.75rem] sm:px-5">
+    <header className="border-b border-border bg-[#f7fbf8] pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.25rem] sm:px-5">
         <MobileDrawer profile={profile} accounts={accounts} />
-        <Link href="/" className="touch-target flex min-h-12 shrink-0 items-center rounded-lg pr-1">
-          <PokaLogo className="text-[1.65rem] sm:text-[2.05rem]" />
+        <Link href="/" className="touch-target flex min-h-11 shrink-0 items-center rounded-lg pr-1">
+          <PokaLogo />
           <span className="sr-only">POKA 홈</span>
         </Link>
-        <TopNav onDark />
+        <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
           <label className="relative w-full max-w-sm">
             <span className="sr-only">검색</span>
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/50" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-            className="h-10 w-full rounded-full border border-white/10 bg-white/10 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/50 focus:border-amber-300 focus:bg-white/15 focus:ring-2 focus:ring-amber-300/30"
+              className="h-10 w-full rounded-full border border-border bg-muted/60 pr-4 pl-9 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
           </label>
         </form>
@@ -46,7 +46,7 @@ export function SiteHeader({
           <Link
             href="/search"
             aria-label="검색"
-            className="touch-target inline-flex size-11 items-center justify-center rounded-full text-white/80 hover:bg-white/10 lg:hidden"
+            className="touch-target inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted lg:hidden"
           >
             <SearchIcon className="size-5" />
           </Link>
@@ -92,7 +92,7 @@ function HeaderIcon({
     <Link
       href={href}
       aria-label={label}
-      className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-white/90 hover:bg-white/10"
+      className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-foreground hover:bg-muted"
     >
       {children}
     </Link>

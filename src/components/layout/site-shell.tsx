@@ -60,12 +60,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#0f1728] [transform:translateZ(0)]">
+      <div className="sticky top-0 z-40 bg-[#f7fbf8] [transform:translateZ(0)]">
         <SiteHeader profile={profile} accounts={accounts} noticeCount={notices.length || 3} />
         <LedTicker items={ticker} />
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
-        <aside className="sticky top-[8.75rem] hidden h-[calc(100dvh-9rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
+        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-7rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
@@ -75,7 +75,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             <SidebarSponsorCard unit={sidebarSponsor} />
           </div>
         </main>
-        <aside className="sticky top-[8.75rem] hidden h-[calc(100dvh-9rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
+        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-7rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
             <ProfileWidget profile={profile} accounts={accounts} />

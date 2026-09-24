@@ -13,7 +13,7 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-border bg-white pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex items-center gap-3">
-          <PokaLogo compact className="text-xl" />
+          <PokaLogo compact />
           <p className="text-sm text-muted-foreground">포커·딜러 커뮤니티</p>
         </div>
         <nav aria-label="약관 및 소개" className="flex flex-wrap gap-x-4 gap-y-2">
