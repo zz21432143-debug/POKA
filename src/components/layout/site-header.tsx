@@ -20,10 +20,15 @@ export function SiteHeader({
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
     <header className="border-b border-border bg-[#f7fbf8] pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.25rem] sm:px-5">
+      <div className="mx-auto flex h-[4.25rem] max-w-[1320px] flex-nowrap items-center gap-2 px-3 sm:h-[4.5rem] sm:gap-3 sm:px-5">
         <MobileDrawer profile={profile} accounts={accounts} />
-        <Link href="/" className="touch-target flex min-h-11 shrink-0 items-center rounded-lg pr-1">
-          <PokaLogo />
+        <Link href="/" className="touch-target flex min-h-11 shrink-0 items-center rounded-2xl">
+          <span className="sm:hidden">
+            <PokaLogo compact />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <PokaLogo />
+          </span>
           <span className="sr-only">POKA 홈</span>
         </Link>
         <TopNav />
@@ -35,12 +40,12 @@ export function SiteHeader({
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-              className="h-10 w-full rounded-full border border-border bg-muted/60 pr-4 pl-9 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+              className="h-10 w-full rounded-full border border-border bg-white pr-4 pl-9 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
         </form>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
-          <span className="xl:hidden">
+          <span className="lg:hidden">
             <KakaoOpenChatCta compact />
           </span>
           <Link

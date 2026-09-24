@@ -8,7 +8,7 @@ import { TOP_NAV } from "@/lib/nav";
 export function TopNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="주요 메뉴" className="hidden items-center gap-1 md:flex">
+    <nav aria-label="주요 메뉴" className="hidden shrink-0 items-center gap-0.5 md:flex">
       {TOP_NAV.map((item) => {
         const active =
           item.href === "/"

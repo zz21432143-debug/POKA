@@ -130,11 +130,16 @@
     text-size-adjust: 100%;
   }
   img,
-  svg,
   video {
     max-width: 100%;
     height: auto;
   }
+}
+
+.poka-sign {
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9),
+    0 10px 24px -14px rgb(22 101 52 / 0.45);
 }
 
 .felt-bg {

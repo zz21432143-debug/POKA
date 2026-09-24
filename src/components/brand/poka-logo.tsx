@@ -7,38 +7,53 @@ export function PokaLogo({
   className?: string;
   compact?: boolean;
 }) {
-  const size = compact ? 32 : 40;
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <PokaChip size={size} />
-      <span className="flex flex-col justify-center leading-none">
+    <span
+      className={cn(
+        "poka-sign inline-flex items-center gap-2 rounded-[1.15rem] bg-white py-1 pr-3 pl-1.5 ring-1 ring-emerald-200/90",
+        compact ? "gap-1.5 py-0.5 pr-2.5" : "sm:pr-3.5",
+        className,
+      )}
+    >
+      <PokaChip compact={compact} />
+      <span className="flex min-w-0 flex-col justify-center leading-none" aria-hidden>
         <span
           className={cn(
-            "font-black tracking-[-0.06em] text-[#1a2433]",
-            compact ? "text-[1.35rem]" : "text-[1.7rem] sm:text-[1.9rem]",
+            "flex items-center font-black tracking-[-0.08em] text-[#102033]",
+            compact ? "text-[1.35rem]" : "text-[1.65rem] sm:text-[1.85rem]",
           )}
         >
-          P
-          <span className="text-primary">O</span>
-          KA
+          <span>P</span>
+          <span
+            className={cn(
+              "mx-[0.06em] inline-flex shrink-0 items-center justify-center rounded-full border-primary",
+              compact
+                ? "h-[0.72em] w-[0.72em] border-[3px]"
+                : "h-[0.74em] w-[0.74em] border-[3.5px] sm:border-4",
+            )}
+          >
+            <span className="block h-[38%] w-[38%] rounded-full bg-emerald-700/80" />
+          </span>
+          <span>KA</span>
         </span>
         {compact ? null : (
-          <span className="mt-1 hidden text-[11px] font-semibold tracking-[0.02em] text-primary sm:block">
-            홀덤 커뮤니티
+          <span className="mt-0.5 hidden text-[10px] font-bold tracking-[0.18em] text-emerald-600 sm:block">
+            HOLDEM
           </span>
         )}
       </span>
+      <span className="sr-only">POKA</span>
     </span>
   );
 }
 
-function PokaChip({ size }: { size: number }) {
+function PokaChip({ compact }: { compact: boolean }) {
   return (
     <svg
-      width={size}
-      height={size}
       viewBox="0 0 40 40"
-      className="shrink-0"
+      width={compact ? 30 : 36}
+      height={compact ? 30 : 36}
+      className={cn("shrink-0", compact ? "size-[30px]" : "size-9")}
       aria-hidden
     >
       <circle cx="20" cy="20" r="20" fill="#22C55E" />

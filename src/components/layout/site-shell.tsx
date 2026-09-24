@@ -65,17 +65,17 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <LedTicker items={ticker} />
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
-        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-7rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
+        <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[14.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block xl:w-[15.5rem]">
           <BoardNav />
         </aside>
         <main className="min-w-0 flex-1 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           {children}
           <FeedAdRow />
-          <div className="mt-5 xl:hidden">
+          <div className="mt-5 lg:hidden">
             <SidebarSponsorCard unit={sidebarSponsor} />
           </div>
         </main>
-        <aside className="sticky top-[6.75rem] hidden h-[calc(100dvh-7rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
+        <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[17rem] shrink-0 overflow-y-auto lg:flex xl:w-[18.5rem]">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
             <ProfileWidget profile={profile} accounts={accounts} />
