@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
-import { PcClass } from "@/components/layout/pc-class";
 import { adsensePublisherId } from "@/lib/adsense";
 import "./globals.css";
 
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 1280,
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#f4f7f8",
@@ -43,11 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ko"
       className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <Script id="poka-pc" strategy="beforeInteractive">
-          {`(function(){try{var p=window.matchMedia("(hover: hover) and (pointer: fine)").matches||screen.width>=1100||innerWidth>=900;document.documentElement.classList.toggle("is-pc",p);}catch(e){}})();`}
-        </Script>
-        <PcClass />
+      <body className="min-h-full min-w-[1180px] flex flex-col">
         {adsense ? (
           <Script
             async

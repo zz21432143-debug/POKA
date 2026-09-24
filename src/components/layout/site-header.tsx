@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { BellIcon, SearchIcon, UserRoundIcon } from "lucide-react";
-import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
-import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import type { ViewerProfile } from "@/lib/profile";
 import type { SwitchAccount } from "@/lib/switch-account";
 
 export function SiteHeader({
   profile,
-  accounts = [],
   noticeCount = 0,
 }: {
   profile: ViewerProfile | null;
@@ -19,20 +16,14 @@ export function SiteHeader({
 }) {
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
-    <header className="border-b border-border bg-[#f7fbf8] pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-[4.25rem] max-w-[1320px] flex-nowrap items-center gap-2 px-3 sm:h-[4.5rem] sm:gap-3 sm:px-5">
-        <MobileDrawer profile={profile} accounts={accounts} />
-        <Link href="/" className="touch-target flex min-h-11 shrink-0 items-center rounded-2xl">
-          <span className="sm:hidden">
-            <PokaLogo compact />
-          </span>
-          <span className="hidden sm:inline-flex">
-            <PokaLogo />
-          </span>
+    <header className="border-b border-border bg-[#f7fbf8]">
+      <div className="mx-auto flex h-[4.5rem] w-full min-w-[1180px] max-w-[1320px] flex-nowrap items-center gap-3 px-5">
+        <Link href="/" className="flex shrink-0 items-center rounded-2xl">
+          <PokaLogo />
           <span className="sr-only">POKA 홈</span>
         </Link>
         <TopNav />
-        <form action="/search" className="pc-search ml-auto hidden min-w-0 flex-1 items-center justify-end md:flex">
+        <form action="/search" className="ml-auto flex min-w-0 flex-1 items-center justify-end">
           <label className="relative w-full max-w-sm">
             <span className="sr-only">검색</span>
             <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -44,17 +35,7 @@ export function SiteHeader({
             />
           </label>
         </form>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-2">
-          <span className="pc-mobile md:hidden">
-            <KakaoOpenChatCta compact />
-          </span>
-          <Link
-            href="/search"
-            aria-label="검색"
-            className="pc-mobile touch-target inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted md:hidden"
-          >
-            <SearchIcon className="size-5" />
-          </Link>
+        <div className="flex shrink-0 items-center gap-1.5">
           <HeaderIcon href="/notifications" label="알림">
             <span className="relative">
               <BellIcon className="size-5" />
@@ -68,12 +49,12 @@ export function SiteHeader({
           {profile ? (
             <HeaderIcon href={meHref} label="마이페이지">
               <UserRoundIcon className="size-5" />
-              <span className="hidden sm:inline">마이페이지</span>
+              <span>마이페이지</span>
             </HeaderIcon>
           ) : (
             <Link
               href="/login"
-              className="touch-target inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-semibold text-white hover:bg-primary/90"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-semibold text-white hover:bg-primary/90"
             >
               로그인
             </Link>
@@ -97,7 +78,7 @@ function HeaderIcon({
     <Link
       href={href}
       aria-label={label}
-      className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-foreground hover:bg-muted"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-foreground hover:bg-muted"
     >
       {children}
     </Link>
