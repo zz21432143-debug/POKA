@@ -5,62 +5,32 @@ import {
   CalendarDaysIcon,
   MegaphoneIcon,
 } from "lucide-react";
-import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
+
+const ITEMS = [
+  { href: "/advertise", title: "홍보하기", icon: MegaphoneIcon, navy: true },
+  { href: "/boards/jobs", title: "구인·구직", icon: BriefcaseIcon, navy: false },
+  { href: "/info/guide", title: "딜러 가이드", icon: BookOpenIcon, navy: false },
+  { href: "/boards/schedule", title: "대회 일정", icon: CalendarDaysIcon, navy: false },
+] as const;
 
 export function HomeShortcuts() {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="xl:hidden">
-        <KakaoOpenChatCta />
-      </div>
-      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <li className="col-span-2 sm:col-span-1">
-        <Link
-          href="/advertise"
-          className="navy-panel touch-target flex h-full min-h-[8.25rem] flex-col rounded-2xl p-4 text-white"
-        >
-          <MegaphoneIcon className="size-5 text-emerald-300" />
-          <p className="mt-3 text-sm font-semibold">홍보하기</p>
-          <p className="mt-1 flex-1 text-xs leading-5 text-white/70">
-            당신의 소식을 커뮤니티에 홍보하고 보상을 받아보세요.
-          </p>
-        </Link>
-      </li>
-      {[
-        {
-          href: "/boards/jobs",
-          title: "딜러 구인 · 구직",
-          body: "새로운 기회를 찾는 딜러와 매장을 위한 현장 구인입니다.",
-          icon: BriefcaseIcon,
-        },
-        {
-          href: "/info/guide",
-          title: "홀덤 딜러 가이드",
-          body: "홀덤 딜러의 기본 룰과 테이블 진행을 한눈에 봅니다.",
-          icon: BookOpenIcon,
-        },
-        {
-          href: "/boards/schedule",
-          title: "대회 스케줄",
-          body: "일자별 · 월별 토너먼트 일정을 가장 빠르게 확인하세요.",
-          icon: CalendarDaysIcon,
-        },
-      ].map((card) => (
-        <li key={card.href}>
+    <ul className="grid grid-cols-4 gap-2">
+      {ITEMS.map((item) => (
+        <li key={item.href}>
           <Link
-            href={card.href}
-            className="touch-target group flex h-full min-h-[8.25rem] flex-col rounded-2xl border border-border bg-white p-4 shadow-sm hover:border-primary/40"
+            href={item.href}
+            className={
+              item.navy
+                ? "navy-panel touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-white sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
+                : "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-white px-1 py-2 text-center shadow-sm hover:border-primary/40 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
+            }
           >
-            <card.icon className="size-5 text-primary" />
-            <p className="mt-3 text-sm font-semibold">{card.title}</p>
-            <p className="mt-1 flex-1 text-xs leading-5 text-muted-foreground">{card.body}</p>
-            <span className="mt-3 ml-auto flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-              →
-            </span>
+            <item.icon className={`size-4 shrink-0 ${item.navy ? "text-emerald-300" : "text-primary"}`} />
+            <span className="text-[11px] font-semibold leading-tight sm:text-sm">{item.title}</span>
           </Link>
         </li>
-        ))}
-      </ul>
-    </div>
+      ))}
+    </ul>
   );
 }

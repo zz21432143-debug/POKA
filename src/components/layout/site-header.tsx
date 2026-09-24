@@ -60,10 +60,19 @@ export function SiteHeader({
               ) : null}
             </span>
           </HeaderIcon>
-          <HeaderIcon href={meHref} label="마이페이지">
-            <UserRoundIcon className="size-5" />
-            <span className="hidden sm:inline">마이페이지</span>
-          </HeaderIcon>
+          {profile ? (
+            <HeaderIcon href={meHref} label="마이페이지">
+              <UserRoundIcon className="size-5" />
+              <span className="hidden sm:inline">마이페이지</span>
+            </HeaderIcon>
+          ) : (
+            <Link
+              href="/login"
+              className="touch-target inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-semibold text-white hover:bg-primary/90"
+            >
+              로그인
+            </Link>
+          )}
         </div>
       </div>
     </header>

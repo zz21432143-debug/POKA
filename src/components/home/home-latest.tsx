@@ -7,10 +7,10 @@ import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 const TABS = [
-  { key: "all", label: "전체" },
-  { key: "free", label: "자유" },
-  { key: "jobs", label: "구인/구직" },
-  { key: "issues", label: "이슈" },
+  { key: "all", label: "전체", href: "/community" },
+  { key: "free", label: "자유", href: "/boards/free" },
+  { key: "jobs", label: "구인/구직", href: "/boards/jobs" },
+  { key: "issues", label: "이슈", href: "/issues" },
 ] as const;
 
 type Tab = (typeof TABS)[number]["key"];
@@ -53,7 +53,10 @@ export function HomeLatest({
             {item.label}
           </button>
         ))}
-        <Link href="/boards/free" className="ml-auto text-xs text-muted-foreground hover:text-primary">
+        <Link
+          href={TABS.find((item) => item.key === tab)?.href ?? "/community"}
+          className="ml-auto text-xs text-muted-foreground hover:text-primary"
+        >
           더보기
         </Link>
       </div>

@@ -25,14 +25,13 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   try {
     await ensureTodayAttendancePost();
     await ensureWeeklyScheduleHub().catch(() => null);
-    const [viewer, events, switchAccounts, sidebar] = await Promise.all([
+    const [viewer, events, sidebar] = await Promise.all([
       getViewerProfile(),
       getTickerEvents(),
-      listSwitchableUsers().catch(() => []),
       getSponsorCreative("SIDEBAR").catch(() => null),
     ]);
     profile = viewer;
-    accounts = switchAccounts;
+    accounts = viewer?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];
     sidebarSponsor = sidebar;
     notices = events.slice(0, 4).map((event) => ({
       id: event.id,

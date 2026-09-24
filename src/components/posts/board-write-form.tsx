@@ -52,6 +52,10 @@ export function BoardWriteForm({
         }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
       if (!response.ok || !payload.id) throw new Error(payload.error ?? "저장에 실패했습니다.");
       router.push(`/posts/${payload.id}`);
       router.refresh();

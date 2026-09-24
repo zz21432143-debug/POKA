@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { getFeedCreatives } from "@/lib/inventory";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import type { AdSensePlacement } from "@/lib/adsense";
+import Link from "next/link";
 
 function DirectCard({ creative }: { creative: DirectCreative }) {
   return (
@@ -27,33 +27,25 @@ function DirectCard({ creative }: { creative: DirectCreative }) {
 
 export async function FeedAdRow() {
   const [a1, a2, a3] = await getFeedCreatives().catch(() => [null, null, null] as const);
-  const units: Array<{ label: "A1" | "A2" | "A3"; unit: DirectCreative | null; google: AdSensePlacement }> = [
-    { label: "A1", unit: a1, google: "a1" },
-    { label: "A2", unit: a2, google: "a2" },
-    { label: "A3", unit: a3, google: "a3" },
+  const units: Array<{ unit: DirectCreative | null; google: AdSensePlacement }> = [
+    { unit: a1, google: "a1" },
+    { unit: a2, google: "a2" },
+    { unit: a3, google: "a3" },
   ];
 
   return (
-    <section aria-label="본문 하단 광고 가로 3구좌" className="mt-5">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">
-          A1–A3 · 300×150 가로 3칸
-        </p>
-        <Link href="/advertise" className="text-[11px] font-medium text-primary hover:underline">
-          직판 제휴 문의
-        </Link>
-      </div>
+    <section aria-label="추천 배너" className="mt-5">
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {units.map((item) => {
+        {units.map((item, index) => {
           const fill = pickFill(item.unit, "adsense", true);
           return (
-            <div key={item.label} className="min-w-0">
-              <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">{item.label}</p>
+            <div key={item.google} className="min-w-0">
               {fill.kind === "direct" ? (
                 <DirectCard creative={fill.creative} />
               ) : (
                 <GoogleAdUnit placement={item.google} />
               )}
+              <span className="sr-only">배너 {index + 1}</span>
             </div>
           );
         })}

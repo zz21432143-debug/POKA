@@ -31,6 +31,7 @@ export default async function BoardWritePage({
   }
 
   const viewer = await getCurrentUser();
+  if (!viewer) redirect("/login");
   const allowed = canWriteBoard(viewer, board.boardType);
   const hint = WRITE_HINT[board.boardType] ?? board.title;
 

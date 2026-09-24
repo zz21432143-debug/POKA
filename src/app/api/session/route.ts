@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
-import { SESSION_COOKIE } from "@/lib/current-user";
+import { getCurrentUser, setSessionNickname } from "@/lib/current-user";
 
 export async function POST(request: Request) {
+  const admin = await getCurrentUser();
+  if (!admin?.isAdmin) {
+    return NextResponse.json({ error: "관리자만 계정을 전환할 수 있습니다." }, { status: 403 });
+  }
   const body = (await request.json()) as { nickname?: string };
   const nickname = body.nickname?.trim();
   if (!nickname) {
@@ -13,11 +16,6 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "회원을 찾을 수 없습니다." }, { status: 404 });
   }
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, user.nickname, {
-    path: "/",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  await setSessionNickname(user.nickname);
   return NextResponse.json({ ok: true, nickname: user.nickname });
 }

@@ -65,29 +65,30 @@ export default async function HomePage() {
     getVerifiedDealers().catch(() => []),
   ]);
   try {
+    const notUrgentJob = { NOT: { AND: [{ boardType: "JOBS" as const }, { jobKind: "URGENT" as const }] } };
     const [allRows, freeRows, jobRows, issueRows, urgentRows] = await Promise.all([
       prisma.post.findMany({
-        where: base,
+        where: { ...base, ...notUrgentJob },
         orderBy: { createdAt: "desc" },
-        take: 6,
+        take: 4,
         include,
       }),
       prisma.post.findMany({
         where: { ...base, boardType: "FREE" },
         orderBy: { createdAt: "desc" },
-        take: 6,
+        take: 4,
         include,
       }),
       prisma.post.findMany({
-        where: { ...base, boardType: "JOBS" },
+        where: { ...base, boardType: "JOBS", jobKind: { not: "URGENT" } },
         orderBy: { createdAt: "desc" },
-        take: 6,
+        take: 4,
         include,
       }),
       prisma.post.findMany({
         where: { ...base, boardType: { in: ["ANONYMOUS_REVIEW", "HAND_REVIEW"] } },
         orderBy: { createdAt: "desc" },
-        take: 6,
+        take: 4,
         include,
       }),
       prisma.post.findMany({
@@ -115,6 +116,15 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-5">
       <HomeShortcuts />
+      <GrowthHomePanel
+        today={today}
+        hand={
+          handSpot.post
+            ? { id: handSpot.post.id, title: handSpot.post.title, isToday: handSpot.isToday }
+            : null
+        }
+        hub={hub}
+      />
       <HomeUrgentJobs
         jobs={urgent.map((row) => ({
           id: row.id,
@@ -126,15 +136,6 @@ export default async function HomePage() {
       />
       <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
       <VerifiedDealerStrip dealers={dealers} />
-      <GrowthHomePanel
-        today={today}
-        hand={
-          handSpot.post
-            ? { id: handSpot.post.id, title: handSpot.post.title, isToday: handSpot.isToday }
-            : null
-        }
-        hub={hub}
-      />
       <PromoBanners />
     </div>
   );

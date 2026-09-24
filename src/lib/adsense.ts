@@ -44,19 +44,19 @@ export const GOOGLE_REMNANT_MOCKS: Record<
   a1: {
     kicker: "쇼핑",
     title: "장바구니 할인, 오늘만",
-    line: "구글 디스플레이 · A1",
+    line: "관련 추천",
     tone: "from-sky-100 to-white",
   },
   a2: {
     kicker: "배송",
     title: "자정 전 주문 내일 도착",
-    line: "구글 디스플레이 · A2",
+    line: "관련 추천",
     tone: "from-amber-100 to-white",
   },
   a3: {
     kicker: "금융",
     title: "카드 캐시백 비교",
-    line: "구글 디스플레이 · A3",
+    line: "관련 추천",
     tone: "from-violet-100 to-white",
   },
 };

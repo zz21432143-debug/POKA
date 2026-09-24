@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
+import type { ReactNode } from "react";
 
-export const dynamic = "force-dynamic";
-
-export default async function MePage() {
+export async function RequireLogin({ children }: { children: ReactNode }) {
   const user = await getCurrentUser().catch(() => null);
   if (!user) redirect("/login");
-  redirect(`/u/${encodeURIComponent(user.nickname)}`);
+  return children;
 }

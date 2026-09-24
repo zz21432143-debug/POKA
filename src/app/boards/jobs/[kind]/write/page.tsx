@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { RequireLogin } from "@/components/auth/require-login";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { resolveJobKind } from "@/lib/nav";
 
@@ -20,6 +21,7 @@ export default async function JobWritePage({
   } as const;
 
   return (
+    <RequireLogin>
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-2xl font-semibold">{job.title} 작성</h1>
@@ -27,5 +29,6 @@ export default async function JobWritePage({
       </header>
       <JobWriteForm jobKind={job.kind} hint={hints[job.kind]} />
     </div>
+    </RequireLogin>
   );
 }

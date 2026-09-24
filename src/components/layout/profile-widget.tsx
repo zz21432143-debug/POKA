@@ -2,6 +2,7 @@ import type { ViewerProfile } from "@/lib/profile";
 import type { SwitchAccount } from "@/lib/switch-account";
 import { MarkImage } from "@/components/layout/mark-image";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
+import { LogoutButton } from "@/components/auth/logout-button";
 import Link from "next/link";
 
 export { MarkImage };
@@ -17,8 +18,14 @@ export function ProfileWidget({
 }) {
   if (!profile) {
     return (
-      <div className="rounded-2xl border border-border bg-white p-4 text-sm text-muted-foreground">
-        로그인 후 레벨과 경험치가 표시됩니다.
+      <div className="rounded-2xl border border-border bg-white p-4 text-sm">
+        <p className="text-muted-foreground">로그인하면 레벨, 출석, 글쓰기를 쓸 수 있습니다.</p>
+        <Link
+          href="/login"
+          className="mt-3 flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white"
+        >
+          로그인 / 가입
+        </Link>
       </div>
     );
   }
@@ -92,6 +99,7 @@ export function ProfileWidget({
         >
           내 프로필 보기 →
         </Link>
+        <LogoutButton />
       </div>
     </section>
   );

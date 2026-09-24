@@ -24,7 +24,7 @@ export function AccountSwitcher({
 
   return (
     <label className="mt-3 block text-xs text-muted-foreground">
-      계정 전환 (데모)
+      계정 전환 (관리자)
       <select
         className="mt-1 h-11 w-full rounded-xl border border-border bg-white px-2 text-sm text-foreground"
         value={current}
