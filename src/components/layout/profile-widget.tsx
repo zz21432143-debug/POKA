@@ -58,7 +58,7 @@ export function ProfileWidget({
               ★ 인증 딜러
             </p>
           ) : (
-            <p className="text-xs text-muted-foreground">오늘도 성장 중인 딜러</p>
+            <p className="text-xs text-muted-foreground">홀덤 커뮤니티 회원</p>
           )}
         </div>
         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">

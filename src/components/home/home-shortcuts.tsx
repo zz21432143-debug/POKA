@@ -22,7 +22,7 @@ export function HomeShortcuts() {
             href={item.href}
             className={
               item.navy
-                ? "navy-panel touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-white sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
+                ? "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl bg-[#07150f] px-1 py-2 text-center text-white sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
                 : "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-white px-1 py-2 text-center shadow-sm hover:border-primary/40 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
             }
           >

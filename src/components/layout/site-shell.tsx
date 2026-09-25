@@ -17,13 +17,15 @@ import { ensureTodayAttendancePost } from "@/lib/attendance";
 import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
 import { getTickerEvents } from "@/lib/ticker";
 import { getSponsorCreative } from "@/lib/inventory";
+import { OFFICIAL_NOTICES } from "@/lib/notices";
+import { headers } from "next/headers";
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   let profile = null;
   let accounts: Awaited<ReturnType<typeof listSwitchableUsers>> = [];
   let ticker: { id: string; message: string; href: string }[] = [];
-  let notices: { id: string; title: string; date: string; href: string }[] = [];
   let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
+  const pathname = (await headers()).get("x-pathname") ?? "";
   try {
     await ensureTodayAttendancePost();
     await ensureWeeklyScheduleHub().catch(() => null);
@@ -40,28 +42,16 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       message: event.message,
       href: event.href,
     }));
-    notices = events.slice(0, 4).map((event) => ({
-      id: event.id,
-      title: event.message.replace(/^[^ ]+\s/, "").slice(0, 28),
-      date: event.createdAt
-        ? new Date(event.createdAt).toISOString().slice(0, 10).replaceAll("-", ".")
-        : "",
-      href: event.href,
-    }));
   } catch {
     profile = null;
   }
 
-  const fallbackNotices = [
-    { id: "n1", title: "홀덤 핸드리뷰 · 구인 · 대회", date: "2026.09.22", href: "/about" },
-    { id: "n2", title: "POKA 공식 오픈채팅방 참여하기", date: "2026.09.22", href: "https://open.kakao.com/o/gewUD9jc" },
-    { id: "n3", title: "인증 딜러 골드 뱃지", date: "2026.09.22", href: "/info/dealers" },
-  ];
+  const showFeedAds = shouldShowFeedAds(pathname);
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-[#07150f]">
-        <SiteHeader profile={profile} accounts={accounts} noticeCount={notices.length || 3} />
+        <SiteHeader profile={profile} accounts={accounts} noticeCount={0} />
         <LedTicker items={ticker} />
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
@@ -70,10 +60,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0 flex-1 pb-6">
           {children}
-          <FeedAdRow />
-          <div className="mt-5 xl:hidden">
-            <SidebarSponsorCard unit={sidebarSponsor} />
-          </div>
+          {showFeedAds ? <FeedAdRow /> : null}
+          {showFeedAds ? (
+            <div className="mt-5 xl:hidden">
+              <SidebarSponsorCard unit={sidebarSponsor} />
+            </div>
+          ) : null}
         </main>
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
@@ -81,7 +73,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             <ProfileWidget profile={profile} accounts={accounts} />
             <SidebarSponsorCard unit={sidebarSponsor} />
             <PromoApplyCta />
-            <NoticeWidget items={notices.length > 0 ? notices : fallbackNotices} />
+            <NoticeWidget items={OFFICIAL_NOTICES} />
             <PopularPosts />
             <GoogleAdUnit placement="sidebar" />
           </div>
@@ -90,4 +82,15 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       <SiteFooter />
     </div>
   );
+}
+
+function shouldShowFeedAds(pathname: string) {
+  if (!pathname) return true;
+  if (pathname === "/") return true;
+  if (pathname.startsWith("/community")) return true;
+  if (pathname.startsWith("/issues")) return true;
+  if (pathname.startsWith("/attendance")) return true;
+  if (pathname.startsWith("/search")) return true;
+  if (pathname.startsWith("/boards") && !pathname.includes("/write")) return true;
+  return false;
 }
