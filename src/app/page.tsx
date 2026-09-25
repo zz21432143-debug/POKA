@@ -71,25 +71,25 @@ export default async function HomePage() {
       prisma.post.findMany({
         where: { ...base, ...notUrgentJob },
         orderBy: { createdAt: "desc" },
-        take: 4,
+        take: 6,
         include,
       }),
       prisma.post.findMany({
         where: { ...base, boardType: "FREE" },
         orderBy: { createdAt: "desc" },
-        take: 4,
+        take: 6,
         include,
       }),
       prisma.post.findMany({
         where: { ...base, boardType: "JOBS", jobKind: { not: "URGENT" } },
         orderBy: { createdAt: "desc" },
-        take: 4,
+        take: 6,
         include,
       }),
       prisma.post.findMany({
         where: { ...base, boardType: { in: ["ANONYMOUS_REVIEW", "HAND_REVIEW"] } },
         orderBy: { createdAt: "desc" },
-        take: 4,
+        take: 6,
         include,
       }),
       prisma.post.findMany({
@@ -117,6 +117,16 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-5">
       <HomeHeroBanner />
+      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
+      <HomeUrgentJobs
+        jobs={urgent.map((row) => ({
+          id: row.id,
+          title: row.title,
+          jobLocation: row.jobLocation,
+          jobWorkDate: row.jobWorkDate,
+          jobPayAmount: row.jobPayAmount,
+        }))}
+      />
       <HomeShortcuts />
       <GrowthHomePanel
         today={today}
@@ -127,16 +137,6 @@ export default async function HomePage() {
         }
         hub={hub}
       />
-      <HomeUrgentJobs
-        jobs={urgent.map((row) => ({
-          id: row.id,
-          title: row.title,
-          jobLocation: row.jobLocation,
-          jobWorkDate: row.jobWorkDate,
-          jobPayAmount: row.jobPayAmount,
-        }))}
-      />
-      <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
       <VerifiedDealerStrip dealers={dealers} />
       <PromoBanners />
     </div>
