@@ -8,19 +8,23 @@ export function PokaLogo({
   compact?: boolean;
 }) {
   return (
-    <span className={cn("inline-flex items-center", className)}>
+    <span className={cn("inline-flex items-center gap-2", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/poka-lockup.svg"
+        src="/brand/poka-mark.svg"
         alt=""
-        width={compact ? 132 : 168}
-        height={compact ? 124 : 156}
-        className={cn(
-          "w-auto shrink-0",
-          compact ? "h-11" : "h-[3.35rem] sm:h-[3.7rem]",
-        )}
+        width={compact ? 32 : 40}
+        height={compact ? 32 : 40}
+        className={cn("shrink-0", compact ? "size-8" : "size-9 sm:size-10")}
       />
-      <span className="sr-only">POKA</span>
+      <span
+        className={cn(
+          "font-black tracking-[-0.04em] text-[#16a34a]",
+          compact ? "text-[1.45rem]" : "text-[1.7rem] sm:text-[1.9rem]",
+        )}
+      >
+        POKA
+      </span>
     </span>
   );
 }

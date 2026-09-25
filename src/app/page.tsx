@@ -1,5 +1,6 @@
 import { PromoBanners } from "@/components/home/promo-banners";
 import { HomeShortcuts } from "@/components/home/home-shortcuts";
+import { HomeHeroBanner } from "@/components/home/home-hero-banner";
 import { HomeLatest } from "@/components/home/home-latest";
 import { HomeUrgentJobs, type HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
@@ -115,6 +116,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <HomeHeroBanner />
       <HomeShortcuts />
       <GrowthHomePanel
         today={today}
