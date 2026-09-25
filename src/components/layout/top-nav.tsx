@@ -20,7 +20,7 @@ export function TopNav() {
             href={item.href}
             className={cn(
               "relative touch-target inline-flex min-h-11 items-center px-3 text-sm font-medium",
-              active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+              active ? "text-white" : "text-white/60 hover:text-white",
             )}
           >
             {item.label}

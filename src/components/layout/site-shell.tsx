@@ -60,7 +60,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#f7fbf8]">
+      <div className="sticky top-0 z-40 bg-[#07150f]">
         <SiteHeader profile={profile} accounts={accounts} noticeCount={notices.length || 3} />
         <LedTicker items={ticker} />
       </div>

@@ -32,7 +32,7 @@ export function MobileDrawer({
           <Button
             variant="ghost"
             size="icon-touch"
-            className="lg:hidden"
+            className="lg:hidden text-white hover:bg-white/10 hover:text-white"
             aria-label="메뉴 열기"
           />
         }

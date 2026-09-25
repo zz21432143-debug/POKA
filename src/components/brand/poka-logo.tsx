@@ -3,28 +3,29 @@ import { cn } from "cn";
 export function PokaLogo({
   className,
   compact = false,
+  onDark = false,
 }: {
   className?: string;
   compact?: boolean;
+  onDark?: boolean;
 }) {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center",
+        !onDark && "rounded-xl bg-[#07150f] px-2 py-1",
+        className,
+      )}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/poka-mark.svg"
+        src="/brand/poka-wordmark.png"
         alt=""
-        width={compact ? 32 : 40}
-        height={compact ? 32 : 40}
-        className={cn("shrink-0", compact ? "size-8" : "size-9 sm:size-10")}
+        width={204}
+        height={53}
+        className={cn("w-auto shrink-0", compact ? "h-7" : "h-8 sm:h-9")}
       />
-      <span
-        className={cn(
-          "font-black tracking-[-0.04em] text-[#16a34a]",
-          compact ? "text-[1.45rem]" : "text-[1.7rem] sm:text-[1.9rem]",
-        )}
-      >
-        POKA
-      </span>
+      <span className="sr-only">POKA</span>
     </span>
   );
 }

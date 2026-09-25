@@ -19,23 +19,22 @@ export function SiteHeader({
 }) {
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
-    <header className="border-b border-border bg-[#f7fbf8] pt-[env(safe-area-inset-top)]">
+    <header className="border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.5rem] sm:px-5">
         <MobileDrawer profile={profile} accounts={accounts} />
         <Link href="/" className="flex shrink-0 items-center rounded-2xl">
-          <PokaLogo />
-          <span className="sr-only">POKA 홈</span>
+          <PokaLogo onDark />
         </Link>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
           <label className="relative w-full max-w-sm">
             <span className="sr-only">검색</span>
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/45" />
             <input
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-              className="h-10 w-full rounded-full border border-border bg-white pr-4 pl-9 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-10 w-full rounded-full border border-white/15 bg-white/10 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/40 focus:border-primary focus:bg-white/15 focus:ring-2 focus:ring-primary/30"
             />
           </label>
         </form>
@@ -46,7 +45,7 @@ export function SiteHeader({
           <Link
             href="/search"
             aria-label="검색"
-            className="inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted lg:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-full text-white/80 hover:bg-white/10 lg:hidden"
           >
             <SearchIcon className="size-5" />
           </Link>
@@ -92,7 +91,7 @@ function HeaderIcon({
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-foreground hover:bg-muted"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white"
     >
       {children}
     </Link>

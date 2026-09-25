@@ -18,7 +18,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
 
   return (
     <div className="led-board relative w-full overflow-hidden" aria-label="POKA 실시간 전광판">
-      <div className="pointer-events-none absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full border border-primary/20 bg-white px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary">
+      <div className="pointer-events-none absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
         LIVE
       </div>
       <div className="led-marquee flex w-max gap-12 py-1.5 pl-16">
@@ -26,7 +26,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
           <Link
             key={`${item.id}-${index}`}
             href={item.href}
-            className="shrink-0 whitespace-nowrap text-sm font-medium tracking-wide text-[#14532d] hover:text-primary"
+            className="shrink-0 whitespace-nowrap text-sm font-medium tracking-wide text-emerald-200 hover:text-white"
           >
             {item.message}
           </Link>
