@@ -8,7 +8,6 @@ export type FeedKey =
   | "sketch"
   | "free"
   | "hand-review"
-  | "anonymous"
   | "jobs/fixed"
   | "jobs/apply"
   | "jobs/team"
@@ -19,13 +18,11 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/schedule": "schedule",
   "/boards/official": "official",
   "/boards/promo": "official",
-  "/boards/store-review": "anonymous",
   "/attendance": "attendance",
   "/boards/rules": "rules",
   "/boards/sketch": "sketch",
   "/boards/free": "free",
   "/boards/hand-review": "hand-review",
-  "/boards/anonymous": "anonymous",
   "/boards/jobs/fixed": "jobs/fixed",
   "/boards/jobs/apply": "jobs/apply",
   "/boards/jobs/team": "jobs/team",
@@ -50,9 +47,6 @@ export function feedWhere(key: FeedKey) {
   if (key === "sketch") return { boardType: "SKETCH" as const, hidden: false, isAttendanceThread: false };
   if (key === "free") return { boardType: "FREE" as const, hidden: false, isAttendanceThread: false };
   if (key === "hand-review") return { boardType: "HAND_REVIEW" as const, hidden: false, isAttendanceThread: false };
-  if (key === "anonymous") {
-    return { boardType: "ANONYMOUS_REVIEW" as const, hidden: false, isAttendanceThread: false };
-  }
   const jobKind = {
     "jobs/fixed": "FIXED",
     "jobs/apply": "APPLY",

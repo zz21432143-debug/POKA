@@ -14,7 +14,8 @@ const ALIASES: Record<string, string> = {
   talent: "/boards/jobs/seek/write",
   events: "/boards/schedule/write",
   promo: "/boards/official/write",
-  "store-review": "/boards/anonymous/write",
+  "store-review": "/community",
+  anonymous: "/community",
 };
 
 export default async function BoardWritePage({

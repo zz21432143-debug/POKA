@@ -87,7 +87,7 @@ export default async function HomePage() {
         include,
       }),
       prisma.post.findMany({
-        where: { ...base, boardType: { in: ["ANONYMOUS_REVIEW", "HAND_REVIEW"] } },
+        where: { ...base, boardType: "HAND_REVIEW" },
         orderBy: { createdAt: "desc" },
         take: 6,
         include,

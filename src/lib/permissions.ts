@@ -20,7 +20,6 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   RULE_QA: "member",
   SKETCH: "member",
   HAND_REVIEW: "member",
-  ANONYMOUS_REVIEW: "member",
 };
 
 export function canWriteBoard(user: WriteUser | null, boardType: BoardType): boolean {

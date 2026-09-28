@@ -22,7 +22,8 @@ const ALIASES: Record<string, string> = {
   pickup: "/boards/jobs/urgent",
   talent: "/boards/jobs/seek",
   events: "/boards/schedule",
-  "store-review": "/boards/anonymous",
+  "store-review": "/community",
+  anonymous: "/community",
 };
 
 export default async function BoardPage({

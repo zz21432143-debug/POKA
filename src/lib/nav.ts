@@ -59,7 +59,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
-      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개", icon: "heart" },
       { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
@@ -104,7 +103,7 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "커뮤니티",
     href: "/attendance",
-    hint: "출석부터 익명까지",
+    hint: "출석부터 핸드리뷰까지",
     accent: "emerald",
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
@@ -112,7 +111,6 @@ export const BOARD_NAV: NavGroup[] = [
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
-      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개" },
     ],
   },
   {
@@ -163,16 +161,6 @@ export const BOARD_SLUGS = {
     title: "핸드리뷰",
     boardType: "HAND_REVIEW" as const,
     writeHref: "/boards/hand-review/write",
-  },
-  anonymous: {
-    title: "익명 게시판",
-    boardType: "ANONYMOUS_REVIEW" as const,
-    writeHref: "/boards/anonymous/write",
-  },
-  "store-review": {
-    title: "익명 게시판",
-    boardType: "ANONYMOUS_REVIEW" as const,
-    writeHref: "/boards/anonymous/write",
   },
   official: {
     title: "공식 홍보",
@@ -262,8 +250,6 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   FREE: "자유 수다, 잡담, 현장 이야기.",
   RULE_QA: "룰·판정·진행이 맞는지 질문하세요.",
   SKETCH: "현장 사진과 스케치를 공유하세요.",
-  ANONYMOUS_REVIEW:
-    "닉네임은 공개되지 않습니다. 매장 후기 제목은 '지역 홀덤펍 후기' 형식을 권장합니다.",
   HAND_REVIEW:
     "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 Fold/Check/Call/Raise 투표가 열립니다.",
 };
