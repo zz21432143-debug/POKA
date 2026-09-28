@@ -90,6 +90,7 @@ model User {
   commentVotes     CommentVote[]
   reports          Report[]
   pollVotes        HandPollVote[]
+  drillRuns        DealerDrillRun[]
 
   @@index([level])
   @@index([isDealerVerified])
@@ -365,6 +366,20 @@ model UserCosmetic {
   purchasedAt DateTime        @default(now())
 
   @@id([userId, cosmeticId])
+}
+
+model DealerDrillRun {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String
+  correct    Int
+  total      Int
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  @@index([kind, correct, durationMs])
+  @@index([userId, createdAt])
 }
 
 model LevelExp {
