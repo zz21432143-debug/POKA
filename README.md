@@ -76,6 +76,28 @@ bash desktop/install-shortcut.sh
 
 **Windows:** `POKA.bat`만 받아서 바탕화면에 두면 열리지 않습니다. 프로젝트 폴더에서 `desktop\POKA.bat`을 실행하세요. 브라우저 바로가기는 `desktop\윈도우-바탕화면설치.bat`이 바탕화면에 `POKA.url`을 만듭니다. 다운로드한 bat이 막히면 우클릭 → 속성 → 차단 해제. 안내는 `desktop/윈도우.txt`입니다.
 
+## 도메인 pokerwiki.co.kr (카페24)
+
+도메인은 카페24에서 샀고, 사이트 공개 주소는 `https://pokerwiki.co.kr` 입니다. `www`는 본주소로 넘깁니다.
+
+카페24 **일반 웹호스팅(PHP·FTP)** 에는 Next.js가 올라가지 않습니다. Node가 되는 VPS·클라우드(또는 Cafe24 클라우드)에 `npm run build && npm start`로 띄운 뒤, 카페24 도메인만 DNS로 붙입니다.
+
+카페24 마이페이지 → 도메인 관리 → DNS 설정 예시:
+
+| 호스트 | 타입 | 값 |
+| --- | --- | --- |
+| @ | A | 서버 공인 IP |
+| www | CNAME | pokerwiki.co.kr |
+
+서버를 아직 안 켰으면 DNS는 비워 두세요. 연결되면 `.env`에 다음을 넣습니다.
+
+```
+NEXT_PUBLIC_SITE_URL=https://pokerwiki.co.kr
+KAKAO_REDIRECT_URI=https://pokerwiki.co.kr/api/auth/kakao/callback
+```
+
+카카오 개발자 콘솔 Redirect URI에도 같은 주소를 등록합니다.
+
 ## 프로덕션
 
 ```bash
