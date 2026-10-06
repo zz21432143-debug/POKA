@@ -4,7 +4,17 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
-  allowedDevOrigins: ["127.0.0.1"],
+  allowedDevOrigins: ["127.0.0.1", "pokerwiki.co.kr", "www.pokerwiki.co.kr"],
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.pokerwiki.co.kr" }],
+        destination: "https://pokerwiki.co.kr/:path*",
+        permanent: true,
+      },
+    ];
+  },
   serverExternalPackages: [
     "@prisma/client",
     "@prisma/adapter-better-sqlite3",

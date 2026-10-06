@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { adsensePublisherId } from "@/lib/adsense";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const sans = Noto_Sans_KR({
@@ -23,8 +24,10 @@ const script = Caveat({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "POKA — 홀덤·딜러 커뮤니티",
   description: "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기.",
+  alternates: { canonical: "/" },
   icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
 };
 

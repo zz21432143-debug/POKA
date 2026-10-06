@@ -60,8 +60,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
-      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
     ],
   },
   {
@@ -103,15 +103,15 @@ export const BOARD_NAV: NavGroup[] = [
   },
   {
     title: "커뮤니티",
-    href: "/attendance",
-    hint: "출석부터 핸드리뷰까지",
+    href: "/community",
+    hint: "핸드리뷰부터 출석까지",
     accent: "emerald",
     items: [
-      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
     ],
   },
   {

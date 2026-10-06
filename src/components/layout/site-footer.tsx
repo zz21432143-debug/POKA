@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PokaLogo } from "@/components/brand/poka-logo";
+import { SITE_HOST, siteUrl } from "@/lib/site";
 
 const LINKS = [
   { href: "/about", label: "사이트 소개" },
@@ -14,7 +15,12 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex items-center gap-3">
           <PokaLogo compact />
-          <p className="text-sm text-muted-foreground">홀덤·딜러 커뮤니티</p>
+          <p className="text-sm text-muted-foreground">
+            홀덤·딜러 커뮤니티 ·{" "}
+            <a href={siteUrl()} className="hover:text-foreground">
+              {SITE_HOST}
+            </a>
+          </p>
         </div>
         <nav aria-label="약관 및 소개" className="flex flex-wrap gap-x-4 gap-y-2">
           {LINKS.map((link) => (

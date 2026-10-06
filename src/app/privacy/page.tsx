@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           광고 영역은 Google AdSense 연동을 위한 자리입니다. 연동 후에는 광고 네트워크의
           쿠키·식별자가 추가로 수집될 수 있습니다.
         </p>
-        <p>문의: 사이트 관리 메뉴를 통해 신고하거나 게시글 신고 기능을 이용해 주세요.</p>
+        <p>문의: pokerwiki.co.kr 관리 메뉴 또는 게시글 신고 기능을 이용해 주세요.</p>
       </section>
     </article>
   );
