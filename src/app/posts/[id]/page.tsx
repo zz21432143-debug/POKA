@@ -20,6 +20,7 @@ import { JOB_KIND_LABEL } from "@/lib/nav";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
+import { COMMENT_EXP } from "@/lib/rewards";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -238,11 +239,20 @@ export default async function PostDetailPage({
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">댓글 {post.comments.length}</h2>
-        <CommentForm
-          postId={post.id}
-          submitLabel="댓글 등록"
-          placeholder="댓글을 남겨 주세요. EXP가 지급됩니다."
-        />
+        {viewer ? (
+          <CommentForm
+            postId={post.id}
+            submitLabel="댓글 등록"
+            placeholder="댓글을 남겨 주세요. EXP가 지급됩니다."
+          />
+        ) : (
+          <p className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-muted-foreground">
+            댓글은 로그인 후 남길 수 있습니다. EXP {COMMENT_EXP}이 지급됩니다.{" "}
+            <Link href="/login" className="font-medium text-primary underline">
+              로그인
+            </Link>
+          </p>
+        )}
         {post.comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
         ) : (
