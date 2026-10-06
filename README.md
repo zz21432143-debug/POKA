@@ -72,7 +72,9 @@ Cursor 미리보기 대신 **바탕화면에서** 열려면:
 bash desktop/install-shortcut.sh
 ```
 
-리눅스 바탕화면에 `POKA` 아이콘이 생깁니다. 더블클릭하면 서버를 확인하고 Chrome 앱 창으로 엽니다. 이미 설치했다면 `npm run app` 또는 `bash desktop/open-poka.sh`입니다. Windows는 `desktop/POKA.bat`, macOS는 `desktop/POKA.command`를 바탕화면으로 복사하면 됩니다.
+리눅스 바탕화면에 `POKA` 아이콘이 생깁니다. 더블클릭하면 서버를 확인하고 Chrome 앱 창으로 엽니다. 이미 설치했다면 `npm run app` 또는 `bash desktop/open-poka.sh`입니다.
+
+**Windows:** `POKA.bat`만 받아서 바탕화면에 두면 열리지 않습니다. 프로젝트 폴더에서 `desktop\POKA.bat`을 실행하세요. 브라우저 바로가기는 `desktop\윈도우-바탕화면설치.bat`이 바탕화면에 `POKA.url`을 만듭니다. 다운로드한 bat이 막히면 우클릭 → 속성 → 차단 해제. 안내는 `desktop/윈도우.txt`입니다.
 
 ## 프로덕션
 
