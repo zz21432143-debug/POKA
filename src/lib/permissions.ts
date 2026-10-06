@@ -6,13 +6,14 @@ export type WriteUser = {
   isDealerVerified?: boolean;
 };
 
-export type WriteRole = "admin" | "verified" | "member";
+export type WriteRole = "admin" | "member";
 
+/** 공식 홍보·대회 스케줄은 관리자만. 그 외 글 보드는 회원. */
 export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   EVENT_POSTER: "admin",
   OFFICIAL_POSTER: "admin",
   SCHEDULE: "admin",
-  PROMO: "verified",
+  PROMO: "admin",
   JOBS: "member",
   TALENT: "member",
   PICKUP: "member",
@@ -27,13 +28,11 @@ export function canWriteBoard(user: WriteUser | null, boardType: BoardType): boo
   if (user.isAdmin) return true;
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
   if (role === "admin") return false;
-  if (role === "verified") return Boolean(user.isDealerVerified);
   return true;
 }
 
 export function writeDeniedMessage(boardType: BoardType): string {
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
   if (role === "admin") return "관리자만 작성할 수 있는 게시판입니다.";
-  if (role === "verified") return "검증된 매장(인증 딜러)만 공식 홍보를 등록할 수 있습니다.";
   return "로그인 후 작성할 수 있습니다.";
 }

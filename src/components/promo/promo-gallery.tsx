@@ -23,7 +23,7 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
     <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {posts.map((post) => {
         const image = post.bannerImageUrl || "/images/posters/official-6.jpg";
-        const summary = post.promoTag || post.content.slice(0, 24);
+        const summary = post.promoTag || post.promoLocation;
         return (
           <li key={post.id} className="mx-auto w-full max-w-[320px]">
             <Link

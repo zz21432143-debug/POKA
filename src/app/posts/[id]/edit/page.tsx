@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { getCurrentUser } from "@/lib/current-user";
+import { loginHref } from "@/lib/login-path";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +13,10 @@ export default async function EditJobPage({
 }) {
   const { id } = await params;
   const viewer = await getCurrentUser();
+  if (!viewer) redirect(loginHref(`/posts/${id}/edit`));
   const post = await prisma.post.findUnique({ where: { id } });
   if (!post || post.boardType !== "JOBS" || !post.jobKind) notFound();
-  if (!viewer || (post.authorId !== viewer.id && !viewer.isAdmin)) {
+  if (post.authorId !== viewer.id && !viewer.isAdmin) {
     redirect(`/posts/${id}`);
   }
 

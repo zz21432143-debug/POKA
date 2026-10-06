@@ -22,7 +22,7 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   HAND_REVIEW: "홀덤 핸드를 그리고 Fold/Check/Call/Raise로 투표합니다. 제목에 홀덤 핸드리뷰가 붙습니다.",
   ANONYMOUS_REVIEW: "닉네임 비공개. 홀덤펍 후기라면 제목에 지역을 넣고 매너·서비스·시설·분위기 별점",
   JOBS: "홀덤펍 고정 딜러 · 스팟 · 팀 · 급구/대타 · 개인 구직. 제목은 [지역] 홀덤 형식으로 붙습니다.",
-  PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬 · 메인 프리미엄 6구좌 연동",
+  PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬. 등록은 관리자만 가능합니다.",
   EVENT_POSTER: "대회 포스터 (일정 게시판으로 이전)",
   OFFICIAL_POSTER: "공식 홍보 (검증 매장 게시판으로 이전)",
   TALENT: "개인 구직 (구인/구직 > 개인 구직으로 이전)",

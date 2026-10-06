@@ -54,8 +54,8 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
         {hint} · 작성 EXP +{POST_EXP.PROMO}
       </p>
       <p className="text-sm text-muted-foreground">
-        일반 대회 안내는 「대회 스케줄」로 올립니다. 이곳은 검증 매장 공식 홍보물만
-        받습니다. 배너 구좌를 지정하면 메인 3×2 프리미엄 영역에 연결됩니다.
+        일반 대회 안내는 「대회 스케줄」로 올립니다. 공식 홍보·일정 등록은 관리자만 할 수 있습니다.
+        배너 구좌를 지정하면 메인 3×2 프리미엄 영역에 연결됩니다.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">

@@ -26,7 +26,7 @@ export default async function JobBoardPage({
         <div>
           <h1 className="text-2xl font-semibold">{job.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처는 로그인 후 공개됩니다.
+            {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
             {page.total ? ` · ${page.total}개` : ""}
           </p>
         </div>

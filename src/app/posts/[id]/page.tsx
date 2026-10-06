@@ -32,6 +32,7 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params;
   const viewer = await getCurrentUser().catch(() => null);
+  if (!viewer) redirect(`/login?next=${encodeURIComponent(`/posts/${id}`)}`);
   const post = await prisma.post.findUnique({
     where: { id },
     include: {

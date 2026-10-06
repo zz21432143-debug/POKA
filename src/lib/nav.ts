@@ -168,12 +168,14 @@ export const BOARD_SLUGS = {
     boardType: "PROMO" as const,
     writeHref: "/boards/official/write",
     gallery: true,
+    adminOnly: true,
   },
   promo: {
     title: "공식 홍보",
     boardType: "PROMO" as const,
     writeHref: "/boards/official/write",
     gallery: true,
+    adminOnly: true,
   },
   schedule: {
     title: "대회 스케줄",
@@ -245,7 +247,7 @@ export const JOB_KIND_LABEL: Record<JobKind, string> = {
 };
 
 export const WRITE_HINT: Partial<Record<BoardType, string>> = {
-  PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬 소식만 등록합니다. 배너 구좌 1~6과 연동됩니다.",
+  PROMO: "관리자만 올립니다. 팀·브랜드 공식 홍보, 제휴 및 협찬 소식. 배너 구좌 1~6과 연동됩니다.",
   SCHEDULE: "관리자가 올립니다. 주간 허브 글이 매주 자동으로 생깁니다.",
   JOBS: "제목은 [지역] 홀덤펍 딜러 구인 형식으로 자동 생성됩니다.",
   FREE: "자유 수다, 잡담, 현장 이야기.",

@@ -54,20 +54,15 @@ export default async function BoardPage({
           <p className="mt-1 text-sm text-muted-foreground">
             {BOARD_DESCRIPTIONS[board.boardType]} · 작성 EXP {POST_EXP[board.boardType]}
             {page.total ? ` · ${page.total}개` : ""}
+            {" · 목록은 누구나, 본문은 로그인 후"}
           </p>
         </div>
-        {canWrite ? (
+        {canWrite || !("adminOnly" in board && board.adminOnly) ? (
           <Link href={board.writeHref} className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>
             {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
           </Link>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {"adminOnly" in board && board.adminOnly
-              ? "관리자만 작성할 수 있습니다."
-              : gallery
-                ? "검증 매장(인증 딜러)만 등록할 수 있습니다."
-                : null}
-          </p>
+          <p className="text-sm text-muted-foreground">관리자만 작성할 수 있습니다.</p>
         )}
       </header>
 

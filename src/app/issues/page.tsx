@@ -18,7 +18,7 @@ export default async function IssuesPage() {
           <h1 className="text-2xl font-semibold">사고 · 사건 · 이슈</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             현장에서 벌어진 이슈와 공유할 사건을 모았습니다. 글은 자유게시판과 같은 곳에 올라갑니다.
-            {page.total ? ` · ${page.total}개` : ""}
+            목록은 누구나, 본문은 로그인 후.{page.total ? ` · ${page.total}개` : ""}
           </p>
         </div>
         <Link href="/boards/free/write" className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>

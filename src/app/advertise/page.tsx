@@ -84,11 +84,8 @@ export default function AdvertisePage() {
           <li>S와 C가 한 자리씩이라 월간 패키지는 두지 않습니다. 칸을 따로 고르면 됩니다.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
-          트래픽 리포트는 계약 기간에 공유하는 것을 기본으로 합니다. 공식 홍보 글만 직접 올리려면{" "}
-          <Link href="/boards/official/write" className="text-primary">
-            홍보 등록
-          </Link>
-          을 쓰면 되고, 유료 구좌는 아래 문의가 맞습니다. 운영자는{" "}
+          트래픽 리포트는 계약 기간에 공유하는 것을 기본으로 합니다. 공식 홍보 글은 관리자가
+          올립니다. 유료 구좌는 아래 문의가 맞습니다. 운영자는{" "}
           <Link href="/admin/banners" className="text-primary">
             배너 구좌 관리
           </Link>

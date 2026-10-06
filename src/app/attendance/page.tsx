@@ -1,17 +1,19 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { CommentForm } from "@/components/posts/comment-form";
 import { InfiniteAttendanceList } from "@/components/posts/infinite-attendance-list";
 import { getAttendanceStats } from "@/lib/attendance";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatKstLabel } from "@/lib/dates";
 import { PAGE_SIZE } from "@/lib/feed";
+import { loginHref } from "@/lib/login-path";
 import { ATTENDANCE_EXP, ATTENDANCE_POINTS } from "@/lib/rewards";
 
 export const dynamic = "force-dynamic";
 
 export default async function AttendancePage() {
   const user = await getCurrentUser().catch(() => null);
-  const stats = await getAttendanceStats(user?.id);
+  if (!user) redirect(loginHref("/attendance"));
+  const stats = await getAttendanceStats(user.id);
 
   return (
     <div className="flex flex-col gap-4">
@@ -33,22 +35,13 @@ export default async function AttendancePage() {
         <h2 className="text-lg font-semibold">{stats.post.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{stats.post.content}</p>
         <div className="mt-4">
-          {user ? (
-            <CommentForm
-              postId={stats.post.id}
-              submitLabel="출석 댓글 남기기"
-              placeholder="오늘 한 줄 (최소 2자). 예: 오늘도 핸드 공부"
-              disabled={stats.alreadyCheckedIn}
-              disabledReason="오늘은 이미 출석했습니다. 내일 0시 이후 다시 가능합니다."
-            />
-          ) : (
-            <p className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-muted-foreground">
-              출석 댓글은 로그인 후 남길 수 있습니다.{" "}
-              <Link href="/login" className="font-medium text-primary underline">
-                로그인
-              </Link>
-            </p>
-          )}
+          <CommentForm
+            postId={stats.post.id}
+            submitLabel="출석 댓글 남기기"
+            placeholder="오늘 한 줄 (최소 2자). 예: 오늘도 핸드 공부"
+            disabled={stats.alreadyCheckedIn}
+            disabledReason="오늘은 이미 출석했습니다. 내일 0시 이후 다시 가능합니다."
+          />
         </div>
       </section>
 
