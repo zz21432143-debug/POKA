@@ -1,6 +1,5 @@
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentUser } from "@/lib/current-user";
-import { kakaoConfigured } from "@/lib/kakao-oauth";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +29,7 @@ export default async function LoginPage({
         <p className="mt-3 text-sm text-destructive">{KAKAO_ERRORS[error]}</p>
       ) : null}
       <div className="mt-5">
-        <AuthForm nextPath={nextPath} kakaoReady={kakaoConfigured()} />
+        <AuthForm nextPath={nextPath} />
       </div>
     </article>
   );

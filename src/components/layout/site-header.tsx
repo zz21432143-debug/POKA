@@ -39,9 +39,7 @@ export function SiteHeader({
           </label>
         </form>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
-          <span className="xl:hidden">
-            <KakaoOpenChatCta compact />
-          </span>
+          <KakaoOpenChatCta compact />
           <Link
             href="/search"
             aria-label="검색"
