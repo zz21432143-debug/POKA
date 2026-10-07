@@ -56,6 +56,11 @@ model User {
   nickname            String   @unique
   passwordHash        String?
   kakaoId             String?  @unique
+  email               String?  @unique
+  emailVerifiedAt     DateTime?
+  emailVerifyHash     String?
+  emailVerifyExpires  DateTime?
+  termsAcceptedAt     DateTime?
   resetCodeHash       String?
   resetCodeExpires    DateTime?
   profileMarkImageUrl String?

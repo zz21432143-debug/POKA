@@ -23,6 +23,7 @@ const BOARDS: BoardType[] = [
   "RULE_QA",
   "SKETCH",
   "HAND_REVIEW",
+  "ANONYMOUS_REVIEW",
   "JOBS",
   "PROMO",
   "EVENT_POSTER",

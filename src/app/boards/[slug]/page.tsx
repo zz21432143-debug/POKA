@@ -14,6 +14,7 @@ import { POST_EXP } from "@/lib/rewards";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { getSponsorCreative } from "@/lib/inventory";
+import { LiabilityNotice } from "@/components/legal/liability-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,6 @@ const ALIASES: Record<string, string> = {
   talent: "/boards/jobs/seek",
   events: "/boards/schedule",
   "store-review": "/community",
-  anonymous: "/community",
 };
 
 export default async function BoardPage({
@@ -65,6 +65,7 @@ export default async function BoardPage({
           <p className="text-sm text-muted-foreground">관리자만 작성할 수 있습니다.</p>
         )}
       </header>
+      {board.boardType === "ANONYMOUS_REVIEW" ? <LiabilityNotice /> : null}
 
       {gallery ? (
         <PromoGallery posts={page.gallery} />

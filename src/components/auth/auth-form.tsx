@@ -1,28 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MEMBER_LIABILITY_TEXT } from "@/lib/legal";
+
+type Mode = "login" | "register" | "forgot" | "reset";
 
 export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register" | "forgot" | "reset">("login");
+  const [mode, setMode] = useState<Mode>("login");
   const [nickname, setNickname] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [code, setCode] = useState("");
   const [company, setCompany] = useState("");
+  const [website, setWebsite] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaPrompt, setCaptchaPrompt] = useState("문제를 불러오는 중…");
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [terms, setTerms] = useState<"agree" | "disagree" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  async function loadCaptcha() {
+    try {
+      const response = await fetch("/api/auth/captcha", { cache: "no-store" });
+      const data = (await response.json()) as { token?: string; prompt?: string };
+      setCaptchaToken(data.token ?? "");
+      setCaptchaPrompt(data.prompt ?? "1 + 1 = ?");
+      setCaptchaAnswer("");
+    } catch {
+      setCaptchaPrompt("문제를 다시 받아 주세요.");
+    }
+  }
+
+  useEffect(() => {
+    if (mode === "register") void loadCaptcha();
+  }, [mode]);
 
   async function submit() {
     setPending(true);
     setError(null);
     setInfo(null);
+    setVerifyUrl(null);
     try {
+      if (mode === "register") {
+        if (terms !== "agree") {
+          setError("미동의 시 회원가입할 수 없습니다. 동의를 선택하세요.");
+          return;
+        }
+      }
       const action = mode === "forgot" ? "forgot" : mode === "reset" ? "reset" : mode;
       const response = await fetch("/api/auth", {
         method: "POST",
@@ -34,11 +68,25 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
           newPassword,
           code,
           company,
+          website,
+          email,
+          captchaToken,
+          captchaAnswer,
+          termsAccepted: terms === "agree",
         }),
       });
-      const data = (await response.json()) as { error?: string; code?: string; hint?: string };
+      const data = (await response.json()) as {
+        error?: string;
+        code?: string;
+        hint?: string;
+        needsVerify?: boolean;
+        verifyUrl?: string;
+        email?: string;
+      };
       if (!response.ok) {
         setError(data.error ?? "처리할 수 없습니다.");
+        if (data.needsVerify && data.email) setEmail(data.email);
+        if (mode === "register") void loadCaptcha();
         return;
       }
       if (mode === "forgot" && data.code) {
@@ -47,8 +95,41 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
         setCode(data.code);
         return;
       }
+      if (data.needsVerify) {
+        setInfo(data.hint ?? "이메일 인증 후 로그인하세요.");
+        if (data.verifyUrl) setVerifyUrl(data.verifyUrl);
+        setMode("login");
+        return;
+      }
       router.push(nextPath.startsWith("/") ? nextPath : "/");
       router.refresh();
+    } catch {
+      setError("네트워크 오류입니다.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resend() {
+    if (!email.trim()) {
+      setError("인증 메일을 다시 받으려면 이메일을 입력하세요.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "resend-verify", email }),
+      });
+      const data = (await response.json()) as { error?: string; hint?: string; verifyUrl?: string };
+      if (!response.ok) {
+        setError(data.error ?? "다시 보낼 수 없습니다.");
+        return;
+      }
+      setInfo(data.hint ?? "인증 메일을 다시 보냈습니다.");
+      if (data.verifyUrl) setVerifyUrl(data.verifyUrl);
     } catch {
       setError("네트워크 오류입니다.");
     } finally {
@@ -94,8 +175,23 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
       </div>
       <div className="hidden" aria-hidden>
         <Label htmlFor="company">회사</Label>
-        <Input id="company" value={company} onChange={(event) => setCompany(event.target.value)} tabIndex={-1} />
+        <Input id="company" value={company} onChange={(event) => setCompany(event.target.value)} tabIndex={-1} autoComplete="off" />
+        <Label htmlFor="website">웹사이트</Label>
+        <Input id="website" value={website} onChange={(event) => setWebsite(event.target.value)} tabIndex={-1} autoComplete="off" />
       </div>
+      {mode === "register" || mode === "login" ? (
+        <div className="grid gap-1.5">
+          <Label htmlFor="email">이메일{mode === "login" ? " (인증 메일 재발송용)" : ""}</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            required={mode === "register"}
+          />
+        </div>
+      ) : null}
       {mode === "login" || mode === "register" ? (
         <div className="grid gap-1.5">
           <Label htmlFor="password">비밀번호</Label>
@@ -107,6 +203,50 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
             autoComplete={mode === "login" ? "current-password" : "new-password"}
           />
         </div>
+      ) : null}
+      {mode === "register" ? (
+        <>
+          <div className="grid gap-1.5">
+            <Label htmlFor="captcha">봇 확인 · {captchaPrompt}</Label>
+            <div className="flex gap-2">
+              <Input
+                id="captcha"
+                inputMode="numeric"
+                value={captchaAnswer}
+                onChange={(event) => setCaptchaAnswer(event.target.value)}
+                autoComplete="off"
+              />
+              <Button type="button" variant="outline" onClick={() => void loadCaptcha()}>
+                새로
+              </Button>
+            </div>
+          </div>
+          <fieldset className="rounded-2xl border border-amber-300 bg-amber-50 p-3">
+            <legend className="px-1 text-sm font-semibold text-amber-950">작성 책임 동의</legend>
+            <p className="text-sm leading-6 text-amber-950">{MEMBER_LIABILITY_TEXT}</p>
+            <p className="mt-1 text-xs text-amber-800">미동의 시 회원가입할 수 없습니다.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
+                  terms === "agree" ? "bg-primary text-white" : "border border-border bg-white"
+                }`}
+                onClick={() => setTerms("agree")}
+              >
+                동의
+              </button>
+              <button
+                type="button"
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
+                  terms === "disagree" ? "bg-destructive text-white" : "border border-border bg-white"
+                }`}
+                onClick={() => setTerms("disagree")}
+              >
+                미동의
+              </button>
+            </div>
+          </fieldset>
+        </>
       ) : null}
       {mode === "reset" ? (
         <>
@@ -127,21 +267,33 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {info ? <p className="text-sm text-primary">{info}</p> : null}
-      <Button type="submit" size="touch" disabled={pending}>
+      {verifyUrl ? (
+        <p className="text-sm">
+          <Link className="font-semibold text-primary underline" href={verifyUrl}>
+            이메일 인증하기
+          </Link>
+        </p>
+      ) : null}
+      <Button type="submit" size="touch" disabled={pending || (mode === "register" && terms === "disagree")}>
         {pending
           ? "처리 중…"
           : mode === "login"
             ? "로그인"
             : mode === "register"
-              ? "가입하고 시작"
+              ? "가입하고 이메일 인증"
               : mode === "forgot"
                 ? "재설정 코드 받기"
                 : "비밀번호 바꾸기"}
       </Button>
       {mode === "login" ? (
-        <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("forgot")}>
-          비밀번호를 잊었어요
-        </button>
+        <div className="flex flex-col items-start gap-1">
+          <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("forgot")}>
+            비밀번호를 잊었어요
+          </button>
+          <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => void resend()}>
+            인증 메일 다시 받기
+          </button>
+        </div>
       ) : (
         <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("login")}>
           로그인으로

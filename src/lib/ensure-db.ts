@@ -37,14 +37,21 @@ async function applySchema() {
   await client.connect();
   try {
     const found = await client.query(`SELECT to_regclass('public."User"') AS rel`);
-    if (found.rows[0]?.rel) return;
-    const file = migrationPath();
-    if (!file) {
-      console.error("ensure-db: migration.sql not found");
-      return;
+    if (!found.rows[0]?.rel) {
+      const file = migrationPath();
+      if (!file) {
+        console.error("ensure-db: migration.sql not found");
+        return;
+      }
+      console.log("ensure-db: applying Postgres schema");
+      await client.query(readFileSync(file, "utf8"));
     }
-    console.log("ensure-db: applying Postgres schema");
-    await client.query(readFileSync(file, "utf8"));
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "email" TEXT`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifyHash" TEXT`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifyExpires" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "termsAcceptedAt" TIMESTAMP(3)`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`);
   } finally {
     await client.end().catch(() => undefined);
   }

@@ -253,6 +253,42 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     "라이브 리드 투톤 플러시",
     "체크레이즈 이후 턴 배럴",
   ];
+  const anonymous: CatalogPost[] = times((i) => ({
+    boardType: "ANONYMOUS_REVIEW",
+    title: [
+      "강남 홀덤펍 분위기만 짧게",
+      "야간 테이블 매너 후기",
+      "첫 스팟 다녀온 느낌",
+      "딜러 콜 속도가 빨랐던 날",
+      "홍대 캐주얼 한 궤도",
+      "주말 대기 줄이 길었습니다",
+      "시설은 괜찮은데 서비스가",
+      "지방 원정 홀덤펍 메모",
+      "신입 손님 배려가 있었는지",
+      "샷클락 있는 매장 체감",
+      "분당 홀덤펍 좌석 간격",
+      "송도 나이트 템포",
+      "서면 홀덤 테이블 후기",
+      "동성로 매장 청결",
+      "일산 주말 게임 밀도",
+      "건대 캐주얼 매너",
+      "신림 야간 스팟",
+      "노원 홀덤펍 첫인상",
+      "송파 토너 분위기",
+      "잠실 근처 홀덤펍 한줄",
+    ][i],
+    content: `${LOCS[i]} 홀덤펍에서 본 장면입니다. 익명이지만 사실만 적었습니다. (${i + 1})`,
+    authorNickname: nick(i + 4),
+    daysAgo: i,
+    upvoteCount: i % 9,
+    ratings: [3 + (i % 3), 3 + ((i + 1) % 3), 3 + ((i + 2) % 3), 3 + ((i + 3) % 3)] as [
+      number,
+      number,
+      number,
+      number,
+    ],
+  }));
+
   const hand: CatalogPost[] = times((i) => ({
     boardType: "HAND_REVIEW",
     title:
@@ -466,6 +502,7 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     sketch,
     free,
     "hand-review": hand,
+    anonymous,
     "jobs/fixed": jobsFixed,
     "jobs/apply": jobsApply,
     "jobs/team": jobsTeam,

@@ -20,7 +20,7 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   RULE_QA: "룰·판정·진행이 맞는지 질문",
   SKETCH: "현장 사진과 스케치",
   HAND_REVIEW: "홀덤 핸드를 그리고 Fold/Check/Call/Raise로 투표합니다. 제목에 홀덤 핸드리뷰가 붙습니다.",
-  ANONYMOUS_REVIEW: "닉네임 비공개. 홀덤펍 후기라면 제목에 지역을 넣고 매너·서비스·시설·분위기 별점",
+  ANONYMOUS_REVIEW: "닉네임 비공개. 글·댓글의 민·형사상 책임은 작성자 본인에게 있습니다.",
   JOBS: "홀덤펍 고정 딜러 · 스팟 · 팀 · 급구/대타 · 개인 구직. 제목은 [지역] 홀덤 형식으로 붙습니다.",
   PROMO: "팀·브랜드 공식 홍보, 제휴 및 협찬. 등록은 관리자만 가능합니다.",
   EVENT_POSTER: "대회 포스터 (일정 게시판으로 이전)",

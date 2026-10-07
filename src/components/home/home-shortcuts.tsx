@@ -1,15 +1,15 @@
 import Link from "next/link";
 import {
-  BookOpenIcon,
   BriefcaseIcon,
   CalendarDaysIcon,
-  MegaphoneIcon,
+  CheckCircle2Icon,
+  EyeOffIcon,
 } from "lucide-react";
 
 const ITEMS = [
-  { href: "/advertise", title: "홍보하기", icon: MegaphoneIcon, navy: true },
+  { href: "/attendance", title: "출석체크", icon: CheckCircle2Icon, navy: true },
+  { href: "/boards/anonymous", title: "익명 게시판", icon: EyeOffIcon, navy: false },
   { href: "/boards/jobs", title: "구인·구직", icon: BriefcaseIcon, navy: false },
-  { href: "/info/guide", title: "딜러 가이드", icon: BookOpenIcon, navy: false },
   { href: "/boards/schedule", title: "대회 일정", icon: CalendarDaysIcon, navy: false },
 ] as const;
 

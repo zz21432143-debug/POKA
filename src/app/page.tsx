@@ -117,6 +117,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-5">
       <HomeHeroBanner />
+      <HomeShortcuts />
       <HomeLatest all={all} free={free} jobs={jobs} issues={issues} nativeSponsor={nativeSponsor} />
       <HomeUrgentJobs
         jobs={urgent.map((row) => ({
@@ -127,7 +128,6 @@ export default async function HomePage() {
           jobPayAmount: row.jobPayAmount,
         }))}
       />
-      <HomeShortcuts />
       <GrowthHomePanel
         today={today}
         hand={

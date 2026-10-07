@@ -10,6 +10,7 @@ describe("board write roles", () => {
     assert.equal(canWriteBoard(member, "FREE"), true);
     assert.equal(canWriteBoard(member, "JOBS"), true);
     assert.equal(canWriteBoard(member, "HAND_REVIEW"), true);
+    assert.equal(canWriteBoard(member, "ANONYMOUS_REVIEW"), true);
     assert.equal(canWriteBoard(member, "PROMO"), false);
     assert.equal(canWriteBoard(member, "SCHEDULE"), false);
     assert.match(writeDeniedMessage("PROMO"), /관리자만/);

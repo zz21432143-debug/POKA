@@ -22,6 +22,7 @@ import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { COMMENT_EXP } from "@/lib/rewards";
 import Link from "next/link";
+import { LiabilityNotice } from "@/components/legal/liability-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,7 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
+      {anonymous ? <LiabilityNotice /> : null}
       <header className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">

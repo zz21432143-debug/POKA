@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BellIcon, SearchIcon, UserRoundIcon } from "lucide-react";
+import { BellIcon, CheckCircle2Icon, SearchIcon, UserRoundIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
@@ -40,6 +40,10 @@ export function SiteHeader({
         </form>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
           <KakaoOpenChatCta compact />
+          <HeaderIcon href="/attendance" label="출석체크">
+            <CheckCircle2Icon className="size-5" />
+            <span className="hidden sm:inline">출석</span>
+          </HeaderIcon>
           <Link
             href="/search"
             aria-label="검색"

@@ -37,7 +37,8 @@ export type SidebarIcon =
   | "shield"
   | "check"
   | "spade"
-  | "badge";
+  | "badge"
+  | "mask";
 
 export type SidebarItem = NavItem & { icon: SidebarIcon };
 
@@ -55,21 +56,20 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "커뮤니티",
     items: [
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
+      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개", icon: "mask" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
-      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
     ],
   },
   {
     title: "정보센터",
     items: [
-      { href: "/info/guide", label: "딜러 가이드", hint: "홀덤 기본 룰", icon: "book" },
       { href: "/practice", label: "딜러 연습", hint: "사이드팟 · 미니멈 레이즈", icon: "lightbulb" },
-      { href: "/info/dealers", label: "인증 딜러", hint: "골드 뱃지 딜러", icon: "badge" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],
@@ -104,14 +104,15 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "커뮤니티",
     href: "/community",
-    hint: "핸드리뷰부터 출석까지",
+    hint: "출석·익명부터 핸드리뷰까지",
     accent: "emerald",
     items: [
+      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
+      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
-      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
     ],
   },
   {
@@ -147,6 +148,11 @@ export function navGroupActive(pathname: string, group: NavGroup) {
 }
 
 export const BOARD_SLUGS = {
+  anonymous: {
+    title: "익명 게시판",
+    boardType: "ANONYMOUS_REVIEW" as const,
+    writeHref: "/boards/anonymous/write",
+  },
   free: { title: "자유게시판", boardType: "FREE" as const, writeHref: "/boards/free/write" },
   rules: {
     title: "질문 & 답변",
@@ -255,4 +261,5 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   SKETCH: "현장 사진과 스케치를 공유하세요.",
   HAND_REVIEW:
     "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 Fold/Check/Call/Raise 투표가 열립니다.",
+  ANONYMOUS_REVIEW: "닉네임은 화면에 보이지 않습니다. 작성 책임은 본인에게 있습니다.",
 };

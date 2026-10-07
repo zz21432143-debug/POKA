@@ -24,8 +24,8 @@ export function VerifiedDealerStrip({
           </p>
           <p className="mt-1 text-sm text-muted-foreground">골드 뱃지 딜러의 최근 핸드입니다.</p>
         </div>
-        <Link href="/info/dealers" className="text-sm font-semibold text-amber-800 hover:text-amber-950">
-          전체 보기
+        <Link href="/community" className="text-sm font-semibold text-amber-800 hover:text-amber-950">
+          커뮤니티
         </Link>
       </div>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
