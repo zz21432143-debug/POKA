@@ -31,6 +31,8 @@ export const metadata: Metadata = {
   icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
 };
 
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

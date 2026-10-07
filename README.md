@@ -113,7 +113,7 @@ Vercel 프로젝트 환경 변수:
 
 Vercel Optional Integrations의 **Prisma Postgres Add 는 누르지 않습니다.** 이미 Neon을 씁니다.
 
-`npm run build`가 `prisma migrate deploy`와 (회원이 없을 때만) seed를 실행합니다. 로컬에서 데이터를 지우고 다시 넣으려면 `npm run db:seed` (`SEED_RESET=1`)입니다.
+`npm run build`가 Neon 연결 확인, `prisma migrate deploy`, (회원이 없을 때만) seed, 그다음 Next 빌드를 실행합니다. 로컬에서 데이터를 지우고 다시 넣으려면 `npm run db:seed` (`SEED_RESET=1`)입니다.
 
 ```bash
 npx prisma migrate deploy

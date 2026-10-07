@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/** 보안 헤더. 작성 쿨다운은 SQLite 상태 때문에 API 레이어(`assertWriteCooldown`)에서 처리합니다. */
+/** 보안 헤더. 작성 쿨다운은 API 레이어(`assertWriteCooldown`)에서 처리합니다. */
 export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
