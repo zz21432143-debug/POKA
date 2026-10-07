@@ -1,34 +1,26 @@
 import { NextResponse } from "next/server";
-import { randomBytes, randomInt } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { verifyCaptcha } from "@/lib/captcha";
 import { clearSession, setSessionNickname } from "@/lib/current-user";
 import { emailError, normalizeEmail } from "@/lib/email-address";
-import { canRevealVerifyUrl, sendMail, verificationMail } from "@/lib/mailer";
+import { completeEmailVerification, issueVerification } from "@/lib/email-verify";
 import { nicknameError, normalizeNickname, passwordError } from "@/lib/nickname";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { clientIp } from "@/lib/request";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
-import { pushTicker } from "@/lib/ticker";
 
-const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
-
-function newVerifyToken() {
-  return randomBytes(24).toString("base64url");
-}
-
-async function issueVerification(userId: string, email: string) {
-  const token = newVerifyToken();
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      emailVerifyHash: hashPassword(token),
-      emailVerifyExpires: new Date(Date.now() + VERIFY_TTL_MS),
-    },
-  });
-  const mail = verificationMail(email, token);
-  const result = await sendMail({ to: email, subject: mail.subject, text: mail.text });
-  return { token, url: mail.url, sent: result.sent };
+function verifyPayload(issued: Awaited<ReturnType<typeof issueVerification>>, email: string) {
+  return {
+    ok: true as const,
+    needsVerify: true as const,
+    email,
+    hint: issued.sent
+      ? `${email}로 인증 메일을 보냈습니다. 메일함의 링크를 열거나, 아래에 코드가 있으면 코드를 입력하세요.`
+      : `${email}로 메일을 보내지 못했습니다. 아래 링크를 열거나 인증 코드를 입력해 가입을 끝내세요.`,
+    verifyUrl: issued.verifyUrl,
+    verifyCode: issued.verifyCode,
+  };
 }
 
 export async function POST(request: Request) {
@@ -75,13 +67,38 @@ export async function POST(request: Request) {
       const captchaErr = verifyCaptcha(body.captchaToken, body.captchaAnswer);
       if (captchaErr) return NextResponse.json({ error: captchaErr }, { status: 400 });
       const email = normalizeEmail(body.email ?? "");
-      await assertWriteCooldown({ kind: "register", ip: clientIp(request) });
       const [takenNick, takenEmail] = await Promise.all([
         prisma.user.findUnique({ where: { nickname } }),
         prisma.user.findUnique({ where: { email } }),
       ]);
-      if (takenNick) return NextResponse.json({ error: "이미 있는 닉네임입니다." }, { status: 409 });
-      if (takenEmail) return NextResponse.json({ error: "이미 등록된 이메일입니다." }, { status: 409 });
+      if (takenEmail?.emailVerifiedAt) {
+        return NextResponse.json({ error: "이미 등록된 이메일입니다." }, { status: 409 });
+      }
+      if (takenEmail && !takenEmail.emailVerifiedAt) {
+        if (takenNick && takenNick.id !== takenEmail.id) {
+          return NextResponse.json({ error: "이미 있는 닉네임입니다." }, { status: 409 });
+        }
+        if (takenEmail.nickname !== nickname) {
+          return NextResponse.json(
+            {
+              error: "이 이메일은 인증 대기 중입니다. 처음 가입한 닉네임으로 로그인한 뒤 인증을 마치세요.",
+              needsVerify: true,
+              email,
+            },
+            { status: 409 },
+          );
+        }
+        const issued = await issueVerification(takenEmail.id, email);
+        return NextResponse.json(verifyPayload(issued, email));
+      }
+      if (takenNick) {
+        if (takenNick.emailVerifiedAt || takenNick.email !== email) {
+          return NextResponse.json({ error: "이미 있는 닉네임입니다." }, { status: 409 });
+        }
+        const issued = await issueVerification(takenNick.id, email);
+        return NextResponse.json(verifyPayload(issued, email));
+      }
+      await assertWriteCooldown({ kind: "register", ip: clientIp(request) });
       const user = await prisma.user.create({
         data: {
           nickname,
@@ -94,45 +111,18 @@ export async function POST(request: Request) {
         },
       });
       const issued = await issueVerification(user.id, email);
-      return NextResponse.json({
-        ok: true,
-        needsVerify: true,
-        email,
-        hint: issued.sent
-          ? `${email}로 인증 메일을 보냈습니다. 메일함의 링크를 연 뒤 로그인하세요.`
-          : `${email}로 인증 메일을 준비했습니다. 메일 발송 설정이 없으면 아래 링크로 인증하세요.`,
-        verifyUrl: canRevealVerifyUrl() || !issued.sent ? issued.url : undefined,
-      });
+      return NextResponse.json(verifyPayload(issued, email));
     }
 
     if (action === "verify-email") {
       const email = normalizeEmail(body.email ?? "");
-      const token = typeof body.token === "string" ? body.token.trim() : "";
-      if (emailError(email) || !token) {
-        return NextResponse.json({ error: "인증 링크가 올바르지 않습니다." }, { status: 400 });
+      const token = typeof body.token === "string" ? body.token.trim() : typeof body.code === "string" ? body.code.trim() : "";
+      const verified = await completeEmailVerification(email, token);
+      if (!verified.ok) {
+        return NextResponse.json({ error: verified.error }, { status: 400 });
       }
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user?.emailVerifyHash || !user.emailVerifyExpires || user.emailVerifyExpires < new Date()) {
-        return NextResponse.json({ error: "인증 링크가 만료되었습니다. 다시 요청하세요." }, { status: 400 });
-      }
-      if (!verifyPassword(token, user.emailVerifyHash)) {
-        return NextResponse.json({ error: "인증 링크가 올바르지 않습니다." }, { status: 400 });
-      }
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          emailVerifiedAt: new Date(),
-          emailVerifyHash: null,
-          emailVerifyExpires: null,
-        },
-      });
-      await setSessionNickname(user.nickname);
-      await pushTicker({
-        kind: `JOIN:${user.id}`,
-        message: `👋 ${user.nickname}님이 POKA에 가입했습니다!`,
-        href: `/u/${encodeURIComponent(user.nickname)}`,
-      });
-      return NextResponse.json({ ok: true, nickname: user.nickname });
+      await setSessionNickname(verified.nickname);
+      return NextResponse.json({ ok: true, nickname: verified.nickname });
     }
 
     if (action === "resend-verify") {
@@ -147,8 +137,11 @@ export async function POST(request: Request) {
       const issued = await issueVerification(user.id, email);
       return NextResponse.json({
         ok: true,
-        hint: issued.sent ? "인증 메일을 다시 보냈습니다." : "인증 링크를 다시 만들었습니다.",
-        verifyUrl: canRevealVerifyUrl() || !issued.sent ? issued.url : undefined,
+        hint: issued.sent ? "인증 메일을 다시 보냈습니다." : "인증 링크와 코드를 다시 만들었습니다.",
+        verifyUrl: issued.verifyUrl,
+        verifyCode: issued.verifyCode,
+        email,
+        needsVerify: true,
       });
     }
 
@@ -163,7 +156,7 @@ export async function POST(request: Request) {
       if (user.email && !user.emailVerifiedAt) {
         return NextResponse.json(
           {
-            error: "이메일 인증 후 로그인할 수 있습니다. 메일함의 링크를 확인하세요.",
+            error: "이메일 인증 후 로그인할 수 있습니다. 인증 메일을 다시 받거나 코드를 입력하세요.",
             needsVerify: true,
             email: user.email,
           },

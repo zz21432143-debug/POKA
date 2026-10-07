@@ -111,7 +111,7 @@ Vercel 프로젝트 환경 변수:
 | `DATABASE_URL_UNPOOLED` | 같은 모달에서 pooling **OFF** |
 | `NEXT_PUBLIC_SITE_URL` | `https://pokerwiki.co.kr` |
 | `SESSION_SECRET` | 세션·캡차 HMAC 서명용 긴 문자열 |
-| `RESEND_API_KEY` | 회원가입 인증 메일 (없으면 가입 화면에 인증 링크) |
+| `RESEND_API_KEY` | 회원가입 인증 메일. 없으면(또는 발송 실패 시) 가입 화면에 인증 링크와 6자리 코드를 보여 줍니다. |
 | `MAIL_FROM` | 예: `POKA <noreply@pokerwiki.co.kr>` |
 
 Vercel Optional Integrations의 **Prisma Postgres Add 는 누르지 않습니다.** 이미 Neon을 씁니다.

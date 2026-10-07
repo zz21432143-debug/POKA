@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; verify?: string; email?: string }>;
 }) {
   const user = await getCurrentUser().catch(() => null);
-  const { next } = await searchParams;
+  const { next, verify, email } = await searchParams;
   const nextPath = next?.startsWith("/") ? next : "/";
   if (user) redirect(nextPath);
 
@@ -21,7 +21,7 @@ export default async function LoginPage({
         로그인은 닉네임과 비밀번호만 있으면 됩니다. 이메일 인증은 회원가입할 때만 필요합니다.
       </p>
       <div className="mt-5">
-        <AuthForm nextPath={nextPath} />
+        <AuthForm nextPath={nextPath} initialEmail={email ?? ""} initialVerifyFail={verify === "fail"} />
       </div>
     </article>
   );

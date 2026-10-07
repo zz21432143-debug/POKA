@@ -7,25 +7,30 @@ export async function sendMail(options: { to: string; subject: string; text: str
     console.log("[mail:fallback]", options.to, options.subject, options.text);
     return { sent: false as const };
   }
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [options.to],
-      subject: options.subject,
-      text: options.text,
-    }),
-  });
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    console.error("[mail:resend]", response.status, body);
-    throw new Error("인증 메일을 보내지 못했습니다. 잠시 후 다시 시도하세요.");
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [options.to],
+        subject: options.subject,
+        text: options.text,
+      }),
+    });
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.error("[mail:resend]", response.status, body);
+      return { sent: false as const };
+    }
+    return { sent: true as const };
+  } catch (error) {
+    console.error("[mail:resend]", error);
+    return { sent: false as const };
   }
-  return { sent: true as const };
 }
 
 export function verificationMail(email: string, token: string) {
@@ -37,6 +42,8 @@ export function verificationMail(email: string, token: string) {
   };
 }
 
-export function canRevealVerifyUrl() {
-  return process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY?.trim();
+/** 메일이 실제로 나가지 않았으면 화면에서 링크·코드를 보여 준다. */
+export function canRevealVerifyArtifacts(sent: boolean) {
+  if (!sent) return true;
+  return process.env.NODE_ENV !== "production";
 }
