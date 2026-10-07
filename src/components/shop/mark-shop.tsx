@@ -22,6 +22,7 @@ import {
   type MarkCategoryId,
   type ShopKindId,
 } from "@/lib/mark-categories";
+import { levelTitle } from "@/lib/levels";
 
 export function MarkShop({
   asPage = false,
@@ -139,7 +140,7 @@ function ShopBody({
           </p>
         </div>
         <p className="text-sm text-muted-foreground">
-          활동 Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
+          {levelTitle(catalog.level)} · Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
           {catalog.equippedMarkId ? " · 착용 중" : ""}
         </p>
       </div>

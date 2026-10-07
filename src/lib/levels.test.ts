@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { EXP_PER_LEVEL, MAX_LEVEL, buildLevelRows, levelFromExp, requiredExpForLevel } from "./levels";
+import {
+  EXP_PER_LEVEL,
+  MAX_LEVEL,
+  buildLevelRows,
+  levelFromExp,
+  levelTitle,
+  requiredExpForLevel,
+} from "./levels";
 import { ATTENDANCE_POINTS, DAILY_POINT_CAP, MARK_PRICE_POINTS } from "./rewards";
 
 describe("activity levels", () => {
@@ -15,6 +22,20 @@ describe("activity levels", () => {
     assert.equal(requiredExpForLevel(1), 0);
     assert.equal(requiredExpForLevel(250), 24900);
     assert.equal(buildLevelRows().length, 250);
+  });
+
+  it("names ranks by level band", () => {
+    assert.equal(levelTitle(1), "연습 딜러");
+    assert.equal(levelTitle(29), "연습 딜러");
+    assert.equal(levelTitle(30), "딜러");
+    assert.equal(levelTitle(99), "딜러");
+    assert.equal(levelTitle(100), "메인 딜러");
+    assert.equal(levelTitle(149), "메인 딜러");
+    assert.equal(levelTitle(150), "러너");
+    assert.equal(levelTitle(199), "러너");
+    assert.equal(levelTitle(200), "플로어");
+    assert.equal(levelTitle(249), "플로어");
+    assert.equal(levelTitle(250), "TD");
   });
 
   it("needs about eight attendance days for a 3000P mark", () => {

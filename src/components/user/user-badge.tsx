@@ -1,6 +1,9 @@
 import { cn } from "cn";
 import { MarkImage } from "@/components/layout/mark-image";
 import { ShieldIcon, StarIcon, MessageCircleHeartIcon } from "lucide-react";
+import { levelTitle } from "@/lib/levels";
+
+export { levelTitle };
 
 export type BadgeUser = {
   nickname: string;
@@ -29,14 +32,6 @@ export const AUTHOR_SELECT = {
   equippedFrame: { select: { cssClass: true } },
   equippedEffect: { select: { cssClass: true } },
 } as const;
-
-export function levelTitle(level: number) {
-  if (level >= 250) return "만렙";
-  if (level >= 100) return "백일";
-  if (level >= 30) return "한 달";
-  if (level >= 8) return "일주일";
-  return null;
-}
 
 export function isOpenChatStar(user: Pick<BadgeUser, "level" | "attendanceStreak">) {
   return user.level >= 8 || (user.attendanceStreak ?? 0) >= 7;
@@ -93,11 +88,6 @@ export function UserBadge({
           오픈채팅 우수
         </span>
       ) : null}
-      {title ? (
-        <span className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-          {title}
-        </span>
-      ) : null}
     </span>
   ) : showExtras && user.isDealerVerified ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
@@ -123,8 +113,13 @@ export function UserBadge({
               Lv.{user.level}
             </span>
             {showNickname ? (
-              <span className={cn("truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
-            ) : null}
+              <span className="min-w-0">
+                <span className={cn("block truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
+                <span className="mt-0.5 block text-xs font-semibold text-emerald-800">{title}</span>
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-emerald-800">{title}</span>
+            )}
           </span>
           {extraPills ? <span className="mt-1.5 flex">{extraPills}</span> : null}
         </span>
@@ -146,8 +141,15 @@ export function UserBadge({
         className={user.isDealerVerified ? "ring-2 ring-amber-400" : "ring-1 ring-border"}
       />
       {showNickname ? (
-        <span className={cn("truncate font-semibold text-foreground", spec.nick)}>{user.nickname}</span>
-      ) : null}
+        <span className="min-w-0">
+          <span className={cn("block truncate font-semibold leading-tight text-foreground", spec.nick)}>
+            {user.nickname}
+          </span>
+          <span className="block text-[11px] font-semibold leading-tight text-emerald-800">{title}</span>
+        </span>
+      ) : (
+        <span className="text-[11px] font-semibold text-emerald-800">{title}</span>
+      )}
       {extraPills}
     </span>
   );
