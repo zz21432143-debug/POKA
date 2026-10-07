@@ -96,7 +96,6 @@ async function seedIfEmpty() {
     data: {
       nickname: "펠트딜러",
       passwordHash: hashPassword(SEED_ACCOUNT_PASSWORD),
-      isDealerVerified: true,
       isAdmin: true,
       level: 8,
       exp: 7400,
@@ -120,7 +119,6 @@ async function ensureMasterAccount() {
       passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
       isAdmin: true,
       isMaster: true,
-      isDealerVerified: true,
       level: 250,
       exp: 24900,
       points: 999999,
@@ -130,7 +128,6 @@ async function ensureMasterAccount() {
       passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
       isAdmin: true,
       isMaster: true,
-      isDealerVerified: true,
       level: 250,
       exp: 24900,
     },
@@ -152,8 +149,9 @@ export function ensureDb() {
     .then(ensureLevelTable)
     .then(ensureMasterAccount)
     .then(async () => {
-      const { purgeDemoCatalog } = await import("@/lib/purge-demo-catalog");
+      const { purgeDemoCatalog, clearAutoDealerVerified } = await import("@/lib/purge-demo-catalog");
       await purgeDemoCatalog();
+      await clearAutoDealerVerified();
     })
     .catch((error) => {
       console.error("ensure-db failed", error);

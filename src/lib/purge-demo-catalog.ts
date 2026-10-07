@@ -2,6 +2,7 @@ import { SEED_NICKNAMES } from "@/lib/seed-catalog";
 import { FEATURED_OFFICIAL_POSTERS } from "@/lib/official-posters";
 
 export const PURGE_SEED_CATALOG_KIND = "PURGE_SEED_CATALOG";
+export const CLEAR_AUTO_VERIFIED_KIND = "CLEAR_AUTO_VERIFIED";
 
 const SEED_NICK_SET = new Set<string>(SEED_NICKNAMES);
 const DUMMY_POSTER_TITLES = new Set<string>(FEATURED_OFFICIAL_POSTERS.map((row) => row.title));
@@ -82,4 +83,26 @@ export async function purgeDemoCatalog() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+/** 시드·부팅으로 붙은 인증을 한 번 걷어 냅니다. 이후에는 마스터가 단 것만 남습니다. */
+export async function clearAutoDealerVerified() {
+  const { prisma } = await import("@/lib/db");
+  const already = await prisma.auditLog.findFirst({
+    where: { kind: CLEAR_AUTO_VERIFIED_KIND },
+    select: { id: true },
+  });
+  if (already) return;
+  const result = await prisma.user.updateMany({
+    where: { isDealerVerified: true },
+    data: { isDealerVerified: false },
+  });
+  await prisma.auditLog.create({
+    data: {
+      kind: CLEAR_AUTO_VERIFIED_KIND,
+      ip: "system",
+      detail: `cleared ${result.count}`,
+    },
+  });
+  console.log("ensure-db: cleared auto 인증 flags", result.count);
 }
