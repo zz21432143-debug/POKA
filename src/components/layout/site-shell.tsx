@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -11,48 +11,47 @@ import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
-import { getViewerProfile } from "@/lib/profile";
-import { listSwitchableUsers } from "@/lib/current-user";
+import { getCurrentUser, listSwitchableUsers } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
 import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
-import { getTickerEvents } from "@/lib/ticker";
+import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
 import { headers } from "next/headers";
 
-export async function SiteShell({ children }: { children: ReactNode }) {
-  let profile = null;
-  let accounts: Awaited<ReturnType<typeof listSwitchableUsers>> = [];
-  let ticker: { id: string; message: string; href: string }[] = [];
-  let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
-  const pathname = (await headers()).get("x-pathname") ?? "";
-  try {
-    const [viewer, events, sidebar] = await Promise.all([
-      getViewerProfile(),
-      getTickerEvents(),
-      getSponsorCreative("SIDEBAR").catch(() => null),
-      ensureTodayAttendancePost().catch(() => null),
-      ensureWeeklyScheduleHub().catch(() => null),
-    ]);
-    profile = viewer;
-    accounts = viewer?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];
-    sidebarSponsor = sidebar;
-    ticker = events.map((event) => ({
-      id: event.id,
-      message: event.message,
-      href: event.href,
-    }));
-  } catch {
-    profile = null;
-  }
+async function ConnectedTicker() {
+  void ensureTodayAttendancePost().catch(() => null);
+  void ensureWeeklyScheduleHub().catch(() => null);
+  const events = await getCachedTickerEvents().catch(() => []);
+  return (
+    <LedTicker
+      items={events.map((event) => ({
+        id: event.id,
+        message: event.message,
+        href: event.href,
+      }))}
+    />
+  );
+}
 
+async function ConnectedSidebarSponsor() {
+  const sidebarSponsor = await getSponsorCreative("SIDEBAR").catch(() => null);
+  return <SidebarSponsorCard unit={sidebarSponsor} />;
+}
+
+export async function SiteShell({ children }: { children: ReactNode }) {
+  const pathname = (await headers()).get("x-pathname") ?? "";
   const showFeedAds = shouldShowFeedAds(pathname);
+  const profile = await getCurrentUser().catch(() => null);
+  const accounts = profile?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-[#07150f]">
         <SiteHeader profile={profile} accounts={accounts} noticeCount={0} />
-        <LedTicker items={ticker} />
+        <Suspense fallback={<LedTicker items={[]} />}>
+          <ConnectedTicker />
+        </Suspense>
       </div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
@@ -60,10 +59,16 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0 flex-1 pb-6">
           {children}
-          {showFeedAds ? <FeedAdRow /> : null}
+          {showFeedAds ? (
+            <Suspense fallback={null}>
+              <FeedAdRow />
+            </Suspense>
+          ) : null}
           {showFeedAds ? (
             <div className="mt-5 xl:hidden">
-              <SidebarSponsorCard unit={sidebarSponsor} />
+              <Suspense fallback={null}>
+                <ConnectedSidebarSponsor />
+              </Suspense>
             </div>
           ) : null}
         </main>
@@ -71,10 +76,14 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
             <ProfileWidget profile={profile} accounts={accounts} />
-            <SidebarSponsorCard unit={sidebarSponsor} />
+            <Suspense fallback={null}>
+              <ConnectedSidebarSponsor />
+            </Suspense>
             <PromoApplyCta />
             <NoticeWidget items={OFFICIAL_NOTICES} />
-            <PopularPosts />
+            <Suspense fallback={null}>
+              <PopularPosts />
+            </Suspense>
             <GoogleAdUnit placement="sidebar" />
           </div>
         </aside>

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { toViewerProfile, type ViewerProfile } from "@/lib/profile";
@@ -39,12 +40,11 @@ async function findUserBySession() {
   return prisma.user.findUnique({ where: { nickname } });
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const user = await findUserBySession();
   if (!user) return null;
-  const profile = await toViewerProfile(user);
-  return { id: user.id, ...profile };
-}
+  return { id: user.id, ...toViewerProfile(user) };
+});
 
 export async function listSwitchableUsers(): Promise<SwitchAccount[]> {
   return prisma.user.findMany({

@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst, shiftDate } from "@/lib/dates";
 import { WEEKLY_HUB_PREFIX, kstDayStart, weeklyHubContent, weeklyHubTitle } from "@/lib/growth";
 import { holdemOnlyViolation } from "@/lib/holdem-only";
-import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { SEED_NICKNAMES } from "@/lib/seed-catalog";
 
 export async function ensureWeeklyScheduleHub() {
@@ -73,22 +72,24 @@ export async function ensureWeeklyScheduleHub() {
 
 export async function getTodayHandSpotlight() {
   const start = kstDayStart();
-  const include = { author: { select: AUTHOR_SELECT } } as const;
-  const todayHand = await prisma.post.findFirst({
-    where: {
-      boardType: "HAND_REVIEW",
-      hidden: false,
-      createdAt: { gte: start },
-    },
-    orderBy: [{ upvoteCount: "desc" }, { createdAt: "desc" }],
-    include,
-  });
+  const select = { id: true, title: true } as const;
+  const [todayHand, latest] = await Promise.all([
+    prisma.post.findFirst({
+      where: {
+        boardType: "HAND_REVIEW",
+        hidden: false,
+        createdAt: { gte: start },
+      },
+      orderBy: [{ upvoteCount: "desc" }, { createdAt: "desc" }],
+      select,
+    }),
+    prisma.post.findFirst({
+      where: { boardType: "HAND_REVIEW", hidden: false },
+      orderBy: { createdAt: "desc" },
+      select,
+    }),
+  ]);
   if (todayHand) return { post: todayHand, isToday: true as const };
-  const latest = await prisma.post.findFirst({
-    where: { boardType: "HAND_REVIEW", hidden: false },
-    orderBy: { createdAt: "desc" },
-    include,
-  });
   return { post: latest, isToday: false as const };
 }
 

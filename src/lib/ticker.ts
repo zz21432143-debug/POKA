@@ -42,12 +42,11 @@ export async function ensureWeeklyBestHand() {
 
 export async function getTickerEvents() {
   try {
-    await ensureWeeklyBestHand();
     const rows = await prisma.tickerEvent.findMany({
       orderBy: { createdAt: "desc" },
-      take: 40,
+      take: 24,
     });
-    return rows.filter((row) => !tickerMentionsSeedCatalog(row.message)).slice(0, 24);
+    return rows.filter((row) => !tickerMentionsSeedCatalog(row.message));
   } catch {
     return [];
   }

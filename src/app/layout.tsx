@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Caveat, Geist_Mono, Noto_Sans_KR } from "next/font/google";
+import { Caveat, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { adsensePublisherId } from "@/lib/adsense";
 import { siteUrl } from "@/lib/site";
@@ -9,12 +9,7 @@ import "./globals.css";
 const sans = Noto_Sans_KR({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "900"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "600", "700", "900"],
 });
 
 const script = Caveat({
@@ -31,8 +26,6 @@ export const metadata: Metadata = {
   icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
 };
 
-export const dynamic = "force-dynamic";
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -45,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${sans.variable} ${geistMono.variable} ${script.variable} h-full antialiased`}
+      className={`${sans.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {adsense ? (

@@ -7,6 +7,7 @@ import {
   levelFromExp,
   levelTitle,
   memberRankTitle,
+  progressFromExp,
   requiredExpForLevel,
 } from "./levels";
 import { ATTENDANCE_POINTS, DAILY_POINT_CAP, MARK_PRICE_POINTS } from "./rewards";
@@ -23,6 +24,13 @@ describe("activity levels", () => {
     assert.equal(requiredExpForLevel(1), 0);
     assert.equal(requiredExpForLevel(250), 24900);
     assert.equal(buildLevelRows().length, 250);
+    assert.deepEqual(progressFromExp(1, 0), {
+      currentLevelExp: 0,
+      nextLevelExp: 100,
+      progressPercent: 0,
+    });
+    assert.equal(progressFromExp(250, 24900).progressPercent, 100);
+    assert.equal(progressFromExp(250, 24900).nextLevelExp, null);
   });
 
   it("names ranks by level band", () => {

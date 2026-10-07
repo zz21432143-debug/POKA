@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { PREMIUM_BANNERS, type PromoBanner } from "@/lib/banners";
 import { normalizeMark } from "@/lib/inventory-policy";
@@ -12,18 +13,27 @@ export type PremiumBannerCard = PromoBanner & {
   mark: "AD" | "제휴";
 };
 
+let slotsReady: Promise<void> | null = null;
+
 export async function ensureBannerSlots() {
-  const existing = await prisma.bannerSlot.findMany();
-  const have = new Set(existing.map((row) => row.slot));
-  const missing = [1, 2, 3, 4, 5, 6].filter((slot) => !have.has(slot));
-  if (missing.length) {
-    await prisma.bannerSlot.createMany({
-      data: missing.map((slot) => ({ slot, mode: "AUTO", enabled: true })),
+  if (!slotsReady) {
+    slotsReady = (async () => {
+      const existing = await prisma.bannerSlot.findMany();
+      const have = new Set(existing.map((row) => row.slot));
+      const missing = [1, 2, 3, 4, 5, 6].filter((slot) => !have.has(slot));
+      if (!missing.length) return;
+      await prisma.bannerSlot.createMany({
+        data: missing.map((slot) => ({ slot, mode: "AUTO", enabled: true })),
+      });
+    })().catch((error) => {
+      slotsReady = null;
+      throw error;
     });
   }
+  return slotsReady;
 }
 
-export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
+async function loadPremiumBanners(): Promise<PremiumBannerCard[]> {
   try {
     await ensureBannerSlots();
     const [slots, promoPosts] = await Promise.all([
@@ -116,3 +126,7 @@ export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
     }));
   }
 }
+
+export const getPremiumBanners = unstable_cache(loadPremiumBanners, ["premium-banners"], {
+  revalidate: 30,
+});

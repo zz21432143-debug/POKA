@@ -28,6 +28,16 @@ export function requiredExpForLevel(level: number) {
   return (clamped - 1) * EXP_PER_LEVEL;
 }
 
+export function progressFromExp(level: number, exp: number) {
+  const currentLevelExp = requiredExpForLevel(level);
+  const nextLevelExp = level >= MAX_LEVEL ? null : requiredExpForLevel(level + 1);
+  const span = nextLevelExp == null ? 1 : Math.max(nextLevelExp - currentLevelExp, 1);
+  const gained = Math.max(exp - currentLevelExp, 0);
+  const progressPercent =
+    nextLevelExp == null ? 100 : Math.min(100, Math.round((gained / span) * 100));
+  return { currentLevelExp, nextLevelExp, progressPercent };
+}
+
 export function levelFromExp(exp: number) {
   if (exp <= 0) return 1;
   return Math.min(MAX_LEVEL, 1 + Math.floor(exp / EXP_PER_LEVEL));

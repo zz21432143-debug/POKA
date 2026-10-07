@@ -41,7 +41,18 @@ async function applySchema() {
   });
   await client.connect();
   try {
-    const found = await client.query(`SELECT to_regclass('public."User"') AS rel`);
+    const found = await client.query(`
+      SELECT
+        to_regclass('public."User"') AS rel,
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'googleId'
+        ) AS has_google,
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'Comment' AND column_name = 'authorIp'
+        ) AS has_ip
+    `);
     if (!found.rows[0]?.rel) {
       const file = migrationPath();
       if (!file) {
@@ -50,6 +61,8 @@ async function applySchema() {
       }
       console.log("ensure-db: applying Postgres schema");
       await client.query(readFileSync(file, "utf8"));
+    } else if (found.rows[0]?.has_google && found.rows[0]?.has_ip) {
+      return;
     }
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "email" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP(3)`);
@@ -76,15 +89,9 @@ async function applySchema() {
 }
 
 async function seedIfEmpty() {
-  const { createPrismaClient } = await import("@/lib/create-prisma-client");
-  const prisma = createPrismaClient();
-  const { buildLevelRows } = await import("@/lib/levels");
-  await prisma.levelExp.createMany({ data: buildLevelRows(), skipDuplicates: true });
+  const { prisma } = await import("@/lib/db");
   const users = await prisma.user.count();
-  if (users > 0) {
-    await prisma.$disconnect();
-    return;
-  }
+  if (users > 0) return;
   await prisma.user.create({
     data: {
       nickname: "펠트딜러",
@@ -97,56 +104,46 @@ async function seedIfEmpty() {
     },
   });
   console.log("ensure-db: created admin 펠트딜러");
-  await prisma.$disconnect();
 }
 
 async function ensureMasterAccount() {
-  const { createPrismaClient } = await import("@/lib/create-prisma-client");
-  const prisma = createPrismaClient();
-  try {
-    await prisma.user.upsert({
-      where: { nickname: MASTER_ACCOUNT_NICKNAME },
-      create: {
-        nickname: MASTER_ACCOUNT_NICKNAME,
-        passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
-        isAdmin: true,
-        isMaster: true,
-        isDealerVerified: true,
-        level: 250,
-        exp: 24900,
-        points: 999999,
-        termsAcceptedAt: new Date(),
-      },
-      update: {
-        passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
-        isAdmin: true,
-        isMaster: true,
-        isDealerVerified: true,
-        level: 250,
-        exp: 24900,
-      },
-    });
-    console.log("ensure-db: master account ready");
-  } finally {
-    await prisma.$disconnect();
-  }
+  const { prisma } = await import("@/lib/db");
+  const existing = await prisma.user.findUnique({
+    where: { nickname: MASTER_ACCOUNT_NICKNAME },
+    select: { id: true, isMaster: true },
+  });
+  if (existing?.isMaster) return;
+  await prisma.user.upsert({
+    where: { nickname: MASTER_ACCOUNT_NICKNAME },
+    create: {
+      nickname: MASTER_ACCOUNT_NICKNAME,
+      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+      isAdmin: true,
+      isMaster: true,
+      isDealerVerified: true,
+      level: 250,
+      exp: 24900,
+      points: 999999,
+      termsAcceptedAt: new Date(),
+    },
+    update: {
+      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+      isAdmin: true,
+      isMaster: true,
+      isDealerVerified: true,
+      level: 250,
+      exp: 24900,
+    },
+  });
+  console.log("ensure-db: master account ready");
 }
 
 async function ensureLevelTable() {
-  const { createPrismaClient } = await import("@/lib/create-prisma-client");
-  const { buildLevelRows } = await import("@/lib/levels");
-  const prisma = createPrismaClient();
-  try {
-    await prisma.levelExp.createMany({ data: buildLevelRows(), skipDuplicates: true });
-    for (const row of buildLevelRows()) {
-      await prisma.levelExp.update({
-        where: { level: row.level },
-        data: { requiredExp: row.requiredExp, markPurchasePoints: 0 },
-      });
-    }
-  } finally {
-    await prisma.$disconnect();
-  }
+  const { prisma } = await import("@/lib/db");
+  const { buildLevelRows, MAX_LEVEL } = await import("@/lib/levels");
+  const n = await prisma.levelExp.count();
+  if (n >= MAX_LEVEL) return;
+  await prisma.levelExp.createMany({ data: buildLevelRows(), skipDuplicates: true });
 }
 
 export function ensureDb() {

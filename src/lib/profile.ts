@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { progressFromExp } from "@/lib/levels";
 
 export type ViewerProfile = {
   nickname: string;
@@ -22,7 +22,7 @@ export async function getViewerProfile(): Promise<ViewerProfile | null> {
   return getCurrentUser();
 }
 
-export async function toViewerProfile(user: {
+export function toViewerProfile(user: {
   nickname: string;
   profileMarkImageUrl: string | null;
   level: number;
@@ -34,17 +34,8 @@ export async function toViewerProfile(user: {
   memberKind?: "COMPANY" | "INDIVIDUAL";
   attendanceStreak?: number;
   lastAttendanceDate?: string | null;
-}): Promise<ViewerProfile> {
-  const [current, next] = await Promise.all([
-    prisma.levelExp.findUnique({ where: { level: user.level } }),
-    prisma.levelExp.findUnique({ where: { level: user.level + 1 } }),
-  ]);
-  const currentLevelExp = current?.requiredExp ?? 0;
-  const nextLevelExp = next?.requiredExp ?? null;
-  const span = nextLevelExp == null ? 1 : Math.max(nextLevelExp - currentLevelExp, 1);
-  const gained = Math.max(user.exp - currentLevelExp, 0);
-  const progressPercent =
-    nextLevelExp == null ? 100 : Math.min(100, Math.round((gained / span) * 100));
+}): ViewerProfile {
+  const { currentLevelExp, nextLevelExp, progressPercent } = progressFromExp(user.level, user.exp);
 
   return {
     nickname: user.nickname,

@@ -22,6 +22,12 @@ export async function purgeDemoCatalog() {
   const { createPrismaClient } = await import("@/lib/create-prisma-client");
   const prisma = createPrismaClient();
   try {
+    const already = await prisma.auditLog.findFirst({
+      where: { kind: PURGE_SEED_CATALOG_KIND },
+      select: { id: true },
+    });
+    if (already) return;
+
     await prisma.tickerEvent.deleteMany({
       where: {
         OR: [...SEED_NICKNAMES].map((nickname) => ({
@@ -29,12 +35,6 @@ export async function purgeDemoCatalog() {
         })),
       },
     });
-
-    const already = await prisma.auditLog.findFirst({
-      where: { kind: PURGE_SEED_CATALOG_KIND },
-      select: { id: true },
-    });
-    if (already) return;
 
     const seedUsers = await prisma.user.findMany({
       where: { nickname: { in: [...SEED_NICKNAMES] } },

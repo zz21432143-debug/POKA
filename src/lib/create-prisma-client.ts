@@ -19,6 +19,10 @@ export function createPrismaClient(connectionString = process.env.DATABASE_URL) 
     ? undefined
     : { rejectUnauthorized: false as const };
   return new PrismaClient({
-    adapter: new PrismaPg({ connectionString, max: 5, ssl }),
+    adapter: new PrismaPg({
+      connectionString,
+      max: 4,
+      ssl,
+    }),
   });
 }
