@@ -7,7 +7,7 @@ import { jobFieldsFromBody } from "@/lib/job-fields";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
-import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
+import { CoolDownError, assertWriteCooldown } from "@/lib/security";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { ensureBannerSlots } from "@/lib/premium-banners";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
@@ -15,7 +15,6 @@ import {
   HoldemOnlyError,
   assertHoldemOnly,
   normalizeHandTitle,
-  normalizeReviewTitle,
 } from "@/lib/holdem-only";
 
 const BOARDS: BoardType[] = [
@@ -35,12 +34,6 @@ const BOARDS: BoardType[] = [
 ];
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
-
-function clampStar(value: unknown) {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n < 1 || n > 5) return null;
-  return n;
-}
 
 export async function POST(request: Request) {
   try {
@@ -78,12 +71,6 @@ export async function POST(request: Request) {
     if (boardType === "HAND_REVIEW") {
       title = normalizeHandTitle(title);
     }
-    if (boardType === "ANONYMOUS_REVIEW") {
-      const hasRatings = [body.ratingManner, body.ratingService, body.ratingFacility, body.ratingAtmosphere].every(
-        (star) => clampStar(star) != null,
-      );
-      title = normalizeReviewTitle(title, hasRatings);
-    }
 
     let handReviewJson: string | null = null;
     if (boardType === "HAND_REVIEW") {
@@ -98,18 +85,6 @@ export async function POST(request: Request) {
       handReviewJson = JSON.stringify(parsed);
     }
 
-    if (boardType === "ANONYMOUS_REVIEW") {
-      const stars = [
-        clampStar(body.ratingManner),
-        clampStar(body.ratingService),
-        clampStar(body.ratingFacility),
-        clampStar(body.ratingAtmosphere),
-      ];
-      const filled = stars.filter((star) => star != null).length;
-      if (filled > 0 && filled < 4) {
-        return NextResponse.json({ error: "별점을 남기려면 매너·서비스·시설·분위기를 모두 입력하세요." }, { status: 400 });
-      }
-    }
     let jobKind: JobKind | null = null;
     let jobData: ReturnType<typeof jobFieldsFromBody> | null = null;
     if (boardType === "JOBS") {
@@ -187,10 +162,10 @@ export async function POST(request: Request) {
         eventPrize: typeof body.eventPrize === "string" ? body.eventPrize.trim() || null : null,
         eventLink: typeof body.eventLink === "string" ? body.eventLink.trim() || null : null,
         storeVerified: boardType === "PROMO" ? Boolean(body.storeVerified ?? true) : false,
-        ratingManner: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingManner) : null,
-        ratingService: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingService) : null,
-        ratingFacility: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingFacility) : null,
-        ratingAtmosphere: boardType === "ANONYMOUS_REVIEW" ? clampStar(body.ratingAtmosphere) : null,
+        ratingManner: null,
+        ratingService: null,
+        ratingFacility: null,
+        ratingAtmosphere: null,
         isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,
@@ -209,22 +184,9 @@ export async function POST(request: Request) {
     const boardLabel = BOARD_LABELS[boardType as BoardTypeKey] ?? "게시판";
     await pushTicker({
       kind: `POST:${post.id}`,
-      message:
-        boardType === "ANONYMOUS_REVIEW"
-          ? `📝 익명 게시판에 새 글이 올라왔습니다`
-          : `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${title.slice(0, 28)}`,
+      message: `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${title.slice(0, 28)}`,
       href: `/posts/${post.id}`,
     });
-
-    if (boardType === "ANONYMOUS_REVIEW") {
-      await writeAudit({
-        kind: "ANONYMOUS_POST",
-        userId: user.id,
-        ip,
-        postId: post.id,
-        detail: title.slice(0, 80),
-      });
-    }
 
     if (bannerSlot) {
       await ensureBannerSlots();
@@ -238,7 +200,7 @@ export async function POST(request: Request) {
       id: post.id,
       exp: POST_EXP[boardType],
       points: POST_POINTS[boardType],
-      anonymous: boardType === "ANONYMOUS_REVIEW",
+      anonymous: false,
     });
   } catch (error) {
     if (error instanceof CoolDownError) {

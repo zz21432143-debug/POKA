@@ -5,7 +5,6 @@ import { BoardWriteForm } from "@/components/posts/board-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { WRITE_HINT, resolveBoardSlug } from "@/lib/nav";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
-import { LiabilityNotice } from "@/components/legal/liability-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +41,6 @@ export default async function BoardWritePage({
         <h1 className="text-2xl font-semibold">{board.title} 작성</h1>
         <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
       </header>
-      {board.boardType === "ANONYMOUS_REVIEW" ? <LiabilityNotice /> : null}
       {!allowed ? (
         <p className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
           {writeDeniedMessage(board.boardType)}

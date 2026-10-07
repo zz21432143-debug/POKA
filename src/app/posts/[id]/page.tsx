@@ -3,26 +3,21 @@ import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
 import { AUTHOR_SELECT, AuthorChip } from "@/components/posts/author-chip";
 import { HandPoll } from "@/components/hand/hand-poll";
-import { RatingStamp } from "@/components/reviews/rating-stamp";
-import { REVIEW_AXES } from "@/lib/ratings";
 import { POLL_CHOICES } from "@/lib/poll";
 import { CommentForm } from "@/components/posts/comment-form";
 import { CommentThread } from "@/components/posts/comment-thread";
 import { HireButton } from "@/components/jobs/hire-button";
-import { ReportButton } from "@/components/posts/report-button";
 import { VoteButtons } from "@/components/posts/vote-buttons";
 import { prisma } from "@/lib/db";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { parseHandReview } from "@/lib/hand-review";
 import { getCurrentUser } from "@/lib/current-user";
-import { isAnonymousBoard } from "@/lib/request";
 import { JOB_KIND_LABEL } from "@/lib/nav";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { COMMENT_EXP } from "@/lib/rewards";
 import Link from "next/link";
-import { LiabilityNotice } from "@/components/legal/liability-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +66,6 @@ export default async function PostDetailPage({
     .update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } })
     .catch(() => undefined);
 
-  const anonymous = isAnonymousBoard(post.boardType);
   const hand = parseHandReview(post.handReviewJson);
   const myVote = Array.isArray(post.votes) ? (post.votes[0]?.value ?? 0) : 0;
 
@@ -96,7 +90,6 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
-      {anonymous ? <LiabilityNotice /> : null}
       <header className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">
@@ -112,19 +105,9 @@ export default async function PostDetailPage({
         </div>
         <div className="mt-2 flex items-start gap-3">
           <h1 className="min-w-0 flex-1 text-2xl font-semibold">{post.title}</h1>
-          {post.boardType === "ANONYMOUS_REVIEW" ? (
-            <RatingStamp
-              ratings={{
-                ratingManner: post.ratingManner,
-                ratingService: post.ratingService,
-                ratingFacility: post.ratingFacility,
-                ratingAtmosphere: post.ratingAtmosphere,
-              }}
-            />
-          ) : null}
         </div>
         <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
-          <AuthorChip author={post.author} anonymous={anonymous} size="lg" />
+          <AuthorChip author={post.author} anonymous={false} size="lg" />
           {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
             <Link href={`/posts/${post.id}/edit`} className="mt-2 inline-block text-sm text-primary">
               수정
@@ -204,22 +187,6 @@ export default async function PostDetailPage({
         <HandPoll postId={post.id} initialCounts={pollCounts} initialChoice={myPollChoice} />
       ) : null}
 
-      {post.boardType === "ANONYMOUS_REVIEW" &&
-      (post.ratingManner || post.ratingService || post.ratingFacility || post.ratingAtmosphere) ? (
-        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-4">
-          {REVIEW_AXES.map((axis) => (
-            <div key={axis.key}>
-              <dt className="text-xs text-muted-foreground">{axis.label}</dt>
-              <dd className="text-primary">
-                {"★".repeat(post[axis.key] ?? 0)}
-                {"☆".repeat(5 - (post[axis.key] ?? 0))}
-                <span className="ml-1 text-foreground">{post[axis.key] ?? "—"}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : null}
-
       {post.boardType === "SKETCH" && post.bannerImageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -242,16 +209,9 @@ export default async function PostDetailPage({
           downvoteCount={post.downvoteCount}
           initialVote={myVote}
         />
-        {anonymous ? <ReportButton postId={post.id} /> : null}
       </div>
 
       <GoogleAdUnit placement="post-bottom" />
-      {anonymous ? (
-        <p className="text-xs text-muted-foreground">
-          이 글은 익명입니다. 신고 시 운영자가 내부 계정/IP를 확인할 수 있습니다.
-          {post._count.reports ? ` 현재 신고 ${post._count.reports}건.` : ""}
-        </p>
-      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">댓글 {post.comments.length}</h2>
@@ -273,7 +233,7 @@ export default async function PostDetailPage({
           <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
         ) : (
           <CommentThread
-            anonymous={anonymous}
+            anonymous={false}
             comments={post.comments.map((comment) => ({
               id: comment.id,
               content: comment.content,
