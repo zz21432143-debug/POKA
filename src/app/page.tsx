@@ -56,7 +56,7 @@ export default async function HomePage({
     author: { select: AUTHOR_SELECT },
     _count: { select: { comments: true } },
   } as const;
-  const base = { isAttendanceThread: false, hidden: false };
+  const base = { isAttendanceThread: false, hidden: false, boardType: { not: "ANONYMOUS_REVIEW" as const } };
 
   let all: PostSummary[] = [];
   let free: PostSummary[] = [];

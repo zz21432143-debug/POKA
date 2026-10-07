@@ -40,12 +40,15 @@ describe("board feed keys", () => {
     assert.equal(PAGE_SIZE, 10);
   });
 
-  it("puts attendance and anonymous near the top of community", () => {
+  it("puts attendance near the top of community and keeps anonymous closed", () => {
     const community = BOARD_NAV.find((group) => group.title === "커뮤니티");
     assert.ok(community);
     assert.equal(community.items[0]?.href, "/attendance");
-    assert.equal(community.items[1]?.href, "/boards/anonymous");
-    assert.equal(FEED_BY_HREF["/boards/anonymous"], "anonymous");
+    assert.equal(
+      community.items.some((item) => item.href === "/boards/anonymous"),
+      false,
+    );
+    assert.equal(FEED_BY_HREF["/boards/anonymous"], undefined);
   });
 
   it("strips emoji from nav copy", () => {

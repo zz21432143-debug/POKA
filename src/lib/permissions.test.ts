@@ -11,7 +11,7 @@ describe("board write roles", () => {
     assert.equal(canWriteBoard(member, "FREE"), true);
     assert.equal(canWriteBoard(member, "JOBS"), true);
     assert.equal(canWriteBoard(member, "HAND_REVIEW"), true);
-    assert.equal(canWriteBoard(member, "ANONYMOUS_REVIEW"), true);
+    assert.equal(canWriteBoard(member, "ANONYMOUS_REVIEW"), false);
     assert.equal(canWriteBoard(member, "PROMO"), false);
     assert.equal(canWriteBoard(member, "SCHEDULE"), false);
     assert.equal(canWriteBoard(member, "NOTICE"), false);

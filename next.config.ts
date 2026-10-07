@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
         destination: "https://pokerwiki.co.kr/:path*",
         permanent: true,
       },
+      { source: "/boards/anonymous", destination: "/community", permanent: false },
+      { source: "/boards/anonymous/:path*", destination: "/community", permanent: false },
     ];
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg"],

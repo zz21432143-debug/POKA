@@ -51,6 +51,19 @@ export default async function PostDetailPage({
     },
   });
   if (!post) notFound();
+  if (post.boardType === "ANONYMOUS_REVIEW") {
+    return (
+      <article className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-white p-5 shadow-sm">
+        <h1 className="text-xl font-semibold">익명 게시판 종료</h1>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          익명 게시판은 운영을 종료했습니다. 기존 글은 더 이상 공개하지 않습니다.
+        </p>
+        <Link href="/community" className="mt-4 inline-flex text-sm font-semibold text-primary">
+          커뮤니티로
+        </Link>
+      </article>
+    );
+  }
   if (post.isAttendanceThread) redirect("/attendance");
   if (post.hidden && !viewer?.isAdmin) notFound();
 

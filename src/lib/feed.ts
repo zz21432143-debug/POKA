@@ -25,7 +25,6 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/sketch": "sketch",
   "/boards/free": "free",
   "/boards/hand-review": "hand-review",
-  "/boards/anonymous": "anonymous",
   "/notices": "notices",
   "/boards/jobs/fixed": "jobs/fixed",
   "/boards/jobs/apply": "jobs/apply",

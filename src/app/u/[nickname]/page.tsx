@@ -23,7 +23,7 @@ export default async function MemberPage({
   if (!user) notFound();
 
   const posts = await prisma.post.findMany({
-    where: { authorId: user.id, hidden: false, isAttendanceThread: false },
+    where: { authorId: user.id, hidden: false, isAttendanceThread: false, boardType: { not: "ANONYMOUS_REVIEW" } },
     orderBy: { createdAt: "desc" },
     take: 20,
     include: { author: { select: AUTHOR_SELECT } },

@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     if (!boardType || !BOARDS.includes(boardType)) {
       return NextResponse.json({ error: "게시판을 확인하세요." }, { status: 400 });
     }
-    if (!canWriteBoard(user, boardType)) {
+    if (boardType === "ANONYMOUS_REVIEW" || !canWriteBoard(user, boardType)) {
       return NextResponse.json({ error: writeDeniedMessage(boardType) }, { status: 403 });
     }
 

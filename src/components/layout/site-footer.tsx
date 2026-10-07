@@ -16,7 +16,7 @@ export function SiteFooter() {
         <div className="flex items-center gap-3">
           <PokaLogo compact />
           <p className="text-sm text-muted-foreground">
-            홀덤·딜러 커뮤니티 ·{" "}
+            홀덤·딜러 커뮤니티 · 만 19세 이상 ·{" "}
             <a href={siteUrl()} className="hover:text-foreground">
               {SITE_HOST}
             </a>

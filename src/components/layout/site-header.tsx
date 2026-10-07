@@ -22,9 +22,9 @@ export function SiteHeader({
     <header className="border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.5rem] sm:px-5">
         <MobileDrawer profile={profile} accounts={accounts} />
-        <Link href="/" className="flex shrink-0 items-center rounded-2xl">
+        <a href="/" className="relative z-20 flex shrink-0 items-center rounded-2xl">
           <PokaLogo onDark />
-        </Link>
+        </a>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
           <label className="relative w-full max-w-sm">

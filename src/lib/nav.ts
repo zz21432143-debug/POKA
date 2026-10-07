@@ -57,7 +57,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "커뮤니티",
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
-      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개", icon: "mask" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
@@ -104,11 +103,10 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "커뮤니티",
     href: "/community",
-    hint: "출석·익명부터 핸드리뷰까지",
+    hint: "출석부터 핸드리뷰까지",
     accent: "emerald",
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
-      { href: "/boards/anonymous", label: "익명 게시판", hint: "닉네임 비공개" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
@@ -139,6 +137,7 @@ export function flattenNavItems(groups: NavGroup[] = BOARD_NAV): NavItem[] {
 }
 
 export function navItemActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -148,11 +147,6 @@ export function navGroupActive(pathname: string, group: NavGroup) {
 }
 
 export const BOARD_SLUGS = {
-  anonymous: {
-    title: "익명 게시판",
-    boardType: "ANONYMOUS_REVIEW" as const,
-    writeHref: "/boards/anonymous/write",
-  },
   free: { title: "자유게시판", boardType: "FREE" as const, writeHref: "/boards/free/write" },
   rules: {
     title: "질문 & 답변",

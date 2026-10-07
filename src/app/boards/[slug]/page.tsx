@@ -14,7 +14,6 @@ import { POST_EXP } from "@/lib/rewards";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { getSponsorCreative } from "@/lib/inventory";
-import { LiabilityNotice } from "@/components/legal/liability-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +64,6 @@ export default async function BoardPage({
           <p className="text-sm text-muted-foreground">마스터만 작성할 수 있습니다.</p>
         )}
       </header>
-      {board.boardType === "ANONYMOUS_REVIEW" ? <LiabilityNotice /> : null}
 
       {gallery ? (
         <PromoGallery posts={page.gallery} />

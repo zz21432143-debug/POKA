@@ -18,6 +18,7 @@ export default async function SearchPage({
       where: {
         hidden: false,
         isAttendanceThread: false,
+        boardType: { not: "ANONYMOUS_REVIEW" },
         OR: [{ title: { contains: query } }, { content: { contains: query } }],
       },
       orderBy: { createdAt: "desc" },

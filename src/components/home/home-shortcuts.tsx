@@ -3,12 +3,12 @@ import {
   BriefcaseIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
-  EyeOffIcon,
+  MessageCircleIcon,
 } from "lucide-react";
 
 const ITEMS = [
   { href: "/attendance", title: "출석체크", icon: CheckCircle2Icon, navy: true },
-  { href: "/boards/anonymous", title: "익명 게시판", icon: EyeOffIcon, navy: false },
+  { href: "/boards/free", title: "자유 게시판", icon: MessageCircleIcon, navy: false },
   { href: "/boards/jobs", title: "구인·구직", icon: BriefcaseIcon, navy: false },
   { href: "/boards/schedule", title: "대회 일정", icon: CalendarDaysIcon, navy: false },
 ] as const;

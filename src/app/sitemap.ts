@@ -13,7 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/issues",
     "/boards/hand-review",
     "/attendance",
-    "/boards/anonymous",
     "/practice",
     "/boards/schedule",
     "/boards/official",

@@ -72,23 +72,27 @@ export function BoardNav({
                     : navItemActive(pathname, item.href);
                 const Icon = ICONS[item.icon];
                 const home = item.href === "/";
+                const className = cn(
+                  "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
+                  home && active
+                    ? "bg-primary font-semibold text-white shadow-sm"
+                    : active
+                      ? "bg-accent font-medium text-accent-foreground"
+                      : "text-foreground/80 hover:bg-muted",
+                );
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      className={cn(
-                        "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
-                        home && active
-                          ? "bg-primary font-semibold text-white shadow-sm"
-                          : active
-                            ? "bg-accent font-medium text-accent-foreground"
-                            : "text-foreground/80 hover:bg-muted",
-                      )}
-                    >
-                      <Icon className="size-4 shrink-0 opacity-90" />
-                      <span className="min-w-0 flex-1">{item.label}</span>
-                    </Link>
+                    {home ? (
+                      <a href="/" className={className} onClick={onNavigate}>
+                        <Icon className="size-4 shrink-0 opacity-90" />
+                        <span className="min-w-0 flex-1">{item.label}</span>
+                      </a>
+                    ) : (
+                      <Link href={item.href} onClick={onNavigate} className={className}>
+                        <Icon className="size-4 shrink-0 opacity-90" />
+                        <span className="min-w-0 flex-1">{item.label}</span>
+                      </Link>
+                    )}
                   </li>
                 );
               })}

@@ -5,7 +5,7 @@ import { grantRewards } from "@/lib/exp";
 import { COMMENT_EXP, COMMENT_POINTS } from "@/lib/rewards";
 import { checkInAttendance } from "@/lib/attendance";
 import { clientIp } from "@/lib/request";
-import { CoolDownError, assertWriteCooldown, writeAudit } from "@/lib/security";
+import { CoolDownError, assertWriteCooldown } from "@/lib/security";
 
 export async function POST(
   request: Request,
@@ -31,6 +31,9 @@ export async function POST(
     if (post.hidden) {
       return NextResponse.json({ error: "숨김 처리된 글입니다." }, { status: 403 });
     }
+    if (post.boardType === "ANONYMOUS_REVIEW") {
+      return NextResponse.json({ error: "익명 게시판은 운영을 종료했습니다." }, { status: 403 });
+    }
 
     if (post.isAttendanceThread) {
       const result = await checkInAttendance(user.id, content);
@@ -55,15 +58,6 @@ export async function POST(
     });
     await grantRewards(user.id, COMMENT_EXP, COMMENT_POINTS);
     await prisma.user.update({ where: { id: user.id }, data: { lastCommentAt: new Date() } });
-    if (post.boardType === "ANONYMOUS_REVIEW") {
-      await writeAudit({
-        kind: "ANONYMOUS_COMMENT",
-        userId: user.id,
-        ip,
-        postId: post.id,
-        detail: content.slice(0, 80),
-      });
-    }
     return NextResponse.json({ id: comment.id, exp: COMMENT_EXP });
   } catch (error) {
     if (error instanceof CoolDownError) {

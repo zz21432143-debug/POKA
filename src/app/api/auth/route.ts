@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       captchaToken?: string;
       captchaAnswer?: string | number;
       termsAccepted?: boolean | string;
+      adultConfirmed?: boolean | string;
       token?: string;
     };
     const action = body.action;
@@ -51,6 +52,9 @@ export async function POST(request: Request) {
     if (action === "register") {
       if (body.company?.trim() || body.website?.trim()) {
         return NextResponse.json({ error: "가입할 수 없습니다." }, { status: 400 });
+      }
+      if (body.adultConfirmed !== true && body.adultConfirmed !== "true") {
+        return NextResponse.json({ error: "만 19세 미만은 가입할 수 없습니다." }, { status: 400 });
       }
       if (body.termsAccepted !== true && body.termsAccepted !== "true") {
         return NextResponse.json(
@@ -105,6 +109,7 @@ export async function POST(request: Request) {
           email,
           passwordHash: hashPassword(password),
           termsAcceptedAt: new Date(),
+          adultConfirmedAt: new Date(),
           level: 1,
           exp: 0,
           points: 0,

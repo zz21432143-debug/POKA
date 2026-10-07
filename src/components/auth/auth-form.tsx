@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MEMBER_LIABILITY_TEXT } from "@/lib/legal";
+import { ADULT_ONLY_TEXT, MEMBER_LIABILITY_TEXT } from "@/lib/legal";
 
 type Mode = "login" | "register" | "forgot" | "reset";
 
@@ -32,6 +32,7 @@ export function AuthForm({
   const [captchaPrompt, setCaptchaPrompt] = useState("문제를 불러오는 중…");
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [terms, setTerms] = useState<"agree" | "disagree" | null>(null);
+  const [adult, setAdult] = useState<"agree" | "disagree" | null>(null);
   const [error, setError] = useState<string | null>(
     initialVerifyFail ? "이메일 인증에 실패했습니다. 코드를 다시 받거나 링크를 다시 열어 주세요." : null,
   );
@@ -75,6 +76,10 @@ export function AuthForm({
     }
     try {
       if (mode === "register") {
+        if (adult !== "agree") {
+          setError("만 19세 미만은 가입할 수 없습니다.");
+          return;
+        }
         if (terms !== "agree") {
           setError("미동의 시 회원가입할 수 없습니다. 동의를 선택하세요.");
           return;
@@ -96,6 +101,7 @@ export function AuthForm({
           captchaToken,
           captchaAnswer,
           termsAccepted: terms === "agree",
+          adultConfirmed: adult === "agree",
         }),
       });
       const data = (await response.json()) as {
@@ -279,6 +285,30 @@ export function AuthForm({
               </Button>
             </div>
           </div>
+          <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
+            <legend className="px-1 text-sm font-semibold">연령 확인</legend>
+            <p className="text-sm leading-6">{ADULT_ONLY_TEXT}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
+                  adult === "agree" ? "bg-primary text-white" : "border border-border bg-white"
+                }`}
+                onClick={() => setAdult("agree")}
+              >
+                만 19세 이상입니다
+              </button>
+              <button
+                type="button"
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
+                  adult === "disagree" ? "bg-destructive text-white" : "border border-border bg-white"
+                }`}
+                onClick={() => setAdult("disagree")}
+              >
+                만 19세 미만입니다
+              </button>
+            </div>
+          </fieldset>
           <fieldset className="rounded-2xl border border-amber-300 bg-amber-50 p-3">
             <legend className="px-1 text-sm font-semibold text-amber-950">작성 책임 동의</legend>
             <p className="text-sm leading-6 text-amber-950">{MEMBER_LIABILITY_TEXT}</p>
@@ -375,7 +405,11 @@ export function AuthForm({
           </div>
         </div>
       ) : null}
-      <Button type="submit" size="touch" disabled={pending || (mode === "register" && terms === "disagree")}>
+      <Button
+        type="submit"
+        size="touch"
+        disabled={pending || (mode === "register" && (terms === "disagree" || adult === "disagree"))}
+      >
         {pending
           ? "처리 중…"
           : mode === "login"

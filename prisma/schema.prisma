@@ -62,6 +62,7 @@ model User {
   emailVerifyHash     String?
   emailVerifyExpires  DateTime?
   termsAcceptedAt     DateTime?
+  adultConfirmedAt    DateTime?
   resetCodeHash       String?
   resetCodeExpires    DateTime?
   profileMarkImageUrl String?
