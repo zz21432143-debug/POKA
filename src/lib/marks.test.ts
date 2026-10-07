@@ -6,7 +6,7 @@ function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "
   return {
     slug: partial.id,
     imageUrl: `/images/badges/${partial.id}.png`,
-    pricePoints: 2000,
+    pricePoints: 3000,
     minLevel: 1,
     owned: false,
     equipped: false,
@@ -38,6 +38,6 @@ describe("mark shop catalog", () => {
     const team = marksInCategory(marks, "TEAM");
     assert.equal(team.length, 1);
     assert.equal(team[0].name, "TOP");
-    assert.equal(team[0].pricePoints, 2000);
+    assert.equal(team[0].pricePoints, 3000);
   });
 });

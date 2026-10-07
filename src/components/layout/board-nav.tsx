@@ -100,9 +100,9 @@ export function BoardNav({
         className="mt-8 px-3 pb-3 text-[15px] leading-6 text-emerald-600"
         style={{ fontFamily: "var(--font-script), cursive" }}
       >
-        함께하는
+        포커를 더 즐겁게
         <br />
-        딜러들의 더 나은 내일
+        함께하는 공간
       </p>
     </nav>
   );

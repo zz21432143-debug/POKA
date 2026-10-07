@@ -57,12 +57,12 @@ export default async function BoardPage({
             {" · 목록은 누구나, 본문은 로그인 후"}
           </p>
         </div>
-        {canWrite || !("adminOnly" in board && board.adminOnly) ? (
+        {canWrite || !("masterOnly" in board && board.masterOnly) ? (
           <Link href={board.writeHref} className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>
             {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
           </Link>
         ) : (
-          <p className="text-sm text-muted-foreground">관리자만 작성할 수 있습니다.</p>
+          <p className="text-sm text-muted-foreground">마스터만 작성할 수 있습니다.</p>
         )}
       </header>
       {board.boardType === "ANONYMOUS_REVIEW" ? <LiabilityNotice /> : null}

@@ -59,6 +59,11 @@ async function applySchema() {
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isMaster" BOOLEAN NOT NULL DEFAULT false`);
     await client.query(`CREATE INDEX IF NOT EXISTS "User_isMaster_idx" ON "User"("isMaster")`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "pointsEarnedDate" TEXT`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "pointsEarnedToday" INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TYPE "BoardType" ADD VALUE IF NOT EXISTS 'NOTICE'`).catch(() => undefined);
+    await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
+    await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -67,17 +72,13 @@ async function applySchema() {
 async function seedIfEmpty() {
   const { createPrismaClient } = await import("@/lib/create-prisma-client");
   const prisma = createPrismaClient();
+  const { buildLevelRows } = await import("@/lib/levels");
+  await prisma.levelExp.createMany({ data: buildLevelRows(), skipDuplicates: true });
   const users = await prisma.user.count();
-  if (users > 0) return;
-  const levels = Array.from({ length: 20 }, (_, i) => {
-    const level = i + 1;
-    return {
-      level,
-      requiredExp: Math.round(100 * (level - 1) ** 2.15),
-      markPurchasePoints: 200 + (level - 1) * 150,
-    };
-  });
-  await prisma.levelExp.createMany({ data: levels, skipDuplicates: true });
+  if (users > 0) {
+    await prisma.$disconnect();
+    return;
+  }
   await prisma.user.create({
     data: {
       nickname: "펠트딜러",
@@ -105,8 +106,8 @@ async function ensureMasterAccount() {
         isAdmin: true,
         isMaster: true,
         isDealerVerified: true,
-        level: 20,
-        exp: 999999,
+        level: 250,
+        exp: 24900,
         points: 999999,
         termsAcceptedAt: new Date(),
       },
@@ -115,7 +116,8 @@ async function ensureMasterAccount() {
         isAdmin: true,
         isMaster: true,
         isDealerVerified: true,
-        level: 20,
+        level: 250,
+        exp: 24900,
       },
     });
     console.log("ensure-db: master account ready");
@@ -124,9 +126,27 @@ async function ensureMasterAccount() {
   }
 }
 
+async function ensureLevelTable() {
+  const { createPrismaClient } = await import("@/lib/create-prisma-client");
+  const { buildLevelRows } = await import("@/lib/levels");
+  const prisma = createPrismaClient();
+  try {
+    await prisma.levelExp.createMany({ data: buildLevelRows(), skipDuplicates: true });
+    for (const row of buildLevelRows()) {
+      await prisma.levelExp.update({
+        where: { level: row.level },
+        data: { requiredExp: row.requiredExp, markPurchasePoints: 0 },
+      });
+    }
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export function ensureDb() {
   boot ??= applySchema()
     .then(seedIfEmpty)
+    .then(ensureLevelTable)
     .then(ensureMasterAccount)
     .catch((error) => {
       console.error("ensure-db failed", error);

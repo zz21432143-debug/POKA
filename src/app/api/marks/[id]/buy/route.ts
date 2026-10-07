@@ -16,9 +16,6 @@ export async function POST(
     if (!mark) {
       return NextResponse.json({ error: "마크를 찾을 수 없습니다." }, { status: 404 });
     }
-    if (user.level < mark.minLevel) {
-      return NextResponse.json({ error: `레벨 ${mark.minLevel}부터 구매할 수 있습니다.` }, { status: 400 });
-    }
     const owned = await prisma.userMark.findUnique({
       where: { userId_markId: { userId: user.id, markId: id } },
     });

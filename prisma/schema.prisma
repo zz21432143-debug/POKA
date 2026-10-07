@@ -23,6 +23,7 @@ enum BoardType {
   TALENT
   PICKUP
   SCHEDULE
+  NOTICE
 }
 
 /// 구인/구직 5종. 레거시 TALENT·PICKUP 보드 타입은 라우트 별칭으로 유지합니다.
@@ -84,6 +85,8 @@ model User {
   lastCommentAt       DateTime?
   lastAttendanceDate  String?
   attendanceStreak    Int      @default(0)
+  pointsEarnedDate    String?
+  pointsEarnedToday   Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

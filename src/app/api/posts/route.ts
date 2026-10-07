@@ -31,6 +31,7 @@ const BOARDS: BoardType[] = [
   "TALENT",
   "PICKUP",
   "SCHEDULE",
+  "NOTICE",
 ];
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];

@@ -12,7 +12,8 @@ export default async function ShopPage() {
       <header>
         <h1 className="text-2xl font-semibold">마크 상점</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          포인트로 마크를 구매·착용합니다. 프레임(테두리)과 이펙트(후광) 구좌도 같은 상점에 준비되어 있습니다.
+          마크는 3,000P입니다. 출석으로 하루 최대 375P라 약 8일이면 살 수 있습니다. 레벨은 활동
+          기간을 나타낼 뿐이고, 구매·글쓰기와는 별개입니다.
         </p>
       </header>
       <MarkShop asPage initial={initial} />

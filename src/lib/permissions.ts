@@ -2,18 +2,20 @@ import type { BoardType } from "@/generated/prisma/enums";
 
 export type WriteUser = {
   isAdmin: boolean;
+  isMaster?: boolean;
   memberKind: "COMPANY" | "INDIVIDUAL";
   isDealerVerified?: boolean;
 };
 
-export type WriteRole = "admin" | "member";
+export type WriteRole = "master" | "member";
 
-/** 공식 홍보·대회 스케줄은 관리자만. 그 외 글 보드는 회원. */
+/** 대회 스케줄·공식 홍보·공지는 마스터만. 그 외는 로그인한 회원이면 레벨과 무관. */
 export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
-  EVENT_POSTER: "admin",
-  OFFICIAL_POSTER: "admin",
-  SCHEDULE: "admin",
-  PROMO: "admin",
+  EVENT_POSTER: "master",
+  OFFICIAL_POSTER: "master",
+  SCHEDULE: "master",
+  PROMO: "master",
+  NOTICE: "master",
   JOBS: "member",
   TALENT: "member",
   PICKUP: "member",
@@ -26,14 +28,13 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
 
 export function canWriteBoard(user: WriteUser | null, boardType: BoardType): boolean {
   if (!user) return false;
-  if (user.isAdmin) return true;
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
-  if (role === "admin") return false;
+  if (role === "master") return Boolean(user.isMaster);
   return true;
 }
 
 export function writeDeniedMessage(boardType: BoardType): string {
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
-  if (role === "admin") return "관리자만 작성할 수 있는 게시판입니다.";
+  if (role === "master") return "마스터 계정만 작성할 수 있는 게시판입니다.";
   return "로그인 후 작성할 수 있습니다.";
 }

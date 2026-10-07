@@ -96,9 +96,8 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
         return;
       }
       if (data.needsVerify) {
-        setInfo(data.hint ?? "이메일 인증 후 로그인하세요.");
+        setInfo(data.hint ?? "이메일 인증을 마친 뒤 로그인하세요.");
         if (data.verifyUrl) setVerifyUrl(data.verifyUrl);
-        setMode("login");
         return;
       }
       router.push(nextPath.startsWith("/") ? nextPath : "/");
@@ -179,16 +178,16 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
         <Label htmlFor="website">웹사이트</Label>
         <Input id="website" value={website} onChange={(event) => setWebsite(event.target.value)} tabIndex={-1} autoComplete="off" />
       </div>
-      {mode === "register" || mode === "login" ? (
+      {mode === "register" ? (
         <div className="grid gap-1.5">
-          <Label htmlFor="email">이메일{mode === "login" ? " (인증 메일 재발송용)" : ""}</Label>
+          <Label htmlFor="email">이메일</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
-            required={mode === "register"}
+            required
           />
         </div>
       ) : null}
@@ -285,13 +284,15 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
                 ? "재설정 코드 받기"
                 : "비밀번호 바꾸기"}
       </Button>
+      {mode === "register" && (info || verifyUrl) ? (
+        <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => void resend()}>
+          인증 메일 다시 받기
+        </button>
+      ) : null}
       {mode === "login" ? (
         <div className="flex flex-col items-start gap-1">
           <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("forgot")}>
             비밀번호를 잊었어요
-          </button>
-          <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => void resend()}>
-            인증 메일 다시 받기
           </button>
         </div>
       ) : (

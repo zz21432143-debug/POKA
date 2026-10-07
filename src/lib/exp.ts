@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/db";
+import { todayKstDate } from "@/lib/dates";
+import { levelFromExp } from "@/lib/levels";
+import { DAILY_POINT_CAP } from "@/lib/rewards";
 
 export async function grantRewards(userId: string, exp: number, points: number) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -6,21 +9,21 @@ export async function grantRewards(userId: string, exp: number, points: number) 
     throw new Error("회원을 찾을 수 없습니다.");
   }
 
-  const newExp = user.exp + exp;
-  const levels = await prisma.levelExp.findMany({ orderBy: { level: "asc" } });
-  let level = user.level;
-  while (true) {
-    const next = levels.find((row) => row.level === level + 1);
-    if (!next || newExp < next.requiredExp) break;
-    level = next.level;
-  }
+  const today = todayKstDate();
+  const earnedToday = user.pointsEarnedDate === today ? user.pointsEarnedToday : 0;
+  const room = Math.max(0, DAILY_POINT_CAP - earnedToday);
+  const grantedPoints = Math.max(0, Math.min(points, room));
+  const newExp = user.exp + Math.max(0, exp);
+  const level = levelFromExp(newExp);
 
   const updated = await prisma.user.update({
     where: { id: userId },
     data: {
       exp: newExp,
-      points: user.points + points,
+      points: user.points + grantedPoints,
       level,
+      pointsEarnedDate: today,
+      pointsEarnedToday: earnedToday + grantedPoints,
     },
   });
 

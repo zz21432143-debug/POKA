@@ -20,8 +20,9 @@ export default async function AttendancePage() {
       <header>
         <h1 className="text-2xl font-semibold">출석체크</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          매일 0시(KST) 기준 출석 글이 하나 열립니다. 댓글을 남기면 출석 처리되며 EXP {ATTENDANCE_EXP} /
-          포인트 {ATTENDANCE_POINTS}가 지급됩니다. 1일 1회.
+          매일 0시(KST) 기준 출석 글이 하나 열립니다. 댓글을 남기면 출석 처리되며 레벨 EXP {ATTENDANCE_EXP} /
+          포인트 {ATTENDANCE_POINTS}가 지급됩니다. 포인트는 하루 최대 {ATTENDANCE_POINTS}라 마크(3,000P)는
+          약 8일이 필요합니다. 1일 1회.
         </p>
       </header>
 

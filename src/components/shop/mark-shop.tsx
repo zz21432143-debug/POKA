@@ -139,8 +139,8 @@ function ShopBody({
           </p>
         </div>
         <p className="text-sm text-muted-foreground">
-          Lv.{catalog.level}
-          {catalog.equippedMarkId ? " · 마크 착용 중" : " · 마크 미착용"}
+          활동 Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
+          {catalog.equippedMarkId ? " · 착용 중" : ""}
         </p>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -299,7 +299,6 @@ function MarkCard({
       <p className="mt-3 text-center text-sm font-semibold">{mark.name}</p>
       <p className="text-center text-xs text-muted-foreground">
         {mark.pricePoints === 0 ? "무료" : `${mark.pricePoints.toLocaleString()} P`}
-        {mark.minLevel > 1 ? ` · Lv.${mark.minLevel}+` : null}
       </p>
       <div className="mt-3 flex justify-center">
         {mark.equipped ? (

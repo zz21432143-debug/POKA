@@ -31,9 +31,10 @@ export const AUTHOR_SELECT = {
 } as const;
 
 export function levelTitle(level: number) {
-  if (level >= 8) return "에이스";
-  if (level >= 4) return "헌터";
-  if (level >= 2) return "라이브";
+  if (level >= 250) return "만렙";
+  if (level >= 100) return "백일";
+  if (level >= 30) return "한 달";
+  if (level >= 8) return "일주일";
   return null;
 }
 
