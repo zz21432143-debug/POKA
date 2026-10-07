@@ -34,11 +34,11 @@ export function AuthForm({
   const [terms, setTerms] = useState<"agree" | "disagree" | null>(null);
   const [adult, setAdult] = useState<"agree" | "disagree" | null>(null);
   const [error, setError] = useState<string | null>(
-    initialVerifyFail ? "이메일 인증에 실패했습니다. 코드를 다시 받거나 링크를 다시 열어 주세요." : null,
+    initialVerifyFail ? "이메일 인증에 실패했습니다. 메일 안의 인증 주소를 다시 눌러 주세요." : null,
   );
   const [info, setInfo] = useState<string | null>(null);
   const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
-  const [verifyCode, setVerifyCode] = useState<string | null>(null);
+  const [mailSent, setMailSent] = useState(false);
   const [needsVerify, setNeedsVerify] = useState(initialVerifyFail && Boolean(initialEmail));
   const [pending, setPending] = useState(false);
 
@@ -58,12 +58,18 @@ export function AuthForm({
     if (mode === "register") void loadCaptcha();
   }, [mode]);
 
-  function applyVerify(data: { hint?: string; verifyUrl?: string; verifyCode?: string; email?: string; needsVerify?: boolean }) {
+  function applyVerify(data: {
+    hint?: string;
+    verifyUrl?: string;
+    email?: string;
+    needsVerify?: boolean;
+    sent?: boolean;
+  }) {
     if (data.email) setEmail(data.email);
     if (data.hint) setInfo(data.hint);
     setVerifyUrl(data.verifyUrl ?? null);
-    setVerifyCode(data.verifyCode ?? null);
-    if (data.needsVerify || data.verifyUrl || data.verifyCode) setNeedsVerify(true);
+    if (typeof data.sent === "boolean") setMailSent(data.sent);
+    if (data.needsVerify || data.verifyUrl || data.sent) setNeedsVerify(true);
   }
 
   async function submit() {
@@ -72,7 +78,7 @@ export function AuthForm({
     setInfo(null);
     if (mode === "register") {
       setVerifyUrl(null);
-      setVerifyCode(null);
+      setMailSent(false);
     }
     try {
       if (mode === "register") {
@@ -110,7 +116,7 @@ export function AuthForm({
         hint?: string;
         needsVerify?: boolean;
         verifyUrl?: string;
-        verifyCode?: string;
+        sent?: boolean;
         email?: string;
       };
       if (!response.ok) {
@@ -155,7 +161,7 @@ export function AuthForm({
         error?: string;
         hint?: string;
         verifyUrl?: string;
-        verifyCode?: string;
+        sent?: boolean;
         email?: string;
         needsVerify?: boolean;
       };
@@ -171,35 +177,7 @@ export function AuthForm({
     }
   }
 
-  async function confirmCode() {
-    const secret = (code.trim() || verifyCode || "").trim();
-    if (!email.trim() || !secret) {
-      setError("이메일과 인증 코드를 입력하세요.");
-      return;
-    }
-    setPending(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "verify-email", email, token: secret, code: secret }),
-      });
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "인증에 실패했습니다.");
-        return;
-      }
-      router.push(nextPath.startsWith("/") ? nextPath : "/");
-      router.refresh();
-    } catch {
-      setError("네트워크 오류입니다.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const showVerifyPanel = needsVerify || Boolean(verifyUrl) || Boolean(verifyCode) || Boolean(info && mode === "register");
+  const showVerifyPanel = needsVerify || Boolean(verifyUrl) || Boolean(info && mode === "register");
 
   return (
     <form
@@ -258,7 +236,10 @@ export function AuthForm({
       ) : null}
       {mode === "login" || mode === "register" ? (
         <div className="grid gap-1.5">
-          <Label htmlFor="password">비밀번호</Label>
+          <div className="flex items-baseline justify-between gap-2">
+            <Label htmlFor="password">비밀번호</Label>
+            {mode === "register" ? <span className="text-xs text-muted-foreground">8자 이상</span> : null}
+          </div>
           <Input
             id="password"
             type="password"
@@ -347,8 +328,10 @@ export function AuthForm({
       {showVerifyPanel ? (
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3">
           <p className="text-sm font-semibold text-foreground">이메일 인증</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            지금은 인증 메일이 자동으로 도착하지 않을 수 있습니다. 링크를 열거나 6자리 코드를 입력하세요.
+          <p className="mt-1 text-sm leading-6 text-foreground">
+            {mailSent
+              ? "메일함에서 인증 주소(URL)를 누르세요. 홈페이지가 열리면서 가입이 완료됩니다. 스팸함도 확인해 주세요."
+              : "메일 안의 인증 주소(URL)를 누르면 가입이 끝납니다."}
           </p>
           {mode === "login" ? (
             <div className="mt-2 grid gap-1.5">
@@ -362,34 +345,17 @@ export function AuthForm({
               />
             </div>
           ) : null}
-          {verifyCode ? (
-            <p className="mt-2 text-center font-mono text-2xl font-semibold tracking-[0.35em] text-foreground">{verifyCode}</p>
-          ) : null}
-          <div className="mt-2 grid gap-1.5">
-            <Label htmlFor="verify-code">인증 코드</Label>
-            <Input
-              id="verify-code"
-              inputMode="numeric"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              placeholder={verifyCode ?? "6자리"}
-              autoComplete="one-time-code"
-            />
-          </div>
           <div className="mt-3 flex flex-col gap-2">
             {verifyUrl ? (
               <Link
                 href={verifyUrl}
                 className="inline-flex h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-4 text-base font-medium text-primary-foreground"
               >
-                이메일 인증 링크 열기
+                인증 주소 열기
               </Link>
             ) : null}
-            <Button type="button" variant={verifyUrl ? "outline" : "default"} size="touch" disabled={pending} onClick={() => void confirmCode()}>
-              코드로 인증 완료
-            </Button>
             <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => void resend()}>
-              인증 메일·코드 다시 받기
+              인증 메일 다시 받기
             </button>
           </div>
         </div>
@@ -400,7 +366,9 @@ export function AuthForm({
         disabled={pending || (mode === "register" && terms === "disagree")}
       >
         {pending
-          ? "처리 중…"
+          ? mode === "register"
+            ? "인증 메일을 보내는 중…"
+            : "처리 중…"
           : mode === "login"
             ? "로그인"
             : mode === "register"

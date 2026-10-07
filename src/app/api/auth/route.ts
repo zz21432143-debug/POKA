@@ -15,11 +15,11 @@ function verifyPayload(issued: Awaited<ReturnType<typeof issueVerification>>, em
     ok: true as const,
     needsVerify: true as const,
     email,
+    sent: issued.sent,
     hint: issued.sent
-      ? `${email}로 인증 메일을 보냈습니다. 메일함의 링크를 열거나, 아래에 코드가 있으면 코드를 입력하세요.`
-      : `${email}로 메일을 보내지 못했습니다. 아래 링크를 열거나 인증 코드를 입력해 가입을 끝내세요.`,
+      ? `${email}로 인증 메일을 보냈습니다. 메일함에서 인증 주소(URL)를 누르면 홈페이지가 열리면서 가입이 완료됩니다.`
+      : `${email}로 메일을 보내지 못했습니다. 아래 인증 주소를 눌러 가입을 끝내세요.`,
     verifyUrl: issued.verifyUrl,
-    verifyCode: issued.verifyCode,
   };
 }
 
@@ -145,9 +145,11 @@ export async function POST(request: Request) {
       const issued = await issueVerification(user.id, email);
       return NextResponse.json({
         ok: true,
-        hint: issued.sent ? "인증 메일을 다시 보냈습니다." : "인증 링크와 코드를 다시 만들었습니다.",
+        sent: issued.sent,
+        hint: issued.sent
+          ? "인증 메일을 다시 보냈습니다. 메일 안의 인증 주소(URL)를 누르세요."
+          : "인증 주소를 다시 만들었습니다. 아래 주소를 누르세요.",
         verifyUrl: issued.verifyUrl,
-        verifyCode: issued.verifyCode,
         email,
         needsVerify: true,
       });
@@ -164,7 +166,7 @@ export async function POST(request: Request) {
       if (user.email && !user.emailVerifiedAt) {
         return NextResponse.json(
           {
-            error: "이메일 인증 후 로그인할 수 있습니다. 인증 메일을 다시 받거나 코드를 입력하세요.",
+            error: "이메일 인증 후 로그인할 수 있습니다. 메일 안의 인증 주소를 누르거나 메일을 다시 받으세요.",
             needsVerify: true,
             email: user.email,
           },

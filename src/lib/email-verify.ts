@@ -1,4 +1,4 @@
-import { randomBytes, randomInt } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { emailError, normalizeEmail } from "@/lib/email-address";
 import { canRevealVerifyArtifacts, sendMail, verificationMail } from "@/lib/mailer";
@@ -13,31 +13,23 @@ export function newVerifyToken() {
   return randomBytes(24).toString("base64url");
 }
 
-export function newVerifyCode() {
-  return String(randomInt(100000, 1000000));
-}
-
 export async function issueVerification(userId: string, email: string) {
   const token = newVerifyToken();
-  const code = newVerifyCode();
   await prisma.user.update({
     where: { id: userId },
     data: {
-      emailVerifyHash: packVerifySecret(token, code),
+      emailVerifyHash: packVerifySecret(token),
       emailVerifyExpires: new Date(Date.now() + VERIFY_TTL_MS),
     },
   });
   const mail = verificationMail(email, token);
-  const mailText = `${mail.text}\n\n메일이 오지 않으면 가입 화면에 표시된 인증 코드 ${code} 를 입력하세요.`;
-  const result = await sendMail({ to: email, subject: mail.subject, text: mailText });
+  const result = await sendMail({ to: email, subject: mail.subject, text: mail.text });
   const reveal = canRevealVerifyArtifacts(result.sent);
   return {
     token,
-    code,
     url: mail.url,
     sent: result.sent,
     verifyUrl: reveal ? mail.url : undefined,
-    verifyCode: reveal ? code : undefined,
   };
 }
 

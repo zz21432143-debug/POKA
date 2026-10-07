@@ -11,7 +11,7 @@ describe("email verify secrets", () => {
     assert.equal(matchVerifySecret("000000", packed), false);
   });
 
-  it("still accepts a legacy single hash", () => {
+  it("still accepts a legacy scrypt hash", () => {
     const packed = hashPassword("legacy-token");
     assert.equal(matchVerifySecret("legacy-token", packed), true);
     assert.equal(matchVerifySecret("nope", packed), false);

@@ -43,7 +43,7 @@ export function verificationMail(email: string, token: string) {
   return {
     url,
     subject: "[POKA] 이메일 인증",
-    text: `POKA 회원가입을 완료하려면 아래 링크를 열어 이메일을 인증하세요.\n\n${url}\n\n링크는 24시간 동안 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시하세요.`,
+    text: `POKA 회원가입을 완료하려면 아래 인증 주소(URL)를 누르세요. 주소가 열리면 홈페이지로 이동하면서 가입이 끝납니다.\n\n${url}\n\n주소는 24시간 동안 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시하세요.`,
   };
 }
 
