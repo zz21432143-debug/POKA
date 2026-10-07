@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 43123",
-    "build": "node scripts/build.cjs",
-    "vercel-build": "node scripts/build.cjs",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
+    "db:release": "node scripts/build.cjs",
     "start": "next start --hostname 0.0.0.0 --port 43123",
     "lint": "eslint",
     "test": "tsx --test src/lib/feed.test.ts src/lib/marks.test.ts src/lib/promo-rotate.test.ts src/lib/hand-review.test.ts src/lib/inventory.test.ts src/lib/growth.test.ts src/lib/nickname.test.ts src/lib/dealer-drill.test.ts src/lib/permissions.test.ts",

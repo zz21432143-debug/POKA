@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
     ];
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg"],
+  outputFileTracingIncludes: {
+    "*": ["./prisma/migrations/**/*"],
+  },
   async headers() {
     return [
       {

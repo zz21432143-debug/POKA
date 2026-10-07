@@ -267,42 +267,6 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     handReview: true,
   }));
 
-  const anonymous: CatalogPost[] = times((i) => ({
-    boardType: "ANONYMOUS_REVIEW",
-    title: [
-      `${LOCS[0]} 홀덤펍 후기 · 딜러 진행`,
-      `${LOCS[1]} 홀덤펍 후기 · 시설`,
-      `${LOCS[2]} 홀덤펍 후기 · 서비스 무난`,
-      `${LOCS[3]} 홀덤펍 후기 · 환기`,
-      `${LOCS[4]} 홀덤펍 후기 · 매너`,
-      `${LOCS[5]} 홀덤펍 후기 · 주말 대기`,
-      `${LOCS[6]} 홀덤펍 후기 · 하이 테이블`,
-      `${LOCS[7]} 홀덤펍 후기 · 첫방문`,
-      `${LOCS[8]} 홀덤펍 후기 · 관광 겸 플레이`,
-      `${LOCS[9]} 홀덤펍 후기 · 딜러 콜`,
-      `${LOCS[10]} 홀덤펍 후기 · 분위기`,
-      `${LOCS[11]} 홀덤펍 후기 · 심야 손님층`,
-      `${LOCS[12]} 홀덤펍 후기 · 토너 데이1`,
-      `${LOCS[13]} 홀덤펍 후기 · 소규모 룸`,
-      `${LOCS[14]} 홀덤펍 후기 · 프로모션`,
-      `${LOCS[15]} 홀덤펍 후기 · 주간 리그`,
-      `${LOCS[16]} 홀덤펍 후기 · 프라이빗 응대`,
-      `${LOCS[17]} 홀덤펍 후기 · 학생 손님`,
-      `${LOCS[18]} 홀덤펍 후기 · 주차`,
-      `${LOCS[19]} 홀덤펍 후기 · 칩 상태`,
-    ][i],
-    content: `${LOCS[i]} 홀덤펍 익명 후기입니다. 홀덤 진행·시설 위주로 적습니다.`,
-    authorNickname: nick(i + 5),
-    daysAgo: i,
-    upvoteCount: 1 + (i % 8),
-    ratings: [
-      3 + (i % 3),
-      2 + (i % 4),
-      3 + ((i + 1) % 3),
-      3 + ((i + 2) % 3),
-    ] as [number, number, number, number],
-  }));
-
   const schedule: CatalogPost[] = times((i) => {
     const day = String(((i * 1) % 27) + 1).padStart(2, "0");
     const end = String(Math.min(28, ((i * 1) % 27) + 2)).padStart(2, "0");
@@ -502,7 +466,6 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
     sketch,
     free,
     "hand-review": hand,
-    anonymous,
     "jobs/fixed": jobsFixed,
     "jobs/apply": jobsApply,
     "jobs/team": jobsTeam,

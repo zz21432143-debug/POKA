@@ -73,7 +73,6 @@ describe("evergreen guides and verified dealers", () => {
   it("seeds holdem-only catalog titles", () => {
     const catalog = catalogPosts("2026-09-22");
     assert.match(catalog["hand-review"][0].title, /오늘의 홀덤 핸드리뷰/);
-    assert.match(catalog.anonymous[0].title, /홀덤펍 후기/);
     assert.match(catalog["jobs/fixed"][0].title, /홀덤펍 딜러 구인/);
     const blob = JSON.stringify(catalog);
     assert.equal(/바카라/.test(blob), false);
