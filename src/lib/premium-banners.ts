@@ -55,14 +55,14 @@ export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
         };
       }
 
-      if (slot.mode === "MANUAL" && slot.post && !slot.post.hidden) {
+      if (slot.mode === "MANUAL" && slot.post && !slot.post.hidden && slot.post.bannerImageUrl) {
         used.add(slot.post.id);
         return {
           id: fallback.id,
           href: `/posts/${slot.post.id}`,
           title: slot.post.title,
           sponsor: `구좌 ${fallback.id}`,
-          image: slot.post.bannerImageUrl || fallback.image,
+          image: slot.post.bannerImageUrl,
           mode: "MANUAL",
           enabled: true,
           vacant: false,
@@ -73,15 +73,15 @@ export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
         };
       }
 
-      const auto = autoPool.find((post) => !used.has(post.id));
-      if (auto) {
+      const auto = autoPool.find((post) => !used.has(post.id) && post.bannerImageUrl);
+      if (auto?.bannerImageUrl) {
         used.add(auto.id);
         return {
           id: fallback.id,
           href: `/posts/${auto.id}`,
           title: auto.title,
           sponsor: `구좌 ${fallback.id}`,
-          image: auto.bannerImageUrl || fallback.image,
+          image: auto.bannerImageUrl,
           mode: "AUTO",
           enabled: true,
           vacant: false,
@@ -106,6 +106,9 @@ export async function getPremiumBanners(): Promise<PremiumBannerCard[]> {
   } catch {
     return PREMIUM_BANNERS.map((banner) => ({
       ...banner,
+      href: "/advertise",
+      title: "제휴 / 광고 문의하기",
+      image: "",
       mode: "AUTO",
       enabled: true,
       vacant: true,

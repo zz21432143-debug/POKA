@@ -3,7 +3,12 @@ import { todayKstDate, yesterdayKstDate } from "@/lib/dates";
 import { grantRewards } from "@/lib/exp";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PAGE_SIZE } from "@/lib/feed";
-import { ATTENDANCE_EXP, ATTENDANCE_MIN_COMMENT_LENGTH, ATTENDANCE_POINTS, STREAK_BONUS_EXP } from "@/lib/rewards";
+import {
+  ATTENDANCE_EXP,
+  ATTENDANCE_MIN_COMMENT_LENGTH,
+  ATTENDANCE_POINTS,
+  streakBonusFor,
+} from "@/lib/rewards";
 
 export async function ensureTodayAttendancePost() {
   const date = todayKstDate();
@@ -81,14 +86,17 @@ export async function checkInAttendance(userId: string, message: string) {
     },
   });
   await grantRewards(userId, ATTENDANCE_EXP, ATTENDANCE_POINTS);
+  const bonus = streakBonusFor(streak);
+  if (bonus) {
+    await grantRewards(userId, bonus.exp, bonus.points, { ignorePointCap: true });
+  }
 
   const todayCount = await prisma.dailyAttendance.count({ where: { date } });
   const { pushTicker } = await import("@/lib/ticker");
-  if (streak > 0 && streak % 7 === 0) {
-    await grantRewards(userId, STREAK_BONUS_EXP, 0);
+  if (bonus) {
     await pushTicker({
       kind: `STREAK:${userId}:${date}`,
-      message: `🔥 ${user.nickname}님이 ${streak}일 연속 출석 달성! (경험치 보너스 획득)`,
+      message: `🔥 ${user.nickname}님이 ${bonus.label} 출석! 보너스 ${bonus.points.toLocaleString()}P · EXP ${bonus.exp}`,
       href: "/attendance",
     });
   }
@@ -100,7 +108,14 @@ export async function checkInAttendance(userId: string, message: string) {
     });
   }
 
-  return { date, streak, exp: ATTENDANCE_EXP, points: ATTENDANCE_POINTS, postId: post.id };
+  return {
+    date,
+    streak,
+    exp: ATTENDANCE_EXP + (bonus?.exp ?? 0),
+    points: ATTENDANCE_POINTS + (bonus?.points ?? 0),
+    bonus,
+    postId: post.id,
+  };
 }
 
 export async function getAttendanceStats(userId?: string) {

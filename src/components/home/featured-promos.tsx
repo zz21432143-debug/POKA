@@ -19,15 +19,17 @@ export async function FeaturedPromos() {
     .catch(() => []);
 
   const pool: HomePromo[] = shuffleInPlaceCopy(
-    posts.map((post) => ({
-      key: post.id,
-      href: `/posts/${post.id}`,
-      title: post.title,
-      image: post.bannerImageUrl || "/images/posters/official-1.png",
-      location: post.promoLocation,
-      tag: post.promoTag,
-      isPaid: post.isPaid,
-    })),
+    posts
+      .filter((post) => Boolean(post.bannerImageUrl))
+      .map((post) => ({
+        key: post.id,
+        href: `/posts/${post.id}`,
+        title: post.title,
+        image: post.bannerImageUrl as string,
+        location: post.promoLocation,
+        tag: post.promoTag,
+        isPaid: post.isPaid,
+      })),
   );
 
   const seconds = Math.round(HOME_PROMO_ROTATE_MS / 1000);

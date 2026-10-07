@@ -6,7 +6,14 @@ import { getCurrentUser } from "@/lib/current-user";
 import { formatKstLabel } from "@/lib/dates";
 import { PAGE_SIZE } from "@/lib/feed";
 import { loginHref } from "@/lib/login-path";
-import { ATTENDANCE_EXP, ATTENDANCE_POINTS } from "@/lib/rewards";
+import {
+  ATTENDANCE_EXP,
+  ATTENDANCE_POINTS,
+  STREAK_MILESTONES,
+  STREAK_REPEAT_AFTER,
+  STREAK_REPEAT_EXP,
+  STREAK_REPEAT_POINTS,
+} from "@/lib/rewards";
 
 export const dynamic = "force-dynamic";
 
@@ -21,8 +28,7 @@ export default async function AttendancePage() {
         <h1 className="text-2xl font-semibold">출석체크</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           매일 0시(KST) 기준 출석 글이 하나 열립니다. 댓글을 남기면 출석 처리되며 레벨 EXP {ATTENDANCE_EXP} /
-          포인트 {ATTENDANCE_POINTS}가 지급됩니다. 포인트는 하루 최대 {ATTENDANCE_POINTS}라 마크(3,000P)는
-          약 8일이 필요합니다. 1일 1회.
+          포인트 {ATTENDANCE_POINTS}가 지급됩니다. 연속 출석 보너스는 하루 한도 밖에서 추가로 드립니다. 1일 1회.
         </p>
       </header>
 
@@ -30,6 +36,24 @@ export default async function AttendancePage() {
         <Stat label="오늘 날짜" value={formatKstLabel(stats.date)} />
         <Stat label="오늘 출석 인원" value={`${stats.todayCount}명`} />
         <Stat label="내 연속 출석" value={`${stats.myStreak}일`} />
+      </section>
+
+      <section className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+        <h2 className="text-lg font-semibold">연속 출석 보너스</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          끊기지 않고 오면 아래 일차에 보너스 포인트와 EXP를 더 드립니다. {STREAK_REPEAT_AFTER}일 이후에는
+          7일 단위(35일, 42일…)마다 {STREAK_REPEAT_POINTS}P · EXP {STREAK_REPEAT_EXP}가 반복됩니다.
+        </p>
+        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {STREAK_MILESTONES.map((row) => (
+            <li key={row.day} className="rounded-xl border border-border bg-white px-3 py-2">
+              <p className="text-xs text-muted-foreground">{row.label}</p>
+              <p className="mt-0.5 text-sm font-semibold">
+                +{row.points}P · EXP {row.exp}
+              </p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">

@@ -1,5 +1,3 @@
-import { OFFICIAL_POSTER_IMAGES } from "@/lib/official-posters";
-
 export type PromoBanner = {
   id: number;
   href: string;
@@ -8,10 +6,10 @@ export type PromoBanner = {
   image: string;
 };
 
-export const PREMIUM_BANNERS: PromoBanner[] = OFFICIAL_POSTER_IMAGES.map((image, index) => ({
-  id: index + 1,
-  href: "/boards/official",
-  title: "공식 홍보 포스터",
-  sponsor: `프리미엄 ${index + 1}`,
-  image,
+export const PREMIUM_BANNERS: PromoBanner[] = [1, 2, 3, 4, 5, 6].map((id) => ({
+  id,
+  href: "/advertise",
+  title: "제휴 / 광고 문의하기",
+  sponsor: `구좌 ${id}`,
+  image: "",
 }));

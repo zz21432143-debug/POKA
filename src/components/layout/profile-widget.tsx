@@ -3,6 +3,7 @@ import type { SwitchAccount } from "@/lib/switch-account";
 import { MarkImage } from "@/components/layout/mark-image";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { todayKstDate } from "@/lib/dates";
 import Link from "next/link";
 
 export { MarkImage };
@@ -89,6 +90,10 @@ export function ProfileWidget({
         보유 포인트{" "}
         <strong className="font-semibold text-foreground">{profile.points.toLocaleString()} P</strong>
       </p>
+      <AttendanceStreakCard
+        streak={profile.attendanceStreak}
+        lastAttendanceDate={profile.lastAttendanceDate}
+      />
       {accounts.length > 0 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
       <div className="mt-3 grid grid-cols-1 gap-2">
         <Link
@@ -106,5 +111,34 @@ export function ProfileWidget({
         <LogoutButton />
       </div>
     </section>
+  );
+}
+
+function AttendanceStreakCard({
+  streak,
+  lastAttendanceDate,
+}: {
+  streak: number;
+  lastAttendanceDate: string | null;
+}) {
+  const checkedInToday = lastAttendanceDate === todayKstDate();
+  const displayStreak = lastAttendanceDate ? streak : 0;
+  return (
+    <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5">
+      <p className="text-sm font-semibold text-emerald-950">
+        연속 출석{" "}
+        <strong className="text-base">{displayStreak.toLocaleString()}일</strong>
+      </p>
+      {checkedInToday ? (
+        <p className="mt-0.5 text-[11px] text-emerald-800">오늘 출석 완료 · 내일도 이어 가세요</p>
+      ) : (
+        <Link
+          href="/attendance"
+          className="mt-1 inline-flex min-h-9 items-center text-sm font-semibold text-primary hover:underline"
+        >
+          출석체크 하러 가기 →
+        </Link>
+      )}
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import { todayKstDate, weekStartKst, shiftDate } from "@/lib/dates";
 import { WEEKLY_HUB_PREFIX, kstDayStart, weeklyHubContent, weeklyHubTitle } from "@/lib/growth";
 import { holdemOnlyViolation } from "@/lib/holdem-only";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
+import { SEED_NICKNAMES } from "@/lib/seed-catalog";
 
 export async function ensureWeeklyScheduleHub() {
   const week = weekStartKst();
@@ -101,7 +102,7 @@ export async function getWeeklyHubPost() {
 
 export async function getVerifiedDealers() {
   const dealers = await prisma.user.findMany({
-    where: { isDealerVerified: true },
+    where: { isDealerVerified: true, nickname: { notIn: [...SEED_NICKNAMES] } },
     orderBy: [{ level: "desc" }, { nickname: "asc" }],
     take: 12,
     select: {

@@ -3,7 +3,12 @@ import { todayKstDate } from "@/lib/dates";
 import { levelFromExp } from "@/lib/levels";
 import { DAILY_POINT_CAP } from "@/lib/rewards";
 
-export async function grantRewards(userId: string, exp: number, points: number) {
+export async function grantRewards(
+  userId: string,
+  exp: number,
+  points: number,
+  options?: { ignorePointCap?: boolean },
+) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw new Error("회원을 찾을 수 없습니다.");
@@ -12,7 +17,9 @@ export async function grantRewards(userId: string, exp: number, points: number) 
   const today = todayKstDate();
   const earnedToday = user.pointsEarnedDate === today ? user.pointsEarnedToday : 0;
   const room = Math.max(0, DAILY_POINT_CAP - earnedToday);
-  const grantedPoints = Math.max(0, Math.min(points, room));
+  const grantedPoints = options?.ignorePointCap
+    ? Math.max(0, points)
+    : Math.max(0, Math.min(points, room));
   const newExp = user.exp + Math.max(0, exp);
   const level = levelFromExp(newExp);
 
@@ -23,7 +30,7 @@ export async function grantRewards(userId: string, exp: number, points: number) 
       points: user.points + grantedPoints,
       level,
       pointsEarnedDate: today,
-      pointsEarnedToday: earnedToday + grantedPoints,
+      pointsEarnedToday: options?.ignorePointCap ? earnedToday : earnedToday + grantedPoints,
     },
   });
 

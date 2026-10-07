@@ -44,7 +44,37 @@ export const COMMENT_POINTS = 5;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;
 export const WEEKLY_HAND_EXP = 20;
 export const LUCKY_ATTENDANCE_POINTS = 0;
-export const STREAK_BONUS_EXP = 20;
+/** 30일 이후 매주 반복되는 연속 출석 보너스. */
+export const STREAK_REPEAT_AFTER = 30;
+export const STREAK_REPEAT_EVERY = 7;
+export const STREAK_REPEAT_POINTS = 150;
+export const STREAK_REPEAT_EXP = 40;
+
+export const STREAK_MILESTONES = [
+  { day: 3, points: 50, exp: 20, label: "3일 연속" },
+  { day: 7, points: 150, exp: 50, label: "7일 연속" },
+  { day: 14, points: 300, exp: 80, label: "14일 연속" },
+  { day: 30, points: 750, exp: 150, label: "30일 연속" },
+] as const;
+
+export type StreakBonus = { points: number; exp: number; label: string };
+
+export function streakBonusFor(streak: number): StreakBonus | null {
+  if (streak < 1) return null;
+  const hit = STREAK_MILESTONES.find((row) => row.day === streak);
+  if (hit) {
+    return { points: hit.points, exp: hit.exp, label: hit.label };
+  }
+  if (streak > STREAK_REPEAT_AFTER && streak % STREAK_REPEAT_EVERY === 0) {
+    return {
+      points: STREAK_REPEAT_POINTS,
+      exp: STREAK_REPEAT_EXP,
+      label: `${streak}일 연속`,
+    };
+  }
+  return null;
+}
+
 export const POPULAR_UPVOTE_THRESHOLD = 5;
 export const BEST_COMMENT_MIN = 2;
 export const UPVOTE_RECEIVED_EXP = 1;

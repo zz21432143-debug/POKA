@@ -149,6 +149,10 @@ export function ensureDb() {
     .then(seedIfEmpty)
     .then(ensureLevelTable)
     .then(ensureMasterAccount)
+    .then(async () => {
+      const { purgeDemoCatalog } = await import("@/lib/purge-demo-catalog");
+      await purgeDemoCatalog();
+    })
     .catch((error) => {
       console.error("ensure-db failed", error);
     });
