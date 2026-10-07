@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
-import { setSessionNickname } from "@/lib/current-user";
+import { KAKAO_STATE_COOKIE, setSessionNickname } from "@/lib/current-user";
 import { kakaoRedirectUri, kakaoRestApiKey } from "@/lib/kakao-oauth";
 import { normalizeNickname } from "@/lib/nickname";
 import { pushTicker } from "@/lib/ticker";
@@ -20,7 +21,12 @@ export async function GET(request: Request) {
   const key = kakaoRestApiKey();
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  if (!key || !code) {
+  const state = url.searchParams.get("state") ?? "";
+  const jar = await cookies();
+  const expected = jar.get(KAKAO_STATE_COOKIE)?.value ?? "";
+  jar.delete(KAKAO_STATE_COOKIE);
+
+  if (!key || !code || !state || !expected || state !== expected) {
     return NextResponse.redirect(new URL("/login?error=kakao", request.url));
   }
 
@@ -57,9 +63,7 @@ export async function GET(request: Request) {
   const kakaoId = String(me.id);
   const nickFromKakao = me.kakao_account?.profile?.nickname ?? me.properties?.nickname ?? "카카오";
   let user = await prisma.user.findUnique({ where: { kakaoId } });
-  let created = false;
   if (!user) {
-    created = true;
     user = await prisma.user.create({
       data: {
         kakaoId,
@@ -76,5 +80,5 @@ export async function GET(request: Request) {
     });
   }
   await setSessionNickname(user.nickname);
-  return NextResponse.redirect(new URL(created ? "/" : "/", request.url));
+  return NextResponse.redirect(new URL("/", request.url));
 }

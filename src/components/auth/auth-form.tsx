@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
+export function AuthForm({ nextPath = "/", kakaoReady = false }: { nextPath?: string; kakaoReady?: boolean }) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register" | "forgot" | "reset">("login");
   const [nickname, setNickname] = useState("");
@@ -65,7 +65,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
       }}
     >
       <a
-        href="/api/auth/kakao"
+        href={kakaoReady ? "/api/auth/kakao" : "/login?error=kakao_not_configured"}
         className="touch-target flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#FEE500] text-sm font-bold text-[#191919] hover:bg-[#f5dc00]"
       >
         카카오로 시작하기

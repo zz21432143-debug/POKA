@@ -1,38 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { setSessionNickname } from "@/lib/current-user";
-import { kakaoAuthorizeUrl, kakaoRestApiKey } from "@/lib/kakao-oauth";
-import { pushTicker } from "@/lib/ticker";
+import { cookies } from "next/headers";
+import { kakaoAuthorizeUrl, kakaoConfigured } from "@/lib/kakao-oauth";
+import { KAKAO_STATE_COOKIE } from "@/lib/current-user";
+import { randomOAuthState } from "@/lib/session";
 
 export async function GET(request: Request) {
-  const authorize = kakaoAuthorizeUrl(request.url);
-  if (authorize) {
-    return NextResponse.redirect(authorize);
+  if (!kakaoConfigured()) {
+    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
   }
-
-  const existing = await prisma.user.findUnique({ where: { kakaoId: "local-demo" } });
-  const user =
-    existing ??
-    (await prisma.user.create({
-      data: {
-        nickname: "카카오손님",
-        kakaoId: "local-demo",
-        level: 1,
-        exp: 0,
-        points: 0,
-      },
-    }));
-  await setSessionNickname(user.nickname);
-  if (!existing) {
-    await pushTicker({
-      kind: `JOIN:${user.id}`,
-      message: `👋 ${user.nickname}님이 POKA에 들어왔습니다!`,
-      href: `/u/${encodeURIComponent(user.nickname)}`,
-    });
+  const state = randomOAuthState();
+  const authorize = kakaoAuthorizeUrl(request.url, state);
+  if (!authorize) {
+    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
   }
-  return NextResponse.redirect(new URL("/", request.url));
-}
-
-export function kakaoConfigured() {
-  return Boolean(kakaoRestApiKey());
+  const jar = await cookies();
+  jar.set(KAKAO_STATE_COOKIE, state, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 10,
+  });
+  return NextResponse.redirect(authorize);
 }
