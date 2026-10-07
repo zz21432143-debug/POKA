@@ -1,7 +1,7 @@
 import { cn } from "cn";
 import { MarkImage } from "@/components/layout/mark-image";
-import { ShieldIcon, StarIcon, MessageCircleHeartIcon } from "lucide-react";
-import { levelTitle } from "@/lib/levels";
+import { StarIcon, MessageCircleHeartIcon } from "lucide-react";
+import { levelTitle, memberRankTitle } from "@/lib/levels";
 
 export { levelTitle };
 
@@ -59,27 +59,17 @@ export function UserBadge({
   const spec = SIZE[size];
   const frameClass = user.equippedFrame?.cssClass;
   const effectClass = user.equippedEffect?.cssClass;
-  const title = levelTitle(user.level);
+  const title = memberRankTitle(user);
   const openChat = isOpenChatStar(user);
   const extras = size !== "sm";
+  const staff = Boolean(user.isMaster || user.isAdmin);
 
   const extraPills = showExtras && extras ? (
     <span className="inline-flex flex-wrap items-center gap-1">
-      {user.isDealerVerified ? (
+      {!staff && user.isDealerVerified ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
           인증 딜러
-        </span>
-      ) : null}
-      {user.isMaster ? (
-        <span className="inline-flex items-center gap-0.5 rounded-full border border-emerald-400 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-900">
-          <ShieldIcon className="size-3" />
-          마스터
-        </span>
-      ) : user.isAdmin ? (
-        <span className="inline-flex items-center gap-0.5 rounded-full border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
-          <ShieldIcon className="size-3" />
-          관리자
         </span>
       ) : null}
       {openChat ? (
@@ -89,7 +79,7 @@ export function UserBadge({
         </span>
       ) : null}
     </span>
-  ) : showExtras && user.isDealerVerified ? (
+  ) : showExtras && !staff && user.isDealerVerified ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
           인증
@@ -115,11 +105,11 @@ export function UserBadge({
             {showNickname ? (
               <span className="min-w-0">
                 <span className={cn("block truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
-                <span className="mt-0.5 block text-xs font-semibold text-emerald-800">{title}</span>
+                {title ? <span className="mt-0.5 block text-xs font-semibold text-emerald-800">{title}</span> : null}
               </span>
-            ) : (
+            ) : title ? (
               <span className="text-xs font-semibold text-emerald-800">{title}</span>
-            )}
+            ) : null}
           </span>
           {extraPills ? <span className="mt-1.5 flex">{extraPills}</span> : null}
         </span>
@@ -145,11 +135,13 @@ export function UserBadge({
           <span className={cn("block truncate font-semibold leading-tight text-foreground", spec.nick)}>
             {user.nickname}
           </span>
-          <span className="block text-[11px] font-semibold leading-tight text-emerald-800">{title}</span>
+          {title ? (
+            <span className="block text-[11px] font-semibold leading-tight text-emerald-800">{title}</span>
+          ) : null}
         </span>
-      ) : (
+      ) : title ? (
         <span className="text-[11px] font-semibold text-emerald-800">{title}</span>
-      )}
+      ) : null}
       {extraPills}
     </span>
   );

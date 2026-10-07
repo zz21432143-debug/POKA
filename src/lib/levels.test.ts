@@ -6,6 +6,7 @@ import {
   buildLevelRows,
   levelFromExp,
   levelTitle,
+  memberRankTitle,
   requiredExpForLevel,
 } from "./levels";
 import { ATTENDANCE_POINTS, DAILY_POINT_CAP, MARK_PRICE_POINTS } from "./rewards";
@@ -36,6 +37,9 @@ describe("activity levels", () => {
     assert.equal(levelTitle(200), "플로어");
     assert.equal(levelTitle(249), "플로어");
     assert.equal(levelTitle(250), "TD");
+    assert.equal(memberRankTitle({ level: 250, isMaster: true }), null);
+    assert.equal(memberRankTitle({ level: 75, isAdmin: true }), null);
+    assert.equal(memberRankTitle({ level: 7 }), "연습 딜러");
   });
 
   it("needs about eight attendance days for a 3000P mark", () => {

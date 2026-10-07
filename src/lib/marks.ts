@@ -49,6 +49,8 @@ export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
   return {
     points: dbUser?.points ?? 0,
     level: dbUser?.level ?? 1,
+    isMaster: dbUser?.isMaster ?? false,
+    isAdmin: dbUser?.isAdmin ?? false,
     equippedMarkId: dbUser?.equippedMarkId ?? null,
     equippedFrameId: dbUser?.equippedFrameId ?? null,
     equippedEffectId: dbUser?.equippedEffectId ?? null,

@@ -22,7 +22,7 @@ import {
   type MarkCategoryId,
   type ShopKindId,
 } from "@/lib/mark-categories";
-import { levelTitle } from "@/lib/levels";
+import { memberRankTitle } from "@/lib/levels";
 
 export function MarkShop({
   asPage = false,
@@ -128,6 +128,7 @@ function ShopBody({
     () => marksInCategory(catalog.marks, category),
     [catalog.marks, category],
   );
+  const rank = memberRankTitle(catalog);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -140,7 +141,7 @@ function ShopBody({
           </p>
         </div>
         <p className="text-sm text-muted-foreground">
-          {levelTitle(catalog.level)} · Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
+          {rank ? `${rank} · ` : ""}Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
           {catalog.equippedMarkId ? " · 착용 중" : ""}
         </p>
       </div>

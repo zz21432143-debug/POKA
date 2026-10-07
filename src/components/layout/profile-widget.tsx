@@ -4,7 +4,7 @@ import { MarkImage } from "@/components/layout/mark-image";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { todayKstDate } from "@/lib/dates";
-import { levelTitle } from "@/lib/levels";
+import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 
 export { MarkImage };
@@ -32,6 +32,8 @@ export function ProfileWidget({
     );
   }
 
+  const rank = memberRankTitle(profile);
+
   if (variant === "compact") {
     return (
       <div className="flex min-h-11 items-center gap-2">
@@ -39,7 +41,7 @@ export function ProfileWidget({
         <div className="min-w-0">
           <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
           <p className="text-xs text-emerald-800">
-            {levelTitle(profile.level)} · Lv.{profile.level}
+            {rank ? `${rank} · ` : null}Lv.{profile.level}
           </p>
         </div>
       </div>
@@ -57,12 +59,10 @@ export function ProfileWidget({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{profile.nickname}</p>
-          <p className="mt-0.5 text-xs font-semibold text-emerald-800">{levelTitle(profile.level)}</p>
-          {profile.isMaster ? (
-            <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
-              ★ 마스터
-            </p>
-          ) : profile.isDealerVerified ? (
+          {rank ? (
+            <p className="mt-0.5 text-xs font-semibold text-emerald-800">{rank}</p>
+          ) : null}
+          {profile.isMaster || profile.isAdmin ? null : profile.isDealerVerified ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
               ★ 인증 딜러
             </p>

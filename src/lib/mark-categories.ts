@@ -42,6 +42,8 @@ export type CosmeticCatalogItem = {
 export type MarkCatalog = {
   points: number;
   level: number;
+  isMaster?: boolean;
+  isAdmin?: boolean;
   equippedMarkId: string | null;
   equippedFrameId: string | null;
   equippedEffectId: string | null;

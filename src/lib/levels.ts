@@ -17,6 +17,12 @@ export function levelTitle(level: number) {
   return row?.title ?? "연습 딜러";
 }
 
+/** 마스터·관리자 계정은 레벨 명칭을 붙이지 않고 Lv.만 씁니다. */
+export function memberRankTitle(opts: { level: number; isMaster?: boolean; isAdmin?: boolean }) {
+  if (opts.isMaster || opts.isAdmin) return null;
+  return levelTitle(opts.level);
+}
+
 export function requiredExpForLevel(level: number) {
   const clamped = Math.min(MAX_LEVEL, Math.max(1, level));
   return (clamped - 1) * EXP_PER_LEVEL;
