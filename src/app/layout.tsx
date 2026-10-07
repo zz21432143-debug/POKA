@@ -23,7 +23,14 @@ export const metadata: Metadata = {
   title: "POKA — 홀덤·딜러 커뮤니티",
   description: "홀덤 핸드리뷰, 딜러 구인, 대회 일정, 홀덤펍 후기.",
   alternates: { canonical: "/" },
-  icons: { icon: "/brand/poka-mark.svg", apple: "/brand/poka-mark.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/brand/poka-favicon.png", type: "image/png", sizes: "64x64" },
+      { url: "/brand/poka-cloud.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
