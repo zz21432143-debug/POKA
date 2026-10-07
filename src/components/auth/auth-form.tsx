@@ -77,7 +77,7 @@ export function AuthForm({
     try {
       if (mode === "register") {
         if (adult !== "agree") {
-          setError("만 19세 미만은 가입할 수 없습니다.");
+          setError("가입하려면 ‘만 19세 이상입니다’를 선택하세요.");
           return;
         }
         if (terms !== "agree") {
@@ -288,26 +288,15 @@ export function AuthForm({
           <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
             <legend className="px-1 text-sm font-semibold">연령 확인</legend>
             <p className="text-sm leading-6">{ADULT_ONLY_TEXT}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
-                  adult === "agree" ? "bg-primary text-white" : "border border-border bg-white"
-                }`}
-                onClick={() => setAdult("agree")}
-              >
-                만 19세 이상입니다
-              </button>
-              <button
-                type="button"
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
-                  adult === "disagree" ? "bg-destructive text-white" : "border border-border bg-white"
-                }`}
-                onClick={() => setAdult("disagree")}
-              >
-                만 19세 미만입니다
-              </button>
-            </div>
+            <button
+              type="button"
+              className={`mt-3 min-h-11 rounded-full px-4 text-sm font-semibold ${
+                adult === "agree" ? "bg-primary text-white" : "border border-border bg-white"
+              }`}
+              onClick={() => setAdult(adult === "agree" ? null : "agree")}
+            >
+              만 19세 이상입니다
+            </button>
           </fieldset>
           <fieldset className="rounded-2xl border border-amber-300 bg-amber-50 p-3">
             <legend className="px-1 text-sm font-semibold text-amber-950">작성 책임 동의</legend>
@@ -408,7 +397,7 @@ export function AuthForm({
       <Button
         type="submit"
         size="touch"
-        disabled={pending || (mode === "register" && (terms === "disagree" || adult === "disagree"))}
+        disabled={pending || (mode === "register" && terms === "disagree")}
       >
         {pending
           ? "처리 중…"

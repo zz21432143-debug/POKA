@@ -54,7 +54,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "가입할 수 없습니다." }, { status: 400 });
       }
       if (body.adultConfirmed !== true && body.adultConfirmed !== "true") {
-        return NextResponse.json({ error: "만 19세 미만은 가입할 수 없습니다." }, { status: 400 });
+        return NextResponse.json(
+          { error: "가입하려면 만 19세 이상임을 확인해 주세요." },
+          { status: 400 },
+        );
       }
       if (body.termsAccepted !== true && body.termsAccepted !== "true") {
         return NextResponse.json(
