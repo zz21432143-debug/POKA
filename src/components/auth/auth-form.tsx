@@ -105,7 +105,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
               onChange={(event) => setAdult(event.target.checked)}
             />
             <Label htmlFor="consent-adult" className="text-sm font-medium leading-6">
-              만 19세 이상입니다
+              [필수] 만 19세 이상입니다
             </Label>
           </li>
           <li className="flex items-start gap-2">
@@ -118,7 +118,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
             />
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Label htmlFor="consent-terms" className="text-sm font-medium leading-6">
-                이용약관 및 작성 책임 동의
+                [필수] 이용약관 및 작성 책임 동의
               </Label>
               <LegalDetailDialog label="상세보기" heading="이용약관" sections={TERMS_SECTIONS} />
             </div>
@@ -133,7 +133,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
             />
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Label htmlFor="consent-privacy" className="text-sm font-medium leading-6">
-                개인정보 수집 및 이용 동의
+                [필수] 개인정보 수집 및 이용 동의
               </Label>
               <LegalDetailDialog
                 label="상세보기"
@@ -152,7 +152,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
           type="button"
           size="touch"
           className="h-12 w-full rounded-xl border-0 bg-[#FEE500] text-base font-semibold text-[#191919] hover:bg-[#F6DC00]"
-          disabled={pending !== null}
+          disabled={pending !== null || !adult || !terms || !privacy}
           onClick={() => void startSocial("kakao")}
         >
           {pending === "kakao" ? "카카오로 이동 중…" : "카카오로 시작하기"}
@@ -162,7 +162,7 @@ export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
           size="touch"
           variant="outline"
           className="h-12 w-full rounded-xl text-base font-semibold"
-          disabled={pending !== null}
+          disabled={pending !== null || !adult || !terms || !privacy}
           onClick={() => void startSocial("google")}
         >
           {pending === "google" ? "구글로 이동 중…" : "구글로 시작하기"}
