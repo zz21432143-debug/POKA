@@ -4,7 +4,7 @@ import { FEATURED_OFFICIAL_POSTERS } from "@/lib/official-posters";
 export const PURGE_SEED_CATALOG_KIND = "PURGE_SEED_CATALOG";
 
 const SEED_NICK_SET = new Set<string>(SEED_NICKNAMES);
-const DUMMY_POSTER_TITLES = new Set(FEATURED_OFFICIAL_POSTERS.map((row) => row.title));
+const DUMMY_POSTER_TITLES = new Set<string>(FEATURED_OFFICIAL_POSTERS.map((row) => row.title));
 
 export function isSeedCatalogNickname(nickname: string) {
   return SEED_NICK_SET.has(nickname);
