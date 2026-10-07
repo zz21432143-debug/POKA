@@ -1,138 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ADULT_ONLY_TEXT, MEMBER_LIABILITY_TEXT } from "@/lib/legal";
+import { LegalDetailDialog } from "@/components/legal/legal-detail-dialog";
+import {
+  ADULT_ONLY_TEXT,
+  MEMBER_LIABILITY_TEXT,
+  PRIVACY_CONSENT_SECTIONS,
+  TERMS_SECTIONS,
+} from "@/lib/legal";
 
-type Mode = "login" | "register" | "forgot" | "reset";
+type Provider = "kakao" | "google";
 
-export function AuthForm({
-  nextPath = "/",
-  initialEmail = "",
-  initialVerifyFail = false,
-}: {
-  nextPath?: string;
-  initialEmail?: string;
-  initialVerifyFail?: boolean;
-}) {
+export function AuthForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("login");
-  const [nickname, setNickname] = useState("");
-  const [email, setEmail] = useState(initialEmail);
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [company, setCompany] = useState("");
-  const [website, setWebsite] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaPrompt, setCaptchaPrompt] = useState("문제를 불러오는 중…");
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
-  const [terms, setTerms] = useState<"agree" | "disagree" | null>(null);
-  const [adult, setAdult] = useState<"agree" | "disagree" | null>(null);
-  const [error, setError] = useState<string | null>(
-    initialVerifyFail ? "이메일 인증에 실패했습니다. 메일 안의 인증 주소를 다시 눌러 주세요." : null,
-  );
-  const [info, setInfo] = useState<string | null>(null);
-  const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
-  const [mailSent, setMailSent] = useState(false);
-  const [needsVerify, setNeedsVerify] = useState(initialVerifyFail && Boolean(initialEmail));
-  const [pending, setPending] = useState(false);
+  const [adult, setAdult] = useState(false);
+  const [terms, setTerms] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<Provider | "ops" | null>(null);
+  const [opsNickname, setOpsNickname] = useState("");
+  const [opsPassword, setOpsPassword] = useState("");
 
-  async function loadCaptcha() {
-    try {
-      const response = await fetch("/api/auth/captcha", { cache: "no-store" });
-      const data = (await response.json()) as { token?: string; prompt?: string };
-      setCaptchaToken(data.token ?? "");
-      setCaptchaPrompt(data.prompt ?? "1 + 1 = ?");
-      setCaptchaAnswer("");
-    } catch {
-      setCaptchaPrompt("문제를 다시 받아 주세요.");
+  function requireConsents() {
+    if (!adult || !terms || !privacy) {
+      setError("만 19세 확인, 이용약관 및 작성 책임, 개인정보 수집·이용에 모두 동의해 주세요.");
+      return false;
     }
+    return true;
   }
 
-  useEffect(() => {
-    if (mode === "register") void loadCaptcha();
-  }, [mode]);
-
-  function applyVerify(data: {
-    hint?: string;
-    verifyUrl?: string;
-    email?: string;
-    needsVerify?: boolean;
-    sent?: boolean;
-  }) {
-    if (data.email) setEmail(data.email);
-    if (data.hint) setInfo(data.hint);
-    setVerifyUrl(data.verifyUrl ?? null);
-    if (typeof data.sent === "boolean") setMailSent(data.sent);
-    if (data.needsVerify || data.verifyUrl || data.sent) setNeedsVerify(true);
-  }
-
-  async function submit() {
-    setPending(true);
+  async function startSocial(provider: Provider) {
     setError(null);
-    setInfo(null);
-    if (mode === "register") {
-      setVerifyUrl(null);
-      setMailSent(false);
-    }
+    if (!requireConsents()) return;
+    setPending(provider);
     try {
-      if (mode === "register") {
-        if (adult !== "agree") {
-          setError("가입하려면 ‘만 19세 이상입니다’를 선택하세요.");
-          return;
-        }
-        if (terms !== "agree") {
-          setError("미동의 시 회원가입할 수 없습니다. 동의를 선택하세요.");
-          return;
-        }
+      const response = await fetch("/api/auth/consent", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          adult: true,
+          terms: true,
+          privacy: true,
+          next: nextPath,
+        }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "동의 저장에 실패했습니다.");
+        return;
       }
-      const action = mode === "forgot" ? "forgot" : mode === "reset" ? "reset" : mode;
+      const next = nextPath.startsWith("/") ? nextPath : "/";
+      window.location.assign(`/api/auth/${provider}?next=${encodeURIComponent(next)}`);
+    } catch {
+      setError("네트워크 오류입니다.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function opsLogin() {
+    setError(null);
+    setPending("ops");
+    try {
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          action,
-          nickname,
-          password,
-          newPassword,
-          code,
-          company,
-          website,
-          email,
-          captchaToken,
-          captchaAnswer,
-          termsAccepted: terms === "agree",
-          adultConfirmed: adult === "agree",
+          action: "login",
+          nickname: opsNickname,
+          password: opsPassword,
         }),
       });
-      const data = (await response.json()) as {
-        error?: string;
-        code?: string;
-        hint?: string;
-        needsVerify?: boolean;
-        verifyUrl?: string;
-        sent?: boolean;
-        email?: string;
-      };
+      const data = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setError(data.error ?? "처리할 수 없습니다.");
-        applyVerify(data);
-        if (mode === "register") void loadCaptcha();
-        return;
-      }
-      if (mode === "forgot" && data.code) {
-        setInfo(`${data.hint ?? ""} 코드: ${data.code}`);
-        setMode("reset");
-        setCode(data.code);
-        return;
-      }
-      if (data.needsVerify) {
-        applyVerify(data);
+        setError(data.error ?? "운영 계정으로 들어갈 수 없습니다.");
         return;
       }
       router.push(nextPath.startsWith("/") ? nextPath : "/");
@@ -140,254 +85,124 @@ export function AuthForm({
     } catch {
       setError("네트워크 오류입니다.");
     } finally {
-      setPending(false);
+      setPending(null);
     }
   }
-
-  async function resend() {
-    if (!email.trim()) {
-      setError("인증 메일을 다시 받으려면 이메일을 입력하세요.");
-      return;
-    }
-    setPending(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "resend-verify", email }),
-      });
-      const data = (await response.json()) as {
-        error?: string;
-        hint?: string;
-        verifyUrl?: string;
-        sent?: boolean;
-        email?: string;
-        needsVerify?: boolean;
-      };
-      if (!response.ok) {
-        setError(data.error ?? "다시 보낼 수 없습니다.");
-        return;
-      }
-      applyVerify(data);
-    } catch {
-      setError("네트워크 오류입니다.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const showVerifyPanel = needsVerify || Boolean(verifyUrl) || Boolean(info && mode === "register");
 
   return (
-    <form
-      className="flex flex-col gap-3"
-      onSubmit={(event) => {
-        event.preventDefault();
-        void submit();
-      }}
-    >
-      {mode === "login" || mode === "register" ? (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className={`rounded-full px-3 py-1 text-sm font-medium ${mode === "login" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
-            onClick={() => setMode("login")}
-          >
-            로그인
-          </button>
-          <button
-            type="button"
-            className={`rounded-full px-3 py-1 text-sm font-medium ${mode === "register" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
-            onClick={() => setMode("register")}
-          >
-            가입
-          </button>
-        </div>
-      ) : null}
-      <div className="grid gap-1.5">
-        <Label htmlFor="nickname">닉네임</Label>
-        <Input
-          id="nickname"
-          value={nickname}
-          onChange={(event) => setNickname(event.target.value)}
-          autoComplete="username"
-          maxLength={12}
-        />
-      </div>
-      <div className="hidden" aria-hidden>
-        <Label htmlFor="company">회사</Label>
-        <Input id="company" value={company} onChange={(event) => setCompany(event.target.value)} tabIndex={-1} autoComplete="off" />
-        <Label htmlFor="website">웹사이트</Label>
-        <Input id="website" value={website} onChange={(event) => setWebsite(event.target.value)} tabIndex={-1} autoComplete="off" />
-      </div>
-      {mode === "register" ? (
-        <div className="grid gap-1.5">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-            required
-          />
-        </div>
-      ) : null}
-      {mode === "login" || mode === "register" ? (
-        <div className="grid gap-1.5">
-          <div className="flex items-baseline justify-between gap-2">
-            <Label htmlFor="password">비밀번호</Label>
-            {mode === "register" ? <span className="text-xs text-muted-foreground">8자 이상</span> : null}
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-          />
-        </div>
-      ) : null}
-      {mode === "register" ? (
-        <>
-          <div className="grid gap-1.5">
-            <Label htmlFor="captcha">봇 확인 · {captchaPrompt}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="captcha"
-                inputMode="numeric"
-                value={captchaAnswer}
-                onChange={(event) => setCaptchaAnswer(event.target.value)}
-                autoComplete="off"
-              />
-              <Button type="button" variant="outline" onClick={() => void loadCaptcha()}>
-                새로
-              </Button>
-            </div>
-          </div>
-          <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
-            <legend className="px-1 text-sm font-semibold">연령 확인</legend>
-            <p className="text-sm leading-6">{ADULT_ONLY_TEXT}</p>
-            <button
-              type="button"
-              className={`mt-3 min-h-11 rounded-full px-4 text-sm font-semibold ${
-                adult === "agree" ? "bg-primary text-white" : "border border-border bg-white"
-              }`}
-              onClick={() => setAdult(adult === "agree" ? null : "agree")}
-            >
+    <div className="flex flex-col gap-4">
+      <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
+        <legend className="px-1 text-sm font-semibold">필수 동의</legend>
+        <p className="text-sm leading-6 text-muted-foreground">{ADULT_ONLY_TEXT}</p>
+        <p className="mt-2 text-sm leading-6 text-foreground">{MEMBER_LIABILITY_TEXT}</p>
+        <ul className="mt-3 flex flex-col gap-3">
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-adult"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={adult}
+              onChange={(event) => setAdult(event.target.checked)}
+            />
+            <Label htmlFor="consent-adult" className="text-sm font-medium leading-6">
               만 19세 이상입니다
-            </button>
-          </fieldset>
-          <fieldset className="rounded-2xl border border-amber-300 bg-amber-50 p-3">
-            <legend className="px-1 text-sm font-semibold text-amber-950">작성 책임 동의</legend>
-            <p className="text-sm leading-6 text-amber-950">{MEMBER_LIABILITY_TEXT}</p>
-            <p className="mt-1 text-xs text-amber-800">미동의 시 회원가입할 수 없습니다.</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
-                  terms === "agree" ? "bg-primary text-white" : "border border-border bg-white"
-                }`}
-                onClick={() => setTerms("agree")}
-              >
-                동의
-              </button>
-              <button
-                type="button"
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${
-                  terms === "disagree" ? "bg-destructive text-white" : "border border-border bg-white"
-                }`}
-                onClick={() => setTerms("disagree")}
-              >
-                미동의
-              </button>
+            </Label>
+          </li>
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-terms"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={terms}
+              onChange={(event) => setTerms(event.target.checked)}
+            />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <Label htmlFor="consent-terms" className="text-sm font-medium leading-6">
+                이용약관 및 작성 책임 동의
+              </Label>
+              <LegalDetailDialog label="상세보기" heading="이용약관" sections={TERMS_SECTIONS} />
             </div>
-          </fieldset>
-        </>
-      ) : null}
-      {mode === "reset" ? (
-        <>
+          </li>
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-privacy"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={privacy}
+              onChange={(event) => setPrivacy(event.target.checked)}
+            />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <Label htmlFor="consent-privacy" className="text-sm font-medium leading-6">
+                개인정보 수집 및 이용 동의
+              </Label>
+              <LegalDetailDialog
+                label="상세보기"
+                heading="개인정보 수집 및 이용"
+                sections={PRIVACY_CONSENT_SECTIONS}
+              />
+            </div>
+          </li>
+        </ul>
+      </fieldset>
+
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      <div className="flex flex-col gap-2">
+        <Button
+          type="button"
+          size="touch"
+          className="h-12 w-full rounded-xl border-0 bg-[#FEE500] text-base font-semibold text-[#191919] hover:bg-[#F6DC00]"
+          disabled={pending !== null}
+          onClick={() => void startSocial("kakao")}
+        >
+          {pending === "kakao" ? "카카오로 이동 중…" : "카카오로 시작하기"}
+        </Button>
+        <Button
+          type="button"
+          size="touch"
+          variant="outline"
+          className="h-12 w-full rounded-xl text-base font-semibold"
+          disabled={pending !== null}
+          onClick={() => void startSocial("google")}
+        >
+          {pending === "google" ? "구글로 이동 중…" : "구글로 시작하기"}
+        </Button>
+      </div>
+
+      <details className="rounded-2xl border border-dashed border-border p-3">
+        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">운영 계정</summary>
+        <form
+          className="mt-3 flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void opsLogin();
+          }}
+        >
           <div className="grid gap-1.5">
-            <Label htmlFor="code">재설정 코드</Label>
-            <Input id="code" value={code} onChange={(event) => setCode(event.target.value)} />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="newPassword">새 비밀번호</Label>
+            <Label htmlFor="ops-nickname">닉네임</Label>
             <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
+              id="ops-nickname"
+              value={opsNickname}
+              onChange={(event) => setOpsNickname(event.target.value)}
+              autoComplete="username"
+              maxLength={12}
             />
           </div>
-        </>
-      ) : null}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {info ? <p className="text-sm text-primary">{info}</p> : null}
-      {showVerifyPanel ? (
-        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3">
-          <p className="text-sm font-semibold text-foreground">이메일 인증</p>
-          <p className="mt-1 text-sm leading-6 text-foreground">
-            {mailSent
-              ? "메일함에서 인증 주소(URL)를 누르세요. 홈페이지가 열리면서 가입이 완료됩니다. 스팸함도 확인해 주세요."
-              : "메일 안의 인증 주소(URL)를 누르면 가입이 끝납니다."}
-          </p>
-          {mode === "login" ? (
-            <div className="mt-2 grid gap-1.5">
-              <Label htmlFor="verify-email">인증 이메일</Label>
-              <Input
-                id="verify-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                autoComplete="email"
-              />
-            </div>
-          ) : null}
-          <div className="mt-3 flex flex-col gap-2">
-            {verifyUrl ? (
-              <Link
-                href={verifyUrl}
-                className="inline-flex h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-4 text-base font-medium text-primary-foreground"
-              >
-                인증 주소 열기
-              </Link>
-            ) : null}
-            <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => void resend()}>
-              인증 메일 다시 받기
-            </button>
+          <div className="grid gap-1.5">
+            <Label htmlFor="ops-password">비밀번호</Label>
+            <Input
+              id="ops-password"
+              type="password"
+              value={opsPassword}
+              onChange={(event) => setOpsPassword(event.target.value)}
+              autoComplete="current-password"
+            />
           </div>
-        </div>
-      ) : null}
-      <Button
-        type="submit"
-        size="touch"
-        disabled={pending || (mode === "register" && terms === "disagree")}
-      >
-        {pending
-          ? mode === "register"
-            ? "인증 메일을 보내는 중…"
-            : "처리 중…"
-          : mode === "login"
-            ? "로그인"
-            : mode === "register"
-              ? "가입하고 이메일 인증"
-              : mode === "forgot"
-                ? "재설정 코드 받기"
-                : "비밀번호 바꾸기"}
-      </Button>
-      {mode === "login" ? (
-        <div className="flex flex-col items-start gap-1">
-          <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("forgot")}>
-            비밀번호를 잊었어요
-          </button>
-        </div>
-      ) : (
-        <button type="button" className="text-xs text-muted-foreground hover:text-primary" onClick={() => setMode("login")}>
-          로그인으로
-        </button>
-      )}
-    </form>
+          <Button type="submit" size="touch" variant="secondary" disabled={pending !== null}>
+            {pending === "ops" ? "처리 중…" : "운영 계정으로 들어가기"}
+          </Button>
+        </form>
+      </details>
+    </div>
   );
 }

@@ -35,12 +35,12 @@ export async function POST(
       return NextResponse.json({ error: "익명 게시판은 운영을 종료했습니다." }, { status: 403 });
     }
 
+    const ip = clientIp(request);
     if (post.isAttendanceThread) {
-      const result = await checkInAttendance(user.id, content);
+      const result = await checkInAttendance(user.id, content, ip);
       return NextResponse.json({ attendance: true, ...result });
     }
 
-    const ip = clientIp(request);
     await assertWriteCooldown({
       kind: "comment",
       userId: user.id,
@@ -54,6 +54,7 @@ export async function POST(
         authorId: user.id,
         content,
         isAttendanceCheck: false,
+        authorIp: ip,
       },
     });
     await grantRewards(user.id, COMMENT_EXP, COMMENT_POINTS);

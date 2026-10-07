@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { checkInAttendance } from "@/lib/attendance";
+import { clientIp } from "@/lib/request";
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "로그인된 회원이 없습니다." }, { status: 401 });
     }
     const body = (await request.json()) as { content?: string };
-    const result = await checkInAttendance(user.id, body.content ?? "");
+    const result = await checkInAttendance(user.id, body.content ?? "", clientIp(request));
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "출석에 실패했습니다.";

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { toViewerProfile, type ViewerProfile } from "@/lib/profile";
+import { CONSENT_COOKIE, GOOGLE_STATE_COOKIE, OAUTH_NEXT_COOKIE } from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
 import type { SwitchAccount } from "@/lib/switch-account";
 
@@ -26,6 +27,9 @@ export async function clearSession() {
   const jar = await cookies();
   jar.delete(SESSION_COOKIE);
   jar.delete(KAKAO_STATE_COOKIE);
+  jar.delete(GOOGLE_STATE_COOKIE);
+  jar.delete(CONSENT_COOKIE);
+  jar.delete(OAUTH_NEXT_COOKIE);
 }
 
 async function findUserBySession() {

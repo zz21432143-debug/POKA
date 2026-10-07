@@ -289,6 +289,7 @@ async function main() {
         authorId: user.id,
         content: line,
         isAttendanceCheck: true,
+        authorIp: "203.0.113.20",
       },
     });
     await prisma.dailyAttendance.create({
@@ -315,6 +316,7 @@ async function main() {
         authorId: dealer.id,
         content: "인증 딜러 입장에서 Raise 빈도를 조금 낮추고 Call 위주로 갑니다.",
         upvoteCount: 14,
+        authorIp: "203.0.113.21",
       },
     });
   }

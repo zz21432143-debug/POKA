@@ -34,7 +34,7 @@ export async function ensureTodayAttendancePost() {
   }
 }
 
-export async function checkInAttendance(userId: string, message: string) {
+export async function checkInAttendance(userId: string, message: string, authorIp?: string | null) {
   const content = message.trim();
   if (content.length < ATTENDANCE_MIN_COMMENT_LENGTH) {
     throw new Error(`출석 댓글은 ${ATTENDANCE_MIN_COMMENT_LENGTH}자 이상 적어 주세요.`);
@@ -61,6 +61,7 @@ export async function checkInAttendance(userId: string, message: string) {
       authorId: userId,
       content,
       isAttendanceCheck: true,
+      authorIp: authorIp ?? null,
     },
   });
 

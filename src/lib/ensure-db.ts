@@ -57,7 +57,12 @@ async function applySchema() {
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifyExpires" TIMESTAMP(3)`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "termsAcceptedAt" TIMESTAMP(3)`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "adultConfirmedAt" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "privacyAcceptedAt" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "googleId" TEXT`);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "User_googleId_key" ON "User"("googleId")`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`);
+    await client.query(`ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "authorIp" TEXT`);
+    await client.query(`CREATE INDEX IF NOT EXISTS "Comment_authorIp_createdAt_idx" ON "Comment"("authorIp", "createdAt")`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isMaster" BOOLEAN NOT NULL DEFAULT false`);
     await client.query(`CREATE INDEX IF NOT EXISTS "User_isMaster_idx" ON "User"("isMaster")`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "pointsEarnedDate" TEXT`);

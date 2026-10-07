@@ -26,7 +26,7 @@ export function kakaoAuthorizeUrl(requestUrl: string, state: string) {
   url.searchParams.set("client_id", key);
   url.searchParams.set("redirect_uri", kakaoRedirectUri(requestUrl));
   url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "profile_nickname");
+  url.searchParams.set("scope", "profile_nickname account_email");
   url.searchParams.set("state", state);
   return url.toString();
 }

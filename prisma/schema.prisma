@@ -57,12 +57,14 @@ model User {
   nickname            String   @unique
   passwordHash        String?
   kakaoId             String?  @unique
+  googleId            String?  @unique
   email               String?  @unique
   emailVerifiedAt     DateTime?
   emailVerifyHash     String?
   emailVerifyExpires  DateTime?
   termsAcceptedAt     DateTime?
   adultConfirmedAt    DateTime?
+  privacyAcceptedAt   DateTime?
   resetCodeHash       String?
   resetCodeExpires    DateTime?
   profileMarkImageUrl String?
@@ -201,6 +203,7 @@ model Comment {
   author            User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
   content           String
   isAttendanceCheck Boolean  @default(false)
+  authorIp          String?
   upvoteCount       Int      @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -211,6 +214,7 @@ model Comment {
   @@index([postId])
   @@index([postId, upvoteCount])
   @@index([authorId, isAttendanceCheck, createdAt])
+  @@index([authorIp, createdAt])
 }
 
 model CommentVote {

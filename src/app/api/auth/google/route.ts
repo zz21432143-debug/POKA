@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { kakaoAuthorizeUrl, kakaoConfigured } from "@/lib/kakao-oauth";
-import { KAKAO_STATE_COOKIE } from "@/lib/current-user";
+import { googleAuthorizeUrl, googleConfigured } from "@/lib/google-oauth";
 import { randomOAuthState } from "@/lib/session";
 import {
   CONSENT_COOKIE,
   CONSENT_COOKIE_OPTS,
+  GOOGLE_STATE_COOKIE,
   OAUTH_NEXT_COOKIE,
   consentIsValid,
   safeNextPath,
@@ -20,14 +20,14 @@ export async function GET(request: Request) {
   const next = safeNextPath(url.searchParams.get("next") ?? jar.get(OAUTH_NEXT_COOKIE)?.value);
   jar.set(OAUTH_NEXT_COOKIE, next, CONSENT_COOKIE_OPTS);
 
-  if (!kakaoConfigured()) {
-    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
+  if (!googleConfigured()) {
+    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url));
   }
   const state = randomOAuthState();
-  const authorize = kakaoAuthorizeUrl(request.url, state);
+  const authorize = googleAuthorizeUrl(request.url, state);
   if (!authorize) {
-    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url));
   }
-  jar.set(KAKAO_STATE_COOKIE, state, CONSENT_COOKIE_OPTS);
+  jar.set(GOOGLE_STATE_COOKIE, state, CONSENT_COOKIE_OPTS);
   return NextResponse.redirect(authorize);
 }

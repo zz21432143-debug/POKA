@@ -16,7 +16,7 @@ PC와 모바일 브라우저(Android Chrome / iOS Safari)에서 같은 반응형
 7. **5단계** — 모바일 터치 최적화, 작성 쿨다운, 신고 자동 숨김, 배너 수동/자동 관리, 프로덕션 빌드
 8. **딜러 연습** — `/practice` 사이드팟·미니멈 레이즈 10문제. 비회원도 플레이, 로그인 시 기록·순위·EXP
 
-글 작성·본문 열람·댓글은 로그인한 회원만 가능합니다. 게시판 목록(제목)은 비회원도 볼 수 있습니다. 공식 홍보와 대회 스케줄 등록은 관리자만 가능합니다. 신규 가입은 이메일 인증과 작성 책임 동의가 필요합니다. 시드된 계정(펠트딜러 등)의 로컬 비밀번호는 `poka1234` 입니다.
+글 작성·본문 열람·댓글은 로그인한 회원만 가능합니다. 게시판 목록(제목)은 비회원도 볼 수 있습니다. 공식 홍보와 대회 스케줄 등록은 관리자만 가능합니다. 신규 가입·로그인은 카카오 또는 구글 소셜 로그인만 사용합니다. 만 19세 확인, 이용약관 및 작성 책임, 개인정보 수집·이용에 모두 동의한 뒤에만 OAuth가 시작됩니다. 이메일·비밀번호 가입과 Resend 인증 메일은 쓰지 않습니다. 시드된 로컬 계정(펠트딜러 등)과 마스터 운영 계정은 로그인 화면의 접힌 **운영 계정** 칸으로만 들어갑니다.
 
 광고: 직판 제휴 소재가 있으면 그 칸이 우선입니다. 공개 단가는 없고, 제휴/광고는 운영자와 따로 협의한 뒤 문의 폼으로만 받습니다. A칸이 비면 구글이 채울 수 있습니다.
 
@@ -94,10 +94,15 @@ bash desktop/install-shortcut.sh
 
 ```
 NEXT_PUBLIC_SITE_URL=https://pokerwiki.co.kr
+KAKAO_REST_API_KEY=...
+KAKAO_CLIENT_SECRET=...
 KAKAO_REDIRECT_URI=https://pokerwiki.co.kr/api/auth/kakao/callback
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=https://pokerwiki.co.kr/api/auth/google/callback
 ```
 
-카카오 개발자 콘솔 Redirect URI에도 같은 주소를 등록합니다.
+카카오 개발자 콘솔과 Google Cloud OAuth 클라이언트의 Redirect URI에도 같은 주소를 등록합니다.
 
 ## 프로덕션 (Vercel + Neon)
 
@@ -110,9 +115,15 @@ Vercel 프로젝트 환경 변수:
 | `DATABASE_URL` | Neon Connect, Connection pooling **ON** (호스트에 `-pooler`) |
 | `DATABASE_URL_UNPOOLED` | 같은 모달에서 pooling **OFF** |
 | `NEXT_PUBLIC_SITE_URL` | `https://pokerwiki.co.kr` |
-| `SESSION_SECRET` | 세션·캡차 HMAC 서명용 긴 문자열 |
-| `RESEND_API_KEY` | 회원가입 인증 메일. 없으면(또는 발송 실패 시) 가입 화면에 인증 링크와 6자리 코드를 보여 줍니다. |
-| `MAIL_FROM` | 예: `POKA <noreply@pokerwiki.co.kr>` |
+| `SESSION_SECRET` | 세션·동의 쿠키 HMAC 서명용 긴 문자열 |
+| `KAKAO_REST_API_KEY` | 카카오 REST API 키 |
+| `KAKAO_CLIENT_SECRET` | 카카오 Client Secret |
+| `KAKAO_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/kakao/callback` |
+| `GOOGLE_CLIENT_ID` | 구글 OAuth 클라이언트 ID |
+| `GOOGLE_CLIENT_SECRET` | 구글 OAuth 클라이언트 시크릿 |
+| `GOOGLE_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/google/callback` |
+
+가입은 Resend 메일을 쓰지 않습니다.
 
 Vercel Optional Integrations의 **Prisma Postgres Add 는 누르지 않습니다.** 이미 Neon을 씁니다.
 
