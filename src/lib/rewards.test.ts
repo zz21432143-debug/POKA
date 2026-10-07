@@ -10,7 +10,11 @@ import {
   STREAK_REPEAT_POINTS,
   streakBonusFor,
 } from "./rewards";
-import { isDummyOfficialPosterTitle, isSeedCatalogNickname } from "./purge-demo-catalog";
+import {
+  isDummyOfficialPosterTitle,
+  isSeedCatalogNickname,
+  tickerMentionsSeedCatalog,
+} from "./purge-demo-catalog";
 
 describe("streak attendance bonus", () => {
   it("pays extra on 3 / 7 / 14 / 30 day milestones", () => {
@@ -42,5 +46,7 @@ describe("seed catalog purge helpers", () => {
     assert.equal(isSeedCatalogNickname("POKA"), false);
     assert.equal(isDummyOfficialPosterTitle("RunnerOne 총상금 11억"), true);
     assert.equal(isDummyOfficialPosterTitle("실제 제휴 공지"), false);
+    assert.equal(tickerMentionsSeedCatalog("펠트딜러님이 [핸드리뷰]에 글을 남겼습니다"), true);
+    assert.equal(tickerMentionsSeedCatalog("정태규님이 출석했습니다"), false);
   });
 });

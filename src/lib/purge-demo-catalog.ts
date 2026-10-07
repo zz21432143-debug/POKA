@@ -14,10 +14,22 @@ export function isDummyOfficialPosterTitle(title: string) {
   return DUMMY_POSTER_TITLES.has(title);
 }
 
+export function tickerMentionsSeedCatalog(message: string) {
+  return [...SEED_NICKNAMES].some((nickname) => message.includes(`${nickname}님`));
+}
+
 export async function purgeDemoCatalog() {
   const { createPrismaClient } = await import("@/lib/create-prisma-client");
   const prisma = createPrismaClient();
   try {
+    await prisma.tickerEvent.deleteMany({
+      where: {
+        OR: [...SEED_NICKNAMES].map((nickname) => ({
+          message: { contains: `${nickname}님` },
+        })),
+      },
+    });
+
     const already = await prisma.auditLog.findFirst({
       where: { kind: PURGE_SEED_CATALOG_KIND },
       select: { id: true },

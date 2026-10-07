@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { weekStartKst } from "@/lib/dates";
 import { POPULAR_UPVOTE_THRESHOLD, WEEKLY_HAND_EXP } from "@/lib/rewards";
+import { isSeedCatalogNickname, tickerMentionsSeedCatalog } from "@/lib/purge-demo-catalog";
 
 export async function pushTicker(entry: { kind: string; message: string; href: string }) {
   try {
@@ -26,6 +27,7 @@ export async function ensureWeeklyBestHand() {
     include: { author: { select: { nickname: true } } },
   });
   if (!best?.author || best.upvoteCount < 1) return;
+  if (isSeedCatalogNickname(best.author.nickname)) return;
 
   const { grantRewards } = await import("@/lib/exp");
   if (best.authorId) {
@@ -41,10 +43,11 @@ export async function ensureWeeklyBestHand() {
 export async function getTickerEvents() {
   try {
     await ensureWeeklyBestHand();
-    return await prisma.tickerEvent.findMany({
+    const rows = await prisma.tickerEvent.findMany({
       orderBy: { createdAt: "desc" },
-      take: 24,
+      take: 40,
     });
+    return rows.filter((row) => !tickerMentionsSeedCatalog(row.message)).slice(0, 24);
   } catch {
     return [];
   }
@@ -56,6 +59,7 @@ export async function maybePopularPost(postId: string) {
     include: { author: { select: { nickname: true } } },
   });
   if (!post?.author || post.upvoteCount < POPULAR_UPVOTE_THRESHOLD || post.hidden) return;
+  if (isSeedCatalogNickname(post.author.nickname)) return;
   await pushTicker({
     kind: `POPULAR:${post.id}`,
     message: `⭐ ${post.author.nickname}님의 [${post.title}]이 인기 게시물로 선정되었습니다!`,
