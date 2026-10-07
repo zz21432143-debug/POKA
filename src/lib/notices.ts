@@ -15,7 +15,7 @@ export const OFFICIAL_NOTICES: OfficialNotice[] = [
   },
   {
     id: "notice-dealers",
-    title: "인증 딜러 골드 뱃지 안내",
+    title: "인증 골드 뱃지 안내",
     date: "2026.09.24",
     href: "/shop",
   },

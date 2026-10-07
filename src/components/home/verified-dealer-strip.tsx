@@ -20,9 +20,9 @@ export function VerifiedDealerStrip({
         <div>
           <p className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-amber-800">
             <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />
-            인증 딜러
+            인증
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">골드 뱃지 딜러의 최근 핸드입니다.</p>
+          <p className="mt-1 text-sm text-muted-foreground">인증 회원의 최근 핸드입니다.</p>
         </div>
         <Link href="/community" className="text-sm font-semibold text-amber-800 hover:text-amber-950">
           커뮤니티

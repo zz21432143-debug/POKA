@@ -103,7 +103,12 @@ export async function getWeeklyHubPost() {
 
 export async function getVerifiedDealers() {
   const dealers = await prisma.user.findMany({
-    where: { isDealerVerified: true, nickname: { notIn: [...SEED_NICKNAMES] } },
+    where: {
+      isDealerVerified: true,
+      isMaster: false,
+      isAdmin: false,
+      nickname: { notIn: [...SEED_NICKNAMES] },
+    },
     orderBy: [{ level: "desc" }, { nickname: "asc" }],
     take: 12,
     select: {

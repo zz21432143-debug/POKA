@@ -7,8 +7,8 @@ import { MarkImage } from "@/components/layout/mark-image";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "인증 딜러 — POKA",
-  description: "골드 뱃지를 받은 홀덤 딜러와 최근 핸드리뷰.",
+  title: "인증 — POKA",
+  description: "마스터가 단 골드 뱃지 인증 회원과 최근 핸드리뷰.",
 };
 
 export default async function DealersPage() {
@@ -21,15 +21,14 @@ export default async function DealersPage() {
           <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />
           VERIFIED
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">인증 딜러</h1>
+        <h1 className="mt-2 text-2xl font-semibold">인증</h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-          현장에서 검증된 홀덤 딜러입니다. 닉네임 옆 골드 뱃지로 글·댓글·프로필에 표시됩니다. 핸드를
-          눌러 투표할 수 있습니다.
+          마스터가 직접 단 골드 뱃지입니다. 닉네임 옆에 「인증」으로 표시됩니다.
         </p>
       </header>
       {dealers.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border bg-white px-4 py-10 text-center text-sm text-muted-foreground">
-          아직 공개된 인증 딜러가 없습니다.
+          아직 공개된 인증 회원이 없습니다.
         </p>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
@@ -48,7 +47,7 @@ export default async function DealersPage() {
                         <span className="truncate text-base font-bold">{dealer.nickname}</span>
                         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
                           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
-                          인증 딜러
+                          인증
                         </span>
                       </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">Lv.{dealer.level}</span>

@@ -1,24 +1,25 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
+import { logoutAction } from "@/lib/logout-action";
 
-export function LogoutButton() {
-  const router = useRouter();
+function LogoutSubmit() {
+  const { pending } = useFormStatus();
   return (
     <button
-      type="button"
-      className="touch-target flex min-h-11 w-full items-center justify-center rounded-full border border-border text-sm font-semibold text-muted-foreground hover:bg-muted"
-      onClick={async () => {
-        await fetch("/api/auth", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "logout" }),
-        });
-        router.push("/");
-        router.refresh();
-      }}
+      type="submit"
+      disabled={pending}
+      className="touch-target flex min-h-11 w-full items-center justify-center rounded-full border border-border text-sm font-semibold text-muted-foreground hover:bg-muted disabled:opacity-60"
     >
-      로그아웃
+      {pending ? "로그아웃 중…" : "로그아웃"}
     </button>
+  );
+}
+
+export function LogoutButton() {
+  return (
+    <form action={logoutAction} className="w-full">
+      <LogoutSubmit />
+    </form>
   );
 }

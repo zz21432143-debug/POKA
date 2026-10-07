@@ -64,7 +64,7 @@ export function ProfileWidget({
           ) : null}
           {profile.isMaster || profile.isAdmin ? null : profile.isDealerVerified ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
-              ★ 인증 딜러
+              ★ 인증
             </p>
           ) : null}
         </div>
@@ -98,6 +98,14 @@ export function ProfileWidget({
       />
       {accounts.length > 0 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
       <div className="mt-3 grid grid-cols-1 gap-2">
+        {profile.isMaster ? (
+          <Link
+            href="/admin/members"
+            className="touch-target flex min-h-11 items-center justify-center rounded-full border border-amber-300 bg-amber-50 text-sm font-semibold text-amber-950 hover:bg-amber-100"
+          >
+            인증 달기
+          </Link>
+        ) : null}
         <Link
           href="/shop"
           className="touch-target flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"

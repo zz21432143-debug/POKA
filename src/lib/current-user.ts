@@ -26,11 +26,12 @@ export async function setSessionNickname(nickname: string) {
 
 export async function clearSession() {
   const jar = await cookies();
-  jar.delete(SESSION_COOKIE);
-  jar.delete(KAKAO_STATE_COOKIE);
-  jar.delete(GOOGLE_STATE_COOKIE);
-  jar.delete(CONSENT_COOKIE);
-  jar.delete(OAUTH_NEXT_COOKIE);
+  const expire = { ...COOKIE_OPTS, maxAge: 0 };
+  jar.set(SESSION_COOKIE, "", expire);
+  jar.set(KAKAO_STATE_COOKIE, "", expire);
+  jar.set(GOOGLE_STATE_COOKIE, "", expire);
+  jar.set(CONSENT_COOKIE, "", expire);
+  jar.set(OAUTH_NEXT_COOKIE, "", expire);
 }
 
 async function findUserBySession() {

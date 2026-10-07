@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { UserBadge } from "@/components/user/user-badge";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PostList } from "@/components/posts/post-list";
+import { VerifyToggle } from "@/components/admin/verify-toggle";
+import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +23,7 @@ export default async function MemberPage({
     },
   });
   if (!user) notFound();
+  const viewer = await getCurrentUser().catch(() => null);
 
   const posts = await prisma.post.findMany({
     where: { authorId: user.id, hidden: false, isAttendanceThread: false, boardType: { not: "ANONYMOUS_REVIEW" } },
@@ -56,6 +59,9 @@ export default async function MemberPage({
           size="lg"
         />
         <p className="text-sm text-muted-foreground">연속 출석 {user.attendanceStreak}일</p>
+        {viewer?.isMaster && !user.isMaster ? (
+          <VerifyToggle nickname={user.nickname} verified={user.isDealerVerified} />
+        ) : null}
       </header>
       <PostList
         posts={posts.map((post) => ({
