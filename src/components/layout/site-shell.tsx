@@ -27,12 +27,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   let sidebarSponsor = null as Awaited<ReturnType<typeof getSponsorCreative>>;
   const pathname = (await headers()).get("x-pathname") ?? "";
   try {
-    await ensureTodayAttendancePost();
-    await ensureWeeklyScheduleHub().catch(() => null);
     const [viewer, events, sidebar] = await Promise.all([
       getViewerProfile(),
       getTickerEvents(),
       getSponsorCreative("SIDEBAR").catch(() => null),
+      ensureTodayAttendancePost().catch(() => null),
+      ensureWeeklyScheduleHub().catch(() => null),
     ]);
     profile = viewer;
     accounts = viewer?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];

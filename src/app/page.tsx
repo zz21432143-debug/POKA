@@ -63,61 +63,66 @@ export default async function HomePage({
   let jobs: PostSummary[] = [];
   let issues: PostSummary[] = [];
   let urgent: HomeUrgentJob[] = [];
-  const nativeSponsor = await getSponsorCreative("NATIVE").catch(() => null);
   const today = todayKstDate();
-  const [handSpot, hub, dealers] = await Promise.all([
-    getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
-    getWeeklyHubPost().catch(() => null),
-    getVerifiedDealers().catch(() => []),
-  ]);
-  try {
-    const notUrgentJob = { NOT: { AND: [{ boardType: "JOBS" as const }, { jobKind: "URGENT" as const }] } };
-    const [allRows, freeRows, jobRows, issueRows, urgentRows] = await Promise.all([
-      prisma.post.findMany({
-        where: { ...base, ...notUrgentJob },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include,
-      }),
-      prisma.post.findMany({
-        where: { ...base, boardType: "FREE" },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include,
-      }),
-      prisma.post.findMany({
-        where: { ...base, boardType: "JOBS", jobKind: { not: "URGENT" } },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include,
-      }),
-      prisma.post.findMany({
-        where: { ...base, boardType: "HAND_REVIEW" },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include,
-      }),
-      prisma.post.findMany({
-        where: { ...base, boardType: "JOBS", jobKind: "URGENT" },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          title: true,
-          jobLocation: true,
-          jobWorkDate: true,
-          jobPayAmount: true,
-        },
-      }),
+  const notUrgentJob = { NOT: { AND: [{ boardType: "JOBS" as const }, { jobKind: "URGENT" as const }] } };
+  const [nativeSponsor, handSpot, hub, dealers, allRows, freeRows, jobRows, issueRows, urgentRows] =
+    await Promise.all([
+      getSponsorCreative("NATIVE").catch(() => null),
+      getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
+      getWeeklyHubPost().catch(() => null),
+      getVerifiedDealers().catch(() => []),
+      prisma.post
+        .findMany({
+          where: { ...base, ...notUrgentJob },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include,
+        })
+        .catch(() => []),
+      prisma.post
+        .findMany({
+          where: { ...base, boardType: "FREE" },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include,
+        })
+        .catch(() => []),
+      prisma.post
+        .findMany({
+          where: { ...base, boardType: "JOBS", jobKind: { not: "URGENT" } },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include,
+        })
+        .catch(() => []),
+      prisma.post
+        .findMany({
+          where: { ...base, boardType: "HAND_REVIEW" },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          include,
+        })
+        .catch(() => []),
+      prisma.post
+        .findMany({
+          where: { ...base, boardType: "JOBS", jobKind: "URGENT" },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            title: true,
+            jobLocation: true,
+            jobWorkDate: true,
+            jobPayAmount: true,
+          },
+        })
+        .catch(() => []),
     ]);
-    all = allRows.map(toSummary);
-    free = freeRows.map(toSummary);
-    jobs = jobRows.map(toSummary);
-    issues = issueRows.map(toSummary);
-    urgent = urgentRows;
-  } catch {
-    all = [];
-  }
+  all = allRows.map(toSummary);
+  free = freeRows.map(toSummary);
+  jobs = jobRows.map(toSummary);
+  issues = issueRows.map(toSummary);
+  urgent = urgentRows;
 
   return (
     <div className="flex flex-col gap-5">
