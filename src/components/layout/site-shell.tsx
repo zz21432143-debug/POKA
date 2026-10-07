@@ -40,7 +40,12 @@ async function ConnectedSidebarSponsor() {
 }
 
 export async function SiteShell({ children }: { children: ReactNode }) {
-  const pathname = (await headers()).get("x-pathname") ?? "";
+  let pathname = "";
+  try {
+    pathname = (await headers()).get("x-pathname") ?? "";
+  } catch {
+    pathname = "";
+  }
   const showFeedAds = shouldShowFeedAds(pathname);
   const profile = await getCurrentUser().catch(() => null);
   const accounts = profile?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];

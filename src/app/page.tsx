@@ -14,7 +14,17 @@ function HomePanelFallback({ className }: { className: string }) {
 }
 
 async function HomeFeedSections() {
-  const feed = await getHomeFeed();
+  const feed = await getHomeFeed().catch(() => ({
+    all: [],
+    free: [],
+    jobs: [],
+    issues: [],
+    urgent: [],
+    nativeSponsor: null,
+    hand: null,
+    hub: null,
+    dealers: [],
+  }));
   const today = todayKstDate();
   return (
     <>

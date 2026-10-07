@@ -1,5 +1,5 @@
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ttlCache } from "@/lib/ttl-cache";
 import { PREMIUM_BANNERS, type PromoBanner } from "@/lib/banners";
 import { normalizeMark } from "@/lib/inventory-policy";
 
@@ -127,6 +127,6 @@ async function loadPremiumBanners(): Promise<PremiumBannerCard[]> {
   }
 }
 
-export const getPremiumBanners = unstable_cache(loadPremiumBanners, ["premium-banners"], {
-  revalidate: 30,
-});
+export function getPremiumBanners() {
+  return ttlCache("premium-banners", 30_000, loadPremiumBanners);
+}

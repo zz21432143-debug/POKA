@@ -1,5 +1,5 @@
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ttlCache } from "@/lib/ttl-cache";
 import type { PostSummary } from "@/components/posts/post-list";
 import type { HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { getSponsorCreative } from "@/lib/inventory";
@@ -125,8 +125,10 @@ async function loadHomeFeed() {
   };
 }
 
-export const getHomeFeed = unstable_cache(loadHomeFeed, ["home-feed"], { revalidate: 20 });
+export function getHomeFeed() {
+  return ttlCache("home-feed", 20_000, loadHomeFeed);
+}
 
-export const getCachedTickerEvents = unstable_cache(getTickerEvents, ["ticker-events"], {
-  revalidate: 20,
-});
+export function getCachedTickerEvents() {
+  return ttlCache("ticker-events", 20_000, getTickerEvents);
+}

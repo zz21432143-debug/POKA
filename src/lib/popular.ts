@@ -1,9 +1,9 @@
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { publicPostWhere } from "@/lib/posts";
+import { ttlCache } from "@/lib/ttl-cache";
 
-export const getPopularPosts = unstable_cache(
-  async (limit = 5) => {
+export function getPopularPosts(limit = 5) {
+  return ttlCache(`popular-posts:${limit}`, 30_000, async () => {
     try {
       return await prisma.post.findMany({
         where: { ...publicPostWhere, isAttendanceThread: false },
@@ -21,7 +21,5 @@ export const getPopularPosts = unstable_cache(
     } catch {
       return [];
     }
-  },
-  ["popular-posts"],
-  { revalidate: 30 },
-);
+  });
+}
