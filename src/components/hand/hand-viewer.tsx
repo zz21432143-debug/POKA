@@ -6,62 +6,59 @@ import { cn } from "cn";
 import { HandTable } from "@/components/hand/hand-table";
 import {
   ACTION_LABEL,
-  STREET_LABEL,
   actionChipClass,
+  actionTimeline,
+  actorLabel,
   formatBb,
-  resolveActorSeat,
   sittingSeats,
   type HandReviewData,
   type StreetAction,
 } from "@/lib/hand-review";
 
-function ActionPill({ row, hand }: { row: StreetAction; hand: HandReviewData }) {
-  const seat = resolveActorSeat(row.actor, hand);
+function ActionRow({ row, hand }: { row: StreetAction; hand: HandReviewData }) {
   return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-[10px] font-semibold text-zinc-400">{seat}</span>
-      <span className={cn("rounded-md px-2 py-1 text-center text-[11px] font-bold", actionChipClass(row.action))}>
+    <li className="flex items-center justify-between gap-2 py-1">
+      <span className="text-[13px] font-medium text-zinc-200">{actorLabel(row.actor, hand)}</span>
+      <span className={cn("rounded-md px-2 py-0.5 text-[12px] font-bold", actionChipClass(row.action))}>
         {ACTION_LABEL[row.action]}
         {row.amount != null ? ` ${formatBb(row.amount)}` : ""}
       </span>
-    </div>
+    </li>
   );
 }
 
 function ActionLog({ hand }: { hand: HandReviewData }) {
   const [open, setOpen] = useState(true);
-  const columns = [
-    { key: "blinds", label: "Blinds (Ante)", pot: undefined, rows: hand.blinds },
-    { key: "preflop", label: STREET_LABEL.preflop, pot: hand.streetPots?.preflop, rows: hand.streets.preflop },
-    { key: "flop", label: STREET_LABEL.flop, pot: hand.streetPots?.flop, rows: hand.streets.flop },
-    { key: "turn", label: STREET_LABEL.turn, pot: hand.streetPots?.turn, rows: hand.streets.turn },
-    { key: "river", label: STREET_LABEL.river, pot: hand.streetPots?.river ?? hand.potBb, rows: hand.streets.river },
-  ];
+  const groups = actionTimeline(hand).filter((group) => group.street === "blinds" || group.rows.length > 0);
 
   return (
     <div className="bg-[#2a2d33] text-zinc-100">
       {open ? (
-        <div className="grid grid-cols-5 gap-1 overflow-x-auto p-2 sm:p-3">
-          {columns.map((col) => (
-            <div key={col.key} className="min-w-[4.5rem]">
-              <p className="text-center text-[11px] font-semibold text-zinc-300">{col.label}</p>
-              {col.pot != null ? (
-                <p className="mt-0.5 text-center text-[10px] text-zinc-500">{formatBb(col.pot)}</p>
-              ) : (
-                <p className="mt-0.5 text-center text-[10px] text-transparent">.</p>
-              )}
-              <div className="mt-2 flex flex-col items-center gap-2">
-                {col.rows.length === 0 ? (
-                  <span className="text-[10px] text-zinc-500">-</span>
-                ) : (
-                  col.rows.map((row, index) => (
-                    <ActionPill key={`${col.key}-${index}`} row={row} hand={hand} />
-                  ))
-                )}
+        <ol className="grid gap-3 px-3 py-3">
+          {groups.map((group) => (
+            <li key={group.street}>
+              <div className="mb-1 flex items-baseline justify-between gap-2">
+                <p className="text-[12px] font-semibold text-zinc-300">{group.label}</p>
+                {group.pot != null ? (
+                  <p className="text-[11px] text-zinc-500">팟 {formatBb(group.pot)}</p>
+                ) : null}
               </div>
-            </div>
+              {group.street === "blinds" ? (
+                <p className="text-[13px] text-zinc-200">
+                  {group.rows.map((row) => `${row.actor} ${formatBb(row.amount)}`).join(" · ")}
+                </p>
+              ) : group.rows.length === 0 ? (
+                <p className="text-[12px] text-zinc-500">액션 없음</p>
+              ) : (
+                <ul>
+                  {group.rows.map((row, index) => (
+                    <ActionRow key={`${group.street}-${index}`} row={row} hand={hand} />
+                  ))}
+                </ul>
+              )}
+            </li>
           ))}
-        </div>
+        </ol>
       ) : null}
       <button
         type="button"
@@ -69,7 +66,7 @@ function ActionLog({ hand }: { hand: HandReviewData }) {
         onClick={() => setOpen((value) => !value)}
       >
         <ChevronDownIcon className={cn("size-4 transition-transform", open ? "rotate-180" : "")} />
-        {open ? "접기" : "액션 로그 펼치기"}
+        {open ? "액션 접기" : "액션 펼치기"}
       </button>
     </div>
   );
@@ -80,12 +77,13 @@ export function HandViewer({ hand }: { hand: HandReviewData }) {
     (seat) => !seat.isHero && seat.showCards && seat.cards.length === 2,
   );
   const [reveal, setReveal] = useState(revealable);
+  const others = sittingSeats(hand).filter((seat) => !seat.isHero).length;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#141414]">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3">
         <p className="text-xs text-zinc-400">
-          {hand.heroPosition} Hero · 유효 {formatBb(hand.effectiveBb ?? 100)}
+          나 {hand.heroPosition} · {others + 1}인 · 유효 {formatBb(hand.effectiveBb ?? 100)}
         </p>
         {revealable ? (
           <button
@@ -96,7 +94,7 @@ export function HandViewer({ hand }: { hand: HandReviewData }) {
             {reveal ? "상대 핸드 가리기" : "상대 핸드 공개"}
           </button>
         ) : (
-          <p className="text-[11px] text-zinc-500">상대 핸드는 공개되지 않았습니다</p>
+          <p className="text-[11px] text-zinc-500">상대 핸드는 비공개</p>
         )}
       </div>
       <HandTable hand={hand} revealOpponents={reveal} />

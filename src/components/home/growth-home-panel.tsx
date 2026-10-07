@@ -37,7 +37,7 @@ export function GrowthHomePanel({
           )}
         </h2>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          {formatKstLabel(today)} · Fold/Check/Call/Raise 투표는 글에서.
+          {formatKstLabel(today)} · 폴드/체크/콜/레이즈 투표는 글에서.
         </p>
         <Link
           href={hand ? handHref : "/boards/hand-review/write"}

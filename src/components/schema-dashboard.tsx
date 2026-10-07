@@ -45,7 +45,7 @@ const COLUMN_DOCS = {
     ["upvoteCount / downvoteCount", "추천·비추천 수"],
     ["authorIp", "작성자 IP (익명 후기 운영용)"],
     ["ratingManner/Service/Facility/Atmosphere", "익명 게시판 매장후기 4항목 별점 (1~5)"],
-    ["pollVotes", "핸드리뷰 Fold/Check/Call/Raise 투표"],
+    ["pollVotes", "핸드리뷰 폴드/체크/콜/레이즈 투표"],
   ],
   comments: [
     ["postId", "대상 게시글. 독립 출석 기록은 null 허용"],

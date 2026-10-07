@@ -295,7 +295,7 @@ export function catalogPosts(today: string): Record<Exclude<FeedKey, "attendance
       i === 0
         ? `오늘의 홀덤 핸드리뷰 | ${today} | ${handSpots[0]}`
         : `홀덤 핸드리뷰 | ${handSpots[i]}`,
-    content: `홀덤 핸드입니다. Fold/Check/Call/Raise 투표 부탁합니다. 유효스택 ${80 + i}bb, ${LOCS[i]} 테이블.`,
+    content: `홀덤 핸드입니다. 폴드/체크/콜/레이즈 투표 부탁합니다. 유효스택 ${80 + i}bb, ${LOCS[i]} 테이블.`,
     authorNickname:
       i < VERIFIED_DEALER_NICKNAMES.length ? VERIFIED_DEALER_NICKNAMES[i] : nick(i),
     daysAgo: i,

@@ -38,8 +38,8 @@ function SeatBubble({
         {winner ? (
           <span className="text-[10px] font-black tracking-widest text-white drop-shadow">WIN</span>
         ) : null}
-        <span className="text-[11px] font-bold text-white">{seat.isHero ? "Hero" : seat.id}</span>
-        <span className="text-[10px] text-white/80">{seat.id}</span>
+        <span className="text-[11px] font-bold text-white">{seat.isHero ? "나" : seat.id}</span>
+        {seat.isHero ? <span className="text-[10px] text-white/80">{seat.id}</span> : null}
         <span className="text-[10px] font-semibold text-sky-200">{formatBb(seat.stackBb)}</span>
       </div>
     </div>

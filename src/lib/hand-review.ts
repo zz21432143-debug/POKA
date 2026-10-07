@@ -45,21 +45,32 @@ export type HandReviewData = {
   streetPots?: Partial<Record<StreetId, number>>;
 };
 
+export function defaultBlinds(sittingIds: string[]): StreetAction[] {
+  const sitting = new Set(sittingIds);
+  if (!sitting.has("SB") && sitting.has("BTN") && sitting.has("BB")) {
+    return [
+      { actor: "BTN", action: "bet", amount: 0.5 },
+      { actor: "BB", action: "bet", amount: 1 },
+    ];
+  }
+  return [
+    { actor: "SB", action: "bet", amount: 0.5 },
+    { actor: "BB", action: "bet", amount: 1 },
+  ];
+}
+
 export const EMPTY_HAND: HandReviewData = {
   heroPosition: "BB",
-  villainPosition: "UTG",
+  villainPosition: "BTN",
   heroCards: [],
   villainCards: [],
   board: [],
   streets: { preflop: [], flop: [], turn: [], river: [] },
-  blinds: [
-    { actor: "SB", action: "bet", amount: 0.5 },
-    { actor: "BB", action: "bet", amount: 1 },
-  ],
+  blinds: defaultBlinds(["BTN", "BB"]),
   seats: POSITIONS.map((id) => ({
     id,
     stackBb: 100,
-    sitting: id === "BB" || id === "BTN" || id === "SB",
+    sitting: id === "BB" || id === "BTN",
     isHero: id === "BB",
     cards: [],
     showCards: id === "BB",
@@ -70,10 +81,10 @@ export const EMPTY_HAND: HandReviewData = {
 };
 
 export const STREET_LABEL: Record<StreetId, string> = {
-  preflop: "Pre-Flop",
-  flop: "Flop",
-  turn: "Turn",
-  river: "River",
+  preflop: "프리플랍",
+  flop: "플랍",
+  turn: "턴",
+  river: "리버",
 };
 
 export const STREET_LABEL_KO: Record<StreetId, string> = {
@@ -84,13 +95,59 @@ export const STREET_LABEL_KO: Record<StreetId, string> = {
 };
 
 export const ACTION_LABEL: Record<ActionId, string> = {
-  fold: "Fold",
-  check: "Check",
-  call: "Call",
-  bet: "Bet",
-  raise: "Raise",
-  allin: "All-in",
+  fold: "폴드",
+  check: "체크",
+  call: "콜",
+  bet: "벳",
+  raise: "레이즈",
+  allin: "올인",
 };
+
+export const ACTION_LABEL_KO = ACTION_LABEL;
+
+export const POSITION_LABEL: Record<SeatId, string> = {
+  UTG: "UTG 언더",
+  MP: "MP 미들",
+  CO: "CO 컷오프",
+  BTN: "BTN 버튼",
+  SB: "SB 스몰",
+  BB: "BB 빅블라인드",
+};
+
+export function actorLabel(actor: string, hand: HandReviewData): string {
+  const seat = resolveActorSeat(actor, hand);
+  if (seat === hand.heroPosition) return `나 (${seat})`;
+  const others = sittingSeats(hand).filter((row) => !row.isHero && row.id !== hand.heroPosition);
+  if (others.length === 1 && seat === others[0]?.id) return `상대 (${seat})`;
+  return seat;
+}
+
+export function formatActionLine(row: StreetAction, hand: HandReviewData): string {
+  const amount = row.amount != null ? ` ${formatBb(row.amount)}` : "";
+  return `${actorLabel(row.actor, hand)} ${ACTION_LABEL[row.action]}${amount}`;
+}
+
+export type TimelineGroup = {
+  street: StreetId | "blinds";
+  label: string;
+  pot?: number;
+  rows: StreetAction[];
+};
+
+export function actionTimeline(hand: HandReviewData): TimelineGroup[] {
+  return [
+    { street: "blinds", label: "블라인드", rows: hand.blinds },
+    { street: "preflop", label: STREET_LABEL_KO.preflop, pot: hand.streetPots?.preflop, rows: hand.streets.preflop },
+    { street: "flop", label: STREET_LABEL_KO.flop, pot: hand.streetPots?.flop, rows: hand.streets.flop },
+    { street: "turn", label: STREET_LABEL_KO.turn, pot: hand.streetPots?.turn, rows: hand.streets.turn },
+    {
+      street: "river",
+      label: STREET_LABEL_KO.river,
+      pot: hand.streetPots?.river ?? hand.potBb,
+      rows: hand.streets.river,
+    },
+  ];
+}
 
 const CARD_RE = /^([AKQJT2-9])([shdc])$/;
 

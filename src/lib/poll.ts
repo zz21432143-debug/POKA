@@ -1,8 +1,8 @@
 export const POLL_CHOICES = [
-  { id: "FOLD", label: "Fold" },
-  { id: "CHECK", label: "Check" },
-  { id: "CALL", label: "Call" },
-  { id: "RAISE", label: "Raise" },
+  { id: "FOLD", label: "폴드" },
+  { id: "CHECK", label: "체크" },
+  { id: "CALL", label: "콜" },
+  { id: "RAISE", label: "레이즈" },
 ] as const;
 
 export type PollChoice = (typeof POLL_CHOICES)[number]["id"];

@@ -44,7 +44,7 @@ export async function POST(
     const body = (await request.json()) as { choice?: string };
     const choice = body.choice as PollChoice | undefined;
     if (!choice || !IDS.includes(choice)) {
-      return NextResponse.json({ error: "Fold / Check / Call / Raise 중 고르세요." }, { status: 400 });
+      return NextResponse.json({ error: "폴드 / 체크 / 콜 / 레이즈 중 고르세요." }, { status: 400 });
     }
     const post = await prisma.post.findUnique({ where: { id }, select: { boardType: true } });
     if (!post || post.boardType !== "HAND_REVIEW") {

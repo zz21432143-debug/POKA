@@ -255,6 +255,6 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   RULE_QA: "룰·판정·진행이 맞는지 질문하세요.",
   SKETCH: "현장 사진과 스케치를 공유하세요.",
   HAND_REVIEW:
-    "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 Fold/Check/Call/Raise 투표가 열립니다.",
+    "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 폴드/체크/콜/레이즈 투표가 열립니다.",
   ANONYMOUS_REVIEW: "닉네임은 화면에 보이지 않습니다. 작성 책임은 본인에게 있습니다.",
 };

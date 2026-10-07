@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  EMPTY_HAND,
   SAMPLE_TABLE_HAND,
+  actorLabel,
+  formatActionLine,
   normalizeHand,
   resolveActorSeat,
   seatsAroundHero,
@@ -42,5 +45,20 @@ describe("hand review table", () => {
     const style = tableSlotStyle(0, 5);
     assert.equal(style.top, "86%");
     assert.equal(style.left, "50%");
+  });
+
+  it("starts as heads-up BB vs BTN with Korean action lines", () => {
+    const sitting = EMPTY_HAND.seats.filter((seat) => seat.sitting).map((seat) => seat.id);
+    assert.deepEqual(sitting, ["BTN", "BB"]);
+    assert.equal(actorLabel("BB", EMPTY_HAND), "나 (BB)");
+    assert.equal(actorLabel("BTN", EMPTY_HAND), "상대 (BTN)");
+    assert.equal(
+      formatActionLine({ actor: "BTN", action: "raise", amount: 3 }, EMPTY_HAND),
+      "상대 (BTN) 레이즈 3 BB",
+    );
+    assert.deepEqual(
+      EMPTY_HAND.blinds.map((row) => row.actor),
+      ["BTN", "BB"],
+    );
   });
 });
