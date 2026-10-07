@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isMaster" BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS "User_isMaster_idx" ON "User"("isMaster");

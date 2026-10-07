@@ -46,6 +46,7 @@ export default async function MemberPage({
             level: user.level,
             isDealerVerified: user.isDealerVerified,
             isAdmin: user.isAdmin,
+            isMaster: user.isMaster,
             attendanceStreak: user.attendanceStreak,
             equippedFrameId: user.equippedFrameId,
             equippedEffectId: user.equippedEffectId,

@@ -3,7 +3,12 @@ import { MemberKind } from "../src/generated/prisma/client";
 import { prisma } from "../src/lib/db";
 import { todayKstDate, weekStartKst, yesterdayKstDate, shiftDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
-import { hashPassword, SEED_ACCOUNT_PASSWORD } from "../src/lib/password";
+import {
+  hashPassword,
+  MASTER_ACCOUNT_NICKNAME,
+  MASTER_ACCOUNT_PASSWORD,
+  SEED_ACCOUNT_PASSWORD,
+} from "../src/lib/password";
 import {
   ATTENDANCE_LINES,
   catalogPosts,
@@ -103,6 +108,28 @@ async function main() {
       data: { userId: user.id, markId: markList[index % markList.length].id },
     });
   }
+
+  await prisma.user.upsert({
+    where: { nickname: MASTER_ACCOUNT_NICKNAME },
+    create: {
+      nickname: MASTER_ACCOUNT_NICKNAME,
+      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+      isAdmin: true,
+      isMaster: true,
+      isDealerVerified: true,
+      level: 20,
+      exp: 999999,
+      points: 999999,
+      termsAcceptedAt: new Date(),
+    },
+    update: {
+      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+      isAdmin: true,
+      isMaster: true,
+      isDealerVerified: true,
+      level: 20,
+    },
+  });
 
   const byNick = Object.fromEntries(users.map((user) => [user.nickname, user]));
   const dealer = byNick.펠트딜러;

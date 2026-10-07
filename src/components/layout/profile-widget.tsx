@@ -53,7 +53,11 @@ export function ProfileWidget({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{profile.nickname}</p>
-          {profile.isDealerVerified ? (
+          {profile.isMaster ? (
+            <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800">
+              ★ 마스터
+            </p>
+          ) : profile.isDealerVerified ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
               ★ 인증 딜러
             </p>

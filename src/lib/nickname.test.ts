@@ -11,6 +11,7 @@ describe("nickname and password", () => {
 
   it("rejects reserved and too-short names", () => {
     assert.ok(nicknameError("익명"));
+    assert.ok(nicknameError("POKA"));
     assert.ok(nicknameError("a"));
     assert.ok(passwordError("short"));
   });

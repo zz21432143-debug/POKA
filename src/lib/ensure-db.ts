@@ -2,7 +2,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import dns from "node:dns";
 import { Client } from "pg";
-import { hashPassword, SEED_ACCOUNT_PASSWORD } from "@/lib/password";
+import {
+  hashPassword,
+  MASTER_ACCOUNT_NICKNAME,
+  MASTER_ACCOUNT_PASSWORD,
+  SEED_ACCOUNT_PASSWORD,
+} from "@/lib/password";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -52,6 +57,8 @@ async function applySchema() {
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifyExpires" TIMESTAMP(3)`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "termsAcceptedAt" TIMESTAMP(3)`);
     await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isMaster" BOOLEAN NOT NULL DEFAULT false`);
+    await client.query(`CREATE INDEX IF NOT EXISTS "User_isMaster_idx" ON "User"("isMaster")`);
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -86,9 +93,41 @@ async function seedIfEmpty() {
   await prisma.$disconnect();
 }
 
+async function ensureMasterAccount() {
+  const { createPrismaClient } = await import("@/lib/create-prisma-client");
+  const prisma = createPrismaClient();
+  try {
+    await prisma.user.upsert({
+      where: { nickname: MASTER_ACCOUNT_NICKNAME },
+      create: {
+        nickname: MASTER_ACCOUNT_NICKNAME,
+        passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+        isAdmin: true,
+        isMaster: true,
+        isDealerVerified: true,
+        level: 20,
+        exp: 999999,
+        points: 999999,
+        termsAcceptedAt: new Date(),
+      },
+      update: {
+        passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+        isAdmin: true,
+        isMaster: true,
+        isDealerVerified: true,
+        level: 20,
+      },
+    });
+    console.log("ensure-db: master account ready");
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export function ensureDb() {
   boot ??= applySchema()
     .then(seedIfEmpty)
+    .then(ensureMasterAccount)
     .catch((error) => {
       console.error("ensure-db failed", error);
     });

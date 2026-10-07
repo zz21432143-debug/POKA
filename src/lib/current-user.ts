@@ -44,12 +44,19 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
 export async function listSwitchableUsers(): Promise<SwitchAccount[]> {
   return prisma.user.findMany({
-    orderBy: [{ isAdmin: "desc" }, { isDealerVerified: "desc" }, { level: "desc" }, { nickname: "asc" }],
+    orderBy: [
+      { isMaster: "desc" },
+      { isAdmin: "desc" },
+      { isDealerVerified: "desc" },
+      { level: "desc" },
+      { nickname: "asc" },
+    ],
     take: 12,
     select: {
       nickname: true,
       level: true,
       isAdmin: true,
+      isMaster: true,
       isDealerVerified: true,
       points: true,
     },

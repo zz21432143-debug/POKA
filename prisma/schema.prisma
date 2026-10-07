@@ -78,6 +78,7 @@ model User {
   points              Int      @default(0)
   isDealerVerified    Boolean  @default(false)
   isAdmin             Boolean  @default(false)
+  isMaster            Boolean  @default(false)
   memberKind          MemberKind @default(INDIVIDUAL)
   lastPostAt          DateTime?
   lastCommentAt       DateTime?
@@ -100,6 +101,7 @@ model User {
   @@index([level])
   @@index([isDealerVerified])
   @@index([isAdmin])
+  @@index([isMaster])
 }
 
 model Post {

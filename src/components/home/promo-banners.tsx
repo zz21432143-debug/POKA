@@ -9,11 +9,12 @@ export async function PromoBanners() {
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold sm:text-2xl">프리미엄 제휴</h2>
-          <p className="text-sm text-muted-foreground">홈 3×2 · 월정액 6구좌</p>
+          <p className="text-sm text-muted-foreground">홈 3×2 · 제휴 6구좌</p>
         </div>
-        <Link href="/advertise" className="touch-target inline-flex min-h-11 items-center text-sm text-primary">
-          구좌 안내
-        </Link>
+        <AdvertiseInquiryDialog
+          triggerClassName="touch-target inline-flex min-h-11 items-center text-sm font-medium text-primary"
+          triggerLabel="제휴 / 광고 문의하기"
+        />
       </div>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4">
         {banners.map((banner) => (

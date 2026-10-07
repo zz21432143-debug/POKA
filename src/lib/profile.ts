@@ -8,6 +8,7 @@ export type ViewerProfile = {
   points: number;
   isDealerVerified: boolean;
   isAdmin: boolean;
+  isMaster: boolean;
   memberKind: "COMPANY" | "INDIVIDUAL";
   attendanceStreak: number;
   lastAttendanceDate: string | null;
@@ -29,6 +30,7 @@ export async function toViewerProfile(user: {
   points: number;
   isDealerVerified: boolean;
   isAdmin?: boolean;
+  isMaster?: boolean;
   memberKind?: "COMPANY" | "INDIVIDUAL";
   attendanceStreak?: number;
   lastAttendanceDate?: string | null;
@@ -52,6 +54,7 @@ export async function toViewerProfile(user: {
     points: user.points,
     isDealerVerified: user.isDealerVerified,
     isAdmin: Boolean(user.isAdmin),
+    isMaster: Boolean(user.isMaster),
     memberKind: user.memberKind === "COMPANY" ? "COMPANY" : "INDIVIDUAL",
     attendanceStreak: user.attendanceStreak ?? 0,
     lastAttendanceDate: user.lastAttendanceDate ?? null,

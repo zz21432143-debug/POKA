@@ -28,7 +28,7 @@ export function AdPlacementMap() {
                   </div>
                 ))}
               </div>
-              <p className="px-2 pb-2 text-[10px] text-muted-foreground">월정액 · [AD]/[제휴] · 빈 칸은 문의 CTA</p>
+              <p className="px-2 pb-2 text-[10px] text-muted-foreground">[AD]/[제휴] · 빈 칸은 문의하기</p>
             </div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 1</div>
             <div className="rounded-md bg-white px-2 py-2 text-[10px] text-muted-foreground">최신글 2</div>

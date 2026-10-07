@@ -8,6 +8,7 @@ export type BadgeUser = {
   level: number;
   isDealerVerified?: boolean;
   isAdmin?: boolean;
+  isMaster?: boolean;
   attendanceStreak?: number;
   equippedFrameId?: string | null;
   equippedEffectId?: string | null;
@@ -21,6 +22,7 @@ export const AUTHOR_SELECT = {
   level: true,
   isDealerVerified: true,
   isAdmin: true,
+  isMaster: true,
   attendanceStreak: true,
   equippedFrameId: true,
   equippedEffectId: true,
@@ -73,7 +75,12 @@ export function UserBadge({
           인증 딜러
         </span>
       ) : null}
-      {user.isAdmin ? (
+      {user.isMaster ? (
+        <span className="inline-flex items-center gap-0.5 rounded-full border border-emerald-400 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-900">
+          <ShieldIcon className="size-3" />
+          마스터
+        </span>
+      ) : user.isAdmin ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
           <ShieldIcon className="size-3" />
           관리자

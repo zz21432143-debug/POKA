@@ -33,7 +33,7 @@ export function AccountSwitcher({
         {accounts.map((account) => (
           <option key={account.nickname} value={account.nickname}>
             {account.nickname}
-            {account.isAdmin ? " · 관리자" : account.isDealerVerified ? " · 인증" : ""} · Lv.
+            {account.isMaster ? " · 마스터" : account.isAdmin ? " · 관리자" : account.isDealerVerified ? " · 인증" : ""} · Lv.
             {account.level} · {account.points.toLocaleString()}P
           </option>
         ))}

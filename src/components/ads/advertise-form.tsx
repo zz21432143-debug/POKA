@@ -61,16 +61,17 @@ export function AdvertiseForm() {
         <Input id="contact" name="contact" required className="mt-1 h-11" placeholder="hello@brand.com" />
       </div>
       <div>
-        <Label htmlFor="product">희망 상품</Label>
+        <Label htmlFor="product">관심 구좌</Label>
         <select
           id="product"
           name="product"
           className="mt-1 h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
-          defaultValue={AD_PRODUCTS[0].name}
+          defaultValue="상담 후 결정"
         >
+          <option value="상담 후 결정">상담 후 결정</option>
           {AD_PRODUCTS.map((item) => (
             <option key={item.id} value={item.name}>
-              {item.name} · {item.price}
+              {item.code} · {item.name}
             </option>
           ))}
         </select>

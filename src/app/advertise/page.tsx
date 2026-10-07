@@ -1,10 +1,9 @@
 import { AdvertiseForm } from "@/components/ads/advertise-form";
 import { AdPlacementMap } from "@/components/ads/ad-placement-map";
 import { AD_PRODUCTS } from "@/lib/sponsor";
-import Link from "next/link";
 
 export const metadata = {
-  title: "제휴 및 광고 안내 — POKA",
+  title: "제휴 및 광고 문의 — POKA",
 };
 
 export default function AdvertisePage() {
@@ -12,89 +11,34 @@ export default function AdvertisePage() {
     <div className="flex flex-col gap-6">
       <header>
         <p className="text-xs font-semibold tracking-wide text-primary">SPONSOR</p>
-        <h1 className="mt-1 text-2xl font-semibold">제휴 및 광고 안내</h1>
+        <h1 className="mt-1 text-2xl font-semibold">제휴 / 광고 문의</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          직판 제휴(홈 3×2, 사이드바, 인피드, 본문 하단 A칸)가 있으면 그 소재가 먼저 붙습니다. A1–A3가
-          비면 구글이 채우고, 글 본문 위·아래와 사이드바 맨 아래에도 구글이 있습니다.
+          광고·제휴 단가는 공개하지 않습니다. 구좌와 금액은 운영자와 따로 이야기한 뒤에만 진행합니다.
+          아래 문의로 연락 주시면 됩니다.
         </p>
       </header>
-
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold">우선순위</h2>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-foreground/90">
-          <li>직접 수주한 제휴 소재(이미지·제목)가 있으면 그 칸은 제휴만 보여 줍니다.</li>
-          <li>프리미엄 6칸과 사이드바는 월정액 전용입니다. 비어 있으면 구글이 아니라 문의 버튼입니다.</li>
-          <li>본문 하단 A1–A3는 제휴 이미지가 있으면 제휴, 없으면 구글입니다. 홈과 모든 게시판 아래에 가로 한 줄입니다.</li>
-          <li>인피드도 제휴 문장이 있을 때만 한 줄을 넣습니다. 없으면 목록을 비우지 않습니다.</li>
-          <li>
-            구글은 게시자 코드로 들어옵니다. AdSense ID를{" "}
-            <code className="text-xs">NEXT_PUBLIC_ADSENSE_CLIENT</code>에 넣으면 본문 상·하단, 사이드바
-            하단, A1–A3 데모가 실제 광고로 바뀝니다.
-          </li>
-        </ol>
-        <p className="mt-3 text-xs leading-5 text-muted-foreground">
-          포커·실머니로 분류되면 AdSense 승인이 거절될 수 있습니다. 그때는 같은 G칸을 Ad Manager나 다른
-          잔여 네트워크로 바꾸면 됩니다.
-        </p>
-      </section>
 
       <AdPlacementMap />
 
       <section>
-        <h2 className="text-lg font-semibold">구좌별 위치와 단가</h2>
-        <p className="mt-1 text-xs text-muted-foreground">부가세 별도. 직판 소재는 이미지 1장(또는 인피드 문구)과 랜딩 URL이면 됩니다.</p>
+        <h2 className="text-lg font-semibold">구좌 위치</h2>
+        <p className="mt-1 text-xs text-muted-foreground">어디에 붙는지만 안내합니다. 금액은 적지 않습니다.</p>
         <ul className="mt-3 grid gap-3">
           {AD_PRODUCTS.map((item) => (
             <li key={item.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs font-semibold text-primary">
-                    {item.code} · {item.size}
-                  </p>
-                  <p className="mt-1 text-base font-semibold">{item.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-emerald-800">{item.price}</p>
-                </div>
-              </div>
-              <p className="mt-2 text-xs font-medium text-emerald-900">{item.exclusive}</p>
-              <dl className="mt-3 grid gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">어디인가</dt>
-                  <dd className="mt-0.5 leading-6">{item.where}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">왜 이 금액인가</dt>
-                  <dd className="mt-0.5 leading-6 text-foreground/90">{item.why}</dd>
-                </div>
-              </dl>
+              <p className="text-xs font-semibold text-primary">
+                {item.code} · {item.size}
+              </p>
+              <p className="mt-1 text-base font-semibold">{item.name}</p>
+              <p className="mt-1 text-xs font-medium text-emerald-900">{item.exclusive}</p>
+              <p className="mt-2 text-sm leading-6">{item.where}</p>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold">단가를 이렇게 잡았습니다</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-foreground/90">
-          <li>아직 오픈 전이라 아래는 런칭가입니다. 트래픽이 안정되면 다시 올립니다.</li>
-          <li>사이드바(S)는 PC에서 모든 페이지 옆에 고정입니다. 한 칸뿐이라 월 23만입니다. 다음 팀은 계약 종료 후거나 대기입니다.</li>
-          <li>홈 3×2(B)는 첫 화면이지만 홈에서만 보여서 월 18만입니다. 칸이 6개라 여러 팀을 받을 수 있습니다.</li>
-          <li>인피드(C)는 글 제목 3·4번째 사이입니다. 눈길이 지나가는 한 줄이라 월 12만입니다.</li>
-          <li>본문 하단 A는 목록이 끝난 뒤고 세 칸이 나눕니다. 칸당 월 8만입니다.</li>
-          <li>S와 C가 한 자리씩이라 월간 패키지는 두지 않습니다. 칸을 따로 고르면 됩니다.</li>
-        </ul>
-        <p className="mt-3 text-xs text-muted-foreground">
-          트래픽 리포트는 계약 기간에 공유하는 것을 기본으로 합니다. 공식 홍보 글은 관리자가
-          올립니다. 유료 구좌는 아래 문의가 맞습니다. 운영자는{" "}
-          <Link href="/admin/banners" className="text-primary">
-            배너 구좌 관리
-          </Link>
-          에서 6칸·사이드바·인피드를 지정합니다.
-        </p>
-      </section>
-
       <section>
-        <h2 className="mb-3 text-lg font-semibold">문의</h2>
+        <h2 className="mb-3 text-lg font-semibold">문의하기</h2>
         <AdvertiseForm />
       </section>
     </div>
