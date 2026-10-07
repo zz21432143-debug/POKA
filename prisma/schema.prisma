@@ -1,5 +1,5 @@
 // POKA — 포커/딜러 커뮤니티 스키마
-// SQLite는 로컬 개발용. 이후 PostgreSQL로 전환해도 모델 구조는 동일하게 유지합니다.
+// 운영: Neon PostgreSQL. 로컬도 postgres URL(prisma dev 또는 Docker)을 씁니다.
 
 generator client {
   provider = "prisma-client"
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 enum BoardType {

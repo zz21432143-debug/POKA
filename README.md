@@ -58,6 +58,7 @@ Node.js 20+ 가 필요합니다.
 
 ```bash
 cp .env.example .env
+# DATABASE_URL 에 PostgreSQL 주소를 넣습니다. 로컬은 `npx prisma dev` 또는 Docker.
 npm install
 npx prisma migrate deploy
 npx prisma db seed
@@ -98,16 +99,28 @@ KAKAO_REDIRECT_URI=https://pokerwiki.co.kr/api/auth/kakao/callback
 
 카카오 개발자 콘솔 Redirect URI에도 같은 주소를 등록합니다.
 
-## 프로덕션
+## 프로덕션 (Vercel + Neon)
+
+앱은 Vercel Hobby, DB는 Neon Postgres입니다. 카페24는 도메인만 쓰고 PHP 호스팅에는 올리지 않습니다.
+
+Vercel 프로젝트 환경 변수:
+
+| Key | 값 |
+| --- | --- |
+| `DATABASE_URL` | Neon Connect, Connection pooling **ON** (호스트에 `-pooler`) |
+| `DATABASE_URL_UNPOOLED` | 같은 모달에서 pooling **OFF** |
+| `NEXT_PUBLIC_SITE_URL` | `https://pokerwiki.co.kr` |
+
+Vercel Optional Integrations의 **Prisma Postgres Add 는 누르지 않습니다.** 이미 Neon을 씁니다.
+
+`npm run build`가 `prisma migrate deploy`와 (회원이 없을 때만) seed를 실행합니다. 로컬에서 데이터를 지우고 다시 넣으려면 `npm run db:seed` (`SEED_RESET=1`)입니다.
 
 ```bash
 npx prisma migrate deploy
-npx prisma db seed   # 초기 데이터가 필요할 때만
+npx prisma db seed   # 빈 DB 첫 배포. 이미 회원이 있으면 건너뜁니다
 npm run build
 npm start
 ```
-
-SQLite는 로컬/단일 인스턴스용입니다. 트래픽이 늘면 `DATABASE_URL`만 PostgreSQL로 바꾸면 모델은 그대로입니다.
 
 주요 인덱스: `Post(hidden, boardType, createdAt)`, `Post(authorIp, createdAt)`, `AuditLog(ip, createdAt)`, `Report(status, createdAt)`.
 

@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { MemberKind, PrismaClient } from "../src/generated/prisma/client";
+import { MemberKind } from "../src/generated/prisma/client";
+import { prisma } from "../src/lib/db";
 import { todayKstDate, weekStartKst, yesterdayKstDate, shiftDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
 import { hashPassword, SEED_ACCOUNT_PASSWORD } from "../src/lib/password";
@@ -14,11 +14,6 @@ import { FEATURED_OFFICIAL_POSTERS, PUBLIC_OFFICIAL_POSTERS } from "../src/lib/o
 import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
 import { weeklyHubContent, weeklyHubTitle } from "../src/lib/growth";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
-});
-const prisma = new PrismaClient({ adapter });
-
 const LEVELS = Array.from({ length: 20 }, (_, i) => {
   const level = i + 1;
   const requiredExp = Math.round(100 * (level - 1) ** 2.15);
@@ -27,6 +22,15 @@ const LEVELS = Array.from({ length: 20 }, (_, i) => {
 });
 
 async function main() {
+  const reset = process.env.SEED_RESET === "1";
+  if (!reset) {
+    const existing = await prisma.user.count();
+    if (existing > 0) {
+      console.log("POKA seed skip: users already exist");
+      return;
+    }
+  }
+
   await prisma.tickerEvent.deleteMany();
   await prisma.writeThrottle.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -51,25 +55,25 @@ async function main() {
 
   await prisma.levelExp.createMany({ data: LEVELS });
 
-  const marks = await Promise.all(
-    [
-      { slug: "dealer", name: "딜러 스타", imageUrl: "/marks/dealer.svg", pricePoints: 0, minLevel: 1, category: "LEVEL" as const },
-      { slug: "crown", name: "크라운", imageUrl: "/marks/crown.svg", pricePoints: 900, minLevel: 8, category: "LEVEL" as const },
-      { slug: "chip", name: "칩", imageUrl: "/marks/chip.svg", pricePoints: 120, minLevel: 1, category: "SPECIAL" as const },
-      { slug: "ace", name: "에이스", imageUrl: "/marks/ace.svg", pricePoints: 400, minLevel: 3, category: "SPECIAL" as const },
-      { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
-      { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
-      { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
-      { slug: "team-a", name: "TOP", imageUrl: "/images/badges/team_1.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-b", name: "PLIME", imageUrl: "/images/badges/team_2.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-c", name: "HAM", imageUrl: "/images/badges/team_3.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-d", name: "ROCKET", imageUrl: "/images/badges/team_4.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-e", name: "GUNNER", imageUrl: "/images/badges/team_5.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-      { slug: "team-f", name: "DOO", imageUrl: "/images/badges/team_6.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
-    ].map((data) => prisma.mark.create({ data })),
-  );
+  const markRows = [
+    { slug: "dealer", name: "딜러 스타", imageUrl: "/marks/dealer.svg", pricePoints: 0, minLevel: 1, category: "LEVEL" as const },
+    { slug: "crown", name: "크라운", imageUrl: "/marks/crown.svg", pricePoints: 900, minLevel: 8, category: "LEVEL" as const },
+    { slug: "chip", name: "칩", imageUrl: "/marks/chip.svg", pricePoints: 120, minLevel: 1, category: "SPECIAL" as const },
+    { slug: "ace", name: "에이스", imageUrl: "/marks/ace.svg", pricePoints: 400, minLevel: 3, category: "SPECIAL" as const },
+    { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+    { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+    { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: 280, minLevel: 2, category: "SPECIAL" as const },
+    { slug: "team-a", name: "TOP", imageUrl: "/images/badges/team_1.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-b", name: "PLIME", imageUrl: "/images/badges/team_2.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-c", name: "HAM", imageUrl: "/images/badges/team_3.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-d", name: "ROCKET", imageUrl: "/images/badges/team_4.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-e", name: "GUNNER", imageUrl: "/images/badges/team_5.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-f", name: "DOO", imageUrl: "/images/badges/team_6.png", pricePoints: 2000, minLevel: 1, category: "TEAM" as const },
+  ];
+  await prisma.mark.createMany({ data: markRows });
+  const marks = await prisma.mark.findMany();
   const bySlug = Object.fromEntries(marks.map((mark) => [mark.slug, mark]));
-  const markList = marks;
+  const markList = markRows.map((row) => bySlug[row.slug]!);
 
   const today = todayKstDate();
   const yesterday = yesterdayKstDate(today);

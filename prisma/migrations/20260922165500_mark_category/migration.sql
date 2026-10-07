@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Mark" ADD COLUMN "category" TEXT NOT NULL DEFAULT 'SPECIAL';
