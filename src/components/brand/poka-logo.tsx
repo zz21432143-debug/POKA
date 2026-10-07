@@ -12,27 +12,20 @@ export function PokaLogo({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5",
+        "inline-flex items-center",
         !onDark && "rounded-xl bg-[#07150f] px-2 py-1",
         className,
       )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/poka-mark.svg"
+        src="/brand/poka-wordmark.png"
         alt=""
-        width={36}
-        height={36}
+        width={204}
+        height={53}
         className={cn("w-auto shrink-0", compact ? "h-7" : "h-8 sm:h-9")}
       />
-      <span
-        className={cn(
-          "font-black tracking-tight text-white",
-          compact ? "text-lg" : "text-xl sm:text-2xl",
-        )}
-      >
-        POKA
-      </span>
+      <span className="sr-only">POKA</span>
     </span>
   );
 }
