@@ -33,8 +33,13 @@ export async function sendMail(options: { to: string; subject: string; text: str
   }
 }
 
+function verifyBaseUrl() {
+  if (process.env.NODE_ENV === "development") return "http://127.0.0.1:43123";
+  return siteUrl();
+}
+
 export function verificationMail(email: string, token: string) {
-  const url = `${siteUrl()}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const url = `${verifyBaseUrl()}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
   return {
     url,
     subject: "[POKA] 이메일 인증",
