@@ -2,7 +2,14 @@ import { readSessionValue, signSessionValue } from "@/lib/session";
 
 export const CONSENT_COOKIE = "poka_oauth_consent";
 export const OAUTH_NEXT_COOKIE = "poka_oauth_next";
+export const OAUTH_INTENT_COOKIE = "poka_oauth_intent";
 export const GOOGLE_STATE_COOKIE = "poka_google_state";
+
+export type OauthIntent = "login" | "signup";
+
+export function parseOauthIntent(raw: string | undefined | null): OauthIntent {
+  return raw === "signup" ? "signup" : "login";
+}
 
 const CONSENT_TTL_MS = 20 * 60 * 1000;
 

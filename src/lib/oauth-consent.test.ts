@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { consentIsValid, packOauthConsent, safeNextPath } from "./oauth-consent";
+import { consentIsValid, packOauthConsent, parseOauthIntent, safeNextPath } from "./oauth-consent";
 import { signSessionValue } from "./session";
 
 describe("oauth consent", () => {
@@ -28,5 +28,12 @@ describe("oauth consent", () => {
     assert.equal(safeNextPath("//evil.example"), "/");
     assert.equal(safeNextPath("https://evil.example"), "/");
     assert.equal(safeNextPath("/ok://no"), "/");
+  });
+
+  it("treats oauth intent as login unless signup is set", () => {
+    assert.equal(parseOauthIntent(undefined), "login");
+    assert.equal(parseOauthIntent("login"), "login");
+    assert.equal(parseOauthIntent("signup"), "signup");
+    assert.equal(parseOauthIntent("other"), "login");
   });
 });

@@ -2,7 +2,12 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { toViewerProfile, type ViewerProfile } from "@/lib/profile";
-import { CONSENT_COOKIE, GOOGLE_STATE_COOKIE, OAUTH_NEXT_COOKIE } from "@/lib/oauth-consent";
+import {
+  CONSENT_COOKIE,
+  GOOGLE_STATE_COOKIE,
+  OAUTH_INTENT_COOKIE,
+  OAUTH_NEXT_COOKIE,
+} from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
 import type { SwitchAccount } from "@/lib/switch-account";
 
@@ -32,6 +37,7 @@ export async function clearSession() {
   jar.set(GOOGLE_STATE_COOKIE, "", expire);
   jar.set(CONSENT_COOKIE, "", expire);
   jar.set(OAUTH_NEXT_COOKIE, "", expire);
+  jar.set(OAUTH_INTENT_COOKIE, "", expire);
 }
 
 async function findUserBySession() {

@@ -22,12 +22,20 @@ export function ProfileWidget({
     return (
       <div className="rounded-2xl border border-border bg-white p-4 text-sm">
         <p className="text-muted-foreground">로그인하면 레벨, 출석, 글쓰기를 쓸 수 있습니다.</p>
-        <Link
-          href="/login"
-          className="mt-3 flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white"
-        >
-          로그인 / 가입
-        </Link>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link
+            href="/login"
+            className="flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white"
+          >
+            로그인
+          </Link>
+          <Link
+            href="/login?tab=signup"
+            className="flex min-h-11 items-center justify-center rounded-full border border-primary text-sm font-semibold text-primary"
+          >
+            회원가입
+          </Link>
+        </div>
       </div>
     );
   }

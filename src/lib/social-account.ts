@@ -29,20 +29,26 @@ export async function uniqueSocialNickname(base: string, fallback: string) {
   return candidate;
 }
 
+export async function findSocialUser(profile: Pick<SocialProfile, "provider" | "providerId" | "email">) {
+  const email = cleanEmail(profile.email);
+  const providerId = profile.providerId.trim();
+  if (!providerId) return null;
+  const byId =
+    profile.provider === "kakao"
+      ? await prisma.user.findUnique({ where: { kakaoId: providerId } })
+      : await prisma.user.findUnique({ where: { googleId: providerId } });
+  if (byId) return byId;
+  if (!email) return null;
+  return prisma.user.findUnique({ where: { email } });
+}
+
 export async function upsertSocialUser(profile: SocialProfile) {
   const now = new Date();
   const email = cleanEmail(profile.email);
   const providerId = profile.providerId.trim();
   if (!providerId) throw new Error("소셜 계정 식별자를 받지 못했습니다.");
 
-  let user =
-    profile.provider === "kakao"
-      ? await prisma.user.findUnique({ where: { kakaoId: providerId } })
-      : await prisma.user.findUnique({ where: { googleId: providerId } });
-
-  if (!user && email) {
-    user = await prisma.user.findUnique({ where: { email } });
-  }
+  let user = await findSocialUser(profile);
 
   const consents = {
     adultConfirmedAt: now,
