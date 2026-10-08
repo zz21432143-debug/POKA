@@ -17,7 +17,7 @@ export function KakaoInquiryLink({
     <a
       href={target}
       className={cn(
-        "relative z-30 inline-flex min-h-11 items-center justify-center rounded-full bg-[#FEE500] px-4 text-sm font-semibold text-[#191919] hover:bg-[#F6DC00]",
+        "relative z-30 inline-flex min-h-11 items-center justify-center rounded-full bg-[#c59b27] px-4 text-sm font-semibold text-[#1c1408] hover:bg-[#b38c22]",
         className,
       )}
     >

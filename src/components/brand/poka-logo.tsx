@@ -4,12 +4,10 @@ export function PokaLogo({
   className,
   compact = false,
   onDark = false,
-  hideScript = false,
 }: {
   className?: string;
   compact?: boolean;
   onDark?: boolean;
-  hideScript?: boolean;
 }) {
   if (onDark) {
     return (
@@ -23,14 +21,6 @@ export function PokaLogo({
           className={cn("size-8 shrink-0 rounded-full object-cover", compact ? "size-7" : null)}
         />
         <span className={cn("font-black tracking-tight text-white", compact ? "text-base" : "text-lg")}>POKA</span>
-        {hideScript ? null : (
-          <span
-            className={cn("leading-none text-[#ef3b3b]", compact ? "text-lg" : "text-[1.65rem]")}
-            style={{ fontFamily: "var(--font-brush), serif" }}
-          >
-            108요괴
-          </span>
-        )}
         <span className="sr-only">POKA</span>
       </span>
     );

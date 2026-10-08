@@ -114,7 +114,7 @@ export function AuthForm({
         <Button
           type="button"
           size="touch"
-          className="h-12 w-full rounded-xl border-0 bg-[#FEE500] text-base font-semibold text-[#191919] hover:bg-[#F6DC00]"
+          className="h-12 w-full rounded-xl border-0 bg-[#c59b27] text-base font-semibold text-[#1c1408] hover:bg-[#b38c22]"
           disabled={pending !== null}
           onClick={() => void startSocial("kakao")}
         >

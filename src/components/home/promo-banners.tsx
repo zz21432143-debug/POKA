@@ -20,7 +20,7 @@ export async function PromoBanners() {
         {banners.map((banner) => (
           <li key={banner.id}>
             {banner.vacant ? (
-              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#cbbfa8] bg-[#f7f1e6] px-2 text-center">
+              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl bg-[#f7f1e6] px-2 text-center shadow-[0_2px_8px_rgb(0_0_0/0.06)]">
                 <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">B{banner.id}</p>
                 <p className="mt-1 text-sm font-semibold text-[#5c3a22]">제휴 구좌 비어 있음</p>
                 <div className="mt-2">
@@ -30,7 +30,7 @@ export async function PromoBanners() {
             ) : (
               <Link
                 href={banner.href}
-                className="touch-target group block overflow-hidden rounded-2xl border border-border bg-card focus-visible:ring-2 focus-visible:ring-ring"
+                className="touch-target group block overflow-hidden rounded-2xl bg-card shadow-[0_2px_8px_rgb(0_0_0/0.06)] focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <div className="relative aspect-[4/5] bg-black">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -47,7 +47,7 @@ export function KakaoOpenChatCta({
         className,
       )}
     >
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#191919] text-[#FEE500]">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1c1408] text-[#c59b27]">
         <KakaoBubbleIcon className="size-6" />
       </span>
       <span className="min-w-0">

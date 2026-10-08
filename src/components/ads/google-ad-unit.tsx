@@ -40,7 +40,7 @@ export function GoogleAdUnit({
   }, [client, unit]);
 
   const frame = cn(
-    "overflow-hidden rounded-xl border-2 border-dashed border-slate-400 bg-slate-100",
+    "overflow-hidden rounded-xl bg-slate-100/90",
     className,
   );
 

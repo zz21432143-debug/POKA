@@ -43,7 +43,7 @@ export function ProfileWidget({
   if (!profile) {
     return (
       <div className="lounge-card rounded-[1.35rem] p-4 text-sm">
-        <p className="rounded-xl border border-[#eadcc4] bg-[#fffaf2] px-3 py-2.5 text-center text-sm font-semibold text-[#3f3424]">
+        <p className="rounded-xl bg-[#fffaf2] px-3 py-2.5 text-center text-sm font-semibold text-[#3f3424]">
           로그인이 필요합니다
         </p>
         <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">
@@ -110,7 +110,7 @@ export function ProfileWidget({
   return (
     <section className="lounge-card rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#c9a24a]">
+        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#C59B27]">
           <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
@@ -126,7 +126,7 @@ export function ProfileWidget({
             </p>
           ) : null}
         </div>
-        <span className="rounded-full bg-[#1c1612] px-2 py-0.5 text-[11px] font-semibold text-[#f0d48a] ring-1 ring-[#c9a24a]">
+        <span className="rounded-full bg-[#1c1612] px-2 py-0.5 text-[11px] font-semibold text-[#C59B27]">
           Lv.{profile.level}
         </span>
       </div>
@@ -180,7 +180,7 @@ function AttendanceStreakCard({
   const checkedInToday = lastAttendanceDate === todayKstDate();
   const displayStreak = lastAttendanceDate ? streak : 0;
   return (
-    <div className="mt-2.5 rounded-xl border border-[#e2d7c5] bg-[#efe6d6] px-3 py-2">
+    <div className="mt-2.5 rounded-xl bg-[#efe6d6] px-3 py-2">
       <p className="text-[13px] font-semibold text-[#2b1810]">
         연속 출석{" "}
         <strong className="text-sm">{displayStreak.toLocaleString()}일</strong>

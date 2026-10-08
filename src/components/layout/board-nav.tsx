@@ -111,7 +111,7 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 flex items-center gap-2 rounded-2xl border border-[#5c2428] bg-[#2a1214] px-3 py-2">
+      <div className="m-3 flex items-center gap-2 rounded-2xl bg-[#2a1214] px-3 py-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/theme/yokai-cat.jpg" alt="" width={72} height={72} className="size-16 shrink-0 rounded-xl object-cover" />
         <p className="text-sm font-black leading-5 text-[#f6e7d4]">

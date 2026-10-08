@@ -164,8 +164,33 @@
 }
 
 .felt-bg {
-  background: #0b0908 url("/theme/yokai-bg.jpg") center top / cover no-repeat fixed;
+  background: #0b0908;
   color: #f6efe4;
+  isolation: isolate;
+}
+
+.felt-bg::before {
+  content: "";
+  position: fixed;
+  inset: -20px;
+  background: url("/theme/yokai-bg.jpg") center top / cover no-repeat;
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.felt-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.felt-bg > * {
+  position: relative;
+  z-index: 1;
 }
 
 .board-face {
@@ -178,7 +203,7 @@
 }
 
 .lounge-card {
-  border: 1px solid #e7dccb;
+  border: 0;
   border-radius: 16px;
   background: #f7f2ea;
   color: #2b1810;
@@ -186,7 +211,7 @@
 }
 
 .wood-frame {
-  border: 1px solid #4a2428;
+  border: 0;
   border-radius: 18px;
   background: #14110f;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
@@ -217,23 +242,23 @@
 }
 
 .btn-3d {
-  border: 1px solid #e2d7c5;
+  border: 0;
   background: #fffaf4;
   color: #2b1810;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  box-shadow: none;
 }
 
 .btn-3d-green {
-  border: 1px solid #6d1822;
+  border: 0;
   background: #8e2430;
   color: #fff8ee;
   box-shadow: none;
 }
 
 .btn-3d-gold {
-  border: 1px solid #e0b000;
-  background: #f5c400;
-  color: #3a2a10;
+  border: 0;
+  background: #c59b27;
+  color: #1c1408;
   box-shadow: none;
 }
 

@@ -35,7 +35,7 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
   return (
     <section
       aria-label="사이드바 제휴 배너 공석"
-      className="mx-auto flex min-h-[132px] w-full max-w-[300px] flex-col items-center justify-center rounded-[1.25rem] border-2 border-dashed border-[#d7ccb8] bg-[#fffcf7] px-3 py-5"
+      className="mx-auto flex min-h-[132px] w-full max-w-[300px] flex-col items-center justify-center rounded-[1.25rem] bg-[#fffcf7] px-3 py-5 shadow-[0_2px_8px_rgb(0_0_0/0.06)]"
     >
       <p className="mb-3 text-xs font-semibold text-[#8a7f6c]">S · 전 페이지 고정</p>
       <AdvertiseInquiryCta />

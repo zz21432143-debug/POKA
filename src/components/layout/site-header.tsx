@@ -23,7 +23,7 @@ export function SiteHeader({
           </a>
         </div>
         <a href="/" className="relative z-0 flex min-w-0 justify-center lg:hidden">
-          <PokaLogo onDark compact hideScript />
+          <PokaLogo onDark compact />
         </a>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
