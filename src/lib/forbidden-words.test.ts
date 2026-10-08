@@ -43,12 +43,14 @@ describe("sanction durations", () => {
 });
 
 describe("ga measurement id", () => {
-  it("rejects empty or malformed ids", () => {
+  it("uses the POKA measurement id unless env overrides it", () => {
     const previous = process.env.NEXT_PUBLIC_GA_ID;
+    delete process.env.NEXT_PUBLIC_GA_ID;
+    assert.equal(gaMeasurementId(), "G-MW7F9CY9XD");
     process.env.NEXT_PUBLIC_GA_ID = "";
-    assert.equal(gaMeasurementId(), null);
+    assert.equal(gaMeasurementId(), "G-MW7F9CY9XD");
     process.env.NEXT_PUBLIC_GA_ID = "not-a-ga-id";
-    assert.equal(gaMeasurementId(), null);
+    assert.equal(gaMeasurementId(), "G-MW7F9CY9XD");
     process.env.NEXT_PUBLIC_GA_ID = "G-ABC123";
     assert.equal(gaMeasurementId(), "G-ABC123");
     if (previous === undefined) delete process.env.NEXT_PUBLIC_GA_ID;
