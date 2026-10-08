@@ -257,8 +257,16 @@
 
 .btn-3d-gold {
   border: 0;
-  background: #c59b27;
-  color: #1c1408;
+  background: #8b2222;
+  color: #fff8ee;
+  box-shadow: none;
+}
+
+.wood-frame nav a,
+.wood-frame nav li,
+.board-face nav a,
+.board-face nav li {
+  border: 0;
   box-shadow: none;
 }
 

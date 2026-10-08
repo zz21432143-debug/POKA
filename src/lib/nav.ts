@@ -65,8 +65,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: null,
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
-      { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
-      { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
+      { href: "/boards/sketch", label: "현장 취재처", hint: "현장 사진", icon: "camera" },
+      { href: "/boards/jobs", label: "딜러 구인·구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
@@ -75,7 +75,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "정보센터",
     items: [
-      { href: "/practice", label: "딜러 연습", hint: "사이드팟 · 미니멈 레이즈", icon: "lightbulb" },
+      { href: "/practice", label: "딜러 연습", hint: "사이드팟 · 미니멈 레이즈", icon: "book" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],
@@ -83,7 +83,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "기타",
     items: [
-      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
+      { href: "/shop", label: "매너 상점", hint: "포인트로 마크 구매", icon: "badge" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "megaphone" },
       { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },
