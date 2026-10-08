@@ -74,7 +74,7 @@ async function ConnectedFeedAds() {
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#07150f]">
+      <div className="sticky top-0 z-40 bg-[#0b2b1d]">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>
@@ -87,7 +87,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </Suspense>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[16rem] shrink-0 lg:block">
-          <div className="flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-[#d7ccb8] bg-[#f3eee4] shadow-[0_10px_28px_rgb(60_40_16_/_0.1)]">
+          <div className="wood-frame flex h-full flex-col overflow-hidden">
             <BoardNav />
           </div>
         </aside>

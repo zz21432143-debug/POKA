@@ -7,12 +7,12 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
   const creative = fill.creative;
 
   return (
-    <li className="bg-emerald-50/70">
+    <li className="bg-[#f6edd4]">
       <Link
         href={creative.href}
-        className="touch-target flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-emerald-50"
+        className="touch-target flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-[#f3e4bc]"
       >
-        <span className="h-6 shrink-0 rounded-full border border-primary/30 bg-white px-2.5 text-[11px] font-semibold text-emerald-800">
+        <span className="h-6 shrink-0 rounded-full border border-[#e2c36a] bg-[#fffaf2] px-2.5 text-[11px] font-semibold text-[#8a6a2a]">
           {creative.mark}
         </span>
         <div className="min-w-0 flex-1">

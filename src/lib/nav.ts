@@ -62,9 +62,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [{ href: "/", label: "홈", hint: "커뮤니티 홈", icon: "home" }],
   },
   {
-    title: "커뮤니티",
+    title: null,
     items: [
-      { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP", icon: "check" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },

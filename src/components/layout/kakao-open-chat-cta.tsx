@@ -27,7 +27,7 @@ export function KakaoOpenChatCta({
         rel="noopener noreferrer"
         aria-label="POKA 공식 오픈채팅방 참여하기"
         className={cn(
-          "touch-target inline-flex size-11 items-center justify-center rounded-full bg-[#FEE500] text-[#191919] shadow-sm hover:bg-[#f5dc00] sm:h-11 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
+          "btn-3d-gold touch-target inline-flex size-11 items-center justify-center rounded-full sm:h-10 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
           className,
         )}
       >
@@ -43,8 +43,7 @@ export function KakaoOpenChatCta({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "touch-target flex w-full items-center gap-3 rounded-[1.25rem] bg-[#FEE500] px-4 py-3.5 text-[#191919]",
-        "shadow-sm ring-1 ring-black/5 hover:bg-[#f5dc00]",
+        "btn-3d-gold touch-target flex w-full items-center gap-3 rounded-[1.25rem] px-4 py-3.5",
         className,
       )}
     >

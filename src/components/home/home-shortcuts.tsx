@@ -22,8 +22,8 @@ export function HomeShortcuts() {
             href={item.href}
             className={
               item.filled
-                ? "touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-[#0d3b24] px-3 text-center text-[13px] font-semibold text-white"
-                : "touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#d7ccb8] bg-[#fffcf7] px-3 text-center text-[13px] font-semibold text-foreground hover:border-primary"
+                ? "btn-3d-green touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-center text-[13px] font-semibold"
+                : "btn-3d touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-center text-[13px] font-semibold text-foreground"
             }
           >
             <item.icon className={`size-3.5 shrink-0 ${item.filled ? "text-emerald-300" : "text-primary"}`} />

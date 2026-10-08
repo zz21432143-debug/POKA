@@ -9,6 +9,17 @@ import { formatRelativeKst } from "@/lib/dates";
 import { Fragment } from "react";
 import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
 import type { DirectCreative } from "@/lib/inventory-policy";
+import { cn } from "cn";
+
+function boardBadgeClass(board: string) {
+  if (board === "FREE") return "bg-[#1b6b3a] text-white";
+  if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
+  if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
+    return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
+  }
+  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#0d3b24] text-emerald-100";
+  return "bg-[#efe4cc] text-[#5c4a2a]";
+}
 
 export type PostSummary = {
   id: string;
@@ -72,7 +83,10 @@ export function PostList({
               {showBoard ? (
                 <Badge
                   variant="secondary"
-                  className="h-5 shrink-0 rounded-full bg-[#0d3b24] px-2 text-[10px] font-semibold text-emerald-100"
+                  className={cn(
+                    "h-5 shrink-0 rounded-full px-2 text-[10px] font-semibold",
+                    boardBadgeClass(post.boardType),
+                  )}
                 >
                   {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
                 </Badge>
@@ -94,8 +108,14 @@ export function PostList({
                   {post.title}
                 </Link>
                 {compact ? (
-                  <p className="truncate text-[11px] text-[#8a7f6c]">
-                    {anonymous ? "익명" : post.author.nickname} · {formatRelativeKst(post.createdAt)}
+                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]">
+                    <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
+                    {!anonymous && post.author ? (
+                      <span className="shrink-0 rounded bg-emerald-800/10 px-1 text-[10px] font-bold text-emerald-800">
+                        Lv.{post.author.level}
+                      </span>
+                    ) : null}
+                    <span className="shrink-0">{formatRelativeKst(post.createdAt)}</span>
                   </p>
                 ) : (
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
@@ -126,12 +146,10 @@ export function PostList({
                     <EyeIcon className="size-3.5" />
                     {post.viewCount ?? 0}
                   </span>
-                  {compact ? null : (
-                    <span className="inline-flex items-center gap-1">
-                      <MessageCircleIcon className="size-3.5" />
-                      {post.commentCount ?? 0}
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <MessageCircleIcon className="size-3.5" />
+                    {post.commentCount ?? 0}
+                  </span>
                 </div>
               )}
             </li>

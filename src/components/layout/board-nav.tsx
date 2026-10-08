@@ -68,7 +68,7 @@ export function BoardNav({
           className={cn(
             "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold",
             homeActive
-              ? "bg-[#0d3b24] text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.08)]"
+              ? "home-tab-3d text-white"
               : "bg-[#143d28] text-emerald-50 hover:bg-[#0d3b24]",
           )}
         >
@@ -81,7 +81,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#8a7f6c]">
+              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#a6843d]">
                 {group.title}
               </p>
             ) : null}
@@ -96,12 +96,12 @@ export function BoardNav({
                       className={cn(
                         "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
                         active
-                          ? "bg-[#0d3b24] font-semibold text-white"
-                          : "font-medium text-[#3f3a32] hover:bg-[#efe4cc]",
+                          ? "home-tab-3d font-semibold text-white"
+                          : "font-medium text-[#6d5834] hover:bg-[#efe4cc]",
                       )}
                       onClick={onNavigate}
                     >
-                      <Icon className={cn("size-4 shrink-0", active ? "text-emerald-200" : "text-[#b8860b]")} />
+                      <Icon className={cn("size-4 shrink-0", active ? "text-[#f3e2a4]" : "text-[#D4AF37]")} />
                       <span className="min-w-0 flex-1">{item.label}</span>
                     </a>
                   </li>
@@ -111,15 +111,17 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-[1.25rem] bg-[#0d3b24] px-4 py-5 text-center text-emerald-50">
-        <SpadeIcon className="mx-auto size-8 text-emerald-200" />
+      <div className="m-3 rounded-[1.25rem] bg-[#0d3b24] px-4 py-5 text-center shadow-[inset_0_1px_0_rgb(255_255_255_/_0.12),0_4px_0_#062214]">
+        <span className="mx-auto flex size-10 items-center justify-center rounded-full border-2 border-[#D4AF37] bg-[#145232] text-[#D4AF37] shadow-[inset_0_2px_0_rgb(255_255_255_/_0.15)]">
+          <SpadeIcon className="size-5" />
+        </span>
         <p
-          className="mt-2 text-[16px] leading-6"
+          className="mt-2 text-[16px] leading-6 text-[#D4AF37]"
           style={{ fontFamily: "var(--font-script), cursive" }}
         >
           포카와 함께하는
           <br />
-          즐거운 시간들!
+          즐거운 시간들! ✌️
         </p>
       </div>
     </nav>

@@ -3,8 +3,19 @@
 import { useFormStatus } from "react-dom";
 import { logoutAction } from "@/lib/logout-action";
 
-function LogoutSubmit({ variant }: { variant: "button" | "row" }) {
+function LogoutSubmit({ variant }: { variant: "button" | "row" | "raised" }) {
   const { pending } = useFormStatus();
+  if (variant === "raised") {
+    return (
+      <button
+        type="submit"
+        disabled={pending}
+        className="btn-3d touch-target flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f] disabled:opacity-60"
+      >
+        {pending ? "로그아웃 중…" : "로그아웃"}
+      </button>
+    );
+  }
   if (variant === "row") {
     return (
       <button
@@ -30,7 +41,7 @@ function LogoutSubmit({ variant }: { variant: "button" | "row" }) {
   );
 }
 
-export function LogoutButton({ variant = "button" }: { variant?: "button" | "row" }) {
+export function LogoutButton({ variant = "button" }: { variant?: "button" | "row" | "raised" }) {
   return (
     <form action={logoutAction} className="w-full">
       <LogoutSubmit variant={variant} />

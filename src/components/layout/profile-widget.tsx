@@ -6,18 +6,29 @@ import { displayMarkSrc } from "@/lib/mark-assets";
 import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
-import { ChevronRightIcon } from "lucide-react";
-
 export { MarkImage };
 
-function ProfileRow({ href, children }: { href: string; children: string }) {
+function ProfileAction({
+  href,
+  children,
+  tone = "plain",
+}: {
+  href: string;
+  children: string;
+  tone?: "plain" | "green" | "gold";
+}) {
   return (
     <Link
       href={href}
-      className="touch-target flex min-h-10 items-center justify-between border-t border-[#eee4d2] px-0.5 text-[13px] font-medium text-[#2b271f] hover:text-primary"
+      className={
+        tone === "green"
+          ? "btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl border-primary text-sm font-semibold text-primary"
+          : tone === "gold"
+            ? "btn-3d-gold touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
+            : "btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
+      }
     >
       {children}
-      <ChevronRightIcon className="size-4 text-[#b8ae9c]" />
     </Link>
   );
 }
@@ -32,21 +43,44 @@ export function ProfileWidget({
   if (!profile) {
     return (
       <div className="lounge-card rounded-[1.35rem] p-4 text-sm">
-        <p className="text-muted-foreground">로그인하면 레벨, 출석, 글쓰기를 쓸 수 있습니다.</p>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Link
-            href="/login"
-            className="flex min-h-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white"
+        <p className="rounded-xl border border-[#eadcc4] bg-[#fffaf2] px-3 py-2.5 text-center text-sm font-semibold text-[#3f3424]">
+          로그인이 필요합니다
+        </p>
+        <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">
+          레벨, 출석, 글쓰기는 로그인 후 이용할 수 있습니다.
+        </p>
+        <div className="mt-3 flex flex-col gap-2">
+          <a
+            href="/api/auth/kakao?intent=login&next=%2F"
+            className="btn-3d-gold touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
           >
-            로그인
+            카카오 로그인
+          </a>
+          <Link
+            href="/login?error=naver_soon"
+            className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#03C75A]"
+          >
+            네이버 로그인
           </Link>
           <Link
-            href="/login?tab=signup"
-            className="flex min-h-10 items-center justify-center rounded-full border border-primary text-sm font-semibold text-primary"
+            href="/login?ops=1"
+            className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
           >
-            회원가입
+            아이디/비밀번호 로그인
           </Link>
         </div>
+        <p className="mt-2 text-center text-[11px] leading-4 text-muted-foreground">
+          일반 회원은 카카오·구글입니다. 네이버는 준비 중이고, 아이디/비밀번호는 운영 계정용입니다.
+        </p>
+        <p className="mt-3 flex items-center justify-center gap-3 text-[12px] font-semibold">
+          <Link href="/login?tab=signup" className="text-primary hover:underline">
+            회원가입
+          </Link>
+          <span className="text-[#d7ccb8]">|</span>
+          <Link href="/login?ops=1" className="text-[#6d5834] hover:underline">
+            ID/PW 찾기
+          </Link>
+        </p>
       </div>
     );
   }
@@ -120,13 +154,17 @@ export function ProfileWidget({
         streak={profile.attendanceStreak}
         lastAttendanceDate={profile.lastAttendanceDate}
       />
-      <div className="mt-2">
-        {profile.isAdmin ? <ProfileRow href="/admin">관리자 페이지</ProfileRow> : null}
-        {profile.isMaster ? <ProfileRow href="/admin/members">인증 달기</ProfileRow> : null}
-        <ProfileRow href="/shop">마크 상점</ProfileRow>
-        <ProfileRow href={meHref}>내 프로필</ProfileRow>
-        <ProfileRow href="/account">내 정보</ProfileRow>
-        <LogoutButton variant="row" />
+      <div className="mt-3 flex flex-col gap-2 pb-3">
+        {profile.isAdmin ? <ProfileAction href="/admin">관리자 페이지</ProfileAction> : null}
+        {profile.isMaster ? <ProfileAction href="/admin/members">인증 달기</ProfileAction> : null}
+        <ProfileAction href="/shop" tone="green">
+          마크 상점
+        </ProfileAction>
+        <ProfileAction href={meHref} tone="green">
+          내 프로필 보기 →
+        </ProfileAction>
+        <ProfileAction href="/account">내 정보</ProfileAction>
+        <LogoutButton variant="raised" />
       </div>
     </section>
   );
