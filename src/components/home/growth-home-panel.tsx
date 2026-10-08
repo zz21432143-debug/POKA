@@ -24,7 +24,7 @@ export function GrowthHomePanel({
     <section className="grid gap-3 sm:grid-cols-2">
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#005A44] text-white">
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#C86D2A] text-[#fff8ee]">
             <SpadeIcon className="size-4 shrink-0" />
           </span>
           {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}

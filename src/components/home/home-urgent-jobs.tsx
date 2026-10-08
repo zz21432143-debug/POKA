@@ -17,7 +17,7 @@ export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
           <SirenIcon className="size-4 text-rose-600" />
           급구 / 대타
         </span>
-        <Link href="/boards/jobs/urgent" className="ml-auto text-xs font-semibold text-slate-700 hover:text-primary">
+        <Link href="/boards/jobs/urgent" className="ml-auto text-xs font-semibold text-[#6d5844] hover:text-primary">
           더보기
         </Link>
       </div>

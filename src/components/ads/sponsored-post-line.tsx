@@ -16,8 +16,8 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
           {creative.mark}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-bold leading-snug text-emerald-950">{creative.title}</p>
-          <p className="mt-1 truncate text-xs text-emerald-800/80">
+          <p className="truncate text-[17px] font-bold leading-snug text-[#2b1810]">{creative.title}</p>
+          <p className="mt-1 truncate text-xs text-[#6d5844]">
             {creative.advertiser}
             {creative.advertiser ? " · " : ""}
             커뮤니티 제휴 · 목록 3번째와 4번째 사이

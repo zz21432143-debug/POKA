@@ -13,7 +13,7 @@ export function TopNav() {
         const active = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`);
         const className = cn(
           "relative z-10 touch-target inline-flex min-h-11 items-center px-3 text-sm font-medium",
-          active ? "text-white" : "text-white/60 hover:text-white",
+          active ? "text-[#F5EFE6]" : "text-[#F5EFE6]/70 hover:text-[#F5EFE6]",
         );
         return item.href === "/" ? (
           <a key={item.href} href="/" className={className}>

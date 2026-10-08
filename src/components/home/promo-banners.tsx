@@ -22,7 +22,7 @@ export async function PromoBanners() {
             {banner.vacant ? (
               <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#cbbfa8] bg-[#f7f1e6] px-2 text-center">
                 <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">B{banner.id}</p>
-                <p className="mt-1 text-sm font-semibold text-emerald-900">제휴 구좌 비어 있음</p>
+                <p className="mt-1 text-sm font-semibold text-[#5c3a22]">제휴 구좌 비어 있음</p>
                 <div className="mt-2">
                   <AdvertiseInquiryDialog triggerClassName="inline-flex min-h-10 items-center rounded-full bg-primary px-3 text-xs font-semibold text-white" />
                 </div>

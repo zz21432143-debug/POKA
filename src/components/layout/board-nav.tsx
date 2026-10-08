@@ -68,8 +68,8 @@ export function BoardNav({
           className={cn(
             "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold",
             homeActive
-              ? "home-tab-3d text-white"
-              : "text-[#374151] hover:bg-[#f3f4f6]",
+              ? "home-tab-3d text-[#fff8ee]"
+              : "text-[#2B1810] hover:bg-[#efe6d6]",
           )}
         >
           <HomeIcon className="size-4 shrink-0" />
@@ -81,7 +81,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#6b7280]">
+              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#8a6a4a]">
                 {group.title}
               </p>
             ) : null}
@@ -96,12 +96,12 @@ export function BoardNav({
                       className={cn(
                         "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
                         active
-                          ? "home-tab-3d font-semibold text-white"
-                          : "font-medium text-[#374151] hover:bg-[#f3f4f6]",
+                          ? "home-tab-3d font-semibold text-[#fff8ee]"
+                          : "font-medium text-[#2B1810] hover:bg-[#efe6d6]",
                       )}
                       onClick={onNavigate}
                     >
-                      <Icon className={cn("size-4 shrink-0", active ? "text-white" : "text-[#005A44]")} />
+                      <Icon className={cn("size-4 shrink-0", active ? "text-[#fff8ee]" : "text-[#C86D2A]")} />
                       <span className="min-w-0 flex-1">{item.label}</span>
                     </a>
                   </li>
@@ -111,10 +111,10 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 flex items-center gap-2 rounded-2xl bg-[#3a2416] px-3 py-2">
+      <div className="m-3 flex items-center gap-2 rounded-2xl border border-[#e2d7c5] bg-[#efe6d6] px-3 py-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/theme/side-baby.png" alt="" width={72} height={72} className="size-16 shrink-0 object-contain" />
-        <p className="text-sm font-black leading-5 text-[#f6e2b8]">
+        <p className="text-sm font-black leading-5 text-[#2B1810]">
           포카와 함께하는
           <br />
           즐거운 시간!

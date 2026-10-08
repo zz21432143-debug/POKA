@@ -26,7 +26,7 @@ export function HomeShortcuts() {
                 : "btn-3d touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-center text-[13px] font-semibold text-foreground"
             }
           >
-            <item.icon className={`size-3.5 shrink-0 ${item.filled ? "text-emerald-300" : "text-primary"}`} />
+            <item.icon className={`size-3.5 shrink-0 ${item.filled ? "text-[#fff8ee]" : "text-primary"}`} />
             <span className="leading-tight">{item.title}</span>
           </Link>
         </li>

@@ -22,7 +22,7 @@ function ProfileAction({
       href={href}
       className={
         tone === "green"
-          ? "btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl border-primary text-sm font-semibold text-primary"
+          ? "btn-3d-green touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
           : tone === "gold"
             ? "btn-3d-gold touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
             : "btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
@@ -96,7 +96,7 @@ export function ProfileWidget({
           <NicknameMenu nickname={profile.nickname}>
             <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
           </NicknameMenu>
-          <p className="text-xs text-emerald-800">
+          <p className="text-xs text-[#8a5a2a]">
             {rank ? `${rank} · ` : null}Lv.{profile.level}
           </p>
         </div>
@@ -110,7 +110,7 @@ export function ProfileWidget({
   return (
     <section className="lounge-card rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#005A44] ring-2 ring-[#D4AF37]">
+        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#C86D2A] ring-2 ring-[#D4AF37]">
           <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
@@ -118,7 +118,7 @@ export function ProfileWidget({
             <p className="truncate text-base font-semibold">{profile.nickname}</p>
           </NicknameMenu>
           {rank ? (
-            <p className="mt-0.5 text-xs font-semibold text-emerald-800">{rank}</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#8a5a2a]">{rank}</p>
           ) : null}
           {profile.isMaster || profile.isAdmin ? null : profile.isDealerVerified ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
@@ -126,7 +126,7 @@ export function ProfileWidget({
             </p>
           ) : null}
         </div>
-        <span className="rounded-full bg-[#005A44] px-2 py-0.5 text-[11px] font-semibold text-white">
+        <span className="rounded-full bg-[#C86D2A] px-2 py-0.5 text-[11px] font-semibold text-[#fff8ee]">
           Lv.{profile.level}
         </span>
       </div>
@@ -180,13 +180,13 @@ function AttendanceStreakCard({
   const checkedInToday = lastAttendanceDate === todayKstDate();
   const displayStreak = lastAttendanceDate ? streak : 0;
   return (
-    <div className="mt-2.5 rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2">
-      <p className="text-[13px] font-semibold text-emerald-950">
+    <div className="mt-2.5 rounded-xl border border-[#e2d7c5] bg-[#efe6d6] px-3 py-2">
+      <p className="text-[13px] font-semibold text-[#2b1810]">
         연속 출석{" "}
         <strong className="text-sm">{displayStreak.toLocaleString()}일</strong>
       </p>
       {checkedInToday ? (
-        <p className="mt-0.5 text-[11px] text-emerald-800">오늘 출석 완료 · 내일도 이어 가세요</p>
+        <p className="mt-0.5 text-[11px] text-[#6d5844]">오늘 출석 완료 · 내일도 이어 가세요</p>
       ) : (
         <Link
           href="/attendance"

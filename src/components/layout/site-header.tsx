@@ -14,7 +14,7 @@ export function SiteHeader({
 }) {
   const meHref = profile ? "/account" : "/login";
   return (
-    <header className="bg-[#5c3a22] pt-[env(safe-area-inset-top)] shadow-[inset_0_-3px_0_#3a2414]">
+    <header className="bg-[#4A2E1B] pt-[env(safe-area-inset-top)] text-[#F5EFE6]">
       <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
         <div className="relative z-30 flex items-center justify-start">
           <MobileDrawer profile={profile} />
@@ -46,7 +46,7 @@ export function SiteHeader({
           <Link
             href="/search"
             aria-label="검색"
-            className="inline-flex size-11 items-center justify-center rounded-full text-white/80 hover:bg-white/10 lg:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-full text-[#F5EFE6] hover:bg-white/10 lg:hidden"
           >
             <SearchIcon className="size-5" />
           </Link>

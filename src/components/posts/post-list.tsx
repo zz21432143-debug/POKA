@@ -12,12 +12,12 @@ import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 function boardBadgeClass(board: string) {
-  if (board === "FREE") return "bg-[#005A44] text-white";
+  if (board === "FREE") return "bg-[#C86D2A] text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
     return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
   }
-  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#005A44] text-white";
+  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#C86D2A] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
 }
 
@@ -54,7 +54,7 @@ export function PostList({
 }) {
   if (posts.length === 0) {
     return (
-      <p className="rounded-2xl border-2 border-dashed border-border bg-white px-4 py-10 text-center text-sm text-foreground">
+      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
         {emptyText}
       </p>
     );
@@ -64,7 +64,7 @@ export function PostList({
     <ul
       className={
         framed
-          ? "divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white shadow-sm"
+          ? "divide-y divide-border overflow-hidden rounded-2xl border border-border bg-[#fffaf4] shadow-[0_2px_8px_rgb(0_0_0/0.05)]"
           : "divide-y divide-border"
       }
     >
@@ -76,8 +76,8 @@ export function PostList({
             <li
               className={
                 compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f3f4f6] hover:bg-[#e8f5f0]"
-                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f3f4f6] hover:bg-[#e8f5f0]"
+                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
+                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
               }
             >
               {showBoard ? (
@@ -111,7 +111,7 @@ export function PostList({
                   <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]">
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-emerald-800/10 px-1 text-[10px] font-bold text-emerald-800">
+                      <span className="shrink-0 rounded bg-[#c86d2a]/12 px-1 text-[10px] font-bold text-[#a8561f]">
                         Lv.{post.author.level}
                       </span>
                     ) : null}
@@ -120,7 +120,7 @@ export function PostList({
                 ) : (
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                     <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                    <span className="text-xs font-medium text-slate-600">{formatRelativeKst(post.createdAt)}</span>
+                    <span className="text-xs font-medium text-[#6d5844]">{formatRelativeKst(post.createdAt)}</span>
                   </div>
                 )}
               </div>
