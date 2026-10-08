@@ -1,13 +1,13 @@
-import { redirect } from "next/navigation";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceToLogin } from "@/lib/history-redirect";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function NoticeWritePage() {
   const viewer = await getCurrentUser();
-  if (!viewer) redirect("/login?next=/notices/write");
+  if (!viewer) replaceToLogin("/notices/write");
   const allowed = canWriteBoard(viewer, "NOTICE");
 
   return (

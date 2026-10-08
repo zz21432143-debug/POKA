@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
 import { AccountWithdrawPanel } from "@/components/account/account-withdraw-panel";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceToLogin } from "@/lib/history-redirect";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountWithdrawPage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect("/login?next=/account/withdraw");
+  if (!user) replaceToLogin("/account/withdraw");
 
   return (
     <article className="mx-auto flex w-full max-w-lg flex-col gap-4">

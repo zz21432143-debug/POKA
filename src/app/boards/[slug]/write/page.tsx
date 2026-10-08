@@ -1,4 +1,5 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { ScheduleForm } from "@/components/listing/schedule-form";
 import { OfficialPromoForm } from "@/components/promo/official-promo-form";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
@@ -23,7 +24,7 @@ export default async function BoardWritePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (ALIASES[slug]) redirect(ALIASES[slug]);
+  if (ALIASES[slug]) replaceTo(ALIASES[slug]);
   const board = resolveBoardSlug(slug);
   if (!board) notFound();
   if (slug === "free" || slug === "hand-review" || slug === "store-review") {
@@ -31,7 +32,7 @@ export default async function BoardWritePage({
   }
 
   const viewer = await getCurrentUser();
-  if (!viewer) redirect("/login");
+  if (!viewer) replaceToLogin(`/boards/${slug}/write`);
   const allowed = canWriteBoard(viewer, board.boardType);
   const hint = WRITE_HINT[board.boardType] ?? board.title;
 

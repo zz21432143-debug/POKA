@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { replaceTo } from "@/lib/history-redirect";
 
 export default function StoreReviewRemoved() {
-  redirect("/community");
+  replaceTo("/community");
 }

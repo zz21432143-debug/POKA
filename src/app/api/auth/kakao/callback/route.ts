@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   jar.delete(KAKAO_STATE_COOKIE);
 
   if (!key || !code || !state || !expected || state !== expected) {
-    return NextResponse.redirect(new URL("/login?error=kakao", request.url));
+    return NextResponse.redirect(new URL("/login?error=kakao", request.url), 303);
   }
 
   const tokenRes = await fetch("https://kauth.kakao.com/oauth/token", {
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   });
   const token = (await tokenRes.json()) as { access_token?: string };
   if (!token.access_token) {
-    return NextResponse.redirect(new URL("/login?error=kakao", request.url));
+    return NextResponse.redirect(new URL("/login?error=kakao", request.url), 303);
   }
 
   const meRes = await fetch("https://kapi.kakao.com/v2/user/me", {
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     properties?: { nickname?: string };
   };
   if (me.id == null) {
-    return NextResponse.redirect(new URL("/login?error=kakao", request.url));
+    return NextResponse.redirect(new URL("/login?error=kakao", request.url), 303);
   }
 
   return finishSocialAuth(request, {

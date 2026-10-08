@@ -16,7 +16,7 @@ export async function prepareOauthStart(request: Request) {
   const intent = parseOauthIntent(url.searchParams.get("intent"));
   if (intent === "signup" && !consentIsValid(jar.get(CONSENT_COOKIE)?.value)) {
     return {
-      error: NextResponse.redirect(new URL("/login?tab=signup&error=consent", request.url)),
+      error: NextResponse.redirect(new URL("/login?tab=signup&error=consent", request.url), 303),
       intent,
       next: "/",
     };

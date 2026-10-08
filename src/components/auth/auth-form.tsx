@@ -93,7 +93,7 @@ export function AuthForm({
         setError(data.error ?? "운영 계정으로 들어갈 수 없습니다.");
         return;
       }
-      router.push(nextPath.startsWith("/") ? nextPath : "/");
+      router.replace(nextPath.startsWith("/") ? nextPath : "/");
       router.refresh();
     } catch {
       setError("네트워크 오류입니다.");

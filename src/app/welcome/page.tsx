@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceToLogin } from "@/lib/history-redirect";
 import { NICKNAME_CHANGE_HREF, NICKNAME_TICKET_NAME } from "@/lib/nickname-change";
 import { safeNextPath } from "@/lib/oauth-consent";
 
@@ -12,7 +12,7 @@ export default async function WelcomePage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect("/login?tab=signup");
+  if (!user) replaceToLogin("/");
   const { next } = await searchParams;
   const later = safeNextPath(next);
 

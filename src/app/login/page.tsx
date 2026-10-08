@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentUser } from "@/lib/current-user";
-import { redirect } from "next/navigation";
+import { replaceTo } from "@/lib/history-redirect";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function LoginPage({
   const user = await getCurrentUser().catch(() => null);
   const { next, error, tab, msg } = await searchParams;
   const nextPath = next?.startsWith("/") ? next : "/";
-  if (user) redirect(nextPath);
+  if (user) replaceTo(nextPath);
   const signup = tab === "signup";
   const errorMessage = msg?.trim()
     ? msg

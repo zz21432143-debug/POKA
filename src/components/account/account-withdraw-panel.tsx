@@ -25,7 +25,7 @@ export function AccountWithdrawPanel({ nickname }: { nickname: string }) {
       });
       const data = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(data.error ?? "탈퇴에 실패했습니다.");
-      router.push("/");
+      router.replace("/");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "탈퇴에 실패했습니다.");

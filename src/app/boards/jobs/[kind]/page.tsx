@@ -32,7 +32,7 @@ export default async function JobBoardPage({
         </div>
         <Link
           href={`/boards/jobs/${kind}/write`}
-          className={cn(buttonVariants({ size: "touch" }), "inline-flex")}
+          className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
         >
           {job.cta}
         </Link>

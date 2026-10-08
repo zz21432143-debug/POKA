@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
 import { AccountPrivacyPanel } from "@/components/account/account-privacy-panel";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceToLogin } from "@/lib/history-redirect";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect("/login?next=/account");
+  if (!user) replaceToLogin("/account");
 
   return (
     <article className="mx-auto flex w-full max-w-lg flex-col gap-4">

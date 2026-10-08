@@ -1,10 +1,11 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceTo } from "@/lib/history-redirect";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSanctionsPage() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) notFound();
-  redirect("/admin?tab=sanctions");
+  replaceTo("/admin?tab=sanctions");
 }

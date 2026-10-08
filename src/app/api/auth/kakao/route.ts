@@ -11,12 +11,12 @@ export async function GET(request: Request) {
   if (started.error) return started.error;
 
   if (!kakaoConfigured()) {
-    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url), 303);
   }
   const state = randomOAuthState();
   const authorize = kakaoAuthorizeUrl(state);
   if (!authorize) {
-    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url), 303);
   }
   const jar = await cookies();
   jar.set(KAKAO_STATE_COOKIE, state, CONSENT_COOKIE_OPTS);

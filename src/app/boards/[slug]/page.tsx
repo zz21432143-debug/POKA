@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { replaceTo } from "@/lib/history-redirect";
 import { ScheduleBoard } from "@/components/listing/schedule-board";
 import { PromoGallery } from "@/components/promo/promo-gallery";
 import { InfinitePostList } from "@/components/posts/infinite-post-list";
@@ -31,7 +32,7 @@ export default async function BoardPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (ALIASES[slug]) redirect(ALIASES[slug]);
+  if (ALIASES[slug]) replaceTo(ALIASES[slug]);
   const board = resolveBoardSlug(slug);
   if (!board) notFound();
   const viewer = await getCurrentUser().catch(() => null);

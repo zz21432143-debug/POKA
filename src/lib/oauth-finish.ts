@@ -15,11 +15,15 @@ import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restr
 import { clientIp } from "@/lib/request";
 import { prisma } from "@/lib/db";
 
+function sendTo(url: URL) {
+  return NextResponse.redirect(url, 303);
+}
+
 function restrictionRedirect(request: Request, message: string) {
   const url = new URL("/login", request.url);
   url.searchParams.set("error", "restricted");
   url.searchParams.set("msg", message);
-  return NextResponse.redirect(url);
+  return sendTo(url);
 }
 
 export async function finishSocialAuth(request: Request, profile: SocialProfile) {
@@ -33,7 +37,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
   if (intent === "signup") {
     if (!consentIsValid(jar.get(CONSENT_COOKIE)?.value)) {
       jar.delete(CONSENT_COOKIE);
-      return NextResponse.redirect(new URL("/login?tab=signup&error=consent", request.url));
+      return sendTo(new URL("/login?tab=signup&error=consent", request.url));
     }
     jar.delete(CONSENT_COOKIE);
     const created = await upsertSocialUser(profile, { signupIp: ip }).catch((error: unknown) => {
@@ -44,7 +48,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       url.searchParams.set("msg", message);
       return url;
     });
-    if (created instanceof URL) return NextResponse.redirect(created);
+    if (created instanceof URL) return sendTo(created);
     const { user, isNew } = created;
     try {
       await assertAccountActive(user);
@@ -56,9 +60,9 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
     if (isNew) {
       const welcome = new URL("/welcome", request.url);
       if (next !== "/") welcome.searchParams.set("next", next);
-      return NextResponse.redirect(welcome);
+      return sendTo(welcome);
     }
-    return NextResponse.redirect(new URL(next, request.url));
+    return sendTo(new URL(next, request.url));
   }
 
   jar.delete(CONSENT_COOKIE);
@@ -66,7 +70,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
   if (cooldown) return restrictionRedirect(request, cooldown);
   const existing = await findSocialUser(profile);
   if (!existing || existing.withdrawnAt) {
-    return NextResponse.redirect(new URL("/login?tab=signup&error=need_signup", request.url));
+    return sendTo(new URL("/login?tab=signup&error=need_signup", request.url));
   }
   try {
     await assertAccountActive(existing);
@@ -79,5 +83,5 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
     data: { lastLoginAt: new Date() },
   });
   await setSessionNickname(existing.nickname);
-  return NextResponse.redirect(new URL(next, request.url));
+  return sendTo(new URL(next, request.url));
 }

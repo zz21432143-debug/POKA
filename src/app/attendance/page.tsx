@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
 import { CommentForm } from "@/components/posts/comment-form";
 import { InfiniteAttendanceList } from "@/components/posts/infinite-attendance-list";
 import { getAttendanceStats } from "@/lib/attendance";
 import { getCurrentUser } from "@/lib/current-user";
 import { formatKstLabel } from "@/lib/dates";
 import { PAGE_SIZE } from "@/lib/feed";
-import { loginHref } from "@/lib/login-path";
+import { replaceToLogin } from "@/lib/history-redirect";
 import {
   ATTENDANCE_EXP,
   ATTENDANCE_POINTS,
@@ -19,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AttendancePage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect(loginHref("/attendance"));
+  if (!user) replaceToLogin("/attendance");
   const stats = await getAttendanceStats(user.id);
 
   return (

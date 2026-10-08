@@ -1,4 +1,5 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
 import { AUTHOR_SELECT, AuthorChip } from "@/components/posts/author-chip";
@@ -33,7 +34,7 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params;
   const viewer = await getCurrentUser().catch(() => null);
-  if (!viewer) redirect(`/login?next=${encodeURIComponent(`/posts/${id}`)}`);
+  if (!viewer) replaceToLogin(`/posts/${id}`);
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
@@ -64,7 +65,7 @@ export default async function PostDetailPage({
       </article>
     );
   }
-  if (post.isAttendanceThread) redirect("/attendance");
+  if (post.isAttendanceThread) replaceTo("/attendance");
   if (post.hidden && !viewer?.isAdmin) notFound();
 
   const jar = await cookies();

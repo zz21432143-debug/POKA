@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   jar.delete(GOOGLE_STATE_COOKIE);
 
   if (!clientId || !clientSecret || !code || !state || !expected || state !== expected) {
-    return NextResponse.redirect(new URL("/login?error=google", request.url));
+    return NextResponse.redirect(new URL("/login?error=google", request.url), 303);
   }
 
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   });
   const token = (await tokenRes.json()) as { access_token?: string };
   if (!token.access_token) {
-    return NextResponse.redirect(new URL("/login?error=google", request.url));
+    return NextResponse.redirect(new URL("/login?error=google", request.url), 303);
   }
 
   const meRes = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     name?: string;
   };
   if (!me.sub) {
-    return NextResponse.redirect(new URL("/login?error=google", request.url));
+    return NextResponse.redirect(new URL("/login?error=google", request.url), 303);
   }
 
   return finishSocialAuth(request, {

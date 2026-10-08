@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { replaceTo } from "@/lib/history-redirect";
 
 export default function AnonymousWriteClosedPage() {
-  redirect("/community");
+  replaceTo("/community");
 }

@@ -1,10 +1,10 @@
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
+import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 
 export const dynamic = "force-dynamic";
 
 export default async function MePage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!user) redirect("/login");
-  redirect(`/u/${encodeURIComponent(user.nickname)}`);
+  if (!user) replaceToLogin("/me");
+  replaceTo(`/u/${encodeURIComponent(user.nickname)}`);
 }

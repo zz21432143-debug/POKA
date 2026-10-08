@@ -10,12 +10,12 @@ export async function GET(request: Request) {
   if (started.error) return started.error;
 
   if (!googleConfigured()) {
-    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url), 303);
   }
   const state = randomOAuthState();
   const authorize = googleAuthorizeUrl(request.url, state);
   if (!authorize) {
-    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url));
+    return NextResponse.redirect(new URL("/login?error=google_not_configured", request.url), 303);
   }
   const jar = await cookies();
   jar.set(GOOGLE_STATE_COOKIE, state, CONSENT_COOKIE_OPTS);
