@@ -16,7 +16,7 @@ import { JOB_KIND_LABEL } from "@/lib/nav";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
-import { COMMENT_EXP } from "@/lib/rewards";
+import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ReportButton } from "@/components/posts/report-button";
@@ -222,7 +222,7 @@ export default async function PostDetailPage({
       ) : null}
 
       {post.content ? (
-        <div className="overflow-x-clip text-[16px] leading-8 break-words whitespace-pre-wrap text-foreground">
+        <div className="overflow-x-clip rounded-xl border border-border bg-slate-50 px-4 py-4 text-[17px] leading-8 break-words whitespace-pre-wrap text-foreground sm:px-5">
           {post.content}
         </div>
       ) : null}
@@ -244,17 +244,17 @@ export default async function PostDetailPage({
         <>
       <GoogleAdUnit placement="post-top" />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">댓글 {post.comments.length}</h2>
+      <section className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
+        <h2 className="border-b border-border pb-3 text-lg font-bold">댓글 {post.comments.length}</h2>
         {viewer ? (
           <CommentForm
             postId={post.id}
             submitLabel="댓글 등록"
-            placeholder="댓글을 남겨 주세요. EXP가 지급됩니다."
+            placeholder={`댓글을 남겨 주세요. ${commentRewardLine()}가 지급됩니다.`}
           />
         ) : (
-          <p className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-muted-foreground">
-            댓글은 로그인 후 남길 수 있습니다. EXP {COMMENT_EXP}이 지급됩니다.{" "}
+          <p className="rounded-xl border border-border bg-muted px-3 py-3 text-sm text-foreground">
+            댓글은 로그인 후 남길 수 있습니다. {commentRewardLine()}가 지급됩니다.{" "}
             <Link href="/login" className="font-medium text-primary underline">
               로그인
             </Link>

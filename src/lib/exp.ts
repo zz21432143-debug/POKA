@@ -43,5 +43,5 @@ export async function grantRewards(
     });
   }
 
-  return updated;
+  return { user: updated, grantedPoints, grantedExp: Math.max(0, exp) };
 }

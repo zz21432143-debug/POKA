@@ -19,7 +19,7 @@ import {
   type ApplyMethod,
   type HireListing,
 } from "@/lib/listing";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 
 function toggle(list: string[], value: string) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -76,7 +76,7 @@ export function HireForm({
   return (
     <div className="flex flex-col gap-6">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        {hint} · 작성 EXP +{POST_EXP.JOBS}
+        {hint} · 작성 {postRewardLine("JOBS")}
       </p>
 
       <section className="grid gap-3 rounded-2xl border border-border bg-card p-4">

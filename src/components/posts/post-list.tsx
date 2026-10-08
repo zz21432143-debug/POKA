@@ -41,7 +41,7 @@ export function PostList({
 }) {
   if (posts.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border bg-white px-4 py-10 text-center text-sm text-muted-foreground">
+      <p className="rounded-2xl border-2 border-dashed border-border bg-white px-4 py-10 text-center text-sm text-foreground">
         {emptyText}
       </p>
     );
@@ -51,7 +51,7 @@ export function PostList({
     <ul
       className={
         framed
-          ? "divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white"
+          ? "divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white shadow-sm"
           : "divide-y divide-border"
       }
     >
@@ -60,7 +60,7 @@ export function PostList({
         return (
           <Fragment key={post.id}>
             {index === 3 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
-            <li className="flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-muted/50">
+            <li className="flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-slate-50 hover:bg-emerald-50/70">
               {showBoard ? (
                 <Badge
                   variant="secondary"
@@ -83,7 +83,7 @@ export function PostList({
                 </Link>
                 <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                   <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                  <span className="text-xs text-muted-foreground">{formatRelativeKst(post.createdAt)}</span>
+                  <span className="text-xs font-medium text-slate-600">{formatRelativeKst(post.createdAt)}</span>
                 </div>
               </div>
               {post.boardType === "ANONYMOUS_REVIEW" ? (

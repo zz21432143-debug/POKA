@@ -24,7 +24,11 @@ export function CommentThread({
   anonymous: boolean;
 }) {
   if (comments.length === 0) {
-    return <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>;
+    return (
+      <p className="rounded-xl border border-dashed border-border bg-muted px-4 py-6 text-center text-sm text-foreground">
+        아직 댓글이 없습니다.
+      </p>
+    );
   }
 
   const max = Math.max(...comments.map((row) => row.upvoteCount), 0);
@@ -36,7 +40,7 @@ export function CommentThread({
   });
 
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+    <ul className="divide-y divide-border overflow-hidden rounded-xl border-2 border-border bg-white">
       {ordered.map((row) => (
         <CommentItem
           key={row.id}
@@ -86,8 +90,8 @@ function CommentItem({
     <li
       className={
         best
-          ? "border-b border-primary/30 bg-primary/10 px-3 py-3"
-          : "px-3 py-3"
+          ? "border-b border-primary/40 bg-emerald-50 px-3 py-3.5"
+          : "px-3 py-3.5 even:bg-slate-50"
       }
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -107,7 +111,9 @@ function CommentItem({
         </Button>
         <ReportButton targetType="comment" targetId={comment.id} compact />
       </div>
-      <p className="mt-1 break-words text-sm whitespace-pre-wrap">{comment.content}</p>
+      <p className="mt-2 break-words text-[15px] leading-7 whitespace-pre-wrap text-foreground">
+        {comment.content}
+      </p>
     </li>
   );
 }

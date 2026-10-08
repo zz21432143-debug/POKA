@@ -13,8 +13,8 @@ export default async function ShopPage() {
       <header>
         <h1 className="text-2xl font-semibold">마크 상점</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          마크는 3,000P입니다. 닉네임 변경권은 500P이며, 최초 1회 변경은 무료입니다. 출석으로 하루 최대
-          375P입니다.
+          마크는 3,000P입니다. 닉네임 변경권은 500P이며, 최초 1회 변경은 무료입니다. 출석은 하루 375P이며
+          글·댓글 한도와 별개입니다. 글·댓글·연습은 하루 최대 375P입니다.
         </p>
         {user ? null : (
           <p className="mt-2 text-sm">

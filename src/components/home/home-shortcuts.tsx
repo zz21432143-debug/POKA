@@ -23,7 +23,7 @@ export function HomeShortcuts() {
             className={
               item.navy
                 ? "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl bg-[#07150f] px-1 py-2 text-center text-white sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
-                : "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-white px-1 py-2 text-center shadow-sm hover:border-primary/40 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
+                : "touch-target flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-border bg-white px-1 py-2 text-center text-foreground shadow-sm hover:border-primary sm:min-h-12 sm:flex-row sm:gap-2 sm:px-3"
             }
           >
             <item.icon className={`size-4 shrink-0 ${item.navy ? "text-emerald-300" : "text-primary"}`} />

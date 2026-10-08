@@ -59,7 +59,7 @@ export function BoardNav({
         {SIDEBAR_NAV.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-3 text-[11px] font-semibold tracking-wide text-muted-foreground">
+              <p className="mb-2 px-3 text-[11px] font-bold tracking-wide text-slate-600">
                 {group.title}
               </p>
             ) : null}
@@ -77,7 +77,7 @@ export function BoardNav({
                     ? "bg-primary font-semibold text-white shadow-sm"
                     : active
                       ? "bg-accent font-medium text-accent-foreground"
-                      : "text-foreground/80 hover:bg-muted",
+                      : "font-medium text-foreground hover:bg-muted",
                 );
                 return (
                   <li key={item.href}>

@@ -192,7 +192,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
+    const reward = await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
     await prisma.user.update({ where: { id: user.id }, data: { lastPostAt: new Date() } });
 
     const { pushTicker } = await import("@/lib/ticker");
@@ -213,8 +213,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       id: post.id,
-      exp: POST_EXP[boardType],
-      points: POST_POINTS[boardType],
+      exp: reward.grantedExp,
+      points: reward.grantedPoints,
       anonymous: false,
     });
   } catch (error) {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 
 export function OfficialPromoForm({ hint }: { hint: string }) {
   const router = useRouter();
@@ -51,7 +51,7 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        {hint} · 작성 EXP +{POST_EXP.PROMO}
+        {hint} · 작성 {postRewardLine("PROMO")}
       </p>
       <p className="text-sm text-muted-foreground">
         일반 대회 안내는 「대회 스케줄」로 올립니다. 공식 홍보·일정 등록은 마스터만 할 수 있습니다.

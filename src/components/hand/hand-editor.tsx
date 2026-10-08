@@ -28,7 +28,7 @@ import {
   type SeatId,
   type StreetId,
 } from "@/lib/hand-review";
-import { POST_EXP } from "@/lib/rewards";
+import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 
 type Slot = "hero" | "board" | SeatId;
 
@@ -185,7 +185,8 @@ export function HandEditor() {
   return (
     <div className="flex max-w-full flex-col gap-5 overflow-x-clip">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        자리 → 카드 → 액션 순서로만 채우면 됩니다. 등록 시 EXP <strong>+{POST_EXP.HAND_REVIEW}</strong>,
+        자리 → 카드 → 액션 순서로만 채우면 됩니다. 등록 시 EXP <strong>+{POST_EXP.HAND_REVIEW}</strong> ·
+        포인트 <strong>+{POST_POINTS.HAND_REVIEW}P</strong>,
         글에 폴드/체크/콜/레이즈 투표가 붙습니다.
       </p>
 

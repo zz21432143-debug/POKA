@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 
 export function ScheduleForm({ hint }: { hint: string }) {
   const router = useRouter();
@@ -55,7 +55,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        {hint} · 작성 EXP +{POST_EXP.SCHEDULE}
+        {hint} · 작성 {postRewardLine("SCHEDULE")}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">

@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   ATTENDANCE_POINTS,
+  COMMENT_POINTS,
   DAILY_POINT_CAP,
+  POST_POINTS,
   STREAK_MILESTONES,
   STREAK_REPEAT_AFTER,
   STREAK_REPEAT_EVERY,
   STREAK_REPEAT_EXP,
   STREAK_REPEAT_POINTS,
+  commentRewardLine,
+  postRewardLine,
   streakBonusFor,
 } from "./rewards";
 import {
@@ -36,6 +40,14 @@ describe("streak attendance bonus", () => {
     });
     assert.equal(streakBonusFor(STREAK_REPEAT_AFTER + STREAK_REPEAT_EVERY), null);
     assert.equal(DAILY_POINT_CAP, ATTENDANCE_POINTS);
+  });
+
+  it("pays points for posts and comments separately from attendance", () => {
+    assert.equal(COMMENT_POINTS, 10);
+    assert.equal(POST_POINTS.FREE, 15);
+    assert.equal(POST_POINTS.HAND_REVIEW, 30);
+    assert.equal(postRewardLine("FREE"), "EXP +4 · 포인트 +15P");
+    assert.equal(commentRewardLine(), "EXP +2 · 포인트 +10P");
   });
 });
 

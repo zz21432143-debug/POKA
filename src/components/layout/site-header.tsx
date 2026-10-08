@@ -35,7 +35,7 @@ export function SiteHeader({
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-              className="h-10 w-full rounded-full border border-white/15 bg-white/10 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/40 focus:border-primary focus:bg-white/15 focus:ring-2 focus:ring-primary/30"
+              className="h-10 w-full rounded-full border border-white/30 bg-white/15 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/70 focus:border-primary focus:bg-white/20 focus:ring-2 focus:ring-primary/30"
             />
           </label>
         </form>

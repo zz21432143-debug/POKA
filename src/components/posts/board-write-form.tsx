@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BoardType } from "@/generated/prisma/enums";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 import { StarPicker } from "@/components/reviews/star-picker";
 
 export function BoardWriteForm({
@@ -71,8 +71,8 @@ export function BoardWriteForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        {hint} · 작성 EXP +{POST_EXP[boardType]}
+      <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
+        {hint} · 작성 {postRewardLine(boardType)}
       </p>
       <div className="grid gap-2">
         <Label htmlFor="title">제목</Label>

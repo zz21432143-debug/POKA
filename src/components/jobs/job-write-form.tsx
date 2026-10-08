@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobKind } from "@/generated/prisma/enums";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 import { buildJobTitle } from "@/lib/jobs";
 
 export type JobFormValues = {
@@ -109,7 +109,7 @@ export function JobWriteForm({
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
-        {hint} · 작성 EXP +{POST_EXP.JOBS}
+        {hint} · 작성 {postRewardLine("JOBS")}
       </p>
       <p className="rounded-xl border border-border bg-card px-3 py-2 text-sm">
         <span className="text-muted-foreground">자동 제목 · </span>

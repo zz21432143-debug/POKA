@@ -10,7 +10,7 @@ import { FEED_BY_HREF } from "@/lib/feed";
 import { loadFeedPage } from "@/lib/load-feed";
 import { resolveBoardSlug } from "@/lib/nav";
 import { canWriteBoard } from "@/lib/permissions";
-import { POST_EXP } from "@/lib/rewards";
+import { postRewardLine } from "@/lib/rewards";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { getSponsorCreative } from "@/lib/inventory";
@@ -49,9 +49,9 @@ export default async function BoardPage({
     <div className="flex flex-col gap-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{board.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {BOARD_DESCRIPTIONS[board.boardType]} · 작성 EXP {POST_EXP[board.boardType]}
+          <h1 className="text-2xl font-bold tracking-tight">{board.title}</h1>
+          <p className="mt-1 text-sm font-medium text-slate-700">
+            {BOARD_DESCRIPTIONS[board.boardType]} · 작성 {postRewardLine(board.boardType)}
             {page.total ? ` · ${page.total}개` : ""}
             {" · 목록은 누구나, 본문은 로그인 후"}
           </p>

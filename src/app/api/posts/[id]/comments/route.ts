@@ -76,9 +76,13 @@ export async function POST(
         authorIp: ip,
       },
     });
-    await grantRewards(user.id, COMMENT_EXP, COMMENT_POINTS);
+    const reward = await grantRewards(user.id, COMMENT_EXP, COMMENT_POINTS);
     await prisma.user.update({ where: { id: user.id }, data: { lastCommentAt: new Date() } });
-    return NextResponse.json({ id: comment.id, exp: COMMENT_EXP });
+    return NextResponse.json({
+      id: comment.id,
+      exp: reward.grantedExp,
+      points: reward.grantedPoints,
+    });
   } catch (error) {
     if (error instanceof ForbiddenWordError) {
       return NextResponse.json({ error: error.message }, { status: 400 });

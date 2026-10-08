@@ -1,7 +1,7 @@
 import type { BoardType } from "@/generated/prisma/enums";
 
 export const MARK_PRICE_POINTS = 3000;
-/** 하루 최대 포인트. 마크 3,000P는 출석만으로도 8일. */
+/** 글·댓글·연습만 쓰는 하루 포인트 한도. 출석·연속 보너스는 이 한도에 넣지 않습니다. */
 export const DAILY_POINT_CAP = 375;
 
 /** 레벨용 EXP. 포인트와 별개. 출석 1회가 레벨 1에 가깝습니다. */
@@ -23,26 +23,26 @@ export const POST_EXP: Record<BoardType, number> = {
 };
 
 export const POST_POINTS: Record<BoardType, number> = {
-  HAND_REVIEW: 20,
-  ANONYMOUS_REVIEW: 10,
-  RULE_QA: 10,
-  SKETCH: 10,
-  FREE: 8,
-  JOBS: 10,
-  TALENT: 8,
-  PICKUP: 8,
-  EVENT_POSTER: 8,
-  OFFICIAL_POSTER: 8,
-  SCHEDULE: 8,
-  PROMO: 8,
-  NOTICE: 8,
-  SUGGESTION: 8,
+  HAND_REVIEW: 30,
+  ANONYMOUS_REVIEW: 15,
+  RULE_QA: 15,
+  SKETCH: 15,
+  FREE: 15,
+  JOBS: 20,
+  TALENT: 12,
+  PICKUP: 12,
+  EVENT_POSTER: 12,
+  OFFICIAL_POSTER: 12,
+  SCHEDULE: 12,
+  PROMO: 12,
+  NOTICE: 12,
+  SUGGESTION: 12,
 };
 
 export const ATTENDANCE_EXP = 100;
 export const ATTENDANCE_POINTS = 375;
 export const COMMENT_EXP = 2;
-export const COMMENT_POINTS = 5;
+export const COMMENT_POINTS = 10;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;
 export const WEEKLY_HAND_EXP = 20;
 export const LUCKY_ATTENDANCE_POINTS = 0;
@@ -81,3 +81,15 @@ export const POPULAR_UPVOTE_THRESHOLD = 5;
 export const BEST_COMMENT_MIN = 2;
 export const UPVOTE_RECEIVED_EXP = 1;
 export const UPVOTE_RECEIVED_POINTS = 2;
+
+export function formatRewardLine(exp: number, points: number) {
+  return `EXP +${exp} · 포인트 +${points}P`;
+}
+
+export function postRewardLine(boardType: BoardType) {
+  return formatRewardLine(POST_EXP[boardType], POST_POINTS[boardType]);
+}
+
+export function commentRewardLine() {
+  return formatRewardLine(COMMENT_EXP, COMMENT_POINTS);
+}

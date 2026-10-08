@@ -86,7 +86,7 @@ export async function checkInAttendance(userId: string, message: string, authorI
       attendanceStreak: streak,
     },
   });
-  await grantRewards(userId, ATTENDANCE_EXP, ATTENDANCE_POINTS);
+  await grantRewards(userId, ATTENDANCE_EXP, ATTENDANCE_POINTS, { ignorePointCap: true });
   const bonus = streakBonusFor(streak);
   if (bonus) {
     await grantRewards(userId, bonus.exp, bonus.points, { ignorePointCap: true });
