@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { KAKAO_INQUIRY_URL, kakaoInquiryHref } from "@/lib/kakao";
 import { publicContactEmail } from "@/lib/legal-contact";
@@ -18,16 +19,20 @@ export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   kakaoChannelUrl: KAKAO_INQUIRY_URL,
 };
 
+async function loadSiteSettings(): Promise<PublicSiteSettings> {
+  const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID } });
+  if (!row) return DEFAULT_SITE_SETTINGS;
+  return {
+    noticeBanner: row.noticeBanner?.trim() || null,
+    footerEmail: publicContactEmail(row.footerEmail),
+    kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
+  };
+}
+
+const cachedSiteSettings = unstable_cache(loadSiteSettings, ["poka-site-settings"], { revalidate: 60 });
+
 export async function getSiteSettings(): Promise<PublicSiteSettings> {
-  return ttlCache(SITE_SETTINGS_CACHE_KEY, 15_000, async () => {
-    const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID } });
-    if (!row) return DEFAULT_SITE_SETTINGS;
-    return {
-      noticeBanner: row.noticeBanner?.trim() || null,
-      footerEmail: publicContactEmail(row.footerEmail),
-      kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
-    };
-  });
+  return ttlCache(SITE_SETTINGS_CACHE_KEY, 20_000, () => cachedSiteSettings());
 }
 
 export function clearSiteSettingsCache() {

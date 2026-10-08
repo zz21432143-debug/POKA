@@ -14,8 +14,6 @@ import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
 import { getCurrentUser } from "@/lib/current-user";
-import { ensureTodayAttendancePost } from "@/lib/attendance";
-import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
 import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
@@ -23,8 +21,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 
 async function ConnectedTicker() {
-  void ensureTodayAttendancePost().catch(() => null);
-  void ensureWeeklyScheduleHub().catch(() => null);
   const events = await getCachedTickerEvents().catch(() => []);
   return (
     <LedTicker
@@ -35,6 +31,21 @@ async function ConnectedTicker() {
       }))}
     />
   );
+}
+
+async function ConnectedHeader() {
+  const profile = await getCurrentUser().catch(() => null);
+  return <SiteHeader profile={profile} />;
+}
+
+async function ConnectedNotice() {
+  const settings = await getSiteSettings().catch(() => null);
+  return <SiteNoticeBanner text={settings?.noticeBanner} />;
+}
+
+async function ConnectedProfile() {
+  const profile = await getCurrentUser().catch(() => null);
+  return <ProfileWidget profile={profile} />;
 }
 
 async function ConnectedSidebarSponsor() {
@@ -50,18 +61,20 @@ export async function SiteShell({ children }: { children: ReactNode }) {
     pathname = "";
   }
   const showFeedAds = shouldShowFeedAds(pathname);
-  const profile = await getCurrentUser().catch(() => null);
-  const settings = await getSiteSettings().catch(() => null);
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 overflow-x-clip bg-[#07150f]">
-        <SiteHeader profile={profile} />
+        <Suspense fallback={<SiteHeader profile={null} />}>
+          <ConnectedHeader />
+        </Suspense>
         <Suspense fallback={<LedTicker items={[]} />}>
           <ConnectedTicker />
         </Suspense>
       </div>
-      <SiteNoticeBanner text={settings?.noticeBanner} />
+      <Suspense fallback={null}>
+        <ConnectedNotice />
+      </Suspense>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-4 py-5 sm:px-5">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />
@@ -84,7 +97,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
-            <ProfileWidget profile={profile} />
+            <Suspense fallback={<ProfileWidget profile={null} />}>
+              <ConnectedProfile />
+            </Suspense>
             <Suspense fallback={null}>
               <ConnectedSidebarSponsor />
             </Suspense>

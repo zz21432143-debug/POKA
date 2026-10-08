@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { ttlCache } from "@/lib/ttl-cache";
 import type { PostSummary } from "@/components/posts/post-list";
@@ -126,10 +127,13 @@ async function loadHomeFeed() {
   };
 }
 
+const cachedHomeFeed = unstable_cache(loadHomeFeed, ["poka-home-feed"], { revalidate: 30 });
+const cachedTickerEvents = unstable_cache(getTickerEvents, ["poka-ticker"], { revalidate: 20 });
+
 export function getHomeFeed() {
-  return ttlCache("home-feed", 20_000, loadHomeFeed);
+  return ttlCache("home-feed", 15_000, () => cachedHomeFeed());
 }
 
 export function getCachedTickerEvents() {
-  return ttlCache("ticker-events", 20_000, getTickerEvents);
+  return ttlCache("ticker-events", 15_000, () => cachedTickerEvents());
 }

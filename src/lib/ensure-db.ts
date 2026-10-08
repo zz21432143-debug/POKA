@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import dns from "node:dns";
 import { Client } from "pg";
+import { preferNeonPooler } from "@/lib/db-url";
+import { SCHEMA_BOOT_ID, SCHEMA_BOOT_KIND, SCHEMA_BOOT_VERSION } from "@/lib/schema-boot";
 dns.setDefaultResultOrder("ipv4first");
 
 let boot: Promise<void> | null = null;
@@ -15,25 +17,41 @@ function migrationPath() {
 }
 
 function dbUrl() {
-  const url = (process.env.DATABASE_URL || "").trim();
-  if (!url.startsWith("postgres")) return "";
+  const raw = (process.env.DATABASE_URL || "").trim();
+  if (!raw.startsWith("postgres")) return "";
+  const url = preferNeonPooler(raw);
   if (/sslmode=/i.test(url) || url.includes("localhost")) return url;
   return `${url}${url.includes("?") ? "&" : "?"}sslmode=require`;
 }
 
-async function applySchema() {
+async function schemaAlreadyBooted(client: Client) {
+  const found = await client.query(`SELECT to_regclass('public."User"') AS rel`);
+  if (!found.rows[0]?.rel) return false;
+  const audit = await client.query(`SELECT to_regclass('public."AuditLog"') AS rel`);
+  if (!audit.rows[0]?.rel) return false;
+  const row = await client.query(
+    `SELECT 1 FROM "AuditLog" WHERE id = $1 AND kind = $2 AND detail = $3 LIMIT 1`,
+    [SCHEMA_BOOT_ID, SCHEMA_BOOT_KIND, SCHEMA_BOOT_VERSION],
+  );
+  return (row.rowCount ?? 0) > 0;
+}
+
+async function applySchema(): Promise<"ready" | "patched" | "skipped"> {
   const url = dbUrl();
   if (!url) {
     console.error("ensure-db: DATABASE_URL missing at runtime");
-    return;
+    return "skipped";
   }
   const client = new Client({
     connectionString: url,
     ssl: url.includes("localhost") ? false : { rejectUnauthorized: false },
-    connectionTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 8_000,
   });
   await client.connect();
   try {
+    if (await schemaAlreadyBooted(client)) {
+      return "ready";
+    }
     const found = await client.query(`
       SELECT to_regclass('public."User"') AS rel
     `);
@@ -41,7 +59,7 @@ async function applySchema() {
       const file = migrationPath();
       if (!file) {
         console.error("ensure-db: migration.sql not found");
-        return;
+        return "skipped";
       }
       console.log("ensure-db: applying Postgres schema");
       await client.query(readFileSync(file, "utf8"));
@@ -192,6 +210,13 @@ async function applySchema() {
       WHERE EXISTS (SELECT 1 FROM "User" WHERE "isMaster" = true)
         AND NOT EXISTS (SELECT 1 FROM "AuditLog" WHERE "kind" = 'LAUNCH_MASTER_POINTS')
     `);
+    await client.query(
+      `INSERT INTO "AuditLog" (id, kind, ip, detail, "createdAt")
+       VALUES ($1, $2, 'system', $3, NOW())
+       ON CONFLICT (id) DO UPDATE SET kind = EXCLUDED.kind, detail = EXCLUDED.detail`,
+      [SCHEMA_BOOT_ID, SCHEMA_BOOT_KIND, SCHEMA_BOOT_VERSION],
+    );
+    return "patched";
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -215,18 +240,15 @@ async function ensureLevelTable() {
 
 export function ensureDb() {
   boot ??= applySchema()
-    .then(async () => {
+    .then(async (state) => {
+      if (state !== "patched") return;
       const { wipeCommunityForLaunch } = await import("@/lib/wipe-community");
       await wipeCommunityForLaunch();
-    })
-    .then(ensureLevelTable)
-    .then(ensureMasterAccount)
-    .then(async () => {
+      await ensureLevelTable();
+      await ensureMasterAccount();
       const { ensureSiteSettingsRow, ensureDefaultForbiddenWords } = await import("@/lib/site-settings");
       await ensureSiteSettingsRow();
       await ensureDefaultForbiddenWords();
-    })
-    .then(async () => {
       const { purgeDemoCatalog, clearAutoDealerVerified } = await import("@/lib/purge-demo-catalog");
       await purgeDemoCatalog();
       await clearAutoDealerVerified();

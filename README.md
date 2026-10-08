@@ -128,6 +128,16 @@ Vercel 프로젝트 환경 변수:
 
 가입은 Resend 메일을 쓰지 않습니다.
 
+### 홈이 늦게 열릴 때
+
+트래픽 때문이 아닙니다. Vercel Hobby 함수와 Neon DB가 쉬었다가 일어나는 시간과, 예전에는 요청마다 스키마 ALTER를 돌리던 부팅 때문입니다.
+
+코드는 스키마가 이미 맞으면 ALTER를 건너뛰고, 홈·티커·인기글은 짧게 캐시합니다. 그래도 첫 접속이 수 초면 Neon에서 컴퓨트를 끄지 않게 하세요.
+
+1. Neon 대시보드 → 프로젝트 → Compute → **Scale to zero** 끄기(또는 suspend 시간을 늘리기)
+2. `DATABASE_URL`은 Connect에서 **Connection pooling ON** (`-pooler` 호스트). 앱이 직접 연결이면 pooler로 바꿉니다.
+3. Vercel 배포가 Ready가 된 뒤 시크릿 창으로 `https://pokerwiki.co.kr` 을 한 번 열고, 바로 새로고침해 비교하세요. 첫 배포 직후 한 번은 마커를 남기느라 느릴 수 있습니다.
+
 Vercel Optional Integrations의 **Prisma Postgres Add 는 누르지 않습니다.** 이미 Neon을 씁니다.
 
 `npm run build`가 Neon 연결 확인, `prisma migrate deploy`, (회원이 없을 때만) seed, 그다음 Next 빌드를 실행합니다. 로컬에서 데이터를 지우고 다시 넣으려면 `npm run db:seed` (`SEED_RESET=1`)입니다.
