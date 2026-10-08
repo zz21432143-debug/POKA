@@ -75,8 +75,8 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: [{ url: "/images/logo-flame.png", type: "image/png" }],
-    apple: [{ url: "/images/logo-flame.png", type: "image/png" }],
+    icon: [{ url: "/images/poka-flame-favicon.png", type: "image/png", sizes: "192x192" }],
+    apple: [{ url: "/images/poka-flame-favicon.png", type: "image/png" }],
   },
 };
 
@@ -95,6 +95,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${script.variable} ${display.variable} ${brush.variable} h-full antialiased`}
     >
       <head>
+        <link rel="icon" type="image/png" href="/images/poka-flame-favicon.png" />
         {adsense ? (
           <script
             async
