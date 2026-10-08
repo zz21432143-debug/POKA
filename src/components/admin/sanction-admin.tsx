@@ -143,6 +143,7 @@ export function SanctionAdmin({
         {restricted.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">현재 정지된 회원이 없습니다.</p>
         ) : (
+          <>
           <ul className="mt-3 grid gap-3 md:hidden">
             {restricted.map((user) => (
               <li key={user.id} className="rounded-lg border border-border p-3 text-sm">
@@ -210,6 +211,7 @@ export function SanctionAdmin({
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>
