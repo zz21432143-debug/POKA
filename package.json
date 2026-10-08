@@ -9,7 +9,7 @@
     "db:release": "node scripts/build.cjs",
     "start": "next start --hostname 0.0.0.0 --port 43123",
     "lint": "eslint",
-    "test": "tsx --test src/lib/feed.test.ts src/lib/marks.test.ts src/lib/promo-rotate.test.ts src/lib/hand-review.test.ts src/lib/inventory.test.ts src/lib/growth.test.ts src/lib/nickname.test.ts src/lib/dealer-drill.test.ts src/lib/permissions.test.ts src/lib/session.test.ts src/lib/levels.test.ts src/lib/rewards.test.ts src/lib/oauth-consent.test.ts src/lib/kakao-oauth.test.ts src/lib/account-restriction.test.ts src/lib/seo.test.ts src/lib/forbidden-words.test.ts src/lib/legal.test.ts src/lib/pwa.test.ts src/lib/account-delete.test.ts src/lib/nickname-change.test.ts src/lib/wipe-community.test.ts src/lib/db-url.test.ts src/lib/schema-boot.test.ts src/lib/history-redirect.test.ts src/lib/cold-start.test.ts",
+    "test": "tsx --test src/lib/feed.test.ts src/lib/marks.test.ts src/lib/promo-rotate.test.ts src/lib/hand-review.test.ts src/lib/inventory.test.ts src/lib/growth.test.ts src/lib/nickname.test.ts src/lib/dealer-drill.test.ts src/lib/permissions.test.ts src/lib/session.test.ts src/lib/levels.test.ts src/lib/rewards.test.ts src/lib/oauth-consent.test.ts src/lib/kakao-oauth.test.ts src/lib/account-restriction.test.ts src/lib/seo.test.ts src/lib/forbidden-words.test.ts src/lib/legal.test.ts src/lib/pwa.test.ts src/lib/account-delete.test.ts src/lib/nickname-change.test.ts src/lib/wipe-community.test.ts src/lib/db-url.test.ts src/lib/schema-boot.test.ts src/lib/history-redirect.test.ts src/lib/cold-start.test.ts src/lib/dates.test.ts",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

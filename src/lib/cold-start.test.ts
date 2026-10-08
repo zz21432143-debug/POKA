@@ -9,6 +9,12 @@ describe("cold start does not block the first page", () => {
     assert.doesNotMatch(src, /await ensureDb\(\)/);
   });
 
+  it("keeps the root shell synchronous so a widget error cannot blank the page", () => {
+    const src = readFileSync(new URL("../components/layout/site-shell.tsx", import.meta.url), "utf8");
+    assert.match(src, /export function SiteShell/);
+    assert.doesNotMatch(src, /export async function SiteShell/);
+  });
+
   it("streams the footer so a sleeping database cannot take down the shell", () => {
     const src = readFileSync(new URL("../components/layout/site-shell.tsx", import.meta.url), "utf8");
     assert.match(src, /SiteFooterFallback/);

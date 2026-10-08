@@ -33,6 +33,13 @@ export function formatKstLabel(date: string): string {
   return `${year}년 ${Number(month)}월 ${Number(day)}일`;
 }
 
+/** unstable_cache 이후 Date가 문자열로 내려와도 깨지지 않게 합니다. */
+export function toIsoString(value: Date | string | number) {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? new Date(0).toISOString() : value.toISOString();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString();
+}
+
 export function formatRelativeKst(iso: string) {
   const diff = Math.max(0, Date.now() - new Date(iso).getTime());
   const minutes = Math.floor(diff / 60_000);

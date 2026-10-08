@@ -5,7 +5,7 @@ import { ttlCache } from "@/lib/ttl-cache";
 
 async function loadPopularPosts(limit: number) {
   try {
-    return await prisma.post.findMany({
+    const rows = await prisma.post.findMany({
       where: { ...publicPostWhere, isAttendanceThread: false },
       orderBy: [{ upvoteCount: "desc" }, { viewCount: "desc" }, { createdAt: "desc" }],
       take: limit,
@@ -18,6 +18,10 @@ async function loadPopularPosts(limit: number) {
         createdAt: true,
       },
     });
+    return rows.map((post) => ({
+      ...post,
+      createdAt: post.createdAt.toISOString(),
+    }));
   } catch {
     return [];
   }
@@ -25,7 +29,7 @@ async function loadPopularPosts(limit: number) {
 
 const cachedPopularPosts = unstable_cache(
   () => loadPopularPosts(5),
-  ["poka-popular-posts-5"],
+  ["poka-popular-posts-5-iso"],
   { revalidate: 60 },
 );
 

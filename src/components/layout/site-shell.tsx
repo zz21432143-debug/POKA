@@ -53,15 +53,25 @@ async function ConnectedSidebarSponsor() {
   return <SidebarSponsorCard unit={sidebarSponsor} />;
 }
 
-export async function SiteShell({ children }: { children: ReactNode }) {
+async function ConnectedFeedAds() {
   let pathname = "";
   try {
     pathname = (await headers()).get("x-pathname") ?? "";
   } catch {
     pathname = "";
   }
-  const showFeedAds = shouldShowFeedAds(pathname);
+  if (!shouldShowFeedAds(pathname)) return null;
+  return (
+    <>
+      <FeedAdRow />
+      <div className="mt-5 xl:hidden">
+        <ConnectedSidebarSponsor />
+      </div>
+    </>
+  );
+}
 
+export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-[#07150f]">
@@ -81,18 +91,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
           {children}
-          {showFeedAds ? (
-            <Suspense fallback={null}>
-              <FeedAdRow />
-            </Suspense>
-          ) : null}
-          {showFeedAds ? (
-            <div className="mt-5 xl:hidden">
-              <Suspense fallback={null}>
-                <ConnectedSidebarSponsor />
-              </Suspense>
-            </div>
-          ) : null}
+          <Suspense fallback={null}>
+            <ConnectedFeedAds />
+          </Suspense>
         </main>
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
