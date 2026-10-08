@@ -39,13 +39,13 @@ export function MobileDrawer({
       >
         <MenuIcon />
       </SheetTrigger>
-      <SheetContent side="left" className="z-[70] w-[min(100%,20rem)] bg-white p-0" showCloseButton>
+      <SheetContent side="left" className="z-[90] w-[min(100%,20rem)] bg-white p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <PokaLogo compact />
           </SheetTitle>
         </SheetHeader>
-        <div className="flex flex-1 flex-col overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-1 flex-col overflow-y-auto overscroll-contain p-3 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
           <div className="mb-3">
             <ProfileWidget profile={profile} />
           </div>

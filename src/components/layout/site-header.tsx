@@ -15,16 +15,16 @@ export function SiteHeader({
 }) {
   const meHref = profile ? "/account" : "/login";
   return (
-    <header className="overflow-x-clip border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-16 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
-        <div className="flex min-w-0 items-center justify-start gap-1">
+    <header className="border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
+        <div className="relative z-30 flex items-center justify-start">
           <MobileDrawer profile={profile} />
           <a href="/" className="relative z-20 hidden shrink-0 items-center rounded-2xl lg:flex">
             <PokaLogo onDark />
           </a>
         </div>
-        <a href="/" className="relative z-20 flex justify-center lg:hidden">
-          <PokaLogo onDark />
+        <a href="/" className="relative z-0 flex min-w-0 justify-center overflow-hidden lg:hidden">
+          <PokaLogo onDark className="max-w-full" />
         </a>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
@@ -39,7 +39,7 @@ export function SiteHeader({
             />
           </label>
         </form>
-        <div className="flex min-w-0 items-center justify-end gap-0.5 lg:ml-2 lg:gap-1.5">
+        <div className="relative z-30 flex items-center justify-end gap-0.5 lg:ml-2 lg:gap-1.5">
           <span className="hidden lg:inline-flex">
             <InstallPwaButton compact />
           </span>

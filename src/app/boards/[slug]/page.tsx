@@ -57,7 +57,10 @@ export default async function BoardPage({
           </p>
         </div>
         {canWrite || !("masterOnly" in board && board.masterOnly) ? (
-          <Link href={board.writeHref} className={cn(buttonVariants({ size: "touch" }), "inline-flex")}>
+          <Link
+            href={board.writeHref}
+            className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
+          >
             {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
           </Link>
         ) : (

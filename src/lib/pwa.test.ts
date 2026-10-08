@@ -32,6 +32,12 @@ describe("mobile bottom nav", () => {
     assert.equal(MOBILE_BOTTOM_NAV[4]?.href, "/account");
   });
 
+  it("uses real page hrefs so bottom buttons can navigate", () => {
+    assert.equal(MOBILE_BOTTOM_NAV[1]?.href, "/community");
+    assert.equal(MOBILE_BOTTOM_NAV[2]?.href, "/boards/free/write");
+    assert.equal(MOBILE_BOTTOM_NAV[3]?.href, "/boards/suggestions");
+  });
+
   it("highlights suggestions instead of boards", () => {
     const boards = MOBILE_BOTTOM_NAV.find((item) => item.label === "게시판");
     const suggestions = MOBILE_BOTTOM_NAV.find((item) => item.label === "건의사항");

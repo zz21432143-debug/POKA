@@ -23,7 +23,7 @@ export function PokaLogo({
         alt=""
         width={204}
         height={53}
-        className={cn("w-auto shrink-0", compact ? "h-7" : "h-8 sm:h-9")}
+        className={cn("h-8 w-auto max-w-full shrink-0 sm:h-9", compact ? "h-7" : null)}
       />
       <span className="sr-only">POKA</span>
     </span>

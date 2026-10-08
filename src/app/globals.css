@@ -121,15 +121,16 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
   html {
-    @apply font-sans overflow-x-clip;
+    @apply font-sans;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   h1,
   h2,
@@ -182,6 +183,17 @@
 .touch-target {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.mobile-nav-pad {
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+  .mobile-nav-pad {
+    padding-bottom: 1.5rem;
+  }
 }
 
 .touch-check {

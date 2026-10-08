@@ -64,7 +64,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 overflow-x-clip bg-[#07150f]">
+      <div className="sticky top-0 z-40 bg-[#07150f]">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>
@@ -79,7 +79,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />
         </aside>
-        <main className="min-w-0 flex-1 overflow-x-clip pb-6">
+        <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
           {children}
           {showFeedAds ? (
             <Suspense fallback={null}>

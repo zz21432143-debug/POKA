@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   HomeIcon,
@@ -26,7 +25,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="모바일 하단 메뉴"
-      className="pointer-events-auto fixed inset-x-0 bottom-0 z-50 isolate border-t border-border bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="mx-auto grid max-w-[1320px] grid-cols-5">
         {MOBILE_BOTTOM_NAV.map((item) => {
@@ -34,16 +33,16 @@ export function MobileBottomNav() {
           const active = mobileNavActive(pathname, item);
           return (
             <li key={item.href}>
-              <Link
+              <a
                 href={item.href}
                 className={cn(
-                  "touch-target flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
+                  "touch-target relative z-10 flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <Icon className="size-5" />
                 <span className="break-keep">{item.label}</span>
-              </Link>
+              </a>
             </li>
           );
         })}
