@@ -69,7 +69,7 @@ export function BoardNav({
             "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold",
             homeActive
               ? "home-tab-3d text-[#fff8ee]"
-              : "text-[#2B1810] hover:bg-[#efe6d6]",
+              : "text-[#f4eadf] hover:bg-white/10",
           )}
         >
           <HomeIcon className="size-4 shrink-0" />
@@ -81,7 +81,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#8a6a4a]">
+              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#e25a4a]">
                 {group.title}
               </p>
             ) : null}
@@ -97,11 +97,11 @@ export function BoardNav({
                         "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
                         active
                           ? "home-tab-3d font-semibold text-[#fff8ee]"
-                          : "font-medium text-[#2B1810] hover:bg-[#efe6d6]",
+                          : "font-medium text-[#f4eadf] hover:bg-white/10",
                       )}
                       onClick={onNavigate}
                     >
-                      <Icon className={cn("size-4 shrink-0", active ? "text-[#fff8ee]" : "text-[#C86D2A]")} />
+                      <Icon className={cn("size-4 shrink-0", active ? "text-[#fff8ee]" : "text-[#e0b15a]")} />
                       <span className="min-w-0 flex-1">{item.label}</span>
                     </a>
                   </li>
@@ -111,13 +111,13 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 flex items-center gap-2 rounded-2xl border border-[#e2d7c5] bg-[#efe6d6] px-3 py-2">
+      <div className="m-3 flex items-center gap-2 rounded-2xl border border-[#5c2428] bg-[#2a1214] px-3 py-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/theme/side-baby.png" alt="" width={72} height={72} className="size-16 shrink-0 object-contain" />
-        <p className="text-sm font-black leading-5 text-[#2B1810]">
-          포카와 함께하는
+        <img src="/theme/yokai-cat.jpg" alt="" width={72} height={72} className="size-16 shrink-0 rounded-xl object-cover" />
+        <p className="text-sm font-black leading-5 text-[#f6e7d4]">
+          108요괴의 힘을
           <br />
-          즐거운 시간!
+          모아보세요!
         </p>
       </div>
     </nav>

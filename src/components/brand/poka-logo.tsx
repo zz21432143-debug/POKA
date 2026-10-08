@@ -4,16 +4,43 @@ export function PokaLogo({
   className,
   compact = false,
   onDark = false,
+  hideScript = false,
 }: {
   className?: string;
   compact?: boolean;
   onDark?: boolean;
+  hideScript?: boolean;
 }) {
+  if (onDark) {
+    return (
+      <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap", className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/theme/yokai-mark.jpg"
+          alt=""
+          width={36}
+          height={36}
+          className={cn("size-8 shrink-0 rounded-full object-cover", compact ? "size-7" : null)}
+        />
+        <span className={cn("font-black tracking-tight text-white", compact ? "text-base" : "text-lg")}>POKA</span>
+        {hideScript ? null : (
+          <span
+            className={cn("leading-none text-[#ef3b3b]", compact ? "text-lg" : "text-[1.65rem]")}
+            style={{ fontFamily: "var(--font-brush), serif" }}
+          >
+            108요괴
+          </span>
+        )}
+        <span className="sr-only">POKA</span>
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
         "inline-flex items-center",
-        !onDark && "rounded-xl bg-[#07150f] px-2 py-1",
+        "rounded-xl bg-[#07150f] px-2 py-1",
         className,
       )}
     >

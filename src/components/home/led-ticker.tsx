@@ -26,7 +26,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
           <Link
             key={`${item.id}-${index}`}
             href={item.href}
-            className="shrink-0 whitespace-nowrap text-sm font-medium tracking-wide text-[#F5EFE6] hover:text-white"
+            className="shrink-0 whitespace-nowrap text-sm font-medium tracking-wide text-[#f4eadf] hover:text-white"
           >
             {item.message}
           </Link>

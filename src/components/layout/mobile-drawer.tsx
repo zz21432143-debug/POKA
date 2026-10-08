@@ -42,7 +42,7 @@ export function MobileDrawer({
       <SheetContent side="left" className="board-face z-[90] w-[min(100%,20rem)] p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
-            <PokaLogo compact />
+            <PokaLogo compact onDark />
           </SheetTitle>
         </SheetHeader>
         <div className="flex flex-1 flex-col overflow-y-auto overscroll-contain p-3 pb-[max(2.5rem,env(safe-area-inset-bottom))]">

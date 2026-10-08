@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Black_Han_Sans, Caveat, Noto_Sans_KR } from "next/font/google";
+import { Black_Han_Sans, Caveat, Dokdo, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { PwaRegister } from "@/components/pwa/pwa-register";
@@ -29,6 +29,12 @@ const script = Caveat({
 
 const display = Black_Han_Sans({
   variable: "--font-display",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const brush = Dokdo({
+  variable: "--font-brush",
   subsets: ["latin"],
   weight: "400",
 });
@@ -91,7 +97,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${sans.variable} ${script.variable} ${display.variable} h-full antialiased`}
+      className={`${sans.variable} ${script.variable} ${display.variable} ${brush.variable} h-full antialiased`}
     >
       <head>
         {adsense ? (
@@ -102,7 +108,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           />
         ) : null}
       </head>
-      <body className="flex min-h-full flex-col bg-[#7ec8ea]">
+      <body className="flex min-h-full flex-col bg-[#0b0908]">
         <GoogleAnalytics />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>

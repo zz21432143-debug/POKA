@@ -74,7 +74,7 @@ async function ConnectedFeedAds() {
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#4A2E1B]">
+      <div className="sticky top-0 z-40 bg-[#0e0c0b]">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>
@@ -87,14 +87,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </Suspense>
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[16rem] shrink-0 lg:block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/theme/side-raptor.png"
-            alt=""
-            width={180}
-            height={180}
-            className="pointer-events-none absolute -left-10 bottom-2 z-30 hidden w-28 xl:block"
-          />
           <div className="wood-frame flex h-full flex-col">
             <BoardNav />
           </div>
@@ -120,8 +112,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <PopularPosts />
             </Suspense>
             <GoogleAdUnit placement="sidebar" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/theme/side-bluedino.png" alt="" width={140} height={140} className="mx-auto w-28" />
           </div>
         </aside>
       </div>

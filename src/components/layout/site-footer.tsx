@@ -16,7 +16,7 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
         <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
           <div className="flex min-w-0 flex-col gap-1 text-sm leading-6 text-muted-foreground">
             <div className="flex items-center gap-3">
-              <PokaLogo compact />
+              <PokaLogo compact onDark />
               <p className="font-semibold text-foreground">서비스명: {LEGAL_SERVICE_NAME}</p>
             </div>
             <p>홀덤·딜러 커뮤니티 · 만 19세 이상</p>

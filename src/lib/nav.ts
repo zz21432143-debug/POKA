@@ -18,7 +18,7 @@ export const TOP_NAV = [
   { href: "/", label: "홈" },
   { href: "/community", label: "커뮤니티" },
   { href: "/info", label: "정보센터" },
-  { href: "/boards/jobs", label: "구인" },
+  { href: "/boards/rules", label: "규칙" },
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [

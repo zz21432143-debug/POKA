@@ -14,7 +14,7 @@ export function SiteHeader({
 }) {
   const meHref = profile ? "/account" : "/login";
   return (
-    <header className="bg-[#4A2E1B] pt-[env(safe-area-inset-top)] text-[#F5EFE6]">
+    <header className="bg-[#0e0c0b] pt-[env(safe-area-inset-top)] text-[#F5EFE6]">
       <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
         <div className="relative z-30 flex items-center justify-start">
           <MobileDrawer profile={profile} />
@@ -22,19 +22,19 @@ export function SiteHeader({
             <PokaLogo onDark />
           </a>
         </div>
-        <a href="/" className="relative z-0 flex min-w-0 justify-center overflow-hidden lg:hidden">
-          <PokaLogo onDark className="max-w-full" />
+        <a href="/" className="relative z-0 flex min-w-0 justify-center lg:hidden">
+          <PokaLogo onDark compact hideScript />
         </a>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
           <label className="relative w-full max-w-sm">
             <span className="sr-only">검색</span>
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#8a5a32]" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#d7c4a4]" />
             <input
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-              className="search-inset h-10 w-full rounded-full pr-4 pl-9 text-sm outline-none placeholder:text-[#8a6a4a] focus:ring-2 focus:ring-[#d4af37]/40"
+              className="search-inset h-10 w-full rounded-full pr-10 pl-4 text-sm outline-none placeholder:text-[#a89880] focus:ring-2 focus:ring-[#e11d2e]/40"
             />
           </label>
         </form>
