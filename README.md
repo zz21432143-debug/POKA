@@ -112,7 +112,7 @@ Vercel 프로젝트 환경 변수:
 | `DATABASE_URL` | Neon Connect, Connection pooling **ON** (호스트에 `-pooler`) |
 | `DATABASE_URL_UNPOOLED` | 같은 모달에서 pooling **OFF** |
 | `NEXT_PUBLIC_SITE_URL` | `https://pokerwiki.co.kr` |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | 푸터·개인정보 처리방침 문의 메일. 없으면 `POKA4444444@gmail.com` |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | 푸터·개인정보 처리방침 문의 메일. 없으면 `POKA4444444@gmail.com`. 예전 `contact@pokerwiki.co.kr` 값은 무시합니다. 하단 1:1 문의는 카카오톡 ID `POKA1` |
 | `NEXT_PUBLIC_OPERATOR_NAME` | 운영자/개인정보 보호책임자. 없으면 `POKA 관리자` |
 | `SESSION_SECRET` | 세션·동의 쿠키 HMAC 서명용 긴 문자열 |
 | `KAKAO_REST_API_KEY` | 카카오 REST API 키 |

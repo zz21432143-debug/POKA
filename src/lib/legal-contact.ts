@@ -6,10 +6,12 @@ export function privacyOfficerName() {
   return process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || DEFAULT_OPERATOR_NAME;
 }
 
+function usableEmail(value?: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.toLowerCase() === LEGACY_CONTACT_EMAIL) return null;
+  return trimmed;
+}
+
 export function publicContactEmail(fallback?: string | null) {
-  const fromEnv = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
-  if (fromEnv) return fromEnv;
-  const extra = fallback?.trim();
-  if (extra && extra !== LEGACY_CONTACT_EMAIL) return extra;
-  return DEFAULT_CONTACT_EMAIL;
+  return usableEmail(process.env.NEXT_PUBLIC_CONTACT_EMAIL) ?? usableEmail(fallback) ?? DEFAULT_CONTACT_EMAIL;
 }

@@ -136,7 +136,7 @@ async function applySchema() {
       CREATE TABLE IF NOT EXISTS "SiteSetting" (
         "id" TEXT NOT NULL,
         "noticeBanner" TEXT,
-        "footerEmail" TEXT NOT NULL DEFAULT 'contact@pokerwiki.co.kr',
+        "footerEmail" TEXT NOT NULL DEFAULT 'POKA4444444@gmail.com',
         "kakaoChannelUrl" TEXT,
         "updatedAt" TIMESTAMP(3) NOT NULL,
         CONSTRAINT "SiteSetting_pkey" PRIMARY KEY ("id")
@@ -146,6 +146,11 @@ async function applySchema() {
       UPDATE "SiteSetting"
       SET "footerEmail" = 'POKA4444444@gmail.com'
       WHERE "footerEmail" IS NULL OR "footerEmail" = '' OR "footerEmail" = 'contact@pokerwiki.co.kr'
+    `).catch(() => undefined);
+    await client.query(`
+      UPDATE "SiteSetting"
+      SET "kakaoChannelUrl" = 'kakaotalk://addfriend?id=POKA1'
+      WHERE "kakaoChannelUrl" IS NULL OR "kakaoChannelUrl" = '' OR "kakaoChannelUrl" = 'https://open.kakao.com/o/gewUD9jc'
     `).catch(() => undefined);
     await client.query(`
       UPDATE "Post" SET "authorIp" = NULL

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
 import { publicContactEmail } from "@/lib/legal-contact";
 
 export function AccountPrivacyPanel({
@@ -82,7 +83,8 @@ export function AccountPrivacyPanel({
           </div>
         </dl>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          이 화면의 이메일은 본인만 보입니다. 정정·삭제를 이메일로 요청하면 {contact}로 보내 주세요.
+          이 화면의 이메일은 본인만 보입니다. 정정·삭제는 {contact} 또는 카카오톡 ID {KAKAO_INQUIRY_ID}로 요청해
+          주세요.
         </p>
       </section>
 

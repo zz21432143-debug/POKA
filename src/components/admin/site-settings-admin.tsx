@@ -58,13 +58,14 @@ export function SiteSettingsAdmin({ initial }: { initial: PublicSiteSettings }) 
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="kakao-url">카카오톡 채널 문의 URL</Label>
+        <Label htmlFor="kakao-url">카카오톡 1:1 문의 (아이디 POKA1)</Label>
         <Input
           id="kakao-url"
           value={kakaoChannelUrl}
           onChange={(event) => setKakaoChannelUrl(event.target.value)}
-          placeholder="https://pf.kakao.com/ 또는 오픈채팅 링크"
+          placeholder="비우면 카카오톡 아이디 POKA1로 친구 추가"
         />
+        <p className="text-xs text-muted-foreground">헤더 공식 오픈채팅은 그대로 두고, 하단 1:1만 이 주소/아이디를 씁니다.</p>
       </div>
       {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void save()}>

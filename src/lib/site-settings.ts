@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
+import { KAKAO_INQUIRY_URL, kakaoInquiryHref } from "@/lib/kakao";
+import { publicContactEmail } from "@/lib/legal-contact";
 import { ttlCache, ttlCacheClear } from "@/lib/ttl-cache";
 
 export const SITE_SETTING_ID = "default";
@@ -13,8 +14,8 @@ export type PublicSiteSettings = {
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   noticeBanner: null,
-  footerEmail: "POKA4444444@gmail.com",
-  kakaoChannelUrl: KAKAO_OPEN_CHAT_URL,
+  footerEmail: publicContactEmail(),
+  kakaoChannelUrl: KAKAO_INQUIRY_URL,
 };
 
 export async function getSiteSettings(): Promise<PublicSiteSettings> {
@@ -23,8 +24,8 @@ export async function getSiteSettings(): Promise<PublicSiteSettings> {
     if (!row) return DEFAULT_SITE_SETTINGS;
     return {
       noticeBanner: row.noticeBanner?.trim() || null,
-      footerEmail: row.footerEmail.trim() || DEFAULT_SITE_SETTINGS.footerEmail,
-      kakaoChannelUrl: row.kakaoChannelUrl?.trim() || null,
+      footerEmail: publicContactEmail(row.footerEmail),
+      kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
     };
   });
 }
@@ -34,15 +35,25 @@ export function clearSiteSettingsCache() {
 }
 
 export async function ensureSiteSettingsRow() {
-  await prisma.siteSetting.upsert({
-    where: { id: SITE_SETTING_ID },
-    create: {
-      id: SITE_SETTING_ID,
-      footerEmail: DEFAULT_SITE_SETTINGS.footerEmail,
-      kakaoChannelUrl: DEFAULT_SITE_SETTINGS.kakaoChannelUrl,
-    },
-    update: {},
-  });
+  const existing = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID } });
+  if (!existing) {
+    await prisma.siteSetting.create({
+      data: {
+        id: SITE_SETTING_ID,
+        footerEmail: DEFAULT_SITE_SETTINGS.footerEmail,
+        kakaoChannelUrl: DEFAULT_SITE_SETTINGS.kakaoChannelUrl,
+      },
+    });
+    return;
+  }
+  const footerEmail = publicContactEmail(existing.footerEmail);
+  const kakaoChannelUrl = kakaoInquiryHref(existing.kakaoChannelUrl);
+  if (footerEmail !== existing.footerEmail || kakaoChannelUrl !== (existing.kakaoChannelUrl ?? "")) {
+    await prisma.siteSetting.update({
+      where: { id: SITE_SETTING_ID },
+      data: { footerEmail, kakaoChannelUrl },
+    });
+  }
 }
 
 export const DEFAULT_FORBIDDEN_WORDS = ["텔레그램", "첫충", "꽁머니"];

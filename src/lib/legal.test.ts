@@ -6,7 +6,8 @@ import {
   PRIVACY_POLICY_SECTIONS,
   YOUTH_PROTECTION_SECTIONS,
 } from "./legal";
-import { DEFAULT_CONTACT_EMAIL, publicContactEmail } from "./legal-contact";
+import { KAKAO_INQUIRY_ID, KAKAO_INQUIRY_URL, KAKAO_OPEN_CHAT_URL, kakaoInquiryHref } from "./kakao";
+import { DEFAULT_CONTACT_EMAIL, LEGACY_CONTACT_EMAIL, publicContactEmail } from "./legal-contact";
 
 describe("legal required disclosures", () => {
   it("names the service POKA", () => {
@@ -42,6 +43,7 @@ describe("legal required disclosures", () => {
     const officer = PRIVACY_POLICY_SECTIONS.find((row) => row.title.includes("관련 문의"));
     assert.ok(officer);
     assert.match(officer.body, new RegExp(publicContactEmail()));
+    assert.match(officer.body, new RegExp(KAKAO_INQUIRY_ID));
     assert.doesNotMatch(officer.body, /성명/);
     assert.equal(DEFAULT_CONTACT_EMAIL, "POKA4444444@gmail.com");
     const transfer = PRIVACY_CONSENT_SECTIONS.find((row) => row.title.includes("국외"));
@@ -49,6 +51,24 @@ describe("legal required disclosures", () => {
     for (const phrase of ["Google", "Vercel", "Neon", "미국"]) {
       assert.match(transfer.body, new RegExp(phrase));
     }
+  });
+
+  it("ignores the legacy pokerwiki contact mailbox", () => {
+    const prev = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = LEGACY_CONTACT_EMAIL;
+    try {
+      assert.equal(publicContactEmail(LEGACY_CONTACT_EMAIL), DEFAULT_CONTACT_EMAIL);
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+      else process.env.NEXT_PUBLIC_CONTACT_EMAIL = prev;
+    }
+  });
+
+  it("uses Kakao ID POKA1 for 1:1 inquiry, not the official open chat", () => {
+    assert.equal(kakaoInquiryHref(null), KAKAO_INQUIRY_URL);
+    assert.equal(kakaoInquiryHref(KAKAO_OPEN_CHAT_URL), KAKAO_INQUIRY_URL);
+    assert.equal(kakaoInquiryHref("https://pf.kakao.com/_custom"), "https://pf.kakao.com/_custom");
+    assert.match(YOUTH_PROTECTION_SECTIONS[3].body, /POKA1/);
   });
 
   it("includes a youth protection policy", () => {

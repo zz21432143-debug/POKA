@@ -1,3 +1,4 @@
+import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
 import { publicContactEmail } from "@/lib/legal-contact";
 
 export const MEMBER_LIABILITY_TEXT =
@@ -74,7 +75,7 @@ export const PRIVACY_CONSENT_SECTIONS: LegalSection[] = [
   },
   {
     title: "4. 개인정보 관련 문의",
-    body: `연락처(이메일): ${publicContactEmail()}. 카카오톡 1:1 문의로도 받을 수 있습니다. 열람·정정·삭제·탈퇴는 로그인 후 [내 정보·탈퇴] 메뉴 또는 이메일로 요청하면 되며, 이메일 요청은 10일 이내에 회신합니다.`,
+    body: `연락처(이메일): ${publicContactEmail()}. 카카오톡 ID: ${KAKAO_INQUIRY_ID}. 카카오톡 1:1 문의로도 받을 수 있습니다. 열람·정정·삭제·탈퇴는 로그인 후 [내 정보·탈퇴] 메뉴 또는 이메일로 요청하면 되며, 이메일 요청은 10일 이내에 회신합니다.`,
   },
   {
     title: "5. 동의 거부 권리 및 불이익",
@@ -113,6 +114,6 @@ export const YOUTH_PROTECTION_SECTIONS: LegalSection[] = [
   },
   {
     title: "4. 청소년 보호 문의",
-    body: `연락처(이메일): ${publicContactEmail()}. 유해정보 신고와 청소년 보호 관련 문의는 이메일 또는 카카오톡 1:1 문의로 접수합니다.`,
+    body: `연락처(이메일): ${publicContactEmail()}. 카카오톡 ID: ${KAKAO_INQUIRY_ID}. 유해정보 신고와 청소년 보호 관련 문의는 이메일 또는 카카오톡 1:1 문의(아이디 ${KAKAO_INQUIRY_ID})로 접수합니다.`,
   },
 ];

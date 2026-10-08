@@ -1,6 +1,6 @@
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { FooterLegalLinks } from "@/components/layout/footer-legal-links";
-import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
+import { KAKAO_INQUIRY_ID, kakaoInquiryHref } from "@/lib/kakao";
 import { LEGAL_SERVICE_NAME } from "@/lib/legal";
 import { publicContactEmail } from "@/lib/legal-contact";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -8,7 +8,8 @@ import { getSiteSettings } from "@/lib/site-settings";
 export async function SiteFooter() {
   const settings = await getSiteSettings().catch(() => null);
   const email = publicContactEmail(settings?.footerEmail);
-  const kakao = settings?.kakaoChannelUrl?.trim() || KAKAO_OPEN_CHAT_URL;
+  const kakao = kakaoInquiryHref(settings?.kakaoChannelUrl);
+  const kakaoExternal = kakao.startsWith("http");
 
   return (
     <footer className="mt-auto border-t border-border bg-white pb-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -23,18 +24,18 @@ export async function SiteFooter() {
             <a href={`mailto:${email}`} className="break-all hover:text-foreground">
               문의 이메일: {email}
             </a>
+            <p className="text-foreground">
+              문의 카카오톡 ID: <span className="font-semibold">{KAKAO_INQUIRY_ID}</span>
+            </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
-            {kakao ? (
-              <a
-                href={kakao}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center rounded-full bg-[#FEE500] px-4 text-sm font-semibold text-[#191919] hover:bg-[#F6DC00]"
-              >
-                카카오톡 1:1 문의
-              </a>
-            ) : null}
+            <a
+              href={kakao}
+              {...(kakaoExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              className="inline-flex min-h-11 items-center rounded-full bg-[#FEE500] px-4 text-sm font-semibold text-[#191919] hover:bg-[#F6DC00]"
+            >
+              카카오톡 1:1 문의 · {KAKAO_INQUIRY_ID}
+            </a>
             <FooterLegalLinks />
           </div>
         </div>
