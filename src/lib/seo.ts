@@ -27,7 +27,7 @@ export const ROBOTS_DISALLOW = ["/admin", "/api/", "/account", "/me", "/notifica
  * 비워 두면 <head>에 해당 메타를 출력하지 않습니다.
  */
 export const SEARCH_ENGINE_VERIFICATION = {
-  google: "",
+  google: "k3_-x7A_mpsqW1POyxM0iboyfXeOPKmZ449IQrebWBc",
   naver: "07d34f783c35ccad774a768783ab4c414c758027",
 } as const;
 

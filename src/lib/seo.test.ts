@@ -28,11 +28,11 @@ describe("seo defaults", () => {
   });
 
   it("omits empty search-engine verification tags", () => {
-    assert.equal(SEARCH_ENGINE_VERIFICATION.google, "");
+    assert.equal(SEARCH_ENGINE_VERIFICATION.google, "k3_-x7A_mpsqW1POyxM0iboyfXeOPKmZ449IQrebWBc");
     assert.equal(SEARCH_ENGINE_VERIFICATION.naver, "07d34f783c35ccad774a768783ab4c414c758027");
     const meta = searchEngineVerificationMeta();
     if (!process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION) {
-      assert.equal("google" in meta, false);
+      assert.equal(meta.google, SEARCH_ENGINE_VERIFICATION.google);
     }
     if (!process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION) {
       assert.equal(meta.other?.["naver-site-verification"], SEARCH_ENGINE_VERIFICATION.naver);
