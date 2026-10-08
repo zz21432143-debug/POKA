@@ -12,7 +12,7 @@ export const SITE_NAME = "POKA";
 export const OG_IMAGE_PATH = "/opengraph-image";
 
 /** 검색엔진이 타면 안 되는 관리·계정 경로. */
-export const ROBOTS_DISALLOW = ["/admin", "/api/", "/account", "/me", "/notifications"];
+export const ROBOTS_DISALLOW = ["/admin", "/api/", "/account", "/me", "/notifications", "/welcome"];
 
 /**
  * 검색엔진 소유확인 메타태그.

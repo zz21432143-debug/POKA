@@ -1,5 +1,6 @@
 export const NICKNAME_TICKET_PRICE = 500;
 export const NICKNAME_TICKET_NAME = "닉네임 변경권";
+export const NICKNAME_CHANGE_HREF = "/account#nickname";
 
 export function canUseFreeNicknameChange(changeCount: number) {
   return changeCount <= 0;

@@ -11,6 +11,7 @@ export function ProfileBadges({
   isDealerVerified,
   level,
   isAdmin,
+  isMaster,
   attendanceStreak,
   nickname = "",
   profileMarkImageUrl = null,
@@ -19,6 +20,7 @@ export function ProfileBadges({
   isDealerVerified?: boolean;
   level: number;
   isAdmin?: boolean;
+  isMaster?: boolean;
   attendanceStreak?: number;
   nickname?: string;
   profileMarkImageUrl?: string | null;
@@ -32,6 +34,7 @@ export function ProfileBadges({
         level,
         isDealerVerified,
         isAdmin,
+        isMaster,
         attendanceStreak,
       }}
       size="md"

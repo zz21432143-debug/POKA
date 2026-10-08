@@ -1,6 +1,7 @@
 import { cn } from "cn";
 import { MarkImage } from "@/components/layout/mark-image";
 import { StarIcon, MessageCircleHeartIcon } from "lucide-react";
+import { displayMarkSrc, OPERATOR_MARK_SRC } from "@/lib/mark-assets";
 import { levelTitle, memberRankTitle } from "@/lib/levels";
 
 export { levelTitle };
@@ -39,7 +40,7 @@ export function isOpenChatStar(user: Pick<BadgeUser, "level" | "attendanceStreak
   return user.level >= 8 || (user.attendanceStreak ?? 0) >= 7;
 }
 
-export const OPERATOR_MARK_SRC = "/marks/operator.svg";
+export { OPERATOR_MARK_SRC };
 
 function OperatorPill() {
   return (
@@ -101,19 +102,25 @@ export function UserBadge({
         </span>
       ) : null;
 
+  const markSrc = displayMarkSrc(user);
+  const markRing = user.isMaster
+    ? "ring-2 ring-amber-400 shadow-sm"
+    : user.isDealerVerified
+      ? "ring-2 ring-amber-400 shadow-sm"
+      : size === "lg"
+        ? "ring-2 ring-white shadow-sm"
+        : "ring-1 ring-border";
+
   if (size === "lg") {
     return (
       <span className={cn("flex max-w-full items-center gap-3", className)}>
-        {user.isMaster ? (
-          <MarkImage src={OPERATOR_MARK_SRC} alt="운영자 마크" size={spec.mark} className="ring-2 ring-amber-400 shadow-sm" />
-        ) : null}
         <MarkImage
-          src={user.profileMarkImageUrl}
-          alt={`${user.nickname} 마크`}
+          src={markSrc}
+          alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
           size={spec.mark}
           frameClass={frameClass}
           effectClass={effectClass}
-          className={user.isDealerVerified ? "ring-2 ring-amber-400 shadow-sm" : "ring-2 ring-white shadow-sm"}
+          className={markRing}
         />
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-1.5">
@@ -140,16 +147,13 @@ export function UserBadge({
       <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
         Lv.{user.level}
       </span>
-      {user.isMaster ? (
-        <MarkImage src={OPERATOR_MARK_SRC} alt="운영자 마크" size={spec.mark} className="ring-2 ring-amber-400" />
-      ) : null}
       <MarkImage
-        src={user.profileMarkImageUrl}
-        alt={`${user.nickname} 마크`}
+        src={markSrc}
+        alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
         size={spec.mark}
         frameClass={frameClass}
         effectClass={effectClass}
-        className={user.isDealerVerified ? "ring-2 ring-amber-400" : "ring-1 ring-border"}
+        className={user.isMaster ? "ring-2 ring-amber-400" : markRing}
       />
       {showNickname ? (
         <span className="min-w-0">

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { canUseFreeNicknameChange, nicknameChangeBlocked, NICKNAME_TICKET_PRICE } from "./nickname-change";
+import {
+  canUseFreeNicknameChange,
+  nicknameChangeBlocked,
+  NICKNAME_CHANGE_HREF,
+  NICKNAME_TICKET_PRICE,
+} from "./nickname-change";
 
 describe("nickname change tickets", () => {
   it("costs 500 points after the first free change", () => {
@@ -10,5 +15,6 @@ describe("nickname change tickets", () => {
     assert.equal(nicknameChangeBlocked(0, 0), null);
     assert.equal(nicknameChangeBlocked(1, 1), null);
     assert.match(nicknameChangeBlocked(1, 0) ?? "", /500/);
+    assert.equal(NICKNAME_CHANGE_HREF, "/account#nickname");
   });
 });

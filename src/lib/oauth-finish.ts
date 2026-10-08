@@ -36,7 +36,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       return NextResponse.redirect(new URL("/login?tab=signup&error=consent", request.url));
     }
     jar.delete(CONSENT_COOKIE);
-    const user = await upsertSocialUser(profile, { signupIp: ip }).catch((error: unknown) => {
+    const created = await upsertSocialUser(profile, { signupIp: ip }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : "가입할 수 없습니다.";
       const url = new URL("/login", request.url);
       url.searchParams.set("tab", "signup");
@@ -44,7 +44,8 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       url.searchParams.set("msg", message);
       return url;
     });
-    if (user instanceof URL) return NextResponse.redirect(user);
+    if (created instanceof URL) return NextResponse.redirect(created);
+    const { user, isNew } = created;
     try {
       await assertAccountActive(user);
     } catch (error) {
@@ -52,6 +53,11 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       throw error;
     }
     await setSessionNickname(user.nickname);
+    if (isNew) {
+      const welcome = new URL("/welcome", request.url);
+      if (next !== "/") welcome.searchParams.set("next", next);
+      return NextResponse.redirect(welcome);
+    }
     return NextResponse.redirect(new URL(next, request.url));
   }
 

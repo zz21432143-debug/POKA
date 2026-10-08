@@ -89,7 +89,7 @@ export function AccountPrivacyPanel({
         </p>
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-4">
+      <section id="nickname" className="scroll-mt-24 rounded-xl border border-border bg-card p-4">
         <h2 className="text-lg font-semibold">닉네임 변경</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           최초 1회는 무료입니다. 그다음부터는 상점에서 닉네임 변경권(500P)을 산 뒤 바꿀 수 있습니다. 보유

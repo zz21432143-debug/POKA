@@ -22,7 +22,7 @@ describe("seo defaults", () => {
   });
 
   it("blocks admin and account paths from crawlers", () => {
-    for (const path of ["/admin", "/api/", "/account", "/me", "/notifications"]) {
+    for (const path of ["/admin", "/api/", "/account", "/me", "/notifications", "/welcome"]) {
       assert.equal(ROBOTS_DISALLOW.includes(path), true, path);
     }
   });

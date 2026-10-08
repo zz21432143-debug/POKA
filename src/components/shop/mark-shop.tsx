@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { MarkImage } from "@/components/layout/mark-image";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -374,20 +375,7 @@ function EmptyShop({ copy }: { copy: string }) {
 function ShopPreview({ src, name }: { src: string | null; name: string }) {
   return (
     <div className="flex min-h-24 items-center justify-center rounded-xl bg-muted/60 p-3">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={name}
-          width={80}
-          height={80}
-          className="size-20 min-h-16 min-w-16 object-contain"
-        />
-      ) : (
-        <span className="flex size-20 min-h-16 min-w-16 items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
-          {name.slice(0, 1)}
-        </span>
-      )}
+      <MarkImage src={src} alt={name} size={80} />
     </div>
   );
 }

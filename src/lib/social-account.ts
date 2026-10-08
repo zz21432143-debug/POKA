@@ -44,7 +44,10 @@ export async function findSocialUser(profile: Pick<SocialProfile, "provider" | "
   return prisma.user.findUnique({ where: { email } });
 }
 
-export async function upsertSocialUser(profile: SocialProfile, extras?: { signupIp?: string }) {
+export async function upsertSocialUser(
+  profile: SocialProfile,
+  extras?: { signupIp?: string },
+): Promise<{ user: NonNullable<Awaited<ReturnType<typeof findSocialUser>>>; isNew: boolean }> {
   const now = new Date();
   const email = cleanEmail(profile.email);
   const providerId = profile.providerId.trim();
@@ -65,10 +68,11 @@ export async function upsertSocialUser(profile: SocialProfile, extras?: { signup
   };
 
   if (user) {
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id: user.id },
       data: consents,
     });
+    return { user: updated, isNew: false };
   }
 
   const nickname = await uniqueSocialNickname(
@@ -101,5 +105,5 @@ export async function upsertSocialUser(profile: SocialProfile, extras?: { signup
     message: `👋 ${user.nickname}님이 ${via}로 POKA에 들어왔습니다!`,
     href: `/u/${encodeURIComponent(user.nickname)}`,
   });
-  return user;
+  return { user, isNew: true };
 }

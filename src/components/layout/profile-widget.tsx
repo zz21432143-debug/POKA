@@ -2,6 +2,7 @@ import type { ViewerProfile } from "@/lib/profile";
 import { MarkImage } from "@/components/layout/mark-image";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { todayKstDate } from "@/lib/dates";
+import { displayMarkSrc } from "@/lib/mark-assets";
 import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
@@ -38,11 +39,12 @@ export function ProfileWidget({
   }
 
   const rank = memberRankTitle(profile);
+  const markSrc = displayMarkSrc(profile);
 
   if (variant === "compact") {
     return (
       <div className="flex min-h-11 items-center gap-2">
-        <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={36} />
+        <MarkImage src={markSrc} alt={profile.nickname} size={36} />
         <div className="min-w-0">
           <NicknameMenu nickname={profile.nickname}>
             <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
@@ -62,7 +64,7 @@ export function ProfileWidget({
     <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted">
-          <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={48} />
+          <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
           <NicknameMenu nickname={profile.nickname}>

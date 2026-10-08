@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { DEFAULT_MARK_SRC, OPERATOR_MARK_SRC, displayMarkSrc } from "./mark-assets";
 import { MARK_CATEGORIES, SHOP_KINDS, marksInCategory, type MarkCatalogItem } from "./mark-categories";
 
 function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "name" | "category">): MarkCatalogItem {
@@ -15,6 +16,13 @@ function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "
 }
 
 describe("mark shop catalog", () => {
+  it("uses a local default mark and operator mark instead of missing badge pngs", () => {
+    assert.equal(displayMarkSrc({ profileMarkImageUrl: null }), DEFAULT_MARK_SRC);
+    assert.equal(displayMarkSrc({ profileMarkImageUrl: "/images/badges/team_1.png" }), DEFAULT_MARK_SRC);
+    assert.equal(displayMarkSrc({ profileMarkImageUrl: "/marks/chip.svg" }), "/marks/chip.svg");
+    assert.equal(displayMarkSrc({ isMaster: true, profileMarkImageUrl: "/marks/chip.svg" }), OPERATOR_MARK_SRC);
+  });
+
   it("exposes 마크 / 프레임 / 이펙트 shop kinds", () => {
     assert.deepEqual(
       SHOP_KINDS.map((tab) => tab.label),
