@@ -11,16 +11,15 @@ export function PokaLogo({
 }) {
   if (onDark) {
     return (
-      <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap", className)}>
+      <span className={cn("inline-flex items-center whitespace-nowrap", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/theme/yokai-mark.jpg"
+          src="/theme/poka-lockup.png"
           alt=""
-          width={36}
-          height={36}
-          className={cn("size-8 shrink-0 rounded-full object-cover", compact ? "size-7" : null)}
+          width={107}
+          height={34}
+          className={cn("h-8 w-auto max-w-full shrink-0", compact ? "h-7" : "sm:h-9")}
         />
-        <span className={cn("font-black tracking-tight text-white", compact ? "text-base" : "text-lg")}>POKA</span>
         <span className="sr-only">POKA</span>
       </span>
     );
