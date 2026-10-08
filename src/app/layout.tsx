@@ -3,7 +3,7 @@ import { Caveat, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { PwaRegister } from "@/components/pwa/pwa-register";
-import { adsensePublisherId } from "@/lib/adsense";
+import { adsensePublisherId, DEFAULT_ADSENSE_CLIENT } from "@/lib/adsense";
 import { PWA_APPLE_ICON, PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
 import {
   OG_IMAGE_PATH,
@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   alternates: { canonical: "/" },
   verification: searchEngineVerificationMeta(),
+  other: {
+    "google-adsense-account": DEFAULT_ADSENSE_CLIENT,
+  },
   openGraph: {
     type: "website",
     locale: "ko_KR",
