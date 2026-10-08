@@ -65,12 +65,12 @@ async function main() {
     { slug: "spade", name: "스페이드", imageUrl: "/marks/spade.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "SPECIAL" as const },
     { slug: "heart", name: "하트", imageUrl: "/marks/heart.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "SPECIAL" as const },
     { slug: "club", name: "클럽", imageUrl: "/marks/club.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "SPECIAL" as const },
-    { slug: "team-a", name: "TOP", imageUrl: "/marks/team-top.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
-    { slug: "team-b", name: "PLIME", imageUrl: "/marks/team-plime.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
-    { slug: "team-c", name: "HAM", imageUrl: "/marks/team-ham.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
-    { slug: "team-d", name: "ROCKET", imageUrl: "/marks/team-rocket.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
-    { slug: "team-e", name: "GUNNER", imageUrl: "/marks/team-gunner.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
-    { slug: "team-f", name: "DOO", imageUrl: "/marks/team-doo.svg", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-a", name: "TOP", imageUrl: "/images/badges/team_1.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-b", name: "PLIME", imageUrl: "/images/badges/team_2.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-c", name: "HAM", imageUrl: "/images/badges/team_3.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-d", name: "ROCKET", imageUrl: "/images/badges/team_4.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-e", name: "GUNNER", imageUrl: "/images/badges/team_5.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    { slug: "team-f", name: "DOO", imageUrl: "/images/badges/team_6.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
   ];
   await prisma.mark.createMany({ data: markRows });
   const marks = await prisma.mark.findMany();

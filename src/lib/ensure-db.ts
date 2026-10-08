@@ -181,22 +181,17 @@ async function applySchema(): Promise<"ready" | "patched" | "skipped"> {
     `).catch(() => undefined);
     await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
     await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-top.svg' WHERE "slug" = 'team-a'`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-plime.svg' WHERE "slug" = 'team-b'`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-ham.svg' WHERE "slug" = 'team-c'`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-rocket.svg' WHERE "slug" = 'team-d'`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-gunner.svg' WHERE "slug" = 'team-e'`);
-    await client.query(`UPDATE "Mark" SET "imageUrl" = '/marks/team-doo.svg' WHERE "slug" = 'team-f'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_1.png' WHERE "slug" = 'team-a'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_2.png' WHERE "slug" = 'team-b'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_3.png' WHERE "slug" = 'team-c'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_4.png' WHERE "slug" = 'team-d'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_5.png' WHERE "slug" = 'team-e'`);
+    await client.query(`UPDATE "Mark" SET "imageUrl" = '/images/badges/team_6.png' WHERE "slug" = 'team-f'`);
     await client.query(`
       UPDATE "User" AS u
       SET "profileMarkImageUrl" = m."imageUrl"
       FROM "Mark" AS m
       WHERE u."equippedMarkId" = m.id
-    `);
-    await client.query(`
-      UPDATE "User"
-      SET "profileMarkImageUrl" = NULL
-      WHERE "profileMarkImageUrl" LIKE '/images/badges/%'
     `);
     await client.query(`
       UPDATE "User"

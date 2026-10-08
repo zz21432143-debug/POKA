@@ -389,8 +389,8 @@ function ShopPreview({
   effectClass?: string | null;
 }) {
   return (
-    <div className="flex aspect-square min-h-24 items-center justify-center rounded-xl bg-muted/60 p-3">
-      <MarkImage src={src} alt={name} size={80} frameClass={frameClass} effectClass={effectClass} />
+    <div className="flex aspect-square min-h-28 items-center justify-center rounded-xl bg-slate-50 p-4">
+      <MarkImage src={src} alt={name} size={128} frameClass={frameClass} effectClass={effectClass} />
     </div>
   );
 }
