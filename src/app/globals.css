@@ -541,12 +541,29 @@
   background: #141110;
 }
 
-.yokai-mini img {
+.yokai-mini-mark {
+  display: block;
   width: 64px;
   height: 64px;
-  border-radius: 999px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid #c59b27;
+  background: none;
+  box-shadow: none;
+}
+
+.yokai-mini img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
   object-fit: cover;
-  box-shadow: 0 0 0 2px #c59b27;
+  transform: scale(1.06);
 }
 
 .yokai-mini strong {
