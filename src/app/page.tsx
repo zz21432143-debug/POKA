@@ -44,7 +44,7 @@ async function HomeFeedSections() {
 
 export default async function HomePage() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3.5">
       <HomeHeroBanner />
       <HomeShortcuts />
       <Suspense

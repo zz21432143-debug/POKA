@@ -37,27 +37,28 @@ export function HomeLatest({
   }, [tab, all, free, jobs, hands]);
 
   return (
-    <section className="lounge-card overflow-hidden rounded-[1.5rem]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#eee4d2] px-4 py-3">
-        <h2 className="mr-2 text-lg font-bold text-[#1c1914] sm:text-xl">최신 게시글</h2>
+    <section className="lounge-card overflow-hidden rounded-[1.35rem]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eee4d2] px-4 py-2.5">
+        <h2 className="mr-1 text-base font-bold text-[#1c1914]">최신 게시글</h2>
         {TABS.map((item) => (
           <button
             key={item.key}
             type="button"
             onClick={() => setTab(item.key)}
             className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-semibold",
-              tab === item.key
-                ? "bg-primary text-white"
-                : "border border-border bg-white text-slate-700 hover:bg-muted",
+              "relative py-1 text-[13px] font-semibold",
+              tab === item.key ? "text-primary" : "text-[#7a7264] hover:text-foreground",
             )}
           >
             {item.label}
+            {tab === item.key ? (
+              <span className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-primary" />
+            ) : null}
           </button>
         ))}
         <Link
           href={TABS.find((item) => item.key === tab)?.href ?? "/community"}
-          className="ml-auto text-xs font-semibold text-slate-700 hover:text-primary"
+          className="ml-auto text-xs font-semibold text-[#7a7264] hover:text-primary"
         >
           더보기
         </Link>
@@ -67,6 +68,7 @@ export function HomeLatest({
         emptyText="아직 게시글이 없습니다."
         showBoard
         framed={false}
+        compact
         nativeSponsor={nativeSponsor}
       />
     </section>

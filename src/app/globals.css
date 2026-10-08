@@ -179,8 +179,7 @@
 }
 
 .hero-mint {
-  background:
-    linear-gradient(90deg, rgb(7 21 15 / 0.82) 0%, rgb(7 21 15 / 0.42) 48%, rgb(7 21 15 / 0.08) 100%);
+  background: #0c3d2c;
 }
 
 .navy-panel {

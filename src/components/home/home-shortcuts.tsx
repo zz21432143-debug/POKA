@@ -15,18 +15,18 @@ const ITEMS = [
 
 export function HomeShortcuts() {
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <ul className="flex flex-wrap gap-2">
       {ITEMS.map((item) => (
-        <li key={item.href}>
+        <li key={item.href} className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-0">
           <Link
             href={item.href}
             className={
               item.filled
-                ? "touch-target relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0d3b24] px-3 text-center text-sm font-semibold text-white shadow-sm"
-                : "touch-target relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#d7ccb8] bg-[#fffcf7] px-3 text-center text-sm font-semibold text-foreground shadow-sm hover:border-primary"
+                ? "touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-[#0d3b24] px-3 text-center text-[13px] font-semibold text-white"
+                : "touch-target relative z-10 flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#d7ccb8] bg-[#fffcf7] px-3 text-center text-[13px] font-semibold text-foreground hover:border-primary"
             }
           >
-            <item.icon className={`size-4 shrink-0 ${item.filled ? "text-emerald-300" : "text-primary"}`} />
+            <item.icon className={`size-3.5 shrink-0 ${item.filled ? "text-emerald-300" : "text-primary"}`} />
             <span className="leading-tight">{item.title}</span>
           </Link>
         </li>

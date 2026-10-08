@@ -61,18 +61,22 @@ export function BoardNav({
 
   return (
     <nav id={id} aria-label="전체 게시판" className="flex h-full min-h-0 flex-col">
-      <a
-        href="/"
-        onClick={onNavigate}
-        className={cn(
-          "touch-target flex min-h-12 items-center gap-2.5 px-4 text-sm font-semibold",
-          homeActive ? "bg-[#0d3b24] text-white" : "bg-[#143d28] text-emerald-50 hover:bg-[#0d3b24]",
-        )}
-      >
-        <HomeIcon className="size-4 shrink-0" />
-        <span className="flex-1">홈</span>
-        <ChevronRightIcon className="size-4 opacity-80" />
-      </a>
+      <div className="px-3 pt-3">
+        <a
+          href="/"
+          onClick={onNavigate}
+          className={cn(
+            "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold",
+            homeActive
+              ? "bg-[#0d3b24] text-white shadow-[inset_0_1px_0_rgb(255_255_255_/_0.08)]"
+              : "bg-[#143d28] text-emerald-50 hover:bg-[#0d3b24]",
+          )}
+        >
+          <HomeIcon className="size-4 shrink-0" />
+          <span className="flex-1">홈</span>
+          <ChevronRightIcon className="size-4 opacity-80" />
+        </a>
+      </div>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
@@ -107,15 +111,15 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-[1.25rem] bg-[#0d3b24] px-4 py-4 text-center text-emerald-50">
-        <SpadeIcon className="mx-auto size-7 text-emerald-200" />
+      <div className="m-3 rounded-[1.25rem] bg-[#0d3b24] px-4 py-5 text-center text-emerald-50">
+        <SpadeIcon className="mx-auto size-8 text-emerald-200" />
         <p
-          className="mt-2 text-[15px] leading-6"
+          className="mt-2 text-[16px] leading-6"
           style={{ fontFamily: "var(--font-script), cursive" }}
         >
-          포커를 더 즐겁게
+          포카와 함께하는
           <br />
-          함께하는 공간
+          즐거운 시간들!
         </p>
       </div>
     </nav>
