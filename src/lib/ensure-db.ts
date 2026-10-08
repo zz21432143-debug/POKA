@@ -2,13 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import dns from "node:dns";
 import { Client } from "pg";
-import {
-  hashPassword,
-  MASTER_ACCOUNT_NICKNAME,
-  MASTER_ACCOUNT_PASSWORD,
-  SEED_ACCOUNT_PASSWORD,
-} from "@/lib/password";
-
 dns.setDefaultResultOrder("ipv4first");
 
 let boot: Promise<void> | null = null;
@@ -171,54 +164,12 @@ async function applySchema() {
   }
 }
 
-async function seedIfEmpty() {
-  const { prisma } = await import("@/lib/db");
-  const users = await prisma.user.count();
-  if (users > 0) return;
-  await prisma.user.create({
-    data: {
-      nickname: "펠트딜러",
-      passwordHash: hashPassword(SEED_ACCOUNT_PASSWORD),
-      isAdmin: true,
-      role: "ADMIN",
-      level: 8,
-      exp: 7400,
-      points: 8200,
-    },
-  });
-  console.log("ensure-db: created admin 펠트딜러");
-}
-
 async function ensureMasterAccount() {
-  const { prisma } = await import("@/lib/db");
-  const existing = await prisma.user.findUnique({
-    where: { nickname: MASTER_ACCOUNT_NICKNAME },
-    select: { id: true, isMaster: true, role: true },
-  });
-  if (existing?.isMaster && existing.role === "MASTER") return;
-  await prisma.user.upsert({
-    where: { nickname: MASTER_ACCOUNT_NICKNAME },
-    create: {
-      nickname: MASTER_ACCOUNT_NICKNAME,
-      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
-      isAdmin: true,
-      isMaster: true,
-      role: "MASTER",
-      level: 250,
-      exp: 24900,
-      points: 999999,
-      termsAcceptedAt: new Date(),
-    },
-    update: {
-      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
-      isAdmin: true,
-      isMaster: true,
-      role: "MASTER",
-      level: 250,
-      exp: 24900,
-    },
-  });
-  console.log("ensure-db: master account ready");
+  const nickname = process.env.MASTER_PROMOTE_NICKNAME?.trim();
+  if (!nickname) return;
+  const { promoteMasterNickname } = await import("@/lib/wipe-community");
+  const user = await promoteMasterNickname(nickname);
+  if (user) console.log("ensure-db: master is", user.nickname);
 }
 
 async function ensureLevelTable() {
@@ -231,7 +182,10 @@ async function ensureLevelTable() {
 
 export function ensureDb() {
   boot ??= applySchema()
-    .then(seedIfEmpty)
+    .then(async () => {
+      const { wipeCommunityForLaunch } = await import("@/lib/wipe-community");
+      await wipeCommunityForLaunch();
+    })
     .then(ensureLevelTable)
     .then(ensureMasterAccount)
     .then(async () => {

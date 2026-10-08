@@ -45,6 +45,8 @@ export async function ensureWeeklyScheduleHub() {
     select: { title: true, eventDate: true, promoLocation: true },
   });
 
+  if (events.length === 0) return null;
+
   const dealer = await prisma.user.findFirst({
     where: { isAdmin: true },
     select: { id: true },
