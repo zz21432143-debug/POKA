@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -45,6 +45,7 @@ export function YokaiPointShop({
     marks.find((mark) => mark.slug === selected) ??
     (catalog?.marks ?? []).find((mark) => mark.slug === selected) ??
     marks[0]!;
+  const inventory = marks.filter((mark) => mark.owned);
   const others = (catalog?.marks ?? []).filter((mark) => !isYokaiSlug(mark.slug));
 
   async function reload() {
@@ -152,52 +153,45 @@ export function YokaiPointShop({
           </p>
         </aside>
 
-        <ul className="yokai-grid">
-          {marks.map((mark) => {
-            const canAfford = points >= mark.pricePoints;
-            const busy = pending !== null;
-            return (
-              <li key={mark.slug}>
-                <article
-                  className={cn("yokai-card", selected === mark.slug && "is-selected")}
-                  onClick={() => setSelected(mark.slug)}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
-                  <h3>{mark.name}</h3>
-                  <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
-                  {mark.equipped ? (
-                    <span className="yokai-owned">착용 중</span>
-                  ) : mark.owned ? (
-                    <button
-                      type="button"
-                      className="yokai-buy"
-                      disabled={busy}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void equip(mark);
-                      }}
-                    >
-                      {pending === mark.id + "equip" ? "장착 중…" : "장착하기"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="yokai-buy"
-                      disabled={busy || !canAfford}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void buy(mark);
-                      }}
-                    >
-                      {pending === mark.id + "buy" ? "구매 중…" : canAfford ? "구매하기" : "포인트 부족"}
-                    </button>
-                  )}
-                </article>
-              </li>
-            );
-          })}
-        </ul>
+        <section className="yokai-block" aria-label="내 인벤토리">
+          <h2>내 인벤토리</h2>
+          {inventory.length === 0 ? (
+            <p className="yokai-note">아직 보유한 마크가 없습니다. 아래에서 구매하면 여기에 모입니다.</p>
+          ) : (
+            <ul className="yokai-grid">
+              {inventory.map((mark) => (
+                <ShopCard
+                  key={mark.slug}
+                  mark={mark}
+                  points={points}
+                  pending={pending}
+                  selected={selected === mark.slug}
+                  onSelect={() => setSelected(mark.slug)}
+                  onBuy={() => void buy(mark)}
+                  onEquip={() => void equip(mark)}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="yokai-block" aria-label="마크 상점">
+          <h2>마크 상점</h2>
+          <ul className="yokai-grid">
+            {marks.map((mark) => (
+              <ShopCard
+                key={mark.slug}
+                mark={mark}
+                points={points}
+                pending={pending}
+                selected={selected === mark.slug}
+                onSelect={() => setSelected(mark.slug)}
+                onBuy={() => void buy(mark)}
+                onEquip={() => void equip(mark)}
+              />
+            ))}
+          </ul>
+        </section>
       </div>
 
       {error ? <p className="yokai-error">{error}</p> : null}
@@ -287,35 +281,120 @@ function OtherMark({
         <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
         <h3>{mark.name}</h3>
         <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
-        {mark.equipped ? (
-          <span className="yokai-owned">착용 중</span>
-        ) : mark.owned ? (
-          <button
-            type="button"
-            className="yokai-buy"
-            disabled={pending !== null}
-            onClick={(event) => {
-              event.stopPropagation();
-              onEquip();
-            }}
-          >
-            장착하기
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="yokai-buy"
-            disabled={pending !== null || !canAfford}
-            onClick={(event) => {
-              event.stopPropagation();
-              onBuy();
-            }}
-          >
-            {canAfford ? "구매하기" : "포인트 부족"}
-          </button>
-        )}
+        <MarkActions
+          owned={mark.owned}
+          equipped={mark.equipped}
+          canAfford={canAfford}
+          pending={pending}
+          busyId={mark.id}
+          pricePoints={mark.pricePoints}
+          onBuy={(event) => {
+            event.stopPropagation();
+            onBuy();
+          }}
+          onEquip={(event) => {
+            event.stopPropagation();
+            onEquip();
+          }}
+        />
       </article>
     </li>
+  );
+}
+
+function ShopCard({
+  mark,
+  points,
+  pending,
+  selected,
+  onSelect,
+  onBuy,
+  onEquip,
+}: {
+  mark: ShopMark;
+  points: number;
+  pending: string | null;
+  selected: boolean;
+  onSelect: () => void;
+  onBuy: () => void;
+  onEquip: () => void;
+}) {
+  const canAfford = points >= mark.pricePoints;
+  return (
+    <li>
+      <article className={cn("yokai-card", selected && "is-selected")} onClick={onSelect}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
+        <h3>{mark.name}</h3>
+        <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
+        <MarkActions
+          owned={mark.owned}
+          equipped={mark.equipped}
+          canAfford={canAfford}
+          pending={pending}
+          busyId={mark.id}
+          pricePoints={mark.pricePoints}
+          onBuy={(event) => {
+            event.stopPropagation();
+            onBuy();
+          }}
+          onEquip={(event) => {
+            event.stopPropagation();
+            onEquip();
+          }}
+        />
+      </article>
+    </li>
+  );
+}
+
+function MarkActions({
+  owned,
+  equipped,
+  canAfford,
+  pending,
+  busyId,
+  pricePoints,
+  onBuy,
+  onEquip,
+}: {
+  owned: boolean;
+  equipped: boolean;
+  canAfford: boolean;
+  pending: string | null;
+  busyId: string;
+  pricePoints: number;
+  onBuy: (event: MouseEvent<HTMLButtonElement>) => void;
+  onEquip: (event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const busy = pending !== null;
+  if (equipped) {
+    return (
+      <div className="yokai-actions">
+        <span className="yokai-equipped">착용 중</span>
+      </div>
+    );
+  }
+  if (owned) {
+    return (
+      <div className="yokai-actions">
+        <span className="yokai-owned">보유 중</span>
+        <button type="button" className="yokai-buy" disabled={busy} onClick={onEquip}>
+          {pending === busyId + "equip" ? "장착 중…" : "장착하기"}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="yokai-actions">
+      <button type="button" className="yokai-buy" disabled={busy || !canAfford} onClick={onBuy}>
+        {pending === busyId + "buy"
+          ? "구매 중…"
+          : canAfford
+            ? `구매하기 (${pricePoints.toLocaleString()} P)`
+            : "포인트 부족"}
+      </button>
+    </div>
   );
 }
 

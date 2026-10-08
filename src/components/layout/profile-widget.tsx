@@ -42,11 +42,11 @@ export function ProfileWidget({
 }) {
   if (!profile) {
     return (
-      <div className="lounge-card rounded-[1.35rem] p-4 text-sm">
-        <p className="rounded-xl bg-[#fffaf2] px-3 py-2.5 text-center text-sm font-semibold text-[#3f3424]">
+      <div className="profile-panel rounded-[1.35rem] p-4 text-sm">
+        <p className="rounded-xl bg-[#2a1814] px-3 py-2.5 text-center text-sm font-semibold text-white">
           로그인이 필요합니다
         </p>
-        <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">
+        <p className="mt-2 text-center text-sm leading-6 text-[#D1D5DB]">
           레벨, 출석, 글쓰기는 로그인 후 이용할 수 있습니다.
         </p>
         <div className="mt-3 flex flex-col gap-2">
@@ -69,7 +69,7 @@ export function ProfileWidget({
             아이디/비밀번호 로그인
           </Link>
         </div>
-        <p className="mt-2 text-center text-[11px] leading-4 text-muted-foreground">
+        <p className="mt-2 text-center text-xs leading-5 text-[#9CA3AF]">
           일반 회원은 카카오·구글입니다. 네이버는 준비 중이고, 아이디/비밀번호는 운영 계정용입니다.
         </p>
         <p className="mt-3 flex items-center justify-center gap-3 text-[12px] font-semibold">
@@ -77,7 +77,7 @@ export function ProfileWidget({
             회원가입
           </Link>
           <span className="text-[#d7ccb8]">|</span>
-          <Link href="/login?ops=1" className="text-[#6d5834] hover:underline">
+          <Link href="/login?ops=1" className="text-[#E5E7EB] hover:text-[#C59B27] hover:underline">
             ID/PW 찾기
           </Link>
         </p>
@@ -108,17 +108,17 @@ export function ProfileWidget({
   const meHref = `/u/${encodeURIComponent(profile.nickname)}`;
 
   return (
-    <section className="lounge-card rounded-[1.35rem] px-4 pt-4 pb-1">
+    <section className="profile-panel rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
         <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#C59B27]">
           <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
           <NicknameMenu nickname={profile.nickname}>
-            <p className="truncate text-base font-semibold">{profile.nickname}</p>
+            <p className="truncate text-base font-bold text-white">{profile.nickname}</p>
           </NicknameMenu>
           {rank ? (
-            <p className="mt-0.5 text-xs font-semibold text-[#8a5a2a]">{rank}</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#C59B27]">{rank}</p>
           ) : null}
           {profile.isMaster || profile.isAdmin ? null : profile.isDealerVerified ? (
             <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800">
@@ -132,7 +132,7 @@ export function ProfileWidget({
       </div>
       <div className="mt-3">
         <div
-          className="h-1.5 overflow-hidden rounded-full bg-[#efe4cc]"
+          className="h-1.5 overflow-hidden rounded-full bg-[#2a2224]"
           role="progressbar"
           aria-label="경험치 진척도"
           aria-valuenow={profile.progressPercent}
@@ -141,14 +141,14 @@ export function ProfileWidget({
         >
           <div className="h-full rounded-full bg-primary" style={{ width: `${profile.progressPercent}%` }} />
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
+        <p className="mt-1.5 text-xs text-[#9CA3AF]">
           경험치 {profile.exp.toLocaleString()} / {next.toLocaleString()}
           <span className="ml-2">{profile.progressPercent}%</span>
         </p>
       </div>
-      <p className="mt-2 text-[13px]">
+      <p className="mt-2 text-sm text-[#E5E7EB]">
         보유 포인트{" "}
-        <strong className="font-semibold text-foreground">{profile.points.toLocaleString()} P</strong>
+        <strong className="font-bold text-white">{profile.points.toLocaleString()} P</strong>
       </p>
       <AttendanceStreakCard
         streak={profile.attendanceStreak}
@@ -180,13 +180,13 @@ function AttendanceStreakCard({
   const checkedInToday = lastAttendanceDate === todayKstDate();
   const displayStreak = lastAttendanceDate ? streak : 0;
   return (
-    <div className="mt-2.5 rounded-xl bg-[#efe6d6] px-3 py-2">
-      <p className="text-[13px] font-semibold text-[#2b1810]">
+    <div className="mt-2.5 rounded-xl bg-[#241c1e] px-3 py-2">
+      <p className="text-sm font-semibold text-white">
         연속 출석{" "}
-        <strong className="text-sm">{displayStreak.toLocaleString()}일</strong>
+        <strong className="text-[#C59B27]">{displayStreak.toLocaleString()}일</strong>
       </p>
       {checkedInToday ? (
-        <p className="mt-0.5 text-[11px] text-[#6d5844]">오늘 출석 완료 · 내일도 이어 가세요</p>
+        <p className="mt-0.5 text-xs text-[#9CA3AF]">오늘 출석 완료 · 내일도 이어 가세요</p>
       ) : (
         <Link
           href="/attendance"
