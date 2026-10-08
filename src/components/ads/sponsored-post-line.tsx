@@ -7,7 +7,7 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
   const creative = fill.creative;
 
   return (
-    <li className="bg-[#2a2218]">
+    <li className="board-sponsor bg-[#2a2218]">
       <Link
         href={creative.href}
         className="touch-target flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-[#3a2e20]"

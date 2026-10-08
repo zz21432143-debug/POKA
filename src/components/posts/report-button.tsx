@@ -12,15 +12,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { REPORT_REASONS } from "@/lib/report-reasons";
+import { FlagIcon } from "lucide-react";
 
 export function ReportButton({
   targetType,
   targetId,
   compact = false,
+  look = "text",
 }: {
   targetType: "post" | "comment";
   targetId: string;
   compact?: boolean;
+  look?: "text" | "pill";
 }) {
   const [preset, setPreset] = useState<(typeof REPORT_REASONS)[number]>("스팸");
   const [detail, setDetail] = useState("");
@@ -60,11 +63,14 @@ export function ReportButton({
         <DialogTrigger
           type="button"
           className={
-            compact
-              ? "ink-btn inline-flex min-h-9 items-center rounded-full px-3 text-xs font-semibold"
-              : "ink-btn inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
+            look === "pill"
+              ? "vote-pill vote-report"
+              : compact
+                ? "ink-btn inline-flex min-h-9 items-center rounded-full px-3 text-xs font-semibold"
+                : "ink-btn inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
           }
         >
+          {look === "pill" ? <FlagIcon /> : null}
           신고
         </DialogTrigger>
         <DialogContent>

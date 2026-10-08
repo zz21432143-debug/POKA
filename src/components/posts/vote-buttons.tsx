@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
+import { cn } from "cn";
 
 export function VoteButtons({
   postId,
@@ -50,28 +51,28 @@ export function VoteButtons({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button
+    <>
+      <button
         type="button"
-        size="touch"
-        variant={mine === 1 ? "default" : "outline"}
-        className={mine === 1 ? "ink-on" : "ink-btn"}
+        className={cn("vote-pill", mine === 1 && "is-on")}
         disabled={pending}
         onClick={() => vote(1)}
       >
-        추천 {up}
-      </Button>
-      <Button
+        <ThumbsUpIcon />
+        추천
+        <strong>{up}</strong>
+      </button>
+      <button
         type="button"
-        size="touch"
-        variant={mine === -1 ? "secondary" : "outline"}
-        className={mine === -1 ? "ink-on" : "ink-btn"}
+        className={cn("vote-pill", "is-down", mine === -1 && "is-on")}
         disabled={pending}
         onClick={() => vote(-1)}
       >
-        비추 {down}
-      </Button>
-      {error ? <span className="text-sm text-destructive">{error}</span> : null}
-    </div>
+        <ThumbsDownIcon />
+        비추천
+        <strong>{down}</strong>
+      </button>
+      {error ? <p className="vote-error">{error}</p> : null}
+    </>
   );
 }

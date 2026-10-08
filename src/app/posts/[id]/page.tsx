@@ -27,6 +27,18 @@ import { UNLOCK_COOKIE, hasUnlock } from "@/lib/unlock-cookie";
 
 export const dynamic = "force-dynamic";
 
+function formatPostDateTime(value: Date) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(value);
+}
+
 export default async function PostDetailPage({
   params,
 }: {
@@ -108,12 +120,12 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
-      <div className="ink-panel overflow-hidden rounded-2xl">
-      <header className="border-b border-border px-4 py-5 sm:px-6">
+      <div className="article-sheet ink-panel">
+      <header className="article-head">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">
+          <span className="article-kicker">
             {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
-          </Badge>
+          </span>
           {post.jobKind ? (
             <Badge variant="outline">
               {JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL]}
@@ -123,18 +135,20 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
         </div>
-        <h1 className="mt-3 min-w-0 break-words text-[1.75rem] font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
-          {post.title}
-        </h1>
-        <div className="mt-4">
-          <AuthorChip author={post.author} anonymous={false} size="lg" />
-          {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
-            <Link href={`/posts/${post.id}/edit`} className="mt-2 inline-block text-sm font-semibold text-primary">
-              수정
-            </Link>
-          ) : null}
-        </div>
+        <h1 className="article-title">{post.title}</h1>
       </header>
+      <div className="article-meta">
+        <AuthorChip author={post.author} anonymous={false} size="md" />
+        {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+          <Link href={`/posts/${post.id}/edit`} className="text-sm font-semibold text-primary">
+            수정
+          </Link>
+        ) : null}
+        <div className="article-meta-side">
+          <time dateTime={post.createdAt.toISOString()}>{formatPostDateTime(post.createdAt)}</time>
+          <span>조회 {(post.viewCount + (canRead ? 1 : 0)).toLocaleString()}</span>
+        </div>
+      </div>
 
       {post.isPrivate && !canRead ? (
         <div className="p-4">
@@ -143,7 +157,7 @@ export default async function PostDetailPage({
       ) : null}
 
       {canRead ? (
-        <div className="flex flex-col gap-4 p-4 sm:p-6">
+        <div className="article-body">
       {post.jobKind ? <JobFacts job={post} /> : null}
 
       {post.boardType === "SCHEDULE" ? (
@@ -222,31 +236,27 @@ export default async function PostDetailPage({
         />
       ) : null}
 
-      {post.content ? (
-        <div className="overflow-x-clip rounded-xl border border-[#3a332c] bg-[#141110] px-4 py-4 text-[17px] leading-8 break-words whitespace-pre-wrap text-[#E5E7EB] sm:px-5">
-          {post.content}
+      {post.content ? <div className="article-copy">{post.content}</div> : null}
         </div>
       ) : null}
-
-      <div className="flex flex-wrap items-start gap-3 border-t border-border pt-4">
-        <VoteButtons
-          postId={post.id}
-          upvoteCount={post.upvoteCount}
-          downvoteCount={post.downvoteCount}
-          initialVote={myVote}
-        />
-        <ReportButton targetType="post" targetId={post.id} />
-      </div>
-        </div>
-      ) : null}
-      </div>
 
       {canRead ? (
-        <>
-      <GoogleAdUnit placement="post-top" />
+        <div className="article-votes">
+          <div className="vote-bar">
+            <VoteButtons
+              postId={post.id}
+              upvoteCount={post.upvoteCount}
+              downvoteCount={post.downvoteCount}
+              initialVote={myVote}
+            />
+            <ReportButton targetType="post" targetId={post.id} look="pill" />
+          </div>
+        </div>
+      ) : null}
 
-      <section className="ink-panel flex flex-col gap-3 rounded-2xl p-4 sm:p-5">
-        <h2 className="border-b border-[#3a332c] pb-3 text-lg font-bold text-white">댓글 {post.comments.length}</h2>
+      {canRead ? (
+      <section className="article-comments">
+        <h2 className="text-lg font-bold text-white">댓글 {post.comments.length}</h2>
         {viewer ? (
           <CommentForm
             postId={post.id}
@@ -276,7 +286,13 @@ export default async function PostDetailPage({
           />
         )}
       </section>
-      <GoogleAdUnit placement="post-bottom" />
+      ) : null}
+      </div>
+
+      {canRead ? (
+        <>
+          <GoogleAdUnit placement="post-top" />
+          <GoogleAdUnit placement="post-bottom" />
         </>
       ) : null}
     </article>
