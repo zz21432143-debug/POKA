@@ -180,6 +180,18 @@ async function applySchema() {
       SET "profileMarkImageUrl" = NULL
       WHERE "profileMarkImageUrl" LIKE '/images/badges/%'
     `);
+    await client.query(`
+      UPDATE "User"
+      SET "points" = "points" + 500000
+      WHERE "isMaster" = true
+        AND NOT EXISTS (SELECT 1 FROM "AuditLog" WHERE "kind" = 'LAUNCH_MASTER_POINTS')
+    `);
+    await client.query(`
+      INSERT INTO "AuditLog" (id, kind, ip, detail, "createdAt")
+      SELECT 'launch_master_points', 'LAUNCH_MASTER_POINTS', 'system', 'POKA 500000 points', NOW()
+      WHERE EXISTS (SELECT 1 FROM "User" WHERE "isMaster" = true)
+        AND NOT EXISTS (SELECT 1 FROM "AuditLog" WHERE "kind" = 'LAUNCH_MASTER_POINTS')
+    `);
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -188,7 +200,9 @@ async function applySchema() {
 async function ensureMasterAccount() {
   const { ensureLaunchMaster } = await import("@/lib/wipe-community");
   const user = await ensureLaunchMaster();
-  if (user) console.log("ensure-db: master is", user.nickname, "tickets", user.nicknameTickets);
+  if (user) {
+    console.log("ensure-db: master is", user.nickname, "tickets", user.nicknameTickets, "points", user.points);
+  }
 }
 
 async function ensureLevelTable() {

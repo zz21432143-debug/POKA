@@ -5,6 +5,8 @@ export const LAUNCH_MASTER_KIND = "LAUNCH_MASTER_POKA_SPRING";
 export const LAUNCH_MASTER_NICKNAME = "POKA";
 export const LEGACY_MASTER_NICKNAME = "포카의봄";
 export const LAUNCH_MASTER_TICKETS = 10;
+export const LAUNCH_MASTER_POINTS = 500_000;
+export const LAUNCH_MASTER_POINTS_KIND = "LAUNCH_MASTER_POINTS";
 
 export async function wipeCommunityForLaunch() {
   const already = await prisma.auditLog.findFirst({
@@ -106,6 +108,29 @@ export async function promoteMasterNickname(nickname: string) {
   });
 }
 
+export async function grantMasterLaunchPoints() {
+  const already = await prisma.auditLog.findFirst({
+    where: { kind: LAUNCH_MASTER_POINTS_KIND },
+    select: { id: true },
+  });
+  if (already) return prisma.user.findFirst({ where: { isMaster: true } });
+  const master = await prisma.user.findFirst({ where: { isMaster: true } });
+  if (!master) return null;
+  const updated = await prisma.user.update({
+    where: { id: master.id },
+    data: { points: { increment: LAUNCH_MASTER_POINTS } },
+  });
+  await prisma.auditLog.create({
+    data: {
+      kind: LAUNCH_MASTER_POINTS_KIND,
+      userId: updated.id,
+      ip: "system",
+      detail: `${updated.nickname}: ${LAUNCH_MASTER_POINTS} points`,
+    },
+  });
+  return updated;
+}
+
 export async function ensureLaunchMaster() {
   await renameLegacyMasterNick();
   const already = await prisma.auditLog.findFirst({
@@ -117,12 +142,18 @@ export async function ensureLaunchMaster() {
       where: { nickname: { equals: LAUNCH_MASTER_NICKNAME, mode: "insensitive" } },
     });
     if (current && !current.isMaster) {
-      return prisma.user.update({
+      await prisma.user.update({
         where: { id: current.id },
-        data: { isMaster: true, isAdmin: true, role: "MASTER", level: 250, exp: 24900 },
+        data: {
+          isMaster: true,
+          isAdmin: true,
+          role: "MASTER",
+          level: 250,
+          exp: 24900,
+        },
       });
     }
-    return current;
+    return grantMasterLaunchPoints();
   }
   const nickname = process.env.MASTER_PROMOTE_NICKNAME?.trim() || LAUNCH_MASTER_NICKNAME;
   const user = await promoteMasterNickname(nickname);
@@ -139,5 +170,5 @@ export async function ensureLaunchMaster() {
       detail: `${updated.nickname}: master + ${LAUNCH_MASTER_TICKETS} nickname tickets`,
     },
   });
-  return updated;
+  return grantMasterLaunchPoints();
 }
