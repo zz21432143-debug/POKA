@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 
 export const LAUNCH_EMPTY_KIND = "LAUNCH_EMPTY_COMMUNITY";
+export const LAUNCH_MASTER_KIND = "LAUNCH_MASTER_POKA_SPRING";
+export const LAUNCH_MASTER_NICKNAME = "포카의봄";
+export const LAUNCH_MASTER_TICKETS = 10;
 
 export async function wipeCommunityForLaunch() {
   const already = await prisma.auditLog.findFirst({
@@ -8,6 +11,18 @@ export async function wipeCommunityForLaunch() {
     select: { id: true },
   });
   if (already) return { wiped: false };
+
+  const kakaoMembers = await prisma.user.count({ where: { kakaoId: { not: null } } });
+  if (kakaoMembers > 0) {
+    await prisma.auditLog.create({
+      data: {
+        kind: LAUNCH_EMPTY_KIND,
+        ip: "system",
+        detail: "skipped wipe: kakao members already exist",
+      },
+    });
+    return { wiped: false };
+  }
 
   await prisma.bannerSlot.updateMany({ data: { postId: null } });
   await prisma.handPollVote.deleteMany();
@@ -57,4 +72,28 @@ export async function promoteMasterNickname(nickname: string) {
       exp: 24900,
     },
   });
+}
+
+export async function ensureLaunchMaster() {
+  const already = await prisma.auditLog.findFirst({
+    where: { kind: LAUNCH_MASTER_KIND },
+    select: { id: true },
+  });
+  if (already) return null;
+  const nickname = process.env.MASTER_PROMOTE_NICKNAME?.trim() || LAUNCH_MASTER_NICKNAME;
+  const user = await promoteMasterNickname(nickname);
+  if (!user) return null;
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { nicknameTickets: { increment: LAUNCH_MASTER_TICKETS } },
+  });
+  await prisma.auditLog.create({
+    data: {
+      kind: LAUNCH_MASTER_KIND,
+      userId: updated.id,
+      ip: "system",
+      detail: `${updated.nickname}: master + ${LAUNCH_MASTER_TICKETS} nickname tickets`,
+    },
+  });
+  return updated;
 }

@@ -165,11 +165,9 @@ async function applySchema() {
 }
 
 async function ensureMasterAccount() {
-  const nickname = process.env.MASTER_PROMOTE_NICKNAME?.trim();
-  if (!nickname) return;
-  const { promoteMasterNickname } = await import("@/lib/wipe-community");
-  const user = await promoteMasterNickname(nickname);
-  if (user) console.log("ensure-db: master is", user.nickname);
+  const { ensureLaunchMaster } = await import("@/lib/wipe-community");
+  const user = await ensureLaunchMaster();
+  if (user) console.log("ensure-db: master is", user.nickname, "tickets", user.nicknameTickets);
 }
 
 async function ensureLevelTable() {
