@@ -23,7 +23,7 @@ export function createPrismaClient(connectionString = process.env.DATABASE_URL) 
     adapter: new PrismaPg({
       connectionString: url,
       max: serverless ? 1 : 4,
-      connectionTimeoutMillis: serverless ? 8_000 : 15_000,
+      connectionTimeoutMillis: serverless ? 5_000 : 15_000,
       idleTimeoutMillis: 10_000,
       ssl,
     }),

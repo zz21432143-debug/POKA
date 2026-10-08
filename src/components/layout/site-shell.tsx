@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteFooter, SiteFooterFallback } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
@@ -112,7 +112,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
       </div>
-      <SiteFooter />
+      <Suspense fallback={<SiteFooterFallback />}>
+        <SiteFooter />
+      </Suspense>
       <MobileBottomNav />
     </div>
   );

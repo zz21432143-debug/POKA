@@ -4,11 +4,10 @@ import { KakaoInquiryLink } from "@/components/layout/kakao-inquiry-link";
 import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
 import { LEGAL_SERVICE_NAME } from "@/lib/legal";
 import { publicContactEmail } from "@/lib/legal-contact";
-import { getSiteSettings } from "@/lib/site-settings";
+import { DEFAULT_SITE_SETTINGS, getSiteSettings, type PublicSiteSettings } from "@/lib/site-settings";
 
-export async function SiteFooter() {
-  const settings = await getSiteSettings().catch(() => null);
-  const email = publicContactEmail(settings?.footerEmail);
+function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
+  const email = publicContactEmail(settings.footerEmail);
 
   return (
     <footer className="relative z-20 mt-auto border-t border-border bg-white pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -28,7 +27,7 @@ export async function SiteFooter() {
             </p>
           </div>
           <div className="flex flex-col items-stretch gap-3 sm:items-end">
-            <KakaoInquiryLink href={settings?.kakaoChannelUrl} className="w-full sm:w-auto" />
+            <KakaoInquiryLink href={settings.kakaoChannelUrl} className="w-full sm:w-auto" />
             <p className="text-xs leading-5 text-muted-foreground sm:text-right">
               버튼이 앱을 열지 않으면 카카오톡에서 {KAKAO_INQUIRY_ID}를 검색해 친구 추가하세요.
             </p>
@@ -39,4 +38,13 @@ export async function SiteFooter() {
       </div>
     </footer>
   );
+}
+
+export function SiteFooterFallback() {
+  return <FooterFrame settings={DEFAULT_SITE_SETTINGS} />;
+}
+
+export async function SiteFooter() {
+  const settings = await getSiteSettings().catch(() => DEFAULT_SITE_SETTINGS);
+  return <FooterFrame settings={settings} />;
 }

@@ -57,25 +57,29 @@ async function findUserBySession() {
 }
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
-  const user = await findUserBySession();
-  if (!user || user.withdrawnAt) return null;
-  const lifted = await liftExpiredSuspension({
-    id: user.id,
-    status: user.status,
-    suspendedUntil: user.suspendedUntil,
-    banReason: user.banReason,
-  });
-  const status = (lifted.status ?? "ACTIVE") as CurrentUser["status"];
-  return {
-    id: user.id,
-    email: user.email ?? null,
-    nicknameChangeCount: user.nicknameChangeCount ?? 0,
-    nicknameTickets: user.nicknameTickets ?? 0,
-    ...toViewerProfile(user),
-    role: roleFromFlags(user),
-    status,
-    suspendedUntil: lifted.suspendedUntil ? new Date(lifted.suspendedUntil) : null,
-    banReason: lifted.banReason ?? null,
-  };
+  try {
+    const user = await findUserBySession();
+    if (!user || user.withdrawnAt) return null;
+    const lifted = await liftExpiredSuspension({
+      id: user.id,
+      status: user.status,
+      suspendedUntil: user.suspendedUntil,
+      banReason: user.banReason,
+    });
+    const status = (lifted.status ?? "ACTIVE") as CurrentUser["status"];
+    return {
+      id: user.id,
+      email: user.email ?? null,
+      nicknameChangeCount: user.nicknameChangeCount ?? 0,
+      nicknameTickets: user.nicknameTickets ?? 0,
+      ...toViewerProfile(user),
+      role: roleFromFlags(user),
+      status,
+      suspendedUntil: lifted.suspendedUntil ? new Date(lifted.suspendedUntil) : null,
+      banReason: lifted.banReason ?? null,
+    };
+  } catch {
+    return null;
+  }
 });
 

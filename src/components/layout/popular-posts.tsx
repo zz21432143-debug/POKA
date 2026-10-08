@@ -5,7 +5,7 @@ import { formatRelativeKst } from "@/lib/dates";
 import { FlameIcon } from "lucide-react";
 
 export async function PopularPosts() {
-  const posts = await getPopularPosts(5);
+  const posts = await getPopularPosts(5).catch(() => []);
   return (
     <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
       <p className="flex items-center gap-1.5 text-sm font-semibold">

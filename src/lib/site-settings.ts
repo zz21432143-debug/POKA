@@ -20,13 +20,17 @@ export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
 };
 
 async function loadSiteSettings(): Promise<PublicSiteSettings> {
-  const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID } });
-  if (!row) return DEFAULT_SITE_SETTINGS;
-  return {
-    noticeBanner: row.noticeBanner?.trim() || null,
-    footerEmail: publicContactEmail(row.footerEmail),
-    kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
-  };
+  try {
+    const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID } });
+    if (!row) return DEFAULT_SITE_SETTINGS;
+    return {
+      noticeBanner: row.noticeBanner?.trim() || null,
+      footerEmail: publicContactEmail(row.footerEmail),
+      kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
+    };
+  } catch {
+    return DEFAULT_SITE_SETTINGS;
+  }
 }
 
 const cachedSiteSettings = unstable_cache(loadSiteSettings, ["poka-site-settings"], { revalidate: 60 });
