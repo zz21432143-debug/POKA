@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
   }
   const state = randomOAuthState();
-  const authorize = kakaoAuthorizeUrl(request.url, state);
+  const authorize = kakaoAuthorizeUrl(state);
   if (!authorize) {
     return NextResponse.redirect(new URL("/login?error=kakao_not_configured", request.url));
   }
