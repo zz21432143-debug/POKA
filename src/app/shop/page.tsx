@@ -1,31 +1,17 @@
-import Link from "next/link";
-import { MarkShop } from "@/components/shop/mark-shop";
+import { YokaiPointShop } from "@/components/shop/yokai-point-shop";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMarkCatalog } from "@/lib/marks";
+import type { MarkCatalog } from "@/lib/mark-categories";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
   const user = await getCurrentUser().catch(() => null);
-  const initial = await getMarkCatalog(user?.id);
-  return (
-    <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">마크 상점</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          마크는 3,000P입니다. 닉네임 변경권은 500P이며, 최초 1회 변경은 무료입니다. 출석은 하루 375P이며
-          글·댓글 한도와 별개입니다. 글·댓글·연습은 하루 최대 375P입니다.
-        </p>
-        {user ? null : (
-          <p className="mt-2 text-sm">
-            <Link href="/login?next=/shop" className="font-semibold text-primary hover:underline">
-              로그인
-            </Link>
-            하면 포인트로 마크를 사고 착용할 수 있습니다.
-          </p>
-        )}
-      </header>
-      <MarkShop asPage initial={initial} />
-    </div>
-  );
+  let initial: MarkCatalog | null = null;
+  try {
+    initial = await getMarkCatalog(user?.id);
+  } catch {
+    initial = null;
+  }
+  return <YokaiPointShop initial={initial} nickname={user?.nickname ?? "POKA"} />;
 }

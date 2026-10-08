@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { publicMarkUrl } from "@/lib/mark-assets";
+import { ensureYokaiMarks } from "@/lib/ensure-yokai-marks";
 import {
   type CosmeticCatalogItem,
   type MarkCatalog,
@@ -38,6 +39,7 @@ function toCosmeticItem(
 }
 
 export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
+  await ensureYokaiMarks().catch(() => undefined);
   const [marks, cosmetics, dbUser, owned, ownedCosmetics] = await Promise.all([
     prisma.mark.findMany({ orderBy: [{ category: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),
     prisma.profileCosmetic.findMany({ orderBy: [{ kind: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),

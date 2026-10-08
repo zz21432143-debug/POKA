@@ -20,6 +20,7 @@ import { SAMPLE_TABLE_HAND } from "../src/lib/hand-review";
 import { weeklyHubContent, weeklyHubTitle } from "../src/lib/growth";
 import { buildLevelRows } from "../src/lib/levels";
 import { MARK_PRICE_POINTS } from "../src/lib/rewards";
+import { YOKAI_MARKS } from "../src/lib/yokai-marks";
 
 const LEVELS = buildLevelRows();
 
@@ -71,6 +72,14 @@ async function main() {
     { slug: "team-d", name: "ROCKET", imageUrl: "/images/badges/team_4.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
     { slug: "team-e", name: "GUNNER", imageUrl: "/images/badges/team_5.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
     { slug: "team-f", name: "DOO", imageUrl: "/images/badges/team_6.png", pricePoints: MARK_PRICE_POINTS, minLevel: 1, category: "TEAM" as const },
+    ...YOKAI_MARKS.map((mark) => ({
+      slug: mark.slug,
+      name: mark.name,
+      imageUrl: mark.imageUrl,
+      pricePoints: mark.pricePoints,
+      minLevel: 1,
+      category: "SPECIAL" as const,
+    })),
   ];
   await prisma.mark.createMany({ data: markRows });
   const marks = await prisma.mark.findMany();

@@ -446,3 +446,265 @@
 .profile-mark.effect-halo {
   filter: drop-shadow(0 0 6px rgb(16 185 129 / 0.7));
 }
+
+.yokai-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: #e5e7eb;
+}
+
+.yokai-shop-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 16px;
+  background: #1c1819;
+  border: 1px solid rgba(197, 155, 39, 0.28);
+}
+
+.yokai-shop-kicker {
+  margin: 0;
+  color: #c59b27;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.yokai-shop-head h1 {
+  margin: 0.2rem 0 0;
+  color: #ffffff;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.yokai-shop-head p {
+  margin: 0.45rem 0 0;
+  color: #d1d5db;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.yokai-points {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: #8b2222;
+  color: #fff8ee;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.yokai-points strong {
+  color: #ffffff;
+  font-size: 1.25rem;
+}
+
+.yokai-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.yokai-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: #1a1617;
+  border: 1px solid rgba(197, 155, 39, 0.35);
+}
+
+.yokai-preview h2 {
+  margin: 0;
+  color: #c59b27;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.yokai-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.5rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: #141110;
+}
+
+.yokai-mini img {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px #c59b27;
+}
+
+.yokai-mini strong {
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.yokai-preview-name {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 0.95rem;
+}
+
+.yokai-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yokai-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.85rem 0.55rem 0.75rem;
+  border-radius: 16px;
+  background: #1a1617;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+  cursor: pointer;
+}
+
+.yokai-card.is-selected {
+  border-color: #c59b27;
+  box-shadow: 0 0 0 1px #c59b27;
+}
+
+.yokai-card img {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.yokai-card h3 {
+  margin: 0.15rem 0 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.yokai-card h3::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 0.4rem auto 0;
+  background: #c59b27;
+  transform: rotate(45deg);
+}
+
+.yokai-price {
+  margin: 0;
+  color: #c59b27;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.yokai-buy,
+.yokai-owned {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+  border: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.yokai-buy {
+  background: #8b2222;
+  color: #fff8ee;
+  cursor: pointer;
+}
+
+.yokai-buy:hover {
+  background: #a32828;
+  color: #ffffff;
+}
+
+.yokai-buy:disabled {
+  background: #2a2426;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.yokai-owned {
+  background: #2a2218;
+  color: #c59b27;
+}
+
+.yokai-note,
+.yokai-error {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.yokai-note {
+  color: #9ca3af;
+}
+
+.yokai-error {
+  color: #fca5a5;
+}
+
+.yokai-extra {
+  border-radius: 16px;
+  background: #1c1819;
+  color: #e5e7eb;
+}
+
+.yokai-extra summary {
+  cursor: pointer;
+  padding: 0.9rem 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.yokai-extra-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+@media (min-width: 900px) {
+  .yokai-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .yokai-preview {
+    position: sticky;
+    top: 5.5rem;
+    width: 260px;
+    flex: none;
+  }
+
+  .yokai-grid {
+    flex: 1;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
