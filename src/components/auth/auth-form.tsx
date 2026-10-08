@@ -197,7 +197,11 @@ export function AuthForm({
       ) : null}
 
       {!signup ? (
-        <details id="ops-account" defaultOpen={openOps} className="rounded-2xl border border-dashed border-border p-3">
+        <details
+          id="ops-account"
+          {...(openOps ? { open: true } : {})}
+          className="rounded-2xl border border-dashed border-border p-3"
+        >
           <summary className="cursor-pointer text-xs font-medium text-muted-foreground">운영 계정</summary>
           <form
             className="mt-3 flex flex-col gap-3"
