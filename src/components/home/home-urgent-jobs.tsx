@@ -40,7 +40,7 @@ export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
                   급구
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{job.title}</span>
+                  <span className="block truncate text-[15px] font-bold leading-snug">{job.title}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                     {[job.jobLocation, job.jobWorkDate, job.jobPayAmount ? `${job.jobPayAmount}` : null]
                       .filter(Boolean)

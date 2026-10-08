@@ -39,12 +39,17 @@ export function GoogleAdUnit({
     }
   }, [client, unit]);
 
+  const frame = cn(
+    "overflow-hidden rounded-xl border border-dashed border-border/80 bg-muted/30",
+    className,
+  );
+
   if (client && unit) {
     return (
-      <aside
-        className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}
-        aria-label="광고"
-      >
+      <aside className={frame} aria-label="광고">
+        <p className="border-b border-border/70 px-3 py-1 text-center text-[11px] font-semibold tracking-wide text-muted-foreground">
+          광고
+        </p>
         <ins
           className={cn("adsbygoogle block", SIZE[placement])}
           style={{ display: "block" }}
@@ -59,16 +64,17 @@ export function GoogleAdUnit({
 
   return (
     <aside
-      className={cn(
-        "relative flex items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted/40",
-        SIZE[placement],
-        className,
-      )}
+      className={cn(frame, "relative flex flex-col", SIZE[placement])}
       data-ad-network="google"
       data-ad-placement={placement}
       aria-label="광고 영역"
     >
-      <span className="text-[11px] font-semibold tracking-wide text-muted-foreground">광고</span>
+      <p className="border-b border-border/70 px-3 py-1 text-center text-[11px] font-semibold tracking-wide text-muted-foreground">
+        광고
+      </p>
+      <span className="flex flex-1 items-center justify-center text-[11px] font-semibold tracking-wide text-muted-foreground">
+        광고 영역
+      </span>
     </aside>
   );
 }

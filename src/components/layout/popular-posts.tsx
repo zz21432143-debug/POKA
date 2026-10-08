@@ -21,7 +21,7 @@ export async function PopularPosts() {
               <Link href={`/posts/${post.id}`} className="group flex gap-2">
                 <span className="w-4 shrink-0 text-sm font-bold text-primary">{index + 1}</span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium group-hover:text-primary">
+                  <span className="block truncate text-[15px] font-bold leading-snug group-hover:text-primary">
                     {post.title}
                   </span>
                   <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">

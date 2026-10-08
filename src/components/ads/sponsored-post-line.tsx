@@ -16,7 +16,7 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
           {creative.mark}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-emerald-950">{creative.title}</p>
+          <p className="truncate text-[17px] font-bold leading-snug text-emerald-950">{creative.title}</p>
           <p className="mt-1 truncate text-xs text-emerald-800/80">
             {creative.advertiser}
             {creative.advertiser ? " · " : ""}

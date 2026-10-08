@@ -107,7 +107,8 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
-      <header className="rounded-xl border border-border bg-card p-4">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+      <header className="border-b border-border px-4 py-5 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">
             {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
@@ -119,28 +120,30 @@ export default async function PostDetailPage({
           ) : null}
           {post.isPaid ? <Badge>유료 고정</Badge> : null}
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
-        </div>
-        <div className="mt-2 flex items-start gap-3">
-          <h1 className="min-w-0 flex-1 break-words text-2xl font-semibold">{post.title}</h1>
-        </div>
-        <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
-          <AuthorChip author={post.author} anonymous={false} size="lg" />
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
+        </div>
+        <h1 className="mt-3 min-w-0 break-words text-[1.75rem] font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+          {post.title}
+        </h1>
+        <div className="mt-4">
+          <AuthorChip author={post.author} anonymous={false} size="lg" />
           {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
-            <Link href={`/posts/${post.id}/edit`} className="mt-2 inline-block text-sm text-primary">
+            <Link href={`/posts/${post.id}/edit`} className="mt-2 inline-block text-sm font-semibold text-primary">
               수정
             </Link>
           ) : null}
         </div>
       </header>
 
-      {post.isPrivate && !canRead ? <UnlockPostForm postId={post.id} /> : null}
+      {post.isPrivate && !canRead ? (
+        <div className="p-4">
+          <UnlockPostForm postId={post.id} />
+        </div>
+      ) : null}
 
       {canRead ? (
-        <>
+        <div className="flex flex-col gap-4 p-4 sm:p-6">
       {post.jobKind ? <JobFacts job={post} /> : null}
-
-      <GoogleAdUnit placement="post-top" />
 
       {post.boardType === "SCHEDULE" ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
@@ -219,12 +222,12 @@ export default async function PostDetailPage({
       ) : null}
 
       {post.content ? (
-        <div className="overflow-x-clip rounded-xl border border-border bg-card p-4 text-[15px] leading-7 break-words whitespace-pre-wrap">
+        <div className="overflow-x-clip text-[16px] leading-8 break-words whitespace-pre-wrap text-foreground">
           {post.content}
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-start gap-3">
+      <div className="flex flex-wrap items-start gap-3 border-t border-border pt-4">
         <VoteButtons
           postId={post.id}
           upvoteCount={post.upvoteCount}
@@ -233,8 +236,13 @@ export default async function PostDetailPage({
         />
         <ReportButton targetType="post" targetId={post.id} />
       </div>
+        </div>
+      ) : null}
+      </div>
 
-      <GoogleAdUnit placement="post-bottom" />
+      {canRead ? (
+        <>
+      <GoogleAdUnit placement="post-top" />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">댓글 {post.comments.length}</h2>
@@ -267,6 +275,7 @@ export default async function PostDetailPage({
           />
         )}
       </section>
+      <GoogleAdUnit placement="post-bottom" />
         </>
       ) : null}
     </article>

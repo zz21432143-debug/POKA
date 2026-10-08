@@ -35,7 +35,7 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
                 <img src={image} alt={post.title} className="h-full w-full object-contain" />
               </div>
               <div className="p-3">
-                <h2 className="text-base font-semibold leading-snug">{post.title}</h2>
+                <h2 className="text-lg font-bold leading-snug">{post.title}</h2>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {post.promoLocation ? <Badge variant="secondary">{post.promoLocation}</Badge> : null}
                   {summary ? <Badge variant="outline">{summary}</Badge> : null}
