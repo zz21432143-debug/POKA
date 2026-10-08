@@ -117,7 +117,7 @@ Vercel 프로젝트 환경 변수:
 | `KAKAO_CLIENT_SECRET` | 카카오 Client Secret |
 | `KAKAO_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/kakao/callback` |
 
-카카오 디벨로퍼스에서 KOE205를 막으려면 Redirect URI를 **위 주소 그대로** 등록하세요. 끝 슬래시 없이, `https`만. 사이트 도메인은 `https://pokerwiki.co.kr`. 카카오 로그인 ON, 동의 항목은 닉네임.
+카카오 Redirect URI는 위 주소 그대로입니다. KOE205는 Redirect URI가 아니라 **동의항목** 오류입니다. [카카오 로그인] > [동의항목]에서 켜지 않은 scope를 요청하면 납니다. 앱은 scope를 보내지 않습니다.
 | `GOOGLE_CLIENT_ID` | 구글 OAuth 클라이언트 ID |
 | `GOOGLE_CLIENT_SECRET` | 구글 OAuth 클라이언트 시크릿 |
 | `GOOGLE_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/google/callback` |
