@@ -14,7 +14,7 @@ export function SiteHeader({
 }) {
   const meHref = profile ? "/account" : "/login";
   return (
-    <header className="border-b border-[#D4AF37]/20 bg-[#0b2b1d] pt-[env(safe-area-inset-top)] shadow-[inset_0_-1px_0_rgb(212_175_55_/_0.15)]">
+    <header className="bg-[#0d2b1e] pt-[env(safe-area-inset-top)]">
       <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
         <div className="relative z-30 flex items-center justify-start">
           <MobileDrawer profile={profile} />

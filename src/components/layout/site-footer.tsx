@@ -10,9 +10,9 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
   const email = publicContactEmail(settings.footerEmail);
 
   return (
-    <footer className="relative z-20 mt-auto pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <div className="wood-rail h-3 w-full" aria-hidden />
-      <div className="board-face">
+    <footer className="footer-on-felt relative z-20 mt-auto pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="wood-rail h-2 w-full" aria-hidden />
+      <div>
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 py-6 sm:px-5">
         <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
           <div className="flex min-w-0 flex-col gap-1 text-sm leading-6 text-muted-foreground">

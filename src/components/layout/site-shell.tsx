@@ -74,7 +74,7 @@ async function ConnectedFeedAds() {
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#0b2b1d]">
+      <div className="sticky top-0 z-40 bg-[#0d2b1e]">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>
