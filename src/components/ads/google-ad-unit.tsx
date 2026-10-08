@@ -40,14 +40,14 @@ export function GoogleAdUnit({
   }, [client, unit]);
 
   const frame = cn(
-    "overflow-hidden rounded-xl bg-slate-100/90",
+    "overflow-hidden rounded-xl border border-[#3a332c] bg-[#1C1819]",
     className,
   );
 
   if (client && unit) {
     return (
       <aside className={frame} aria-label="광고">
-        <p className="border-b border-slate-300 bg-slate-200 px-3 py-1 text-center text-[11px] font-bold tracking-wide text-slate-700">
+        <p className="border-b border-[#3a332c] bg-[#141110] px-3 py-1 text-center text-[11px] font-bold tracking-wide text-[#E5E7EB]">
           광고
         </p>
         <ins
@@ -69,10 +69,10 @@ export function GoogleAdUnit({
       data-ad-placement={placement}
       aria-label="광고 영역"
     >
-      <p className="border-b border-slate-300 bg-slate-200 px-3 py-1 text-center text-[11px] font-bold tracking-wide text-slate-700">
+      <p className="border-b border-[#3a332c] bg-[#141110] px-3 py-1 text-center text-[11px] font-bold tracking-wide text-[#E5E7EB]">
         광고
       </p>
-      <span className="flex flex-1 items-center justify-center text-[11px] font-bold tracking-wide text-slate-600">
+      <span className="flex flex-1 items-center justify-center text-[11px] font-bold tracking-wide text-[#9CA3AF]">
         광고 영역
       </span>
     </aside>

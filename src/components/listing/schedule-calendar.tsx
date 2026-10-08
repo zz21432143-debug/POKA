@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { todayKstDate } from "@/lib/dates";
 
 export type ScheduleEvent = {
   id: string;
@@ -40,6 +40,8 @@ function eachDay(start: string, end: string) {
   return days;
 }
 
+const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"] as const;
+
 export function ScheduleCalendar({
   events,
   year,
@@ -50,6 +52,7 @@ export function ScheduleCalendar({
   month: number;
 }) {
   const weeks = monthMatrix(year, month);
+  const today = todayKstDate();
   const byDay = new Map<string, ScheduleEvent[]>();
   for (const event of events) {
     if (!event.eventDate) continue;
@@ -62,12 +65,19 @@ export function ScheduleCalendar({
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border">
+    <div className="overflow-x-auto rounded-2xl border border-[#3a332c] bg-[#1A1617]">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
-          <tr className="bg-muted/50">
-            {["월", "화", "수", "목", "금", "토", "일"].map((day) => (
-              <th key={day} className="px-2 py-2 font-medium">
+          <tr className="bg-[#141110]">
+            {WEEKDAYS.map((day, index) => (
+              <th
+                key={day}
+                className={
+                  index >= 5
+                    ? "border-b border-[#3a332c] px-2 py-2.5 text-sm font-semibold text-[#C59B27]"
+                    : "border-b border-[#3a332c] px-2 py-2.5 text-sm font-semibold text-white"
+                }
+              >
                 {day}
               </th>
             ))}
@@ -77,21 +87,36 @@ export function ScheduleCalendar({
           {weeks.map((week, index) => (
             <tr key={index} className="align-top">
               {week.map((day, col) => {
-                const iso =
-                  day == null ? "" : `${year}-${pad(month + 1)}-${pad(day)}`;
+                const iso = day == null ? "" : `${year}-${pad(month + 1)}-${pad(day)}`;
                 const items = iso ? (byDay.get(iso) ?? []) : [];
+                const isToday = iso !== "" && iso === today;
                 return (
-                  <td key={col} className="h-28 border border-border p-1.5">
-                    {day ? <p className="text-xs text-muted-foreground">{day}</p> : null}
+                  <td key={col} className="h-28 border border-[#3a332c] bg-[#1A1617] p-1.5 align-top">
+                    {day ? (
+                      <p className="text-sm font-medium text-white">
+                        <span
+                          className={
+                            isToday
+                              ? "inline-flex size-7 items-center justify-center rounded-full bg-[#8B2222] font-semibold text-white"
+                              : undefined
+                          }
+                        >
+                          {day}
+                        </span>
+                      </p>
+                    ) : null}
                     <ul className="mt-1 flex flex-col gap-1">
                       {items.map((item) => (
                         <li key={`${item.id}-${iso}`}>
-                          <Link href={`/posts/${item.id}`} className="block rounded-md bg-primary/10 px-1.5 py-1 text-xs">
+                          <Link
+                            href={`/posts/${item.id}`}
+                            className="block rounded-md bg-[#3a2426] px-1.5 py-1 text-[11px] font-medium leading-snug text-white hover:bg-[#8B2222] hover:text-white"
+                          >
                             {item.title}
                             {item.promoLocation || item.jobLocation ? (
-                              <Badge variant="outline" className="mt-1">
+                              <span className="mt-1 block truncate text-[10px] font-medium text-[#C59B27]">
                                 {item.promoLocation || item.jobLocation}
-                              </Badge>
+                              </span>
                             ) : null}
                           </Link>
                         </li>

@@ -31,15 +31,15 @@ export default async function NoticesPage() {
         ) : null}
       </header>
       {page.total === 0 ? (
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white">
+        <ul className="ink-panel divide-y divide-[#3a332c] overflow-hidden rounded-2xl">
           {OFFICIAL_NOTICES.map((item) => {
             const external = item.href.startsWith("http");
             const className =
-              "touch-target flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50";
+              "touch-target flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-white hover:bg-[#241c1e] hover:text-white";
             const body = (
               <>
-                <span className="min-w-0 truncate text-sm font-medium">{item.title}</span>
-                <span className="shrink-0 text-xs text-muted-foreground">{item.date}</span>
+                <span className="min-w-0 truncate text-sm font-bold text-white">{item.title}</span>
+                <span className="shrink-0 text-xs text-[#9CA3AF]">{item.date}</span>
               </>
             );
             return (

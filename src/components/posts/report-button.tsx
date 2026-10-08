@@ -61,8 +61,8 @@ export function ReportButton({
           type="button"
           className={
             compact
-              ? "inline-flex min-h-9 items-center rounded-full border border-border bg-white px-3 text-xs font-semibold text-muted-foreground hover:bg-muted"
-              : "inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-4 text-sm font-semibold hover:bg-muted"
+              ? "ink-btn inline-flex min-h-9 items-center rounded-full px-3 text-xs font-semibold"
+              : "ink-btn inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold"
           }
         >
           신고

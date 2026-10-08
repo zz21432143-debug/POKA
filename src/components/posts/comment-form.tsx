@@ -62,7 +62,7 @@ export function CommentForm({
 
   if (disabled) {
     return (
-      <p className="rounded-xl border border-border bg-muted px-3 py-3 text-sm text-foreground">
+      <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-3 py-3 text-sm text-[#D1D5DB]">
         {disabledReason ?? "지금은 작성할 수 없습니다."}
       </p>
     );
@@ -74,11 +74,11 @@ export function CommentForm({
         value={content}
         onChange={(event) => setContent(event.target.value)}
         placeholder={placeholder}
-        className="min-h-24 bg-white"
+        className="ink-field min-h-24"
       />
       {error ? <p className="text-sm font-medium text-destructive">{error}</p> : null}
       {granted ? (
-        <p className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+        <p className="rounded-lg border border-[#C59B27]/40 bg-[#2a2218] px-3 py-2 text-sm font-medium text-[#C59B27]">
           {granted}
         </p>
       ) : null}

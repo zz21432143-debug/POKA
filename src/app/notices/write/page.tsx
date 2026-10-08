@@ -12,12 +12,12 @@ export default async function NoticeWritePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">공지사항 작성</h1>
-        <p className="mt-1 text-sm text-muted-foreground">마스터 계정만 올릴 수 있습니다.</p>
+      <header className="board-intro">
+        <h1>공지사항 작성</h1>
+        <p className="mt-2">마스터 계정만 올릴 수 있습니다.</p>
       </header>
       {!allowed ? (
-        <p className="rounded-xl border border-border bg-card px-4 py-6 text-sm text-muted-foreground">
+        <p className="ink-panel rounded-xl px-4 py-6 text-sm text-[#D1D5DB]">
           {writeDeniedMessage("NOTICE")}
         </p>
       ) : (

@@ -23,11 +23,11 @@ export default function JobsHubPage() {
           <li key={slug}>
             <Link
               href={`/boards/jobs/${slug}`}
-              className="touch-target flex min-h-28 flex-col rounded-2xl border border-border bg-white p-5 shadow-sm hover:border-primary/40"
+              className="ink-panel touch-target flex min-h-28 flex-col rounded-2xl p-5 hover:bg-[#241c1e]"
             >
-              <BriefcaseIcon className="size-5 text-primary" />
-              <p className="mt-3 text-lg font-semibold text-[#2b1810]">{job.title}</p>
-              <p className="mt-1 text-base text-[#3d2e22]">{job.blurb}</p>
+              <BriefcaseIcon className="size-5 text-[#C59B27]" />
+              <p className="mt-3 text-lg font-bold text-white">{job.title}</p>
+              <p className="mt-1 text-base text-[#D1D5DB]">{job.blurb}</p>
             </Link>
           </li>
         ))}

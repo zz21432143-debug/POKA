@@ -183,7 +183,7 @@ export function HandEditor() {
   const streetLines = normalized.streets[street];
 
   return (
-    <div className="flex max-w-full flex-col gap-5 overflow-x-clip">
+    <div className="ink-panel flex max-w-full flex-col gap-5 overflow-x-clip rounded-2xl p-4 sm:p-5">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
         자리 → 카드 → 액션 순서로만 채우면 됩니다. 등록 시 EXP <strong>+{POST_EXP.HAND_REVIEW}</strong> ·
         포인트 <strong>+{POST_POINTS.HAND_REVIEW}P</strong>,
@@ -439,7 +439,7 @@ export function HandEditor() {
         </label>
         <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {ACTIONS.map((action) => (
-            <Button key={action} type="button" size="touch" variant="outline" onClick={() => pushAction(action)}>
+            <Button key={action} type="button" size="touch" variant="outline" className="ink-btn" onClick={() => pushAction(action)}>
               {ACTION_LABEL[action]}
             </Button>
           ))}

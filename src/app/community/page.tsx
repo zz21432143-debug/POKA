@@ -16,10 +16,10 @@ export default function CommunityHubPage() {
           <li key={item.href}>
             <Link
               href={item.href}
-              className="touch-target relative z-10 flex min-h-20 flex-col rounded-2xl border border-border bg-white p-4 shadow-sm hover:border-primary/40"
+              className="ink-panel touch-target relative z-10 flex min-h-20 flex-col rounded-2xl p-4 hover:bg-[#241c1e]"
             >
-              <p className="font-semibold">{item.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{item.hint}</p>
+              <p className="font-bold text-white">{item.label}</p>
+              <p className="mt-1 text-sm text-[#9CA3AF]">{item.hint}</p>
             </Link>
           </li>
         ))}

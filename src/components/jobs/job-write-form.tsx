@@ -107,12 +107,12 @@ export function JobWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="ink-panel flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
         {hint} · 작성 {postRewardLine("JOBS")}
       </p>
-      <p className="rounded-xl border border-border bg-card px-3 py-2 text-sm">
-        <span className="text-muted-foreground">자동 제목 · </span>
+      <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-3 py-2 text-sm text-[#E5E7EB]">
+        <span className="text-[#9CA3AF]">자동 제목 · </span>
         {preview}
       </p>
 
@@ -124,7 +124,7 @@ export function JobWriteForm({
             <Label htmlFor="pay-type">급여형태</Label>
             <select
               id="pay-type"
-              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
+              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#2b1810]"
               value={form.jobPayType}
               onChange={(event) => set("jobPayType", event.target.value)}
             >
@@ -172,7 +172,7 @@ export function JobWriteForm({
             <Label htmlFor="overtime">연장 유무</Label>
             <select
               id="overtime"
-              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
+              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#2b1810]"
               value={form.jobOvertime}
               onChange={(event) => set("jobOvertime", event.target.value)}
             >

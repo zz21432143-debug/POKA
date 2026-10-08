@@ -174,7 +174,7 @@
   position: fixed;
   inset: -20px;
   background: url("/theme/yokai-bg.jpg") center top / cover no-repeat;
-  filter: blur(2px);
+  filter: blur(8px) brightness(0.6);
   pointer-events: none;
   z-index: 0;
 }
@@ -183,7 +183,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background: rgb(0 0 0 / 0.55);
+  background-color: rgba(10, 8, 12, 0.85);
   pointer-events: none;
   z-index: 0;
 }
@@ -289,6 +289,63 @@
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.7;
+}
+
+.ink-panel {
+  background: #1c1819;
+  color: #e5e7eb;
+  border: 1px solid rgba(243, 215, 161, 0.14);
+}
+
+.ink-panel :where(h1, h2, h3, h4) {
+  color: #ffffff;
+}
+
+.ink-panel :where(.text-foreground) {
+  color: #ffffff;
+}
+
+.ink-panel :where(.text-muted-foreground) {
+  color: #9ca3af;
+}
+
+.ink-panel :where(a:hover),
+.ink-panel :where(button:hover) {
+  color: inherit;
+}
+
+.ink-btn {
+  background: #2a2224;
+  color: #fff8ee;
+  border: 1px solid rgba(243, 215, 161, 0.35);
+}
+
+.ink-btn:hover,
+.ink-btn:focus-visible {
+  background: #3a2c2e;
+  color: #fff8ee;
+}
+
+.ink-on {
+  background: #8b2222;
+  color: #fff8ee;
+  border-color: #8b2222;
+}
+
+.ink-on:hover,
+.ink-on:focus-visible {
+  background: #a32828;
+  color: #fff8ee;
+}
+
+.ink-field {
+  background: #141110;
+  color: #e5e7eb;
+  border-color: #3a332c;
+}
+
+.ink-field::placeholder {
+  color: #9ca3af;
 }
 
 .home-tab-3d {

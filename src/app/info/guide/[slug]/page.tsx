@@ -35,19 +35,19 @@ export default async function GuideArticlePage({
 
   return (
     <article className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">
-        <Link href="/info/guide" className="hover:text-primary">
+      <p className="text-sm text-[#9CA3AF]">
+        <Link href="/info/guide" className="text-[#E5E7EB] hover:text-[#C59B27]">
           딜러 가이드
         </Link>
         <span className="mx-1">/</span>
         {index + 1}편
       </p>
-      <header>
-        <h1 className="text-2xl font-semibold">{article.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{article.summary}</p>
+      <header className="board-intro">
+        <h1>{article.title}</h1>
+        <p className="mt-2">{article.summary}</p>
       </header>
-      <div className="rounded-2xl border border-border bg-white px-4 py-5 shadow-sm">
-        <p className="whitespace-pre-line text-sm leading-7 text-foreground/90">{article.body}</p>
+      <div className="ink-panel rounded-2xl px-4 py-5">
+        <p className="whitespace-pre-line text-base leading-7 text-[#E5E7EB]">{article.body}</p>
       </div>
       <nav className="flex flex-wrap justify-between gap-3 text-sm font-semibold">
         {prev ? (

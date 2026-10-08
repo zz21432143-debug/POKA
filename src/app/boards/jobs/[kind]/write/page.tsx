@@ -23,9 +23,9 @@ export default async function JobWritePage({
   return (
     <RequireLogin>
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">{job.title} 작성</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{job.blurb}</p>
+      <header className="board-intro">
+        <h1>{job.title} 작성</h1>
+        <p className="mt-2">{job.blurb}</p>
       </header>
       <JobWriteForm jobKind={job.kind} hint={hints[job.kind]} />
     </div>

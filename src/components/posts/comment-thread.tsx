@@ -25,7 +25,7 @@ export function CommentThread({
 }) {
   if (comments.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border bg-muted px-4 py-6 text-center text-sm text-foreground">
+      <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-4 py-6 text-center text-sm text-[#D1D5DB]">
         아직 댓글이 없습니다.
       </p>
     );
@@ -40,7 +40,7 @@ export function CommentThread({
   });
 
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-xl border-2 border-border bg-white">
+    <ul className="divide-y divide-[#3a332c] overflow-hidden rounded-xl border border-[#3a332c] bg-[#141110]">
       {ordered.map((row) => (
         <CommentItem
           key={row.id}
@@ -90,20 +90,21 @@ function CommentItem({
     <li
       className={
         best
-          ? "border-b border-primary/40 bg-emerald-50 px-3 py-3.5"
-          : "px-3 py-3.5 even:bg-slate-50"
+          ? "border-b border-[#8B2222]/60 bg-[#2a1818] px-3 py-3.5"
+          : "bg-[#1C1819] px-3 py-3.5"
       }
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {best ? <Badge>베스트 댓글</Badge> : null}
           <AuthorChip author={comment.author} anonymous={anonymous} size="sm" />
-          <span className="text-xs text-primary">추천 {count}</span>
+          <span className="text-xs font-medium text-[#C59B27]">추천 {count}</span>
         </div>
         <Button
           type="button"
           size="touch"
           variant={liked ? "default" : "outline"}
+          className={liked ? "ink-on" : "ink-btn"}
           disabled={pending || liked}
           onClick={() => void like()}
         >
@@ -111,7 +112,7 @@ function CommentItem({
         </Button>
         <ReportButton targetType="comment" targetId={comment.id} compact />
       </div>
-      <p className="mt-2 break-words text-[15px] leading-7 whitespace-pre-wrap text-foreground">
+      <p className="mt-2 break-words text-[15px] leading-7 whitespace-pre-wrap text-[#E5E7EB]">
         {comment.content}
       </p>
     </li>

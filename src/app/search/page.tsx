@@ -46,22 +46,22 @@ export default async function SearchPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">검색</h1>
+      <header className="board-intro">
+        <h1>검색</h1>
         <form action="/search" className="mt-3">
           <input
             type="search"
             name="q"
             defaultValue={query}
             placeholder="검색어를 입력하세요."
-            className="h-11 w-full rounded-full border border-border bg-white px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="ink-field h-11 w-full rounded-full px-4 text-sm outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-[#C59B27]/30"
           />
         </form>
       </header>
       {query ? (
         <PostList posts={posts} emptyText={`‘${query}’ 검색 결과가 없습니다.`} showBoard />
       ) : (
-        <p className="rounded-2xl border border-dashed border-border bg-white px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="ink-panel rounded-2xl px-4 py-10 text-center text-sm text-[#D1D5DB]">
           제목이나 본문으로 글을 찾아보세요.{" "}
           <Link href="/boards/free" className="text-primary">
             자유 게시판

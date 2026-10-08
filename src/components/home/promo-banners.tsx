@@ -8,8 +8,8 @@ export async function PromoBanners() {
     <section aria-label="프리미엄 제휴 배너 6구좌">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold sm:text-2xl">프리미엄 제휴</h2>
-          <p className="text-sm text-muted-foreground">홈 3×2 · 제휴 6구좌</p>
+          <h2 className="text-xl font-bold text-white sm:text-2xl">프리미엄 제휴</h2>
+          <p className="text-sm text-[#D1D5DB]">홈 3×2 · 제휴 6구좌</p>
         </div>
         <AdvertiseInquiryDialog
           triggerClassName="touch-target inline-flex min-h-11 items-center text-sm font-medium text-primary"
@@ -20,9 +20,9 @@ export async function PromoBanners() {
         {banners.map((banner) => (
           <li key={banner.id}>
             {banner.vacant ? (
-              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl bg-[#f7f1e6] px-2 text-center shadow-[0_2px_8px_rgb(0_0_0/0.06)]">
-                <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">B{banner.id}</p>
-                <p className="mt-1 text-sm font-semibold text-[#5c3a22]">제휴 구좌 비어 있음</p>
+              <div className="ink-panel touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl px-2 text-center">
+                <p className="text-[11px] font-semibold tracking-wide text-[#9CA3AF]">B{banner.id}</p>
+                <p className="mt-1 text-sm font-semibold text-[#E5E7EB]">제휴 구좌 비어 있음</p>
                 <div className="mt-2">
                   <AdvertiseInquiryDialog triggerClassName="inline-flex min-h-10 items-center rounded-full bg-primary px-3 text-xs font-semibold text-white" />
                 </div>

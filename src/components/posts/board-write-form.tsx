@@ -70,7 +70,7 @@ export function BoardWriteForm({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="ink-panel flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
         {hint} · 작성 {postRewardLine(boardType)}
       </p>

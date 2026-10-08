@@ -111,10 +111,10 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
           ];
 
   return (
-    <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
+    <dl className="grid grid-cols-2 gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-3 text-sm text-[#E5E7EB] sm:grid-cols-3">
       {rows.map(([label, value]) => (
         <div key={label}>
-          <dt className="text-xs text-muted-foreground">{label}</dt>
+          <dt className="text-xs text-[#9CA3AF]">{label}</dt>
           <dd>{value || "—"}</dd>
         </div>
       ))}

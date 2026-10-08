@@ -54,9 +54,9 @@ export default async function PostDetailPage({
   if (!post) notFound();
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
-      <article className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-white p-5 shadow-sm">
-        <h1 className="text-xl font-semibold">익명 게시판 종료</h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+      <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
+        <h1 className="text-xl font-semibold text-white">익명 게시판 종료</h1>
+        <p className="mt-3 text-sm leading-6 text-[#D1D5DB]">
           익명 게시판은 운영을 종료했습니다. 기존 글은 더 이상 공개하지 않습니다.
         </p>
         <Link href="/community" className="mt-4 inline-flex text-sm font-semibold text-primary">
@@ -108,7 +108,7 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ink-panel overflow-hidden rounded-2xl">
       <header className="border-b border-border px-4 py-5 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">
@@ -123,7 +123,7 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
         </div>
-        <h1 className="mt-3 min-w-0 break-words text-[1.75rem] font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+        <h1 className="mt-3 min-w-0 break-words text-[1.75rem] font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
           {post.title}
         </h1>
         <div className="mt-4">
@@ -147,25 +147,25 @@ export default async function PostDetailPage({
       {post.jobKind ? <JobFacts job={post} /> : null}
 
       {post.boardType === "SCHEDULE" ? (
-        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-3 text-sm text-[#E5E7EB] sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-muted-foreground">개최 장소</dt>
+            <dt className="text-xs text-[#9CA3AF]">개최 장소</dt>
             <dd>{post.promoLocation || "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">일정</dt>
+            <dt className="text-xs text-[#9CA3AF]">일정</dt>
             <dd>
               {post.eventDate || "—"}
               {post.eventEndDate && post.eventEndDate !== post.eventDate ? ` ~ ${post.eventEndDate}` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted-foreground">총상금</dt>
+            <dt className="text-xs text-[#9CA3AF]">총상금</dt>
             <dd>{post.eventPrize || "—"}</dd>
           </div>
           {post.eventLink ? (
             <div className="col-span-full">
-              <dt className="text-xs text-muted-foreground">공식 링크</dt>
+              <dt className="text-xs text-[#9CA3AF]">공식 링크</dt>
               <dd>
                 <a href={post.eventLink} className="text-primary" target="_blank" rel="noreferrer">
                   {post.eventLink}
@@ -189,8 +189,8 @@ export default async function PostDetailPage({
       ) : null}
 
       {post.jobKind ? (
-        <section className="rounded-xl border border-border bg-card p-3">
-          <p className="mb-2 text-xs text-muted-foreground">연락처</p>
+        <section className="rounded-xl border border-[#3a332c] bg-[#141110] p-3">
+          <p className="mb-2 text-xs text-[#9CA3AF]">연락처</p>
           <ContactReveal
             postId={post.id}
             hasContact={Boolean(post.jobContact)}
@@ -223,7 +223,7 @@ export default async function PostDetailPage({
       ) : null}
 
       {post.content ? (
-        <div className="overflow-x-clip rounded-xl border border-border bg-slate-50 px-4 py-4 text-[17px] leading-8 break-words whitespace-pre-wrap text-foreground sm:px-5">
+        <div className="overflow-x-clip rounded-xl border border-[#3a332c] bg-[#141110] px-4 py-4 text-[17px] leading-8 break-words whitespace-pre-wrap text-[#E5E7EB] sm:px-5">
           {post.content}
         </div>
       ) : null}
@@ -245,8 +245,8 @@ export default async function PostDetailPage({
         <>
       <GoogleAdUnit placement="post-top" />
 
-      <section className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
-        <h2 className="border-b border-border pb-3 text-lg font-bold">댓글 {post.comments.length}</h2>
+      <section className="ink-panel flex flex-col gap-3 rounded-2xl p-4 sm:p-5">
+        <h2 className="border-b border-[#3a332c] pb-3 text-lg font-bold text-white">댓글 {post.comments.length}</h2>
         {viewer ? (
           <CommentForm
             postId={post.id}
@@ -254,7 +254,7 @@ export default async function PostDetailPage({
             placeholder={`댓글을 남겨 주세요. ${commentRewardLine()}가 지급됩니다.`}
           />
         ) : (
-          <p className="rounded-xl border border-border bg-muted px-3 py-3 text-sm text-foreground">
+          <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-3 py-3 text-sm text-[#D1D5DB]">
             댓글은 로그인 후 남길 수 있습니다. {commentRewardLine()}가 지급됩니다.{" "}
             <Link href="/login" className="font-medium text-primary underline">
               로그인
@@ -262,7 +262,7 @@ export default async function PostDetailPage({
           </p>
         )}
         {post.comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">아직 댓글이 없습니다.</p>
+          <p className="text-sm text-[#9CA3AF]">아직 댓글이 없습니다.</p>
         ) : (
           <CommentThread
             anonymous={false}

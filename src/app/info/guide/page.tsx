@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 export default function GuideHubPage() {
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">홀덤 딜러 가이드</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <header className="board-intro">
+        <h1>홀덤 딜러 가이드</h1>
+        <p className="mt-2">
           검색으로 들어오는 상설 글 {GUIDE_ARTICLES.length}편입니다. 하우스 룰이 있으면 플로어 판정이
           우선입니다.
         </p>
@@ -22,12 +22,12 @@ export default function GuideHubPage() {
           <li key={row.slug}>
             <Link
               href={`/info/guide/${row.slug}`}
-              className="touch-target flex min-h-20 flex-col rounded-2xl border border-border bg-white px-4 py-4 shadow-sm hover:border-primary/40"
+              className="ink-panel touch-target flex min-h-20 flex-col rounded-2xl px-4 py-4 hover:bg-[#241c1e]"
             >
-              <span className="text-sm font-semibold">
+              <span className="text-sm font-bold text-white">
                 {index + 1}. {row.title}
               </span>
-              <span className="mt-1 text-sm text-muted-foreground">{row.summary}</span>
+              <span className="mt-1 text-sm text-[#D1D5DB]">{row.summary}</span>
             </Link>
           </li>
         ))}

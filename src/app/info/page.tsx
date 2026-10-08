@@ -19,11 +19,11 @@ export default function InfoHubPage() {
           <li key={card.href}>
             <Link
               href={card.href}
-              className="touch-target flex min-h-28 flex-col rounded-2xl border border-border bg-white p-5 shadow-sm hover:border-primary/40"
+              className="ink-panel touch-target flex min-h-28 flex-col rounded-2xl p-5 hover:bg-[#241c1e]"
             >
-              <card.icon className="size-5 text-primary" />
-              <p className="mt-3 font-semibold">{card.title}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{card.body}</p>
+              <card.icon className="size-5 text-[#C59B27]" />
+              <p className="mt-3 font-bold text-white">{card.title}</p>
+              <p className="mt-1 text-sm text-[#D1D5DB]">{card.body}</p>
             </Link>
           </li>
         ))}

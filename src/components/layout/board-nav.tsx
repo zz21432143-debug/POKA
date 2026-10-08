@@ -6,8 +6,8 @@ import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
 
 function SealIcon({ kind, active }: { kind: SidebarIcon; active?: boolean }) {
-  const gold = active ? "#fff8ee" : "#C59B27";
-  const red = active ? "#fff8ee" : "#8B2222";
+  const gold = active ? "#fff8ee" : "currentColor";
+  const red = active ? "#fff8ee" : "currentColor";
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="size-5 shrink-0">
       {kind === "home" ? (
@@ -135,7 +135,7 @@ export function BoardNav({
             "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base font-semibold shadow-none",
             homeActive
               ? "bg-[#8B2222] text-[#fff8ee]"
-              : "text-[#fff8ee] hover:bg-[#2a1814]",
+              : "text-[#E5E7EB] hover:bg-[#2a1814] hover:text-[#C59B27]",
           )}
         >
           <SealIcon kind="home" active={homeActive} />
@@ -162,7 +162,7 @@ export function BoardNav({
                         "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
                         active
                           ? "bg-[#8B2222] font-semibold text-[#fff8ee]"
-                          : "bg-transparent font-semibold text-[#fff8ee] hover:bg-[#2a1814]",
+                          : "bg-transparent font-semibold text-[#E5E7EB] hover:bg-[#2a1814] hover:text-[#8B2222]",
                       )}
                       onClick={onNavigate}
                     >

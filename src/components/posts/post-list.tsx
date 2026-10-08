@@ -54,7 +54,13 @@ export function PostList({
 }) {
   if (posts.length === 0) {
     return (
-      <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+      <p
+        className={
+          framed
+            ? "ink-panel rounded-2xl px-4 py-10 text-center text-base text-[#D1D5DB]"
+            : "px-4 py-10 text-center text-sm text-muted-foreground"
+        }
+      >
         {emptyText}
       </p>
     );
@@ -64,7 +70,7 @@ export function PostList({
     <ul
       className={
         framed
-          ? "divide-y divide-border overflow-hidden rounded-2xl border border-border bg-[#fffaf4] shadow-[0_2px_8px_rgb(0_0_0/0.05)]"
+          ? "ink-panel divide-y divide-[#3a332c] overflow-hidden rounded-2xl"
           : "divide-y divide-border"
       }
     >
@@ -75,9 +81,13 @@ export function PostList({
             {index === 3 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
             <li
               className={
-                compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
-                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
+                framed
+                  ? compact
+                    ? "flex min-h-11 items-center gap-2.5 bg-[#1C1819] px-4 py-2 hover:bg-[#241c1e]"
+                    : "flex min-h-14 items-center gap-3 bg-[#1C1819] px-4 py-3.5 hover:bg-[#241c1e]"
+                  : compact
+                    ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
+                    : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
               }
             >
               {showBoard ? (
@@ -95,9 +105,13 @@ export function PostList({
                 <Link
                   href={`/posts/${post.id}`}
                   className={
-                    compact
-                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-foreground"
-                      : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-foreground sm:text-lg"
+                    framed
+                      ? compact
+                        ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-white hover:text-white"
+                        : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-white hover:text-white sm:text-lg"
+                      : compact
+                        ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-foreground"
+                        : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-foreground sm:text-lg"
                   }
                 >
                   {post.isPrivate ? (
@@ -108,10 +122,22 @@ export function PostList({
                   {post.title}
                 </Link>
                 {compact ? (
-                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]">
+                  <p
+                    className={
+                      framed
+                        ? "flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#9CA3AF]"
+                        : "flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]"
+                    }
+                  >
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-[#c86d2a]/12 px-1 text-[10px] font-bold text-[#a8561f]">
+                      <span
+                        className={
+                          framed
+                            ? "shrink-0 rounded bg-[#C59B27]/15 px-1 text-[10px] font-bold text-[#C59B27]"
+                            : "shrink-0 rounded bg-[#c86d2a]/12 px-1 text-[10px] font-bold text-[#a8561f]"
+                        }
+                      >
                         Lv.{post.author.level}
                       </span>
                     ) : null}
@@ -120,7 +146,9 @@ export function PostList({
                 ) : (
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                     <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                    <span className="text-xs font-medium text-[#6d5844]">{formatRelativeKst(post.createdAt)}</span>
+                    <span className={framed ? "text-xs font-medium text-[#9CA3AF]" : "text-xs font-medium text-[#6d5844]"}>
+                      {formatRelativeKst(post.createdAt)}
+                    </span>
                   </div>
                 )}
               </div>
@@ -138,8 +166,12 @@ export function PostList({
                 <div
                   className={
                     compact
-                      ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#8a7f6c] sm:flex"
-                      : "hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex"
+                      ? framed
+                        ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#9CA3AF] sm:flex"
+                        : "hidden shrink-0 items-center gap-2 text-[11px] text-[#8a7f6c] sm:flex"
+                      : framed
+                        ? "hidden shrink-0 items-center gap-3 text-xs text-[#9CA3AF] sm:flex"
+                        : "hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex"
                   }
                 >
                   <span className="inline-flex items-center gap-1">

@@ -130,10 +130,10 @@ export function UserBadge({
             {showNickname ? (
               <span className="min-w-0">
                 <span className={cn("block truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
-                {title ? <span className="mt-0.5 block text-xs font-semibold text-emerald-800">{title}</span> : null}
+                {title ? <span className="mt-0.5 block text-xs font-semibold text-[#C59B27]">{title}</span> : null}
               </span>
             ) : title ? (
-              <span className="text-xs font-semibold text-emerald-800">{title}</span>
+              <span className="text-xs font-semibold text-[#C59B27]">{title}</span>
             ) : null}
           </span>
           {extraPills ? <span className="mt-1.5 flex">{extraPills}</span> : null}
@@ -161,11 +161,11 @@ export function UserBadge({
             {user.nickname}
           </span>
           {title ? (
-            <span className="block text-[11px] font-semibold leading-tight text-emerald-800">{title}</span>
+            <span className="block text-[11px] font-semibold leading-tight text-[#C59B27]">{title}</span>
           ) : null}
         </span>
       ) : title ? (
-        <span className="text-[11px] font-semibold text-emerald-800">{title}</span>
+        <span className="text-[11px] font-semibold text-[#C59B27]">{title}</span>
       ) : null}
       {extraPills}
     </span>

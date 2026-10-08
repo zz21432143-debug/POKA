@@ -55,6 +55,7 @@ export function VoteButtons({
         type="button"
         size="touch"
         variant={mine === 1 ? "default" : "outline"}
+        className={mine === 1 ? "ink-on" : "ink-btn"}
         disabled={pending}
         onClick={() => vote(1)}
       >
@@ -64,6 +65,7 @@ export function VoteButtons({
         type="button"
         size="touch"
         variant={mine === -1 ? "secondary" : "outline"}
+        className={mine === -1 ? "ink-on" : "ink-btn"}
         disabled={pending}
         onClick={() => vote(-1)}
       >

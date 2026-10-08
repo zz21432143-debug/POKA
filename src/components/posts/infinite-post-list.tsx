@@ -76,7 +76,7 @@ export function InfinitePostList({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-[#9CA3AF]">
         {items.length} / {total}개
       </p>
       <PostList posts={items} emptyText={emptyText} showBoard={showBoard} nativeSponsor={nativeSponsor} />
@@ -87,7 +87,7 @@ export function InfinitePostList({
           {pending ? "불러오는 중…" : "더 보기"}
         </Button>
       ) : items.length > 0 ? (
-        <p className="text-center text-xs text-muted-foreground">마지막 글입니다.</p>
+        <p className="text-center text-xs text-[#9CA3AF]">마지막 글입니다.</p>
       ) : null}
     </div>
   );

@@ -40,10 +40,10 @@ export function HandPoll({
   }
 
   return (
-    <section className="rounded-2xl border border-primary/40 bg-card p-4">
+    <section className="ink-panel rounded-2xl p-4">
       <div className="flex items-end justify-between gap-2">
-        <h2 className="text-lg font-semibold">이 핸드라면?</h2>
-        <p className="text-xs text-muted-foreground">투표 {total}명</p>
+        <h2 className="text-lg font-bold text-white">이 핸드라면?</h2>
+        <p className="text-xs text-[#9CA3AF]">투표 {total}명</p>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {POLL_CHOICES.map((choice) => (
@@ -52,6 +52,7 @@ export function HandPoll({
             type="button"
             size="touch"
             variant={mine === choice.id ? "default" : "outline"}
+            className={mine === choice.id ? "ink-on" : "ink-btn"}
             disabled={pending}
             onClick={() => void vote(choice.id)}
           >
@@ -62,15 +63,15 @@ export function HandPoll({
       <ul className="mt-4 grid gap-2">
         {bars.map((bar) => (
           <li key={bar.id}>
-            <div className="mb-1 flex justify-between text-xs">
+            <div className="mb-1 flex justify-between text-xs text-white">
               <span>{bar.label}</span>
-              <span className="text-primary">
+              <span className="font-semibold text-[#C59B27]">
                 {bar.percent}% · {bar.count}
               </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2224]">
               <div
-                className="h-full rounded-full bg-primary transition-[width]"
+                className="h-full rounded-full bg-[#C59B27] transition-[width]"
                 style={{ width: `${bar.percent}%` }}
               />
             </div>
