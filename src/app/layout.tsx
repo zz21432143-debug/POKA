@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { adsensePublisherId, DEFAULT_ADSENSE_CLIENT } from "@/lib/adsense";
-import { PWA_APPLE_ICON, PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
+import { PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
 import {
   OG_IMAGE_PATH,
   SITE_DESCRIPTION,
@@ -75,13 +75,8 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
-      { url: "/brand/poka-favicon.png", type: "image/png", sizes: "64x64" },
-      { url: "/brand/poka-cloud.svg", type: "image/svg+xml" },
-      { url: "/icons/poka-192.png", type: "image/png", sizes: "192x192" },
-    ],
-    apple: [{ url: PWA_APPLE_ICON, sizes: "180x180" }],
+    icon: [{ url: "/images/logo-flame.png", type: "image/png" }],
+    apple: [{ url: "/images/logo-flame.png", type: "image/png" }],
   },
 };
 
