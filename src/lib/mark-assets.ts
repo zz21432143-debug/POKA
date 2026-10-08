@@ -21,6 +21,5 @@ export function publicMarkUrl(url?: string | null, slug?: string | null) {
 }
 
 export function displayMarkSrc(opts: { isMaster?: boolean; profileMarkImageUrl?: string | null }) {
-  if (opts.isMaster) return OPERATOR_MARK_SRC;
   return publicMarkUrl(opts.profileMarkImageUrl);
 }

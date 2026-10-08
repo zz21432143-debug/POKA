@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { DEFAULT_MARK_SRC, OPERATOR_MARK_SRC, displayMarkSrc, publicMarkUrl } from "./mark-assets";
+import { DEFAULT_MARK_SRC, displayMarkSrc, publicMarkUrl } from "./mark-assets";
 import { MARK_CATEGORIES, SHOP_KINDS, marksInCategory, type MarkCatalogItem } from "./mark-categories";
 
 function item(partial: Partial<MarkCatalogItem> & Pick<MarkCatalogItem, "id" | "name" | "category">): MarkCatalogItem {
@@ -21,7 +21,7 @@ describe("mark shop catalog", () => {
     assert.equal(displayMarkSrc({ profileMarkImageUrl: "/images/badges/team_1.png" }), "/images/badges/team_1.png");
     assert.equal(displayMarkSrc({ profileMarkImageUrl: "/marks/team-top.svg" }), "/images/badges/team_1.png");
     assert.equal(displayMarkSrc({ profileMarkImageUrl: "/marks/chip.svg" }), "/marks/chip.svg");
-    assert.equal(displayMarkSrc({ isMaster: true, profileMarkImageUrl: "/marks/chip.svg" }), OPERATOR_MARK_SRC);
+    assert.equal(displayMarkSrc({ isMaster: true, profileMarkImageUrl: "/marks/chip.svg" }), "/marks/chip.svg");
     assert.equal(publicMarkUrl("/images/badges/team_2.png"), "/images/badges/team_2.png");
     assert.equal(publicMarkUrl("/marks/team-plime.svg", "team-b"), "/images/badges/team_2.png");
     assert.equal(publicMarkUrl("/marks/spade.svg", "spade"), "/marks/spade.svg");
