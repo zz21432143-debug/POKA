@@ -4,6 +4,12 @@ import { readFileSync } from "node:fs";
 import { loginHref } from "./login-path";
 
 describe("back navigation", () => {
+  it("marks helpers as never so pages typecheck after replace", () => {
+    const src = readFileSync(new URL("./history-redirect.ts", import.meta.url), "utf8");
+    assert.match(src, /export function replaceTo\(path: string\): never/);
+    assert.match(src, /export function replaceToLogin\(next = "\/"\): never/);
+  });
+
   it("keeps login next paths in-app", () => {
     assert.equal(loginHref("/posts/abc"), "/login?next=%2Fposts%2Fabc");
   });
