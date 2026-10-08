@@ -59,7 +59,7 @@ export default async function LoginPage({
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {signup
           ? "만 19세 이상만 가입할 수 있습니다. 카카오 또는 구글로만 가입하며, 아래 필수 동의 3개를 모두 체크해야 진행됩니다."
-          : "카카오 또는 구글로만 로그인합니다. 필수 동의 3개를 체크한 뒤 시작해 주세요. 처음이라면 회원가입 탭을 누르세요."}
+          : "카카오 또는 구글로만 로그인합니다. 처음이라면 회원가입 탭에서 동의 후 가입해 주세요."}
       </p>
       {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
       <div className="mt-5">

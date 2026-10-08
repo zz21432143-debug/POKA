@@ -42,7 +42,7 @@ export function AuthForm({
 
   async function startSocial(provider: Provider) {
     setError(null);
-    if (!requireConsents()) return;
+    if (signup && !requireConsents()) return;
     const next = nextPath.startsWith("/") ? nextPath : "/";
     const intent = signup ? "signup" : "login";
     setPending(provider);
@@ -128,14 +128,15 @@ export function AuthForm({
         >
           {pending === "google" ? "구글로 이동 중…" : "구글로 시작하기"}
         </Button>
-        {!ready ? (
+        {signup && !ready ? (
           <p className="text-xs leading-5 text-muted-foreground">
-            아래 필수 항목 3개에 모두 동의한 뒤에 소셜 로그인이 진행됩니다.
+            아래 필수 항목 3개에 모두 동의한 뒤에 가입이 진행됩니다.
           </p>
         ) : null}
       </div>
 
-      <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
+      {signup ? (
+        <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
         <legend className="px-1 text-sm font-semibold">필수 동의</legend>
         <p className="text-sm leading-6 text-muted-foreground">{ADULT_ONLY_TEXT}</p>
         <p className="mt-2 text-sm leading-6 text-foreground">{MEMBER_LIABILITY_TEXT}</p>
@@ -190,7 +191,8 @@ export function AuthForm({
             </div>
           </li>
         </ul>
-      </fieldset>
+        </fieldset>
+      ) : null}
 
       {!signup ? (
         <details className="rounded-2xl border border-dashed border-border p-3">
