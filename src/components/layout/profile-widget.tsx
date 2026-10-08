@@ -4,6 +4,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { todayKstDate } from "@/lib/dates";
 import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
+import { NicknameMenu } from "@/components/user/nickname-menu";
 
 export { MarkImage };
 
@@ -43,7 +44,9 @@ export function ProfileWidget({
       <div className="flex min-h-11 items-center gap-2">
         <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={36} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
+          <NicknameMenu nickname={profile.nickname}>
+            <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
+          </NicknameMenu>
           <p className="text-xs text-emerald-800">
             {rank ? `${rank} · ` : null}Lv.{profile.level}
           </p>
@@ -62,7 +65,9 @@ export function ProfileWidget({
           <MarkImage src={profile.profileMarkImageUrl} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold">{profile.nickname}</p>
+          <NicknameMenu nickname={profile.nickname}>
+            <p className="truncate text-base font-semibold">{profile.nickname}</p>
+          </NicknameMenu>
           {rank ? (
             <p className="mt-0.5 text-xs font-semibold text-emerald-800">{rank}</p>
           ) : null}

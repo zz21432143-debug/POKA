@@ -13,6 +13,7 @@ describe("nickname and password", () => {
     assert.ok(nicknameError("익명"));
     assert.ok(nicknameError("POKA"));
     assert.ok(nicknameError("a"));
+    assert.ok(nicknameError("탈퇴_abc"));
     assert.ok(passwordError("short"));
   });
 

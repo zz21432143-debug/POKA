@@ -11,6 +11,9 @@ export async function GET() {
     nickname: user.nickname,
     email: user.email,
     level: user.level,
+    nicknameChangeCount: user.nicknameChangeCount,
+    nicknameTickets: user.nicknameTickets,
+    points: user.points,
   });
 }
 

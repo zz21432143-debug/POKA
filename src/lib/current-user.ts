@@ -15,6 +15,8 @@ import { roleFromFlags } from "@/lib/roles";
 export type CurrentUser = ViewerProfile & {
   id: string;
   email: string | null;
+  nicknameChangeCount: number;
+  nicknameTickets: number;
   role: "USER" | "ADMIN" | "MASTER";
   status: "ACTIVE" | "SUSPENDED" | "BANNED";
   suspendedUntil: Date | null;
@@ -67,6 +69,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return {
     id: user.id,
     email: user.email ?? null,
+    nicknameChangeCount: user.nicknameChangeCount ?? 0,
+    nicknameTickets: user.nicknameTickets ?? 0,
     ...toViewerProfile(user),
     role: roleFromFlags(user),
     status,

@@ -45,6 +45,7 @@ export type MarkCatalog = {
   level: number;
   isMaster?: boolean;
   isAdmin?: boolean;
+  nicknameTickets: number;
   equippedMarkId: string | null;
   equippedFrameId: string | null;
   equippedEffectId: string | null;

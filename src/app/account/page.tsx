@@ -16,7 +16,12 @@ export default async function AccountPage() {
           개인정보 열람과 회원 탈퇴를 여기서 할 수 있습니다.
         </p>
       </header>
-      <AccountPrivacyPanel nickname={user.nickname} email={user.email} />
+      <AccountPrivacyPanel
+        nickname={user.nickname}
+        email={user.email}
+        changeCount={user.nicknameChangeCount}
+        tickets={user.nicknameTickets}
+      />
     </article>
   );
 }

@@ -85,6 +85,8 @@ async function applySchema() {
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "signupIp" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP(3)`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "withdrawnAt" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "nicknameChangeCount" INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "nicknameTickets" INTEGER NOT NULL DEFAULT 0`);
     await client.query(`CREATE INDEX IF NOT EXISTS "User_status_idx" ON "User"("status")`);
     await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "isPrivate" BOOLEAN NOT NULL DEFAULT false`);
     await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "unlockPasswordHash" TEXT`);

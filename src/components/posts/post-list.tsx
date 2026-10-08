@@ -60,56 +60,51 @@ export function PostList({
         return (
           <Fragment key={post.id}>
             {index === 3 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
-            <li>
-              <Link
-                href={`/posts/${post.id}`}
-                className="touch-target flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-muted/50"
-              >
-                {showBoard ? (
-                  <Badge
-                    variant="secondary"
-                    className="h-6 shrink-0 rounded-full bg-emerald-50 px-2.5 text-[11px] font-medium text-emerald-700"
-                  >
-                    {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
-                  </Badge>
-                ) : null}
-                <div className="min-w-0 flex-1">
-                  <p className="break-words font-medium">
-                    {post.isPrivate ? (
-                      <span className="mr-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
-                        비밀글
-                      </span>
-                    ) : null}
-                    {post.title}
-                  </p>
-                  <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
-                    <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                    <span className="text-xs text-muted-foreground">{formatRelativeKst(post.createdAt)}</span>
-                  </div>
+            <li className="flex min-h-14 items-center gap-3 px-4 py-3.5 hover:bg-muted/50">
+              {showBoard ? (
+                <Badge
+                  variant="secondary"
+                  className="h-6 shrink-0 rounded-full bg-emerald-50 px-2.5 text-[11px] font-medium text-emerald-700"
+                >
+                  {BOARD_LABELS[post.boardType as BoardTypeKey] ?? post.boardType}
+                </Badge>
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <Link href={`/posts/${post.id}`} className="touch-target block break-words font-medium">
+                  {post.isPrivate ? (
+                    <span className="mr-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                      비밀글
+                    </span>
+                  ) : null}
+                  {post.title}
+                </Link>
+                <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
+                  <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
+                  <span className="text-xs text-muted-foreground">{formatRelativeKst(post.createdAt)}</span>
                 </div>
-                {post.boardType === "ANONYMOUS_REVIEW" ? (
-                  <RatingStamp
-                    size="sm"
-                    ratings={{
-                      ratingManner: post.ratingManner ?? null,
-                      ratingService: post.ratingService ?? null,
-                      ratingFacility: post.ratingFacility ?? null,
-                      ratingAtmosphere: post.ratingAtmosphere ?? null,
-                    }}
-                  />
-                ) : (
-                  <div className="hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex">
-                    <span className="inline-flex items-center gap-1">
-                      <EyeIcon className="size-3.5" />
-                      {post.viewCount ?? 0}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <MessageCircleIcon className="size-3.5" />
-                      {post.commentCount ?? 0}
-                    </span>
-                  </div>
-                )}
-              </Link>
+              </div>
+              {post.boardType === "ANONYMOUS_REVIEW" ? (
+                <RatingStamp
+                  size="sm"
+                  ratings={{
+                    ratingManner: post.ratingManner ?? null,
+                    ratingService: post.ratingService ?? null,
+                    ratingFacility: post.ratingFacility ?? null,
+                    ratingAtmosphere: post.ratingAtmosphere ?? null,
+                  }}
+                />
+              ) : (
+                <div className="hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex">
+                  <span className="inline-flex items-center gap-1">
+                    <EyeIcon className="size-3.5" />
+                    {post.viewCount ?? 0}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <MessageCircleIcon className="size-3.5" />
+                    {post.commentCount ?? 0}
+                  </span>
+                </div>
+              )}
             </li>
           </Fragment>
         );

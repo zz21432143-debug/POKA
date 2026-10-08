@@ -14,6 +14,7 @@ export function nicknameError(raw: string): string | null {
     return "사용할 수 없는 닉네임입니다.";
   }
   if (holdemOnlyViolation(nickname)) return "이 닉네임은 등록할 수 없습니다.";
+  if (nickname.startsWith("탈퇴_")) return "사용할 수 없는 닉네임입니다.";
   return null;
 }
 

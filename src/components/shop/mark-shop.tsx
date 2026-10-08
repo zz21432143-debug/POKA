@@ -23,6 +23,7 @@ import {
   type MarkCategoryId,
   type ShopKindId,
 } from "@/lib/mark-categories";
+import { NICKNAME_TICKET_NAME, NICKNAME_TICKET_PRICE } from "@/lib/nickname-change";
 import { memberRankTitle } from "@/lib/levels";
 
 export function MarkShop({
@@ -45,6 +46,22 @@ export function MarkShop({
     const response = await fetch("/api/marks");
     const payload = (await response.json()) as MarkCatalog;
     setCatalog(payload);
+  }
+
+  async function buyTicket() {
+    setPending("ticket-buy");
+    setError(null);
+    try {
+      const response = await fetch("/api/shop/nickname-ticket", { method: "POST" });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "구매에 실패했습니다.");
+      await load();
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "구매에 실패했습니다.");
+    } finally {
+      setPending(null);
+    }
   }
 
   async function act(id: string, path: "buy" | "equip", kind: "mark" | "cosmetic" = "mark") {
@@ -74,6 +91,7 @@ export function MarkShop({
       onKind={setKind}
       onCategory={setCategory}
       onAct={act}
+      onBuyTicket={() => void buyTicket()}
     />
   ) : (
     <Button type="button" size="touch" onClick={() => void load()}>
@@ -116,6 +134,7 @@ function ShopBody({
   onKind,
   onCategory,
   onAct,
+  onBuyTicket,
 }: {
   catalog: MarkCatalog;
   error: string | null;
@@ -125,6 +144,7 @@ function ShopBody({
   onKind: (id: ShopKindId) => void;
   onCategory: (id: MarkCategoryId) => void;
   onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
+  onBuyTicket: () => void;
 }) {
   const marks = useMemo(
     () => marksInCategory(catalog.marks, category),
@@ -148,6 +168,29 @@ function ShopBody({
         </p>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-semibold">{NICKNAME_TICKET_NAME}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {NICKNAME_TICKET_PRICE.toLocaleString()}P · 보유 {catalog.nicknameTickets}장. 최초 1회 닉네임 변경은
+            무료입니다.
+          </p>
+        </div>
+        {catalog.loggedIn ? (
+          <Button
+            type="button"
+            size="touch"
+            disabled={pending !== null || catalog.points < NICKNAME_TICKET_PRICE}
+            onClick={onBuyTicket}
+          >
+            {pending === "ticket-buy" ? "구매 중…" : "구매"}
+          </Button>
+        ) : (
+          <Link href="/login?next=/shop" className={buttonVariants({ size: "touch" })}>
+            로그인
+          </Link>
+        )}
+      </div>
       <Tabs value={kind} onValueChange={(value) => onKind(value as ShopKindId)} className="gap-4">
         <TabsList className="h-auto w-full flex-wrap justify-start gap-1 p-1">
           {SHOP_KINDS.filter(

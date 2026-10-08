@@ -10,15 +10,23 @@ import { publicContactEmail } from "@/lib/legal-contact";
 export function AccountPrivacyPanel({
   nickname,
   email,
+  changeCount,
+  tickets,
 }: {
   nickname: string;
   email: string | null;
+  changeCount: number;
+  tickets: number;
 }) {
   const router = useRouter();
   const [confirm, setConfirm] = useState("");
+  const [nextNick, setNextNick] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [nickError, setNickError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [nickPending, setNickPending] = useState(false);
   const contact = publicContactEmail();
+  const freeLeft = changeCount <= 0;
 
   async function withdraw() {
     setPending(true);
@@ -39,6 +47,26 @@ export function AccountPrivacyPanel({
     }
   }
 
+  async function changeNick() {
+    setNickPending(true);
+    setNickError(null);
+    try {
+      const response = await fetch("/api/account/nickname", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nickname: nextNick }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(data.error ?? "닉네임을 바꾸지 못했습니다.");
+      setNextNick("");
+      router.refresh();
+    } catch (err) {
+      setNickError(err instanceof Error ? err.message : "닉네임을 바꾸지 못했습니다.");
+    } finally {
+      setNickPending(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-xl border border-border bg-card p-4">
@@ -54,8 +82,39 @@ export function AccountPrivacyPanel({
           </div>
         </dl>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          정정·삭제를 이메일로 요청하면 {contact}로 보내 주세요. 10일 이내에 회신합니다.
+          이 화면의 이메일은 본인만 보입니다. 정정·삭제를 이메일로 요청하면 {contact}로 보내 주세요.
         </p>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <h2 className="text-lg font-semibold">닉네임 변경</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          최초 1회는 무료입니다. 그다음부터는 상점에서 닉네임 변경권(500P)을 산 뒤 바꿀 수 있습니다. 보유
+          변경권 {tickets}장.
+        </p>
+        {freeLeft ? (
+          <p className="mt-1 text-sm font-medium text-primary">지금 한 번은 무료로 바꿀 수 있습니다.</p>
+        ) : null}
+        <div className="mt-3 grid gap-2">
+          <Label htmlFor="next-nick">새 닉네임</Label>
+          <Input
+            id="next-nick"
+            value={nextNick}
+            onChange={(event) => setNextNick(event.target.value)}
+            maxLength={12}
+            placeholder="2~12자"
+          />
+        </div>
+        {nickError ? <p className="mt-2 text-sm text-destructive">{nickError}</p> : null}
+        <Button
+          type="button"
+          size="touch"
+          className="mt-3"
+          disabled={nickPending || nextNick.trim().length < 2}
+          onClick={() => void changeNick()}
+        >
+          {nickPending ? "변경 중…" : freeLeft ? "무료로 변경" : "변경권으로 변경"}
+        </Button>
       </section>
 
       <section className="rounded-xl border border-destructive/30 bg-card p-4">

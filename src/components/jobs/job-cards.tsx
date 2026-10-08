@@ -26,11 +26,8 @@ export function JobCards({ jobs }: { jobs: JobCardData[] }) {
   return (
     <ul className="grid gap-3">
       {jobs.map((job) => (
-        <li key={job.id}>
-          <Link
-            href={`/posts/${job.id}`}
-            className="touch-target block rounded-xl border border-border bg-card p-3 hover:bg-muted/40"
-          >
+        <li key={job.id} className="rounded-xl border border-border bg-card p-3 hover:bg-muted/40">
+          <Link href={`/posts/${job.id}`} className="touch-target block">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">
                 {JOB_KIND_LABEL[job.jobKind as keyof typeof JOB_KIND_LABEL] ?? "구인"}
@@ -39,10 +36,10 @@ export function JobCards({ jobs }: { jobs: JobCardData[] }) {
             </div>
             <p className="mt-2 text-lg font-semibold">{job.title}</p>
             <JobTagList tags={jobTags(job)} />
-            <div className="mt-2">
-              <AuthorChip author={job.author} anonymous={false} size="sm" />
-            </div>
           </Link>
+          <div className="mt-2">
+            <AuthorChip author={job.author} anonymous={false} size="sm" />
+          </div>
         </li>
       ))}
     </ul>

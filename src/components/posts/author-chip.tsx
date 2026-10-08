@@ -1,4 +1,5 @@
 import { UserBadge, AUTHOR_SELECT, type BadgeUser } from "@/components/user/user-badge";
+import { NicknameMenu } from "@/components/user/nickname-menu";
 import { isWithdrawnRecord, withdrawnDisplayName } from "@/lib/account-privacy";
 
 export type PublicAuthor = BadgeUser | null;
@@ -55,5 +56,9 @@ export function AuthorChip({
   if (isWithdrawnRecord(author)) {
     return <span className="text-sm text-muted-foreground">{withdrawnDisplayName()}</span>;
   }
-  return <UserBadge user={author} size={size} />;
+  return (
+    <NicknameMenu nickname={author.nickname}>
+      <UserBadge user={author} size={size} />
+    </NicknameMenu>
+  );
 }
