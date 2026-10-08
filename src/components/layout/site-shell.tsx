@@ -19,6 +19,7 @@ import { getSponsorCreative } from "@/lib/inventory";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
+import { CrownProvider } from "@/components/honor/crowned-frame";
 
 async function ConnectedTicker() {
   const events = await getCachedTickerEvents().catch(() => []);
@@ -73,6 +74,7 @@ async function ConnectedFeedAds() {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
+    <CrownProvider>
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-[#0e0c0b]">
         <Suspense fallback={<SiteHeader profile={null} />}>
@@ -120,6 +122,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </Suspense>
       <MobileBottomNav />
     </div>
+    </CrownProvider>
   );
 }
 

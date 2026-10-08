@@ -34,6 +34,11 @@ export async function grantRewards(
     },
   });
 
+  if (grantedPoints > 0) {
+    const { recordPointGain } = await import("@/lib/point-ledger");
+    await recordPointGain(userId, grantedPoints, "reward").catch(() => undefined);
+  }
+
   if (level > user.level) {
     const { pushTicker } = await import("@/lib/ticker");
     await pushTicker({

@@ -3,6 +3,8 @@ import { MarkImage } from "@/components/layout/mark-image";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { todayKstDate } from "@/lib/dates";
 import { displayMarkSrc } from "@/lib/mark-assets";
+import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
@@ -91,7 +93,9 @@ export function ProfileWidget({
   if (variant === "compact") {
     return (
       <div className="flex min-h-11 items-center gap-2">
-        <MarkImage src={markSrc} alt={profile.nickname} size={36} />
+        <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
+          <MarkImage src={markSrc} alt={profile.nickname} size={36} />
+        </CrownedFrame>
         <div className="min-w-0">
           <NicknameMenu nickname={profile.nickname}>
             <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
@@ -110,9 +114,11 @@ export function ProfileWidget({
   return (
     <section className="profile-panel rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#C59B27]">
-          <MarkImage src={markSrc} alt={profile.nickname} size={48} />
-        </div>
+        <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#C59B27]">
+            <MarkImage src={markSrc} alt={profile.nickname} size={48} />
+          </div>
+        </CrownedFrame>
         <div className="min-w-0 flex-1">
           <NicknameMenu nickname={profile.nickname}>
             <p className="truncate text-base font-bold text-white">{profile.nickname}</p>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
+import { isAchievementSlug } from "@/lib/yokai-achievements";
 
 export async function POST(
   _request: Request,
@@ -15,6 +16,9 @@ export async function POST(
     const mark = await prisma.mark.findUnique({ where: { id } });
     if (!mark) {
       return NextResponse.json({ error: "마크를 찾을 수 없습니다." }, { status: 404 });
+    }
+    if (isAchievementSlug(mark.slug)) {
+      return NextResponse.json({ error: "업적 마크는 상점에서 구매할 수 없습니다." }, { status: 400 });
     }
     const owned = await prisma.userMark.findUnique({
       where: { userId_markId: { userId: user.id, markId: id } },

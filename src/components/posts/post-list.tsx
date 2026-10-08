@@ -9,6 +9,8 @@ import { isAnonymousBoard } from "@/lib/request";
 import { formatRelativeKst } from "@/lib/dates";
 import { memberRankTitle } from "@/lib/levels";
 import { displayMarkSrc } from "@/lib/mark-assets";
+import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { isWithdrawnRecord, withdrawnDisplayName } from "@/lib/account-privacy";
 import { Fragment } from "react";
 import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
@@ -262,7 +264,9 @@ function BoardAuthor({ post, anonymous }: { post: PostSummary; anonymous: boolea
   const rank = memberRankTitle(post.author);
   return (
     <span className="board-author">
-      <MarkImage src={displayMarkSrc(post.author)} alt="" size={22} />
+      <CrownedFrame nickname={post.author.nickname} aura={auraClassForSrc(displayMarkSrc(post.author))}>
+        <MarkImage src={displayMarkSrc(post.author)} alt="" size={22} />
+      </CrownedFrame>
       <span className="board-author-copy">
         <span className="board-author-name">{post.author.nickname}</span>
         <span className="board-author-rank">{rank ? `${rank} · Lv.${post.author.level}` : `Lv.${post.author.level}`}</span>

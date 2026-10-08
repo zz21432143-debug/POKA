@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { YOKAI_ACHIEVEMENTS } from "@/lib/yokai-achievements";
 import { YOKAI_MARKS } from "@/lib/yokai-marks";
 
 let ensured: Promise<void> | null = null;
@@ -15,11 +16,20 @@ export function ensureYokaiMarks() {
 
 async function writeYokaiMarks() {
   const found = await prisma.mark.findMany({
-    where: { slug: { in: YOKAI_MARKS.map((mark) => mark.slug) } },
+    where: { slug: { in: [...YOKAI_MARKS, ...YOKAI_ACHIEVEMENTS].map((mark) => mark.slug) } },
     select: { slug: true, name: true, imageUrl: true, pricePoints: true },
   });
   const bySlug = new Map(found.map((mark) => [mark.slug, mark]));
-  for (const row of YOKAI_MARKS) {
+  const rows = [
+    ...YOKAI_MARKS,
+    ...YOKAI_ACHIEVEMENTS.map((mark) => ({
+      slug: mark.slug,
+      name: mark.name,
+      imageUrl: mark.imageUrl,
+      pricePoints: 0,
+    })),
+  ];
+  for (const row of rows) {
     const current = bySlug.get(row.slug);
     if (!current) {
       await prisma.mark.create({

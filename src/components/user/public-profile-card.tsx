@@ -1,4 +1,6 @@
 import { MarkImage } from "@/components/layout/mark-image";
+import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { displayMarkSrc } from "@/lib/mark-assets";
 import { memberRankTitle } from "@/lib/levels";
 import { progressFromExp } from "@/lib/levels";
@@ -22,15 +24,17 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
   return (
     <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div
-          className={
-            user.isMaster
-              ? "flex size-12 items-center justify-center overflow-hidden rounded-full bg-zinc-900 ring-2 ring-amber-400"
-              : "flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted"
-          }
-        >
-          <MarkImage src={displayMarkSrc(user)} alt={user.isMaster ? "운영자 마크" : user.nickname} size={48} />
-        </div>
+        <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(displayMarkSrc(user))}>
+          <div
+            className={
+              user.isMaster
+                ? "flex size-12 items-center justify-center overflow-hidden rounded-full bg-zinc-900 ring-2 ring-amber-400"
+                : "flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted"
+            }
+          >
+            <MarkImage src={displayMarkSrc(user)} alt={user.isMaster ? "운영자 마크" : user.nickname} size={48} />
+          </div>
+        </CrownedFrame>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{user.nickname}</p>
           {user.isMaster ? <p className="mt-0.5 text-xs font-bold text-amber-700">운영자</p> : null}

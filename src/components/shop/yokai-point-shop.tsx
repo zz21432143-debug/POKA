@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import type { MarkCatalog, MarkCatalogItem } from "@/lib/mark-categories";
 import { NICKNAME_TICKET_NAME, NICKNAME_TICKET_PRICE } from "@/lib/nickname-change";
+import { YOKAI_ACHIEVEMENTS, auraClassForSrc, isAchievementSlug } from "@/lib/yokai-achievements";
+import { AchievementCards } from "@/components/shop/yokai-achievements";
 import { YOKAI_MARKS, isYokaiSlug } from "@/lib/yokai-marks";
 import { cn } from "cn";
 
@@ -41,12 +43,30 @@ export function YokaiPointShop({
   const points = loggedIn ? (catalog?.points ?? 0) : demoPoints;
 
   const marks = useMemo(() => mergeMarks(catalog, demoOwned, demoEquipped), [catalog, demoOwned, demoEquipped]);
+  const collected = marks.filter((mark) => mark.owned).length;
+  const achievements = useMemo(() => {
+    return YOKAI_ACHIEVEMENTS.map((def) => {
+      const row = (catalog?.marks ?? []).find((mark) => mark.slug === def.slug);
+      const owned = loggedIn ? Boolean(row?.owned) : Boolean(demoOwned[def.slug]);
+      const equipped = loggedIn ? Boolean(row?.equipped) : demoEquipped === def.slug;
+      return {
+        ...def,
+        id: row?.id ?? def.slug,
+        owned,
+        equipped,
+        ready: collected >= def.required && !owned,
+      };
+    });
+  }, [catalog, collected, demoEquipped, demoOwned, loggedIn]);
   const preview =
     marks.find((mark) => mark.slug === selected) ??
-    (catalog?.marks ?? []).find((mark) => mark.slug === selected) ??
+    achievements.find((mark) => mark.slug === selected) ??
     marks[0]!;
-  const inventory = marks.filter((mark) => mark.owned);
-  const others = (catalog?.marks ?? []).filter((mark) => !isYokaiSlug(mark.slug));
+  const inventory = [
+    ...achievements.filter((mark) => mark.owned).map((mark) => toShopMarkFromAchievement(mark)),
+    ...marks.filter((mark) => mark.owned),
+  ];
+  const others = (catalog?.marks ?? []).filter((mark) => !isYokaiSlug(mark.slug) && !isAchievementSlug(mark.slug));
 
   async function reload() {
     const response = await fetch("/api/marks");
@@ -77,6 +97,38 @@ export function YokaiPointShop({
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "구매에 실패했습니다.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function claim(slug: string) {
+    const mark = achievements.find((item) => item.slug === slug);
+    if (!mark?.ready) return;
+    setError(null);
+    if (!loggedIn) {
+      setDemoOwned((value) => ({ ...value, [slug]: true }));
+      setSelected(slug);
+      return;
+    }
+    if (mark.id === mark.slug) {
+      setError("업적 마크를 아직 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+    setPending(slug + "claim");
+    try {
+      const response = await fetch("/api/marks/achievements/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug }),
+      });
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "보상을 받지 못했습니다.");
+      await reload();
+      setSelected(slug);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "보상을 받지 못했습니다.");
     } finally {
       setPending(null);
     }
@@ -141,17 +193,33 @@ export function YokaiPointShop({
         <aside className="yokai-preview" aria-label="내 프로필 미리보기">
           <h2>내 프로필 미리보기</h2>
           <div className="yokai-mini">
-            <span className="yokai-mini-mark">
+            <span className={cn("yokai-mini-mark", auraClassForSrc(preview.imageUrl))}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={preview.imageUrl} alt={preview.name} width={64} height={64} />
             </span>
             <strong>{nickname}</strong>
           </div>
           <p className="yokai-preview-name">
-            {preview.name} · {preview.pricePoints.toLocaleString()} P
+            {preview.name}
+            {"pricePoints" in preview && preview.pricePoints > 0
+              ? ` · ${preview.pricePoints.toLocaleString()} P`
+              : " · 비매품"}
             {preview.equipped ? " · 착용 중" : preview.owned ? " · 보유 중" : ""}
           </p>
         </aside>
+
+        <AchievementCards
+          collected={collected}
+          items={achievements}
+          pending={pending}
+          selected={selected}
+          onSelect={setSelected}
+          onClaim={(slug) => void claim(slug)}
+          onEquip={(slug) => {
+            const mark = achievements.find((item) => item.slug === slug);
+            if (mark) void equip(toShopMarkFromAchievement(mark));
+          }}
+        />
 
         <section className="yokai-block" aria-label="내 인벤토리">
           <h2>내 인벤토리</h2>
@@ -326,7 +394,7 @@ function ShopCard({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
         <h3>{mark.name}</h3>
-        <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
+        <p className="yokai-price">{mark.pricePoints > 0 ? `${mark.pricePoints.toLocaleString()} P` : "비매품"}</p>
         <MarkActions
           owned={mark.owned}
           equipped={mark.equipped}
@@ -418,6 +486,25 @@ function mergeMarks(
       equipped: demoEquipped === mark.slug,
     };
   });
+}
+
+function toShopMarkFromAchievement(mark: {
+  id: string;
+  slug: string;
+  name: string;
+  imageUrl: string;
+  owned: boolean;
+  equipped: boolean;
+}): ShopMark {
+  return {
+    id: mark.id,
+    slug: mark.slug,
+    name: mark.name,
+    imageUrl: mark.imageUrl,
+    pricePoints: 0,
+    owned: mark.owned,
+    equipped: mark.equipped,
+  };
 }
 
 function toShopMark(mark: MarkCatalogItem): ShopMark {

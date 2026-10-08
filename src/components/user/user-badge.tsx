@@ -2,6 +2,8 @@ import { cn } from "cn";
 import { MarkImage } from "@/components/layout/mark-image";
 import { StarIcon, MessageCircleHeartIcon } from "lucide-react";
 import { displayMarkSrc, OPERATOR_MARK_SRC } from "@/lib/mark-assets";
+import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { levelTitle, memberRankTitle } from "@/lib/levels";
 
 export { levelTitle };
@@ -114,14 +116,16 @@ export function UserBadge({
   if (size === "lg") {
     return (
       <span className={cn("flex max-w-full items-center gap-3", className)}>
-        <MarkImage
-          src={markSrc}
-          alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
-          size={spec.mark}
-          frameClass={frameClass}
-          effectClass={effectClass}
-          className={markRing}
-        />
+        <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(markSrc)}>
+          <MarkImage
+            src={markSrc}
+            alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
+            size={spec.mark}
+            frameClass={frameClass}
+            effectClass={effectClass}
+            className={markRing}
+          />
+        </CrownedFrame>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-1.5">
             <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
@@ -147,14 +151,16 @@ export function UserBadge({
       <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
         Lv.{user.level}
       </span>
-      <MarkImage
-        src={markSrc}
-        alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
-        size={spec.mark}
-        frameClass={frameClass}
-        effectClass={effectClass}
-        className={user.isMaster ? "ring-2 ring-amber-400" : markRing}
-      />
+      <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(markSrc)}>
+        <MarkImage
+          src={markSrc}
+          alt={user.isMaster ? "운영자 마크" : `${user.nickname} 마크`}
+          size={spec.mark}
+          frameClass={frameClass}
+          effectClass={effectClass}
+          className={user.isMaster ? "ring-2 ring-amber-400" : markRing}
+        />
+      </CrownedFrame>
       {showNickname ? (
         <span className="min-w-0">
           <span className={cn("block truncate font-semibold leading-tight text-foreground", spec.nick)}>

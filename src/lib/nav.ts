@@ -84,6 +84,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "기타",
     items: [
       { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
+      { href: "/codex", label: "요괴 도감", hint: "수집 업적", icon: "mask" },
+      { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "check" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "megaphone" },
       { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },

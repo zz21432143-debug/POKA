@@ -709,6 +709,177 @@
   color: #c59b27;
 }
 
+.yokai-claim {
+  background: #c59b27;
+  color: #1a1208;
+}
+
+.yokai-claim:hover {
+  background: #e0b84a;
+  color: #1a1208;
+}
+
+.yokai-locked {
+  filter: brightness(0.2);
+}
+
+.yokai-lock-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  color: #f3d7a1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.yokai-mini-mark.aura-yama,
+.honor-mark.aura-yama {
+  filter: drop-shadow(0 0 6px rgba(255, 48, 48, 0.8));
+}
+
+.yokai-mini-mark.aura-gumiho,
+.honor-mark.aura-gumiho {
+  filter: drop-shadow(0 0 7px rgba(255, 40, 40, 0.9)) drop-shadow(0 0 14px rgba(245, 196, 70, 0.85));
+}
+
+.honor-mark {
+  position: relative;
+  display: inline-flex;
+}
+
+.rank-crown::before {
+  content: "👑";
+  position: absolute;
+  top: -0.72em;
+  left: 50%;
+  z-index: 2;
+  font-size: 0.85rem;
+  line-height: 1;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 4px rgba(255, 210, 80, 0.95));
+  pointer-events: none;
+}
+
+.rank-crown::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: 1;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px #f5d76e, 0 0 12px 2px rgba(255, 214, 90, 0.9);
+  pointer-events: none;
+}
+
+.rank-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rank-tabs,
+.rank-periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.rank-tab,
+.rank-period {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  background: #1c1819;
+  color: #d1d5db;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.rank-tab.is-on,
+.rank-period.is-on {
+  background: #8b2222;
+  color: #fff8ee;
+}
+
+.rank-empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  border: 1px solid rgba(243, 215, 161, 0.16);
+  border-radius: 12px;
+  background: #1c1819;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.rank-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  border: 1px solid rgba(243, 215, 161, 0.16);
+  border-radius: 12px;
+  background: #1c1819;
+}
+
+.rank-row {
+  display: grid;
+  grid-template-columns: 4.2rem 2.6rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.4rem;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rank-list li:last-child {
+  border-bottom: 0;
+}
+
+.rank-row.is-me {
+  background: #2a2218;
+}
+
+.rank-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #9ca3af;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-place.is-top {
+  color: #f5d76e;
+}
+
+.rank-place svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rank-name {
+  min-width: 0;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.rank-name span {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rank-score {
+  color: #f3d7a1;
+  font-variant-numeric: tabular-nums;
+}
+
 .yokai-equipped {
   background: #c59b27;
   color: #1a1208;
