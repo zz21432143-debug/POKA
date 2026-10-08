@@ -11,6 +11,9 @@ export const SITE_NAME = "POKA";
 /** Open Graph 대표 이미지. `src/app/opengraph-image.tsx`가 1200×630 PNG를 만듭니다. */
 export const OG_IMAGE_PATH = "/opengraph-image";
 
+/** 검색엔진이 타면 안 되는 관리·계정 경로. */
+export const ROBOTS_DISALLOW = ["/admin", "/api/", "/account", "/me", "/notifications"];
+
 /**
  * 검색엔진 소유확인 메타태그.
  *

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  ROBOTS_DISALLOW,
   SEARCH_ENGINE_VERIFICATION,
   SITE_TITLE,
   SITEMAP_PATHS,
@@ -18,6 +19,12 @@ describe("seo defaults", () => {
       assert.equal(paths.includes(required), true, required);
     }
     assert.equal(SITEMAP_PATHS[0]?.priority, 1);
+  });
+
+  it("blocks admin and account paths from crawlers", () => {
+    for (const path of ["/admin", "/api/", "/account", "/me", "/notifications"]) {
+      assert.equal(ROBOTS_DISALLOW.includes(path), true, path);
+    }
   });
 
   it("omits empty search-engine verification tags", () => {
