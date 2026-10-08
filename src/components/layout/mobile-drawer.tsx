@@ -13,6 +13,7 @@ import {
 import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { PokaLogo } from "@/components/brand/poka-logo";
+import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function MobileDrawer({
@@ -45,6 +46,9 @@ export function MobileDrawer({
         <div className="flex flex-1 flex-col overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="mb-3">
             <ProfileWidget profile={profile} />
+          </div>
+          <div className="mb-3">
+            <InstallPwaButton />
           </div>
           <BoardNav onNavigate={() => setOpen(false)} />
           {profile?.isAdmin ? (

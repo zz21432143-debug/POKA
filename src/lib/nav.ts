@@ -21,6 +21,14 @@ export const TOP_NAV = [
   { href: "/boards/jobs", label: "구인" },
 ] as const;
 
+export const MOBILE_BOTTOM_NAV = [
+  { href: "/", label: "홈", icon: "home" as const, match: "exact" as const },
+  { href: "/community", label: "게시판", icon: "message" as const, match: "boards" as const },
+  { href: "/boards/free/write", label: "글쓰기", icon: "write" as const, match: "write" as const },
+  { href: "/boards/suggestions", label: "건의사항", icon: "lightbulb" as const, match: "prefix" as const },
+  { href: "/me", label: "내정보", icon: "user" as const, match: "me" as const },
+] as const;
+
 export type SidebarIcon =
   | "home"
   | "message"
@@ -134,6 +142,33 @@ export function flattenNavItems(groups: NavGroup[] = BOARD_NAV): NavItem[] {
     group.items.length > 0
       ? group.items
       : [{ href: group.href, label: group.title, hint: group.hint }],
+  );
+}
+
+export function mobileNavActive(
+  pathname: string,
+  item: (typeof MOBILE_BOTTOM_NAV)[number],
+) {
+  if (item.match === "exact") return pathname === "/";
+  if (item.match === "write") return pathname.includes("/write");
+  if (item.match === "me") {
+    return (
+      pathname === "/me" ||
+      pathname === "/login" ||
+      pathname.startsWith("/u/") ||
+      pathname === "/notifications"
+    );
+  }
+  if (item.match === "prefix") {
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  }
+  if (pathname.startsWith("/boards/suggestions")) return false;
+  if (pathname.includes("/write")) return false;
+  return (
+    pathname === "/community" ||
+    pathname.startsWith("/boards") ||
+    pathname.startsWith("/posts/") ||
+    pathname === "/attendance"
   );
 }
 

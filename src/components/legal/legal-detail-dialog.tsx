@@ -33,7 +33,7 @@ export function LegalDetailDialog({
       >
         {label}
       </DialogTrigger>
-      <DialogContent className="max-h-[min(90dvh,40rem)] overflow-y-auto">
+      <DialogContent className="max-h-[min(90dvh,40rem)] overflow-x-clip overflow-y-auto break-words">
         <DialogHeader>
           <DialogTitle>{heading}</DialogTitle>
           <DialogDescription>필수 안내입니다. 닫기 전에 내용을 확인해 주세요.</DialogDescription>

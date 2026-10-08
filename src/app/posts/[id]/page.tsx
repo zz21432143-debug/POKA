@@ -121,7 +121,7 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
         </div>
         <div className="mt-2 flex items-start gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-semibold">{post.title}</h1>
+          <h1 className="min-w-0 flex-1 break-words text-2xl font-semibold">{post.title}</h1>
         </div>
         <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2.5">
           <AuthorChip author={post.author} anonymous={false} size="lg" />
@@ -219,7 +219,7 @@ export default async function PostDetailPage({
       ) : null}
 
       {post.content ? (
-        <div className="rounded-xl border border-border bg-card p-4 text-[15px] leading-7 whitespace-pre-wrap">
+        <div className="overflow-x-clip rounded-xl border border-border bg-card p-4 text-[15px] leading-7 break-words whitespace-pre-wrap">
           {post.content}
         </div>
       ) : null}

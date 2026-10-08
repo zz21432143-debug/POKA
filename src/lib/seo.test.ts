@@ -14,7 +14,7 @@ describe("seo defaults", () => {
 
   it("lists home, boards, login, and terms in the sitemap", () => {
     const paths = SITEMAP_PATHS.map((row) => row.path);
-    for (const required of ["/", "/boards/free", "/login", "/terms", "/privacy", "/community"]) {
+    for (const required of ["/", "/boards/free", "/login", "/terms", "/privacy", "/youth", "/community"]) {
       assert.equal(paths.includes(required), true, required);
     }
     assert.equal(SITEMAP_PATHS[0]?.priority, 1);

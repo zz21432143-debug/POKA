@@ -107,7 +107,7 @@ function CommentItem({
         </Button>
         <ReportButton targetType="comment" targetId={comment.id} compact />
       </div>
-      <p className="mt-1 text-sm">{comment.content}</p>
+      <p className="mt-1 break-words text-sm whitespace-pre-wrap">{comment.content}</p>
     </li>
   );
 }

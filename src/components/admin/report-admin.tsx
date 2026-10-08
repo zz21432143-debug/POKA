@@ -38,11 +38,11 @@ export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
     <ul className="grid gap-3">
       {reports.map((row) => (
         <li key={row.id} className="rounded-xl border border-border bg-card p-3 text-sm">
-          <p className="font-medium">
+          <p className="break-words font-medium">
             {row.targetType === "comment" ? "댓글" : "게시글"} · {row.title}
           </p>
           {row.commentPreview ? (
-            <p className="mt-1 rounded-lg bg-muted px-2 py-1 text-xs">{row.commentPreview}</p>
+            <p className="mt-1 break-words rounded-lg bg-muted px-2 py-1 text-xs">{row.commentPreview}</p>
           ) : null}
           <p className="mt-1 text-muted-foreground">{row.reason}</p>
           <p className="mt-2 font-mono text-xs">

@@ -3,6 +3,7 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
 import { PopularPosts } from "@/components/layout/popular-posts";
 import { NoticeWidget } from "@/components/layout/notice-widget";
@@ -65,7 +66,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />
         </aside>
-        <main className="min-w-0 flex-1 pb-6">
+        <main className="min-w-0 flex-1 overflow-x-clip pb-6">
           {children}
           {showFeedAds ? (
             <Suspense fallback={null}>
@@ -97,6 +98,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </aside>
       </div>
       <SiteFooter />
+      <MobileBottomNav />
     </div>
   );
 }

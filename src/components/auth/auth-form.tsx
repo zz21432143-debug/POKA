@@ -141,25 +141,27 @@ export function AuthForm({
         <p className="mt-2 text-sm leading-6 text-foreground">{MEMBER_LIABILITY_TEXT}</p>
         <ul className="mt-3 flex flex-col gap-3">
           <li className="flex items-start gap-2">
-            <input
-              id="consent-adult"
-              type="checkbox"
-              className="mt-1 size-4"
-              checked={adult}
-              onChange={(event) => setAdult(event.target.checked)}
-            />
+            <span className="touch-check">
+              <input
+                id="consent-adult"
+                type="checkbox"
+                checked={adult}
+                onChange={(event) => setAdult(event.target.checked)}
+              />
+            </span>
             <Label htmlFor="consent-adult" className="text-sm font-medium leading-6">
               [필수] 만 19세 이상입니다
             </Label>
           </li>
           <li className="flex items-start gap-2">
-            <input
-              id="consent-terms"
-              type="checkbox"
-              className="mt-1 size-4"
-              checked={terms}
-              onChange={(event) => setTerms(event.target.checked)}
-            />
+            <span className="touch-check">
+              <input
+                id="consent-terms"
+                type="checkbox"
+                checked={terms}
+                onChange={(event) => setTerms(event.target.checked)}
+              />
+            </span>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Label htmlFor="consent-terms" className="text-sm font-medium leading-6">
                 [필수] 이용약관 동의
@@ -168,13 +170,14 @@ export function AuthForm({
             </div>
           </li>
           <li className="flex items-start gap-2">
-            <input
-              id="consent-privacy"
-              type="checkbox"
-              className="mt-1 size-4"
-              checked={privacy}
-              onChange={(event) => setPrivacy(event.target.checked)}
-            />
+            <span className="touch-check">
+              <input
+                id="consent-privacy"
+                type="checkbox"
+                checked={privacy}
+                onChange={(event) => setPrivacy(event.target.checked)}
+              />
+            </span>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Label htmlFor="consent-privacy" className="text-sm font-medium leading-6">
                 [필수] 개인정보 수집 동의

@@ -138,12 +138,13 @@ export function BoardWriteForm({
         <fieldset className="rounded-xl border border-border bg-muted/40 p-3">
           <legend className="px-1 text-sm font-semibold">비밀글</legend>
           <label className="flex min-h-11 items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="size-4"
-              checked={isPrivate}
-              onChange={(event) => setIsPrivate(event.target.checked)}
-            />
+            <span className="touch-check">
+              <input
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(event) => setIsPrivate(event.target.checked)}
+              />
+            </span>
             비밀글 설정
           </label>
           {isPrivate ? (

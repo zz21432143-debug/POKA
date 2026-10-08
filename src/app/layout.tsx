@@ -3,7 +3,9 @@ import Script from "next/script";
 import { Caveat, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { PwaRegister } from "@/components/pwa/pwa-register";
 import { adsensePublisherId } from "@/lib/adsense";
+import { PWA_APPLE_ICON, PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
 import {
   OG_IMAGE_PATH,
   SITE_DESCRIPTION,
@@ -52,13 +54,20 @@ export const metadata: Metadata = {
     images: [OG_IMAGE_PATH],
   },
   robots: { index: false, follow: false },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: PWA_SHORT_NAME,
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "48x48" },
       { url: "/brand/poka-favicon.png", type: "image/png", sizes: "64x64" },
       { url: "/brand/poka-cloud.svg", type: "image/svg+xml" },
+      { url: "/icons/poka-192.png", type: "image/png", sizes: "192x192" },
     ],
-    apple: "/apple-icon.png",
+    apple: [{ url: PWA_APPLE_ICON, sizes: "180x180" }],
   },
 };
 
@@ -66,7 +75,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#07150f",
+  themeColor: PWA_THEME_COLOR,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -78,6 +87,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <GoogleAnalytics />
+        <PwaRegister />
         {adsense ? (
           <Script
             async

@@ -1,3 +1,5 @@
+import { privacyOfficerName, publicContactEmail } from "@/lib/legal-contact";
+
 export const MEMBER_LIABILITY_TEXT =
   "본 서비스에 가입하여 작성하는 모든 글과 댓글에 대한 민·형사상 법적 책임은 작성자 본인에게 있습니다.";
 
@@ -9,6 +11,7 @@ export const ANONYMOUS_BOARD_WARNING =
 
 export const LEGAL_EFFECTIVE_DATE = "2026-10-08";
 export const LEGAL_OPERATOR = "POKA (홀덤·딜러 커뮤니티)";
+export const LEGAL_SERVICE_NAME = "POKA";
 export const LEGAL_SERVICE_URL = "https://pokerwiki.co.kr";
 
 export type LegalSection = { title: string; body: string };
@@ -58,35 +61,58 @@ export const TERMS_SECTIONS: LegalSection[] = [
 
 export const PRIVACY_CONSENT_SECTIONS: LegalSection[] = [
   {
-    title: "1. 개인정보의 수집 항목",
-    body: "필수: 소셜 로그인 제공자(카카오 또는 구글), 고유 소셜 ID(Provider ID), 닉네임, 이메일(제공자가 동의한 범위에서 전달하는 경우). 자동 수집: 회원가입 시 접속 IP(signup_ip), 게시글·댓글 작성 시 접속 IP(created_ip / authorIp), 작성 시각, 최종 로그인 시각, 회원 ID. 선택: 프로필 마크 등 회원이 자발적으로 설정하는 정보.",
+    title: "1. 개인정보 수집 항목",
+    body: "소셜 고유 ID(카카오·구글 Provider ID), 이메일(제공자가 전달하는 경우), 닉네임, IP 주소(가입·작성·접속), 접속 로그(로그인 시각, 작성 시각, 회원 ID). 선택: 프로필 마크 등 회원이 자발적으로 설정하는 정보.",
   },
   {
-    title: "2. 개인정보의 수집 및 이용 목적",
-    body: "회원 식별 및 로그인 세션 유지, 부정 이용·도배·명의 도용 방지, 게시물 작성자 확인 및 민원·분쟁 대응, 출석·레벨·포인트 등 커뮤니티 기능 제공, 법령상 의무 이행 및 수사기관의 적법한 요청 대응.",
+    title: "2. 개인정보 수집 및 이용 목적",
+    body: "회원 식별 및 로그인 세션 유지, 부정 이용·도배·명의 도용 방지, 수사기관 협조 및 분쟁 대응. 출석·레벨·포인트 등 커뮤니티 기능 제공과 법령상 의무 이행에도 이용합니다.",
   },
   {
     title: "3. 보유 및 이용 기간",
-    body: "회원 탈퇴 시까지 보관하며, 탈퇴 후에는 지체 없이 파기합니다. 다만 전자상거래 등에서의 소비자보호에 관한 법률, 통신비밀보호법, 형사소송법 등 관계 법령에 따라 보존할 필요가 있으면 해당 기간 동안 보관합니다. 예: 계약 또는 청약철회 기록 5년, 소비자 불만·분쟁 처리 3년, 접속 로그 등 통신사실확인자료 3개월(해당되는 경우).",
+    body: "회원 탈퇴 시 즉시 파기합니다. 단, 악성 이용자 재가입 방지 및 작성자 IP 기록은 관계 법령(전자상거래법, 통신비밀보호법, 형사소송법 등)에 따라 일정 기간 보관합니다. 예: 계약 또는 청약철회 기록 5년, 소비자 불만·분쟁 처리 3년, 접속 로그 등 통신사실확인자료 3개월(해당되는 경우).",
   },
   {
-    title: "4. 동의 거부 권리 및 불이익",
+    title: "4. 개인정보 보호책임자",
+    body: `성명: ${privacyOfficerName()}. 연락처(이메일): ${publicContactEmail()}. 문의는 푸터의 카카오톡 1:1 문의 또는 이메일로 할 수 있습니다.`,
+  },
+  {
+    title: "5. 동의 거부 권리 및 불이익",
     body: "귀하는 개인정보 수집·이용에 동의하지 않을 수 있습니다. 다만 필수 항목에 동의하지 않으면 회원가입 및 소셜 로그인을 할 수 없습니다.",
   },
   {
-    title: "5. 제3자 제공 및 처리위탁",
-    body: "로그인 처리에 카카오, 구글을 이용합니다. 회사는 법령에 근거하거나 정보주체의 동의가 있는 경우를 제외하고 개인정보를 제3자에게 제공하지 않습니다. 광고 영역은 Google AdSense가 쓰일 수 있으며, 그 경우 광고 네트워크의 쿠키·식별자가 추가로 처리될 수 있습니다.",
+    title: "6. 제3자 제공 및 처리위탁",
+    body: "로그인 처리에 카카오, 구글을 이용합니다. 회사는 법령에 근거하거나 정보주체의 동의가 있는 경우를 제외하고 개인정보를 제3자에게 제공하지 않습니다.",
   },
   {
-    title: "6. 정보주체의 권리",
-    body: "회원은 자신의 개인정보 열람·정정·삭제·처리정지, 회원 탈퇴를 요청할 수 있습니다. 문의는 pokerwiki.co.kr 관리 메뉴 또는 게시글 신고 기능을 이용해 주세요.",
+    title: "7. 정보주체의 권리",
+    body: "회원은 자신의 개인정보 열람·정정·삭제·처리정지, 회원 탈퇴를 요청할 수 있습니다.",
   },
 ];
 
 export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
   {
     title: "개인정보처리방침",
-    body: `${LEGAL_OPERATOR}는 「개인정보 보호법」에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하게 처리하기 위하여 다음과 같이 처리방침을 둡니다. 시행일 ${LEGAL_EFFECTIVE_DATE}.`,
+    body: `${LEGAL_OPERATOR}는 「개인정보 보호법」 및 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하게 처리하기 위하여 다음과 같이 처리방침을 둡니다. 시행일 ${LEGAL_EFFECTIVE_DATE}.`,
   },
   ...PRIVACY_CONSENT_SECTIONS,
+];
+
+export const YOUTH_PROTECTION_SECTIONS: LegalSection[] = [
+  {
+    title: "1. 목적",
+    body: `${LEGAL_SERVICE_NAME}는 「청소년 보호법」 및 「정보통신망법」에 따라 청소년이 유해한 매체물·정보에 접근하지 못하도록 보호합니다. 본 서비스는 만 19세 미만의 가입·이용을 금지합니다.`,
+  },
+  {
+    title: "2. 유해정보 차단",
+    body: "음란·폭력·도박 조장·불법 광고 등 청소년에게 유해한 게시물은 사전·사후 모니터링, 신고, 금지어 필터, 숨김·삭제, 계정 제재로 차단합니다. 발견 즉시 관리자에게 신고해 주세요.",
+  },
+  {
+    title: "3. 이용 제한",
+    body: "만 19세 미만임이 확인되거나 허위로 성인 동의를 한 경우 계정은 즉시 이용 정지되며 관련 게시물은 삭제될 수 있습니다.",
+  },
+  {
+    title: "4. 청소년 보호 책임자",
+    body: `성명: ${privacyOfficerName()}. 연락처(이메일): ${publicContactEmail()}. 유해정보 신고와 청소년 보호 관련 문의는 이메일 또는 카카오톡 1:1 문의로 접수합니다.`,
+  },
 ];

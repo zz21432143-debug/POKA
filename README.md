@@ -35,7 +35,7 @@ git reset --hard restore-pre-traffic-20260923
 ## 화면 구조
 
 - **PC:** 상단 로고 + 홈/커뮤니티/정보센터/구인 + 검색 + 마이페이지. 왼쪽 게시판 사이드바, 오른쪽 프로필·인기글·공지.
-- **모바일:** 햄버거 드로어에 같은 사이드바. 검색은 헤더 아이콘.
+- **모바일:** 햄버거 드로어에 같은 사이드바. 하단 고정 메뉴(홈·게시판·글쓰기·건의사항·내정보). 검색은 헤더 아이콘. 헤더와 메뉴의 **앱 설치**로 홈 화면에 바로가기를 추가합니다(PWA, `standalone`).
 
 사이드바는 `SIDEBAR_NAV`, 피드 게시판은 `BOARD_NAV` (`src/lib/nav.ts`)입니다. 게시판은 무한 스크롤(페이지 10개)입니다. 로컬 `prisma db seed` 데모 글은 운영 DB에서 한 번 지웁니다.
 
@@ -112,15 +112,19 @@ Vercel 프로젝트 환경 변수:
 | `DATABASE_URL` | Neon Connect, Connection pooling **ON** (호스트에 `-pooler`) |
 | `DATABASE_URL_UNPOOLED` | 같은 모달에서 pooling **OFF** |
 | `NEXT_PUBLIC_SITE_URL` | `https://pokerwiki.co.kr` |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | 푸터·개인정보 처리방침 문의 메일. 없으면 `contact@pokerwiki.co.kr` |
+| `NEXT_PUBLIC_OPERATOR_NAME` | 운영자/개인정보 보호책임자. 없으면 `POKA 관리자` |
 | `SESSION_SECRET` | 세션·동의 쿠키 HMAC 서명용 긴 문자열 |
 | `KAKAO_REST_API_KEY` | 카카오 REST API 키 |
 | `KAKAO_CLIENT_SECRET` | 카카오 Client Secret |
 | `KAKAO_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/kakao/callback` |
-
-카카오 Redirect URI는 위 주소 그대로입니다. KOE205는 Redirect URI가 아니라 **동의항목** 오류입니다. [카카오 로그인] > [동의항목]에서 켜지 않은 scope를 요청하면 납니다. 앱은 scope를 보내지 않습니다.
 | `GOOGLE_CLIENT_ID` | 구글 OAuth 클라이언트 ID |
 | `GOOGLE_CLIENT_SECRET` | 구글 OAuth 클라이언트 시크릿 |
 | `GOOGLE_REDIRECT_URI` | `https://pokerwiki.co.kr/api/auth/google/callback` |
+
+카카오 Redirect URI는 위 주소 그대로입니다. KOE205는 Redirect URI가 아니라 **동의항목** 오류입니다. [카카오 로그인] > [동의항목]에서 켜지 않은 scope를 요청하면 납니다. 앱은 scope를 보내지 않습니다.
+
+홈 화면 추가(PWA): `src/app/manifest.ts`, 아이콘 `public/icons/poka-192.png` · `poka-512.png`. Android Chrome은 헤더 **앱 설치**가 설치 창을 띄우고, iOS Safari는 공유 → 홈 화면에 추가 안내가 뜹니다.
 
 가입은 Resend 메일을 쓰지 않습니다.
 

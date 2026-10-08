@@ -123,11 +123,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   html {
     @apply font-sans overflow-x-clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  h1,
+  h2,
+  h3,
+  p,
+  li,
+  td,
+  th,
+  dd {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
   }
   img,
   video {
@@ -154,6 +173,15 @@
 .touch-target {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+.touch-check {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
 }
 
 .card-scroller {

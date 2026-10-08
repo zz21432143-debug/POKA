@@ -143,8 +143,36 @@ export function SanctionAdmin({
         {restricted.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">현재 정지된 회원이 없습니다.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[36rem] text-left text-sm">
+          <ul className="mt-3 grid gap-3 md:hidden">
+            {restricted.map((user) => (
+              <li key={user.id} className="rounded-lg border border-border p-3 text-sm">
+                <p className="break-words font-medium">{user.nickname}</p>
+                <p className="break-words text-xs text-muted-foreground">
+                  {user.status === "BANNED" ? "영구 정지" : "기간 정지"}
+                  {user.banReason ? ` · ${user.banReason}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {user.status === "BANNED"
+                    ? "만료 없음"
+                    : user.suspendedUntil
+                      ? new Date(user.suspendedUntil).toLocaleString("ko-KR")
+                      : "—"}
+                </p>
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    size="touch"
+                    disabled={pending !== null}
+                    onClick={() => void apply(user.id, "lift")}
+                  >
+                    정지 해제
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 hidden overflow-x-auto md:block">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-xs text-muted-foreground">
                   <th className="py-2 pr-3">닉네임</th>
@@ -157,9 +185,9 @@ export function SanctionAdmin({
               <tbody>
                 {restricted.map((user) => (
                   <tr key={user.id} className="border-b border-border">
-                    <td className="py-2 pr-3 font-medium">{user.nickname}</td>
+                    <td className="max-w-[10rem] break-words py-2 pr-3 font-medium">{user.nickname}</td>
                     <td className="py-2 pr-3">{user.status === "BANNED" ? "영구 정지" : "기간 정지"}</td>
-                    <td className="py-2 pr-3">{user.banReason ?? "—"}</td>
+                    <td className="max-w-[14rem] break-words py-2 pr-3">{user.banReason ?? "—"}</td>
                     <td className="py-2 pr-3">
                       {user.status === "BANNED"
                         ? "없음"

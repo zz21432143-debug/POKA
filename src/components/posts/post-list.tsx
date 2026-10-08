@@ -74,7 +74,7 @@ export function PostList({
                   </Badge>
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">
+                  <p className="break-words font-medium">
                     {post.isPrivate ? (
                       <span className="mr-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
                         비밀글
