@@ -42,12 +42,12 @@ export function AuthForm({
 
   async function startSocial(provider: Provider) {
     setError(null);
+    if (!requireConsents()) return;
     const next = nextPath.startsWith("/") ? nextPath : "/";
     const intent = signup ? "signup" : "login";
-    if (signup) {
-      if (!requireConsents()) return;
-      setPending(provider);
-      try {
+    setPending(provider);
+    try {
+      if (signup) {
         const response = await fetch("/api/auth/consent", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -61,15 +61,14 @@ export function AuthForm({
         const data = (await response.json()) as { error?: string };
         if (!response.ok) {
           setError(data.error ?? "동의 저장에 실패했습니다.");
+          setPending(null);
           return;
         }
-      } catch {
-        setError("네트워크 오류입니다.");
-        setPending(null);
-        return;
       }
-    } else {
-      setPending(provider);
+    } catch {
+      setError("네트워크 오류입니다.");
+      setPending(null);
+      return;
     }
     window.location.assign(
       `/api/auth/${provider}?intent=${intent}&next=${encodeURIComponent(next)}`,
@@ -103,66 +102,10 @@ export function AuthForm({
     }
   }
 
-  const ready = signup ? adult && terms && privacy : true;
+  const ready = adult && terms && privacy;
 
   return (
     <div className="flex flex-col gap-4">
-      {signup ? (
-        <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
-          <legend className="px-1 text-sm font-semibold">필수 동의</legend>
-          <p className="text-sm leading-6 text-muted-foreground">{ADULT_ONLY_TEXT}</p>
-          <p className="mt-2 text-sm leading-6 text-foreground">{MEMBER_LIABILITY_TEXT}</p>
-          <ul className="mt-3 flex flex-col gap-3">
-            <li className="flex items-start gap-2">
-              <input
-                id="consent-adult"
-                type="checkbox"
-                className="mt-1 size-4"
-                checked={adult}
-                onChange={(event) => setAdult(event.target.checked)}
-              />
-              <Label htmlFor="consent-adult" className="text-sm font-medium leading-6">
-                [필수] 만 19세 이상입니다
-              </Label>
-            </li>
-            <li className="flex items-start gap-2">
-              <input
-                id="consent-terms"
-                type="checkbox"
-                className="mt-1 size-4"
-                checked={terms}
-                onChange={(event) => setTerms(event.target.checked)}
-              />
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <Label htmlFor="consent-terms" className="text-sm font-medium leading-6">
-                  [필수] 이용약관 및 작성 책임 동의
-                </Label>
-                <LegalDetailDialog label="상세보기" heading="이용약관" sections={TERMS_SECTIONS} />
-              </div>
-            </li>
-            <li className="flex items-start gap-2">
-              <input
-                id="consent-privacy"
-                type="checkbox"
-                className="mt-1 size-4"
-                checked={privacy}
-                onChange={(event) => setPrivacy(event.target.checked)}
-              />
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <Label htmlFor="consent-privacy" className="text-sm font-medium leading-6">
-                  [필수] 개인정보 수집 및 이용 동의
-                </Label>
-                <LegalDetailDialog
-                  label="상세보기"
-                  heading="개인정보 수집 및 이용"
-                  sections={PRIVACY_CONSENT_SECTIONS}
-                />
-              </div>
-            </li>
-          </ul>
-        </fieldset>
-      ) : null}
-
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       <div className="flex flex-col gap-2">
@@ -170,22 +113,81 @@ export function AuthForm({
           type="button"
           size="touch"
           className="h-12 w-full rounded-xl border-0 bg-[#FEE500] text-base font-semibold text-[#191919] hover:bg-[#F6DC00]"
-          disabled={pending !== null || !ready}
+          disabled={pending !== null}
           onClick={() => void startSocial("kakao")}
         >
-          {pending === "kakao" ? "카카오로 이동 중…" : signup ? "카카오로 가입하기" : "카카오로 로그인"}
+          {pending === "kakao" ? "카카오로 이동 중…" : signup ? "카카오로 시작하기" : "카카오로 시작하기"}
         </Button>
         <Button
           type="button"
           size="touch"
           variant="outline"
           className="h-12 w-full rounded-xl text-base font-semibold"
-          disabled={pending !== null || !ready}
+          disabled={pending !== null}
           onClick={() => void startSocial("google")}
         >
-          {pending === "google" ? "구글로 이동 중…" : signup ? "구글로 가입하기" : "구글로 로그인"}
+          {pending === "google" ? "구글로 이동 중…" : "구글로 시작하기"}
         </Button>
+        {!ready ? (
+          <p className="text-xs leading-5 text-muted-foreground">
+            아래 필수 항목 3개에 모두 동의한 뒤에 소셜 로그인이 진행됩니다.
+          </p>
+        ) : null}
       </div>
+
+      <fieldset className="rounded-2xl border border-border bg-muted/40 p-3">
+        <legend className="px-1 text-sm font-semibold">필수 동의</legend>
+        <p className="text-sm leading-6 text-muted-foreground">{ADULT_ONLY_TEXT}</p>
+        <p className="mt-2 text-sm leading-6 text-foreground">{MEMBER_LIABILITY_TEXT}</p>
+        <ul className="mt-3 flex flex-col gap-3">
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-adult"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={adult}
+              onChange={(event) => setAdult(event.target.checked)}
+            />
+            <Label htmlFor="consent-adult" className="text-sm font-medium leading-6">
+              [필수] 만 19세 이상입니다
+            </Label>
+          </li>
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-terms"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={terms}
+              onChange={(event) => setTerms(event.target.checked)}
+            />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <Label htmlFor="consent-terms" className="text-sm font-medium leading-6">
+                [필수] 이용약관 동의
+              </Label>
+              <LegalDetailDialog label="상세보기" heading="POKA 이용약관" sections={TERMS_SECTIONS} />
+            </div>
+          </li>
+          <li className="flex items-start gap-2">
+            <input
+              id="consent-privacy"
+              type="checkbox"
+              className="mt-1 size-4"
+              checked={privacy}
+              onChange={(event) => setPrivacy(event.target.checked)}
+            />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <Label htmlFor="consent-privacy" className="text-sm font-medium leading-6">
+                [필수] 개인정보 수집 동의
+              </Label>
+              <LegalDetailDialog
+                label="상세보기"
+                heading="개인정보 수집 및 이용"
+                sections={PRIVACY_CONSENT_SECTIONS}
+              />
+            </div>
+          </li>
+        </ul>
+      </fieldset>
 
       {!signup ? (
         <details className="rounded-2xl border border-dashed border-border p-3">

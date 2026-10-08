@@ -62,6 +62,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
+      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
     ],
   },
   {
@@ -110,6 +111,7 @@ export const BOARD_NAV: NavGroup[] = [
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
+      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능" },
     ],
   },
   {
@@ -182,6 +184,11 @@ export const BOARD_SLUGS = {
     writeHref: "/boards/schedule/write",
     calendar: true,
     masterOnly: true,
+  },
+  suggestions: {
+    title: "건의사항",
+    boardType: "SUGGESTION" as const,
+    writeHref: "/boards/suggestions/write",
   },
 } as const;
 
@@ -256,4 +263,5 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   HAND_REVIEW:
     "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 폴드/체크/콜/레이즈 투표가 열립니다.",
   ANONYMOUS_REVIEW: "닉네임은 화면에 보이지 않습니다. 작성 책임은 본인에게 있습니다.",
+  SUGGESTION: "운영 개선 건의. 비밀글을 켜면 비밀번호(4자리 이상)가 필요합니다. 작성자와 관리자는 바로 볼 수 있습니다.",
 };

@@ -3,8 +3,8 @@ import { getCurrentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminReportsPage() {
+export default async function AdminSanctionsPage() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) notFound();
-  redirect("/admin?tab=reports");
+  redirect("/admin?tab=sanctions");
 }

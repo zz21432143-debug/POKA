@@ -23,6 +23,7 @@ export type PostSummary = {
   ratingService?: number | null;
   ratingFacility?: number | null;
   ratingAtmosphere?: number | null;
+  isPrivate?: boolean;
 };
 
 export function PostList({
@@ -73,7 +74,14 @@ export function PostList({
                   </Badge>
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{post.title}</p>
+                  <p className="truncate font-medium">
+                    {post.isPrivate ? (
+                      <span className="mr-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                        비밀글
+                      </span>
+                    ) : null}
+                    {post.title}
+                  </p>
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                     <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
                     <span className="text-xs text-muted-foreground">{formatRelativeKst(post.createdAt)}</span>

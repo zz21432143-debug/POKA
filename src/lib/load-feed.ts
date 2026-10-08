@@ -33,6 +33,7 @@ export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) 
     ratingService: post.ratingService,
     ratingFacility: post.ratingFacility,
     ratingAtmosphere: post.ratingAtmosphere,
+    isPrivate: post.isPrivate,
   }));
   const jobs: JobCardData[] = rows.map((post) => ({
     id: post.id,

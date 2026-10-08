@@ -42,7 +42,7 @@ export async function findSocialUser(profile: Pick<SocialProfile, "provider" | "
   return prisma.user.findUnique({ where: { email } });
 }
 
-export async function upsertSocialUser(profile: SocialProfile) {
+export async function upsertSocialUser(profile: SocialProfile, extras?: { signupIp?: string }) {
   const now = new Date();
   const email = cleanEmail(profile.email);
   const providerId = profile.providerId.trim();
@@ -54,6 +54,7 @@ export async function upsertSocialUser(profile: SocialProfile) {
     adultConfirmedAt: now,
     termsAcceptedAt: now,
     privacyAcceptedAt: now,
+    lastLoginAt: now,
     ...(email ? { email, emailVerifiedAt: now } : {}),
     ...(profile.provider === "kakao" ? { kakaoId: providerId } : { googleId: providerId }),
   };
@@ -80,6 +81,8 @@ export async function upsertSocialUser(profile: SocialProfile) {
       adultConfirmedAt: now,
       termsAcceptedAt: now,
       privacyAcceptedAt: now,
+      signupIp: extras?.signupIp ?? null,
+      lastLoginAt: now,
       level: 1,
       exp: 0,
       points: 0,

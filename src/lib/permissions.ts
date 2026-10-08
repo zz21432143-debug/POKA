@@ -23,6 +23,7 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   RULE_QA: "member",
   SKETCH: "member",
   HAND_REVIEW: "member",
+  SUGGESTION: "member",
 };
 
 const CLOSED_BOARDS = new Set<BoardType>([

@@ -9,8 +9,14 @@ import {
   OAUTH_NEXT_COOKIE,
 } from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
+import { liftExpiredSuspension } from "@/lib/account-restriction";
 
-export type CurrentUser = ViewerProfile & { id: string };
+export type CurrentUser = ViewerProfile & {
+  id: string;
+  status: "ACTIVE" | "SUSPENDED" | "BANNED";
+  suspendedUntil: Date | null;
+  banReason: string | null;
+};
 export const SESSION_COOKIE = "poka_user";
 export const KAKAO_STATE_COOKIE = "poka_kakao_state";
 
@@ -48,6 +54,19 @@ async function findUserBySession() {
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const user = await findUserBySession();
   if (!user) return null;
-  return { id: user.id, ...toViewerProfile(user) };
+  const lifted = await liftExpiredSuspension({
+    id: user.id,
+    status: user.status,
+    suspendedUntil: user.suspendedUntil,
+    banReason: user.banReason,
+  });
+  const status = (lifted.status ?? "ACTIVE") as CurrentUser["status"];
+  return {
+    id: user.id,
+    ...toViewerProfile(user),
+    status,
+    suspendedUntil: lifted.suspendedUntil ? new Date(lifted.suspendedUntil) : null,
+    banReason: lifted.banReason ?? null,
+  };
 });
 

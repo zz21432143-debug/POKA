@@ -32,6 +32,8 @@ export function BoardWriteForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(boardType === "SUGGESTION");
+  const [password, setPassword] = useState("");
 
   async function submit() {
     setPending(true);
@@ -48,6 +50,8 @@ export function BoardWriteForm({
           bannerImageUrl,
           promoLocation,
           promoTag,
+          isPrivate: boardType === "SUGGESTION" ? isPrivate : false,
+          password: boardType === "SUGGESTION" ? password : undefined,
           ...ratings,
         }),
       });
@@ -130,6 +134,33 @@ export function BoardWriteForm({
           onChange={(e) => setContent(e.target.value)}
         />
       </div>
+      {boardType === "SUGGESTION" ? (
+        <fieldset className="rounded-xl border border-border bg-muted/40 p-3">
+          <legend className="px-1 text-sm font-semibold">비밀글</legend>
+          <label className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4"
+              checked={isPrivate}
+              onChange={(event) => setIsPrivate(event.target.checked)}
+            />
+            비밀글 설정
+          </label>
+          {isPrivate ? (
+            <div className="mt-2 grid gap-2">
+              <Label htmlFor="secret-password">비밀번호 (4자리 이상)</Label>
+              <Input
+                id="secret-password"
+                type="password"
+                minLength={4}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="본문 열람용 비밀번호"
+              />
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={submit}>
         {pending ? "등록 중…" : boardType === "ANONYMOUS_REVIEW" ? "익명으로 등록" : "등록"}

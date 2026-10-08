@@ -19,7 +19,10 @@ export default async function SearchPage({
         hidden: false,
         isAttendanceThread: false,
         boardType: { not: "ANONYMOUS_REVIEW" },
-        OR: [{ title: { contains: query } }, { content: { contains: query } }],
+        OR: [
+          { title: { contains: query } },
+          { AND: [{ isPrivate: false }, { content: { contains: query } }] },
+        ],
       },
       orderBy: { createdAt: "desc" },
       take: 30,
@@ -37,6 +40,7 @@ export default async function SearchPage({
       createdAt: post.createdAt.toISOString(),
       viewCount: post.viewCount,
       commentCount: post._count.comments,
+      isPrivate: post.isPrivate,
     }));
   }
 

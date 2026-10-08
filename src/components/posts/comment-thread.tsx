@@ -6,6 +6,7 @@ import { AuthorChip, type PublicAuthor } from "@/components/posts/author-chip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BEST_COMMENT_MIN } from "@/lib/rewards";
+import { ReportButton } from "@/components/posts/report-button";
 
 export type CommentRow = {
   id: string;
@@ -104,6 +105,7 @@ function CommentItem({
         >
           추천
         </Button>
+        <ReportButton targetType="comment" targetId={comment.id} compact />
       </div>
       <p className="mt-1 text-sm">{comment.content}</p>
     </li>

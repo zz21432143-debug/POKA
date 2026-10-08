@@ -37,8 +37,8 @@ export default async function AdminBannersPage() {
           구글이 채웁니다. 프리미엄·사이드바 공석은 문의 CTA입니다.
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
-          <Link href="/admin/reports" className="inline-flex min-h-11 items-center text-sm text-primary">
-            신고 처리
+          <Link href="/admin" className="inline-flex min-h-11 items-center text-sm text-primary">
+            관리자 페이지
           </Link>
           {user.isMaster ? (
             <Link href="/admin/members" className="inline-flex min-h-11 items-center text-sm text-primary">

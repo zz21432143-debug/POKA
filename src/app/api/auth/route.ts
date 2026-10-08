@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { clearSession, setSessionNickname } from "@/lib/current-user";
 import { normalizeNickname } from "@/lib/nickname";
 import { verifyPassword } from "@/lib/password";
+import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +28,18 @@ export async function POST(request: Request) {
       if (!user || !user.passwordHash || !verifyPassword(password, user.passwordHash)) {
         return NextResponse.json({ error: "닉네임 또는 비밀번호가 맞지 않습니다." }, { status: 401 });
       }
+      try {
+        await assertAccountActive(user);
+      } catch (error) {
+        if (error instanceof AccountRestrictedError) {
+          return NextResponse.json({ error: error.message }, { status: 403 });
+        }
+        throw error;
+      }
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
       await setSessionNickname(user.nickname);
       return NextResponse.json({ ok: true, nickname: user.nickname });
     }

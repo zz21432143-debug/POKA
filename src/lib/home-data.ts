@@ -30,6 +30,7 @@ function toSummary(
     ratingFacility: number | null;
     ratingAtmosphere: number | null;
     _count: { comments: number };
+    isPrivate?: boolean;
   },
 ): PostSummary {
   return {
@@ -41,7 +42,7 @@ function toSummary(
     createdAt: post.createdAt.toISOString(),
     viewCount: post.viewCount,
     commentCount: post._count.comments,
-    ratingManner: post.ratingManner,
+    isPrivate: post.isPrivate,
     ratingService: post.ratingService,
     ratingFacility: post.ratingFacility,
     ratingAtmosphere: post.ratingAtmosphere,

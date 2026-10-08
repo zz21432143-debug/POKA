@@ -42,16 +42,7 @@ async function applySchema() {
   await client.connect();
   try {
     const found = await client.query(`
-      SELECT
-        to_regclass('public."User"') AS rel,
-        EXISTS (
-          SELECT 1 FROM information_schema.columns
-          WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'googleId'
-        ) AS has_google,
-        EXISTS (
-          SELECT 1 FROM information_schema.columns
-          WHERE table_schema = 'public' AND table_name = 'Comment' AND column_name = 'authorIp'
-        ) AS has_ip
+      SELECT to_regclass('public."User"') AS rel
     `);
     if (!found.rows[0]?.rel) {
       const file = migrationPath();
@@ -61,8 +52,6 @@ async function applySchema() {
       }
       console.log("ensure-db: applying Postgres schema");
       await client.query(readFileSync(file, "utf8"));
-    } else if (found.rows[0]?.has_google && found.rows[0]?.has_ip) {
-      return;
     }
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "email" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP(3)`);
@@ -81,6 +70,46 @@ async function applySchema() {
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "pointsEarnedDate" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "pointsEarnedToday" INTEGER NOT NULL DEFAULT 0`);
     await client.query(`ALTER TYPE "BoardType" ADD VALUE IF NOT EXISTS 'NOTICE'`).catch(() => undefined);
+    await client.query(`ALTER TYPE "BoardType" ADD VALUE IF NOT EXISTS 'SUGGESTION'`).catch(() => undefined);
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE "AccountStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'BANNED');
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
+    await client.query(
+      `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "status" "AccountStatus" NOT NULL DEFAULT 'ACTIVE'`,
+    );
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "suspendedUntil" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "banReason" TEXT`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "signupIp" TEXT`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP(3)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS "User_status_idx" ON "User"("status")`);
+    await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "isPrivate" BOOLEAN NOT NULL DEFAULT false`);
+    await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "unlockPasswordHash" TEXT`);
+    await client.query(`ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "targetType" TEXT`);
+    await client.query(`UPDATE "Report" SET "targetType" = 'post' WHERE "targetType" IS NULL OR "targetType" = ''`);
+    await client.query(`ALTER TABLE "Report" ALTER COLUMN "targetType" SET DEFAULT 'post'`);
+    await client.query(`ALTER TABLE "Report" ADD COLUMN IF NOT EXISTS "commentId" TEXT`);
+    await client.query(`ALTER TABLE "Report" ALTER COLUMN "postId" DROP NOT NULL`).catch(() => undefined);
+    await client.query(`ALTER TABLE "Report" ALTER COLUMN "status" SET DEFAULT 'pending'`).catch(() => undefined);
+    await client.query(`DROP INDEX IF EXISTS "Report_postId_reporterId_key"`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS "Report_reporterId_postId_idx" ON "Report"("reporterId", "postId")`,
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS "Report_reporterId_commentId_idx" ON "Report"("reporterId", "commentId")`,
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS "Report_targetType_createdAt_idx" ON "Report"("targetType", "createdAt")`,
+    );
+    await client.query(`
+      DO $$ BEGIN
+        ALTER TABLE "Report" ADD CONSTRAINT "Report_commentId_fkey"
+          FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
     await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
     await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
   } finally {

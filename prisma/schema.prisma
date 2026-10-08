@@ -24,6 +24,13 @@ enum BoardType {
   PICKUP
   SCHEDULE
   NOTICE
+  SUGGESTION
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
 }
 
 /// 구인/구직 5종. 레거시 TALENT·PICKUP 보드 타입은 라우트 별칭으로 유지합니다.
@@ -90,6 +97,11 @@ model User {
   attendanceStreak    Int      @default(0)
   pointsEarnedDate    String?
   pointsEarnedToday   Int      @default(0)
+  status              AccountStatus @default(ACTIVE)
+  suspendedUntil      DateTime?
+  banReason           String?
+  signupIp            String?
+  lastLoginAt         DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -108,6 +120,7 @@ model User {
   @@index([isDealerVerified])
   @@index([isAdmin])
   @@index([isMaster])
+  @@index([status])
 }
 
 model Post {
@@ -170,6 +183,9 @@ model Post {
   promoTag           String?
   jobFilled          Boolean   @default(false)
   hidden             Boolean   @default(false)
+  /// 건의사항 등 비밀글. 본문 열람은 작성자·관리자 또는 비밀번호 확인.
+  isPrivate          Boolean   @default(false)
+  unlockPasswordHash String?
   ratingManner       Int?
   ratingService      Int?
   ratingFacility     Int?
@@ -210,6 +226,7 @@ model Comment {
 
   dailyAttendance DailyAttendance?
   votes           CommentVote[]
+  reports         Report[]
 
   @@index([postId])
   @@index([postId, upvoteCount])
@@ -280,17 +297,24 @@ model PostVote {
 
 model Report {
   id         String   @id @default(cuid())
-  postId     String
-  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   reporterId String
   reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  /// post | comment
+  targetType String   @default("post")
+  postId     String?
+  post       Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
   reason     String
   reporterIp String?
-  status     String   @default("PENDING")
+  /// pending | resolved | dismissed | HIDDEN(레거시)
+  status     String   @default("pending")
   createdAt  DateTime @default(now())
 
-  @@unique([postId, reporterId])
   @@index([status, createdAt])
+  @@index([reporterId, postId])
+  @@index([reporterId, commentId])
+  @@index([targetType, createdAt])
 }
 
 model AuditLog {

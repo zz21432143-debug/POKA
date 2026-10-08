@@ -26,7 +26,7 @@ export async function POST(
     });
     await createContentReport({
       reporterId: user.id,
-      targetType: "post",
+      targetType: "comment",
       targetId: id,
       reason: body.reason ?? "",
       ip,

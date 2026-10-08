@@ -12,6 +12,7 @@ export const BOARD_LABELS = {
   PICKUP: "급구 / 대타",
   SCHEDULE: "대회 스케줄",
   NOTICE: "공지사항",
+  SUGGESTION: "건의사항",
 } as const;
 
 export type BoardTypeKey = keyof typeof BOARD_LABELS;
@@ -30,4 +31,5 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   PICKUP: "급구 / 대타 (구인/구직 > 급구/대타로 이전)",
   SCHEDULE: "매주 '이번 주 홀덤 대회 일정' 허브가 자동으로 생깁니다. 등록은 마스터만 가능합니다.",
   NOTICE: "운영 공지. 작성은 마스터 계정만 가능합니다.",
+  SUGGESTION: "운영진에게 전하는 건의. 비밀글로 쓰면 작성자와 관리자만 바로 볼 수 있고, 다른 회원은 비밀번호를 입력해야 본문이 열립니다.",
 };

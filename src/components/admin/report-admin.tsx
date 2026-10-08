@@ -3,27 +3,29 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-type Row = {
+export type ReportAdminRow = {
   id: string;
   reason: string;
   status: string;
+  targetType: string;
   reporter: string;
   reporterIp: string | null;
-  postId: string;
+  postId: string | null;
   title: string;
+  commentPreview: string | null;
   authorId: string | null;
   authorIp: string | null;
   hidden: boolean;
 };
 
-export function ReportAdmin({ reports }: { reports: Row[] }) {
+export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
   const router = useRouter();
 
-  async function act(postId: string, action: "hide" | "restore") {
+  async function act(reportId: string, action: "resolve" | "dismiss" | "delete") {
     await fetch("/api/admin/reports", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId, action }),
+      body: JSON.stringify({ reportId, action }),
     });
     router.refresh();
   }
@@ -36,20 +38,34 @@ export function ReportAdmin({ reports }: { reports: Row[] }) {
     <ul className="grid gap-3">
       {reports.map((row) => (
         <li key={row.id} className="rounded-xl border border-border bg-card p-3 text-sm">
-          <p className="font-medium">{row.title}</p>
+          <p className="font-medium">
+            {row.targetType === "comment" ? "댓글" : "게시글"} · {row.title}
+          </p>
+          {row.commentPreview ? (
+            <p className="mt-1 rounded-lg bg-muted px-2 py-1 text-xs">{row.commentPreview}</p>
+          ) : null}
           <p className="mt-1 text-muted-foreground">{row.reason}</p>
           <p className="mt-2 font-mono text-xs">
             작성자 {row.authorId ?? "—"} / IP {row.authorIp ?? "—"}
           </p>
           <p className="font-mono text-xs">
             신고자 {row.reporter} / IP {row.reporterIp ?? "—"} · {row.status}
+            {row.hidden ? " · 숨김됨" : ""}
           </p>
-          <div className="mt-2 flex gap-2">
-            <Button type="button" size="touch" variant="outline" onClick={() => act(row.postId, "hide")}>
-              숨김
+          {row.postId ? (
+            <a href={`/posts/${row.postId}`} className="mt-1 inline-block text-xs text-primary">
+              대상 글 보기
+            </a>
+          ) : null}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button type="button" size="touch" variant="outline" onClick={() => void act(row.id, "delete")}>
+              게시물 삭제
             </Button>
-            <Button type="button" size="touch" variant="ghost" onClick={() => act(row.postId, "restore")}>
-              복구
+            <Button type="button" size="touch" onClick={() => void act(row.id, "resolve")}>
+              처리 완료
+            </Button>
+            <Button type="button" size="touch" variant="ghost" onClick={() => void act(row.id, "dismiss")}>
+              기각
             </Button>
           </div>
         </li>

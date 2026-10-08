@@ -101,6 +101,14 @@ export function ProfileWidget({
         lastAttendanceDate={profile.lastAttendanceDate}
       />
       <div className="mt-3 grid grid-cols-1 gap-2">
+        {profile.isAdmin ? (
+          <Link
+            href="/admin"
+            className="touch-target flex min-h-11 items-center justify-center rounded-full border border-amber-300 bg-amber-50 text-sm font-semibold text-amber-950 hover:bg-amber-100"
+          >
+            관리자 페이지
+          </Link>
+        ) : null}
         {profile.isMaster ? (
           <Link
             href="/admin/members"
