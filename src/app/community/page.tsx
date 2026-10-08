@@ -5,9 +5,9 @@ export default function CommunityHubPage() {
   const community = SIDEBAR_NAV.find((group) => group.title === "커뮤니티");
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">커뮤니티</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <header className="board-intro">
+        <h1>커뮤니티</h1>
+        <p className="mt-2">
           자유 게시판부터 핸드리뷰·구인까지, 같은 길을 걷는 사람들과 이야기하세요.
         </p>
       </header>

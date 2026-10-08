@@ -51,8 +51,8 @@ export function KakaoOpenChatCta({
         <KakaoBubbleIcon className="size-6" />
       </span>
       <span className="min-w-0 text-[#fff8ee]">
-        <span className="block text-[11px] font-semibold tracking-wide text-[#fff8ee]/75">카카오톡 공식</span>
-        <span className="mt-0.5 block text-sm font-bold leading-snug">POKA 공식 오픈채팅방 참여하기</span>
+        <span className="block text-xs font-semibold tracking-wide text-[#fff8ee]">카카오톡 공식</span>
+        <span className="mt-0.5 block text-base font-bold leading-snug">POKA 공식 오픈채팅방 참여하기</span>
       </span>
     </a>
   );

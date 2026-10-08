@@ -9,7 +9,7 @@ function SealIcon({ kind, active }: { kind: SidebarIcon; active?: boolean }) {
   const gold = active ? "#fff8ee" : "#C59B27";
   const red = active ? "#fff8ee" : "#8B2222";
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-4 shrink-0">
+    <svg viewBox="0 0 24 24" aria-hidden className="size-5 shrink-0">
       {kind === "home" ? (
         <>
           <path fill={gold} d="M12 3.2 3.5 10.2V21h6.2v-6.2h4.6V21H20.5V10.2L12 3.2Z" />
@@ -132,10 +132,10 @@ export function BoardNav({
           href="/"
           onClick={onNavigate}
           className={cn(
-            "touch-target flex min-h-11 items-center gap-2.5 rounded-full border-0 px-4 text-sm font-semibold shadow-none",
+            "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base font-semibold shadow-none",
             homeActive
-              ? "home-tab-3d text-[#fff8ee]"
-              : "text-[#f4eadf] hover:bg-white/10",
+              ? "bg-[#8B2222] text-[#fff8ee]"
+              : "text-[#fff8ee] hover:bg-[#2a1814]",
           )}
         >
           <SealIcon kind="home" active={homeActive} />
@@ -143,11 +143,11 @@ export function BoardNav({
           <ChevronRightIcon className="size-4 opacity-80" />
         </a>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-3 py-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-3">
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#e25a4a]">
+              <p className="mb-2 rounded-lg bg-[#2a1814] px-3 py-1.5 text-sm font-bold text-[#f3d7a1]">
                 {group.title}
               </p>
             ) : null}
@@ -159,10 +159,10 @@ export function BoardNav({
                     <a
                       href={item.href}
                       className={cn(
-                        "touch-target flex min-h-11 items-center gap-2.5 rounded-full border-0 px-3 text-sm shadow-none transition-colors",
+                        "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
                         active
-                          ? "home-tab-3d font-semibold text-[#fff8ee]"
-                          : "bg-transparent font-medium text-[#f4eadf] hover:bg-white/10",
+                          ? "bg-[#8B2222] font-semibold text-[#fff8ee]"
+                          : "bg-transparent font-semibold text-[#fff8ee] hover:bg-[#2a1814]",
                       )}
                       onClick={onNavigate}
                     >

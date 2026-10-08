@@ -10,9 +10,9 @@ const CARDS = [
 export default function InfoHubPage() {
   return (
     <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="text-2xl font-semibold">정보센터</h1>
-        <p className="mt-1 text-sm text-muted-foreground">딜러 연습, 대회 일정, 공식 홍보.</p>
+      <header className="board-intro">
+        <h1>정보센터</h1>
+        <p className="mt-2">딜러 연습, 대회 일정, 공식 홍보.</p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((card) => (

@@ -17,10 +17,10 @@ export default async function NoticesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">공지사항</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1>공지사항</h1>
+          <p className="mt-2">
             운영 공지입니다. 작성은 마스터 계정만 가능합니다.
           </p>
         </div>

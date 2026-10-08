@@ -22,10 +22,10 @@ export default async function JobBoardPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{job.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1>{job.title}</h1>
+          <p className="mt-2">
             {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
             {page.total ? ` · ${page.total}개` : ""}
           </p>

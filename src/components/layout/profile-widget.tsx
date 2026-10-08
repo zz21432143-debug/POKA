@@ -22,10 +22,10 @@ function ProfileAction({
       href={href}
       className={
         tone === "green"
-          ? "btn-3d-green touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
+          ? "btn-3d-green touch-target flex min-h-12 items-center justify-center rounded-xl text-base font-semibold"
           : tone === "gold"
             ? "btn-3d-gold touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold"
-            : "btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
+            : "btn-3d touch-target flex min-h-12 items-center justify-center rounded-xl text-base font-semibold text-[#2b1810]"
       }
     >
       {children}
