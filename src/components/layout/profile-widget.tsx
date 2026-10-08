@@ -104,7 +104,7 @@ export function ProfileWidget({
         streak={profile.attendanceStreak}
         lastAttendanceDate={profile.lastAttendanceDate}
       />
-      {accounts.length > 0 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
+      {accounts.length > 1 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
       <div className="mt-3 grid grid-cols-1 gap-2">
         {profile.isMaster ? (
           <Link

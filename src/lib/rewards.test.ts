@@ -15,6 +15,7 @@ import {
   isSeedCatalogNickname,
   tickerMentionsSeedCatalog,
 } from "./purge-demo-catalog";
+import { filterSwitchAccounts } from "./switch-account";
 
 describe("streak attendance bonus", () => {
   it("pays extra on 3 / 7 / 14 / 30 day milestones", () => {
@@ -48,5 +49,20 @@ describe("seed catalog purge helpers", () => {
     assert.equal(isDummyOfficialPosterTitle("실제 제휴 공지"), false);
     assert.equal(tickerMentionsSeedCatalog("펠트딜러님이 [핸드리뷰]에 글을 남겼습니다"), true);
     assert.equal(tickerMentionsSeedCatalog("정태규님이 출석했습니다"), false);
+  });
+});
+
+describe("staff account switcher", () => {
+  it("drops seed nicknames that looked like unused level titles", () => {
+    const kept = filterSwitchAccounts([
+      { nickname: "POKA", level: 250, isAdmin: true, isMaster: true, isDealerVerified: false, points: 1 },
+      { nickname: "펠트딜러", level: 75, isAdmin: true, isMaster: false, isDealerVerified: false, points: 8202 },
+      { nickname: "스몰블라인드", level: 7, isAdmin: false, isMaster: false, isDealerVerified: false, points: 100 },
+      { nickname: "샷클락", level: 5, isAdmin: false, isMaster: false, isDealerVerified: true, points: 190 },
+    ]);
+    assert.deepEqual(
+      kept.map((row) => row.nickname),
+      ["POKA"],
+    );
   });
 });

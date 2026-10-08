@@ -9,7 +9,7 @@ import {
   OAUTH_NEXT_COOKIE,
 } from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
-import type { SwitchAccount } from "@/lib/switch-account";
+import { filterSwitchAccounts, type SwitchAccount } from "@/lib/switch-account";
 
 export type { SwitchAccount };
 export type CurrentUser = ViewerProfile & { id: string };
@@ -54,15 +54,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 });
 
 export async function listSwitchableUsers(): Promise<SwitchAccount[]> {
-  return prisma.user.findMany({
-    orderBy: [
-      { isMaster: "desc" },
-      { isAdmin: "desc" },
-      { isDealerVerified: "desc" },
-      { level: "desc" },
-      { nickname: "asc" },
-    ],
-    take: 12,
+  const accounts = await prisma.user.findMany({
+    where: { OR: [{ isMaster: true }, { isAdmin: true }] },
+    orderBy: [{ isMaster: "desc" }, { nickname: "asc" }],
+    take: 20,
     select: {
       nickname: true,
       level: true,
@@ -72,4 +67,5 @@ export async function listSwitchableUsers(): Promise<SwitchAccount[]> {
       points: true,
     },
   });
+  return filterSwitchAccounts(accounts);
 }
