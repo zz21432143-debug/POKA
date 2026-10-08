@@ -1,9 +1,14 @@
 /** AdSense 게시자 ID. 없으면 잔여 칸에 목업이 뜹니다. */
 export type AdSensePlacement = "post-top" | "post-bottom" | "sidebar" | "a1" | "a2" | "a3";
 
-export function adsensePublisherId(): string | null {
-  const id = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim() ?? "";
+export const DEFAULT_ADSENSE_CLIENT = "ca-pub-9633875249094546";
+
+function parseAdsenseClient(id: string) {
   return id.startsWith("ca-pub-") ? id : null;
+}
+
+export function adsensePublisherId(): string | null {
+  return parseAdsenseClient(process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim() ?? "") ?? parseAdsenseClient(DEFAULT_ADSENSE_CLIENT);
 }
 
 export function adsenseSlotId(placement: AdSensePlacement): string {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { adsensePublisherId } from "./adsense";
 import { isDirectFilled, normalizeMark, pickFill, type DirectCreative } from "./inventory-policy";
 
 const sample: DirectCreative = {
@@ -48,5 +49,15 @@ describe("ad inventory fill", () => {
   it("hides native rows without a title", () => {
     assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null, title: "" }, "hide").kind, "hide");
     assert.equal(pickFill({ ...sample, placement: "NATIVE", imageUrl: null }, "hide").kind, "direct");
+  });
+});
+
+describe("adsense publisher", () => {
+  it("uses the POKA ca-pub id by default", () => {
+    const previous = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+    delete process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+    assert.equal(adsensePublisherId(), "ca-pub-9633875249094546");
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
+    else process.env.NEXT_PUBLIC_ADSENSE_CLIENT = previous;
   });
 });
