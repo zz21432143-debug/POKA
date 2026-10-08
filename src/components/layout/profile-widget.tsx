@@ -110,7 +110,7 @@ export function ProfileWidget({
   return (
     <section className="lounge-card rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#0d3b24] ring-2 ring-[#e8c36a]">
+        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#005A44] ring-2 ring-[#D4AF37]">
           <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
@@ -126,7 +126,7 @@ export function ProfileWidget({
             </p>
           ) : null}
         </div>
-        <span className="rounded-full bg-[#0d3b24] px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
+        <span className="rounded-full bg-[#005A44] px-2 py-0.5 text-[11px] font-semibold text-white">
           Lv.{profile.level}
         </span>
       </div>

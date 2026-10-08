@@ -12,12 +12,12 @@ import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 function boardBadgeClass(board: string) {
-  if (board === "FREE") return "bg-[#1b6b3a] text-white";
+  if (board === "FREE") return "bg-[#005A44] text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
     return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
   }
-  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#0d3b24] text-emerald-100";
+  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#005A44] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
 }
 
@@ -76,8 +76,8 @@ export function PostList({
             <li
               className={
                 compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#e7f4ea]"
-                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#e7f4ea]"
+                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f3f4f6] hover:bg-[#e8f5f0]"
+                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f3f4f6] hover:bg-[#e8f5f0]"
               }
             >
               {showBoard ? (

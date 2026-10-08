@@ -69,7 +69,7 @@ export function BoardNav({
             "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-semibold",
             homeActive
               ? "home-tab-3d text-white"
-              : "bg-[#143d28] text-emerald-50 hover:bg-[#0d3b24]",
+              : "text-[#374151] hover:bg-[#f3f4f6]",
           )}
         >
           <HomeIcon className="size-4 shrink-0" />
@@ -81,7 +81,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#a6843d]">
+              <p className="mb-2 px-2 text-[11px] font-bold tracking-wide text-[#6b7280]">
                 {group.title}
               </p>
             ) : null}
@@ -97,11 +97,11 @@ export function BoardNav({
                         "touch-target flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm transition-colors",
                         active
                           ? "home-tab-3d font-semibold text-white"
-                          : "font-medium text-[#6d5834] hover:bg-[#efe4cc]",
+                          : "font-medium text-[#374151] hover:bg-[#f3f4f6]",
                       )}
                       onClick={onNavigate}
                     >
-                      <Icon className={cn("size-4 shrink-0", active ? "text-[#f3e2a4]" : "text-[#D4AF37]")} />
+                      <Icon className={cn("size-4 shrink-0", active ? "text-white" : "text-[#005A44]")} />
                       <span className="min-w-0 flex-1">{item.label}</span>
                     </a>
                   </li>
@@ -111,8 +111,8 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-[1.25rem] bg-[#0d3b24] px-4 py-5 text-center shadow-[inset_0_1px_0_rgb(255_255_255_/_0.12),0_4px_0_#062214]">
-        <span className="mx-auto flex size-10 items-center justify-center rounded-full border-2 border-[#D4AF37] bg-[#145232] text-[#D4AF37] shadow-[inset_0_2px_0_rgb(255_255_255_/_0.15)]">
+      <div className="m-3 rounded-xl bg-[#005A44] px-4 py-5 text-center">
+        <span className="mx-auto flex size-10 items-center justify-center rounded-full bg-white/10 text-[#D4AF37]">
           <SpadeIcon className="size-5" />
         </span>
         <p

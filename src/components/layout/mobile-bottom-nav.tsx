@@ -27,8 +27,7 @@ export function MobileBottomNav() {
       aria-label="모바일 하단 메뉴"
       className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
-      <div className="wood-rail h-2.5" aria-hidden />
-      <ul className="board-face mx-auto grid max-w-[1320px] grid-cols-5">
+      <ul className="mx-auto grid max-w-[1320px] grid-cols-5 border-t border-[#E5E7EB] bg-[#F8F9FA]">
         {MOBILE_BOTTOM_NAV.map((item) => {
           const Icon = ICONS[item.icon];
           const active = mobileNavActive(pathname, item);

@@ -49,72 +49,72 @@
 }
 
 :root {
-  --background: #efe6d6;
+  --background: #f8f9fa;
   --foreground: #1c1914;
-  --card: #fffcf7;
+  --card: #f8f9fa;
   --card-foreground: #1c1914;
-  --popover: #fffcf7;
+  --popover: #ffffff;
   --popover-foreground: #1c1914;
-  --primary: #1b6b3a;
+  --primary: #005a44;
   --primary-foreground: #ffffff;
-  --secondary: #efe4cc;
-  --secondary-foreground: #14532d;
-  --muted: #f3ece0;
-  --muted-foreground: #5c564b;
-  --accent: #e7f4ea;
-  --accent-foreground: #14532d;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #005a44;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #e8f5f0;
+  --accent-foreground: #005a44;
   --destructive: #ef4444;
-  --border: #ddd2be;
-  --input: #ddd2be;
-  --ring: #1b6b3a;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #005a44;
   --chart-1: #22c55e;
   --chart-2: #16324f;
   --chart-3: #86efac;
   --chart-4: #38bdf8;
   --chart-5: #fbbf24;
-  --radius: 0.9rem;
-  --sidebar: #f3eee4;
+  --radius: 0.75rem;
+  --sidebar: #f8f9fa;
   --sidebar-foreground: #1c1914;
-  --sidebar-primary: #0d3b24;
+  --sidebar-primary: #005a44;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #efe4cc;
-  --sidebar-accent-foreground: #14532d;
-  --sidebar-border: #ddd2be;
-  --sidebar-ring: #1b6b3a;
+  --sidebar-accent: #e8f5f0;
+  --sidebar-accent-foreground: #005a44;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #005a44;
 }
 
 .dark {
-  --background: #efe6d6;
+  --background: #f8f9fa;
   --foreground: #1c1914;
-  --card: #fffcf7;
+  --card: #f8f9fa;
   --card-foreground: #1c1914;
-  --popover: #fffcf7;
+  --popover: #ffffff;
   --popover-foreground: #1c1914;
-  --primary: #1b6b3a;
+  --primary: #005a44;
   --primary-foreground: #ffffff;
-  --secondary: #efe4cc;
-  --secondary-foreground: #14532d;
-  --muted: #f3ece0;
-  --muted-foreground: #5c564b;
-  --accent: #e7f4ea;
-  --accent-foreground: #14532d;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #005a44;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #e8f5f0;
+  --accent-foreground: #005a44;
   --destructive: #ef4444;
-  --border: #ddd2be;
-  --input: #ddd2be;
-  --ring: #1b6b3a;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #005a44;
   --chart-1: #22c55e;
   --chart-2: #16324f;
   --chart-3: #86efac;
   --chart-4: #38bdf8;
   --chart-5: #fbbf24;
-  --sidebar: #f3eee4;
+  --sidebar: #f8f9fa;
   --sidebar-foreground: #1c1914;
-  --sidebar-primary: #0d3b24;
+  --sidebar-primary: #005a44;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #efe4cc;
-  --sidebar-accent-foreground: #14532d;
-  --sidebar-border: #ddd2be;
-  --sidebar-ring: #1b6b3a;
+  --sidebar-accent: #e8f5f0;
+  --sidebar-accent-foreground: #005a44;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #005a44;
 }
 
 @layer base {
@@ -164,77 +164,38 @@
 }
 
 .felt-bg {
-  background-color: #0d2b1e;
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgb(32 86 56 / 0.4), transparent 52%),
-    radial-gradient(ellipse at 50% 100%, rgb(0 0 0 / 0.38), transparent 58%),
-    url("/assets/felt-bg.png");
-  background-repeat: no-repeat, no-repeat, repeat;
-  background-size: auto, auto, 520px 520px;
+  background: #0f231d;
 }
 
 .board-face {
-  background: #f4efeb;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8);
+  background: #f8f9fa;
 }
 
 .wood-rail {
-  background: linear-gradient(180deg, #f2d7a6 0%, #b88345 28%, #6a4120 62%, #2c1a0e 100%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 236 196 / 0.75),
-    inset 0 -2px 3px rgb(0 0 0 / 0.4);
+  display: none;
 }
 
 .lounge-card,
 .wood-frame {
-  --stud-a: radial-gradient(circle at 7px 7px, #fff6d4 0 1px, #e7c56a 1.4px 2.6px, #6e5420 3px 4px, transparent 4.6px);
-  --stud-b: radial-gradient(circle at calc(100% - 7px) 7px, #fff6d4 0 1px, #e7c56a 1.4px 2.6px, #6e5420 3px 4px, transparent 4.6px);
-  --stud-c: radial-gradient(circle at 7px calc(100% - 7px), #fff6d4 0 1px, #e7c56a 1.4px 2.6px, #6e5420 3px 4px, transparent 4.6px);
-  --stud-d: radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #fff6d4 0 1px, #e7c56a 1.4px 2.6px, #6e5420 3px 4px, transparent 4.6px);
-  --mold: linear-gradient(155deg, #f0d2a0 0%, #b57a3c 14%, #6a3d1c 40%, #d7ae6a 55%, #4e2d14 76%, #1c100a 100%);
-  background-color: #5a3416;
-  background-image: var(--stud-a), var(--stud-b), var(--stud-c), var(--stud-d), var(--mold);
-  background-repeat: no-repeat;
-  box-shadow:
-    inset 0 1px 0 rgb(255 228 180 / 0.55),
-    inset 0 -3px 6px rgb(20 8 0 / 0.45),
-    0 0 0 1px #1a100a,
-    0 14px 28px rgb(0 0 0 / 0.38);
-}
-
-.lounge-card {
-  border: 12px solid transparent;
-  border-radius: 1.2rem;
-  background-image:
-    var(--stud-a),
-    var(--stud-b),
-    var(--stud-c),
-    var(--stud-d),
-    linear-gradient(#f4efeb, #f4efeb),
-    var(--mold);
-  background-clip: border-box, border-box, border-box, border-box, padding-box, border-box;
-  background-origin: border-box, border-box, border-box, border-box, padding-box, border-box;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.75),
-    inset 0 0 0 1px rgb(74 48 24 / 0.16),
-    0 0 0 1px #1a100a,
-    0 12px 26px rgb(0 0 0 / 0.36);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8f9fa;
+  background-image: none;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.04);
 }
 
 .wood-frame {
-  padding: 12px;
-  border-radius: 1.45rem;
+  padding: 0;
+  overflow: hidden;
 }
 
 .wood-frame > * {
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  border-radius: 0.95rem;
-  background: #f4efeb;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.85),
-    inset 0 0 0 1px rgb(90 60 30 / 0.12);
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
 }
 
 .footer-on-felt :where(.text-muted-foreground) {
@@ -246,38 +207,40 @@
 }
 
 .btn-3d {
-  border: 1px solid #e4d3b4;
-  background: linear-gradient(180deg, #fffdf8 0%, #f3e7d2 100%);
-  box-shadow: inset 0 1px 0 #fff, 0 2px 0 #d7c4a0, 0 5px 10px rgb(70 50 20 / 0.08);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1c1914;
+  box-shadow: none;
 }
 
 .btn-3d-green {
-  border: 1px solid #062214;
-  background: linear-gradient(180deg, #217445 0%, #0c3d26 100%);
+  border: 1px solid #005a44;
+  background: #005a44;
   color: #fff;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 3px 0 #04180f, 0 7px 12px rgb(0 0 0 / 0.18);
+  box-shadow: none;
 }
 
 .btn-3d-gold {
-  border: 1px solid #c9a000;
-  background: linear-gradient(180deg, #ffe56a 0%, #f0c400 100%);
-  color: #191919;
-  box-shadow: inset 0 1px 0 #fff6b0, 0 3px 0 #b89000, 0 6px 10px rgb(80 60 0 / 0.18);
+  border: 1px solid #d4af37;
+  background: #d4af37;
+  color: #1c1914;
+  box-shadow: none;
 }
 
 .home-tab-3d {
-  background: linear-gradient(180deg, #1d6a3e 0%, #0b3320 100%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28), 0 3px 0 #04180f, 0 8px 14px rgb(0 0 0 / 0.2);
+  background: #005a44;
+  box-shadow: none;
 }
 
 .search-inset {
-  background: #04140e;
-  box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.55), inset 0 0 0 1px rgb(212 175 55 / 0.38);
+  background: #163028;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: none;
 }
 
 .live-glow {
-  background: #16a34a;
-  box-shadow: 0 0 8px #4ade80, 0 0 16px rgb(34 197 94 / 0.75);
+  background: #005a44;
+  box-shadow: none;
 }
 
 .hero-mint {
@@ -321,7 +284,7 @@
 
 .led-board {
   border-bottom: 1px solid rgb(0 0 0 / 0.28);
-  background: #0d2b1e;
+  background: #0f231d;
 }
 
 .led-marquee {

@@ -96,7 +96,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           />
         ) : null}
       </head>
-      <body className="flex min-h-full flex-col bg-[#0d2b1e]">
+      <body className="flex min-h-full flex-col bg-[#0F231D]">
         <GoogleAnalytics />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>

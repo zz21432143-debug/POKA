@@ -44,7 +44,7 @@ export function HomeHeroBanner() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="btn-3d touch-target relative z-10 inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold text-[#0d3b24]"
+                className="btn-3d touch-target relative z-10 inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold text-[#1c1914]"
               >
                 <item.icon className="size-3.5 text-primary" />
                 {item.title}
