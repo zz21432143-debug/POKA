@@ -14,11 +14,11 @@ function HomePanelFallback({ className }: { className: string }) {
 }
 
 async function HomeFeedSections() {
-  const feed = await getHomeFeed().catch(() => ({
+      const feed = await getHomeFeed().catch(() => ({
     all: [],
     free: [],
     jobs: [],
-    issues: [],
+    hands: [],
     urgent: [],
     nativeSponsor: null,
     hand: null,
@@ -32,7 +32,7 @@ async function HomeFeedSections() {
         all={feed.all}
         free={feed.free}
         jobs={feed.jobs}
-        issues={feed.issues}
+        hands={feed.hands}
         nativeSponsor={feed.nativeSponsor}
       />
       <HomeUrgentJobs jobs={feed.urgent} />
@@ -42,20 +42,9 @@ async function HomeFeedSections() {
   );
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ verified?: string }>;
-}) {
-  const { verified } = await searchParams;
-
+export default async function HomePage() {
   return (
     <div className="flex flex-col gap-5">
-      {verified === "1" ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-950">
-          이메일 인증이 끝났습니다. POKA에 오신 것을 환영합니다.
-        </p>
-      ) : null}
       <HomeHeroBanner />
       <HomeShortcuts />
       <Suspense

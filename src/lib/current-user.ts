@@ -9,9 +9,7 @@ import {
   OAUTH_NEXT_COOKIE,
 } from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
-import { filterSwitchAccounts, type SwitchAccount } from "@/lib/switch-account";
 
-export type { SwitchAccount };
 export type CurrentUser = ViewerProfile & { id: string };
 export const SESSION_COOKIE = "poka_user";
 export const KAKAO_STATE_COOKIE = "poka_kakao_state";
@@ -53,19 +51,3 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return { id: user.id, ...toViewerProfile(user) };
 });
 
-export async function listSwitchableUsers(): Promise<SwitchAccount[]> {
-  const accounts = await prisma.user.findMany({
-    where: { OR: [{ isMaster: true }, { isAdmin: true }] },
-    orderBy: [{ isMaster: "desc" }, { nickname: "asc" }],
-    take: 20,
-    select: {
-      nickname: true,
-      level: true,
-      isAdmin: true,
-      isMaster: true,
-      isDealerVerified: true,
-      points: true,
-    },
-  });
-  return filterSwitchAccounts(accounts);
-}

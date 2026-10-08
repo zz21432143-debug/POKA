@@ -1,7 +1,5 @@
 import type { ViewerProfile } from "@/lib/profile";
-import type { SwitchAccount } from "@/lib/switch-account";
 import { MarkImage } from "@/components/layout/mark-image";
-import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { todayKstDate } from "@/lib/dates";
 import { memberRankTitle } from "@/lib/levels";
@@ -11,11 +9,9 @@ export { MarkImage };
 
 export function ProfileWidget({
   profile,
-  accounts = [],
   variant = "full",
 }: {
   profile: ViewerProfile | null;
-  accounts?: SwitchAccount[];
   variant?: "full" | "compact";
 }) {
   if (!profile) {
@@ -104,7 +100,6 @@ export function ProfileWidget({
         streak={profile.attendanceStreak}
         lastAttendanceDate={profile.lastAttendanceDate}
       />
-      {accounts.length > 1 ? <AccountSwitcher current={profile.nickname} accounts={accounts} /> : null}
       <div className="mt-3 grid grid-cols-1 gap-2">
         {profile.isMaster ? (
           <Link

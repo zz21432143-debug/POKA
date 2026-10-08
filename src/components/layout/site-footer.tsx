@@ -4,7 +4,6 @@ import { SITE_HOST, siteUrl } from "@/lib/site";
 
 const LINKS = [
   { href: "/about", label: "사이트 소개" },
-  { href: "/plan", label: "게시판 기획" },
   { href: "/terms", label: "이용약관" },
   { href: "/privacy", label: "개인정보처리방침" },
 ] as const;

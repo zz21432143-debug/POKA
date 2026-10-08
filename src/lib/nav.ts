@@ -61,7 +61,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
       { href: "/boards/jobs", label: "딜러 구인 · 구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
-      { href: "/issues", label: "사고 · 사건 · 이슈", hint: "현장 이슈", icon: "alert" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
     ],
   },

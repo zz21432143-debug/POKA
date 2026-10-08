@@ -25,9 +25,17 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   HAND_REVIEW: "member",
 };
 
+const CLOSED_BOARDS = new Set<BoardType>([
+  "ANONYMOUS_REVIEW",
+  "TALENT",
+  "PICKUP",
+  "EVENT_POSTER",
+  "OFFICIAL_POSTER",
+]);
+
 export function canWriteBoard(user: WriteUser | null, boardType: BoardType): boolean {
   if (!user) return false;
-  if (boardType === "ANONYMOUS_REVIEW") return false;
+  if (CLOSED_BOARDS.has(boardType)) return false;
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
   if (role === "master") return Boolean(user.isMaster);
   return true;
@@ -35,6 +43,7 @@ export function canWriteBoard(user: WriteUser | null, boardType: BoardType): boo
 
 export function writeDeniedMessage(boardType: BoardType): string {
   if (boardType === "ANONYMOUS_REVIEW") return "익명 게시판은 운영을 종료했습니다.";
+  if (CLOSED_BOARDS.has(boardType)) return "이 게시판은 더 이상 작성할 수 없습니다.";
   const role = BOARD_WRITE_ROLE[boardType] ?? "member";
   if (role === "master") return "마스터 계정만 작성할 수 있는 게시판입니다.";
   return "로그인 후 작성할 수 있습니다.";

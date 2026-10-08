@@ -40,6 +40,7 @@ export type CosmeticCatalogItem = {
 };
 
 export type MarkCatalog = {
+  loggedIn: boolean;
   points: number;
   level: number;
   isMaster?: boolean;

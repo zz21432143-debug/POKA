@@ -22,13 +22,8 @@ const BOARDS: BoardType[] = [
   "RULE_QA",
   "SKETCH",
   "HAND_REVIEW",
-  "ANONYMOUS_REVIEW",
   "JOBS",
   "PROMO",
-  "EVENT_POSTER",
-  "OFFICIAL_POSTER",
-  "TALENT",
-  "PICKUP",
   "SCHEDULE",
   "NOTICE",
 ];
@@ -59,7 +54,7 @@ export async function POST(request: Request) {
     if (!boardType || !BOARDS.includes(boardType)) {
       return NextResponse.json({ error: "게시판을 확인하세요." }, { status: 400 });
     }
-    if (boardType === "ANONYMOUS_REVIEW" || !canWriteBoard(user, boardType)) {
+    if (!canWriteBoard(user, boardType)) {
       return NextResponse.json({ error: writeDeniedMessage(boardType) }, { status: 403 });
     }
 
@@ -111,10 +106,6 @@ export async function POST(request: Request) {
       bannerSlot = slot;
       bannerImageUrl = bannerImageUrl || `/banners/slot-${slot}.svg`;
     }
-    if ((boardType === "EVENT_POSTER" || boardType === "OFFICIAL_POSTER") && !bannerImageUrl) {
-      bannerImageUrl = boardType === "EVENT_POSTER" ? "/banners/slot-1.svg" : "/banners/slot-2.svg";
-    }
-
     assertHoldemOnly(
       title,
       content,

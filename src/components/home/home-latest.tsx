@@ -10,7 +10,7 @@ const TABS = [
   { key: "all", label: "전체", href: "/community" },
   { key: "free", label: "자유", href: "/boards/free" },
   { key: "jobs", label: "구인/구직", href: "/boards/jobs" },
-  { key: "issues", label: "이슈", href: "/issues" },
+  { key: "hands", label: "핸드리뷰", href: "/boards/hand-review" },
 ] as const;
 
 type Tab = (typeof TABS)[number]["key"];
@@ -19,22 +19,22 @@ export function HomeLatest({
   all,
   free,
   jobs,
-  issues,
+  hands,
   nativeSponsor = null,
 }: {
   all: PostSummary[];
   free: PostSummary[];
   jobs: PostSummary[];
-  issues: PostSummary[];
+  hands: PostSummary[];
   nativeSponsor?: DirectCreative | null;
 }) {
   const [tab, setTab] = useState<Tab>("all");
   const posts = useMemo(() => {
     if (tab === "free") return free;
     if (tab === "jobs") return jobs;
-    if (tab === "issues") return issues;
+    if (tab === "hands") return hands;
     return all;
-  }, [tab, all, free, jobs, issues]);
+  }, [tab, all, free, jobs, hands]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">

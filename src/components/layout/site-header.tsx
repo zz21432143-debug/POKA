@@ -1,27 +1,22 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BellIcon, CheckCircle2Icon, SearchIcon, UserRoundIcon } from "lucide-react";
+import { CheckCircle2Icon, SearchIcon, UserRoundIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
 import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
 import type { ViewerProfile } from "@/lib/profile";
-import type { SwitchAccount } from "@/lib/switch-account";
 
 export function SiteHeader({
   profile,
-  accounts = [],
-  noticeCount = 0,
 }: {
   profile: ViewerProfile | null;
-  accounts?: SwitchAccount[];
-  noticeCount?: number;
 }) {
   const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
   return (
     <header className="border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.5rem] sm:px-5">
-        <MobileDrawer profile={profile} accounts={accounts} />
+        <MobileDrawer profile={profile} />
         <a href="/" className="relative z-20 flex shrink-0 items-center rounded-2xl">
           <PokaLogo onDark />
         </a>
@@ -51,16 +46,6 @@ export function SiteHeader({
           >
             <SearchIcon className="size-5" />
           </Link>
-          <HeaderIcon href="/notifications" label="알림">
-            <span className="relative">
-              <BellIcon className="size-5" />
-              {noticeCount > 0 ? (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
-                  {noticeCount > 9 ? "9+" : noticeCount}
-                </span>
-              ) : null}
-            </span>
-          </HeaderIcon>
           {profile ? (
             <HeaderIcon href={meHref} label="마이페이지">
               <UserRoundIcon className="size-5" />

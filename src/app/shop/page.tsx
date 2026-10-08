@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MarkShop } from "@/components/shop/mark-shop";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMarkCatalog } from "@/lib/marks";
@@ -15,6 +16,14 @@ export default async function ShopPage() {
           마크는 3,000P입니다. 출석으로 하루 최대 375P라 약 8일이면 살 수 있습니다. 레벨은 활동
           기간을 나타낼 뿐이고, 구매·글쓰기와는 별개입니다.
         </p>
+        {user ? null : (
+          <p className="mt-2 text-sm">
+            <Link href="/login?next=/shop" className="font-semibold text-primary hover:underline">
+              로그인
+            </Link>
+            하면 포인트로 마크를 사고 착용할 수 있습니다.
+          </p>
+        )}
       </header>
       <MarkShop asPage initial={initial} />
     </div>

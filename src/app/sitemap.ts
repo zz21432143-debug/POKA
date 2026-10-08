@@ -10,7 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/boards/sketch",
     "/boards/jobs",
     "/boards/rules",
-    "/issues",
     "/boards/hand-review",
     "/attendance",
     "/practice",

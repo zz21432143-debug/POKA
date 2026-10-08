@@ -47,6 +47,7 @@ export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
   const ownedIds = new Set(owned.map((row) => row.markId));
   const ownedCosmeticIds = new Set(ownedCosmetics.map((row) => row.cosmeticId));
   return {
+    loggedIn: Boolean(userId && dbUser),
     points: dbUser?.points ?? 0,
     level: dbUser?.level ?? 1,
     isMaster: dbUser?.isMaster ?? false,

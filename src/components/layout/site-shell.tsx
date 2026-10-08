@@ -11,7 +11,7 @@ import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
-import { getCurrentUser, listSwitchableUsers } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/current-user";
 import { ensureTodayAttendancePost } from "@/lib/attendance";
 import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
 import { getCachedTickerEvents } from "@/lib/home-data";
@@ -48,12 +48,11 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   }
   const showFeedAds = shouldShowFeedAds(pathname);
   const profile = await getCurrentUser().catch(() => null);
-  const accounts = profile?.isAdmin ? await listSwitchableUsers().catch(() => []) : [];
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
       <div className="sticky top-0 z-40 bg-[#07150f]">
-        <SiteHeader profile={profile} accounts={accounts} noticeCount={0} />
+        <SiteHeader profile={profile} />
         <Suspense fallback={<LedTicker items={[]} />}>
           <ConnectedTicker />
         </Suspense>
@@ -80,7 +79,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
-            <ProfileWidget profile={profile} accounts={accounts} />
+            <ProfileWidget profile={profile} />
             <Suspense fallback={null}>
               <ConnectedSidebarSponsor />
             </Suspense>
@@ -102,7 +101,6 @@ function shouldShowFeedAds(pathname: string) {
   if (!pathname) return true;
   if (pathname === "/") return true;
   if (pathname.startsWith("/community")) return true;
-  if (pathname.startsWith("/issues")) return true;
   if (pathname.startsWith("/attendance")) return true;
   if (pathname.startsWith("/search")) return true;
   if (pathname.startsWith("/boards") && !pathname.includes("/write")) return true;

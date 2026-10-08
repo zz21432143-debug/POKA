@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -46,11 +47,12 @@ export function MarkShop({
     setCatalog(payload);
   }
 
-  async function act(id: string, path: "buy" | "equip") {
+  async function act(id: string, path: "buy" | "equip", kind: "mark" | "cosmetic" = "mark") {
     setPending(id + path);
     setError(null);
     try {
-      const response = await fetch(`/api/marks/${id}/${path}`, { method: "POST" });
+      const href = kind === "cosmetic" ? `/api/cosmetics/${id}/${path}` : `/api/marks/${id}/${path}`;
+      const response = await fetch(href, { method: "POST" });
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(payload.error ?? "처리에 실패했습니다.");
       await load();
@@ -122,7 +124,7 @@ function ShopBody({
   category: MarkCategoryId;
   onKind: (id: ShopKindId) => void;
   onCategory: (id: MarkCategoryId) => void;
-  onAct: (id: string, path: "buy" | "equip") => void;
+  onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
 }) {
   const marks = useMemo(
     () => marksInCategory(catalog.marks, category),
@@ -185,6 +187,7 @@ function ShopBody({
                           mark={mark}
                           pending={pending}
                           canAfford={catalog.points >= mark.pricePoints}
+                          loggedIn={catalog.loggedIn}
                           onAct={onAct}
                         />
                       ))}
@@ -198,15 +201,21 @@ function ShopBody({
         <TabsContent value="FRAME">
           <CosmeticShelf
             items={catalog.frames}
-            empty="프로필 프레임(테두리) 상품이 곧 등록됩니다. 구매 후 equipped_frame_id 슬롯에 착용됩니다."
+            empty="등록된 프레임이 없습니다."
             points={catalog.points}
+            loggedIn={catalog.loggedIn}
+            pending={pending}
+            onAct={onAct}
           />
         </TabsContent>
         <TabsContent value="EFFECT">
           <CosmeticShelf
             items={catalog.effects}
-            empty="후광·모션 이펙트 상품이 곧 등록됩니다. 구매 후 equipped_effect_id 슬롯에 착용됩니다."
+            empty="등록된 이펙트가 없습니다."
             points={catalog.points}
+            loggedIn={catalog.loggedIn}
+            pending={pending}
+            onAct={onAct}
           />
         </TabsContent>
       </Tabs>
@@ -218,10 +227,16 @@ function CosmeticShelf({
   items,
   empty,
   points,
+  loggedIn,
+  pending,
+  onAct,
 }: {
   items: CosmeticCatalogItem[];
   empty: string;
   points: number;
+  loggedIn: boolean;
+  pending: string | null;
+  onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
 }) {
   if (items.length === 0) return <EmptyShop copy={empty} />;
   return (
@@ -234,23 +249,74 @@ function CosmeticShelf({
             {item.pricePoints === 0 ? "무료" : `${item.pricePoints.toLocaleString()} P`}
           </p>
           <div className="mt-3 flex justify-center">
-            {item.equipped ? (
-              <span className="inline-flex h-11 items-center rounded-lg bg-primary/15 px-3 text-sm font-medium text-primary">
-                착용 중
-              </span>
-            ) : item.owned ? (
-              <Button type="button" size="touch" disabled>
-                장착하기
-              </Button>
-            ) : (
-              <Button type="button" size="touch" variant="outline" disabled>
-                {points >= item.pricePoints ? "준비 중" : "포인트 부족"}
-              </Button>
-            )}
+            <ShopAction
+              owned={item.owned}
+              equipped={item.equipped}
+              canAfford={points >= item.pricePoints}
+              loggedIn={loggedIn}
+              pending={pending}
+              busyId={item.id}
+              onAct={(path) => onAct(item.id, path, "cosmetic")}
+            />
           </div>
         </li>
       ))}
     </ul>
+  );
+}
+
+function ShopAction({
+  owned,
+  equipped,
+  canAfford,
+  loggedIn,
+  pending,
+  busyId,
+  onAct,
+}: {
+  owned: boolean;
+  equipped: boolean;
+  canAfford: boolean;
+  loggedIn: boolean;
+  pending: string | null;
+  busyId: string;
+  onAct: (path: "buy" | "equip") => void;
+}) {
+  const busy = pending !== null;
+  if (equipped) {
+    return (
+      <span className="inline-flex h-11 items-center rounded-lg bg-primary/15 px-3 text-sm font-medium text-primary">
+        착용 중
+      </span>
+    );
+  }
+  if (!loggedIn) {
+    return (
+      <Link
+        href="/login?next=/shop"
+        className={buttonVariants({ size: "touch", variant: "outline" })}
+      >
+        로그인 후 구매
+      </Link>
+    );
+  }
+  if (owned) {
+    return (
+      <Button type="button" size="touch" disabled={busy} onClick={() => onAct("equip")}>
+        {pending === busyId + "equip" ? "장착 중…" : "장착하기"}
+      </Button>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      size="touch"
+      variant="outline"
+      disabled={busy || !canAfford}
+      onClick={() => onAct("buy")}
+    >
+      {pending === busyId + "buy" ? "구매 중…" : canAfford ? "구매하기" : "포인트 부족"}
+    </Button>
   );
 }
 
@@ -287,14 +353,15 @@ function MarkCard({
   mark,
   pending,
   canAfford,
+  loggedIn,
   onAct,
 }: {
   mark: MarkCatalogItem;
   pending: string | null;
   canAfford: boolean;
-  onAct: (id: string, path: "buy" | "equip") => void;
+  loggedIn: boolean;
+  onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
 }) {
-  const busy = pending !== null;
   return (
     <li className="flex flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
       <ShopPreview src={mark.imageUrl} name={mark.name} />
@@ -303,30 +370,15 @@ function MarkCard({
         {mark.pricePoints === 0 ? "무료" : `${mark.pricePoints.toLocaleString()} P`}
       </p>
       <div className="mt-3 flex justify-center">
-        {mark.equipped ? (
-          <span className="inline-flex h-11 items-center rounded-lg bg-primary/15 px-3 text-sm font-medium text-primary">
-            착용 중
-          </span>
-        ) : mark.owned ? (
-          <Button
-            type="button"
-            size="touch"
-            disabled={busy}
-            onClick={() => onAct(mark.id, "equip")}
-          >
-            {pending === mark.id + "equip" ? "장착 중…" : "장착하기"}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            size="touch"
-            variant="outline"
-            disabled={busy || !canAfford}
-            onClick={() => onAct(mark.id, "buy")}
-          >
-            {pending === mark.id + "buy" ? "구매 중…" : canAfford ? "구매하기" : "포인트 부족"}
-          </Button>
-        )}
+        <ShopAction
+          owned={mark.owned}
+          equipped={mark.equipped}
+          canAfford={canAfford}
+          loggedIn={loggedIn}
+          pending={pending}
+          busyId={mark.id}
+          onAct={(path) => onAct(mark.id, path, "mark")}
+        />
       </div>
     </li>
   );

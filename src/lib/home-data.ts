@@ -56,7 +56,7 @@ async function loadHomeFeed() {
   const base = { isAttendanceThread: false, hidden: false, boardType: { not: "ANONYMOUS_REVIEW" as const } };
   const notUrgentJob = { NOT: { AND: [{ boardType: "JOBS" as const }, { jobKind: "URGENT" as const }] } };
 
-  const [nativeSponsor, handSpot, hub, dealers, allRows, freeRows, jobRows, issueRows, urgentRows] =
+  const [nativeSponsor, handSpot, hub, dealers, allRows, freeRows, jobRows, handRows, urgentRows] =
     await Promise.all([
       getSponsorCreative("NATIVE").catch(() => null),
       getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
@@ -114,7 +114,7 @@ async function loadHomeFeed() {
     all: allRows.map(toSummary),
     free: freeRows.map(toSummary),
     jobs: jobRows.map(toSummary),
-    issues: issueRows.map(toSummary),
+    hands: handRows.map(toSummary),
     urgent: urgentRows as HomeUrgentJob[],
     nativeSponsor,
     hand: handSpot.post
