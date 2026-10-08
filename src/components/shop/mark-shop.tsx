@@ -224,7 +224,7 @@ function ShopBody({
                   marks.length === 0 ? (
                     <EmptyShop copy="이 분류에 등록된 마크가 없습니다." />
                   ) : (
-                    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
                       {marks.map((mark) => (
                         <MarkCard
                           key={mark.id}
@@ -284,10 +284,15 @@ function CosmeticShelf({
 }) {
   if (items.length === 0) return <EmptyShop copy={empty} />;
   return (
-    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {items.map((item) => (
-        <li key={item.id} className="flex flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
-          <ShopPreview src={item.imageUrl} name={item.name} />
+        <li key={item.id} className="flex flex-col rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
+          <ShopPreview
+            src={item.imageUrl}
+            name={item.name}
+            frameClass={item.kind === "FRAME" ? item.cssClass : null}
+            effectClass={item.kind === "EFFECT" ? item.cssClass : null}
+          />
           <p className="mt-3 text-center text-sm font-semibold">{item.name}</p>
           <p className="text-center text-xs text-muted-foreground">
             {item.pricePoints === 0 ? "무료" : `${item.pricePoints.toLocaleString()} P`}
@@ -372,10 +377,20 @@ function EmptyShop({ copy }: { copy: string }) {
   );
 }
 
-function ShopPreview({ src, name }: { src: string | null; name: string }) {
+function ShopPreview({
+  src,
+  name,
+  frameClass,
+  effectClass,
+}: {
+  src: string | null;
+  name: string;
+  frameClass?: string | null;
+  effectClass?: string | null;
+}) {
   return (
-    <div className="flex min-h-24 items-center justify-center rounded-xl bg-muted/60 p-3">
-      <MarkImage src={src} alt={name} size={80} />
+    <div className="flex aspect-square min-h-24 items-center justify-center rounded-xl bg-muted/60 p-3">
+      <MarkImage src={src} alt={name} size={80} frameClass={frameClass} effectClass={effectClass} />
     </div>
   );
 }
@@ -394,7 +409,7 @@ function MarkCard({
   onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
 }) {
   return (
-    <li className="flex flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <li className="flex flex-col rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
       <ShopPreview src={mark.imageUrl} name={mark.name} />
       <p className="mt-3 text-center text-sm font-semibold">{mark.name}</p>
       <p className="text-center text-xs text-muted-foreground">

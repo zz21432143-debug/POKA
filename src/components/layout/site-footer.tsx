@@ -1,6 +1,7 @@
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { FooterLegalLinks } from "@/components/layout/footer-legal-links";
-import { KAKAO_INQUIRY_ID, kakaoInquiryHref } from "@/lib/kakao";
+import { KakaoInquiryLink } from "@/components/layout/kakao-inquiry-link";
+import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
 import { LEGAL_SERVICE_NAME } from "@/lib/legal";
 import { publicContactEmail } from "@/lib/legal-contact";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -8,13 +9,11 @@ import { getSiteSettings } from "@/lib/site-settings";
 export async function SiteFooter() {
   const settings = await getSiteSettings().catch(() => null);
   const email = publicContactEmail(settings?.footerEmail);
-  const kakao = kakaoInquiryHref(settings?.kakaoChannelUrl);
-  const kakaoExternal = kakao.startsWith("http");
 
   return (
-    <footer className="mt-auto border-t border-border bg-white pb-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-3 py-6 sm:px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <footer className="relative z-20 mt-auto border-t border-border bg-white pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 py-6 sm:px-5">
+        <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
           <div className="flex min-w-0 flex-col gap-1 text-sm leading-6 text-muted-foreground">
             <div className="flex items-center gap-3">
               <PokaLogo compact />
@@ -28,14 +27,11 @@ export async function SiteFooter() {
               문의 카카오톡 ID: <span className="font-semibold">{KAKAO_INQUIRY_ID}</span>
             </p>
           </div>
-          <div className="flex flex-col items-start gap-3 sm:items-end">
-            <a
-              href={kakao}
-              {...(kakaoExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="inline-flex min-h-11 items-center rounded-full bg-[#FEE500] px-4 text-sm font-semibold text-[#191919] hover:bg-[#F6DC00]"
-            >
-              카카오톡 1:1 문의 · {KAKAO_INQUIRY_ID}
-            </a>
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <KakaoInquiryLink href={settings?.kakaoChannelUrl} className="w-full sm:w-auto" />
+            <p className="text-xs leading-5 text-muted-foreground sm:text-right">
+              버튼이 앱을 열지 않으면 카카오톡에서 {KAKAO_INQUIRY_ID}를 검색해 친구 추가하세요.
+            </p>
             <FooterLegalLinks />
           </div>
         </div>

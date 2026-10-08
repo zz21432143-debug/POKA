@@ -26,7 +26,7 @@ export const MOBILE_BOTTOM_NAV = [
   { href: "/community", label: "게시판", icon: "message" as const, match: "boards" as const },
   { href: "/boards/free/write", label: "글쓰기", icon: "write" as const, match: "write" as const },
   { href: "/boards/suggestions", label: "건의사항", icon: "lightbulb" as const, match: "prefix" as const },
-  { href: "/me", label: "내정보", icon: "user" as const, match: "me" as const },
+  { href: "/account", label: "내정보", icon: "user" as const, match: "me" as const },
 ] as const;
 
 export type SidebarIcon =
@@ -154,6 +154,8 @@ export function mobileNavActive(
   if (item.match === "me") {
     return (
       pathname === "/me" ||
+      pathname === "/account" ||
+      pathname.startsWith("/account/") ||
       pathname === "/login" ||
       pathname.startsWith("/u/") ||
       pathname === "/notifications"

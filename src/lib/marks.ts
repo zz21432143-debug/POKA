@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { publicMarkUrl } from "@/lib/mark-assets";
 import {
   type CosmeticCatalogItem,
   type MarkCatalog,
@@ -27,7 +28,7 @@ function toCosmeticItem(
     slug: row.slug,
     name: row.name,
     kind: row.kind,
-    imageUrl: row.imageUrl,
+    imageUrl: publicMarkUrl(row.imageUrl, row.slug),
     cssClass: row.cssClass,
     pricePoints: row.pricePoints,
     minLevel: row.minLevel,
@@ -60,7 +61,7 @@ export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
       id: mark.id,
       slug: mark.slug,
       name: mark.name,
-      imageUrl: mark.imageUrl,
+      imageUrl: publicMarkUrl(mark.imageUrl, mark.slug),
       pricePoints: mark.pricePoints,
       minLevel: mark.minLevel,
       category: mark.category as MarkCategoryId,

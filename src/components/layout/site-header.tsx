@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CheckCircle2Icon, SearchIcon, UserRoundIcon } from "lucide-react";
+import { SearchIcon, UserRoundIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { PokaLogo } from "@/components/brand/poka-logo";
@@ -13,12 +13,17 @@ export function SiteHeader({
 }: {
   profile: ViewerProfile | null;
 }) {
-  const meHref = profile ? `/u/${encodeURIComponent(profile.nickname)}` : "/me";
+  const meHref = profile ? "/account" : "/login";
   return (
-    <header className="border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-3 sm:h-[4.5rem] sm:px-5">
-        <MobileDrawer profile={profile} />
-        <a href="/" className="relative z-20 flex shrink-0 items-center rounded-2xl">
+    <header className="overflow-x-clip border-b border-white/10 bg-[#07150f] pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-16 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
+        <div className="flex min-w-0 items-center justify-start gap-1">
+          <MobileDrawer profile={profile} />
+          <a href="/" className="relative z-20 hidden shrink-0 items-center rounded-2xl lg:flex">
+            <PokaLogo onDark />
+          </a>
+        </div>
+        <a href="/" className="relative z-20 flex justify-center lg:hidden">
           <PokaLogo onDark />
         </a>
         <TopNav />
@@ -34,13 +39,11 @@ export function SiteHeader({
             />
           </label>
         </form>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:ml-2">
-          <InstallPwaButton compact />
+        <div className="flex min-w-0 items-center justify-end gap-0.5 lg:ml-2 lg:gap-1.5">
+          <span className="hidden lg:inline-flex">
+            <InstallPwaButton compact />
+          </span>
           <KakaoOpenChatCta compact />
-          <HeaderIcon href="/attendance" label="출석체크">
-            <CheckCircle2Icon className="size-5" />
-            <span className="hidden sm:inline">출석</span>
-          </HeaderIcon>
           <Link
             href="/search"
             aria-label="검색"
@@ -49,16 +52,17 @@ export function SiteHeader({
             <SearchIcon className="size-5" />
           </Link>
           {profile ? (
-            <HeaderIcon href={meHref} label="마이페이지">
+            <HeaderIcon href={meHref} label="내 정보">
               <UserRoundIcon className="size-5" />
-              <span className="hidden sm:inline">마이페이지</span>
+              <span className="hidden sm:inline lg:inline">내정보</span>
             </HeaderIcon>
           ) : (
             <Link
               href="/login"
-              className="inline-flex min-h-11 items-center rounded-full bg-primary px-3 text-sm font-semibold text-white hover:bg-primary/90"
+              className="inline-flex size-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white hover:bg-primary/90 sm:min-h-11 sm:w-auto sm:px-3"
             >
-              로그인
+              <UserRoundIcon className="size-5 sm:hidden" />
+              <span className="hidden sm:inline">로그인</span>
             </Link>
           )}
         </div>
@@ -80,7 +84,7 @@ function HeaderIcon({
     <Link
       href={href}
       aria-label={label}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white"
+      className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white sm:w-auto sm:min-h-11 sm:px-2.5"
     >
       {children}
     </Link>

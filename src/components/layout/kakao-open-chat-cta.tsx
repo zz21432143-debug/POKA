@@ -27,12 +27,12 @@ export function KakaoOpenChatCta({
         rel="noopener noreferrer"
         aria-label="POKA 공식 오픈채팅방 참여하기"
         className={cn(
-          "touch-target inline-flex h-11 max-w-[11rem] items-center gap-1.5 rounded-full bg-[#FEE500] px-2.5 text-[13px] font-bold text-[#191919] shadow-sm hover:bg-[#f5dc00] sm:max-w-[12.5rem] sm:px-3",
+          "touch-target inline-flex size-11 items-center justify-center rounded-full bg-[#FEE500] text-[#191919] shadow-sm hover:bg-[#f5dc00] sm:h-11 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
           className,
         )}
       >
         <KakaoBubbleIcon className="size-5 shrink-0" />
-        <span className="truncate">공식 오픈채팅</span>
+        <span className="hidden truncate text-[13px] font-bold sm:inline">공식 오픈채팅</span>
       </a>
     );
   }

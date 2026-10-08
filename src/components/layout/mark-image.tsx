@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "cn";
-import { DEFAULT_MARK_SRC } from "@/lib/mark-assets";
+import { DEFAULT_MARK_SRC, publicMarkUrl } from "@/lib/mark-assets";
 
 export function MarkImage({
   src,
@@ -19,34 +19,43 @@ export function MarkImage({
   frameClass?: string | null;
   effectClass?: string | null;
 }) {
-  const initial = src?.trim() || DEFAULT_MARK_SRC;
+  const resolved = publicMarkUrl(src);
   const [failed, setFailed] = useState(false);
-  const showImg = Boolean(initial) && !failed;
+
+  useEffect(() => {
+    setFailed(false);
+  }, [resolved]);
+
+  const showImg = !failed;
 
   return (
     <span
-      className={cn("profile-mark inline-flex shrink-0 items-center justify-center", frameClass, effectClass)}
+      className={cn("profile-mark inline-flex shrink-0 items-center justify-center overflow-hidden", frameClass, effectClass)}
       style={{ width: size, height: size, minWidth: size, minHeight: size }}
     >
       {showImg ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={initial}
+          src={resolved}
           alt={alt}
           width={size}
           height={size}
-          className={cn("size-full object-contain", className)}
-          onError={() => setFailed(true)}
+          className={cn("mark-glyph", className)}
+          style={{ width: size, height: size, maxWidth: "none", maxHeight: "none" }}
+          onError={() => {
+            if (resolved !== DEFAULT_MARK_SRC) setFailed(true);
+          }}
         />
       ) : (
-        <span
-          className={cn(
-            "inline-flex size-full items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white",
-            className,
-          )}
-        >
-          {(alt.trim() || "P").slice(0, 1)}
-        </span>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={DEFAULT_MARK_SRC}
+          alt={alt}
+          width={size}
+          height={size}
+          className={cn("mark-glyph", className)}
+          style={{ width: size, height: size, maxWidth: "none", maxHeight: "none" }}
+        />
       )}
     </span>
   );

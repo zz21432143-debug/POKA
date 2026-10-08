@@ -29,6 +29,7 @@ describe("mobile bottom nav", () => {
   it("covers home, boards, write, suggestions, me", () => {
     const labels = MOBILE_BOTTOM_NAV.map((item) => item.label);
     assert.deepEqual(labels, ["홈", "게시판", "글쓰기", "건의사항", "내정보"]);
+    assert.equal(MOBILE_BOTTOM_NAV[4]?.href, "/account");
   });
 
   it("highlights suggestions instead of boards", () => {

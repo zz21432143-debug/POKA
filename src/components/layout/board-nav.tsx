@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -82,17 +81,10 @@ export function BoardNav({
                 );
                 return (
                   <li key={item.href}>
-                    {home ? (
-                      <a href="/" className={className} onClick={onNavigate}>
-                        <Icon className="size-4 shrink-0 opacity-90" />
-                        <span className="min-w-0 flex-1">{item.label}</span>
-                      </a>
-                    ) : (
-                      <Link href={item.href} onClick={onNavigate} className={className}>
-                        <Icon className="size-4 shrink-0 opacity-90" />
-                        <span className="min-w-0 flex-1">{item.label}</span>
-                      </Link>
-                    )}
+                    <a href={item.href} className={className} onClick={onNavigate}>
+                      <Icon className="size-4 shrink-0 opacity-90" />
+                      <span className="min-w-0 flex-1">{item.label}</span>
+                    </a>
                   </li>
                 );
               })}

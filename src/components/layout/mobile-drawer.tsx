@@ -14,6 +14,8 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
+import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
+import { KakaoInquiryLink } from "@/components/layout/kakao-inquiry-link";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function MobileDrawer({
@@ -37,7 +39,7 @@ export function MobileDrawer({
       >
         <MenuIcon />
       </SheetTrigger>
-      <SheetContent side="left" className="w-[min(100%,20rem)] bg-white p-0" showCloseButton>
+      <SheetContent side="left" className="z-[70] w-[min(100%,20rem)] bg-white p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <PokaLogo compact />
@@ -49,6 +51,10 @@ export function MobileDrawer({
           </div>
           <div className="mb-3">
             <InstallPwaButton />
+          </div>
+          <div className="mb-3 grid gap-2">
+            <KakaoOpenChatCta />
+            <KakaoInquiryLink className="w-full" />
           </div>
           <BoardNav onNavigate={() => setOpen(false)} />
           {profile?.isAdmin ? (
