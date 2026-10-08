@@ -129,7 +129,7 @@ export function YokaiPointShop({
         <div>
           <p className="yokai-shop-kicker">108요괴</p>
           <h1>포인트 상점</h1>
-          <p>프로필 마크를 고르면 아래 미리보기가 바로 바뀝니다. 앞줄 500P, 뒷줄 1,000P.</p>
+          <p>카드를 누르면 미리보기 마크가 바로 바뀝니다. 요괴 마크는 500P부터 1,500P입니다.</p>
         </div>
         <p className="yokai-points">
           보유 포인트: <strong>{points.toLocaleString()} P</strong>
