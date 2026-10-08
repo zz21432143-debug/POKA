@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireMaster } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin";
 import { clearForbiddenWordsCache } from "@/lib/forbidden-words";
 
 export async function GET() {
-  const { error } = await requireMaster();
+  const { error } = await requireAdmin();
   if (error) return error;
   const words = await prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json({ words });
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireMaster();
+  const { error } = await requireAdmin();
   if (error) return error;
   const body = (await request.json().catch(() => ({}))) as { word?: string };
   const word = body.word?.trim() ?? "";
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const { error } = await requireMaster();
+  const { error } = await requireAdmin();
   if (error) return error;
   const url = new URL(request.url);
   const id = url.searchParams.get("id")?.trim() ?? "";

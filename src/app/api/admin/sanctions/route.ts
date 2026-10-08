@@ -3,15 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { writeAudit } from "@/lib/security";
 import type { Prisma } from "@/generated/prisma/client";
-
-const ACTIONS = ["suspend7", "suspend30", "ban", "lift"] as const;
-type SanctionAction = (typeof ACTIONS)[number];
-
-function untilFor(action: SanctionAction): Date | null {
-  if (action === "suspend7") return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  if (action === "suspend30") return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  return null;
-}
+import { isSanctionAction, untilFor, type SanctionAction } from "@/lib/sanctions";
 
 export async function GET(request: Request) {
   const { error } = await requireAdmin();
@@ -68,7 +60,7 @@ export async function PATCH(request: Request) {
     action?: SanctionAction;
     reason?: string;
   };
-  if (!body.userId || !body.action || !ACTIONS.includes(body.action)) {
+  if (!body.userId || !isSanctionAction(body.action)) {
     return NextResponse.json({ error: "대상과 제재 종류를 확인하세요." }, { status: 400 });
   }
   const target = await prisma.user.findUnique({ where: { id: body.userId } });

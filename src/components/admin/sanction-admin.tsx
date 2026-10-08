@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SANCTION_BUTTONS, type SanctionAction } from "@/lib/sanctions";
 
 export type SanctionUser = {
   id: string;
@@ -39,7 +40,7 @@ export function SanctionAdmin({
     if (data.error) setMessage(data.error);
   }
 
-  async function apply(userId: string, action: "suspend7" | "suspend30" | "ban" | "lift") {
+  async function apply(userId: string, action: SanctionAction) {
     setPending(`${userId}:${action}`);
     setMessage(null);
     try {
@@ -61,33 +62,18 @@ export function SanctionAdmin({
   function actions(user: SanctionUser) {
     return (
       <div className="mt-2 flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="touch"
-          variant="outline"
-          disabled={pending !== null}
-          onClick={() => void apply(user.id, "suspend7")}
-        >
-          7일 정지
-        </Button>
-        <Button
-          type="button"
-          size="touch"
-          variant="outline"
-          disabled={pending !== null}
-          onClick={() => void apply(user.id, "suspend30")}
-        >
-          30일 정지
-        </Button>
-        <Button
-          type="button"
-          size="touch"
-          variant="outline"
-          disabled={pending !== null}
-          onClick={() => void apply(user.id, "ban")}
-        >
-          영구 정지
-        </Button>
+        {SANCTION_BUTTONS.map((item) => (
+          <Button
+            key={item.action}
+            type="button"
+            size="touch"
+            variant="outline"
+            disabled={pending !== null}
+            onClick={() => void apply(user.id, item.action)}
+          >
+            {item.label}
+          </Button>
+        ))}
         {user.status !== "ACTIVE" ? (
           <Button
             type="button"

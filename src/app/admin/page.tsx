@@ -65,7 +65,7 @@ export default async function AdminPage({
       select: userSelect,
     }),
     query ? prisma.user.findMany({ where: search, take: 20, select: userSelect }) : Promise.resolve([]),
-    user.isMaster ? prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } }),
     user.isMaster ? getSiteSettings() : Promise.resolve(null),
   ]);
 
@@ -132,23 +132,20 @@ export default async function AdminPage({
       ) : null}
 
       {active === "words" ? (
-        user.isMaster ? (
-          <section>
-            <h2 className="mb-3 text-lg font-semibold">금지어 관리</h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              글·댓글 제목과 본문에 들어가면 등록이 막힙니다. 마스터만 추가·삭제할 수 있습니다.
-            </p>
-            <ForbiddenWordsAdmin
-              words={words.map((row) => ({
-                id: row.id,
-                word: row.word,
-                createdAt: row.createdAt.toISOString(),
-              }))}
-            />
-          </section>
-        ) : (
-          <p className="text-sm text-muted-foreground">금지어는 마스터만 바꿀 수 있습니다.</p>
-        )
+        <section>
+          <h2 className="mb-3 text-lg font-semibold">금지어 관리</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            등록된 단어가 글·댓글 제목이나 본문에 있으면 작성이 막힙니다. 아래에 있는 목록이 현재 적용 중인 내역입니다.
+            단어를 추가하거나 삭제하면 바로 반영됩니다.
+          </p>
+          <ForbiddenWordsAdmin
+            words={words.map((row) => ({
+              id: row.id,
+              word: row.word,
+              createdAt: row.createdAt.toISOString(),
+            }))}
+          />
+        </section>
       ) : null}
 
       {active === "settings" ? (

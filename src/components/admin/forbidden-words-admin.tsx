@@ -59,8 +59,9 @@ export function ForbiddenWordsAdmin({ words }: { words: ForbiddenWordRow[] }) {
         </Button>
       </form>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
+      <p className="text-sm font-medium">현재 금지어 {words.length}개</p>
       {words.length === 0 ? (
-        <p className="text-sm text-muted-foreground">등록된 금지어가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">아직 직접 추가한 단어가 없습니다. 위에서 등록하면 이 목록에 쌓입니다.</p>
       ) : (
         <ul className="grid gap-2">
           {words.map((row) => (
@@ -68,7 +69,12 @@ export function ForbiddenWordsAdmin({ words }: { words: ForbiddenWordRow[] }) {
               key={row.id}
               className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm"
             >
-              <span className="font-medium">{row.word}</span>
+              <div className="min-w-0">
+                <p className="font-medium">{row.word}</p>
+                <p className="text-xs text-muted-foreground">
+                  등록 {new Date(row.createdAt).toLocaleString("ko-KR")}
+                </p>
+              </div>
               <Button type="button" size="touch" variant="ghost" disabled={pending} onClick={() => void remove(row.id)}>
                 삭제
               </Button>

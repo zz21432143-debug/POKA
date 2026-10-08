@@ -10,12 +10,8 @@ export function AdminNav({
   const links = [
     { href: "/admin?tab=reports", label: "신고 관리" },
     { href: "/admin?tab=sanctions", label: "유저·제재" },
-    ...(isMaster
-      ? [
-          { href: "/admin?tab=words", label: "금지어" },
-          { href: "/admin?tab=settings", label: "사이트 설정" },
-        ]
-      : []),
+    { href: "/admin?tab=words", label: "금지어" },
+    ...(isMaster ? [{ href: "/admin?tab=settings", label: "사이트 설정" }] : []),
     { href: "/admin/banners", label: "배너" },
   ];
   return (

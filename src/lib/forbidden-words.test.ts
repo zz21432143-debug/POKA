@@ -4,6 +4,7 @@ import { findForbiddenWord } from "./forbidden-words";
 import { POST_COOLDOWN_MS } from "./security";
 import { gaMeasurementId } from "./ga";
 import { flagsFromRole, isStaff, roleFromFlags } from "./roles";
+import { SANCTION_BUTTONS, untilFor } from "./sanctions";
 
 describe("forbidden words", () => {
   it("blocks a listed keyword and names it in the match", () => {
@@ -26,6 +27,18 @@ describe("staff roles", () => {
     assert.equal(isStaff({ role: "USER" }), false);
     assert.deepEqual(flagsFromRole("MASTER"), { role: "MASTER", isAdmin: true, isMaster: true });
     assert.equal(roleFromFlags({ isAdmin: true, isMaster: false }), "ADMIN");
+  });
+});
+
+describe("sanction durations", () => {
+  it("offers 1 and 3 day stops plus longer bans", () => {
+    const labels = SANCTION_BUTTONS.map((row) => row.label);
+    assert.deepEqual(labels, ["1일 정지", "3일 정지", "7일 정지", "30일 정지", "영구 정지"]);
+    const one = untilFor("suspend1");
+    const three = untilFor("suspend3");
+    assert.ok(one && one.getTime() - Date.now() < 1.1 * 24 * 60 * 60 * 1000);
+    assert.ok(three && three.getTime() - Date.now() > 2 * 24 * 60 * 60 * 1000);
+    assert.equal(untilFor("ban"), null);
   });
 });
 
