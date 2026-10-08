@@ -28,7 +28,7 @@ export const ROBOTS_DISALLOW = ["/admin", "/api/", "/account", "/me", "/notifica
  */
 export const SEARCH_ENGINE_VERIFICATION = {
   google: "",
-  naver: "",
+  naver: "07d34f783c35ccad774a768783ab4c414c758027",
 } as const;
 
 function pickCode(envName: string, fallback: string) {
