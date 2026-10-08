@@ -20,7 +20,7 @@ export async function PromoBanners() {
         {banners.map((banner) => (
           <li key={banner.id}>
             {banner.vacant ? (
-              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-emerald-50/70 px-2 text-center">
+              <div className="touch-target flex aspect-[4/5] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#cbbfa8] bg-[#f7f1e6] px-2 text-center">
                 <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">B{banner.id}</p>
                 <p className="mt-1 text-sm font-semibold text-emerald-900">제휴 구좌 비어 있음</p>
                 <div className="mt-2">

@@ -11,7 +11,7 @@ export type HomeUrgentJob = {
 
 export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+    <section className="lounge-card overflow-hidden rounded-[1.5rem]">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <span className="inline-flex items-center gap-1.5 text-lg font-bold sm:text-xl">
           <SirenIcon className="size-4 text-rose-600" />

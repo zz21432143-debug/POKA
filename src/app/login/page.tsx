@@ -34,7 +34,7 @@ export default async function LoginPage({
   const nextQuery = nextPath !== "/" ? `&next=${encodeURIComponent(nextPath)}` : "";
 
   return (
-    <article className="mx-auto w-full max-w-md rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <article className="lounge-card mx-auto w-full max-w-md rounded-[1.5rem] p-5">
       <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
         <Link
           href={`/login?tab=login${nextQuery}`}

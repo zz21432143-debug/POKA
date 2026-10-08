@@ -60,7 +60,7 @@ export function PostList({
         return (
           <Fragment key={post.id}>
             {index === 3 ? <SponsoredPostLine unit={nativeSponsor} /> : null}
-            <li className="flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-slate-50 hover:bg-emerald-50/70">
+            <li className="flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#e7f4ea]">
               {showBoard ? (
                 <Badge
                   variant="secondary"

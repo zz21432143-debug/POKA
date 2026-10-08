@@ -8,7 +8,7 @@ export async function PopularPosts() {
   try {
     const posts = await getPopularPosts(5).catch(() => []);
     return (
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="lounge-card rounded-[1.5rem] p-4">
         <p className="flex items-center gap-1.5 text-sm font-semibold">
           <FlameIcon className="size-4 text-primary" />
           실시간 인기글
@@ -42,7 +42,7 @@ export async function PopularPosts() {
     );
   } catch {
     return (
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="lounge-card rounded-[1.5rem] p-4">
         <p className="flex items-center gap-1.5 text-sm font-semibold">
           <FlameIcon className="size-4 text-primary" />
           실시간 인기글

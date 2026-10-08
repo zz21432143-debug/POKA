@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { SearchIcon, UserRoundIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
@@ -35,7 +34,7 @@ export function SiteHeader({
               type="search"
               name="q"
               placeholder="검색어를 입력하세요."
-              className="h-10 w-full rounded-full border border-white/30 bg-white/15 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/70 focus:border-primary focus:bg-white/20 focus:ring-2 focus:ring-primary/30"
+              className="h-10 w-full rounded-full border border-white/15 bg-black/25 pr-4 pl-9 text-sm text-white outline-none placeholder:text-white/55 focus:border-emerald-300/40 focus:bg-black/35 focus:ring-2 focus:ring-emerald-400/20"
             />
           </label>
         </form>
@@ -52,10 +51,14 @@ export function SiteHeader({
             <SearchIcon className="size-5" />
           </Link>
           {profile ? (
-            <HeaderIcon href={meHref} label="내 정보">
-              <UserRoundIcon className="size-5" />
-              <span className="hidden sm:inline lg:inline">내정보</span>
-            </HeaderIcon>
+            <Link
+              href={meHref}
+              aria-label="내 정보"
+              className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full border border-[#e8c36a]/70 bg-[#f4ead0] text-sm font-semibold text-[#0d3b24] hover:bg-[#fff6d6] sm:min-h-11 sm:w-auto sm:px-3"
+            >
+              <UserRoundIcon className="size-4" />
+              <span className="hidden sm:inline">내정보</span>
+            </Link>
           ) : (
             <Link
               href="/login"
@@ -68,25 +71,5 @@ export function SiteHeader({
         </div>
       </div>
     </header>
-  );
-}
-
-function HeaderIcon({
-  href,
-  label,
-  children,
-}: {
-  href: string;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      className="inline-flex size-11 items-center justify-center gap-1.5 rounded-full text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white sm:w-auto sm:min-h-11 sm:px-2.5"
-    >
-      {children}
-    </Link>
   );
 }

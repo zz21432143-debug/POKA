@@ -18,12 +18,12 @@ export function TopNav() {
         return item.href === "/" ? (
           <a key={item.href} href="/" className={className}>
             {item.label}
-            {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary" /> : null}
+            {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#e8c36a]" /> : null}
           </a>
         ) : (
           <Link key={item.href} href={item.href} className={className}>
             {item.label}
-            {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-primary" /> : null}
+            {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#e8c36a]" /> : null}
           </Link>
         );
       })}

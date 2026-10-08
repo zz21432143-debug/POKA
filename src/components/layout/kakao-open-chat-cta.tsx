@@ -43,7 +43,7 @@ export function KakaoOpenChatCta({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "touch-target flex w-full items-center gap-3 rounded-2xl bg-[#FEE500] px-4 py-3.5 text-[#191919]",
+        "touch-target flex w-full items-center gap-3 rounded-[1.25rem] bg-[#FEE500] px-4 py-3.5 text-[#191919]",
         "shadow-sm ring-1 ring-black/5 hover:bg-[#f5dc00]",
         className,
       )}

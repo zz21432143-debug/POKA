@@ -22,9 +22,11 @@ export function GrowthHomePanel({
 
   return (
     <section className="grid gap-3 sm:grid-cols-2">
-      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-[1.5rem] border border-[#ddd2be] bg-[#fffcf7] p-4 shadow-[0_8px_20px_rgb(60_40_16_/_0.06)]">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <SpadeIcon className="size-4 shrink-0 text-primary" />
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#0d3b24] text-emerald-100">
+            <SpadeIcon className="size-4 shrink-0" />
+          </span>
           {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}
         </p>
         <h2 className="mt-2 text-sm font-semibold leading-snug break-keep sm:text-base">
@@ -47,9 +49,11 @@ export function GrowthHomePanel({
         </Link>
       </article>
 
-      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <article className="flex min-h-[8.25rem] min-w-0 flex-col rounded-[1.5rem] border border-[#ddd2be] bg-[#fffcf7] p-4 shadow-[0_8px_20px_rgb(60_40_16_/_0.06)]">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <CalendarDaysIcon className="size-4 shrink-0 text-primary" />
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#efe4cc] text-primary">
+            <CalendarDaysIcon className="size-4 shrink-0" />
+          </span>
           이번 주 홀덤 대회
         </p>
         <h2 className="mt-2 text-sm font-semibold leading-snug break-keep sm:text-base">

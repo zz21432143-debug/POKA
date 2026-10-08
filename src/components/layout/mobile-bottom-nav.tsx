@@ -25,7 +25,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="모바일 하단 메뉴"
-      className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 border-t border-[#d7ccb8] bg-[#fffcf7] pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="mx-auto grid max-w-[1320px] grid-cols-5">
         {MOBILE_BOTTOM_NAV.map((item) => {

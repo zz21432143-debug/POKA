@@ -32,7 +32,7 @@ export function NoticeWidget({
   items: { id: string; title: string; date: string; href: string }[];
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="lounge-card rounded-[1.5rem] p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-sm font-semibold">
           <Volume2Icon className="size-4 text-primary" />

@@ -18,7 +18,7 @@ export function ProfileWidget({
 }) {
   if (!profile) {
     return (
-      <div className="rounded-2xl border border-border bg-white p-4 text-sm">
+      <div className="lounge-card rounded-[1.5rem] p-4 text-sm">
         <p className="text-muted-foreground">로그인하면 레벨, 출석, 글쓰기를 쓸 수 있습니다.</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Link
@@ -61,9 +61,9 @@ export function ProfileWidget({
   const meHref = `/u/${encodeURIComponent(profile.nickname)}`;
 
   return (
-    <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="lounge-card rounded-[1.5rem] p-4">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted">
+        <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#0d3b24] ring-2 ring-[#e8c36a]">
           <MarkImage src={markSrc} alt={profile.nickname} size={48} />
         </div>
         <div className="min-w-0 flex-1">
@@ -79,7 +79,7 @@ export function ProfileWidget({
             </p>
           ) : null}
         </div>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+        <span className="rounded-full bg-[#0d3b24] px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
           Lv.{profile.level}
         </span>
       </div>
@@ -126,7 +126,7 @@ export function ProfileWidget({
         ) : null}
         <Link
           href="/shop"
-          className="touch-target flex min-h-11 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          className="touch-target flex min-h-11 items-center justify-center rounded-full border border-[#d7ccb8] bg-[#fffcf7] text-sm font-semibold hover:bg-[#f3eee4]"
         >
           마크 상점
         </Link>

@@ -37,9 +37,9 @@ export function HomeLatest({
   }, [tab, all, free, jobs, hands]);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border bg-slate-50 px-4 py-3">
-        <h2 className="mr-2 text-lg font-bold sm:text-xl">최신 게시글</h2>
+    <section className="lounge-card overflow-hidden rounded-[1.5rem]">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#eee4d2] px-4 py-3">
+        <h2 className="mr-2 text-lg font-bold text-[#1c1914] sm:text-xl">최신 게시글</h2>
         {TABS.map((item) => (
           <button
             key={item.key}
