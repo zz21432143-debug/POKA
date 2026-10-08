@@ -109,6 +109,7 @@ model User {
   banReason           String?
   signupIp            String?
   lastLoginAt         DateTime?
+  withdrawnAt         DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -445,7 +446,7 @@ model ForbiddenWord {
 model SiteSetting {
   id               String   @id @default("default")
   noticeBanner     String?
-  footerEmail      String   @default("contact@pokerwiki.co.kr")
+  footerEmail      String   @default("POKA4444444@gmail.com")
   kakaoChannelUrl  String?
   updatedAt        DateTime @updatedAt
 }

@@ -10,6 +10,7 @@ import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
 import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
+import { isStaff } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { ensureBannerSlots } from "@/lib/premium-banners";
@@ -180,7 +181,7 @@ export async function POST(request: Request) {
         ratingService: null,
         ratingFacility: null,
         ratingAtmosphere: null,
-        isPaid: boardType === "JOBS" ? Boolean(body.isPaid) : false,
+        isPaid: boardType === "JOBS" && isStaff(user) ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,
         promoLocation:

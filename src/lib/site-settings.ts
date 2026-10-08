@@ -13,7 +13,7 @@ export type PublicSiteSettings = {
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   noticeBanner: null,
-  footerEmail: "contact@pokerwiki.co.kr",
+  footerEmail: "POKA4444444@gmail.com",
   kakaoChannelUrl: KAKAO_OPEN_CHAT_URL,
 };
 

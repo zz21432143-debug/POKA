@@ -84,6 +84,7 @@ async function applySchema() {
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "banReason" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "signupIp" TEXT`);
     await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP(3)`);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "withdrawnAt" TIMESTAMP(3)`);
     await client.query(`CREATE INDEX IF NOT EXISTS "User_status_idx" ON "User"("status")`);
     await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "isPrivate" BOOLEAN NOT NULL DEFAULT false`);
     await client.query(`ALTER TABLE "Post" ADD COLUMN IF NOT EXISTS "unlockPasswordHash" TEXT`);
@@ -139,6 +140,23 @@ async function applySchema() {
         CONSTRAINT "SiteSetting_pkey" PRIMARY KEY ("id")
       )
     `);
+    await client.query(`
+      UPDATE "SiteSetting"
+      SET "footerEmail" = 'POKA4444444@gmail.com'
+      WHERE "footerEmail" IS NULL OR "footerEmail" = '' OR "footerEmail" = 'contact@pokerwiki.co.kr'
+    `).catch(() => undefined);
+    await client.query(`
+      UPDATE "Post" SET "authorIp" = NULL
+      WHERE "authorIp" IS NOT NULL AND "createdAt" < NOW() - INTERVAL '90 days'
+    `).catch(() => undefined);
+    await client.query(`
+      UPDATE "Comment" SET "authorIp" = NULL
+      WHERE "authorIp" IS NOT NULL AND "createdAt" < NOW() - INTERVAL '90 days'
+    `).catch(() => undefined);
+    await client.query(`
+      DELETE FROM "AuditLog"
+      WHERE "kind" = 'BAN_REJOIN' AND "createdAt" < NOW() - INTERVAL '365 days'
+    `).catch(() => undefined);
     await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
     await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
   } finally {

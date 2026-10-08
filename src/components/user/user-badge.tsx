@@ -7,6 +7,7 @@ export { levelTitle };
 
 export type BadgeUser = {
   nickname: string;
+  withdrawnAt?: Date | string | null;
   profileMarkImageUrl: string | null;
   level: number;
   isDealerVerified?: boolean;
@@ -21,6 +22,7 @@ export type BadgeUser = {
 
 export const AUTHOR_SELECT = {
   nickname: true,
+  withdrawnAt: true,
   profileMarkImageUrl: true,
   level: true,
   isDealerVerified: true,

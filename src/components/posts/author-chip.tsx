@@ -1,4 +1,5 @@
 import { UserBadge, AUTHOR_SELECT, type BadgeUser } from "@/components/user/user-badge";
+import { isWithdrawnRecord, withdrawnDisplayName } from "@/lib/account-privacy";
 
 export type PublicAuthor = BadgeUser | null;
 
@@ -50,6 +51,9 @@ export function AuthorChip({
 }) {
   if (anonymous || !author) {
     return <span className="text-sm text-muted-foreground">익명</span>;
+  }
+  if (isWithdrawnRecord(author)) {
+    return <span className="text-sm text-muted-foreground">{withdrawnDisplayName()}</span>;
   }
   return <UserBadge user={author} size={size} />;
 }

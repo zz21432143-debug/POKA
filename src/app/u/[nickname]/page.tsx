@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { UserBadge } from "@/components/user/user-badge";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PostList } from "@/components/posts/post-list";
@@ -22,7 +23,7 @@ export default async function MemberPage({
       equippedEffect: { select: { cssClass: true } },
     },
   });
-  if (!user) notFound();
+  if (!user || user.withdrawnAt) notFound();
   const viewer = await getCurrentUser().catch(() => null);
 
   const posts = await prisma.post.findMany({
@@ -61,6 +62,11 @@ export default async function MemberPage({
         <p className="text-sm text-muted-foreground">연속 출석 {user.attendanceStreak}일</p>
         {viewer?.isMaster && !user.isMaster ? (
           <VerifyToggle nickname={user.nickname} verified={user.isDealerVerified} />
+        ) : null}
+        {viewer?.id === user.id ? (
+          <Link href="/account" className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-primary">
+            내 정보·탈퇴
+          </Link>
         ) : null}
       </header>
       <PostList

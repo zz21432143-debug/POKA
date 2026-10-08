@@ -49,7 +49,6 @@ export default async function EditJobPage({
           jobDressCode: post.jobDressCode ?? "",
           jobApplyMethod: post.jobApplyMethod ?? "",
           content: post.content,
-          isPaid: post.isPaid,
         }}
       />
     </div>

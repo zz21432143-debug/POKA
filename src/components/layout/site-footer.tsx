@@ -2,14 +2,13 @@ import { PokaLogo } from "@/components/brand/poka-logo";
 import { FooterLegalLinks } from "@/components/layout/footer-legal-links";
 import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
 import { LEGAL_SERVICE_NAME } from "@/lib/legal";
-import { privacyOfficerName, publicContactEmail } from "@/lib/legal-contact";
+import { publicContactEmail } from "@/lib/legal-contact";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export async function SiteFooter() {
   const settings = await getSiteSettings().catch(() => null);
   const email = publicContactEmail(settings?.footerEmail);
   const kakao = settings?.kakaoChannelUrl?.trim() || KAKAO_OPEN_CHAT_URL;
-  const officer = privacyOfficerName();
 
   return (
     <footer className="mt-auto border-t border-border bg-white pb-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -21,7 +20,6 @@ export async function SiteFooter() {
               <p className="font-semibold text-foreground">서비스명: {LEGAL_SERVICE_NAME}</p>
             </div>
             <p>홀덤·딜러 커뮤니티 · 만 19세 이상</p>
-            <p className="break-words">운영자 / 개인정보 보호책임자: {officer}</p>
             <a href={`mailto:${email}`} className="break-all hover:text-foreground">
               문의 이메일: {email}
             </a>

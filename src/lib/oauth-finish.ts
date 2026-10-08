@@ -35,7 +35,15 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       return NextResponse.redirect(new URL("/login?tab=signup&error=consent", request.url));
     }
     jar.delete(CONSENT_COOKIE);
-    const user = await upsertSocialUser(profile, { signupIp: ip });
+    const user = await upsertSocialUser(profile, { signupIp: ip }).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : "가입할 수 없습니다.";
+      const url = new URL("/login", request.url);
+      url.searchParams.set("tab", "signup");
+      url.searchParams.set("error", "restricted");
+      url.searchParams.set("msg", message);
+      return url;
+    });
+    if (user instanceof URL) return NextResponse.redirect(user);
     try {
       await assertAccountActive(user);
     } catch (error) {
@@ -48,7 +56,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
 
   jar.delete(CONSENT_COOKIE);
   const existing = await findSocialUser(profile);
-  if (!existing) {
+  if (!existing || existing.withdrawnAt) {
     return NextResponse.redirect(new URL("/login?tab=signup&error=need_signup", request.url));
   }
   try {

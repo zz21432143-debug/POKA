@@ -29,7 +29,6 @@ export type JobFormValues = {
   jobDressCode: string;
   jobApplyMethod: string;
   content: string;
-  isPaid: boolean;
 };
 
 const EMPTY: JobFormValues = {
@@ -51,7 +50,6 @@ const EMPTY: JobFormValues = {
   jobDressCode: "",
   jobApplyMethod: "",
   content: "",
-  isPaid: false,
 };
 
 export function JobWriteForm({
@@ -262,16 +260,6 @@ export function JobWriteForm({
           <Field label="연락처" value={form.jobContact} onChange={(v) => set("jobContact", v)} placeholder="010-0000-0000" />
         </div>
       ) : null}
-
-      <label className="flex min-h-11 items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          className="size-5"
-          checked={form.isPaid}
-          onChange={(event) => set("isPaid", event.target.checked)}
-        />
-        유료 상단 고정 플래그 (is_paid)
-      </label>
 
       <div className="grid gap-2">
         <Label htmlFor="job-content">상세 내용</Label>

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "닉네임과 비밀번호를 입력하세요." }, { status: 400 });
       }
       const user = await prisma.user.findUnique({ where: { nickname } });
-      if (!user || !user.passwordHash || !verifyPassword(password, user.passwordHash)) {
+      if (!user || user.withdrawnAt || !user.passwordHash || !verifyPassword(password, user.passwordHash)) {
         return NextResponse.json({ error: "닉네임 또는 비밀번호가 맞지 않습니다." }, { status: 401 });
       }
       try {

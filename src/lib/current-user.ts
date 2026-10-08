@@ -14,6 +14,7 @@ import { roleFromFlags } from "@/lib/roles";
 
 export type CurrentUser = ViewerProfile & {
   id: string;
+  email: string | null;
   role: "USER" | "ADMIN" | "MASTER";
   status: "ACTIVE" | "SUSPENDED" | "BANNED";
   suspendedUntil: Date | null;
@@ -55,7 +56,7 @@ async function findUserBySession() {
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const user = await findUserBySession();
-  if (!user) return null;
+  if (!user || user.withdrawnAt) return null;
   const lifted = await liftExpiredSuspension({
     id: user.id,
     status: user.status,
@@ -65,6 +66,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const status = (lifted.status ?? "ACTIVE") as CurrentUser["status"];
   return {
     id: user.id,
+    email: user.email ?? null,
     ...toViewerProfile(user),
     role: roleFromFlags(user),
     status,

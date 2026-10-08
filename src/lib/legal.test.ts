@@ -6,7 +6,7 @@ import {
   PRIVACY_POLICY_SECTIONS,
   YOUTH_PROTECTION_SECTIONS,
 } from "./legal";
-import { DEFAULT_CONTACT_EMAIL, DEFAULT_OPERATOR_NAME, publicContactEmail, privacyOfficerName } from "./legal-contact";
+import { DEFAULT_CONTACT_EMAIL, publicContactEmail } from "./legal-contact";
 
 describe("legal required disclosures", () => {
   it("names the service POKA", () => {
@@ -33,18 +33,22 @@ describe("legal required disclosures", () => {
     const retain = PRIVACY_CONSENT_SECTIONS.find((row) => row.title.includes("보유"));
     assert.ok(retain);
     assert.match(retain.body, /탈퇴 시 즉시 파기/);
-    assert.match(retain.body, /악성 이용자 재가입 방지/);
-    assert.match(retain.body, /작성자 IP/);
-    assert.match(retain.body, /관계 법령/);
+    assert.match(retain.body, /재가입 방지/);
+    assert.match(retain.body, /3개월/);
+    assert.match(retain.body, /1년/);
   });
 
-  it("names the privacy officer and email", () => {
-    const officer = PRIVACY_POLICY_SECTIONS.find((row) => row.title.includes("보호책임자"));
+  it("lists contact email and overseas transfer, without a placeholder legal name", () => {
+    const officer = PRIVACY_POLICY_SECTIONS.find((row) => row.title.includes("관련 문의"));
     assert.ok(officer);
-    assert.match(officer.body, new RegExp(privacyOfficerName()));
     assert.match(officer.body, new RegExp(publicContactEmail()));
-    assert.equal(DEFAULT_OPERATOR_NAME, "POKA 관리자");
-    assert.equal(DEFAULT_CONTACT_EMAIL, "contact@pokerwiki.co.kr");
+    assert.doesNotMatch(officer.body, /성명/);
+    assert.equal(DEFAULT_CONTACT_EMAIL, "POKA4444444@gmail.com");
+    const transfer = PRIVACY_CONSENT_SECTIONS.find((row) => row.title.includes("국외"));
+    assert.ok(transfer);
+    for (const phrase of ["Google", "Vercel", "Neon", "미국"]) {
+      assert.match(transfer.body, new RegExp(phrase));
+    }
   });
 
   it("includes a youth protection policy", () => {
