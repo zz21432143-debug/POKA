@@ -157,6 +157,10 @@ async function applySchema() {
       DELETE FROM "AuditLog"
       WHERE "kind" = 'BAN_REJOIN' AND "createdAt" < NOW() - INTERVAL '365 days'
     `).catch(() => undefined);
+    await client.query(`
+      DELETE FROM "AuditLog"
+      WHERE "kind" = 'WITHDRAW_REJOIN' AND "createdAt" < NOW() - INTERVAL '7 days'
+    `).catch(() => undefined);
     await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
     await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
   } finally {

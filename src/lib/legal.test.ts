@@ -4,6 +4,7 @@ import {
   LEGAL_SERVICE_NAME,
   PRIVACY_CONSENT_SECTIONS,
   PRIVACY_POLICY_SECTIONS,
+  TERMS_SECTIONS,
   YOUTH_PROTECTION_SECTIONS,
 } from "./legal";
 import { KAKAO_INQUIRY_ID, KAKAO_INQUIRY_URL, KAKAO_OPEN_CHAT_URL, kakaoInquiryHref } from "./kakao";
@@ -30,11 +31,19 @@ describe("legal required disclosures", () => {
     }
   });
 
+  it("blocks rejoin for 7 days after withdraw in the terms", () => {
+    const leave = TERMS_SECTIONS.find((row) => row.title.includes("계약 해지"));
+    assert.ok(leave);
+    assert.match(leave.body, /7일 동안은 같은 카카오·구글 계정으로 재가입할 수 없습니다/);
+    assert.match(leave.body, /복구되지 않습니다/);
+  });
+
   it("destroys data on leave except legal IP retention", () => {
     const retain = PRIVACY_CONSENT_SECTIONS.find((row) => row.title.includes("보유"));
     assert.ok(retain);
     assert.match(retain.body, /탈퇴 시 즉시 파기/);
     assert.match(retain.body, /재가입 방지/);
+    assert.match(retain.body, /7일/);
     assert.match(retain.body, /3개월/);
     assert.match(retain.body, /1년/);
   });

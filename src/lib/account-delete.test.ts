@@ -6,6 +6,7 @@ import {
   socialFingerprint,
   withdrawnDisplayName,
 } from "./account-privacy";
+import { WITHDRAW_REJOIN_DAYS, WITHDRAW_REJOIN_WARNING } from "./withdraw-copy";
 import { isStaff } from "./roles";
 
 describe("account withdraw helpers", () => {
@@ -22,6 +23,9 @@ describe("account withdraw helpers", () => {
   it("keeps author IP 90 days and banned fingerprints 1 year", () => {
     assert.equal(AUTHOR_IP_RETENTION_DAYS, 90);
     assert.equal(BAN_REJOIN_RETENTION_DAYS, 365);
+    assert.equal(WITHDRAW_REJOIN_DAYS, 7);
+    assert.match(WITHDRAW_REJOIN_WARNING, /7일/);
+    assert.match(WITHDRAW_REJOIN_WARNING, /다시 가입할 수 없습니다/);
     assert.equal(withdrawnDisplayName(), "탈퇴한 회원");
   });
 

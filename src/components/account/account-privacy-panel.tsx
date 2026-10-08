@@ -138,7 +138,8 @@ export function AccountPrivacyPanel({
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-lg font-semibold">회원 탈퇴</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          탈퇴는 이 화면이 아니라 아래 탈퇴 페이지에서 진행합니다.
+          탈퇴는 이 화면이 아니라 아래 탈퇴 페이지에서 진행합니다. 탈퇴하면 같은 카카오·구글 계정으로 7일 동안
+          다시 가입할 수 없습니다.
         </p>
         <Link
           href="/account/withdraw"

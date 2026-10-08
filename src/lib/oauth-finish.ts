@@ -9,6 +9,7 @@ import {
   safeNextPath,
 } from "@/lib/oauth-consent";
 import { setSessionNickname } from "@/lib/current-user";
+import { socialRejoinBlockMessage } from "@/lib/account-delete";
 import { findSocialUser, upsertSocialUser, type SocialProfile } from "@/lib/social-account";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { clientIp } from "@/lib/request";
@@ -55,6 +56,8 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
   }
 
   jar.delete(CONSENT_COOKIE);
+  const cooldown = await socialRejoinBlockMessage(profile.provider, profile.providerId, profile.email);
+  if (cooldown) return restrictionRedirect(request, cooldown);
   const existing = await findSocialUser(profile);
   if (!existing || existing.withdrawnAt) {
     return NextResponse.redirect(new URL("/login?tab=signup&error=need_signup", request.url));

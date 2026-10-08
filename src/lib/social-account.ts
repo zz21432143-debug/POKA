@@ -1,4 +1,4 @@
-import { bannedSocialBlocked } from "@/lib/account-delete";
+import { socialRejoinBlockMessage } from "@/lib/account-delete";
 import { prisma } from "@/lib/db";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
 import { findNicknameOwner } from "@/lib/nickname-lookup";
@@ -49,9 +49,8 @@ export async function upsertSocialUser(profile: SocialProfile, extras?: { signup
   const email = cleanEmail(profile.email);
   const providerId = profile.providerId.trim();
   if (!providerId) throw new Error("소셜 계정 식별자를 받지 못했습니다.");
-  if (await bannedSocialBlocked(profile.provider, providerId)) {
-    throw new Error("영구 정지된 계정은 재가입할 수 없습니다.");
-  }
+  const rejoin = await socialRejoinBlockMessage(profile.provider, providerId, email);
+  if (rejoin) throw new Error(rejoin);
 
   let user = await findSocialUser(profile);
   if (user?.withdrawnAt) user = null;

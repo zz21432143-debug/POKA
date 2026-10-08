@@ -3,8 +3,10 @@ import {
   AUTHOR_IP_RETENTION_DAYS,
   BAN_REJOIN_LOG_KIND,
   BAN_REJOIN_RETENTION_DAYS,
+  WITHDRAW_REJOIN_LOG_KIND,
   socialFingerprint,
 } from "@/lib/account-privacy";
+import { WITHDRAW_REJOIN_DAYS } from "@/lib/withdraw-copy";
 
 export class WithdrawError extends Error {
   constructor(message: string) {
@@ -21,21 +23,20 @@ export async function withdrawAccount(userId: string) {
     throw new WithdrawError("마스터 계정은 화면에서 탈퇴할 수 없습니다. 문의 메일로 요청해 주세요.");
   }
 
-  if (user.status === "BANNED") {
-    const rows = [
-      user.kakaoId ? socialFingerprint("kakao", user.kakaoId) : null,
-      user.googleId ? socialFingerprint("google", user.googleId) : null,
-    ].filter((row): row is string => Boolean(row));
-    if (rows.length > 0) {
-      await prisma.auditLog.createMany({
-        data: rows.map((detail) => ({
-          kind: BAN_REJOIN_LOG_KIND,
-          userId,
-          ip: user.signupIp ?? "",
-          detail,
-        })),
-      });
-    }
+  const fingerprints = [
+    user.kakaoId ? socialFingerprint("kakao", user.kakaoId) : null,
+    user.googleId ? socialFingerprint("google", user.googleId) : null,
+    user.email ? socialFingerprint("email", user.email.trim().toLowerCase()) : null,
+  ].filter((row): row is string => Boolean(row));
+  if (fingerprints.length > 0) {
+    await prisma.auditLog.createMany({
+      data: fingerprints.map((detail) => ({
+        kind: user.status === "BANNED" ? BAN_REJOIN_LOG_KIND : WITHDRAW_REJOIN_LOG_KIND,
+        userId,
+        ip: user.signupIp ?? "",
+        detail,
+      })),
+    });
   }
 
   await prisma.post.updateMany({
@@ -81,6 +82,35 @@ export async function bannedSocialBlocked(provider: string, providerId: string) 
     select: { id: true },
   });
   return Boolean(row);
+}
+
+function remainingRejoinDays(createdAt: Date) {
+  const elapsed = Date.now() - createdAt.getTime();
+  const left = WITHDRAW_REJOIN_DAYS * 24 * 60 * 60 * 1000 - elapsed;
+  return Math.max(1, Math.ceil(left / (24 * 60 * 60 * 1000)));
+}
+
+export async function socialRejoinBlockMessage(
+  provider: string,
+  providerId: string,
+  email?: string | null,
+) {
+  if (await bannedSocialBlocked(provider, providerId)) {
+    return "영구 정지된 계정은 재가입할 수 없습니다.";
+  }
+  const since = new Date(Date.now() - WITHDRAW_REJOIN_DAYS * 24 * 60 * 60 * 1000);
+  const details = [
+    socialFingerprint(provider, providerId),
+    email?.trim() ? socialFingerprint("email", email.trim().toLowerCase()) : null,
+  ].filter((row): row is string => Boolean(row));
+  const row = await prisma.auditLog.findFirst({
+    where: { kind: WITHDRAW_REJOIN_LOG_KIND, detail: { in: details }, createdAt: { gte: since } },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+  if (!row) return null;
+  const days = remainingRejoinDays(row.createdAt);
+  return `탈퇴 후 ${WITHDRAW_REJOIN_DAYS}일 동안은 같은 계정으로 다시 가입할 수 없습니다. ${days}일 뒤에 시도해 주세요.`;
 }
 
 export async function purgeExpiredAuthorIps() {
