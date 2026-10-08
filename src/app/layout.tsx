@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Caveat, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -85,17 +84,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ko"
       className={`${sans.variable} ${script.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <GoogleAnalytics />
-        <PwaRegister />
+      <head>
         {adsense ? (
-          <Script
+          <script
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsense}`}
             crossOrigin="anonymous"
-            strategy="afterInteractive"
           />
         ) : null}
+      </head>
+      <body className="min-h-full flex flex-col">
+        <GoogleAnalytics />
+        <PwaRegister />
         <SiteShell>{children}</SiteShell>
       </body>
     </html>

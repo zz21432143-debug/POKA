@@ -6,6 +6,8 @@ export default function robots(): MetadataRoute.Robots {
   const base = siteUrl();
   return {
     rules: [
+      { userAgent: "Mediapartners-Google", allow: "/" },
+      { userAgent: "AdsBot-Google", allow: "/" },
       {
         userAgent: "*",
         allow: "/",
