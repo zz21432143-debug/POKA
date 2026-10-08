@@ -2,7 +2,8 @@ import { prisma } from "@/lib/db";
 
 export const LAUNCH_EMPTY_KIND = "LAUNCH_EMPTY_COMMUNITY";
 export const LAUNCH_MASTER_KIND = "LAUNCH_MASTER_POKA_SPRING";
-export const LAUNCH_MASTER_NICKNAME = "포카의봄";
+export const LAUNCH_MASTER_NICKNAME = "POKA";
+export const LEGACY_MASTER_NICKNAME = "포카의봄";
 export const LAUNCH_MASTER_TICKETS = 10;
 
 export async function wipeCommunityForLaunch() {
@@ -53,10 +54,41 @@ export async function wipeCommunityForLaunch() {
   return { wiped: true };
 }
 
+async function renameLegacyMasterNick() {
+  const spring = await prisma.user.findFirst({
+    where: { nickname: { equals: LEGACY_MASTER_NICKNAME, mode: "insensitive" } },
+  });
+  if (!spring) return;
+  const taken = await prisma.user.findFirst({
+    where: { nickname: { equals: LAUNCH_MASTER_NICKNAME, mode: "insensitive" }, NOT: { id: spring.id } },
+  });
+  if (taken) {
+    if (taken.kakaoId || taken.googleId) return;
+    await prisma.user.update({
+      where: { id: taken.id },
+      data: { nickname: `old_${taken.id.slice(-10)}` },
+    });
+  }
+  await prisma.user.update({
+    where: { id: spring.id },
+    data: {
+      nickname: LAUNCH_MASTER_NICKNAME,
+      isMaster: true,
+      isAdmin: true,
+      role: "MASTER",
+      level: 250,
+      exp: 24900,
+    },
+  });
+}
+
 export async function promoteMasterNickname(nickname: string) {
   const name = nickname.trim();
   if (!name) return null;
-  const user = await prisma.user.findUnique({ where: { nickname: name }, select: { id: true } });
+  const user = await prisma.user.findFirst({
+    where: { nickname: { equals: name, mode: "insensitive" } },
+    select: { id: true },
+  });
   if (!user) return null;
   await prisma.user.updateMany({
     where: { isMaster: true },
@@ -75,11 +107,23 @@ export async function promoteMasterNickname(nickname: string) {
 }
 
 export async function ensureLaunchMaster() {
+  await renameLegacyMasterNick();
   const already = await prisma.auditLog.findFirst({
     where: { kind: LAUNCH_MASTER_KIND },
     select: { id: true },
   });
-  if (already) return null;
+  if (already) {
+    const current = await prisma.user.findFirst({
+      where: { nickname: { equals: LAUNCH_MASTER_NICKNAME, mode: "insensitive" } },
+    });
+    if (current && !current.isMaster) {
+      return prisma.user.update({
+        where: { id: current.id },
+        data: { isMaster: true, isAdmin: true, role: "MASTER", level: 250, exp: 24900 },
+      });
+    }
+    return current;
+  }
   const nickname = process.env.MASTER_PROMOTE_NICKNAME?.trim() || LAUNCH_MASTER_NICKNAME;
   const user = await promoteMasterNickname(nickname);
   if (!user) return null;

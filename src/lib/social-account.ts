@@ -1,6 +1,7 @@
 import { bannedSocialBlocked } from "@/lib/account-delete";
 import { prisma } from "@/lib/db";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
+import { findNicknameOwner } from "@/lib/nickname-lookup";
 
 export type SocialProvider = "kakao" | "google";
 
@@ -22,7 +23,7 @@ export async function uniqueSocialNickname(base: string, fallback: string) {
   if (nicknameError(cleaned)) cleaned = fallback;
   let candidate = cleaned;
   let n = 1;
-  while (await prisma.user.findUnique({ where: { nickname: candidate } })) {
+  while (await findNicknameOwner(candidate)) {
     n += 1;
     const suffix = String(n);
     candidate = `${cleaned.slice(0, Math.max(2, 12 - suffix.length))}${suffix}`;

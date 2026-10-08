@@ -52,7 +52,7 @@ export default async function MemberPage({
             href="/account"
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-border text-sm font-semibold"
           >
-            내 정보·닉네임 변경
+            내 정보
           </Link>
         ) : null}
         {viewer?.isMaster && !user.isMaster ? (

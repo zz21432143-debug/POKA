@@ -138,7 +138,7 @@ export function ProfileWidget({
           href="/account"
           className="touch-target flex min-h-11 items-center justify-center rounded-full border border-border text-sm font-semibold hover:bg-muted"
         >
-          내 정보·탈퇴
+          내 정보
         </Link>
         <LogoutButton />
       </div>

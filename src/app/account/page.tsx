@@ -11,9 +11,9 @@ export default async function AccountPage() {
   return (
     <article className="mx-auto flex w-full max-w-lg flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">내 정보·탈퇴</h1>
+        <h1 className="text-2xl font-semibold">내 정보</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          개인정보 열람과 회원 탈퇴를 여기서 할 수 있습니다.
+          닉네임·이메일을 확인하고, 닉네임을 바꿀 수 있습니다. 탈퇴는 별도 화면입니다.
         </p>
       </header>
       <AccountPrivacyPanel

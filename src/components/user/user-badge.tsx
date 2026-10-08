@@ -39,6 +39,16 @@ export function isOpenChatStar(user: Pick<BadgeUser, "level" | "attendanceStreak
   return user.level >= 8 || (user.attendanceStreak ?? 0) >= 7;
 }
 
+export const OPERATOR_MARK_SRC = "/marks/operator.svg";
+
+function OperatorPill() {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-400 bg-zinc-900 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
+      운영자
+    </span>
+  );
+}
+
 const SIZE = {
   sm: { mark: 28, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
   md: { mark: 32, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
@@ -68,6 +78,7 @@ export function UserBadge({
 
   const extraPills = showExtras && extras ? (
     <span className="inline-flex flex-wrap items-center gap-1">
+      {user.isMaster ? <OperatorPill /> : null}
       {!staff && user.isDealerVerified ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
@@ -81,7 +92,9 @@ export function UserBadge({
         </span>
       ) : null}
     </span>
-  ) : showExtras && !staff && user.isDealerVerified ? (
+  ) : showExtras && user.isMaster ? (
+        <OperatorPill />
+      ) : showExtras && !staff && user.isDealerVerified ? (
         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
           인증
@@ -91,6 +104,9 @@ export function UserBadge({
   if (size === "lg") {
     return (
       <span className={cn("flex max-w-full items-center gap-3", className)}>
+        {user.isMaster ? (
+          <MarkImage src={OPERATOR_MARK_SRC} alt="운영자 마크" size={spec.mark} className="ring-2 ring-amber-400 shadow-sm" />
+        ) : null}
         <MarkImage
           src={user.profileMarkImageUrl}
           alt={`${user.nickname} 마크`}
@@ -124,6 +140,9 @@ export function UserBadge({
       <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
         Lv.{user.level}
       </span>
+      {user.isMaster ? (
+        <MarkImage src={OPERATOR_MARK_SRC} alt="운영자 마크" size={spec.mark} className="ring-2 ring-amber-400" />
+      ) : null}
       <MarkImage
         src={user.profileMarkImageUrl}
         alt={`${user.nickname} 마크`}

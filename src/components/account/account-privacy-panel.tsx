@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,37 +21,37 @@ export function AccountPrivacyPanel({
   tickets: number;
 }) {
   const router = useRouter();
-  const [confirm, setConfirm] = useState("");
   const [nextNick, setNextNick] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [nickError, setNickError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [nickOk, setNickOk] = useState<string | null>(null);
   const [nickPending, setNickPending] = useState(false);
+  const [checkPending, setCheckPending] = useState(false);
   const contact = publicContactEmail();
   const freeLeft = changeCount <= 0;
 
-  async function withdraw() {
-    setPending(true);
-    setError(null);
+  async function checkNick() {
+    setCheckPending(true);
+    setNickError(null);
+    setNickOk(null);
     try {
-      const response = await fetch("/api/account", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ confirm }),
-      });
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(data.error ?? "탈퇴에 실패했습니다.");
-      router.push("/");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "탈퇴에 실패했습니다.");
-      setPending(false);
+      const response = await fetch(`/api/account/nickname?nickname=${encodeURIComponent(nextNick)}`);
+      const data = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !data.ok) {
+        setNickError(data.error ?? "쓸 수 없는 닉네임입니다.");
+        return;
+      }
+      setNickOk("사용 가능한 닉네임입니다.");
+    } catch {
+      setNickError("확인할 수 없습니다.");
+    } finally {
+      setCheckPending(false);
     }
   }
 
   async function changeNick() {
     setNickPending(true);
     setNickError(null);
+    setNickOk(null);
     try {
       const response = await fetch("/api/account/nickname", {
         method: "POST",
@@ -92,7 +93,7 @@ export function AccountPrivacyPanel({
         <h2 className="text-lg font-semibold">닉네임 변경</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           최초 1회는 무료입니다. 그다음부터는 상점에서 닉네임 변경권(500P)을 산 뒤 바꿀 수 있습니다. 보유
-          변경권 {tickets}장.
+          변경권 {tickets}장. POKA·운영자·관리자처럼 운영 계정으로 보이는 이름은 쓸 수 없습니다.
         </p>
         {freeLeft ? (
           <p className="mt-1 text-sm font-medium text-primary">지금 한 번은 무료로 바꿀 수 있습니다.</p>
@@ -102,50 +103,49 @@ export function AccountPrivacyPanel({
           <Input
             id="next-nick"
             value={nextNick}
-            onChange={(event) => setNextNick(event.target.value)}
+            onChange={(event) => {
+              setNextNick(event.target.value);
+              setNickError(null);
+              setNickOk(null);
+            }}
             maxLength={12}
             placeholder="2~12자"
           />
         </div>
         {nickError ? <p className="mt-2 text-sm text-destructive">{nickError}</p> : null}
-        <Button
-          type="button"
-          size="touch"
-          className="mt-3"
-          disabled={nickPending || nextNick.trim().length < 2}
-          onClick={() => void changeNick()}
-        >
-          {nickPending ? "변경 중…" : freeLeft ? "무료로 변경" : "변경권으로 변경"}
-        </Button>
+        {nickOk ? <p className="mt-2 text-sm text-emerald-700">{nickOk}</p> : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="touch"
+            variant="outline"
+            disabled={checkPending || nextNick.trim().length < 2}
+            onClick={() => void checkNick()}
+          >
+            {checkPending ? "확인 중…" : "중복 확인"}
+          </Button>
+          <Button
+            type="button"
+            size="touch"
+            disabled={nickPending || nextNick.trim().length < 2}
+            onClick={() => void changeNick()}
+          >
+            {nickPending ? "변경 중…" : freeLeft ? "무료로 변경" : "변경권으로 변경"}
+          </Button>
+        </div>
       </section>
 
-      <section className="rounded-xl border border-destructive/30 bg-card p-4">
+      <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-lg font-semibold">회원 탈퇴</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          탈퇴하면 소셜 ID·이메일·닉네임은 바로 지웁니다. 작성한 글과 댓글은 남고, 작성자는 탈퇴한 회원으로
-          보입니다. 구인 글에 적은 연락처는 삭제합니다.
+          탈퇴는 이 화면이 아니라 아래 탈퇴 페이지에서 진행합니다.
         </p>
-        <div className="mt-3 grid gap-2">
-          <Label htmlFor="withdraw-nick">확인을 위해 닉네임 입력</Label>
-          <Input
-            id="withdraw-nick"
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            placeholder={nickname}
-            autoComplete="off"
-          />
-        </div>
-        {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
-        <Button
-          type="button"
-          size="touch"
-          variant="destructive"
-          className="mt-3"
-          disabled={pending || confirm !== nickname}
-          onClick={() => void withdraw()}
+        <Link
+          href="/account/withdraw"
+          className="mt-3 inline-flex h-11 min-w-11 items-center justify-center rounded-lg border border-border px-4 text-base font-medium hover:bg-muted"
         >
-          {pending ? "처리 중…" : "탈퇴하기"}
-        </Button>
+          탈퇴 화면으로
+        </Link>
       </section>
     </div>
   );
