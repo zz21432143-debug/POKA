@@ -14,12 +14,12 @@ export function HomeHeroBanner() {
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover object-[70%_center]"
       />
-      <div className="relative flex min-h-[16rem] max-w-[18rem] flex-col justify-center bg-gradient-to-r from-[#fff6df]/85 via-[#fff6df]/55 to-transparent px-5 py-6 sm:min-h-[18rem] sm:max-w-[22rem] sm:px-7">
+      <div className="relative flex min-h-[16rem] max-w-[28rem] flex-col justify-center bg-gradient-to-r from-[#fff6df]/85 via-[#fff6df]/40 to-transparent px-5 py-6 sm:min-h-[18rem] sm:px-7">
         <p className="text-sm font-black tracking-[0.18em] text-[#fff6d8] drop-shadow-[0_2px_0_#5c3a1e] sm:text-base">
           POKA
         </p>
         <h1
-          className="mt-1 text-[2.4rem] leading-none text-[#fff4cc] drop-shadow-[0_3px_0_#6b4424] sm:text-6xl"
+          className="mt-1 text-4xl leading-tight text-[#fff4cc] drop-shadow-[0_3px_0_#6b4424] sm:text-5xl sm:whitespace-nowrap"
           style={{ fontFamily: "var(--font-display), var(--font-sans), sans-serif" }}
         >
           홀덤 커뮤니티
