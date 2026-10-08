@@ -11,12 +11,11 @@ export function kakaoConfigured() {
   return Boolean(kakaoRestApiKey());
 }
 
-/** 카카오 콘솔 Redirect URI와 한 글자도 같아야 합니다. 미리보기 호스트는 쓰지 않습니다. */
+/** 운영은 콘솔에 등록한 pokerwiki 콜백만 씁니다. 환경변수·미리보기 주소로 바꾸지 않습니다. */
 export function kakaoRedirectUri() {
-  const fromEnv = process.env.KAKAO_REDIRECT_URI?.trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
   if (process.env.NODE_ENV === "development") {
-    return `http://127.0.0.1:43123${KAKAO_CALLBACK_PATH}`;
+    const fromEnv = process.env.KAKAO_REDIRECT_URI?.trim().replace(/\/$/, "");
+    return fromEnv || `http://127.0.0.1:43123${KAKAO_CALLBACK_PATH}`;
   }
   return KAKAO_PRODUCTION_REDIRECT;
 }
