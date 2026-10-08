@@ -6,6 +6,7 @@ import { COMMENT_EXP, COMMENT_POINTS } from "@/lib/rewards";
 import { checkInAttendance } from "@/lib/attendance";
 import { clientIp } from "@/lib/request";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
+import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { canRevealPrivatePost } from "@/lib/private-post";
 import { cookies } from "next/headers";
@@ -28,6 +29,7 @@ export async function POST(
     if (content.length < 1) {
       return NextResponse.json({ error: "댓글 내용을 입력하세요." }, { status: 400 });
     }
+    await assertNoForbiddenWords(content);
 
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post) {
@@ -78,6 +80,9 @@ export async function POST(
     await prisma.user.update({ where: { id: user.id }, data: { lastCommentAt: new Date() } });
     return NextResponse.json({ id: comment.id, exp: COMMENT_EXP });
   } catch (error) {
+    if (error instanceof ForbiddenWordError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     if (error instanceof AccountRestrictedError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }

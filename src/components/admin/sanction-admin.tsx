@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 export type SanctionUser = {
   id: string;
   nickname: string;
+  email?: string | null;
+  signupIp?: string | null;
   status: string;
   suspendedUntil: string | null;
   banReason: string | null;
@@ -108,7 +110,7 @@ export function SanctionAdmin({
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="닉네임"
+            placeholder="닉네임, 이메일, IP"
             onKeyDown={(event) => {
               if (event.key === "Enter") void search();
             }}
@@ -134,6 +136,10 @@ export function SanctionAdmin({
             {matches.map((user) => (
               <li key={user.id} className="rounded-lg border border-border p-3 text-sm">
                 <p className="font-medium">{user.nickname}</p>
+                <p className="text-xs text-muted-foreground">
+                  {user.email ?? "이메일 없음"}
+                  {user.signupIp ? ` · 가입 IP ${user.signupIp}` : ""}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {user.status}
                   {user.banReason ? ` · ${user.banReason}` : ""}

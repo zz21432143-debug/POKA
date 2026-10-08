@@ -8,6 +8,7 @@ import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
+import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { hashPassword } from "@/lib/password";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
@@ -120,6 +121,13 @@ export async function POST(request: Request) {
       jobData?.jobCompanyName,
       typeof body.promoLocation === "string" ? body.promoLocation : null,
     );
+    await assertNoForbiddenWords(
+      title,
+      content,
+      jobData?.jobLocation,
+      jobData?.jobCompanyName,
+      typeof body.promoLocation === "string" ? body.promoLocation : null,
+    );
 
     await assertWriteCooldown({
       kind: "post",
@@ -217,6 +225,9 @@ export async function POST(request: Request) {
     }
     if (error instanceof AccountRestrictedError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof ForbiddenWordError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     if (error instanceof HoldemOnlyError) {
       return NextResponse.json({ error: error.message }, { status: 400 });

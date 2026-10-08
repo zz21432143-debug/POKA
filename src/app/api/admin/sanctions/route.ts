@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { writeAudit } from "@/lib/security";
-import { normalizeNickname } from "@/lib/nickname";
+import type { Prisma } from "@/generated/prisma/client";
 
 const ACTIONS = ["suspend7", "suspend30", "ban", "lift"] as const;
 type SanctionAction = (typeof ACTIONS)[number];
@@ -17,34 +17,43 @@ export async function GET(request: Request) {
   const { error } = await requireAdmin();
   if (error) return error;
   const url = new URL(request.url);
-  const q = normalizeNickname(url.searchParams.get("q") ?? "");
+  const q = url.searchParams.get("q")?.trim() ?? "";
+  const search: Prisma.UserWhereInput | undefined = q
+    ? {
+        OR: [
+          { nickname: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { signupIp: { contains: q } },
+          { posts: { some: { authorIp: { contains: q } } } },
+          { comments: { some: { authorIp: { contains: q } } } },
+        ],
+      }
+    : undefined;
+  const userSelect = {
+    id: true,
+    nickname: true,
+    email: true,
+    signupIp: true,
+    status: true,
+    suspendedUntil: true,
+    banReason: true,
+    lastLoginAt: true,
+    role: true,
+    isAdmin: true,
+    isMaster: true,
+  } as const;
   const [restricted, matches] = await Promise.all([
     prisma.user.findMany({
       where: { status: { in: ["SUSPENDED", "BANNED"] } },
       orderBy: { updatedAt: "desc" },
       take: 80,
-      select: {
-        id: true,
-        nickname: true,
-        status: true,
-        suspendedUntil: true,
-        banReason: true,
-        lastLoginAt: true,
-      },
+      select: userSelect,
     }),
     q
       ? prisma.user.findMany({
-          where: { nickname: { contains: q, mode: "insensitive" } },
+          where: search,
           take: 20,
-          select: {
-            id: true,
-            nickname: true,
-            status: true,
-            suspendedUntil: true,
-            banReason: true,
-            isAdmin: true,
-            isMaster: true,
-          },
+          select: userSelect,
         })
       : Promise.resolve([]),
   ]);

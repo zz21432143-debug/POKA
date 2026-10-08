@@ -3,6 +3,7 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
 import { PopularPosts } from "@/components/layout/popular-posts";
 import { NoticeWidget } from "@/components/layout/notice-widget";
 import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
@@ -17,6 +18,7 @@ import { ensureWeeklyScheduleHub } from "@/lib/growth-ops";
 import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
+import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 
 async function ConnectedTicker() {
@@ -48,6 +50,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   }
   const showFeedAds = shouldShowFeedAds(pathname);
   const profile = await getCurrentUser().catch(() => null);
+  const settings = await getSiteSettings().catch(() => null);
 
   return (
     <div className="felt-bg flex min-h-dvh flex-col">
@@ -57,6 +60,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <ConnectedTicker />
         </Suspense>
       </div>
+      <SiteNoticeBanner text={settings?.noticeBanner} />
       <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[15.5rem] shrink-0 overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-sm lg:block">
           <BoardNav />

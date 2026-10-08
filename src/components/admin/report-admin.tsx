@@ -21,7 +21,7 @@ export type ReportAdminRow = {
 export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
   const router = useRouter();
 
-  async function act(reportId: string, action: "resolve" | "dismiss" | "delete") {
+  async function act(reportId: string, action: "resolve" | "dismiss" | "delete" | "suspend-author") {
     await fetch("/api/admin/reports", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -65,8 +65,18 @@ export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
               처리 완료
             </Button>
             <Button type="button" size="touch" variant="ghost" onClick={() => void act(row.id, "dismiss")}>
-              기각
+              신고 기각
             </Button>
+            {row.authorId ? (
+              <Button
+                type="button"
+                size="touch"
+                variant="outline"
+                onClick={() => void act(row.id, "suspend-author")}
+              >
+                작성자 정지
+              </Button>
+            ) : null}
           </div>
         </li>
       ))}

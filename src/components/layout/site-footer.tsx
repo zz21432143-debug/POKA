@@ -1,37 +1,39 @@
-import Link from "next/link";
 import { PokaLogo } from "@/components/brand/poka-logo";
-import { SITE_HOST, siteUrl } from "@/lib/site";
+import { FooterLegalLinks } from "@/components/layout/footer-legal-links";
+import { KAKAO_OPEN_CHAT_URL } from "@/lib/kakao";
+import { getSiteSettings } from "@/lib/site-settings";
 
-const LINKS = [
-  { href: "/about", label: "사이트 소개" },
-  { href: "/terms", label: "이용약관" },
-  { href: "/privacy", label: "개인정보처리방침" },
-] as const;
+export async function SiteFooter() {
+  const settings = await getSiteSettings().catch(() => null);
+  const email = settings?.footerEmail || "contact@pokerwiki.co.kr";
+  const kakao = settings?.kakaoChannelUrl?.trim() || KAKAO_OPEN_CHAT_URL;
 
-export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-border bg-white pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <div className="flex items-center gap-3">
-          <PokaLogo compact />
-          <p className="text-sm text-muted-foreground">
-            홀덤·딜러 커뮤니티 · 만 19세 이상 ·{" "}
-            <a href={siteUrl()} className="hover:text-foreground">
-              {SITE_HOST}
-            </a>
-          </p>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <PokaLogo compact />
+            <p className="text-sm font-semibold text-foreground">POKA</p>
+          </div>
+          <p className="text-sm text-muted-foreground">홀덤·딜러 커뮤니티 · 만 19세 이상</p>
+          <a href={`mailto:${email}`} className="text-sm text-muted-foreground hover:text-foreground">
+            운영 문의 {email}
+          </a>
         </div>
-        <nav aria-label="약관 및 소개" className="flex flex-wrap gap-x-4 gap-y-2">
-          {LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="touch-target inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground"
+        <div className="flex flex-wrap items-center gap-3">
+          {kakao ? (
+            <a
+              href={kakao}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center rounded-full bg-[#FEE500] px-3 text-sm font-semibold text-[#191919] hover:bg-[#F6DC00]"
             >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+              카카오톡 1:1 문의
+            </a>
+          ) : null}
+          <FooterLegalLinks />
+        </div>
       </div>
     </footer>
   );

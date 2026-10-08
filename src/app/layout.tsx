@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Caveat, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { adsensePublisherId } from "@/lib/adsense";
 import {
   OG_IMAGE_PATH,
@@ -50,7 +51,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [OG_IMAGE_PATH],
   },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: false },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "48x48" },
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${script.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <GoogleAnalytics />
         {adsense ? (
           <Script
             async

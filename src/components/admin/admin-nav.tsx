@@ -1,16 +1,26 @@
 import Link from "next/link";
 
-const LINKS = [
-  { href: "/admin", label: "대시보드" },
-  { href: "/admin?tab=reports", label: "신고 관리" },
-  { href: "/admin?tab=sanctions", label: "제재 및 정지" },
-  { href: "/admin/banners", label: "배너" },
-];
-
-export function AdminNav({ current }: { current?: string }) {
+export function AdminNav({
+  current,
+  isMaster,
+}: {
+  current?: string;
+  isMaster?: boolean;
+}) {
+  const links = [
+    { href: "/admin?tab=reports", label: "신고 관리" },
+    { href: "/admin?tab=sanctions", label: "유저·제재" },
+    ...(isMaster
+      ? [
+          { href: "/admin?tab=words", label: "금지어" },
+          { href: "/admin?tab=settings", label: "사이트 설정" },
+        ]
+      : []),
+    { href: "/admin/banners", label: "배너" },
+  ];
   return (
     <nav className="flex flex-wrap gap-2">
-      {LINKS.map((link) => (
+      {links.map((link) => (
         <Link
           key={link.href}
           href={link.href}

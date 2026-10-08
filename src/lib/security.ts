@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 
-export const POST_COOLDOWN_MS = 60_000;
+export const POST_COOLDOWN_MS = 5_000;
 export const COMMENT_COOLDOWN_MS = 20_000;
 export const REPORT_COOLDOWN_MS = 30_000;
 export const REGISTER_COOLDOWN_MS = 45_000;

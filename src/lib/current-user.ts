@@ -10,9 +10,11 @@ import {
 } from "@/lib/oauth-consent";
 import { readSessionValue, signSessionValue } from "@/lib/session";
 import { liftExpiredSuspension } from "@/lib/account-restriction";
+import { roleFromFlags } from "@/lib/roles";
 
 export type CurrentUser = ViewerProfile & {
   id: string;
+  role: "USER" | "ADMIN" | "MASTER";
   status: "ACTIVE" | "SUSPENDED" | "BANNED";
   suspendedUntil: Date | null;
   banReason: string | null;
@@ -64,6 +66,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   return {
     id: user.id,
     ...toViewerProfile(user),
+    role: roleFromFlags(user),
     status,
     suspendedUntil: lifted.suspendedUntil ? new Date(lifted.suspendedUntil) : null,
     banReason: lifted.banReason ?? null,

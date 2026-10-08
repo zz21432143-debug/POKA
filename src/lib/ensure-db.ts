@@ -110,6 +110,35 @@ async function applySchema() {
       EXCEPTION WHEN duplicate_object THEN NULL;
       END $$;
     `);
+    await client.query(`
+      DO $$ BEGIN
+        CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN', 'MASTER');
+      EXCEPTION WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
+    await client.query(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" "UserRole" NOT NULL DEFAULT 'USER'`);
+    await client.query(`CREATE INDEX IF NOT EXISTS "User_role_idx" ON "User"("role")`);
+    await client.query(`UPDATE "User" SET "role" = 'MASTER' WHERE "isMaster" = true`);
+    await client.query(`UPDATE "User" SET "role" = 'ADMIN' WHERE "isAdmin" = true AND "isMaster" = false`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "ForbiddenWord" (
+        "id" TEXT NOT NULL,
+        "word" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "ForbiddenWord_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS "ForbiddenWord_word_key" ON "ForbiddenWord"("word")`);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "SiteSetting" (
+        "id" TEXT NOT NULL,
+        "noticeBanner" TEXT,
+        "footerEmail" TEXT NOT NULL DEFAULT 'contact@pokerwiki.co.kr',
+        "kakaoChannelUrl" TEXT,
+        "updatedAt" TIMESTAMP(3) NOT NULL,
+        CONSTRAINT "SiteSetting_pkey" PRIMARY KEY ("id")
+      )
+    `);
     await client.query(`UPDATE "Mark" SET "pricePoints" = 3000, "minLevel" = 1`);
     await client.query(`UPDATE "ProfileCosmetic" SET "pricePoints" = 3000, "minLevel" = 1`);
   } finally {
@@ -126,6 +155,7 @@ async function seedIfEmpty() {
       nickname: "펠트딜러",
       passwordHash: hashPassword(SEED_ACCOUNT_PASSWORD),
       isAdmin: true,
+      role: "ADMIN",
       level: 8,
       exp: 7400,
       points: 8200,
@@ -138,9 +168,9 @@ async function ensureMasterAccount() {
   const { prisma } = await import("@/lib/db");
   const existing = await prisma.user.findUnique({
     where: { nickname: MASTER_ACCOUNT_NICKNAME },
-    select: { id: true, isMaster: true },
+    select: { id: true, isMaster: true, role: true },
   });
-  if (existing?.isMaster) return;
+  if (existing?.isMaster && existing.role === "MASTER") return;
   await prisma.user.upsert({
     where: { nickname: MASTER_ACCOUNT_NICKNAME },
     create: {
@@ -148,6 +178,7 @@ async function ensureMasterAccount() {
       passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
       isAdmin: true,
       isMaster: true,
+      role: "MASTER",
       level: 250,
       exp: 24900,
       points: 999999,
@@ -157,6 +188,7 @@ async function ensureMasterAccount() {
       passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
       isAdmin: true,
       isMaster: true,
+      role: "MASTER",
       level: 250,
       exp: 24900,
     },
@@ -177,6 +209,11 @@ export function ensureDb() {
     .then(seedIfEmpty)
     .then(ensureLevelTable)
     .then(ensureMasterAccount)
+    .then(async () => {
+      const { ensureSiteSettingsRow, ensureDefaultForbiddenWords } = await import("@/lib/site-settings");
+      await ensureSiteSettingsRow();
+      await ensureDefaultForbiddenWords();
+    })
     .then(async () => {
       const { purgeDemoCatalog, clearAutoDealerVerified } = await import("@/lib/purge-demo-catalog");
       await purgeDemoCatalog();

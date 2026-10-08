@@ -5,7 +5,11 @@ import { prisma } from "@/lib/db";
 import { ReportAdmin } from "@/components/admin/report-admin";
 import { SanctionAdmin } from "@/components/admin/sanction-admin";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { normalizeNickname } from "@/lib/nickname";
+import { ForbiddenWordsAdmin } from "@/components/admin/forbidden-words-admin";
+import { SiteSettingsAdmin } from "@/components/admin/site-settings-admin";
+import { isStaff } from "@/lib/roles";
+import { getSiteSettings } from "@/lib/site-settings";
+import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +19,11 @@ export default async function AdminPage({
   searchParams: Promise<{ tab?: string; q?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user?.isAdmin) notFound();
+  if (!user || !isStaff(user)) notFound();
   const { tab, q } = await searchParams;
-  const active = tab === "sanctions" ? "sanctions" : "reports";
-  const query = normalizeNickname(q ?? "");
+  const active =
+    tab === "sanctions" ? "sanctions" : tab === "words" ? "words" : tab === "settings" ? "settings" : "reports";
+  const query = (q ?? "").trim();
 
   const reports = await prisma.report.findMany({
     orderBy: { createdAt: "desc" },
@@ -30,43 +35,58 @@ export default async function AdminPage({
     },
   });
 
-  const [restricted, matches] = await Promise.all([
+  const search: Prisma.UserWhereInput | undefined = query
+    ? {
+        OR: [
+          { nickname: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+          { signupIp: { contains: query } },
+          { posts: { some: { authorIp: { contains: query } } } },
+          { comments: { some: { authorIp: { contains: query } } } },
+        ],
+      }
+    : undefined;
+
+  const userSelect = {
+    id: true,
+    nickname: true,
+    email: true,
+    signupIp: true,
+    status: true,
+    suspendedUntil: true,
+    banReason: true,
+  } as const;
+
+  const [restricted, matches, words, settings] = await Promise.all([
     prisma.user.findMany({
       where: { status: { in: ["SUSPENDED", "BANNED"] } },
       orderBy: { updatedAt: "desc" },
       take: 80,
-      select: {
-        id: true,
-        nickname: true,
-        status: true,
-        suspendedUntil: true,
-        banReason: true,
-      },
+      select: userSelect,
     }),
-    query
-      ? prisma.user.findMany({
-          where: { nickname: { contains: query, mode: "insensitive" } },
-          take: 20,
-          select: {
-            id: true,
-            nickname: true,
-            status: true,
-            suspendedUntil: true,
-            banReason: true,
-          },
-        })
-      : Promise.resolve([]),
+    query ? prisma.user.findMany({ where: search, take: 20, select: userSelect }) : Promise.resolve([]),
+    user.isMaster ? prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    user.isMaster ? getSiteSettings() : Promise.resolve(null),
   ]);
+
+  const currentHref =
+    active === "sanctions"
+      ? "/admin?tab=sanctions"
+      : active === "words"
+        ? "/admin?tab=words"
+        : active === "settings"
+          ? "/admin?tab=settings"
+          : "/admin?tab=reports";
 
   return (
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-2xl font-semibold">관리자 페이지</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          관리자(Admin)만 볼 수 있습니다. 신고를 처리하고 계정을 제재할 수 있습니다.
+          관리자·마스터만 볼 수 있습니다. 신고·제재·금지어·사이트 문구를 여기서 바꿉니다.
         </p>
         <div className="mt-3">
-          <AdminNav current={active === "sanctions" ? "/admin?tab=sanctions" : "/admin?tab=reports"} />
+          <AdminNav current={currentHref} isMaster={user.isMaster} />
         </div>
         {user.isMaster ? (
           <Link href="/admin/members" className="mt-2 inline-flex text-sm text-primary">
@@ -77,7 +97,7 @@ export default async function AdminPage({
 
       {active === "reports" ? (
         <section>
-          <h2 className="mb-3 text-lg font-semibold">신고 관리</h2>
+          <h2 className="mb-3 text-lg font-semibold">신고 및 게시물</h2>
           <ReportAdmin
             reports={reports.map((row) => ({
               id: row.id,
@@ -95,7 +115,9 @@ export default async function AdminPage({
             }))}
           />
         </section>
-      ) : (
+      ) : null}
+
+      {active === "sanctions" ? (
         <SanctionAdmin
           restricted={restricted.map((row) => ({
             ...row,
@@ -105,9 +127,40 @@ export default async function AdminPage({
             ...row,
             suspendedUntil: row.suspendedUntil?.toISOString() ?? null,
           }))}
-          initialQuery={q ?? ""}
+          initialQuery={query}
         />
-      )}
+      ) : null}
+
+      {active === "words" ? (
+        user.isMaster ? (
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">금지어 관리</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
+              글·댓글 제목과 본문에 들어가면 등록이 막힙니다. 마스터만 추가·삭제할 수 있습니다.
+            </p>
+            <ForbiddenWordsAdmin
+              words={words.map((row) => ({
+                id: row.id,
+                word: row.word,
+                createdAt: row.createdAt.toISOString(),
+              }))}
+            />
+          </section>
+        ) : (
+          <p className="text-sm text-muted-foreground">금지어는 마스터만 바꿀 수 있습니다.</p>
+        )
+      ) : null}
+
+      {active === "settings" ? (
+        user.isMaster && settings ? (
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">사이트 기본 설정</h2>
+            <SiteSettingsAdmin initial={settings} />
+          </section>
+        ) : (
+          <p className="text-sm text-muted-foreground">사이트 설정은 마스터만 바꿀 수 있습니다.</p>
+        )
+      ) : null}
     </div>
   );
 }

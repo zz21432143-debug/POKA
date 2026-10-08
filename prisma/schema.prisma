@@ -33,6 +33,12 @@ enum AccountStatus {
   BANNED
 }
 
+enum UserRole {
+  USER
+  ADMIN
+  MASTER
+}
+
 /// 구인/구직 5종. 레거시 TALENT·PICKUP 보드 타입은 라우트 별칭으로 유지합니다.
 enum JobKind {
   FIXED
@@ -90,6 +96,7 @@ model User {
   isDealerVerified    Boolean  @default(false)
   isAdmin             Boolean  @default(false)
   isMaster            Boolean  @default(false)
+  role                UserRole @default(USER)
   memberKind          MemberKind @default(INDIVIDUAL)
   lastPostAt          DateTime?
   lastCommentAt       DateTime?
@@ -120,6 +127,7 @@ model User {
   @@index([isDealerVerified])
   @@index([isAdmin])
   @@index([isMaster])
+  @@index([role])
   @@index([status])
 }
 
@@ -425,4 +433,19 @@ model LevelExp {
   level              Int @id
   requiredExp        Int
   markPurchasePoints Int
+}
+
+model ForbiddenWord {
+  id        String   @id @default(cuid())
+  word      String   @unique
+  createdAt DateTime @default(now())
+}
+
+/// 단일 행(id = default)으로 운영 문구를 저장합니다.
+model SiteSetting {
+  id               String   @id @default("default")
+  noticeBanner     String?
+  footerEmail      String   @default("contact@pokerwiki.co.kr")
+  kakaoChannelUrl  String?
+  updatedAt        DateTime @updatedAt
 }

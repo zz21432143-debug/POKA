@@ -1,6 +1,11 @@
 const store = new Map<string, { at: number; value: unknown }>();
 const inflight = new Map<string, Promise<unknown>>();
 
+export function ttlCacheClear(key: string) {
+  store.delete(key);
+  inflight.delete(key);
+}
+
 export async function ttlCache<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
   const hit = store.get(key);
   if (hit && Date.now() - hit.at < ttlMs) return hit.value as T;

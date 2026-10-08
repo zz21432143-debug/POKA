@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
   const body = (await request.json()) as {
     reportId?: string;
     postId?: string;
-    action?: "resolve" | "dismiss" | "delete" | "hide" | "restore";
+    action?: "resolve" | "dismiss" | "delete" | "hide" | "restore" | "suspend-author";
   };
 
   if (body.reportId) {
@@ -53,6 +53,42 @@ export async function PATCH(request: Request) {
         detail: report.id,
       });
       return NextResponse.json({ ok: true, status: "resolved" });
+    }
+    if (body.action === "suspend-author") {
+      const authorId =
+        report.targetType === "comment" && report.commentId
+          ? (await prisma.comment.findUnique({ where: { id: report.commentId }, select: { authorId: true } }))
+              ?.authorId
+          : report.postId
+            ? (await prisma.post.findUnique({ where: { id: report.postId }, select: { authorId: true } }))?.authorId
+            : null;
+      if (!authorId) {
+        return NextResponse.json({ error: "작성자를 찾을 수 없습니다." }, { status: 404 });
+      }
+      const author = await prisma.user.findUnique({ where: { id: authorId } });
+      if (!author) {
+        return NextResponse.json({ error: "작성자를 찾을 수 없습니다." }, { status: 404 });
+      }
+      if (author.isMaster) {
+        return NextResponse.json({ error: "마스터 계정은 제재할 수 없습니다." }, { status: 403 });
+      }
+      await prisma.user.update({
+        where: { id: author.id },
+        data: {
+          status: "SUSPENDED",
+          suspendedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          banReason: `신고 처리: ${report.reason.slice(0, 80)}`,
+        },
+      });
+      await prisma.report.update({ where: { id: report.id }, data: { status: "resolved" } });
+      await writeAudit({
+        kind: "REPORT_SUSPEND_AUTHOR",
+        userId: user.id,
+        ip: "admin",
+        postId: report.postId,
+        detail: author.nickname,
+      });
+      return NextResponse.json({ ok: true, status: "resolved", suspended: true });
     }
     if (body.action === "delete") {
       if (report.targetType === "comment" && report.commentId) {

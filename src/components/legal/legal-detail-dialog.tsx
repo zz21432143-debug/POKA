@@ -15,15 +15,20 @@ export function LegalDetailDialog({
   label,
   heading,
   sections,
+  triggerClassName,
 }: {
   label: string;
   heading: string;
   sections: LegalSection[];
+  triggerClassName?: string;
 }) {
   return (
     <Dialog>
       <DialogTrigger
-        className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-border bg-white px-3 text-xs font-semibold text-foreground hover:bg-muted"
+        className={
+          triggerClassName ??
+          "inline-flex min-h-9 shrink-0 items-center rounded-full border border-border bg-white px-3 text-xs font-semibold text-foreground hover:bg-muted"
+        }
         type="button"
       >
         {label}
