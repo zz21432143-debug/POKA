@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { REPORT_REASONS } from "@/lib/reports";
+import { REPORT_REASONS } from "@/lib/report-reasons";
 
 export function ReportButton({
   targetType,

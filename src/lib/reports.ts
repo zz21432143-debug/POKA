@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/security";
-
-export const REPORT_REASONS = ["스팸", "비방/욕설", "불법 홍보", "기타"] as const;
+export { REPORT_REASONS } from "@/lib/report-reasons";
 
 export type ReportTargetType = "post" | "comment";
 
