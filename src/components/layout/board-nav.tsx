@@ -111,17 +111,13 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-xl bg-[#005A44] px-4 py-5 text-center">
-        <span className="mx-auto flex size-10 items-center justify-center rounded-full bg-white/10 text-[#D4AF37]">
-          <SpadeIcon className="size-5" />
-        </span>
-        <p
-          className="mt-2 text-[16px] leading-6 text-[#D4AF37]"
-          style={{ fontFamily: "var(--font-script), cursive" }}
-        >
+      <div className="m-3 flex items-center gap-2 rounded-2xl bg-[#3a2416] px-3 py-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/theme/side-baby.png" alt="" width={72} height={72} className="size-16 shrink-0 object-contain" />
+        <p className="text-sm font-black leading-5 text-[#f6e2b8]">
           포카와 함께하는
           <br />
-          즐거운 시간들! ✌️
+          즐거운 시간!
         </p>
       </div>
     </nav>
