@@ -10,7 +10,9 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
   const email = publicContactEmail(settings.footerEmail);
 
   return (
-    <footer className="relative z-20 mt-auto border-t border-[#d7ccb8] bg-[#f7f1e6] pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <footer className="relative z-20 mt-auto pb-[max(6.25rem,calc(5rem+env(safe-area-inset-bottom)))] lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="wood-rail h-3 w-full" aria-hidden />
+      <div className="board-face">
       <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 px-4 py-6 sm:px-5">
         <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
           <div className="flex min-w-0 flex-col gap-1 text-sm leading-6 text-muted-foreground">
@@ -35,6 +37,7 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">Copyright © {LEGAL_SERVICE_NAME}. All rights reserved.</p>
+      </div>
       </div>
     </footer>
   );

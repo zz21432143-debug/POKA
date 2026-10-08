@@ -39,7 +39,7 @@ export function MobileDrawer({
       >
         <MenuIcon />
       </SheetTrigger>
-      <SheetContent side="left" className="z-[90] w-[min(100%,20rem)] bg-[#f3eee4] p-0" showCloseButton>
+      <SheetContent side="left" className="felt-bg z-[90] w-[min(100%,20rem)] p-0" showCloseButton>
         <SheetHeader className="border-b border-border">
           <SheetTitle className="flex items-center gap-2">
             <PokaLogo compact />

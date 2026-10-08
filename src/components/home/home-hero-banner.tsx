@@ -19,7 +19,7 @@ export function HomeHeroBanner() {
   return (
     <section
       aria-label="POKA 소개"
-      className="grid overflow-hidden rounded-[1.6rem] border border-[#cfc3ac] shadow-[0_12px_32px_rgb(60_40_16_/_0.12)] sm:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+      className="lounge-card grid overflow-hidden rounded-[1.6rem] sm:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
     >
       <div className="flex flex-col justify-center bg-[#0c3d2c] px-5 py-6 sm:px-7 sm:py-8">
         <div className="flex items-center gap-2.5">
