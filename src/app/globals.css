@@ -165,41 +165,24 @@
   }
 }
 
+body,
 .felt-bg {
-  background: #0b0908;
+  background-color: #0b0908;
+  background-image: url("/theme/bg-left.png"), url("/theme/bg-right.png");
+  background-repeat: no-repeat, no-repeat;
+  background-position: left top, right top;
+  background-size: auto 100%, auto 100%;
+  background-attachment: fixed, fixed;
+}
+
+.felt-bg {
   color: #f6efe4;
   isolation: isolate;
 }
 
-.felt-bg::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("/theme/yokai-hall-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  pointer-events: none;
-  z-index: 0;
-}
-
+.felt-bg::before,
 .felt-bg::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(8, 6, 8, 0) 0%,
-    rgba(8, 6, 8, 0.08) 18%,
-    rgba(8, 6, 8, 0.28) 36%,
-    rgba(8, 6, 8, 0.34) 50%,
-    rgba(8, 6, 8, 0.28) 64%,
-    rgba(8, 6, 8, 0.08) 82%,
-    rgba(8, 6, 8, 0) 100%
-  );
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 
 .felt-bg > * {
