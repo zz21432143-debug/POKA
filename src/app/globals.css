@@ -164,7 +164,7 @@
 }
 
 .felt-bg {
-  background: #0b0908;
+  background: #d7e0ec;
   color: #f6efe4;
   isolation: isolate;
 }
@@ -173,8 +173,7 @@
   content: "";
   position: fixed;
   inset: -20px;
-  background: url("/theme/yokai-bg.jpg") center top / cover no-repeat;
-  filter: blur(8px) brightness(0.6);
+  background: url("/theme/celestial-bg.jpg") center / cover no-repeat;
   pointer-events: none;
   z-index: 0;
 }
@@ -183,7 +182,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background-color: rgba(10, 8, 12, 0.85);
+  background-color: rgba(16, 22, 36, 0.18);
   pointer-events: none;
   z-index: 0;
 }
@@ -191,6 +190,65 @@
 .felt-bg > * {
   position: relative;
   z-index: 1;
+}
+
+.hero-celestial {
+  position: relative;
+}
+
+.hero-celestial-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(18, 24, 40, 0.42) 0%, rgba(18, 24, 40, 0.12) 46%, transparent 72%);
+  pointer-events: none;
+}
+
+.hero-celestial-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 1rem 1.25rem 1.4rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hero-celestial-kicker {
+  margin: 0;
+  font-family: var(--font-brush), "Dokdo", cursive;
+  font-size: clamp(1.45rem, 3.6vw, 2.55rem);
+  line-height: 1.15;
+  color: #fffaf2;
+  text-shadow: 0 2px 10px rgba(12, 16, 28, 0.55);
+}
+
+.hero-celestial-word {
+  margin: 0;
+  font-family: var(--font-brush), "Dokdo", cursive;
+  font-size: clamp(4.4rem, 12vw, 7.4rem);
+  line-height: 0.82;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #fff8dc 0%, #f3d27a 42%, #c9862c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(62, 36, 8, 0.4)) drop-shadow(0 8px 16px rgba(20, 16, 8, 0.28));
+}
+
+.hero-celestial-pill {
+  margin: 0.55rem 0 0;
+  max-width: 100%;
+  border-radius: 999px;
+  background: rgba(12, 16, 24, 0.62);
+  padding: 0.38rem 1.05rem;
+  font-size: clamp(0.72rem, 1.55vw, 0.98rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #fffaf2;
+  word-break: keep-all;
 }
 
 .board-face {
