@@ -9,12 +9,14 @@ export function HomeHeroBanner() {
         百八妖怪
       </span>
       <div className="hero-banner-copy">
-        <p className="hero-banner-tag">대한민국 대표 딜러 커뮤니티</p>
-        <h1 className="hero-banner-title">
-          <span className="hero-banner-line">카드 섞다 멘탈 나간 요괴들의 쉼터,</span>
-          <strong className="hero-banner-brand">POKA</strong>
+        <p className="hero-banner-tag">호리병 봉인 해제</p>
+        <h1 className="hero-banner-kicker">
+          <span className="block whitespace-nowrap">깨진 호리병에서 108요괴가 쏟아졌다</span>
+          <span className="block whitespace-nowrap">
+            모든 홀덤 현장의 중심, <strong className="hero-banner-brand">POKA</strong>
+          </span>
         </h1>
-        <p className="hero-banner-sub">딜러 구인·구직부터 실수담, 사건사고 썰까지 한곳에서</p>
+        <p className="hero-banner-pill">실시간 구인·구직부터 대회 정보, 핸드리뷰까지 한눈에</p>
       </div>
     </section>
   );

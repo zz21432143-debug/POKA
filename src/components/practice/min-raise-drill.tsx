@@ -51,7 +51,7 @@ export function MinRaiseDrill() {
 
   if (phase === "intro") {
     return (
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold">미니멈 레이즈</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           노리밋 홀덤 기준입니다. 미니멈 레이즈 총액 = 현재 벳 + 직전 풀 레이즈 폭. 불완전 올인은 이번
@@ -91,7 +91,7 @@ export function MinRaiseDrill() {
         <p className="mt-2 text-lg font-semibold">{question?.detail}</p>
       </div>
       <form
-        className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"
+        className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm"
         onSubmit={(event) => {
           event.preventDefault();
           if (revealed === null) grade();

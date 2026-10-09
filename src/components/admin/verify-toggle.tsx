@@ -42,7 +42,7 @@ export function VerifyToggle({
         className={
           verified
             ? "inline-flex min-h-10 items-center rounded-full border border-amber-300 bg-amber-50 px-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
-            : "inline-flex min-h-10 items-center rounded-full border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            : "inline-flex min-h-10 items-center rounded-full border border-border bg-white px-3 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
         }
       >
         {pending ? "저장 중…" : verified ? "인증 해제" : "인증 달기"}

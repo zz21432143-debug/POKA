@@ -27,7 +27,7 @@ export function LegalDetailDialog({
       <DialogTrigger
         className={
           triggerClassName ??
-          "inline-flex min-h-9 shrink-0 items-center rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted"
+          "inline-flex min-h-9 shrink-0 items-center rounded-full border border-border bg-white px-3 text-xs font-semibold text-foreground hover:bg-muted"
         }
         type="button"
       >

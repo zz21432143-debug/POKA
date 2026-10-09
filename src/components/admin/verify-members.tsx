@@ -16,7 +16,7 @@ export function VerifyMembers({ members }: { members: VerifyMemberRow[] }) {
   }
 
   return (
-    <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+    <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-white">
       {members.map((member) => (
         <li key={member.nickname} className="flex flex-wrap items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">

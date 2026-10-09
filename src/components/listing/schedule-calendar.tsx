@@ -91,9 +91,9 @@ export function ScheduleCalendar({
                 const items = iso ? (byDay.get(iso) ?? []) : [];
                 const isToday = iso !== "" && iso === today;
                 return (
-                  <td key={col} className="schedule-cell h-28 border border-[#3a332c] p-1.5 align-top">
+                  <td key={col} className="h-28 border border-[#3a332c] bg-[#1A1617] p-1.5 align-top">
                     {day ? (
-                      <p className="schedule-day text-sm font-medium">
+                      <p className="text-sm font-medium text-white">
                         <span
                           className={
                             isToday

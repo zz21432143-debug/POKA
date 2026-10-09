@@ -2,7 +2,7 @@
 
 export default function PageError({ reset }: { reset: () => void }) {
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-16 text-center">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-white px-6 py-16 text-center">
       <p className="text-lg font-semibold">페이지를 불러오지 못했습니다.</p>
       <p className="text-sm text-muted-foreground">잠시 후 다시 시도해 주세요.</p>
       <button

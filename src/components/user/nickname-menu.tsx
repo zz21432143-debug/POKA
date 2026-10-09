@@ -52,7 +52,7 @@ export function NicknameMenu({
         <div
           id={menuId}
           role="menu"
-          className="absolute top-full left-0 z-50 mt-1 min-w-40 rounded-xl border border-border bg-[#1a1617] p-1 text-[#e5e7eb] shadow-lg"
+          className="absolute top-full left-0 z-50 mt-1 min-w-40 rounded-xl border border-border bg-white p-1 shadow-lg"
           onClick={(event) => event.stopPropagation()}
         >
           <Link

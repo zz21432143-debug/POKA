@@ -77,7 +77,7 @@ export function SidePotDrill() {
 
   if (phase === "intro") {
     return (
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold">사이드팟 계산</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           전원 올인입니다. 짧은 스택부터 층을 나누고, 그 층에 칩을 넣을 수 있는 자리가 2명 이상일 때만
@@ -113,7 +113,7 @@ export function SidePotDrill() {
       </div>
       {question ? <FeltTable question={question} /> : null}
       <form
-        className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"
+        className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm"
         onSubmit={(event) => {
           event.preventDefault();
           if (revealed === null) grade();

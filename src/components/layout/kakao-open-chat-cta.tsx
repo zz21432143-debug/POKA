@@ -47,11 +47,11 @@ export function KakaoOpenChatCta({
         className,
       )}
     >
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#5c1515] text-[#fff8ee]">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1a120b] text-[#e7c98a]">
         <KakaoBubbleIcon className="size-6" />
       </span>
-      <span className="min-w-0 text-[#fff8ee]">
-        <span className="block text-xs font-semibold tracking-wide text-[#f3d7c8]">카카오톡 공식</span>
+      <span className="min-w-0 text-[#1a120b]">
+        <span className="block text-xs font-semibold tracking-wide text-[#3a2a17]">카카오톡 공식</span>
         <span className="mt-0.5 block text-base font-bold leading-snug">POKA 공식 오픈채팅방 참여하기</span>
       </span>
     </a>

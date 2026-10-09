@@ -10,7 +10,7 @@ import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 
 function HomePanelFallback({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-[#1a1617]/80 ${className}`} />;
+  return <div className={`animate-pulse rounded-2xl bg-white/80 ${className}`} />;
 }
 
 async function HomeFeedSections() {

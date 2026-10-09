@@ -100,7 +100,7 @@ export function ProfileWidget({
           <NicknameMenu nickname={profile.nickname}>
             <p className="truncate text-sm font-medium leading-tight">{profile.nickname}</p>
           </NicknameMenu>
-          <p className="text-xs text-[#c9a25c]">
+          <p className="text-xs text-[#8a5a2a]">
             {rank ? `${rank} · ` : null}Lv.{profile.level}
           </p>
         </div>
