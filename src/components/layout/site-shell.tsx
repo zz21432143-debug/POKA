@@ -87,7 +87,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <ConnectedNotice />
       </Suspense>
-      <div className="mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-5">
+      <div className="site-columns mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-6">
         <aside className="sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[16rem] shrink-0 lg:block">
           <div className="wood-frame flex h-full flex-col">
             <BoardNav />
