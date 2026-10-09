@@ -670,7 +670,6 @@ select {
   border: 2px solid #c59b27;
   background-color: transparent;
   box-shadow: none;
-  clip-path: circle(50% at 50% 50%);
 }
 
 .yokai-mini-mark img,
