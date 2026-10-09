@@ -1,26 +1,23 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import type { MarkCatalog, MarkCatalogItem } from "@/lib/mark-categories";
 import { NICKNAME_TICKET_NAME, NICKNAME_TICKET_PRICE } from "@/lib/nickname-change";
-import { YOKAI_ACHIEVEMENTS, auraClassForSrc, isAchievementSlug } from "@/lib/yokai-achievements";
-import { AchievementCards } from "@/components/shop/yokai-achievements";
-import { YokaiMarkFrame } from "@/components/shop/yokai-mark-frame";
-import { YOKAI_MARKS, isYokaiSlug } from "@/lib/yokai-marks";
+import { auraClassForSrc, isAchievementSlug, YOKAI_ACHIEVEMENTS } from "@/lib/yokai-achievements";
+import { FOUR_KINGS_MARKS, isKingSlug } from "@/lib/yokai-kings";
+import { YokaiOfferCard, type CardMark } from "@/components/shop/yokai-card";
+import { markPriceTag } from "@/lib/yokai-catalog";
+import {
+  KOREAN_LEGEND_MARKS,
+  YOKAI_MARKS,
+  isLegendSlug,
+  isShopMarkSlug,
+  isYokaiSlug,
+} from "@/lib/yokai-marks";
 import { cn } from "cn";
-
-type ShopMark = {
-  id: string;
-  slug: string;
-  name: string;
-  imageUrl: string;
-  pricePoints: number;
-  owned: boolean;
-  equipped: boolean;
-};
 
 export function YokaiPointShop({
   initial,
@@ -31,11 +28,11 @@ export function YokaiPointShop({
 }) {
   const router = useRouter();
   const [catalog, setCatalog] = useState<MarkCatalog | null>(initial);
-  const [demoPoints, setDemoPoints] = useState(1500);
+  const [demoPoints, setDemoPoints] = useState(3000);
   const [demoOwned, setDemoOwned] = useState<Record<string, boolean>>({});
   const [demoEquipped, setDemoEquipped] = useState<string | null>(null);
   const [selected, setSelected] = useState(() => {
-    const worn = initial?.marks.find((mark) => mark.equipped && isYokaiSlug(mark.slug));
+    const worn = initial?.marks.find((mark) => mark.equipped && isShopMarkSlug(mark.slug));
     return worn?.slug ?? YOKAI_MARKS[0]!.slug;
   });
   const [error, setError] = useState<string | null>(null);
@@ -43,31 +40,40 @@ export function YokaiPointShop({
   const loggedIn = Boolean(catalog?.loggedIn);
   const points = loggedIn ? (catalog?.points ?? 0) : demoPoints;
 
-  const marks = useMemo(() => mergeMarks(catalog, demoOwned, demoEquipped), [catalog, demoOwned, demoEquipped]);
-  const collected = marks.filter((mark) => mark.owned).length;
-  const achievements = useMemo(() => {
-    return YOKAI_ACHIEVEMENTS.map((def) => {
-      const row = (catalog?.marks ?? []).find((mark) => mark.slug === def.slug);
-      const owned = loggedIn ? Boolean(row?.owned) : Boolean(demoOwned[def.slug]);
-      const equipped = loggedIn ? Boolean(row?.equipped) : demoEquipped === def.slug;
-      return {
-        ...def,
-        id: row?.id ?? def.slug,
-        owned,
-        equipped,
-        ready: collected >= def.required && !owned,
-      };
-    });
-  }, [catalog, collected, demoEquipped, demoOwned, loggedIn]);
+  const regular = useMemo(
+    () => mergeFrom(YOKAI_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
+  const legends = useMemo(
+    () => mergeFrom(KOREAN_LEGEND_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
+  const rewards = useMemo(
+    () =>
+      mergeFrom(
+        YOKAI_ACHIEVEMENTS.map((mark) => ({ ...mark, pricePoints: 0 })),
+        catalog,
+        demoOwned,
+        demoEquipped,
+      ),
+    [catalog, demoOwned, demoEquipped],
+  );
+  const kings = useMemo(
+    () =>
+      mergeFrom(
+        FOUR_KINGS_MARKS.map((mark) => ({ ...mark, pricePoints: 0 })),
+        catalog,
+        demoOwned,
+        demoEquipped,
+      ),
+    [catalog, demoOwned, demoEquipped],
+  );
   const preview =
-    marks.find((mark) => mark.slug === selected) ??
-    achievements.find((mark) => mark.slug === selected) ??
-    marks[0]!;
-  const inventory = [
-    ...achievements.filter((mark) => mark.owned).map((mark) => toShopMarkFromAchievement(mark)),
-    ...marks.filter((mark) => mark.owned),
-  ];
-  const others = (catalog?.marks ?? []).filter((mark) => !isYokaiSlug(mark.slug) && !isAchievementSlug(mark.slug));
+    [...regular, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
+  const inventory = [...rewards, ...kings, ...legends, ...regular].filter((mark) => mark.owned);
+  const others = (catalog?.marks ?? []).filter(
+    (mark) => !isYokaiSlug(mark.slug) && !isLegendSlug(mark.slug) && !isAchievementSlug(mark.slug) && !isKingSlug(mark.slug),
+  );
 
   async function reload() {
     const response = await fetch("/api/marks");
@@ -75,8 +81,8 @@ export function YokaiPointShop({
     setCatalog(payload);
   }
 
-  async function buy(mark: ShopMark) {
-    if (points < mark.pricePoints || mark.owned) return;
+  async function buy(mark: CardMark) {
+    if (mark.pricePoints <= 0 || points < mark.pricePoints || mark.owned) return;
     setError(null);
     if (!loggedIn) {
       setDemoPoints((value) => value - mark.pricePoints);
@@ -103,39 +109,7 @@ export function YokaiPointShop({
     }
   }
 
-  async function claim(slug: string) {
-    const mark = achievements.find((item) => item.slug === slug);
-    if (!mark?.ready) return;
-    setError(null);
-    if (!loggedIn) {
-      setDemoOwned((value) => ({ ...value, [slug]: true }));
-      setSelected(slug);
-      return;
-    }
-    if (mark.id === mark.slug) {
-      setError("업적 마크를 아직 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
-      return;
-    }
-    setPending(slug + "claim");
-    try {
-      const response = await fetch("/api/marks/achievements/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
-      });
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(payload.error ?? "보상을 받지 못했습니다.");
-      await reload();
-      setSelected(slug);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "보상을 받지 못했습니다.");
-    } finally {
-      setPending(null);
-    }
-  }
-
-  async function equip(mark: ShopMark) {
+  async function equip(mark: CardMark) {
     if (!mark.owned) return;
     setError(null);
     setSelected(mark.slug);
@@ -183,7 +157,6 @@ export function YokaiPointShop({
         <div>
           <p className="yokai-shop-kicker">108요괴</p>
           <h1>포인트 상점</h1>
-          <p>카드를 누르면 미리보기 마크가 바로 바뀝니다. 요괴 마크는 500P부터 1,500P입니다.</p>
         </div>
         <p className="yokai-points">
           보유 포인트: <strong>{points.toLocaleString()} P</strong>
@@ -201,42 +174,28 @@ export function YokaiPointShop({
             <strong>{nickname}</strong>
           </div>
           <p className="yokai-preview-name">
-            {preview.name}
-            {"pricePoints" in preview && preview.pricePoints > 0
-              ? ` · ${preview.pricePoints.toLocaleString()} P`
-              : " · 비매품"}
+            {preview.name} · {markPriceTag(preview)}
             {preview.equipped ? " · 착용 중" : preview.owned ? " · 보유 중" : ""}
           </p>
         </aside>
 
-        <AchievementCards
-          collected={collected}
-          items={achievements}
-          pending={pending}
-          selected={selected}
-          onSelect={setSelected}
-          onClaim={(slug) => void claim(slug)}
-          onEquip={(slug) => {
-            const mark = achievements.find((item) => item.slug === slug);
-            if (mark) void equip(toShopMarkFromAchievement(mark));
-          }}
-        />
+        <MarkGrid title="레벨 보상" marks={rewards} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
+        <MarkGrid title="랭킹 보상" marks={kings} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
 
         <section className="yokai-block" aria-label="내 인벤토리">
           <h2>내 인벤토리</h2>
           {inventory.length === 0 ? (
-            <p className="yokai-note">아직 보유한 마크가 없습니다. 아래에서 구매하면 여기에 모입니다.</p>
+            <p className="yokai-note">아직 보유한 마크가 없습니다.</p>
           ) : (
             <ul className="yokai-grid">
               {inventory.map((mark) => (
-                <ShopCard
+                <YokaiOfferCard
                   key={mark.slug}
                   mark={mark}
                   points={points}
                   pending={pending}
                   selected={selected === mark.slug}
                   onSelect={() => setSelected(mark.slug)}
-                  onBuy={() => void buy(mark)}
                   onEquip={() => void equip(mark)}
                 />
               ))}
@@ -244,35 +203,29 @@ export function YokaiPointShop({
           )}
         </section>
 
-        <section className="yokai-block" aria-label="마크 상점">
-          <h2>마크 상점</h2>
-          <ul className="yokai-grid">
-            {marks.map((mark) => (
-              <ShopCard
-                key={mark.slug}
-                mark={mark}
-                points={points}
-                pending={pending}
-                selected={selected === mark.slug}
-                onSelect={() => setSelected(mark.slug)}
-                onBuy={() => void buy(mark)}
-                onEquip={() => void equip(mark)}
-              />
-            ))}
-          </ul>
-        </section>
+        <MarkGrid
+          title="한국 전설"
+          marks={legends}
+          points={points}
+          pending={pending}
+          selected={selected}
+          onSelect={setSelected}
+          onBuy={buy}
+          onEquip={equip}
+        />
+        <MarkGrid
+          title="마크 상점"
+          marks={regular}
+          points={points}
+          pending={pending}
+          selected={selected}
+          onSelect={setSelected}
+          onBuy={buy}
+          onEquip={equip}
+        />
       </div>
 
       {error ? <p className="yokai-error">{error}</p> : null}
-      {loggedIn ? null : (
-        <p className="yokai-note">
-          지금은 1,500P 미리보기입니다.{" "}
-          <Link href="/login?next=/shop" className="font-semibold text-[#C59B27]">
-            로그인
-          </Link>
-          하면 실제 포인트로 구매·장착됩니다.
-        </p>
-      )}
 
       <div className="yokai-extra">
         <div className="yokai-extra-body" style={{ paddingTop: "1rem" }}>
@@ -280,8 +233,7 @@ export function YokaiPointShop({
             <div>
               <p className="font-bold text-white">{NICKNAME_TICKET_NAME}</p>
               <p className="yokai-note">
-                {NICKNAME_TICKET_PRICE.toLocaleString()}P · 보유 {catalog?.nicknameTickets ?? 0}장. 최초 1회 닉네임
-                변경은 무료입니다.
+                {NICKNAME_TICKET_PRICE.toLocaleString()}P · 보유 {catalog?.nicknameTickets ?? 0}장.
               </p>
             </div>
             {loggedIn ? (
@@ -305,18 +257,19 @@ export function YokaiPointShop({
 
       {loggedIn && others.length > 0 ? (
         <details className="yokai-extra">
-          <summary>다른 마크 · 3,000P</summary>
+          <summary>다른 마크</summary>
           <div className="yokai-extra-body">
             <ul className="yokai-grid">
               {others.map((mark) => (
-                <OtherMark
+                <YokaiOfferCard
                   key={mark.id}
-                  mark={mark}
+                  mark={toCard(mark)}
                   points={points}
                   pending={pending}
-                  onPreview={() => setSelected(mark.slug)}
-                  onBuy={() => void buy(toShopMark(mark))}
-                  onEquip={() => void equip(toShopMark(mark))}
+                  selected={selected === mark.slug}
+                  onSelect={() => setSelected(mark.slug)}
+                  onBuy={() => void buy(toCard(mark))}
+                  onEquip={() => void equip(toCard(mark))}
                 />
               ))}
             </ul>
@@ -327,51 +280,9 @@ export function YokaiPointShop({
   );
 }
 
-function OtherMark({
-  mark,
-  points,
-  pending,
-  onPreview,
-  onBuy,
-  onEquip,
-}: {
-  mark: MarkCatalogItem;
-  points: number;
-  pending: string | null;
-  onPreview: () => void;
-  onBuy: () => void;
-  onEquip: () => void;
-}) {
-  const canAfford = points >= mark.pricePoints;
-  return (
-    <li>
-      <article className="yokai-card" onClick={onPreview}>
-        <YokaiMarkFrame src={mark.imageUrl} alt={mark.name} />
-        <h3>{mark.name}</h3>
-        <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
-        <MarkActions
-          owned={mark.owned}
-          equipped={mark.equipped}
-          canAfford={canAfford}
-          pending={pending}
-          busyId={mark.id}
-          pricePoints={mark.pricePoints}
-          onBuy={(event) => {
-            event.stopPropagation();
-            onBuy();
-          }}
-          onEquip={(event) => {
-            event.stopPropagation();
-            onEquip();
-          }}
-        />
-      </article>
-    </li>
-  );
-}
-
-function ShopCard({
-  mark,
+function MarkGrid({
+  title,
+  marks,
   points,
   pending,
   selected,
@@ -379,102 +290,48 @@ function ShopCard({
   onBuy,
   onEquip,
 }: {
-  mark: ShopMark;
+  title: string;
+  marks: CardMark[];
   points: number;
   pending: string | null;
-  selected: boolean;
-  onSelect: () => void;
-  onBuy: () => void;
-  onEquip: () => void;
+  selected: string;
+  onSelect: (slug: string) => void;
+  onBuy?: (mark: CardMark) => void;
+  onEquip: (mark: CardMark) => void;
 }) {
-  const canAfford = points >= mark.pricePoints;
   return (
-    <li>
-      <article className={cn("yokai-card", selected && "is-selected")} onClick={onSelect}>
-        <YokaiMarkFrame src={mark.imageUrl} alt={mark.name} />
-        <h3>{mark.name}</h3>
-        <p className="yokai-price">{mark.pricePoints > 0 ? `${mark.pricePoints.toLocaleString()} P` : "비매품"}</p>
-        <MarkActions
-          owned={mark.owned}
-          equipped={mark.equipped}
-          canAfford={canAfford}
-          pending={pending}
-          busyId={mark.id}
-          pricePoints={mark.pricePoints}
-          onBuy={(event) => {
-            event.stopPropagation();
-            onBuy();
-          }}
-          onEquip={(event) => {
-            event.stopPropagation();
-            onEquip();
-          }}
-        />
-      </article>
-    </li>
+    <section className="yokai-block" aria-label={title}>
+      <h2>{title}</h2>
+      <ul className="yokai-grid">
+        {marks.map((mark) => (
+          <YokaiOfferCard
+            key={mark.slug}
+            mark={mark}
+            points={points}
+            pending={pending}
+            selected={selected === mark.slug}
+            dimUnowned={mark.pricePoints <= 0}
+            onSelect={() => onSelect(mark.slug)}
+            onBuy={onBuy ? () => void onBuy(mark) : undefined}
+            onEquip={() => void onEquip(mark)}
+          />
+        ))}
+      </ul>
+    </section>
   );
 }
 
-function MarkActions({
-  owned,
-  equipped,
-  canAfford,
-  pending,
-  busyId,
-  pricePoints,
-  onBuy,
-  onEquip,
-}: {
-  owned: boolean;
-  equipped: boolean;
-  canAfford: boolean;
-  pending: string | null;
-  busyId: string;
-  pricePoints: number;
-  onBuy: (event: MouseEvent<HTMLButtonElement>) => void;
-  onEquip: (event: MouseEvent<HTMLButtonElement>) => void;
-}) {
-  const busy = pending !== null;
-  if (equipped) {
-    return (
-      <div className="yokai-actions">
-        <span className="yokai-equipped">착용 중</span>
-      </div>
-    );
-  }
-  if (owned) {
-    return (
-      <div className="yokai-actions">
-        <span className="yokai-owned">보유 중</span>
-        <button type="button" className="yokai-buy" disabled={busy} onClick={onEquip}>
-          {pending === busyId + "equip" ? "장착 중…" : "장착하기"}
-        </button>
-      </div>
-    );
-  }
-  return (
-    <div className="yokai-actions">
-      <button type="button" className="yokai-buy" disabled={busy || !canAfford} onClick={onBuy}>
-        {pending === busyId + "buy"
-          ? "구매 중…"
-          : canAfford
-            ? `구매하기 (${pricePoints.toLocaleString()} P)`
-            : "포인트 부족"}
-      </button>
-    </div>
-  );
-}
-
-function mergeMarks(
+function mergeFrom(
+  defs: { slug: string; name: string; imageUrl: string; pricePoints: number }[],
   catalog: MarkCatalog | null,
   demoOwned: Record<string, boolean>,
   demoEquipped: string | null,
-): ShopMark[] {
-  const live = new Map((catalog?.marks ?? []).filter((mark) => isYokaiSlug(mark.slug)).map((mark) => [mark.slug, mark]));
+): CardMark[] {
+  const live = new Map((catalog?.marks ?? []).map((mark) => [mark.slug, mark]));
   const loggedIn = Boolean(catalog?.loggedIn);
-  return YOKAI_MARKS.map((mark) => {
+  return defs.map((mark) => {
     const row = live.get(mark.slug);
-    if (loggedIn && row) return toShopMark(row);
+    if (loggedIn && row) return toCard(row);
     return {
       id: row?.id ?? mark.slug,
       slug: mark.slug,
@@ -487,26 +344,7 @@ function mergeMarks(
   });
 }
 
-function toShopMarkFromAchievement(mark: {
-  id: string;
-  slug: string;
-  name: string;
-  imageUrl: string;
-  owned: boolean;
-  equipped: boolean;
-}): ShopMark {
-  return {
-    id: mark.id,
-    slug: mark.slug,
-    name: mark.name,
-    imageUrl: mark.imageUrl,
-    pricePoints: 0,
-    owned: mark.owned,
-    equipped: mark.equipped,
-  };
-}
-
-function toShopMark(mark: MarkCatalogItem): ShopMark {
+function toCard(mark: MarkCatalogItem): CardMark {
   return {
     id: mark.id,
     slug: mark.slug,

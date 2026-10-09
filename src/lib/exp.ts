@@ -48,5 +48,10 @@ export async function grantRewards(
     });
   }
 
+  if (level >= 200) {
+    const { grantLevelRewardMarks } = await import("@/lib/grant-reward-marks");
+    await grantLevelRewardMarks(userId, level).catch(() => undefined);
+  }
+
   return { user: updated, grantedPoints, grantedExp: Math.max(0, exp) };
 }

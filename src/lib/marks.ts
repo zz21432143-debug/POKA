@@ -40,6 +40,13 @@ function toCosmeticItem(
 
 export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
   await ensureYokaiMarks().catch(() => undefined);
+  if (userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { level: true } });
+    if (user) {
+      const { syncRewardMarks } = await import("@/lib/grant-reward-marks");
+      await syncRewardMarks(userId, user.level).catch(() => undefined);
+    }
+  }
   const [marks, cosmetics, dbUser, owned, ownedCosmetics] = await Promise.all([
     prisma.mark.findMany({ orderBy: [{ category: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),
     prisma.profileCosmetic.findMany({ orderBy: [{ kind: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),

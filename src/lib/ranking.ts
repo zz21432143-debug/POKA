@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { displayMarkSrc } from "@/lib/mark-assets";
 import { ensurePointLedger } from "@/lib/point-ledger";
-import { YOKAI_MARKS } from "@/lib/yokai-marks";
+import { shiftDate } from "@/lib/dates";
+import { SHOP_MARKS } from "@/lib/yokai-marks";
 
 export type RankTab = "points" | "marks" | "attendance";
 export type RankPeriod = "all" | "week" | "month";
@@ -16,7 +17,7 @@ export type RankRow = {
   markUrl: string;
 };
 
-const YOKAI_SLUGS = YOKAI_MARKS.map((mark) => mark.slug);
+const YOKAI_SLUGS = SHOP_MARKS.map((mark) => mark.slug);
 
 export function parseRankTab(value: string | undefined): RankTab {
   if (value === "marks" || value === "attendance") return value;
@@ -142,6 +143,26 @@ export async function getRanking(tab: RankTab, period: RankPeriod): Promise<Rank
   const raw =
     tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await pointRows(period);
   return toRows(raw);
+}
+
+export async function weeklyPointsWinner(weekStart: string) {
+  await ensurePointLedger();
+  const start = new Date(`${weekStart}T00:00:00+09:00`);
+  const end = new Date(`${shiftDate(weekStart, 7)}T00:00:00+09:00`);
+  const rows = await prisma.$queryRaw<
+    { id: string; nickname: string; score: number }[]
+  >`
+    SELECT u.id, u.nickname, SUM(p.delta)::int AS score
+    FROM "PointLedger" p
+    JOIN "User" u ON u.id = p."userId"
+    WHERE p.delta > 0 AND p."createdAt" >= ${start} AND p."createdAt" < ${end} AND u."withdrawnAt" IS NULL
+    GROUP BY u.id
+    ORDER BY score DESC, u.level DESC, u.nickname ASC
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row || row.score <= 0) return null;
+  return { id: row.id, nickname: row.nickname, score: Number(row.score) };
 }
 
 export function rankScoreLabel(tab: RankTab, score: number) {
