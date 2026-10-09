@@ -8,6 +8,7 @@ import type { MarkCatalog, MarkCatalogItem } from "@/lib/mark-categories";
 import { NICKNAME_TICKET_NAME, NICKNAME_TICKET_PRICE } from "@/lib/nickname-change";
 import { YOKAI_ACHIEVEMENTS, auraClassForSrc, isAchievementSlug } from "@/lib/yokai-achievements";
 import { AchievementCards } from "@/components/shop/yokai-achievements";
+import { YokaiMarkFrame } from "@/components/shop/yokai-mark-frame";
 import { YOKAI_MARKS, isYokaiSlug } from "@/lib/yokai-marks";
 import { cn } from "cn";
 
@@ -345,8 +346,7 @@ function OtherMark({
   return (
     <li>
       <article className="yokai-card" onClick={onPreview}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
+        <YokaiMarkFrame src={mark.imageUrl} alt={mark.name} />
         <h3>{mark.name}</h3>
         <p className="yokai-price">{mark.pricePoints.toLocaleString()} P</p>
         <MarkActions
@@ -391,8 +391,7 @@ function ShopCard({
   return (
     <li>
       <article className={cn("yokai-card", selected && "is-selected")} onClick={onSelect}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={mark.imageUrl} alt={mark.name} width={96} height={96} />
+        <YokaiMarkFrame src={mark.imageUrl} alt={mark.name} />
         <h3>{mark.name}</h3>
         <p className="yokai-price">{mark.pricePoints > 0 ? `${mark.pricePoints.toLocaleString()} P` : "비매품"}</p>
         <MarkActions

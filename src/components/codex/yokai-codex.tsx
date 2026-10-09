@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AchievementCards } from "@/components/shop/yokai-achievements";
+import { YokaiMarkFrame } from "@/components/shop/yokai-mark-frame";
 import type { MarkCatalog } from "@/lib/mark-categories";
 import { YOKAI_ACHIEVEMENTS } from "@/lib/yokai-achievements";
 import { YOKAI_MARKS, isYokaiSlug } from "@/lib/yokai-marks";
-import { cn } from "cn";
 
 export function YokaiCodex({
   initial,
@@ -122,17 +122,15 @@ export function YokaiCodex({
             isYokaiSlug(mark.slug),
           ).map((mark) => (
             <li key={mark.slug}>
-              <article className={cn("yokai-card", !mark.owned && "is-locked")}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <article className="yokai-card">
+                <YokaiMarkFrame
                   src={mark.imageUrl}
                   alt={mark.owned ? mark.name : `${mark.name} 실루엣`}
-                  width={96}
-                  height={96}
-                  className={mark.owned ? undefined : "yokai-locked"}
+                  dimmed={!mark.owned}
                 />
                 <h3>{mark.name}</h3>
                 <p className="yokai-price">{mark.owned ? "수집함" : "미수집"}</p>
+                <div className="yokai-actions" aria-hidden="true" />
               </article>
             </li>
           ))}

@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { cn } from "cn";
+import { YokaiMarkFrame } from "@/components/shop/yokai-mark-frame";
 
 export type AchievementCardModel = {
   slug: string;
@@ -42,13 +43,10 @@ export function AchievementCards({
               className={cn("yokai-card", selected === mark.slug && "is-selected", !mark.owned && !mark.ready && "is-locked")}
               onClick={() => onSelect(mark.slug)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <YokaiMarkFrame
                 src={mark.imageUrl}
                 alt={mark.owned || mark.ready ? mark.name : `${mark.name} 실루엣`}
-                width={96}
-                height={96}
-                className={mark.owned || mark.ready ? undefined : "yokai-locked"}
+                dimmed={!mark.owned && !mark.ready}
               />
               <h3>{mark.name}</h3>
               <p className="yokai-price">{mark.achievement}</p>
