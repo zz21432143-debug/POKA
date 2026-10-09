@@ -30,7 +30,7 @@ export function MarkImage({
 
   return (
     <span
-      className={cn("profile-mark inline-flex shrink-0 items-center justify-center overflow-hidden", frameClass, effectClass)}
+      className={cn("mark-image-wrapper profile-mark inline-flex shrink-0 items-center justify-center overflow-hidden", frameClass, effectClass)}
       style={{ width: size, height: size, minWidth: size, minHeight: size }}
     >
       {showImg ? (

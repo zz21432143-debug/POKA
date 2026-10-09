@@ -516,9 +516,13 @@ select {
 /* 프로필 마크 슬롯. 프레임·이펙트 cssClass가 붙으면 테두리/후광을 그립니다. */
 .profile-mark {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   border-radius: 50%;
-  background: #120f10;
+  aspect-ratio: 1 / 1;
+  background-color: transparent;
   box-shadow:
     0 0 0 2px #b8860b,
     0 0 0 3px rgba(140, 29, 36, 0.85),
@@ -530,9 +534,15 @@ select {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  background: none;
   object-fit: cover;
   object-position: center;
+  transform: scale(1.08);
+  transform-origin: center center;
 }
 
 .profile-mark.frame-gold {
@@ -646,28 +656,39 @@ select {
 }
 
 .yokai-mini-mark {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 64px;
   height: 64px;
+  min-width: 64px;
+  min-height: 64px;
   flex: none;
   overflow: hidden;
   border-radius: 50%;
+  aspect-ratio: 1 / 1;
   border: 2px solid #c59b27;
-  background: none;
+  background-color: transparent;
   box-shadow: none;
+  clip-path: circle(50% at 50% 50%);
 }
 
+.yokai-mini-mark img,
 .yokai-mini img {
   display: block;
   width: 100%;
   height: 100%;
-  border: none;
+  max-width: none;
+  max-height: none;
+  border: 0;
   outline: none;
   background: none;
   box-shadow: none;
   border-radius: 0;
   object-fit: cover;
-  transform: scale(1.06);
+  object-position: center;
+  transform: scale(1.08);
+  transform-origin: center center;
 }
 
 .yokai-mini strong {
@@ -698,16 +719,17 @@ select {
   min-width: 0;
 }
 
+.mark-card,
 .yokai-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 0.45rem;
   width: 100%;
   height: 100%;
   min-height: 292px;
-  padding: 0.85rem 0.55rem 0.75rem;
+  padding: 16px 12px;
   border-radius: 16px;
   background: #1a1617;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -720,27 +742,30 @@ select {
   box-shadow: 0 0 0 1px #c59b27;
 }
 
+.mark-image-wrapper,
 .yokai-mark-frame {
   flex: none;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 96px;
   height: 96px;
   min-width: 96px;
   min-height: 96px;
-  max-width: 96px;
-  max-height: 96px;
-  margin: 0;
+  margin: 0 auto;
   overflow: hidden;
   border-radius: 50%;
   aspect-ratio: 1 / 1;
-  background: #120f10;
+  background-color: transparent;
+  clip-path: circle(50% at 50% 50%);
 }
 
+.mark-image-wrapper img,
 .yokai-mark-frame img,
 .yokai-card img {
   display: block;
-  width: 96px;
-  height: 96px;
+  width: 100%;
+  height: 100%;
   max-width: none;
   max-height: none;
   margin: 0;
@@ -748,14 +773,19 @@ select {
   outline: none;
   background: none;
   box-shadow: none;
-  border-radius: 50%;
+  border-radius: 0;
   object-fit: cover;
   object-position: center;
+  transform: scale(1.08);
+  transform-origin: center center;
 }
 
-.yokai-mark-frame img {
-  width: 100%;
-  height: 100%;
+.mark-image-wrapper.yokai-mini-mark,
+.yokai-mini-mark {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
 }
 
 .yokai-card h3 {

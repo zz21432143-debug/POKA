@@ -167,9 +167,9 @@ export function YokaiPointShop({
         <aside className="yokai-preview" aria-label="내 프로필 미리보기">
           <h2>내 프로필 미리보기</h2>
           <div className="yokai-mini">
-            <span className={cn("yokai-mini-mark", auraClassForSrc(preview.imageUrl))}>
+            <span className={cn("mark-image-wrapper yokai-mini-mark", auraClassForSrc(preview.imageUrl))}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={preview.imageUrl} alt={preview.name} width={64} height={64} />
+              <img className="mark-glyph" src={preview.imageUrl} alt={preview.name} width={64} height={64} />
             </span>
             <strong>{nickname}</strong>
           </div>

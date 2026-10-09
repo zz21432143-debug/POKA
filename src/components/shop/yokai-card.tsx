@@ -37,7 +37,7 @@ export function YokaiOfferCard({
   const canAfford = points >= mark.pricePoints;
   return (
     <li>
-      <article className={cn("yokai-card", selected && "is-selected")} onClick={onSelect}>
+      <article className={cn("mark-card yokai-card", selected && "is-selected")} onClick={onSelect}>
         <YokaiMarkFrame
           src={mark.imageUrl}
           alt={mark.name}
