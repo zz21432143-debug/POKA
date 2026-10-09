@@ -175,7 +175,11 @@
   content: "";
   position: fixed;
   inset: 0;
-  background: url("/theme/yokai-night-bg.jpg") center / cover no-repeat;
+  background-image: url("/theme/yokai-hall-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   pointer-events: none;
   z-index: 0;
 }
@@ -186,13 +190,13 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(8, 6, 8, 0.18) 0%,
-    rgba(8, 6, 8, 0.42) 16%,
-    rgba(8, 6, 8, 0.62) 34%,
-    rgba(8, 6, 8, 0.7) 50%,
-    rgba(8, 6, 8, 0.62) 66%,
-    rgba(8, 6, 8, 0.42) 84%,
-    rgba(8, 6, 8, 0.18) 100%
+    rgba(8, 6, 8, 0) 0%,
+    rgba(8, 6, 8, 0.08) 18%,
+    rgba(8, 6, 8, 0.28) 36%,
+    rgba(8, 6, 8, 0.34) 50%,
+    rgba(8, 6, 8, 0.28) 64%,
+    rgba(8, 6, 8, 0.08) 82%,
+    rgba(8, 6, 8, 0) 100%
   );
   pointer-events: none;
   z-index: 0;
