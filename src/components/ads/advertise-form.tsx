@@ -65,7 +65,7 @@ export function AdvertiseForm() {
         <select
           id="product"
           name="product"
-          className="mt-1 h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          className="mt-1 h-11 w-full rounded-lg border border-[#3a332c] bg-[#1A1817] px-2.5 text-sm text-white"
           defaultValue="상담 후 결정"
         >
           <option value="상담 후 결정">상담 후 결정</option>

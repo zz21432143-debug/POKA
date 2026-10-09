@@ -428,6 +428,12 @@
   color: #888888;
 }
 
+select {
+  background-color: #1a1817;
+  color: #ffffff;
+  border-color: #3a332c;
+}
+
 [data-slot="input"].bg-white,
 [data-slot="textarea"].bg-white {
   background-color: #ffffff;
