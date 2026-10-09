@@ -195,9 +195,17 @@ body,
   z-index: 2;
 }
 
-.hero-banner {
+.hero-banner,
+.main-banner {
   position: relative;
   z-index: 2;
+  width: 100%;
+  aspect-ratio: 526 / 287;
+  background-color: #0b0908;
+  background-image: url("/theme/poka-hero-banner.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .hero-banner-scrim {
