@@ -134,8 +134,8 @@ export function BoardNav({
           className={cn(
             "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base font-semibold shadow-none",
             homeActive
-              ? "bg-[#7a1c22] text-[#f6efe2]"
-              : "text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
+              ? "bg-[#8b2222] text-[#f6efe2]"
+              : "text-[#ece3d3] hover:bg-[#2a2224] hover:text-[#e7c98a]",
           )}
         >
           <SealIcon kind="home" active={homeActive} />
@@ -147,7 +147,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 rounded-lg border-l-2 border-[#c9a25c] bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]">
+              <p className="mb-2 rounded-lg bg-[#2a2224] px-3 py-1.5 text-sm font-bold text-[#e7c98a]">
                 {group.title}
               </p>
             ) : null}
@@ -161,8 +161,8 @@ export function BoardNav({
                       className={cn(
                         "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
                         active
-                          ? "bg-[#7a1c22] font-semibold text-[#f6efe2]"
-                          : "bg-transparent font-semibold text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
+                          ? "bg-[#8b2222] font-semibold text-[#f6efe2]"
+                          : "bg-transparent font-semibold text-[#ece3d3] hover:bg-[#2a2224] hover:text-[#e7c98a]",
                       )}
                       onClick={onNavigate}
                     >
@@ -179,7 +179,7 @@ export function BoardNav({
       <a
         href="/codex"
         onClick={onNavigate}
-        className="m-3 flex items-center gap-3 rounded-2xl border border-[#7a1c22]/60 bg-[#1e1212] px-3 py-3 hover:border-[#922630]"
+        className="m-3 flex items-center gap-3 rounded-2xl bg-[#1e1212] px-3 py-3 hover:bg-[#2a1616]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/theme/broken-gourd.jpg" alt="" width={56} height={56} className="size-14 shrink-0 rounded-xl object-cover" />

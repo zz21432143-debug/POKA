@@ -17,7 +17,7 @@ export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
           <SirenIcon className="size-4 text-rose-600" />
           급구 / 대타
         </span>
-        <Link href="/boards/jobs/urgent" className="ml-auto text-xs font-semibold text-[#6d5844] hover:text-primary">
+        <Link href="/boards/jobs/urgent" className="ml-auto text-xs font-semibold text-[#9ca3af] hover:text-primary">
           더보기
         </Link>
       </div>
@@ -36,11 +36,11 @@ export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
                 href={`/posts/${job.id}`}
                 className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted/50"
               >
-                <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-700">
+                <span className="shrink-0 rounded-full bg-[#8b2222] px-2 py-0.5 text-[11px] font-bold text-[#fff8ee]">
                   급구
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold leading-snug">{job.title}</span>
+                  <span className="block truncate text-[15px] font-bold leading-snug text-[#e5e7eb]">{job.title}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                     {[job.jobLocation, job.jobWorkDate, job.jobPayAmount ? `${job.jobPayAmount}` : null]
                       .filter(Boolean)

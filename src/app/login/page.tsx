@@ -41,7 +41,7 @@ export default async function LoginPage({
           href={`/login?tab=login${nextQuery}`}
           className={cn(
             "flex min-h-11 items-center justify-center rounded-full text-sm font-semibold",
-            !signup ? "bg-white text-foreground shadow-sm" : "text-muted-foreground",
+            !signup ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
           )}
         >
           로그인
@@ -50,7 +50,7 @@ export default async function LoginPage({
           href={`/login?tab=signup${nextQuery}`}
           className={cn(
             "flex min-h-11 items-center justify-center rounded-full text-sm font-semibold",
-            signup ? "bg-white text-foreground shadow-sm" : "text-muted-foreground",
+            signup ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
           )}
         >
           회원가입

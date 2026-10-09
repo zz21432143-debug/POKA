@@ -48,7 +48,7 @@ export default async function PracticeHubPage() {
           <li key={game.href}>
             <Link
               href={game.href}
-              className="touch-target flex min-h-28 flex-col rounded-2xl border border-border bg-white px-4 py-4 shadow-sm hover:border-primary/40"
+              className="touch-target flex min-h-28 flex-col rounded-2xl border border-border bg-card px-4 py-4 shadow-sm hover:border-primary/40"
             >
               <span className="text-base font-semibold">{game.title}</span>
               <span className="mt-1 text-sm text-muted-foreground">{game.body}</span>
@@ -65,7 +65,7 @@ export default async function PracticeHubPage() {
         <span className="text-xs text-emerald-200">최고 점수 1인 1기록</span>
       </Link>
       {user && recent.length > 0 ? (
-        <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <h2 className="text-sm font-semibold">내 최근 기록</h2>
           <ul className="mt-2 divide-y divide-border">
             {recent.map((row) => (

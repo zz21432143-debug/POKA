@@ -124,7 +124,7 @@ export function JobWriteForm({
             <Label htmlFor="pay-type">급여형태</Label>
             <select
               id="pay-type"
-              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#2b1810]"
+              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-foreground"
               value={form.jobPayType}
               onChange={(event) => set("jobPayType", event.target.value)}
             >
@@ -172,7 +172,7 @@ export function JobWriteForm({
             <Label htmlFor="overtime">연장 유무</Label>
             <select
               id="overtime"
-              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#2b1810]"
+              className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-foreground"
               value={form.jobOvertime}
               onChange={(event) => set("jobOvertime", event.target.value)}
             >

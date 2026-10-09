@@ -46,7 +46,7 @@ export function AdvertiseForm() {
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault();
         void submit(new FormData(event.currentTarget));

@@ -17,7 +17,7 @@ export function HomeShortcuts() {
             href={item.href}
             className="touch-target relative z-10 flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#c9a25c]/35 bg-[#1d1611]/95 px-3 text-center text-[13px] font-semibold text-[#f3eadb] hover:border-[#c9a25c]/70 hover:bg-[#2a2017]"
           >
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e7c98a] to-[#7a1c22] text-[#120d0a]">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e7c98a] to-[#8b2222] text-[#120d0a]">
               <item.icon className="size-3.5" />
             </span>
             <span className="leading-tight">{item.title}</span>

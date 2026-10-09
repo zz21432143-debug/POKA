@@ -17,7 +17,7 @@ export default async function WelcomePage({
   const later = safeNextPath(next);
 
   return (
-    <article className="mx-auto w-full max-w-md rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <article className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-sm">
       <p className="text-sm font-semibold text-emerald-800">POKA</p>
       <h1 className="mt-2 text-2xl font-semibold">가입을 축하드립니다</h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">

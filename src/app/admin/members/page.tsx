@@ -49,7 +49,7 @@ export default async function AdminMembersPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="닉네임 검색"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-white px-3 text-sm"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-card px-3 text-sm"
         />
         <button
           type="submit"

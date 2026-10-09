@@ -22,7 +22,7 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
   const { nextLevelExp, progressPercent } = progressFromExp(user.level, user.exp);
   const next = nextLevelExp ?? user.exp;
   return (
-    <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-center gap-3">
         <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(displayMarkSrc(user))}>
           <div

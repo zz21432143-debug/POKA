@@ -51,7 +51,7 @@ export function GrowthHomePanel({
 
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#efe4cc] text-primary">
+          <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#2a2224] text-[#e7c98a]">
             <CalendarDaysIcon className="size-4 shrink-0" />
           </span>
           이번 주 홀덤 대회

@@ -21,10 +21,10 @@ function boardBadgeClass(board: string) {
   if (board === "FREE") return "bg-primary text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
-    return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
+    return "border border-[#c59b27]/50 bg-[#2a2218] text-[#e7c98a]";
   }
   if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#5a2a1e] text-white";
-  return "bg-[#efe4cc] text-[#5c4a2a]";
+  return "bg-[#3a3033] text-[#e5e7eb]";
 }
 
 export type PostSummary = {
@@ -88,8 +88,8 @@ export function PostList({
             <li
               className={
                 compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
-                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
+                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-white/[0.03] hover:bg-white/[0.06]"
+                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-white/[0.03] hover:bg-white/[0.06]"
               }
             >
               {showBoard ? (
@@ -108,8 +108,8 @@ export function PostList({
                   href={`/posts/${post.id}`}
                   className={
                     compact
-                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-foreground"
-                      : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-foreground sm:text-lg"
+                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-[#e5e7eb]"
+                      : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-[#e5e7eb] sm:text-lg"
                   }
                 >
                   {post.isPrivate ? (
@@ -120,10 +120,10 @@ export function PostList({
                   {post.title}
                 </Link>
                 {compact ? (
-                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]">
+                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#9ca3af]">
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-[#c86d2a]/12 px-1 text-[10px] font-bold text-[#a8561f]">
+                      <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[10px] font-bold text-[#e7c98a]">
                         Lv.{post.author.level}
                       </span>
                     ) : null}
@@ -132,7 +132,7 @@ export function PostList({
                 ) : (
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                     <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                    <span className="text-xs font-medium text-[#6d5844]">
+                    <span className="text-xs font-medium text-[#9ca3af]">
                       {formatRelativeKst(post.createdAt)}
                     </span>
                   </div>
@@ -152,7 +152,7 @@ export function PostList({
                 <div
                   className={
                     compact
-                      ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#8a7f6c] sm:flex"
+                      ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#9ca3af] sm:flex"
                       : "hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex"
                   }
                 >

@@ -46,7 +46,7 @@ export default async function AttendancePage() {
         </p>
         <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {STREAK_MILESTONES.map((row) => (
-            <li key={row.day} className="rounded-xl border border-border bg-white px-3 py-2">
+            <li key={row.day} className="rounded-xl border border-border bg-card px-3 py-2">
               <p className="text-xs text-muted-foreground">{row.label}</p>
               <p className="mt-0.5 text-sm font-semibold">
                 +{row.points}P · EXP {row.exp}

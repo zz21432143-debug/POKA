@@ -37,7 +37,7 @@ export function VerifiedDealerStrip({
             <li key={dealer.id}>
               <Link
                 href={href}
-                className="touch-target flex min-h-14 items-center gap-3 rounded-xl border border-amber-100 bg-white px-3 py-2 hover:border-amber-300"
+                className="touch-target flex min-h-14 items-center gap-3 rounded-xl border border-white/10 bg-[#241e1f] px-3 py-2 text-[#e5e7eb] hover:border-[#c59b27]/50"
               >
                 <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2 ring-amber-300">
                   <MarkImage src={dealer.profileMarkImageUrl} alt="" size={40} />

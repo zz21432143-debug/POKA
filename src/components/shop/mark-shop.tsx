@@ -155,7 +155,7 @@ function ShopBody({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
         <div>
           <p className="text-xs text-muted-foreground">보유 포인트</p>
           <p className="text-2xl font-semibold tracking-tight">
@@ -169,7 +169,7 @@ function ShopBody({
         </p>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-semibold">{NICKNAME_TICKET_NAME}</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -286,7 +286,7 @@ function CosmeticShelf({
   return (
     <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {items.map((item) => (
-        <li key={item.id} className="flex flex-col rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
+        <li key={item.id} className="flex flex-col rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
           <ShopPreview
             src={item.imageUrl}
             name={item.name}
@@ -409,7 +409,7 @@ function MarkCard({
   onAct: (id: string, path: "buy" | "equip", kind?: "mark" | "cosmetic") => void;
 }) {
   return (
-    <li className="flex flex-col rounded-2xl border border-border bg-white p-3 shadow-sm sm:p-4">
+    <li className="flex flex-col rounded-2xl border border-border bg-card p-3 shadow-sm sm:p-4">
       <ShopPreview src={mark.imageUrl} name={mark.name} />
       <p className="mt-3 text-center text-sm font-semibold">{mark.name}</p>
       <p className="text-center text-xs text-muted-foreground">

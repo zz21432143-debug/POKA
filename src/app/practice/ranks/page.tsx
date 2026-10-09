@@ -22,7 +22,7 @@ function RankTable({
   rows: Awaited<ReturnType<typeof listDrillRanks>>;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-base font-semibold">{title}</h2>
         <Link href={href} className="text-sm text-primary">
@@ -91,7 +91,7 @@ export default async function PracticeRanksPage() {
         ))}
       </div>
       {user ? (
-        <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           <h2 className="text-base font-semibold">내 기록</h2>
           {mine.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">아직 저장한 판이 없습니다.</p>
