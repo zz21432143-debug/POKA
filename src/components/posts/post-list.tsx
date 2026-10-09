@@ -18,12 +18,12 @@ import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 function boardBadgeClass(board: string) {
-  if (board === "FREE") return "bg-[#8e2430] text-white";
+  if (board === "FREE") return "bg-primary text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
     return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
   }
-  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#8e2430] text-white";
+  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#8a6a2e] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
 }
 

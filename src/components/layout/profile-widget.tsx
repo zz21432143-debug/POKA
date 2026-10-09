@@ -45,7 +45,7 @@ export function ProfileWidget({
   if (!profile) {
     return (
       <div className="profile-panel rounded-[1.35rem] p-4 text-sm">
-        <p className="rounded-xl bg-[#2a1814] px-3 py-2.5 text-center text-sm font-semibold text-white">
+        <p className="rounded-xl bg-[#2a2017] px-3 py-2.5 text-center text-sm font-semibold text-white">
           로그인이 필요합니다
         </p>
         <p className="mt-2 text-center text-sm leading-6 text-[#D1D5DB]">

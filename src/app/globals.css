@@ -55,7 +55,7 @@
   --card-foreground: #2b1810;
   --popover: #fffaf4;
   --popover-foreground: #2b1810;
-  --primary: #8e2430;
+  --primary: #1f5a43;
   --primary-foreground: #fff8ee;
   --secondary: #efe6d6;
   --secondary-foreground: #2b1810;
@@ -66,7 +66,7 @@
   --destructive: #ef4444;
   --border: #e2d7c5;
   --input: #e2d7c5;
-  --ring: #8e2430;
+  --ring: #1f5a43;
   --chart-1: #22c55e;
   --chart-2: #16324f;
   --chart-3: #86efac;
@@ -75,12 +75,12 @@
   --radius: 0.75rem;
   --sidebar: #f5efe6;
   --sidebar-foreground: #2b1810;
-  --sidebar-primary: #8e2430;
+  --sidebar-primary: #1f5a43;
   --sidebar-primary-foreground: #fff8ee;
   --sidebar-accent: #efe6d6;
   --sidebar-accent-foreground: #2b1810;
   --sidebar-border: #e2d7c5;
-  --sidebar-ring: #8e2430;
+  --sidebar-ring: #1f5a43;
 }
 
 .dark {
@@ -90,7 +90,7 @@
   --card-foreground: #2b1810;
   --popover: #fffaf4;
   --popover-foreground: #2b1810;
-  --primary: #8e2430;
+  --primary: #1f5a43;
   --primary-foreground: #fff8ee;
   --secondary: #efe6d6;
   --secondary-foreground: #2b1810;
@@ -101,7 +101,7 @@
   --destructive: #ef4444;
   --border: #e2d7c5;
   --input: #e2d7c5;
-  --ring: #8e2430;
+  --ring: #1f5a43;
   --chart-1: #22c55e;
   --chart-2: #16324f;
   --chart-3: #86efac;
@@ -109,12 +109,12 @@
   --chart-5: #fbbf24;
   --sidebar: #f5efe6;
   --sidebar-foreground: #2b1810;
-  --sidebar-primary: #8e2430;
+  --sidebar-primary: #1f5a43;
   --sidebar-primary-foreground: #fff8ee;
   --sidebar-accent: #efe6d6;
   --sidebar-accent-foreground: #2b1810;
   --sidebar-border: #e2d7c5;
-  --sidebar-ring: #8e2430;
+  --sidebar-ring: #1f5a43;
 }
 
 @layer base {
@@ -167,16 +167,18 @@
 
 body,
 .felt-bg {
-  background-color: #0b0908;
-  background-image: url("/theme/yokai-casino-bg.png");
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: #120d0a;
+  background-image:
+    linear-gradient(180deg, rgba(18, 13, 10, 0.55) 0%, rgba(18, 13, 10, 0.38) 40%, rgba(18, 13, 10, 0.72) 100%),
+    url("/theme/dealer-lounge-bg.jpg");
+  background-size: cover, cover;
+  background-position: center top, center top;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
 }
 
 .felt-bg {
-  color: #f6efe4;
+  color: #f3eadb;
   isolation: isolate;
 }
 
@@ -200,19 +202,47 @@ body,
   position: relative;
   z-index: 2;
   width: 100%;
-  aspect-ratio: 526 / 287;
-  background-color: #0b0908;
-  background-image: url("/theme/poka-hero-banner.png");
+  aspect-ratio: 16 / 7;
+  min-height: 15rem;
+  border: 1px solid rgba(201, 162, 92, 0.35);
+  background-color: #15100c;
+  background-image: url("/theme/dealer-lounge-hero.jpg");
   background-size: cover;
-  background-position: center;
+  background-position: center 38%;
   background-repeat: no-repeat;
 }
 
 .hero-banner-scrim {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(12, 6, 8, 0.55) 0%, rgba(12, 6, 8, 0.18) 48%, transparent 74%);
+  background:
+    radial-gradient(ellipse 46% 70% at center, rgba(18, 13, 10, 0.72) 0%, rgba(18, 13, 10, 0.35) 60%, transparent 100%),
+    linear-gradient(180deg, transparent 55%, rgba(18, 13, 10, 0.55) 100%);
   pointer-events: none;
+}
+
+.hero-banner-tag {
+  margin: 0 0 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(231, 201, 138, 0.55);
+  border-radius: 999px;
+  background: rgba(18, 13, 10, 0.6);
+  padding: 0.22rem 0.75rem;
+  color: #e7c98a;
+  font-size: clamp(0.62rem, 1.2vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.hero-banner-tag::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #4fbf8a;
+  box-shadow: 0 0 6px #4fbf8a;
 }
 
 .hero-banner-copy {
@@ -230,31 +260,32 @@ body,
 
 .hero-banner-kicker {
   margin: 0;
-  font-family: var(--font-brush), "Dokdo", cursive;
-  font-size: clamp(1.45rem, 3.6vw, 2.55rem);
-  line-height: 1.15;
-  color: #fffaf2;
-  text-shadow: 0 2px 10px rgba(12, 8, 8, 0.7);
+  font-size: clamp(1.05rem, 2.6vw, 1.7rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f3eadb;
+  text-shadow: 0 2px 10px rgba(12, 8, 6, 0.8);
 }
 
 .hero-banner-word {
-  margin: 0;
-  font-family: var(--font-brush), "Dokdo", cursive;
-  font-size: clamp(4.4rem, 12vw, 7.4rem);
-  line-height: 0.82;
-  letter-spacing: 0.02em;
-  background: linear-gradient(180deg, #fff8dc 0%, #f3d27a 42%, #c9862c 100%);
+  margin: 0.1rem 0 0;
+  font-family: var(--font-display), "Black Han Sans", sans-serif;
+  font-size: clamp(3.4rem, 9vw, 5.8rem);
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #fbf1d6 0%, #e7c98a 45%, #b0843c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 3px 0 rgba(62, 36, 8, 0.4)) drop-shadow(0 8px 16px rgba(20, 16, 8, 0.28));
+  filter: drop-shadow(0 3px 0 rgba(40, 26, 10, 0.55)) drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
 }
 
 .hero-banner-pill {
   margin: 0.55rem 0 0;
   max-width: 100%;
+  border: 1px solid rgba(201, 162, 92, 0.4);
   border-radius: 999px;
-  background: rgba(12, 8, 10, 0.72);
+  background: rgba(18, 13, 10, 0.75);
   padding: 0.38rem 1.05rem;
   font-size: clamp(0.72rem, 1.55vw, 0.98rem);
   font-weight: 600;
@@ -264,8 +295,8 @@ body,
 }
 
 .board-face {
-  background: #14110f;
-  color: #f4eadf;
+  background: #1a130e;
+  color: #f3eadb;
 }
 
 .wood-rail {
@@ -273,18 +304,18 @@ body,
 }
 
 .lounge-card {
-  border: 0;
+  border: 1px solid rgba(201, 162, 92, 0.45);
   border-radius: 16px;
-  background: #f7f2ea;
-  color: #2b1810;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.06);
+  background: #f6efe2;
+  color: #2a1d12;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
 }
 
 .wood-frame {
-  border: 0;
+  border: 1px solid rgba(201, 162, 92, 0.28);
   border-radius: 18px;
-  background: #14110f;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
+  background: linear-gradient(180deg, rgba(34, 25, 18, 0.94) 0%, rgba(22, 16, 12, 0.96) 100%);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.38);
   padding: 0;
   overflow: hidden;
 }
@@ -300,7 +331,8 @@ body,
 }
 
 .footer-on-felt {
-  background: #0b0908;
+  border-top: 1px solid rgba(201, 162, 92, 0.22);
+  background: #120d0a;
 }
 
 .footer-on-felt :where(.text-muted-foreground) {
@@ -313,23 +345,31 @@ body,
 
 .btn-3d {
   border: 0;
-  background: #fffaf4;
-  color: #2b1810;
+  background: #f6efe2;
+  color: #2a1d12;
   box-shadow: none;
 }
 
 .btn-3d-green {
   border: 0;
-  background: #8e2430;
-  color: #fff8ee;
+  background: #1f5a43;
+  color: #f6efe2;
   box-shadow: none;
+}
+
+.btn-3d-green:hover {
+  background: #26704f;
 }
 
 .btn-3d-gold {
   border: 0;
-  background: #8b2222;
-  color: #fff8ee;
+  background: linear-gradient(180deg, #e7c98a 0%, #c9a25c 100%);
+  color: #1a120b;
   box-shadow: none;
+}
+
+.btn-3d-gold:hover {
+  background: linear-gradient(180deg, #f0d79f 0%, #d4ae68 100%);
 }
 
 .wood-frame nav a,
@@ -342,8 +382,9 @@ body,
 }
 
 .board-intro {
+  border: 1px solid rgba(201, 162, 92, 0.28);
   border-radius: 16px;
-  background: #14110f;
+  background: rgba(26, 19, 14, 0.94);
   padding: 1.15rem 1.25rem;
 }
 
@@ -362,9 +403,9 @@ body,
 }
 
 .ink-panel {
-  background: #1c1819;
-  color: #e5e7eb;
-  border: 1px solid rgba(243, 215, 161, 0.14);
+  background: rgba(29, 22, 17, 0.95);
+  color: #ece3d3;
+  border: 1px solid rgba(201, 162, 92, 0.28);
 }
 
 .ink-panel :where(h1, h2, h3, h4) {
@@ -397,15 +438,15 @@ body,
 }
 
 .ink-on {
-  background: #8b2222;
-  color: #fff8ee;
-  border-color: #8b2222;
+  background: #1f5a43;
+  color: #f6efe2;
+  border-color: #1f5a43;
 }
 
 .ink-on:hover,
 .ink-on:focus-visible {
-  background: #a32828;
-  color: #fff8ee;
+  background: #26704f;
+  color: #f6efe2;
 }
 
 .ink-field,
@@ -437,15 +478,15 @@ select {
 }
 
 .home-tab-3d {
-  background: #c62828;
-  color: #fff8ee;
+  background: #1f5a43;
+  color: #f6efe2;
   box-shadow: none;
 }
 
 .search-inset {
-  background: #1c1916;
-  border: 1px solid #3a332c;
-  color: #f5efe6;
+  background: #1d1611;
+  border: 1px solid rgba(201, 162, 92, 0.35);
+  color: #f3eadb;
   box-shadow: none;
 }
 
@@ -494,8 +535,9 @@ select {
 }
 
 .led-board {
-  border-bottom: 1px solid #000;
-  background: #070605;
+  border-top: 1px solid rgba(201, 162, 92, 0.18);
+  border-bottom: 1px solid rgba(201, 162, 92, 0.3);
+  background: #0f0b08;
 }
 
 .led-marquee {
@@ -1103,9 +1145,9 @@ select {
 }
 
 .profile-panel {
-  background: #1c1819;
-  color: #e5e7eb;
-  border: 1px solid rgba(197, 155, 39, 0.22);
+  background: rgba(29, 22, 17, 0.95);
+  color: #ece3d3;
+  border: 1px solid rgba(201, 162, 92, 0.3);
 }
 
 .board-sheet {

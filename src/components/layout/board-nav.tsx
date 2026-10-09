@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, CoffeeIcon } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
 
@@ -134,8 +134,8 @@ export function BoardNav({
           className={cn(
             "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base font-semibold shadow-none",
             homeActive
-              ? "bg-[#8B2222] text-[#fff8ee]"
-              : "text-[#E5E7EB] hover:bg-[#2a1814] hover:text-[#C59B27]",
+              ? "bg-[#1f5a43] text-[#f6efe2]"
+              : "text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
           )}
         >
           <SealIcon kind="home" active={homeActive} />
@@ -147,7 +147,7 @@ export function BoardNav({
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
-              <p className="mb-2 rounded-lg bg-[#2a1814] px-3 py-1.5 text-sm font-bold text-[#f3d7a1]">
+              <p className="mb-2 rounded-lg border-l-2 border-[#c9a25c] bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]">
                 {group.title}
               </p>
             ) : null}
@@ -161,8 +161,8 @@ export function BoardNav({
                       className={cn(
                         "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
                         active
-                          ? "bg-[#8B2222] font-semibold text-[#fff8ee]"
-                          : "bg-transparent font-semibold text-[#E5E7EB] hover:bg-[#2a1814] hover:text-[#8B2222]",
+                          ? "bg-[#1f5a43] font-semibold text-[#f6efe2]"
+                          : "bg-transparent font-semibold text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
                       )}
                       onClick={onNavigate}
                     >
@@ -176,13 +176,14 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 flex items-center gap-2 rounded-2xl bg-[#2a1214] px-3 py-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/theme/yokai-mascot.jpg" alt="" width={72} height={72} className="size-16 shrink-0 rounded-xl object-cover" />
-        <p className="text-sm font-black leading-5 text-[#f6e7d4]">
-          108요괴의 힘을
+      <div className="m-3 flex items-center gap-3 rounded-2xl border border-[#c9a25c]/30 bg-[#2a2017] px-3 py-3">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1f5a43] text-[#f6efe2]">
+          <CoffeeIcon className="size-6" />
+        </span>
+        <p className="text-sm font-bold leading-5 text-[#f3eadb]">
+          교대 끝!
           <br />
-          모아보세요!
+          <span className="font-semibold text-[#e7c98a]">잠깐 쉬어가세요</span>
         </p>
       </div>
     </nav>

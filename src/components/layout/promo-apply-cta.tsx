@@ -4,8 +4,8 @@ import { MegaphoneIcon } from "lucide-react";
 export function PromoApplyCta() {
   return (
     <div className="ink-panel flex items-center gap-3 rounded-[1.25rem] px-4 py-3">
-      <MegaphoneIcon className="size-5 shrink-0 text-[#C59B27]" />
-      <p className="min-w-0 flex-1 text-xs leading-5 text-[#E5E7EB]">
+      <MegaphoneIcon className="size-5 shrink-0 text-[#e7c98a]" />
+      <p className="min-w-0 flex-1 text-xs leading-5 text-[#ece3d3]">
         지금 홍보 신청하고
         <br />
         보상을 받아보세요!
