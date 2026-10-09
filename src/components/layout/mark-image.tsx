@@ -41,7 +41,7 @@ export function MarkImage({
           width={size}
           height={size}
           className={cn("mark-glyph", className)}
-          style={{ width: size, height: size, maxWidth: "none", maxHeight: "none" }}
+          style={{ width: "100%", height: "100%", maxWidth: "none", maxHeight: "none", objectFit: "cover" }}
           onError={() => {
             if (resolved !== DEFAULT_MARK_SRC) setFailed(true);
           }}
@@ -54,7 +54,7 @@ export function MarkImage({
           width={size}
           height={size}
           className={cn("mark-glyph", className)}
-          style={{ width: size, height: size, maxWidth: "none", maxHeight: "none" }}
+          style={{ width: "100%", height: "100%", maxWidth: "none", maxHeight: "none", objectFit: "cover" }}
         />
       )}
     </span>

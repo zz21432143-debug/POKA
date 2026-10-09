@@ -32,7 +32,7 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
                 : "flex size-12 items-center justify-center overflow-hidden rounded-full bg-muted"
             }
           >
-            <MarkImage src={displayMarkSrc(user)} alt={user.isMaster ? "운영자 마크" : user.nickname} size={48} />
+            <MarkImage src={displayMarkSrc(user)} alt={user.isMaster ? "운영자 마크" : user.nickname} size={80} />
           </div>
         </CrownedFrame>
         <div className="min-w-0 flex-1">

@@ -53,9 +53,9 @@ function OperatorPill() {
 }
 
 const SIZE = {
-  sm: { mark: 28, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
-  md: { mark: 32, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
-  lg: { mark: 48, nick: "text-base", pad: "h-7 px-2 text-xs" },
+  sm: { mark: 48, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
+  md: { mark: 56, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
+  lg: { mark: 80, nick: "text-base", pad: "h-7 px-2 text-xs" },
 } as const;
 
 export function UserBadge({

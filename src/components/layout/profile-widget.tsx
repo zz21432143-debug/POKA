@@ -94,7 +94,7 @@ export function ProfileWidget({
     return (
       <div className="flex min-h-11 items-center gap-2">
         <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
-          <MarkImage src={markSrc} alt={profile.nickname} size={36} />
+          <MarkImage src={markSrc} alt={profile.nickname} size={56} />
         </CrownedFrame>
         <div className="min-w-0">
           <NicknameMenu nickname={profile.nickname}>
@@ -115,9 +115,7 @@ export function ProfileWidget({
     <section className="profile-panel rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
         <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
-          <div className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#1c1612] ring-2 ring-[#C59B27]">
-            <MarkImage src={markSrc} alt={profile.nickname} size={48} />
-          </div>
+          <MarkImage src={markSrc} alt={profile.nickname} size={96} />
         </CrownedFrame>
         <div className="min-w-0 flex-1">
           <NicknameMenu nickname={profile.nickname}>
