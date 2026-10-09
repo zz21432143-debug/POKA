@@ -23,7 +23,7 @@ function boardBadgeClass(board: string) {
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
     return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
   }
-  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#8a6a2e] text-white";
+  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#5a2a1e] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
 }
 

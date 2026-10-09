@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ChevronRightIcon, CoffeeIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
 
@@ -134,7 +134,7 @@ export function BoardNav({
           className={cn(
             "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base font-semibold shadow-none",
             homeActive
-              ? "bg-[#1f5a43] text-[#f6efe2]"
+              ? "bg-[#7a1c22] text-[#f6efe2]"
               : "text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
           )}
         >
@@ -161,7 +161,7 @@ export function BoardNav({
                       className={cn(
                         "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
                         active
-                          ? "bg-[#1f5a43] font-semibold text-[#f6efe2]"
+                          ? "bg-[#7a1c22] font-semibold text-[#f6efe2]"
                           : "bg-transparent font-semibold text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
                       )}
                       onClick={onNavigate}
@@ -176,16 +176,19 @@ export function BoardNav({
           </div>
         ))}
       </div>
-      <div className="m-3 flex items-center gap-3 rounded-2xl border border-[#c9a25c]/30 bg-[#2a2017] px-3 py-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1f5a43] text-[#f6efe2]">
-          <CoffeeIcon className="size-6" />
-        </span>
+      <a
+        href="/codex"
+        onClick={onNavigate}
+        className="m-3 flex items-center gap-3 rounded-2xl border border-[#7a1c22]/60 bg-[#1e1212] px-3 py-3 hover:border-[#922630]"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/theme/broken-gourd.jpg" alt="" width={56} height={56} className="size-14 shrink-0 rounded-xl object-cover" />
         <p className="text-sm font-bold leading-5 text-[#f3eadb]">
-          교대 끝!
+          호리병이 깨졌다!
           <br />
-          <span className="font-semibold text-[#e7c98a]">잠깐 쉬어가세요</span>
+          <span className="font-semibold text-[#d98a7e]">108요괴를 모아보세요</span>
         </p>
-      </div>
+      </a>
     </nav>
   );
 }
