@@ -45,18 +45,16 @@ export function MobileDrawer({
             <PokaLogo compact onDark />
           </SheetTitle>
         </SheetHeader>
-        <div className="flex flex-1 flex-col overflow-y-auto overscroll-contain p-3 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
-          <div className="mb-3">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-3 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+          <BoardNav inDrawer onNavigate={() => setOpen(false)} />
+          <div className="mt-2 mb-3">
             <ProfileWidget profile={profile} />
-          </div>
-          <div className="mb-3">
-            <InstallPwaButton />
           </div>
           <div className="mb-3 grid gap-2">
             <KakaoOpenChatCta />
             <KakaoInquiryLink className="w-full" />
           </div>
-          <BoardNav onNavigate={() => setOpen(false)} />
+          <InstallPwaButton />
           {profile?.isAdmin ? (
             <p className="mt-4 px-3 text-xs text-muted-foreground">관리자 메뉴는 헤더에서 열 수 있습니다.</p>
           ) : null}

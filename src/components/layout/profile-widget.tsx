@@ -94,7 +94,7 @@ export function ProfileWidget({
     return (
       <div className="flex min-h-11 items-center gap-2">
         <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
-          <MarkImage src={markSrc} alt={profile.nickname} size={56} />
+          <MarkImage src={markSrc} alt={profile.nickname} size={36} />
         </CrownedFrame>
         <div className="min-w-0">
           <NicknameMenu nickname={profile.nickname}>
@@ -115,7 +115,7 @@ export function ProfileWidget({
     <section className="profile-panel rounded-[1.35rem] px-4 pt-4 pb-1">
       <div className="flex items-center gap-3">
         <CrownedFrame nickname={profile.nickname} aura={auraClassForSrc(markSrc)}>
-          <MarkImage src={markSrc} alt={profile.nickname} size={96} />
+          <MarkImage src={markSrc} alt={profile.nickname} size={64} />
         </CrownedFrame>
         <div className="min-w-0 flex-1">
           <NicknameMenu nickname={profile.nickname}>
@@ -130,7 +130,7 @@ export function ProfileWidget({
             </p>
           ) : null}
         </div>
-        <span className="rounded-full bg-[#1c1612] px-2 py-0.5 text-[11px] font-semibold text-[#C59B27]">
+        <span className="level-chip h-6 px-2 text-[11px]">
           Lv.{profile.level}
         </span>
       </div>

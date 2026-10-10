@@ -114,9 +114,11 @@ function SealIcon({ kind, active }: { kind: SidebarIcon; active?: boolean }) {
 export function BoardNav({
   onNavigate,
   id,
+  inDrawer = false,
 }: {
   onNavigate?: () => void;
   id?: string;
+  inDrawer?: boolean;
 }) {
   const pathname = usePathname();
   const groups = SIDEBAR_NAV.map((group) => ({
@@ -126,8 +128,8 @@ export function BoardNav({
   const homeActive = pathname === "/";
 
   return (
-    <nav id={id} aria-label="전체 게시판" className="flex h-full min-h-0 flex-col">
-      <div className="px-3 pt-3">
+    <nav id={id} aria-label="전체 게시판" className={cn("flex flex-col", !inDrawer && "h-full min-h-0")}>
+      <div className={inDrawer ? "pt-1" : "px-3 pt-3"}>
         <a
           href="/"
           onClick={onNavigate}
@@ -143,7 +145,11 @@ export function BoardNav({
           <ChevronRightIcon className="size-4 opacity-80" />
         </a>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-3">
+      <div
+        className={
+          inDrawer ? "flex flex-col gap-4 py-3" : "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-3"
+        }
+      >
         {groups.map((group, index) => (
           <div key={group.title ?? `g-${index}`}>
             {group.title ? (
@@ -179,7 +185,10 @@ export function BoardNav({
       <a
         href="/codex"
         onClick={onNavigate}
-        className="m-3 flex items-center gap-3 rounded-2xl bg-[#1e1212] px-3 py-3 hover:bg-[#2a1618]"
+        className={cn(
+          inDrawer ? "my-2" : "m-3",
+          "flex items-center gap-3 rounded-2xl bg-[#1e1212] px-3 py-3 hover:bg-[#2a1618]",
+        )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/theme/broken-gourd.jpg" alt="" width={56} height={56} className="size-14 shrink-0 rounded-xl object-cover" />

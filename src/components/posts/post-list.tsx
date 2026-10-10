@@ -265,7 +265,7 @@ function BoardAuthor({ post, anonymous }: { post: PostSummary; anonymous: boolea
   return (
     <span className="board-author">
       <CrownedFrame nickname={post.author.nickname} aura={auraClassForSrc(displayMarkSrc(post.author))}>
-        <MarkImage src={displayMarkSrc(post.author)} alt="" size={48} />
+        <MarkImage src={displayMarkSrc(post.author)} alt="" size={32} />
       </CrownedFrame>
       <span className="board-author-copy">
         <span className="board-author-name">{post.author.nickname}</span>

@@ -53,9 +53,9 @@ function OperatorPill() {
 }
 
 const SIZE = {
-  sm: { mark: 48, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
-  md: { mark: 56, nick: "text-sm", pad: "h-6 px-2 text-[11px]" },
-  lg: { mark: 80, nick: "text-base", pad: "h-7 px-2 text-xs" },
+  sm: { mark: 28, nick: "text-sm", pad: "h-5 px-1.5 text-[10px]" },
+  md: { mark: 34, nick: "text-sm", pad: "h-6 px-1.5 text-[11px]" },
+  lg: { mark: 56, nick: "text-base", pad: "h-6 px-2 text-xs" },
 } as const;
 
 export function UserBadge({
@@ -83,13 +83,13 @@ export function UserBadge({
     <span className="inline-flex flex-wrap items-center gap-1">
       {user.isMaster ? <OperatorPill /> : null}
       {!staff && user.isDealerVerified ? (
-        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+        <span className="inline-flex items-center gap-0.5 rounded-full border border-[#c59b27]/45 bg-[#c59b27]/12 px-1.5 py-0.5 text-[10px] font-semibold text-[#f3d58a]">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
           인증
         </span>
       ) : null}
       {openChat ? (
-        <span className="inline-flex items-center gap-0.5 rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-800">
+        <span className="inline-flex items-center gap-0.5 rounded-full border border-sky-400/35 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-semibold text-sky-200">
           <MessageCircleHeartIcon className="size-3" />
           오픈채팅 우수
         </span>
@@ -98,7 +98,7 @@ export function UserBadge({
   ) : showExtras && user.isMaster ? (
         <OperatorPill />
       ) : showExtras && !staff && user.isDealerVerified ? (
-        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+        <span className="inline-flex items-center gap-0.5 rounded-full border border-[#c59b27]/45 bg-[#c59b27]/12 px-1.5 py-0.5 text-[10px] font-semibold text-[#f3d58a]">
           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
           인증
         </span>
@@ -128,7 +128,7 @@ export function UserBadge({
         </CrownedFrame>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-1.5">
-            <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
+            <span className={cn("level-chip", spec.pad)}>
               Lv.{user.level}
             </span>
             {showNickname ? (
@@ -148,9 +148,6 @@ export function UserBadge({
 
   return (
     <span className={cn("inline-flex max-w-full flex-wrap items-center gap-1.5", className)}>
-      <span className={cn("inline-flex shrink-0 items-center rounded-md bg-emerald-600 font-bold text-white", spec.pad)}>
-        Lv.{user.level}
-      </span>
       <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(markSrc)}>
         <MarkImage
           src={markSrc}
@@ -161,6 +158,9 @@ export function UserBadge({
           className={user.isMaster ? "ring-2 ring-amber-400" : markRing}
         />
       </CrownedFrame>
+      <span className={cn("level-chip", spec.pad)}>
+        Lv.{user.level}
+      </span>
       {showNickname ? (
         <span className="min-w-0">
           <span className={cn("block truncate font-semibold leading-tight text-foreground", spec.nick)}>
