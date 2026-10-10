@@ -82,8 +82,8 @@ export function BoardListingForm({
         {hint} · 작성 {postRewardLine(boardType)}
       </p>
       <div className="grid gap-2">
-        <Label htmlFor="title">제목</Label>
-        <Input id="title" className="h-11" value={title} onChange={(event) => setTitle(event.target.value)} />
+        <Label htmlFor="title" className="write-label">제목</Label>
+        <Input id="title" className="write-title-input" placeholder="제목을 입력하세요" value={title} onChange={(event) => setTitle(event.target.value)} />
       </div>
       {mode === "poster" ? (
         <div className="grid gap-2">
@@ -182,8 +182,8 @@ export function BoardListingForm({
         </>
       ) : null}
       <div className="grid gap-2">
-        <Label htmlFor="content">{mode === "talent" ? "이력·프로필" : "상세 내용"}</Label>
-        <Textarea id="content" className="min-h-32" value={content} onChange={(event) => setContent(event.target.value)} />
+        <Label htmlFor="content" className="write-label">{mode === "talent" ? "이력·프로필" : "상세 내용"}</Label>
+        <Textarea id="content" className="write-body-input" value={content} onChange={(event) => setContent(event.target.value)} />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>

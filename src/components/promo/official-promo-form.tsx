@@ -59,8 +59,8 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
-          <Label htmlFor="title">홍보 제목</Label>
-          <Input id="title" className="h-11" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Label htmlFor="title" className="write-label">홍보 제목</Label>
+          <Input id="title" className="write-title-input" placeholder="제목을 입력하세요" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="store">검증 매장명</Label>
@@ -93,8 +93,8 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
         </div>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="content">상세</Label>
-        <Textarea id="content" className="min-h-32" value={content} onChange={(e) => setContent(e.target.value)} />
+        <Label htmlFor="content" className="write-label">상세 내용</Label>
+        <Textarea id="content" className="write-body-input" value={content} onChange={(e) => setContent(e.target.value)} />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>

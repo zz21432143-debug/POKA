@@ -111,10 +111,12 @@ export function JobWriteForm({
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
         {hint} · 작성 {postRewardLine("JOBS")}
       </p>
-      <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-3 py-2 text-sm text-[#E5E7EB]">
-        <span className="text-[#9CA3AF]">자동 제목 · </span>
-        {preview}
-      </p>
+      <div className="grid gap-2">
+        <p className="write-label">
+          제목 <span className="write-label-hint">입력값으로 자동 생성</span>
+        </p>
+        <p className="write-title-input flex items-center break-keep">{preview}</p>
+      </div>
 
       {jobKind === "FIXED" ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -262,10 +264,11 @@ export function JobWriteForm({
       ) : null}
 
       <div className="grid gap-2">
-        <Label htmlFor="job-content">상세 내용</Label>
+        <Label htmlFor="job-content" className="write-label">상세 내용</Label>
         <Textarea
           id="job-content"
-          className="min-h-36"
+          className="write-body-input"
+          placeholder="근무 조건, 분위기, 참고 사항을 적어 주세요"
           value={form.content}
           onChange={(event) => set("content", event.target.value)}
         />

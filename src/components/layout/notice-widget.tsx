@@ -38,7 +38,7 @@ export function NoticeWidget({
           <Volume2Icon className="size-4 text-primary" />
           공지사항
         </p>
-        <Link href="/notices" className="text-xs text-muted-foreground hover:text-primary">
+        <Link href="/notices" className="more-link">
           더보기
         </Link>
       </div>

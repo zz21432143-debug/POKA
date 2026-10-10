@@ -59,10 +59,10 @@ export function ScheduleForm({ hint }: { hint: string }) {
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
-          <Label htmlFor="name">대회명</Label>
+          <Label htmlFor="name" className="write-label">대회명</Label>
           <Input
             id="name"
-            className="h-11"
+            className="write-title-input"
             value={title}
             placeholder="예: 서울 홀덤 위클리"
             onChange={(e) => setTitle(e.target.value)}
@@ -100,8 +100,8 @@ export function ScheduleForm({ hint }: { hint: string }) {
         </div>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="content">상세</Label>
-        <Textarea id="content" className="min-h-28" value={content} onChange={(e) => setContent(e.target.value)} />
+        <Label htmlFor="content" className="write-label">상세 내용</Label>
+        <Textarea id="content" className="write-body-input" value={content} onChange={(e) => setContent(e.target.value)} />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>

@@ -82,10 +82,10 @@ export function HireForm({
       <section className="grid gap-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-base font-semibold">기본 정보</h2>
         <div className="grid gap-2">
-          <Label htmlFor="title">공고 제목</Label>
+          <Label htmlFor="title" className="write-label">공고 제목</Label>
           <Input
             id="title"
-            className="h-11"
+            className="write-title-input"
             value={form.title}
             placeholder="TOT 딜러팀 정규 딜러 모집"
             onChange={(event) => setForm({ ...form, title: event.target.value })}
@@ -219,10 +219,10 @@ export function HireForm({
       </section>
 
       <div className="grid gap-2">
-        <Label htmlFor="content">상세 내용</Label>
+        <Label htmlFor="content" className="write-label">상세 내용</Label>
         <Textarea
           id="content"
-          className="min-h-36"
+          className="write-body-input"
           value={form.content}
           placeholder="팀 소개, 근무 일정, 우대 사항을 적어 주세요."
           onChange={(event) => setForm({ ...form, content: event.target.value })}

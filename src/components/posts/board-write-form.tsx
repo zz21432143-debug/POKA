@@ -75,10 +75,10 @@ export function BoardWriteForm({
         {hint} · 작성 {postRewardLine(boardType)}
       </p>
       <div className="grid gap-2">
-        <Label htmlFor="title">제목</Label>
+        <Label htmlFor="title" className="write-label">제목</Label>
         <Input
           id="title"
-          className="h-11"
+          className="write-title-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={
@@ -86,7 +86,7 @@ export function BoardWriteForm({
               ? "예: 서울 강남 홀덤펍 후기"
               : boardType === "HAND_REVIEW"
                 ? "예: BTN vs BB AJs 3벳팟"
-                : undefined
+                : "제목을 입력하세요"
           }
         />
       </div>
@@ -126,10 +126,11 @@ export function BoardWriteForm({
         <Field label="사진 URL" value={bannerImageUrl} onChange={setBannerImageUrl} placeholder="/banners/slot-4.svg" />
       ) : null}
       <div className="grid gap-2">
-        <Label htmlFor="content">내용</Label>
+        <Label htmlFor="content" className="write-label">내용</Label>
         <Textarea
           id="content"
-          className="min-h-36"
+          className="write-body-input"
+          placeholder="내용을 입력하세요"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />

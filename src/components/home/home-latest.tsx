@@ -58,7 +58,7 @@ export function HomeLatest({
         ))}
         <Link
           href={TABS.find((item) => item.key === tab)?.href ?? "/community"}
-          className="ml-auto text-xs font-semibold text-[#9CA3AF] hover:text-[#E5E7EB]"
+          className="more-link ml-auto"
         >
           더보기
         </Link>

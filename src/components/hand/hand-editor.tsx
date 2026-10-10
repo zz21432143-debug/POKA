@@ -196,13 +196,13 @@ export function HandEditor() {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="hand-title">제목</Label>
+        <Label htmlFor="hand-title" className="write-label">제목</Label>
         <Input
           id="hand-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="예: 버튼에서 AJs 3벳 콜"
-          className="h-11"
+          className="write-title-input"
         />
       </div>
 
@@ -463,13 +463,13 @@ export function HandEditor() {
       <section className="rounded-xl border border-border bg-card p-3">
         <p className="text-sm font-semibold">4. 코멘트 · 등록</p>
         <div className="mt-3 grid gap-3">
-          <Label htmlFor="notes">질문이나 생각한 라인</Label>
+          <Label htmlFor="notes" className="write-label">질문이나 생각한 라인</Label>
           <Textarea
             id="notes"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             placeholder="왜 이 라인을 택했는지, 확인하고 싶은 스팟을 적어 주세요."
-            className="min-h-28"
+            className="write-body-input"
           />
         </div>
         <button
