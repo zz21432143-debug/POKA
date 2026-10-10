@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
@@ -5,6 +6,19 @@ import { PostList } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }): Promise<Metadata> {
+  const { nickname } = await params;
+  return { title: `${safeDecode(nickname)} 님의 글` };
+}
 
 export default async function MemberPostsPage({
   params,

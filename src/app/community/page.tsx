@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SIDEBAR_NAV } from "@/lib/nav";
+
+export const metadata: Metadata = { title: "커뮤니티" };
 
 export default function CommunityHubPage() {
   const community = SIDEBAR_NAV.find((group) => group.title === "커뮤니티");

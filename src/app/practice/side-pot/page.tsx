@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SidePotDrill } from "@/components/practice/side-pot-drill";
 
 export const metadata: Metadata = {
-  title: "사이드팟 계산 — POKA",
+  title: "사이드팟 계산",
   description: "올인 스택으로 메인팟·사이드팟을 10문제 연습합니다.",
 };
 

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { BackToList } from "@/components/posts/back-to-list";
 import { RequireLogin } from "@/components/auth/require-login";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
+
+export const metadata: Metadata = { title: "자유게시판 글쓰기", robots: { index: false } };
 
 export default function FreeWritePage() {
   return (

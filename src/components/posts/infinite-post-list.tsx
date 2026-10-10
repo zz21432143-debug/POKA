@@ -76,9 +76,7 @@ export function InfinitePostList({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-[#9CA3AF]">
-        {items.length} / {total}개
-      </p>
+      {total > 0 ? <p className="text-xs text-[#9CA3AF]">총 {total}개</p> : null}
       <PostList posts={items} emptyText={emptyText} showBoard={showBoard} nativeSponsor={nativeSponsor} />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div ref={sentinel} />

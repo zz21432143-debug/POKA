@@ -69,9 +69,7 @@ export function InfiniteJobList({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs text-[#9CA3AF]">
-        {items.length} / {total}개
-      </p>
+      {total > 0 ? <p className="text-xs text-[#9CA3AF]">총 {total}개</p> : null}
       <JobCards jobs={items} />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div ref={sentinel} />

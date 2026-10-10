@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { YokaiCodex } from "@/components/codex/yokai-codex";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMarkCatalog } from "@/lib/marks";
 import type { MarkCatalog } from "@/lib/mark-categories";
+
+export const metadata: Metadata = { title: "요괴 도감" };
 
 export const dynamic = "force-dynamic";
 

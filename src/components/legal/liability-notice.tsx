@@ -5,7 +5,7 @@ export function LiabilityNotice({ text = ANONYMOUS_BOARD_WARNING }: { text?: str
   return (
     <aside
       role="note"
-      className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
+      className="rounded-2xl border border-amber-500/30 bg-amber-950/40 px-4 py-3 text-sm leading-6 text-amber-200"
     >
       <p className="flex items-start gap-2 font-semibold">
         <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-700" />

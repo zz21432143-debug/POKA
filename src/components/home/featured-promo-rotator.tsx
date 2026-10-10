@@ -27,12 +27,12 @@ export function FeaturedPromoRotator({ pool }: { pool: HomePromo[] }) {
     return (
       <Link
         href="/advertise"
-        className={`touch-target mx-auto flex ${POSTER_FRAME} max-w-sm flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/45 bg-emerald-50/80 px-4 text-center`}
+        className={`touch-target mx-auto flex ${POSTER_FRAME} max-w-sm flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/45 bg-emerald-950/40 px-4 text-center`}
       >
         <span className="flex size-10 items-center justify-center rounded-full border border-primary text-primary">
           <PlusIcon className="size-5" />
         </span>
-        <p className="mt-2 text-sm font-semibold text-emerald-900">홍보 포스터 등록</p>
+        <p className="mt-2 text-sm font-semibold text-emerald-300">홍보 포스터 등록</p>
       </Link>
     );
   }

@@ -21,7 +21,7 @@ function boardBadgeClass(board: string) {
   if (board === "FREE") return "bg-primary text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
   if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
-    return "border border-[#e2c36a] bg-[#f6edd4] text-[#8a6a2a]";
+    return "border border-[#c9a25c]/45 bg-[#2a2017] text-[#e7c98a]";
   }
   if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#5a2a1e] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
@@ -113,7 +113,7 @@ export function PostList({
                   }
                 >
                   {post.isPrivate ? (
-                    <span className="mr-1.5 align-middle rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                    <span className="mr-1.5 align-middle rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
                       비밀글
                     </span>
                   ) : null}
@@ -215,7 +215,7 @@ function BoardSheet({
                     </Badge>
                   ) : null}
                   {post.isPrivate ? (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                    <span className="shrink-0 rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
                       비밀글
                     </span>
                   ) : null}

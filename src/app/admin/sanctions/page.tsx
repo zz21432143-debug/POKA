@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo } from "@/lib/history-redirect";
+
+export const metadata: Metadata = { title: "제재 관리", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

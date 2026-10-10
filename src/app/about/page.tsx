@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "POKA 소개" };
 export default function AboutPage() {
   return (
     <article className="prose-legal mx-auto max-w-2xl">

@@ -7,7 +7,7 @@ import { MarkImage } from "@/components/layout/mark-image";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "인증 — POKA",
+  title: "인증",
   description: "마스터가 단 골드 뱃지 인증 회원과 최근 핸드리뷰.",
 };
 
@@ -45,7 +45,7 @@ export default async function DealersPage() {
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate text-base font-bold text-white">{dealer.nickname}</span>
-                        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/30 bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
                           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
                           인증
                         </span>

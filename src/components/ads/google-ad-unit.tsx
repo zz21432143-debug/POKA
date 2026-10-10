@@ -62,19 +62,5 @@ export function GoogleAdUnit({
     );
   }
 
-  return (
-    <aside
-      className={cn(frame, "relative flex flex-col", SIZE[placement])}
-      data-ad-network="google"
-      data-ad-placement={placement}
-      aria-label="광고 영역"
-    >
-      <p className="border-b border-[#3a332c] bg-[#141110] px-3 py-1 text-center text-[11px] font-bold tracking-wide text-[#E5E7EB]">
-        광고
-      </p>
-      <span className="flex flex-1 items-center justify-center text-[11px] font-bold tracking-wide text-[#9CA3AF]">
-        광고 영역
-      </span>
-    </aside>
-  );
+  return null;
 }

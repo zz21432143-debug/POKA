@@ -52,7 +52,7 @@ export function DrillResult({
   const pass = correct >= 7;
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-[#1a1617] p-5 shadow-sm">
       <p className="text-sm text-muted-foreground">{title} 10문제</p>
       <p className="text-3xl font-semibold tracking-tight">
         {correct}
@@ -73,7 +73,7 @@ export function DrillResult({
       ) : null}
       {state === "saving" ? <p className="text-sm text-muted-foreground">저장 중…</p> : null}
       {state === "saved" ? (
-        <p className="text-sm text-emerald-800">
+        <p className="text-sm text-emerald-300">
           순위표에 올렸습니다
           {reward && (reward.exp > 0 || reward.points > 0)
             ? ` · EXP +${reward.exp} · 포인트 +${reward.points}`

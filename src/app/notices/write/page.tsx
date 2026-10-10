@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { BackToList } from "@/components/posts/back-to-list";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceToLogin } from "@/lib/history-redirect";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
+
+export const metadata: Metadata = { title: "공지 작성", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

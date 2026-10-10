@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { CrownedFrame } from "@/components/honor/crowned-frame";
@@ -13,6 +14,8 @@ import {
   type RankTab,
 } from "@/lib/ranking";
 import { cn } from "cn";
+
+export const metadata: Metadata = { title: "랭킹" };
 
 export const dynamic = "force-dynamic";
 

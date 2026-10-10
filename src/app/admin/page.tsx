@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
@@ -10,6 +11,8 @@ import { SiteSettingsAdmin } from "@/components/admin/site-settings-admin";
 import { isStaff } from "@/lib/roles";
 import { getSiteSettings } from "@/lib/site-settings";
 import type { Prisma } from "@/generated/prisma/client";
+
+export const metadata: Metadata = { title: "관리자", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

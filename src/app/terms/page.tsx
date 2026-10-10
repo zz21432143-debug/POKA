@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/legal/legal-document";
 import { TERMS_SECTIONS } from "@/lib/legal";
+
+export const metadata: Metadata = { title: "이용약관" };
 
 export default function TermsPage() {
   return (

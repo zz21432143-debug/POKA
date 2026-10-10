@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BannerAdmin } from "@/components/admin/banner-admin";
 import { SponsorAdmin } from "@/components/admin/sponsor-admin";
@@ -6,6 +7,8 @@ import { ensureBannerSlots } from "@/lib/premium-banners";
 import { ensureSponsorUnits } from "@/lib/inventory";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "배너 관리", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

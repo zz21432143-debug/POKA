@@ -3,7 +3,7 @@ import { AdPlacementMap } from "@/components/ads/ad-placement-map";
 import { AD_PRODUCTS } from "@/lib/sponsor";
 
 export const metadata = {
-  title: "제휴 및 광고 문의 — POKA",
+  title: "제휴 및 광고 문의",
 };
 
 export default function AdvertisePage() {
@@ -25,12 +25,12 @@ export default function AdvertisePage() {
         <p className="mt-1 text-xs text-muted-foreground">어디에 붙는지만 안내합니다. 금액은 적지 않습니다.</p>
         <ul className="mt-3 grid gap-3">
           {AD_PRODUCTS.map((item) => (
-            <li key={item.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+            <li key={item.id} className="rounded-2xl border border-border bg-[#1a1617] p-4 shadow-sm">
               <p className="text-xs font-semibold text-primary">
                 {item.code} · {item.size}
               </p>
               <p className="mt-1 text-base font-semibold">{item.name}</p>
-              <p className="mt-1 text-xs font-medium text-emerald-900">{item.exclusive}</p>
+              <p className="mt-1 text-xs font-medium text-emerald-300">{item.exclusive}</p>
               <p className="mt-2 text-sm leading-6">{item.where}</p>
             </li>
           ))}

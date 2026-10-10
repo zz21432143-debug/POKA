@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { prisma } from "@/lib/db";
+
+export const metadata: Metadata = { title: "글 수정", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

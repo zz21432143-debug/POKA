@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
+
+export const metadata: Metadata = { title: "검색", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

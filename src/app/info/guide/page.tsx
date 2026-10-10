@@ -3,7 +3,7 @@ import Link from "next/link";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 
 export const metadata: Metadata = {
-  title: "홀덤 딜러 가이드 — POKA",
+  title: "홀덤 딜러 가이드",
   description: "홀덤 딜러가 테이블에서 바로 쓰는 기본 룰 10편.",
 };
 

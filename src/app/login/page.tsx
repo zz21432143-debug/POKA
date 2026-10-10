@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo } from "@/lib/history-redirect";
 import { cn } from "cn";
+
+export const metadata: Metadata = { title: "로그인 · 회원가입" };
 
 export const dynamic = "force-dynamic";
 

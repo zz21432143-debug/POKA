@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { LegalDocument } from "@/components/legal/legal-document";
 import { PRIVACY_POLICY_SECTIONS } from "@/lib/legal";
+
+export const metadata: Metadata = { title: "개인정보처리방침" };
 
 export default function PrivacyPage() {
   return (

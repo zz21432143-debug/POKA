@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { replaceTo } from "@/lib/history-redirect";
@@ -26,6 +27,13 @@ const ALIASES: Record<string, string> = {
   "store-review": "/community",
 };
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const board = resolveBoardSlug(slug);
+  if (!board) return { title: "게시판" };
+  return { title: board.title, description: BOARD_DESCRIPTIONS[board.boardType] };
+}
+
 export default async function BoardPage({
   params,
 }: {
@@ -51,11 +59,10 @@ export default async function BoardPage({
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1>{board.title}</h1>
-          <p className="mt-2">
-            {BOARD_DESCRIPTIONS[board.boardType]} · 작성 {postRewardLine(board.boardType)}
-            {page.total ? ` · ${page.total}개` : ""}
-            {" · 목록은 누구나, 본문은 로그인 후"}
-          </p>
+          <p className="mt-2">{BOARD_DESCRIPTIONS[board.boardType]}</p>
+          {canWrite || !("masterOnly" in board && board.masterOnly) ? (
+            <p className="mt-1.5 text-xs text-[#9CA3AF]">글 작성 시 {postRewardLine(board.boardType)}</p>
+          ) : null}
         </div>
         {canWrite || !("masterOnly" in board && board.masterOnly) ? (
           <Link
@@ -64,9 +71,7 @@ export default async function BoardPage({
           >
             {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
           </Link>
-        ) : (
-          <p className="text-sm text-muted-foreground">마스터만 작성할 수 있습니다.</p>
-        )}
+        ) : null}
       </header>
 
       {gallery ? (

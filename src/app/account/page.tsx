@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { AccountPrivacyPanel } from "@/components/account/account-privacy-panel";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { replaceToLogin } from "@/lib/history-redirect";
+
+export const metadata: Metadata = { title: "내 정보", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

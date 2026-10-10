@@ -36,7 +36,7 @@ export function AccountWithdrawPanel({ nickname }: { nickname: string }) {
   return (
     <section className="rounded-xl border border-destructive/30 bg-card p-4">
       <h2 className="text-lg font-semibold">회원 탈퇴</h2>
-      <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium leading-6 text-amber-950">
+      <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-950/40 px-3 py-2 text-sm font-medium leading-6 text-amber-200">
         {WITHDRAW_REJOIN_WARNING}
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">

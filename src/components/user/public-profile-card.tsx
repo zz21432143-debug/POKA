@@ -22,7 +22,7 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
   const { nextLevelExp, progressPercent } = progressFromExp(user.level, user.exp);
   const next = nextLevelExp ?? user.exp;
   return (
-    <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="rounded-2xl border border-border bg-[#1a1617] p-4 shadow-sm">
       <div className="flex items-center gap-3">
         <CrownedFrame nickname={user.nickname} aura={auraClassForSrc(displayMarkSrc(user))}>
           <div
@@ -38,12 +38,12 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{user.nickname}</p>
           {user.isMaster ? <p className="mt-0.5 text-xs font-bold text-amber-700">운영자</p> : null}
-          {rank ? <p className="mt-0.5 text-xs font-semibold text-emerald-800">{rank}</p> : null}
+          {rank ? <p className="mt-0.5 text-xs font-semibold text-emerald-300">{rank}</p> : null}
           {!user.isMaster && !user.isAdmin && user.isDealerVerified ? (
-            <p className="mt-0.5 text-[11px] font-semibold text-amber-800">★ 인증</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-amber-200">★ 인증</p>
           ) : null}
         </div>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+        <span className="rounded-full bg-emerald-950/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
           Lv.{user.level}
         </span>
       </div>
@@ -67,8 +67,8 @@ export function PublicProfileCard({ user }: { user: PublicProfile }) {
         보유 포인트{" "}
         <strong className="font-semibold text-foreground">{user.points.toLocaleString()} P</strong>
       </p>
-      <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/80 px-3 py-2.5">
-        <p className="text-sm font-semibold text-emerald-950">
+      <div className="mt-3 rounded-xl border border-emerald-500/25 bg-emerald-950/40 px-3 py-2.5">
+        <p className="text-sm font-semibold text-emerald-300">
           연속 출석 <strong className="text-base">{user.attendanceStreak.toLocaleString()}일</strong>
         </p>
       </div>

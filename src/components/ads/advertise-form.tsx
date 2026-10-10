@@ -38,7 +38,7 @@ export function AdvertiseForm() {
 
   if (done) {
     return (
-      <p className="rounded-2xl border border-primary/30 bg-emerald-50 px-4 py-6 text-sm text-emerald-900">
+      <p className="rounded-2xl border border-primary/30 bg-emerald-950/40 px-4 py-6 text-sm text-emerald-300">
         문의가 접수되었습니다. 영업일 기준 1~2일 안에 연락드립니다.
       </p>
     );
@@ -46,7 +46,7 @@ export function AdvertiseForm() {
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-2xl border border-border bg-[#1a1617] p-4 shadow-sm"
       onSubmit={(event) => {
         event.preventDefault();
         void submit(new FormData(event.currentTarget));

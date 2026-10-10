@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { AccountWithdrawPanel } from "@/components/account/account-withdraw-panel";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceToLogin } from "@/lib/history-redirect";
+
+export const metadata: Metadata = { title: "회원 탈퇴", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 

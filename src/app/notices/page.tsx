@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { InfinitePostList } from "@/components/posts/infinite-post-list";
 import { buttonVariants } from "@/components/ui/button";
@@ -7,6 +8,8 @@ import { canWriteBoard } from "@/lib/permissions";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
+
+export const metadata: Metadata = { title: "공지사항" };
 
 export const dynamic = "force-dynamic";
 

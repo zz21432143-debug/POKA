@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDaysIcon, LightbulbIcon, MegaphoneIcon } from "lucide-react";
+
+export const metadata: Metadata = { title: "정보센터" };
 
 const CARDS = [
   { href: "/practice", title: "딜러 연습", body: "사이드팟 · 미니멈 레이즈 드릴.", icon: LightbulbIcon },

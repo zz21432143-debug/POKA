@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { BackToList } from "@/components/posts/back-to-list";
 import { RequireLogin } from "@/components/auth/require-login";
 import { HandEditor } from "@/components/hand/hand-editor";
 import { postRewardLine } from "@/lib/rewards";
+
+export const metadata: Metadata = { title: "핸드리뷰 작성", robots: { index: false } };
 
 export default function HandReviewWritePage() {
   return (

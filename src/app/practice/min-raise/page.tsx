@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MinRaiseDrill } from "@/components/practice/min-raise-drill";
 
 export const metadata: Metadata = {
-  title: "미니멈 레이즈 — POKA",
+  title: "미니멈 레이즈",
   description: "노리밋 홀덤 미니멈 레이즈 총액을 10문제 연습합니다.",
 };
 

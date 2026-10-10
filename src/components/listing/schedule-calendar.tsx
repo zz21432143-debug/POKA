@@ -65,8 +65,8 @@ export function ScheduleCalendar({
   }
 
   return (
-    <div className="schedule-calendar overflow-x-auto rounded-2xl border border-[#3a332c] bg-[#1A1617]">
-      <table className="w-full min-w-[640px] border-collapse text-sm">
+    <div className="schedule-calendar overflow-hidden rounded-2xl border border-[#3a332c] bg-[#1A1617]">
+      <table className="w-full table-fixed border-collapse text-sm">
         <thead>
           <tr className="bg-[#141110]">
             {WEEKDAYS.map((day, index) => (
@@ -74,8 +74,8 @@ export function ScheduleCalendar({
                 key={day}
                 className={
                   index >= 5
-                    ? "border-b border-[#3a332c] px-2 py-2.5 text-sm font-semibold text-[#C59B27]"
-                    : "border-b border-[#3a332c] px-2 py-2.5 text-sm font-semibold text-white"
+                    ? "border-b border-[#3a332c] px-0.5 py-2 text-xs font-semibold text-[#C59B27] sm:px-2 sm:py-2.5 sm:text-sm"
+                    : "border-b border-[#3a332c] px-0.5 py-2 text-xs font-semibold text-white sm:px-2 sm:py-2.5 sm:text-sm"
                 }
               >
                 {day}
@@ -91,13 +91,13 @@ export function ScheduleCalendar({
                 const items = iso ? (byDay.get(iso) ?? []) : [];
                 const isToday = iso !== "" && iso === today;
                 return (
-                  <td key={col} className="schedule-cell h-28 border border-[#3a332c] bg-[#1A1617] p-1.5 align-top">
+                  <td key={col} className="schedule-cell h-20 border border-[#3a332c] bg-[#1A1617] p-0.5 align-top sm:h-28 sm:p-1.5">
                     {day ? (
-                      <p className="schedule-day text-sm font-medium text-white">
+                      <p className="schedule-day text-xs font-medium text-white sm:text-sm">
                         <span
                           className={
                             isToday
-                              ? "inline-flex size-7 items-center justify-center rounded-full bg-[#8B2222] font-semibold text-white"
+                              ? "inline-flex size-6 items-center sm:size-7 justify-center rounded-full bg-[#8B2222] font-semibold text-white"
                               : undefined
                           }
                         >
@@ -105,16 +105,16 @@ export function ScheduleCalendar({
                         </span>
                       </p>
                     ) : null}
-                    <ul className="mt-1 flex flex-col gap-1">
+                    <ul className="mt-0.5 flex flex-col gap-0.5 sm:mt-1 sm:gap-1">
                       {items.map((item) => (
                         <li key={`${item.id}-${iso}`}>
                           <Link
                             href={`/posts/${item.id}`}
-                            className="block rounded-md bg-[#3a2426] px-1.5 py-1 text-[11px] font-medium leading-snug text-white hover:bg-[#8B2222] hover:text-white"
+                            className="overflow-hidden rounded bg-[#3a2426] px-1 py-0.5 text-[10px] font-medium leading-tight break-all text-white line-clamp-2 sm:line-clamp-none sm:rounded-md sm:px-1.5 sm:py-1 sm:text-[11px] sm:leading-snug sm:break-keep hover:bg-[#8B2222] hover:text-white"
                           >
                             {item.title}
                             {item.promoLocation || item.jobLocation ? (
-                              <span className="mt-1 block truncate text-[10px] font-medium text-[#C59B27]">
+                              <span className="mt-1 hidden truncate text-[10px] font-medium text-[#C59B27] sm:block">
                                 {item.promoLocation || item.jobLocation}
                               </span>
                             ) : null}

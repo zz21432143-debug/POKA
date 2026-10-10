@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
@@ -6,6 +7,19 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+
+function safeDecode(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }): Promise<Metadata> {
+  const { nickname } = await params;
+  return { title: `${safeDecode(nickname)} 님의 프로필` };
+}
 
 export default async function MemberPage({
   params,

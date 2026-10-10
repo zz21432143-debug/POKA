@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { normalizeNickname } from "@/lib/nickname";
 import { VerifyMembers } from "@/components/admin/verify-members";
+
+export const metadata: Metadata = { title: "회원 관리", robots: { index: false } };
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +52,7 @@ export default async function AdminMembersPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="닉네임 검색"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-white px-3 text-sm"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-[#1a1617] px-3 text-sm"
         />
         <button
           type="submit"

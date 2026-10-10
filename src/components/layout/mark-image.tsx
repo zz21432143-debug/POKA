@@ -35,6 +35,8 @@ export function MarkImage({
           alt={alt}
           width={size}
           height={size}
+          loading="lazy"
+          decoding="async"
           className={cn("mark-glyph", className)}
           style={{ width: "100%", height: "100%", maxWidth: "none", maxHeight: "none", objectFit: "cover" }}
           onError={() => {

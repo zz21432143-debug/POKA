@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { BackToList } from "@/components/posts/back-to-list";
 import { notFound } from "next/navigation";
 import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
@@ -18,6 +19,12 @@ const ALIASES: Record<string, string> = {
   promo: "/boards/official/write",
   "store-review": "/community",
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const board = resolveBoardSlug(slug);
+  return { title: board ? `${board.title} 작성` : "글쓰기", robots: { index: false } };
+}
 
 export default async function BoardWritePage({
   params,

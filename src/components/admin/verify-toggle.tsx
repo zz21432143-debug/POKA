@@ -41,8 +41,8 @@ export function VerifyToggle({
         onClick={() => void setVerified(!verified)}
         className={
           verified
-            ? "inline-flex min-h-10 items-center rounded-full border border-amber-300 bg-amber-50 px-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-60"
-            : "inline-flex min-h-10 items-center rounded-full border border-border bg-white px-3 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+            ? "inline-flex min-h-10 items-center rounded-full border border-amber-500/30 bg-amber-950/40 px-3 text-sm font-semibold text-amber-200 hover:bg-amber-900/50 disabled:opacity-60"
+            : "inline-flex min-h-10 items-center rounded-full border border-border bg-[#1a1617] px-3 text-sm font-semibold text-foreground hover:bg-muted disabled:opacity-60"
         }
       >
         {pending ? "저장 중…" : verified ? "인증 해제" : "인증 달기"}

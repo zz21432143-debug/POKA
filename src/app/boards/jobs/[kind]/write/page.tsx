@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { BackToList } from "@/components/posts/back-to-list";
 import { notFound } from "next/navigation";
 import { RequireLogin } from "@/components/auth/require-login";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { resolveJobKind } from "@/lib/nav";
+
+export async function generateMetadata({ params }: { params: Promise<{ kind: string }> }): Promise<Metadata> {
+  const { kind } = await params;
+  const job = resolveJobKind(kind);
+  return { title: job ? `${job.title} 작성` : "구인구직 작성", robots: { index: false } };
+}
 
 export default async function JobWritePage({
   params,

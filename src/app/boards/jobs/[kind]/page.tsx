@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
@@ -8,6 +9,13 @@ import { resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ kind: string }> }): Promise<Metadata> {
+  const { kind } = await params;
+  const job = resolveJobKind(kind);
+  if (!job) return { title: "구인구직" };
+  return { title: `${job.title} · 구인구직`, description: job.blurb };
+}
 
 export default async function JobBoardPage({
   params,
