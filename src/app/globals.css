@@ -901,6 +901,15 @@ select {
   transform-origin: center center;
 }
 
+.profile-mark img[src*="/marks/yokai/"],
+.yokai-mini-mark img[src*="/marks/yokai/"],
+.yokai-mini img[src*="/marks/yokai/"],
+.mark-image-wrapper img[src*="/marks/yokai/"],
+.yokai-mark-frame img[src*="/marks/yokai/"],
+.yokai-card img[src*="/marks/yokai/"] {
+  transform: none;
+}
+
 .mark-image-wrapper.yokai-mini-mark,
 .yokai-mini-mark {
   width: 64px;
