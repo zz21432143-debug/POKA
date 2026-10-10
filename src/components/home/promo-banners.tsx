@@ -4,6 +4,23 @@ import { AdvertiseInquiryDialog } from "@/components/ads/advertise-inquiry-dialo
 
 export async function PromoBanners() {
   const banners = await getPremiumBanners();
+  if (banners.every((banner) => banner.vacant)) {
+    return (
+      <section
+        aria-label="프리미엄 제휴 배너"
+        className="ink-panel flex flex-col items-start gap-3 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 className="text-base font-bold text-white">프리미엄 제휴 배너</h2>
+          <p className="mt-1 text-sm text-[#D1D5DB]">홈 화면 6구좌에 매장·대회·브랜드를 소개해 보세요.</p>
+        </div>
+        <AdvertiseInquiryDialog
+          triggerClassName="touch-target inline-flex min-h-11 shrink-0 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-white"
+          triggerLabel="제휴 / 광고 문의하기"
+        />
+      </section>
+    );
+  }
   return (
     <section aria-label="프리미엄 제휴 배너 6구좌">
       <div className="mb-3 flex items-end justify-between gap-3">

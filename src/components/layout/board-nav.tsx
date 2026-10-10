@@ -129,7 +129,7 @@ export function BoardNav({
   const homeActive = pathname === "/";
 
   return (
-    <nav id={id} aria-label="전체 게시판" className={cn("flex flex-col", !inDrawer && "h-full min-h-0")}>
+    <nav id={id} aria-label="전체 게시판" className="flex flex-col">
       <div className={inDrawer ? "pt-1" : "px-3 pt-3"}>
         <Link
           href="/"
@@ -148,7 +148,7 @@ export function BoardNav({
       </div>
       <div
         className={
-          inDrawer ? "flex flex-col gap-4 py-3" : "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 py-3"
+          inDrawer ? "flex flex-col gap-4 py-3" : "flex flex-col gap-3 px-3 py-3"
         }
       >
         {groups.map((group, index) => (
@@ -173,7 +173,8 @@ export function BoardNav({
                     <a
                       href={item.href}
                       className={cn(
-                        "touch-target flex min-h-12 items-center gap-2.5 rounded-xl border-0 px-3 text-base shadow-none transition-colors",
+                        "touch-target flex items-center gap-2.5 rounded-xl border-0 px-3 shadow-none transition-colors",
+                        inDrawer ? "min-h-12 text-base" : "min-h-10 text-[15px]",
                         active
                           ? "bg-[#7a1c22] font-semibold text-[#f6efe2]"
                           : "bg-transparent font-semibold text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
