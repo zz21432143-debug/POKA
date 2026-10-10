@@ -38,8 +38,8 @@ export function HomeLatest({
 
   return (
     <section className="lounge-card overflow-hidden rounded-[1.35rem]">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eee4d2] px-4 py-2.5">
-        <h2 className="mr-1 text-base font-bold text-[#2B1810]">최신 게시글</h2>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/10 px-4 py-2.5">
+        <h2 className="mr-1 text-base font-bold text-white">최신 게시글</h2>
         {TABS.map((item) => (
           <button
             key={item.key}
@@ -47,7 +47,7 @@ export function HomeLatest({
             onClick={() => setTab(item.key)}
             className={cn(
               "relative py-1 text-[13px] font-semibold",
-              tab === item.key ? "text-primary" : "text-[#7a7264] hover:text-foreground",
+              tab === item.key ? "text-white" : "text-[#9CA3AF] hover:text-[#E5E7EB]",
             )}
           >
             {item.label}
@@ -58,7 +58,7 @@ export function HomeLatest({
         ))}
         <Link
           href={TABS.find((item) => item.key === tab)?.href ?? "/community"}
-          className="ml-auto text-xs font-semibold text-[#7a7264] hover:text-primary"
+          className="ml-auto text-xs font-semibold text-[#9CA3AF] hover:text-[#E5E7EB]"
         >
           더보기
         </Link>

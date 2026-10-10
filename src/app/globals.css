@@ -165,26 +165,60 @@
   }
 }
 
-body,
-.felt-bg {
-  background-color: #0d0b0b;
-  background-image:
-    linear-gradient(180deg, rgba(13, 11, 11, 0.35) 0%, rgba(13, 11, 11, 0.2) 40%, rgba(13, 11, 11, 0.65) 100%),
-    url("/theme/yokai-gourd-bg.jpg");
-  background-size: cover, cover;
-  background-position: center top, center top;
-  background-repeat: no-repeat, no-repeat;
-  background-attachment: fixed, fixed;
+body {
+  background-color: #0a080c;
 }
 
 .felt-bg {
-  color: #f3eadb;
+  position: relative;
+  background-color: #0a080c;
+  color: #e5e7eb;
   isolation: isolate;
+  --background: #120f10;
+  --foreground: #e5e7eb;
+  --card: #1a1617;
+  --card-foreground: #e5e7eb;
+  --popover: #1a1617;
+  --popover-foreground: #e5e7eb;
+  --secondary: #2a2426;
+  --secondary-foreground: #e5e7eb;
+  --muted: #221d1e;
+  --muted-foreground: #9ca3af;
+  --accent: #2a2426;
+  --accent-foreground: #e5e7eb;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: #3a332c;
+  --primary: #8b2222;
+  --primary-foreground: #ffffff;
+  --ring: #8b2222;
 }
 
 .felt-bg::before,
 .felt-bg::after {
-  content: none;
+  content: "";
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.felt-bg::before {
+  inset: -32px;
+  background: url("/theme/yokai-gourd-bg.jpg") center top / cover no-repeat;
+  filter: blur(8px) brightness(0.6);
+}
+
+.felt-bg::after {
+  inset: 0;
+  background-color: rgba(10, 8, 12, 0.85);
+  background-image: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(122, 28, 34, 0.28) 0%, transparent 70%);
+}
+
+.felt-bg :is(main, aside) .text-primary {
+  color: #e58a80;
+}
+
+.felt-bg :is(main, aside) .hover\:text-primary:hover {
+  color: #f3b0a7;
 }
 
 .felt-bg > * {
@@ -204,18 +238,25 @@ body,
   width: 100%;
   aspect-ratio: 16 / 7;
   min-height: 15rem;
-  border: 1px solid rgba(122, 28, 34, 0.55);
-  background-color: #0d0b0b;
-  background-image: url("/theme/yokai-gourd-hero.jpg");
-  background-size: cover;
-  background-position: center 85%;
-  background-repeat: no-repeat;
+  border: 1px solid rgba(139, 34, 34, 0.5);
+  background-color: #0a080c;
+}
+
+.hero-banner::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  background: url("/theme/yokai-smoke-hero.jpg") center 70% / cover no-repeat;
+  filter: blur(1.5px) brightness(0.9);
+  pointer-events: none;
 }
 
 .hero-banner-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(13, 11, 11, 0.62) 0%, rgba(13, 11, 11, 0.3) 55%, rgba(13, 11, 11, 0.15) 100%);
+  background:
+    radial-gradient(ellipse 58% 70% at 50% 46%, rgba(10, 8, 12, 0.55) 0%, rgba(10, 8, 12, 0.2) 65%, transparent 100%),
+    linear-gradient(180deg, rgba(10, 8, 12, 0.05) 0%, rgba(10, 8, 12, 0.3) 100%);
   pointer-events: none;
 }
 
@@ -242,18 +283,19 @@ body,
 }
 
 .hero-banner-tag {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.6rem;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid rgba(208, 65, 63, 0.55);
+  border: 1px solid rgba(197, 155, 39, 0.45);
   border-radius: 999px;
-  background: rgba(13, 11, 11, 0.7);
-  padding: 0.22rem 0.75rem;
-  color: #f0b3a8;
-  font-size: clamp(0.62rem, 1.2vw, 0.75rem);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.25rem 0.8rem;
+  color: #e7c98a;
+  font-size: clamp(0.66rem, 1.2vw, 0.8rem);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .hero-banner-tag::before {
@@ -268,85 +310,54 @@ body,
 .hero-banner-copy {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
   padding: 1rem 1.25rem 1.4rem;
   text-align: center;
   pointer-events: none;
 }
 
-.hero-banner-kicker {
+.hero-banner-title {
   margin: 0;
-  font-size: clamp(1.05rem, 2.6vw, 1.7rem);
-  font-weight: 700;
-  line-height: 1.2;
-  color: #f3eadb;
-  text-shadow: 0 2px 10px rgba(12, 8, 6, 0.8);
-  text-wrap: balance;
+  color: #f5ecd7;
+  font-size: clamp(1.15rem, 3vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  word-break: keep-all;
 }
 
 .hero-banner-brand {
+  display: block;
+  margin-top: 0.15rem;
+  color: #f3d58a;
   font-family: var(--font-display), "Black Han Sans", sans-serif;
+  font-size: clamp(3.2rem, 9vw, 5.6rem);
   font-weight: 400;
-  letter-spacing: 0.06em;
-  color: #e7c98a;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 12px rgba(197, 155, 39, 0.6), 0 2px 6px rgba(0, 0, 0, 0.9);
 }
 
-.hero-banner-pill {
-  margin: 0.55rem 0 0;
+.hero-banner-sub {
+  margin: 0.8rem 0 0;
   max-width: 100%;
-  border: 1px solid rgba(122, 28, 34, 0.7);
+  border: 1px solid rgba(197, 155, 39, 0.2);
   border-radius: 999px;
-  background: rgba(13, 11, 11, 0.78);
-  padding: 0.38rem 1.05rem;
-  font-size: clamp(0.72rem, 1.55vw, 0.98rem);
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding: 0.42rem 1.1rem;
+  color: #e5e7eb;
+  font-size: clamp(0.72rem, 1.5vw, 0.95rem);
   font-weight: 600;
-  line-height: 1.35;
-  color: #fffaf2;
+  line-height: 1.4;
   word-break: keep-all;
   text-wrap: balance;
-}
-
-@media (max-width: 639px) {
-  .hero-banner-copy {
-    justify-content: flex-start;
-    padding-top: 1.1rem;
-  }
-
-  .hero-banner-kicker {
-    font-size: clamp(0.95rem, 4.4vw, 1.15rem);
-  }
-
-  .hero-banner-pill {
-    display: none;
-  }
-}
-
-@media (min-width: 640px) {
-  .hero-banner-scrim {
-    background:
-      radial-gradient(ellipse 42% 58% at 26% 26%, rgba(13, 11, 11, 0.82) 0%, rgba(13, 11, 11, 0.45) 60%, transparent 100%),
-      linear-gradient(180deg, rgba(13, 11, 11, 0.25) 0%, transparent 55%);
-  }
-
-  .hero-banner-copy {
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 1.4rem 40% 1rem 14%;
-    text-align: left;
-  }
-
-  .hero-banner-kicker {
-    font-size: clamp(1rem, 1.9vw, 1.35rem);
-    line-height: 1.35;
-  }
-
-  .hero-banner-pill {
-    font-size: clamp(0.68rem, 1.1vw, 0.82rem);
-  }
 }
 
 .board-face {
@@ -359,15 +370,24 @@ body,
 }
 
 .lounge-card {
-  border: 1px solid rgba(201, 162, 92, 0.45);
+  border: 1px solid rgba(197, 155, 39, 0.18);
   border-radius: 16px;
-  background: #f6efe2;
-  color: #2a1d12;
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.28);
+  background: rgba(26, 22, 23, 0.95);
+  color: #e5e7eb;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.35);
+}
+
+.schedule-calendar,
+.schedule-calendar .schedule-cell {
+  background: rgba(26, 22, 23, 0.95);
+}
+
+.schedule-calendar .schedule-day {
+  color: #ffffff;
 }
 
 .wood-frame {
-  border: 1px solid rgba(201, 162, 92, 0.28);
+  border: 0;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(34, 25, 18, 0.94) 0%, rgba(22, 16, 12, 0.96) 100%);
   box-shadow: 0 10px 28px rgb(0 0 0 / 0.38);
@@ -418,13 +438,14 @@ body,
 
 .btn-3d-gold {
   border: 0;
-  background: linear-gradient(180deg, #e7c98a 0%, #c9a25c 100%);
-  color: #1a120b;
+  background: #8b2222;
+  color: #ffffff;
   box-shadow: none;
 }
 
 .btn-3d-gold:hover {
-  background: linear-gradient(180deg, #f0d79f 0%, #d4ae68 100%);
+  background: #a32a2a;
+  color: #ffffff;
 }
 
 .wood-frame nav a,

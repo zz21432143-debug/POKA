@@ -32,7 +32,7 @@ export function UnlockPostForm({ postId }: { postId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+    <div className="rounded-xl border border-[#c59b27]/30 bg-[#1A1617] p-4 text-[#E5E7EB]">
       <h2 className="text-lg font-semibold">비밀글입니다</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         작성자와 관리자가 아니면 비밀번호를 입력해야 본문을 볼 수 있습니다.

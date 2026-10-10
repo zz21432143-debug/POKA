@@ -64,7 +64,7 @@ export function PostList({
         className={
           framed
             ? "ink-panel rounded-2xl px-4 py-10 text-center text-base text-[#D1D5DB]"
-            : "px-4 py-10 text-center text-sm text-muted-foreground"
+            : "px-4 py-10 text-center text-sm text-[#9CA3AF]"
         }
       >
         {emptyText}
@@ -79,7 +79,7 @@ export function PostList({
   }
 
   return (
-    <ul className="divide-y divide-border">
+    <ul className="divide-y divide-white/[0.06]">
       {posts.map((post, index) => {
         const anonymous = isAnonymousBoard(post.boardType);
         return (
@@ -88,8 +88,8 @@ export function PostList({
             <li
               className={
                 compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
-                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 even:bg-[#f7f1e6] hover:bg-[#efe6d6]"
+                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 text-[#E5E7EB] even:bg-white/[0.03] hover:bg-white/[0.07]"
+                  : "flex min-h-14 items-center gap-3 px-4 py-3.5 text-[#E5E7EB] even:bg-white/[0.03] hover:bg-white/[0.07]"
               }
             >
               {showBoard ? (
@@ -108,8 +108,8 @@ export function PostList({
                   href={`/posts/${post.id}`}
                   className={
                     compact
-                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-foreground"
-                      : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-foreground sm:text-lg"
+                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-[#E5E7EB] hover:text-white"
+                      : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-[#E5E7EB] hover:text-white sm:text-lg"
                   }
                 >
                   {post.isPrivate ? (
@@ -120,10 +120,10 @@ export function PostList({
                   {post.title}
                 </Link>
                 {compact ? (
-                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#8a7f6c]">
+                  <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#9CA3AF]">
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-[#c86d2a]/12 px-1 text-[10px] font-bold text-[#a8561f]">
+                      <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[10px] font-bold text-[#e7c98a]">
                         Lv.{post.author.level}
                       </span>
                     ) : null}
@@ -132,7 +132,7 @@ export function PostList({
                 ) : (
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-2">
                     <AuthorChip author={post.author} anonymous={anonymous} size="sm" />
-                    <span className="text-xs font-medium text-[#6d5844]">
+                    <span className="text-xs font-medium text-[#9CA3AF]">
                       {formatRelativeKst(post.createdAt)}
                     </span>
                   </div>
@@ -152,8 +152,8 @@ export function PostList({
                 <div
                   className={
                     compact
-                      ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#8a7f6c] sm:flex"
-                      : "hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex"
+                      ? "hidden shrink-0 items-center gap-2 text-[11px] text-[#9CA3AF] sm:flex"
+                      : "hidden shrink-0 items-center gap-3 text-xs text-[#9CA3AF] sm:flex"
                   }
                 >
                   <span className="inline-flex items-center gap-1">
