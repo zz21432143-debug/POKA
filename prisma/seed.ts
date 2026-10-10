@@ -3,12 +3,7 @@ import { MemberKind } from "../src/generated/prisma/client";
 import { prisma } from "../src/lib/db";
 import { todayKstDate, weekStartKst, yesterdayKstDate, shiftDate } from "../src/lib/dates";
 import { WEEKLY_HAND_EXP } from "../src/lib/rewards";
-import {
-  hashPassword,
-  MASTER_ACCOUNT_NICKNAME,
-  MASTER_ACCOUNT_PASSWORD,
-  SEED_ACCOUNT_PASSWORD,
-} from "../src/lib/password";
+import { MASTER_ACCOUNT_NICKNAME } from "../src/lib/password";
 import {
   ATTENDANCE_LINES,
   catalogPosts,
@@ -89,14 +84,12 @@ async function main() {
   const today = todayKstDate();
   const yesterday = yesterdayKstDate(today);
 
-  const passwordHash = hashPassword(SEED_ACCOUNT_PASSWORD);
   const users = [];
   for (const [index, nickname] of SEED_NICKNAMES.entries()) {
     const verified = (VERIFIED_DEALER_NICKNAMES as readonly string[]).includes(nickname);
     const user = await prisma.user.create({
       data: {
         nickname,
-        passwordHash,
         profileMarkImageUrl: markList[index % markList.length].imageUrl,
         equippedMarkId: markList[index % markList.length].id,
         level: nickname === "펠트딜러" ? 8 : verified ? 5 + (index % 3) : 1 + (index % 7),
@@ -119,7 +112,6 @@ async function main() {
     where: { nickname: MASTER_ACCOUNT_NICKNAME },
     create: {
       nickname: MASTER_ACCOUNT_NICKNAME,
-      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
       isAdmin: true,
       isMaster: true,
       level: 250,
@@ -128,7 +120,7 @@ async function main() {
       termsAcceptedAt: new Date(),
     },
     update: {
-      passwordHash: hashPassword(MASTER_ACCOUNT_PASSWORD),
+      passwordHash: null,
       isAdmin: true,
       isMaster: true,
       level: 250,

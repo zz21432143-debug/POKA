@@ -1,8 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
-export const SEED_ACCOUNT_PASSWORD = "poka1234";
 export const MASTER_ACCOUNT_NICKNAME = "POKA";
-export const MASTER_ACCOUNT_PASSWORD = "poka4444444";
 
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");

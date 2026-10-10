@@ -14,16 +14,15 @@ const LOGIN_ERRORS: Record<string, string> = {
   google: "구글 로그인에 실패했습니다. 다시 시도해 주세요.",
   kakao_not_configured: "카카오 로그인이 아직 설정되지 않았습니다. 운영자에게 문의하세요.",
   google_not_configured: "구글 로그인이 아직 설정되지 않았습니다. 운영자에게 문의하세요.",
-  naver_soon: "네이버 로그인은 아직 열리지 않았습니다. 카카오 또는 구글로 로그인해 주세요.",
 };
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; tab?: string; msg?: string; ops?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; tab?: string; msg?: string }>;
 }) {
   const user = await getCurrentUser().catch(() => null);
-  const { next, error, tab, msg, ops } = await searchParams;
+  const { next, error, tab, msg } = await searchParams;
   const nextPath = next?.startsWith("/") ? next : "/";
   if (user) replaceTo(nextPath);
   const signup = tab === "signup";
@@ -41,7 +40,7 @@ export default async function LoginPage({
           href={`/login?tab=login${nextQuery}`}
           className={cn(
             "flex min-h-11 items-center justify-center rounded-full text-sm font-semibold",
-            !signup ? "bg-white text-foreground shadow-sm" : "text-muted-foreground",
+            !signup ? "bg-[#8b2222] text-white shadow-sm" : "text-muted-foreground",
           )}
         >
           로그인
@@ -50,7 +49,7 @@ export default async function LoginPage({
           href={`/login?tab=signup${nextQuery}`}
           className={cn(
             "flex min-h-11 items-center justify-center rounded-full text-sm font-semibold",
-            signup ? "bg-white text-foreground shadow-sm" : "text-muted-foreground",
+            signup ? "bg-[#8b2222] text-white shadow-sm" : "text-muted-foreground",
           )}
         >
           회원가입
@@ -64,7 +63,7 @@ export default async function LoginPage({
       </p>
       {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
       <div className="mt-5">
-        <AuthForm nextPath={nextPath} mode={signup ? "signup" : "login"} openOps={ops === "1"} />
+        <AuthForm nextPath={nextPath} mode={signup ? "signup" : "login"} />
       </div>
     </article>
   );

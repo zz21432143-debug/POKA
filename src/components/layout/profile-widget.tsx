@@ -64,23 +64,14 @@ export function ProfileWidget({
           >
             구글 로그인
           </a>
-          <Link
-            href="/login?ops=1"
-            className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
-          >
-            아이디/비밀번호 로그인
-          </Link>
         </div>
-        <p className="mt-2 text-center text-xs leading-5 text-[#9CA3AF]">
-          일반 회원은 카카오·구글로 로그인합니다. 아이디/비밀번호는 운영 계정용입니다.
-        </p>
-        <p className="mt-3 flex items-center justify-center gap-3 text-[12px] font-semibold">
-          <Link href="/login?tab=signup" className="text-primary hover:underline">
+        <p className="mt-3 flex items-center justify-center gap-2 text-[12px] text-[#9CA3AF]">
+          처음이신가요?
+          <Link
+            href="/login?tab=signup"
+            className="touch-target inline-flex min-h-9 items-center font-semibold text-primary hover:underline"
+          >
             회원가입
-          </Link>
-          <span className="text-[#d7ccb8]">|</span>
-          <Link href="/login?ops=1" className="text-[#E5E7EB] hover:text-[#C59B27] hover:underline">
-            ID/PW 찾기
           </Link>
         </p>
       </div>

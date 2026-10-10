@@ -26,6 +26,31 @@ function restrictionRedirect(request: Request, message: string) {
   return sendTo(url);
 }
 
+function isMasterKakao(profile: SocialProfile) {
+  if (profile.provider !== "kakao") return false;
+  const id = process.env.MASTER_KAKAO_ID?.trim();
+  if (id && profile.providerId.trim() === id) return true;
+  const email = process.env.MASTER_KAKAO_EMAIL?.trim().toLowerCase();
+  return Boolean(email && profile.email?.trim().toLowerCase() === email);
+}
+
+async function linkMasterKakao(profile: SocialProfile) {
+  if (!isMasterKakao(profile)) return null;
+  const master = await prisma.user.findFirst({ where: { isMaster: true }, orderBy: { createdAt: "asc" } });
+  if (!master) return null;
+  const kakaoId = profile.providerId.trim();
+  if (master.kakaoId !== kakaoId) {
+    await prisma.user.updateMany({
+      where: { kakaoId, NOT: { id: master.id } },
+      data: { kakaoId: null },
+    });
+  }
+  return prisma.user.update({
+    where: { id: master.id },
+    data: { kakaoId, lastLoginAt: new Date(), passwordHash: null },
+  });
+}
+
 export async function finishSocialAuth(request: Request, profile: SocialProfile) {
   const jar = await cookies();
   const next = safeNextPath(jar.get(OAUTH_NEXT_COOKIE)?.value);
@@ -33,6 +58,13 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
   jar.delete(OAUTH_NEXT_COOKIE);
   jar.delete(OAUTH_INTENT_COOKIE);
   const ip = clientIp(request);
+
+  const master = await linkMasterKakao(profile);
+  if (master) {
+    jar.delete(CONSENT_COOKIE);
+    await setSessionNickname(master.nickname);
+    return sendTo(new URL(next, request.url));
+  }
 
   if (intent === "signup") {
     if (!consentIsValid(jar.get(CONSENT_COOKIE)?.value)) {

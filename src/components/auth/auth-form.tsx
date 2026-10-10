@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LegalDetailDialog } from "@/components/legal/legal-detail-dialog";
 import {
@@ -18,21 +16,16 @@ type Provider = "kakao" | "google";
 export function AuthForm({
   nextPath = "/",
   mode = "login",
-  openOps = false,
 }: {
   nextPath?: string;
   mode?: "login" | "signup";
-  openOps?: boolean;
 }) {
-  const router = useRouter();
   const signup = mode === "signup";
   const [adult, setAdult] = useState(false);
   const [terms, setTerms] = useState(false);
   const [privacy, setPrivacy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState<Provider | "ops" | null>(null);
-  const [opsNickname, setOpsNickname] = useState("");
-  const [opsPassword, setOpsPassword] = useState("");
+  const [pending, setPending] = useState<Provider | null>(null);
 
   function requireConsents() {
     if (!adult || !terms || !privacy) {
@@ -77,33 +70,6 @@ export function AuthForm({
     );
   }
 
-  async function opsLogin() {
-    setError(null);
-    setPending("ops");
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "login",
-          nickname: opsNickname,
-          password: opsPassword,
-        }),
-      });
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "운영 계정으로 들어갈 수 없습니다.");
-        return;
-      }
-      router.replace(nextPath.startsWith("/") ? nextPath : "/");
-      router.refresh();
-    } catch {
-      setError("네트워크 오류입니다.");
-    } finally {
-      setPending(null);
-    }
-  }
-
   const ready = adult && terms && privacy;
 
   return (
@@ -118,7 +84,7 @@ export function AuthForm({
           disabled={pending !== null}
           onClick={() => void startSocial("kakao")}
         >
-          {pending === "kakao" ? "카카오로 이동 중…" : signup ? "카카오로 시작하기" : "카카오로 시작하기"}
+          {pending === "kakao" ? "카카오로 이동 중…" : "카카오로 시작하기"}
         </Button>
         <Button
           type="button"
@@ -196,46 +162,6 @@ export function AuthForm({
         </fieldset>
       ) : null}
 
-      {!signup ? (
-        <details
-          id="ops-account"
-          {...(openOps ? { open: true } : {})}
-          className="rounded-2xl border border-dashed border-border p-3"
-        >
-          <summary className="cursor-pointer text-xs font-medium text-muted-foreground">운영 계정</summary>
-          <form
-            className="mt-3 flex flex-col gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void opsLogin();
-            }}
-          >
-            <div className="grid gap-1.5">
-              <Label htmlFor="ops-nickname">닉네임</Label>
-              <Input
-                id="ops-nickname"
-                value={opsNickname}
-                onChange={(event) => setOpsNickname(event.target.value)}
-                autoComplete="username"
-                maxLength={12}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="ops-password">비밀번호</Label>
-              <Input
-                id="ops-password"
-                type="password"
-                value={opsPassword}
-                onChange={(event) => setOpsPassword(event.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <Button type="submit" size="touch" variant="secondary" disabled={pending !== null}>
-              {pending === "ops" ? "처리 중…" : "운영 계정으로 들어가기"}
-            </Button>
-          </form>
-        </details>
-      ) : null}
     </div>
   );
 }
