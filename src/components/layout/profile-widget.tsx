@@ -58,12 +58,12 @@ export function ProfileWidget({
           >
             카카오 로그인
           </a>
-          <Link
-            href="/login?error=naver_soon"
-            className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#03C75A]"
+          <a
+            href="/api/auth/google?intent=login&next=%2F"
+            className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
           >
-            네이버 로그인
-          </Link>
+            구글 로그인
+          </a>
           <Link
             href="/login?ops=1"
             className="btn-3d touch-target flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-[#2b271f]"
@@ -72,7 +72,7 @@ export function ProfileWidget({
           </Link>
         </div>
         <p className="mt-2 text-center text-xs leading-5 text-[#9CA3AF]">
-          일반 회원은 카카오·구글입니다. 네이버는 준비 중이고, 아이디/비밀번호는 운영 계정용입니다.
+          일반 회원은 카카오·구글로 로그인합니다. 아이디/비밀번호는 운영 계정용입니다.
         </p>
         <p className="mt-3 flex items-center justify-center gap-3 text-[12px] font-semibold">
           <Link href="/login?tab=signup" className="text-primary hover:underline">
