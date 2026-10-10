@@ -1,3 +1,4 @@
+import { BackToList } from "@/components/posts/back-to-list";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceToLogin } from "@/lib/history-redirect";
@@ -12,6 +13,7 @@ export default async function NoticeWritePage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <BackToList href="/notices" className="self-start" />
       <header className="board-intro">
         <h1>공지사항 작성</h1>
         <p className="mt-2">마스터 계정만 올릴 수 있습니다.</p>

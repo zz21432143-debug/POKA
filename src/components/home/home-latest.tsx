@@ -9,7 +9,6 @@ import { cn } from "cn";
 const TABS = [
   { key: "all", label: "전체", href: "/community" },
   { key: "free", label: "자유", href: "/boards/free" },
-  { key: "jobs", label: "구인/구직", href: "/boards/jobs" },
   { key: "hands", label: "핸드리뷰", href: "/boards/hand-review" },
 ] as const;
 
@@ -18,28 +17,25 @@ type Tab = (typeof TABS)[number]["key"];
 export function HomeLatest({
   all,
   free,
-  jobs,
   hands,
   nativeSponsor = null,
 }: {
   all: PostSummary[];
   free: PostSummary[];
-  jobs: PostSummary[];
   hands: PostSummary[];
   nativeSponsor?: DirectCreative | null;
 }) {
   const [tab, setTab] = useState<Tab>("all");
   const posts = useMemo(() => {
     if (tab === "free") return free;
-    if (tab === "jobs") return jobs;
     if (tab === "hands") return hands;
     return all;
-  }, [tab, all, free, jobs, hands]);
+  }, [tab, all, free, hands]);
 
   return (
     <section className="lounge-card overflow-hidden rounded-[1.35rem]">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/10 px-4 py-2.5">
-        <h2 className="mr-1 text-base font-bold text-white">최신 게시글</h2>
+        <h2 className="mr-1 text-base font-bold text-white">커뮤니티 최신글</h2>
         {TABS.map((item) => (
           <button
             key={item.key}

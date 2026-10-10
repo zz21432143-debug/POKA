@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import {
+  BriefcaseIcon,
   HomeIcon,
   LightbulbIcon,
   MessageCircleIcon,
@@ -13,6 +14,7 @@ import { MOBILE_BOTTOM_NAV, mobileNavActive } from "@/lib/nav";
 
 const ICONS = {
   home: HomeIcon,
+  briefcase: BriefcaseIcon,
   message: MessageCircleIcon,
   write: PenSquareIcon,
   lightbulb: LightbulbIcon,

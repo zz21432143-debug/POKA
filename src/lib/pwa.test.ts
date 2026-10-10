@@ -26,24 +26,27 @@ describe("pwa manifest constants", () => {
 });
 
 describe("mobile bottom nav", () => {
-  it("covers home, boards, write, suggestions, me", () => {
+  it("puts jobs first: home, jobs, job write, boards, me", () => {
     const labels = MOBILE_BOTTOM_NAV.map((item) => item.label);
-    assert.deepEqual(labels, ["홈", "게시판", "글쓰기", "건의사항", "내정보"]);
+    assert.deepEqual(labels, ["홈", "구인구직", "구인등록", "게시판", "내정보"]);
     assert.equal(MOBILE_BOTTOM_NAV[4]?.href, "/account");
   });
 
   it("uses real page hrefs so bottom buttons can navigate", () => {
-    assert.equal(MOBILE_BOTTOM_NAV[1]?.href, "/community");
-    assert.equal(MOBILE_BOTTOM_NAV[2]?.href, "/boards/free/write");
-    assert.equal(MOBILE_BOTTOM_NAV[3]?.href, "/boards/suggestions");
+    assert.equal(MOBILE_BOTTOM_NAV[1]?.href, "/boards/jobs");
+    assert.equal(MOBILE_BOTTOM_NAV[2]?.href, "/boards/jobs/write");
+    assert.equal(MOBILE_BOTTOM_NAV[3]?.href, "/community");
   });
 
-  it("highlights suggestions instead of boards", () => {
+  it("highlights jobs instead of boards on job pages", () => {
     const boards = MOBILE_BOTTOM_NAV.find((item) => item.label === "게시판");
-    const suggestions = MOBILE_BOTTOM_NAV.find((item) => item.label === "건의사항");
-    assert.ok(boards && suggestions);
-    assert.equal(mobileNavActive("/boards/suggestions", boards), false);
-    assert.equal(mobileNavActive("/boards/suggestions", suggestions), true);
+    const jobs = MOBILE_BOTTOM_NAV.find((item) => item.label === "구인구직");
+    const write = MOBILE_BOTTOM_NAV.find((item) => item.label === "구인등록");
+    assert.ok(boards && jobs && write);
+    assert.equal(mobileNavActive("/boards/jobs/urgent", boards), false);
+    assert.equal(mobileNavActive("/boards/jobs/urgent", jobs), true);
+    assert.equal(mobileNavActive("/boards/jobs/urgent/write", jobs), false);
+    assert.equal(mobileNavActive("/boards/jobs/urgent/write", write), true);
     assert.equal(mobileNavActive("/boards/free", boards), true);
   });
 });

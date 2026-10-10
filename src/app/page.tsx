@@ -4,17 +4,18 @@ import { HomeShortcuts } from "@/components/home/home-shortcuts";
 import { HomeHeroBanner } from "@/components/home/home-hero-banner";
 import { HomeLatest } from "@/components/home/home-latest";
 import { HomeUrgentJobs } from "@/components/home/home-urgent-jobs";
+import { HomeJobs } from "@/components/home/home-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { VerifiedDealerStrip } from "@/components/home/verified-dealer-strip";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 
 function HomePanelFallback({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-2xl bg-white/80 ${className}`} />;
+  return <div className={`animate-pulse rounded-2xl bg-white/[0.06] ${className}`} />;
 }
 
 async function HomeFeedSections() {
-      const feed = await getHomeFeed().catch(() => ({
+  const feed = await getHomeFeed().catch(() => ({
     all: [],
     free: [],
     jobs: [],
@@ -28,14 +29,14 @@ async function HomeFeedSections() {
   const today = todayKstDate();
   return (
     <>
+      <HomeUrgentJobs jobs={feed.urgent} />
+      <HomeJobs jobs={feed.jobs} />
       <HomeLatest
         all={feed.all}
         free={feed.free}
-        jobs={feed.jobs}
         hands={feed.hands}
         nativeSponsor={feed.nativeSponsor}
       />
-      <HomeUrgentJobs jobs={feed.urgent} />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
       <VerifiedDealerStrip dealers={feed.dealers} />
     </>

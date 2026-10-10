@@ -1,3 +1,4 @@
+import { BackToList } from "@/components/posts/back-to-list";
 import { RequireLogin } from "@/components/auth/require-login";
 import { HandEditor } from "@/components/hand/hand-editor";
 import { postRewardLine } from "@/lib/rewards";
@@ -6,6 +7,7 @@ export default function HandReviewWritePage() {
   return (
     <RequireLogin>
       <div className="flex flex-col gap-4">
+        <BackToList href="/boards/hand-review" className="self-start" />
         <header className="board-intro">
           <h1>핸드리뷰 작성</h1>
           <p className="mt-2">

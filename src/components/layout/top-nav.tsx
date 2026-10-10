@@ -15,12 +15,7 @@ export function TopNav() {
           "relative z-10 touch-target inline-flex min-h-11 items-center px-3 text-sm font-medium",
           active ? "text-[#F5EFE6]" : "text-[#F5EFE6]/70 hover:text-[#F5EFE6]",
         );
-        return item.href === "/" ? (
-          <a key={item.href} href="/" className={className}>
-            {item.label}
-            {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#F5EFE6]" /> : null}
-          </a>
-        ) : (
+        return (
           <Link key={item.href} href={item.href} className={className}>
             {item.label}
             {active ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#F5EFE6]" /> : null}

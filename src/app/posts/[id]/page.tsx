@@ -13,7 +13,9 @@ import { prisma } from "@/lib/db";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { parseHandReview } from "@/lib/hand-review";
 import { getCurrentUser } from "@/lib/current-user";
-import { JOB_KIND_LABEL } from "@/lib/nav";
+import { JOB_KIND_LABEL, boardListHref } from "@/lib/nav";
+import { BackToList } from "@/components/posts/back-to-list";
+import type { Metadata } from "next";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
@@ -37,6 +39,23 @@ function formatPostDateTime(value: Date) {
     minute: "2-digit",
     hour12: false,
   }).format(value);
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const post = await prisma.post
+    .findUnique({ where: { id }, select: { title: true, boardType: true, hidden: true, isPrivate: true } })
+    .catch(() => null);
+  if (!post || post.hidden || post.boardType === "ANONYMOUS_REVIEW") return { title: "게시글" };
+  const board = BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시글";
+  return {
+    title: post.isPrivate ? `비밀글 · ${board}` : `${post.title} · ${board}`,
+    robots: post.isPrivate ? { index: false } : undefined,
+  };
 }
 
 export default async function PostDetailPage({
@@ -118,8 +137,13 @@ export default async function PostDetailPage({
     }
   }
 
+  const listHref = boardListHref(post.boardType, post.jobKind);
+
   return (
     <article className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <BackToList href={listHref} />
+      </div>
       <div className="article-sheet ink-panel">
       <header className="article-head">
         <div className="flex flex-wrap items-center gap-2">
@@ -287,6 +311,10 @@ export default async function PostDetailPage({
         )}
       </section>
       ) : null}
+      </div>
+
+      <div className="flex justify-center">
+        <BackToList href={listHref} className="w-full justify-center sm:w-auto sm:min-w-48" />
       </div>
 
       {canRead ? (

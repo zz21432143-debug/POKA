@@ -39,7 +39,7 @@ export function InstallPwaButton({ compact = false }: { compact?: boolean }) {
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    setInstalled(isStandalone());
+    const check = window.setTimeout(() => setInstalled(isStandalone()), 0);
     const onPrompt = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
@@ -51,6 +51,7 @@ export function InstallPwaButton({ compact = false }: { compact?: boolean }) {
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      window.clearTimeout(check);
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };

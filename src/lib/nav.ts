@@ -16,6 +16,7 @@ export type NavGroup = {
 
 export const TOP_NAV = [
   { href: "/", label: "홈" },
+  { href: "/boards/jobs", label: "구인구직" },
   { href: "/community", label: "커뮤니티" },
   { href: "/info", label: "정보센터" },
   { href: "/boards/rules", label: "규칙" },
@@ -23,9 +24,9 @@ export const TOP_NAV = [
 
 export const MOBILE_BOTTOM_NAV = [
   { href: "/", label: "홈", icon: "home" as const, match: "exact" as const },
+  { href: "/boards/jobs", label: "구인구직", icon: "briefcase" as const, match: "prefix" as const },
+  { href: "/boards/jobs/write", label: "구인등록", icon: "write" as const, match: "write" as const },
   { href: "/community", label: "게시판", icon: "message" as const, match: "boards" as const },
-  { href: "/boards/free/write", label: "글쓰기", icon: "write" as const, match: "write" as const },
-  { href: "/boards/suggestions", label: "건의사항", icon: "lightbulb" as const, match: "prefix" as const },
   { href: "/account", label: "내정보", icon: "user" as const, match: "me" as const },
 ] as const;
 
@@ -62,11 +63,21 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [{ href: "/", label: "홈", hint: "커뮤니티 홈", icon: "home" }],
   },
   {
-    title: null,
+    title: "구인구직",
+    items: [
+      { href: "/boards/jobs", label: "구인구직 홈", hint: "전체 공고", icon: "briefcase" },
+      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
+      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "briefcase" },
+      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건", icon: "badge" },
+    ],
+  },
+  {
+    title: "커뮤니티",
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
       { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
-      { href: "/boards/jobs", label: "딜러 구인·구직", hint: "구인 허브", icon: "briefcase" },
       { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
@@ -96,6 +107,19 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
 /** 피드 키 연결용 게시판 트리 (사이드바 시안과 별개) */
 export const BOARD_NAV: NavGroup[] = [
   {
+    title: "구인 / 구직",
+    href: "/boards/jobs/fixed",
+    hint: "고정부터 개인 구직",
+    accent: "gold",
+    items: [
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
+      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
+      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
+      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건" },
+    ],
+  },
+  {
     title: "대회 스케줄",
     href: "/boards/schedule",
     hint: "일자별 / 월별 일정표",
@@ -121,19 +145,6 @@ export const BOARD_NAV: NavGroup[] = [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능" },
-    ],
-  },
-  {
-    title: "구인 / 구직",
-    href: "/boards/jobs/fixed",
-    hint: "고정부터 개인 구직",
-    accent: "gold",
-    items: [
-      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
-      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
-      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
-      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
-      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건" },
     ],
   },
 ];
@@ -163,9 +174,10 @@ export function mobileNavActive(
     );
   }
   if (item.match === "prefix") {
+    if (pathname.includes("/write")) return false;
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
   }
-  if (pathname.startsWith("/boards/suggestions")) return false;
+  if (pathname.startsWith("/boards/jobs")) return false;
   if (pathname.includes("/write")) return false;
   return (
     pathname === "/community" ||
@@ -280,6 +292,31 @@ export const JOB_ALIASES: Record<string, keyof typeof JOB_KINDS> = {
 export function resolveJobKind(kind: string) {
   const mapped = JOB_ALIASES[kind] ?? kind;
   return JOB_KINDS[mapped as keyof typeof JOB_KINDS] ?? null;
+}
+
+const JOB_KIND_SLUG: Record<JobKind, string> = {
+  FIXED: "fixed",
+  APPLY: "apply",
+  TEAM: "team",
+  URGENT: "urgent",
+  SEEKING: "seek",
+};
+
+const BOARD_LIST_HREF: Partial<Record<BoardType, string>> = {
+  FREE: "/boards/free",
+  RULE_QA: "/boards/rules",
+  SKETCH: "/boards/sketch",
+  HAND_REVIEW: "/boards/hand-review",
+  JOBS: "/boards/jobs",
+  PROMO: "/boards/official",
+  SCHEDULE: "/boards/schedule",
+  NOTICE: "/notices",
+  SUGGESTION: "/boards/suggestions",
+};
+
+export function boardListHref(boardType: BoardType, jobKind?: JobKind | null) {
+  if (boardType === "JOBS" && jobKind) return `/boards/jobs/${JOB_KIND_SLUG[jobKind]}`;
+  return BOARD_LIST_HREF[boardType] ?? "/community";
 }
 
 export const JOB_KIND_LABEL: Record<JobKind, string> = {

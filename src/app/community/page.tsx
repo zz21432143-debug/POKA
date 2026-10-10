@@ -8,7 +8,7 @@ export default function CommunityHubPage() {
       <header className="board-intro">
         <h1>커뮤니티</h1>
         <p className="mt-2">
-          자유 게시판부터 핸드리뷰·구인까지, 같은 길을 걷는 사람들과 이야기하세요.
+          자유 게시판부터 핸드리뷰까지, 같은 길을 걷는 사람들과 이야기하세요.
         </p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">

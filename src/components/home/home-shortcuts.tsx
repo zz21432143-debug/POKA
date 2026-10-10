@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { BriefcaseIcon, CalendarDaysIcon, LayoutListIcon, MessageCircleIcon } from "lucide-react";
+import { BriefcaseIcon, MessageCircleIcon, SirenIcon, UserRoundSearchIcon } from "lucide-react";
 
 const ITEMS = [
-  { href: "/community", title: "전체게시글", icon: LayoutListIcon },
-  { href: "/boards/free", title: "자유 게시판", icon: MessageCircleIcon },
-  { href: "/boards/jobs", title: "구인·구직", icon: BriefcaseIcon },
-  { href: "/boards/schedule", title: "대회 일정", icon: CalendarDaysIcon },
+  { href: "/boards/jobs", title: "구인구직", icon: BriefcaseIcon },
+  { href: "/boards/jobs/urgent", title: "급구 / 대타", icon: SirenIcon },
+  { href: "/boards/jobs/seek", title: "개인 구직", icon: UserRoundSearchIcon },
+  { href: "/community", title: "커뮤니티", icon: MessageCircleIcon },
 ] as const;
 
 export function HomeShortcuts() {

@@ -18,13 +18,13 @@ export function SiteHeader({
       <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
         <div className="relative z-30 flex items-center justify-start">
           <MobileDrawer profile={profile} />
-          <a href="/" className="relative z-20 hidden shrink-0 items-center rounded-2xl lg:flex">
+          <Link href="/" className="relative z-20 hidden shrink-0 items-center rounded-2xl lg:flex">
             <PokaLogo onDark />
-          </a>
+          </Link>
         </div>
-        <a href="/" className="relative z-0 flex min-w-0 justify-center lg:hidden">
+        <Link href="/" className="relative z-0 flex min-w-0 justify-center lg:hidden">
           <PokaLogo onDark compact />
-        </a>
+        </Link>
         <TopNav />
         <form action="/search" className="ml-auto hidden min-w-0 flex-1 items-center justify-end lg:flex">
           <label className="relative w-full max-w-sm">

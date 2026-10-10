@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "cn";
 import { DEFAULT_MARK_SRC, publicMarkUrl } from "@/lib/mark-assets";
 
@@ -20,13 +20,8 @@ export function MarkImage({
   effectClass?: string | null;
 }) {
   const resolved = publicMarkUrl(src);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [resolved]);
-
-  const showImg = !failed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImg = failedSrc !== resolved;
 
   return (
     <span
@@ -43,7 +38,7 @@ export function MarkImage({
           className={cn("mark-glyph", className)}
           style={{ width: "100%", height: "100%", maxWidth: "none", maxHeight: "none", objectFit: "cover" }}
           onError={() => {
-            if (resolved !== DEFAULT_MARK_SRC) setFailed(true);
+            if (resolved !== DEFAULT_MARK_SRC) setFailedSrc(resolved);
           }}
         />
       ) : (

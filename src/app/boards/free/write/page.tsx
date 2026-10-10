@@ -1,3 +1,4 @@
+import { BackToList } from "@/components/posts/back-to-list";
 import { RequireLogin } from "@/components/auth/require-login";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
 
@@ -5,6 +6,7 @@ export default function FreeWritePage() {
   return (
     <RequireLogin>
       <div className="flex flex-col gap-4">
+        <BackToList href="/boards/free" className="self-start" />
         <header className="board-intro">
           <h1>자유게시판 작성</h1>
         </header>

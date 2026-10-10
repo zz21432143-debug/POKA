@@ -1,3 +1,4 @@
+import { BackToList } from "@/components/posts/back-to-list";
 import { notFound } from "next/navigation";
 import { RequireLogin } from "@/components/auth/require-login";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
@@ -23,6 +24,7 @@ export default async function JobWritePage({
   return (
     <RequireLogin>
     <div className="flex flex-col gap-4">
+      <BackToList href={`/boards/jobs/${kind}`} className="self-start" />
       <header className="board-intro">
         <h1>{job.title} 작성</h1>
         <p className="mt-2">{job.blurb}</p>

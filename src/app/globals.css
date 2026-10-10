@@ -612,10 +612,12 @@ select {
 }
 
 .led-marquee {
-  animation: led-scroll 32s linear infinite;
+  animation: led-scroll 60s linear infinite;
 }
 
-.led-board:hover .led-marquee {
+.led-board:hover .led-marquee,
+.led-board:active .led-marquee,
+.led-board:focus-within .led-marquee {
   animation-play-state: paused;
 }
 

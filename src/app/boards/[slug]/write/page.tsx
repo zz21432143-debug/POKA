@@ -1,3 +1,4 @@
+import { BackToList } from "@/components/posts/back-to-list";
 import { notFound } from "next/navigation";
 import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { ScheduleForm } from "@/components/listing/schedule-form";
@@ -38,6 +39,7 @@ export default async function BoardWritePage({
 
   return (
     <div className="flex flex-col gap-4">
+      <BackToList href={`/boards/${slug}`} className="self-start" />
       <header className="board-intro">
         <h1>{board.title} 작성</h1>
         <p className="mt-2">{hint}</p>

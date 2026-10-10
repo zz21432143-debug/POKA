@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
@@ -130,7 +131,7 @@ export function BoardNav({
   return (
     <nav id={id} aria-label="전체 게시판" className={cn("flex flex-col", !inDrawer && "h-full min-h-0")}>
       <div className={inDrawer ? "pt-1" : "px-3 pt-3"}>
-        <a
+        <Link
           href="/"
           onClick={onNavigate}
           className={cn(
@@ -143,7 +144,7 @@ export function BoardNav({
           <SealIcon kind="home" active={homeActive} />
           <span className="flex-1">홈</span>
           <ChevronRightIcon className="size-4 opacity-80" />
-        </a>
+        </Link>
       </div>
       <div
         className={
@@ -159,7 +160,14 @@ export function BoardNav({
             ) : null}
             <ul className="flex flex-col gap-1">
               {group.items.map((item) => {
-                const active = navItemActive(pathname, item.href);
+                const active =
+                  navItemActive(pathname, item.href) &&
+                  !group.items.some(
+                    (other) =>
+                      other.href !== item.href &&
+                      other.href.startsWith(`${item.href}/`) &&
+                      navItemActive(pathname, other.href),
+                  );
                 return (
                   <li key={item.href} className="border-0">
                     <a
