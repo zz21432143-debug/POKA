@@ -13,6 +13,7 @@ import {
   STREAK_REPEAT_AFTER,
   STREAK_REPEAT_EXP,
   STREAK_REPEAT_POINTS,
+  nextStreakBonus,
 } from "@/lib/rewards";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
@@ -24,6 +25,7 @@ export default async function AttendancePage() {
   const user = await getCurrentUser().catch(() => null);
   if (!user) replaceToLogin("/attendance");
   const stats = await getAttendanceStats(user.id);
+  const next = nextStreakBonus(stats.myStreak);
 
   return (
     <div className="flex flex-col gap-4">
@@ -36,11 +38,31 @@ export default async function AttendancePage() {
         </p>
       </header>
 
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Stat label="오늘 날짜" value={formatKstLabel(stats.date)} />
-        <Stat label="오늘 출석 인원" value={`${stats.todayCount}명`} />
-        <Stat label="내 연속 출석" value={`${stats.myStreak}일`} />
+      {/* 휴대폰에서도 한 줄 3칸. 연속 출석을 가장 먼저 보이게 둡니다. */}
+      <section className="grid grid-cols-3 gap-2">
+        <Stat label="내 연속 출석" value={`${stats.myStreak}일`} highlight />
+        <Stat label="오늘 출석" value={`${stats.todayCount}명`} />
+        <Stat label="오늘" value={formatKstLabel(stats.date).replace(/^\d+년\s*/, "")} />
       </section>
+
+      {next ? (
+        <p className="rounded-xl border border-[#c9a25c]/50 bg-[#2a2017] px-4 py-3 text-sm text-[#f3eadb]">
+          🔥{" "}
+          {next.daysLeft === 1 ? (
+            <>
+              {stats.alreadyCheckedIn ? "내일 출석하면 " : "오늘 출석하면 "}
+              <strong className="text-[#e7c98a]">{next.label}</strong> 달성!
+            </>
+          ) : (
+            <>
+              <strong className="text-[#e7c98a]">{next.label}</strong>까지{" "}
+              <strong className="text-white">{next.daysLeft}일</strong> 남았어요.
+            </>
+          )}{" "}
+          보너스 +{next.points.toLocaleString()}P · EXP {next.exp}
+          {stats.myStreak === 0 && stats.lastAttendanceDate ? " (연속 기록이 끊겨 1일부터 다시 셉니다)" : ""}
+        </p>
+      ) : null}
 
       <section className="rounded-xl border border-emerald-500/25 bg-emerald-950/40 p-4">
         <h2 className="text-lg font-semibold">연속 출석 보너스</h2>
@@ -92,11 +114,17 @@ export default async function AttendancePage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="rounded-xl border border-border bg-card px-3 py-3">
+    <div
+      className={
+        highlight
+          ? "rounded-xl border border-[#c9a25c]/60 bg-[#2a2017] px-3 py-3"
+          : "rounded-xl border border-border bg-card px-3 py-3"
+      }
+    >
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+      <p className={highlight ? "mt-1 text-lg font-bold text-[#e7c98a]" : "mt-1 text-lg font-semibold"}>{value}</p>
     </div>
   );
 }

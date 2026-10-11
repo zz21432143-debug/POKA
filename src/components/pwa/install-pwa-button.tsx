@@ -101,10 +101,10 @@ export function InstallPwaButton({
           type="button"
           onClick={() => void install()}
           aria-label="휴대폰에 POKA 앱 받기"
-          className="touch-target inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-[#c9a25c]/60 bg-[#2a2017] px-2.5 text-xs font-bold text-[#f3eadb] hover:border-[#c9a25c] hover:bg-[#3a2c1f] sm:px-3 sm:text-[13px]"
+          className="touch-target inline-flex size-10 shrink-0 items-center justify-center gap-1 rounded-full border border-[#c9a25c]/60 bg-[#2a2017] text-[13px] font-bold text-[#f3eadb] hover:border-[#c9a25c] hover:bg-[#3a2c1f] sm:w-auto sm:px-3"
         >
           <SmartphoneIcon className="size-4 shrink-0 text-[#e7c98a]" />
-          <span className="sm:hidden">앱</span>
+          {/* 휴대폰에서는 로고가 가려지지 않도록 아이콘만 보입니다. */}
           <span className="hidden sm:inline">POKA 앱 받기</span>
         </button>
       ) : (

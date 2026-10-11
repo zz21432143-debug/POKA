@@ -99,7 +99,8 @@ function SealIcon({ kind, active }: { kind: SidebarIcon; active?: boolean }) {
       {kind === "check" ? (
         <>
           <circle cx="12" cy="12" r="8" fill={gold} />
-          <path fill={red} d="m7.6 12.2 2.6 2.6 6.2-6.2 1.2 1.2-7.4 7.4-3.8-3.8 1.2-1.2Z" />
+          {/* 체크 표시는 원과 다른 색이어야 보입니다(출석체크·랭킹 아이콘). */}
+          <path fill={active ? "#7a1c22" : "#1d1611"} d="m7.6 12.2 2.6 2.6 6.2-6.2 1.2 1.2-7.4 7.4-3.8-3.8 1.2-1.2Z" />
         </>
       ) : null}
     </svg>

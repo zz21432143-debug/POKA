@@ -77,6 +77,15 @@ export function streakBonusFor(streak: number): StreakBonus | null {
   return null;
 }
 
+/** 오늘 출석하면 이어질 연속 일수 기준으로, 다음에 받을 보너스와 남은 날. */
+export function nextStreakBonus(currentStreak: number): (StreakBonus & { day: number; daysLeft: number }) | null {
+  for (let day = Math.max(currentStreak + 1, 1); day <= currentStreak + STREAK_REPEAT_EVERY + 30; day += 1) {
+    const bonus = streakBonusFor(day);
+    if (bonus) return { ...bonus, day, daysLeft: day - currentStreak };
+  }
+  return null;
+}
+
 export const POPULAR_UPVOTE_THRESHOLD = 5;
 export const BEST_COMMENT_MIN = 2;
 export const UPVOTE_RECEIVED_EXP = 1;

@@ -27,7 +27,7 @@ export function KakaoOpenChatCta({
         rel="noopener noreferrer"
         aria-label="POKA 공식 오픈채팅방 참여하기"
         className={cn(
-          "btn-kakao touch-target inline-flex size-11 items-center justify-center rounded-full sm:h-10 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
+          "btn-kakao touch-target inline-flex size-10 shrink-0 items-center justify-center rounded-full sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
           className,
         )}
       >

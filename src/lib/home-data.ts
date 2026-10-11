@@ -60,6 +60,7 @@ async function loadHomeFeed() {
   // 커뮤니티 최신글에는 공고를 넣지 않습니다. 공고는 홈의 급구·최신 공고 박스에서만 봅니다.
   const communityOnly = { boardType: { notIn: ["ANONYMOUS_REVIEW" as const, "JOBS" as const] } };
 
+  // 글 목록 쿼리는 실패를 삼키지 않습니다. 빈 목록이 30초 캐시에 남지 않고, 다음 요청에서 다시 읽습니다.
   const [nativeSponsor, handSpot, hub, allRows, freeRows, jobRows, handRows, urgentRows] =
     await Promise.all([
       getSponsorCreative("NATIVE").catch(() => null),
@@ -71,16 +72,14 @@ async function loadHomeFeed() {
           orderBy: { createdAt: "desc" },
           take: 5,
           include,
-        })
-        .catch(() => []),
+        }),
       prisma.post
         .findMany({
           where: { ...base, boardType: "FREE" },
           orderBy: { createdAt: "desc" },
           take: 5,
           include,
-        })
-        .catch(() => []),
+        }),
       prisma.post
         .findMany({
           // 홈 메인 공고는 지원 딜러 구인입니다.
@@ -88,16 +87,14 @@ async function loadHomeFeed() {
           orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
           take: 5,
           include,
-        })
-        .catch(() => []),
+        }),
       prisma.post
         .findMany({
           where: { ...base, boardType: "HAND_REVIEW" },
           orderBy: { createdAt: "desc" },
           take: 5,
           include,
-        })
-        .catch(() => []),
+        }),
       prisma.post
         .findMany({
           where: { AND: [{ ...base, boardType: "JOBS", jobKind: "URGENT" }, openJobWhere()] },
@@ -110,8 +107,7 @@ async function loadHomeFeed() {
             jobWorkDate: true,
             jobPayAmount: true,
           },
-        })
-        .catch(() => []),
+        }),
     ]);
 
   return {

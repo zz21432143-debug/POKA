@@ -67,7 +67,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           홀덤펍 지원 딜러·급구 대타·고정 딜러·팀 구인. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다.
           급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:items-center">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:items-center">
           <Link
             href="/boards/jobs/apply/write"
             className={cn(buttonVariants({ size: "touch" }), "relative z-10 gap-1.5")}
@@ -84,7 +84,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           </Link>
           <Link
             href="/boards/jobs/write"
-            className="col-span-2 text-center text-sm font-semibold text-[#e7c98a] underline-offset-4 hover:underline sm:col-span-1 sm:ml-1"
+            className="inline-flex min-h-10 items-center justify-center text-sm font-semibold text-[#e7c98a] underline-offset-4 hover:underline sm:ml-1"
           >
             고정 · 팀 구인 등록
           </Link>

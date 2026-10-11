@@ -76,6 +76,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "커뮤니티",
     items: [
+      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "check" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "message" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
     ],

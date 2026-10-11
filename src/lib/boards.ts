@@ -4,7 +4,7 @@ export const BOARD_LABELS = {
   SKETCH: "현장 스케치",
   HAND_REVIEW: "핸드리뷰",
   ANONYMOUS_REVIEW: "익명 게시판",
-  JOBS: "구인 / 구직",
+  JOBS: "구인",
   PROMO: "공식 홍보",
   EVENT_POSTER: "대회 포스터",
   OFFICIAL_POSTER: "공식 홍보",

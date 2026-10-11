@@ -22,7 +22,7 @@ export function SiteHeader({
             <PokaLogo onDark />
           </Link>
         </div>
-        <Link href="/" className="relative z-0 flex min-w-0 justify-center lg:hidden">
+        <Link href="/" className="relative z-0 flex min-w-0 justify-center overflow-hidden lg:hidden">
           <PokaLogo onDark compact />
         </Link>
         <TopNav />
@@ -44,7 +44,7 @@ export function SiteHeader({
           <Link
             href="/search"
             aria-label="검색"
-            className="inline-flex size-11 items-center justify-center rounded-full text-[#F5EFE6] hover:bg-white/10 lg:hidden"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[#F5EFE6] hover:bg-white/10 lg:hidden"
           >
             <SearchIcon className="size-5" />
           </Link>
@@ -61,13 +61,14 @@ export function SiteHeader({
             <div className="flex items-center gap-1">
               <Link
                 href="/login"
-                className="btn-3d inline-flex h-10 items-center justify-center rounded-full px-2.5 text-xs font-semibold text-[#1c1914] sm:px-3 sm:text-sm"
+                className="btn-3d inline-flex h-10 shrink-0 items-center justify-center rounded-full px-3 text-sm font-semibold text-[#1c1914]"
               >
                 로그인
               </Link>
+              {/* 휴대폰에서는 공간이 좁아 로그인만 둡니다. 회원가입은 로그인 화면의 탭에 있습니다. */}
               <Link
                 href="/login?tab=signup"
-                className="btn-3d-green inline-flex h-10 items-center justify-center rounded-full px-2.5 text-xs font-semibold sm:px-3 sm:text-sm"
+                className="btn-3d-green hidden h-10 items-center justify-center rounded-full px-3 text-sm font-semibold sm:inline-flex"
               >
                 회원가입
               </Link>

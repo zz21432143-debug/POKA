@@ -34,8 +34,10 @@ export function HomeLatest({
 
   return (
     <section className="lounge-card overflow-hidden rounded-[1.35rem]">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/10 px-4 py-2.5">
-        <h2 className="mr-1 text-base font-bold text-white">커뮤니티 최신글</h2>
+      <div className="flex items-center gap-x-3 border-b border-white/10 px-4 py-2.5">
+        <h2 className="mr-1 shrink-0 whitespace-nowrap text-base font-bold text-white">
+          <span className="hidden sm:inline">커뮤니티 </span>최신글
+        </h2>
         {TABS.map((item) => (
           <button
             key={item.key}

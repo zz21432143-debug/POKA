@@ -119,6 +119,21 @@ export async function checkInAttendance(userId: string, message: string, authorI
   };
 }
 
+/**
+ * 지금 살아 있는 연속 출석 일수. 어제나 오늘 출석했으면 저장된 값, 하루라도 빠졌으면 0입니다.
+ * (DB 값은 다음 출석 때 1로 다시 시작하므로 화면에서만 바로 0으로 보여 줍니다.)
+ */
+export function liveStreak(
+  user: { attendanceStreak: number; lastAttendanceDate: string | null } | null,
+  today = todayKstDate(),
+) {
+  if (!user?.lastAttendanceDate) return 0;
+  if (user.lastAttendanceDate === today || user.lastAttendanceDate === yesterdayKstDate(today)) {
+    return user.attendanceStreak;
+  }
+  return 0;
+}
+
 export async function getAttendanceStats(userId?: string) {
   const date = todayKstDate();
   const post = await ensureTodayAttendancePost();
@@ -144,7 +159,7 @@ export async function getAttendanceStats(userId?: string) {
     post,
     todayCount,
     alreadyCheckedIn: Boolean(mine),
-    myStreak: user?.attendanceStreak ?? 0,
+    myStreak: liveStreak(user, date),
     lastAttendanceDate: user?.lastAttendanceDate ?? null,
     comments,
   };
