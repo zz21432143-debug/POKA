@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,12 +101,48 @@ export function JobWriteForm({
     workDate: form.jobDateFlexible ? "날짜 협의" : form.jobWorkDate,
   });
 
+  /** 추가 정보도 모두 필수입니다. [항목명, 값] 순서대로 비어 있는 첫 항목을 알려 줍니다. */
+  const extraRequired: [string, string][] =
+    jobKind === "FIXED"
+      ? [
+          ["근무 일수", form.jobSchedule],
+          ["근무 시간", form.jobWorkHours],
+          ["복리후생", form.jobBenefits],
+          ["경력 요구조건", form.jobExperience],
+        ]
+      : jobKind === "APPLY"
+        ? [
+            ["보장 시간", form.jobGuaranteedHours],
+            ["복장 규정", form.jobDressCode],
+            ["경력 사항", form.jobExperience],
+            ...(form.jobTravelPay ? ([["차비 금액", form.jobBenefits]] as [string, string][]) : []),
+          ]
+        : jobKind === "TEAM"
+          ? [
+              ["주요 이력 및 대회 수상 경력", form.jobExperience],
+              ["근무 혜택", form.jobBenefits],
+              ["지원 방법", form.jobApplyMethod],
+            ]
+          : jobKind === "URGENT"
+            ? [
+                ["근무 시간", form.jobWorkHours],
+                ["경력 요구조건", form.jobExperience],
+              ]
+            : [
+                ["가능 일정", form.jobSchedule],
+                ["경력", form.jobExperience],
+              ];
+
   function missingField(): string | null {
     if (!region) return `${regionLabel}을 선택하세요.`;
+    if (!place.trim()) return "상세주소를 입력하세요.";
     if (named && !form.jobCompanyName.trim()) return `${nameLabel}을(를) 입력하세요.`;
     if (dated && !form.jobDateFlexible && !form.jobWorkDate) return "날짜를 고르거나 협의를 선택하세요.";
     if (jobKind !== "TEAM" && !form.jobPayAmount.trim()) return "급여를 입력하세요.";
     if (!form.jobContact.trim()) return "연락처를 입력하세요.";
+    const empty = extraRequired.find(([, value]) => !value.trim());
+    if (empty) return `${empty[0]}을(를) 입력하세요.`;
+    if (!form.content.trim()) return "상세 내용을 입력하세요.";
     return null;
   }
 
@@ -152,8 +187,10 @@ export function JobWriteForm({
         <p className="write-title-input flex items-center break-keep">{preview}</p>
       </div>
 
-      <section className="grid gap-3" aria-label="필수 항목">
-        <p className="text-sm font-bold text-[#e7c98a]">필수 항목</p>
+      <section className="grid gap-3" aria-label="기본 정보">
+        <p className="text-sm font-bold text-[#e7c98a]">
+          기본 정보 <span className="text-xs font-semibold text-[#9CA3AF]">· <Required /> 표시는 모두 입력해야 합니다</span>
+        </p>
         <div className="grid gap-2">
           <Label>
             {regionLabel} <Required />
@@ -175,10 +212,14 @@ export function JobWriteForm({
               </button>
             ))}
           </div>
+          <Label htmlFor="job-address" className="mt-1">
+            상세주소 <Required />
+          </Label>
           <Input
+            id="job-address"
             className="h-11"
             value={place}
-            placeholder={jobKind === "TEAM" ? "상세 지역 (선택, 예: 전역)" : "상세 지역 (선택, 예: 강남역)"}
+            placeholder={jobKind === "TEAM" ? "예: 강남구 전역" : "예: 강남구 테헤란로 123"}
             onChange={(event) => setPlace(event.target.value)}
           />
         </div>
@@ -273,100 +314,115 @@ export function JobWriteForm({
         </div>
       </section>
 
-      <details className="group rounded-xl border border-white/10 bg-white/[0.02]">
-        <summary className="touch-target flex min-h-12 cursor-pointer list-none items-center justify-between px-3 text-sm font-semibold text-[#E5E7EB] [&::-webkit-details-marker]:hidden">
-          추가 정보 (선택) · 근무 조건, 상세 내용
-          <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="grid gap-3 border-t border-white/10 p-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {jobKind === "FIXED" ? (
-              <>
-                <Field label="근무 일수" value={form.jobSchedule} onChange={(v) => set("jobSchedule", v)} placeholder="주5일" />
-                <Field label="근무 시간" value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="20:00–04:00" />
-                <Field label="복리후생" value={form.jobBenefits} onChange={(v) => set("jobBenefits", v)} placeholder="식대 · 교통비" />
-                <Field label="경력 요구조건" value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="라이브 1년 이상" />
-              </>
-            ) : null}
+      <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3" aria-label="추가 정보">
+        <p className="text-sm font-bold text-[#e7c98a]">추가 정보 · 근무 조건, 상세 내용</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {jobKind === "FIXED" ? (
+            <>
+              <Field label="근무 일수" required value={form.jobSchedule} onChange={(v) => set("jobSchedule", v)} placeholder="주5일" />
+              <Field label="근무 시간" required value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="20:00–04:00" />
+              <Field label="복리후생" required value={form.jobBenefits} onChange={(v) => set("jobBenefits", v)} placeholder="식대 · 교통비" />
+              <Field label="경력 요구조건" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="라이브 1년 이상" />
+            </>
+          ) : null}
 
-            {jobKind === "APPLY" ? (
-              <>
-                <Field label="보장 시간" value={form.jobGuaranteedHours} onChange={(v) => set("jobGuaranteedHours", v)} placeholder="6시간" />
-                <div className="grid gap-2">
-                  <Label htmlFor="overtime">연장 유무</Label>
-                  <select
-                    id="overtime"
-                    className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#E5E7EB]"
-                    value={form.jobOvertime}
-                    onChange={(event) => set("jobOvertime", event.target.value)}
-                  >
-                    <option value="가능">가능</option>
-                    <option value="불가">불가</option>
-                  </select>
-                </div>
-                <Field label="복장 규정" value={form.jobDressCode} onChange={(v) => set("jobDressCode", v)} placeholder="올블랙" />
-                <Field label="경력 사항" value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="스팟 딜러 경험" />
+          {jobKind === "APPLY" ? (
+            <>
+              <Field label="보장 시간" required value={form.jobGuaranteedHours} onChange={(v) => set("jobGuaranteedHours", v)} placeholder="6시간" />
+              <div className="grid gap-2">
+                <Label htmlFor="overtime">
+                  연장 유무 <Required />
+                </Label>
+                <select
+                  id="overtime"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#E5E7EB]"
+                  value={form.jobOvertime}
+                  onChange={(event) => set("jobOvertime", event.target.value)}
+                >
+                  <option value="가능">가능</option>
+                  <option value="불가">불가</option>
+                </select>
+              </div>
+              <Field label="복장 규정" required value={form.jobDressCode} onChange={(v) => set("jobDressCode", v)} placeholder="올블랙" />
+              <Field label="경력 사항" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="스팟 딜러 경험" />
+              <div className="grid gap-2">
                 <label className="flex min-h-11 items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     className="size-5"
                     checked={form.jobTravelPay}
-                    onChange={(event) => set("jobTravelPay", event.target.checked)}
+                    onChange={(event) => {
+                      set("jobTravelPay", event.target.checked);
+                      if (!event.target.checked) set("jobBenefits", "");
+                    }}
                   />
                   차비 지원
                 </label>
-                <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    checked={form.jobSnacks}
-                    onChange={(event) => set("jobSnacks", event.target.checked)}
+                {form.jobTravelPay ? (
+                  <Field
+                    label="차비 금액"
+                    required
+                    numeric
+                    value={form.jobBenefits}
+                    onChange={(v) => set("jobBenefits", v)}
+                    placeholder="20000"
                   />
-                  간식 제공
-                </label>
-              </>
-            ) : null}
-
-            {jobKind === "TEAM" ? (
-              <>
-                <Field
-                  label="주요 이력 및 대회 수상 경력"
-                  value={form.jobExperience}
-                  onChange={(v) => set("jobExperience", v)}
-                  placeholder="WSOP 서킷 스태프"
+                ) : null}
+              </div>
+              <label className="flex min-h-11 items-center gap-2 self-start text-sm">
+                <input
+                  type="checkbox"
+                  className="size-5"
+                  checked={form.jobSnacks}
+                  onChange={(event) => set("jobSnacks", event.target.checked)}
                 />
-                <Field label="근무 혜택" value={form.jobBenefits} onChange={(v) => set("jobBenefits", v)} placeholder="세션비 · 숙소" />
-                <Field label="지원 방법" value={form.jobApplyMethod} onChange={(v) => set("jobApplyMethod", v)} placeholder="프로필 회신" />
-              </>
-            ) : null}
+                간식 제공
+              </label>
+            </>
+          ) : null}
 
-            {jobKind === "URGENT" ? (
-              <>
-                <Field label="근무 시간" value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="22:00–06:00" />
-                <Field label="경력 요구조건" value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="대타 경험" />
-              </>
-            ) : null}
+          {jobKind === "TEAM" ? (
+            <>
+              <Field
+                label="주요 이력 및 대회 수상 경력"
+                required
+                value={form.jobExperience}
+                onChange={(v) => set("jobExperience", v)}
+                placeholder="WSOP 서킷 스태프"
+              />
+              <Field label="근무 혜택" required value={form.jobBenefits} onChange={(v) => set("jobBenefits", v)} placeholder="세션비 · 숙소" />
+              <Field label="지원 방법" required value={form.jobApplyMethod} onChange={(v) => set("jobApplyMethod", v)} placeholder="프로필 회신" />
+            </>
+          ) : null}
 
-            {jobKind === "SEEKING" ? (
-              <>
-                <Field label="가능 일정" value={form.jobSchedule} onChange={(v) => set("jobSchedule", v)} placeholder="주말 · 야간" />
-                <Field label="경력" value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="라이브 2년" />
-              </>
-            ) : null}
-          </div>
+          {jobKind === "URGENT" ? (
+            <>
+              <Field label="근무 시간" required value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="22:00–06:00" />
+              <Field label="경력 요구조건" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="대타 경험" />
+            </>
+          ) : null}
 
-          <div className="grid gap-2">
-            <Label htmlFor="job-content" className="write-label">상세 내용</Label>
-            <Textarea
-              id="job-content"
-              className="write-body-input"
-              placeholder="근무 조건, 분위기, 참고 사항을 적어 주세요"
-              value={form.content}
-              onChange={(event) => set("content", event.target.value)}
-            />
-          </div>
+          {jobKind === "SEEKING" ? (
+            <>
+              <Field label="가능 일정" required value={form.jobSchedule} onChange={(v) => set("jobSchedule", v)} placeholder="주말 · 야간" />
+              <Field label="경력" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="라이브 2년" />
+            </>
+          ) : null}
         </div>
-      </details>
+
+        <div className="grid gap-2">
+          <Label htmlFor="job-content" className="write-label">
+            상세 내용 <Required />
+          </Label>
+          <Textarea
+            id="job-content"
+            className="write-body-input"
+            placeholder="근무 조건, 분위기, 참고 사항을 적어 주세요"
+            value={form.content}
+            onChange={(event) => set("content", event.target.value)}
+          />
+        </div>
+      </section>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
