@@ -39,9 +39,7 @@ export function SiteHeader({
           </label>
         </form>
         <div className="relative z-30 flex items-center justify-end gap-0.5 lg:ml-2 lg:gap-1.5">
-          <span className="hidden lg:inline-flex">
-            <InstallPwaButton compact />
-          </span>
+          <InstallPwaButton variant="header" />
           <KakaoOpenChatCta compact />
           <Link
             href="/search"

@@ -35,7 +35,6 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
 
   const [index, setIndex] = useState(startIndex);
   const [animate, setAnimate] = useState(true);
-  const [paused, setPaused] = useState(false);
   const indexRef = useRef(startIndex);
   const settleTimer = useRef<number>(0);
 
@@ -55,7 +54,8 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
   }, [cloneCount, deck.length]);
 
   useEffect(() => {
-    if (deck.length <= VISIBLE || paused) return;
+    // PC에서 마우스가 올라가 있어도 멈추지 않고 계속 돕니다.
+    if (deck.length <= VISIBLE) return;
     const timer = window.setInterval(() => {
       if (document.hidden) return;
       indexRef.current += 1;
@@ -64,7 +64,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
       settleTimer.current = window.setTimeout(settle, SLIDE_MS + 20);
     }, STEP_MS);
     return () => window.clearInterval(timer);
-  }, [deck.length, paused, settle]);
+  }, [deck.length, settle]);
 
   useEffect(() => () => window.clearTimeout(settleTimer.current), []);
 
@@ -79,13 +79,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           포스터 홍보 문의
         </Link>
       </div>
-      <div
-        className="overflow-hidden"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocus={() => setPaused(true)}
-        onBlur={() => setPaused(false)}
-      >
+      <div className="overflow-hidden">
         <ul
           className="flex"
           style={{

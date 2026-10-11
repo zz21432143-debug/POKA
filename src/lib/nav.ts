@@ -53,7 +53,7 @@ export type SidebarItem = NavItem & { icon: SidebarIcon };
 export type SidebarGroup = {
   title: string | null;
   items: SidebarItem[];
-  /** PC 사이드바에서 접어 둘 수 있는 그룹. 현재 페이지가 속하면 펼친 채로 엽니다. */
+  /** 사이드바에서 접어 둘 수 있는 그룹. 처음에는 펼친 상태로 보입니다. */
   collapsible?: boolean;
 };
 

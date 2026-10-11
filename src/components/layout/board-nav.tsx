@@ -180,9 +180,9 @@ export function BoardNav({
           );
           const heading = "rounded-lg bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]";
           if (group.collapsible && group.title) {
-            const containsActive = group.items.some((item) => navItemActive(pathname, item.href));
+            // 처음 들어오면 펼친 상태. 필요하면 제목을 눌러 접을 수 있습니다.
             return (
-              <details key={group.title} className="group/nav" open={containsActive || undefined}>
+              <details key={group.title} className="group/nav" open>
                 <summary
                   className={cn(
                     heading,

@@ -27,7 +27,7 @@ export function KakaoOpenChatCta({
         rel="noopener noreferrer"
         aria-label="POKA 공식 오픈채팅방 참여하기"
         className={cn(
-          "btn-3d-gold touch-target inline-flex size-11 items-center justify-center rounded-full sm:h-10 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
+          "btn-kakao touch-target inline-flex size-11 items-center justify-center rounded-full sm:h-10 sm:w-auto sm:max-w-[12.5rem] sm:gap-1.5 sm:px-3",
           className,
         )}
       >
@@ -43,15 +43,15 @@ export function KakaoOpenChatCta({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "btn-3d-gold touch-target flex w-full items-center gap-3 rounded-[1.25rem] px-4 py-3.5",
+        "btn-kakao touch-target flex w-full items-center gap-3 rounded-[1.25rem] px-4 py-3.5",
         className,
       )}
     >
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#5c1515] text-white">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#191919] text-[#fee500]">
         <KakaoBubbleIcon className="size-6" />
       </span>
-      <span className="min-w-0 text-white">
-        <span className="block text-xs font-semibold tracking-wide text-[#f3d7c8]">카카오톡 공식</span>
+      <span className="min-w-0 text-[#191919]">
+        <span className="block text-xs font-semibold tracking-wide text-[#3c1e1e]">카카오톡 공식</span>
         <span className="mt-0.5 block text-base font-bold leading-snug">POKA 공식 오픈채팅방 참여하기</span>
       </span>
     </a>

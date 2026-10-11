@@ -447,6 +447,19 @@ body {
   color: #ffffff;
 }
 
+/* 카카오톡 공식 노란색 버튼 */
+.btn-kakao {
+  border: 0;
+  background: #fee500;
+  color: #191919;
+  box-shadow: none;
+}
+
+.btn-kakao:hover {
+  background: #f5d800;
+  color: #191919;
+}
+
 .wood-frame nav a,
 .wood-frame nav li,
 .board-face nav a,
@@ -634,9 +647,13 @@ select {
   }
 }
 
+/*
+ * Windows "애니메이션 효과 끄기"가 켜진 PC에서도 전광판은 흘러야 합니다.
+ * 움직임 줄이기 설정에서는 멈추는 대신 더 천천히 흐르게 합니다.
+ */
 @media (prefers-reduced-motion: reduce) {
   .led-marquee {
-    animation: none;
+    animation-duration: 120s !important;
   }
 }
 

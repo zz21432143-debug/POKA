@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DownloadIcon, ShareIcon, PlusSquareIcon } from "lucide-react";
+import { DownloadIcon, ShareIcon, PlusSquareIcon, SmartphoneIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,10 +32,23 @@ function isStandalone() {
   );
 }
 
-export function InstallPwaButton({ compact = false }: { compact?: boolean }) {
+function isMobileDevice() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || isIosSafari();
+}
+
+export function InstallPwaButton({
+  compact = false,
+  variant,
+}: {
+  compact?: boolean;
+  /** header: 상단 바에 글자와 함께 보이는 "앱 받기" 버튼 */
+  variant?: "header";
+}) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [iosOpen, setIosOpen] = useState(false);
   const [androidOpen, setAndroidOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(false);
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
@@ -71,13 +84,30 @@ export function InstallPwaButton({ compact = false }: { compact?: boolean }) {
       setIosOpen(true);
       return;
     }
+    if (!isMobileDevice()) {
+      setDesktopOpen(true);
+      return;
+    }
     setAndroidOpen(true);
   }
 
   const label = compact ? "앱 설치" : "홈 화면에 추가";
+  const siteHost = typeof window === "undefined" ? "pokerwiki.co.kr" : window.location.host;
 
   return (
     <>
+      {variant === "header" ? (
+        <button
+          type="button"
+          onClick={() => void install()}
+          aria-label="휴대폰에 POKA 앱 받기"
+          className="touch-target inline-flex h-10 shrink-0 items-center gap-1 rounded-full border border-[#c9a25c]/60 bg-[#2a2017] px-2.5 text-xs font-bold text-[#f3eadb] hover:border-[#c9a25c] hover:bg-[#3a2c1f] sm:px-3 sm:text-[13px]"
+        >
+          <SmartphoneIcon className="size-4 shrink-0 text-[#e7c98a]" />
+          <span className="sm:hidden">앱</span>
+          <span className="hidden sm:inline">POKA 앱 받기</span>
+        </button>
+      ) : (
       <Button
         type="button"
         size={compact ? "icon-touch" : "touch"}
@@ -93,6 +123,35 @@ export function InstallPwaButton({ compact = false }: { compact?: boolean }) {
         <DownloadIcon className="size-5" />
         {compact ? <span className="sr-only">{label}</span> : <span>{label}</span>}
       </Button>
+      )}
+
+      <Dialog open={desktopOpen} onOpenChange={setDesktopOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>휴대폰에 POKA 앱 받기</DialogTitle>
+            <DialogDescription>
+              POKA는 앱스토어 없이 휴대폰 홈 화면에 바로 설치됩니다. 설치하면 주소창 없이 앱처럼 열립니다.
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal space-y-3 pl-5 text-sm leading-6">
+            <li className="break-words">
+              휴대폰 브라우저에서 <strong>{siteHost}</strong> 에 접속합니다.
+            </li>
+            <li className="break-words">
+              상단의 <strong>앱</strong> 버튼을 누릅니다.
+            </li>
+            <li className="break-words">
+              안드로이드는 <strong>설치</strong>, 아이폰은 공유 <ShareIcon className="inline size-4 align-text-bottom" /> →{" "}
+              <strong>홈 화면에 추가</strong>를 누르면 끝입니다.
+            </li>
+          </ol>
+          {deferred ? null : (
+            <p className="text-xs leading-5 text-muted-foreground">
+              이 PC에도 설치하려면 주소창 오른쪽의 설치 아이콘을 누르세요.
+            </p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={iosOpen} onOpenChange={setIosOpen}>
         <DialogContent className="max-w-sm">
