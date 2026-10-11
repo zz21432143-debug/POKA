@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { canWriteBoard, writeDeniedMessage } from "./permissions";
 
-const master = { isAdmin: true, isMaster: true, memberKind: "INDIVIDUAL" as const };
+const official = { isAdmin: true, isMaster: true, nickname: "POKA", memberKind: "INDIVIDUAL" as const };
+const otherMaster = { isAdmin: true, isMaster: true, nickname: "홀덤마스터", memberKind: "INDIVIDUAL" as const };
+const fakePoka = { isAdmin: false, isMaster: false, nickname: "POKA", memberKind: "INDIVIDUAL" as const };
 const admin = { isAdmin: true, isMaster: false, memberKind: "INDIVIDUAL" as const };
 const member = { isAdmin: false, memberKind: "INDIVIDUAL" as const, isDealerVerified: true };
 
@@ -18,17 +20,18 @@ describe("board write roles", () => {
     assert.equal(canWriteBoard(member, "PROMO"), false);
     assert.equal(canWriteBoard(member, "SCHEDULE"), false);
     assert.equal(canWriteBoard(member, "NOTICE"), false);
-    assert.match(writeDeniedMessage("PROMO"), /마스터/);
+    assert.match(writeDeniedMessage("PROMO"), /POKA 공식 계정/);
   });
 
-  it("lets only the master write promo, schedule, and notices", () => {
-    assert.equal(canWriteBoard(admin, "PROMO"), false);
-    assert.equal(canWriteBoard(admin, "SCHEDULE"), false);
-    assert.equal(canWriteBoard(admin, "NOTICE"), false);
-    assert.equal(canWriteBoard(master, "PROMO"), true);
-    assert.equal(canWriteBoard(master, "SCHEDULE"), true);
-    assert.equal(canWriteBoard(master, "NOTICE"), true);
-    assert.equal(canWriteBoard(master, "FREE"), true);
+  it("lets only the POKA master account write promo, schedule, and notices", () => {
+    for (const board of ["PROMO", "SCHEDULE", "NOTICE"] as const) {
+      assert.equal(canWriteBoard(official, board), true, `official ${board}`);
+      assert.equal(canWriteBoard(otherMaster, board), false, `other master ${board}`);
+      assert.equal(canWriteBoard(fakePoka, board), false, `non-master POKA ${board}`);
+      assert.equal(canWriteBoard(admin, board), false, `admin ${board}`);
+    }
+    assert.equal(canWriteBoard(official, "FREE"), true);
+    assert.equal(canWriteBoard(otherMaster, "FREE"), true);
   });
 
   it("blocks guests from every board", () => {

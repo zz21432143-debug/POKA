@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
+import { replaceTo } from "@/lib/history-redirect";
 import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
 import { AUTHOR_SELECT, AuthorChip } from "@/components/posts/author-chip";
@@ -26,7 +26,7 @@ import { ReportButton } from "@/components/posts/report-button";
 import { UnlockPostForm } from "@/components/posts/unlock-post-form";
 import { canRevealPrivatePost } from "@/lib/private-post";
 import { UNLOCK_COOKIE, hasUnlock } from "@/lib/unlock-cookie";
-import { CrownIcon } from "lucide-react";
+import { CrownIcon, LockIcon } from "lucide-react";
 import { JobStatusBadge } from "@/components/jobs/job-cards";
 import { PremiumToggle } from "@/components/jobs/premium-toggle";
 import { ApplyPanel } from "@/components/jobs/apply-panel";
@@ -34,13 +34,11 @@ import { ApplicantList } from "@/components/jobs/applicant-list";
 import { BumpButton } from "@/components/jobs/bump-button";
 import { canBumpNow, nextBumpAt } from "@/lib/job-bump";
 import { jobExpiresOn, jobStatus } from "@/lib/job-status";
-import { formatWon } from "@/lib/jobs";
+import { titleRegion } from "@/lib/jobs";
 import { isStaff } from "@/lib/roles";
 import { loginHref } from "@/lib/login-path";
 
 export const dynamic = "force-dynamic";
-
-const GUEST_READABLE_BOARDS = new Set<string>(["PROMO", "SCHEDULE", "NOTICE"]);
 
 function formatPostDateTime(value: Date) {
   return new Intl.DateTimeFormat("sv-SE", {
@@ -70,9 +68,6 @@ export async function generateMetadata({
         isPrivate: true,
         jobKind: true,
         jobLocation: true,
-        jobPayType: true,
-        jobPayAmount: true,
-        jobWorkDate: true,
       },
     })
     .catch(() => null);
@@ -80,18 +75,11 @@ export async function generateMetadata({
   const board = BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시글";
   if (post.boardType === "JOBS" && post.jobKind) {
     const kindLabel = JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL];
-    const pay = formatWon(post.jobPayAmount);
     return {
       alternates: { canonical: `/posts/${id}` },
       title: `${post.title} · ${kindLabel}`,
-      description: [
-        post.jobLocation ? `${post.jobLocation} 홀덤펍` : "홀덤펍",
-        kindLabel,
-        pay ? `${post.jobPayType ?? "급여"} ${pay}` : null,
-        post.jobWorkDate ? `근무일 ${post.jobWorkDate}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
+      // 비회원에게는 제목까지만 공개하므로 설명에도 지역·분류만 넣고 조건은 넣지 않습니다.
+      description: `${titleRegion(post.jobLocation)} 홀덤펍 ${kindLabel} 공고입니다. 근무 조건과 연락처는 POKA 로그인 후 확인할 수 있습니다.`,
     };
   }
   return {
@@ -127,11 +115,8 @@ export default async function PostDetailPage({
   if (!post) notFound();
   // 개인 구직은 운영 종료. 본명이 담긴 예전 구직 글은 작성자와 관리자만 봅니다.
   if (post.jobKind === "SEEKING" && viewer?.id !== post.authorId && !viewer?.isAdmin) notFound();
-  // 구인구직 공고는 검색 유입을 위해 제목·조건까지는 누구나 봅니다. 본문·연락처·댓글은 로그인 후.
-  const guestJob = !viewer && post.boardType === "JOBS";
-  // 홍보 포스터·대회 일정·공지는 광고주와 첫 방문자를 위해 비회원도 전부 읽습니다. 댓글·추천만 로그인.
-  const guestPublic = !viewer && GUEST_READABLE_BOARDS.has(post.boardType);
-  if (!viewer && !guestJob && !guestPublic) replaceToLogin(`/posts/${id}`);
+  // 비회원은 모든 글에서 제목(게시판·작성자·작성일)까지만 봅니다. 본문·조건·연락처·사진·댓글은 로그인 후.
+  const guest = !viewer;
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
       <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
@@ -157,7 +142,7 @@ export default async function PostDetailPage({
     isAdmin: Boolean(viewer?.isAdmin),
     unlocked,
   });
-  const canRead = canReveal && !guestJob;
+  const canRead = canReveal && !guest;
   const status = post.boardType === "JOBS" ? jobStatus(post) : null;
   const expiresOn = status === "open" ? jobExpiresOn(post) : null;
   const staff = Boolean(viewer && isStaff(viewer));
@@ -184,7 +169,7 @@ export default async function PostDetailPage({
       : Promise.resolve(null),
   ]);
 
-  if (canReveal) {
+  if (canRead) {
     void prisma.post
       .update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } })
       .catch(() => undefined);
@@ -251,30 +236,29 @@ export default async function PostDetailPage({
         ) : null}
         <div className="article-meta-side">
           <time dateTime={post.createdAt.toISOString()}>{formatPostDateTime(post.createdAt)}</time>
-          <span>조회 {(post.viewCount + (canReveal ? 1 : 0)).toLocaleString()}</span>
+          <span>조회 {(post.viewCount + (canRead ? 1 : 0)).toLocaleString()}</span>
         </div>
       </div>
 
-      {guestJob ? (
+      {guest ? (
         <div className="article-body">
-          {post.jobKind ? <JobFacts job={post} /> : null}
-          {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
-          {isJobPost && status === "open" ? (
-            <ApplyPanel postId={post.id} applied={false} loggedIn={false} loginHref={loginHref(`/posts/${post.id}`)} />
-          ) : null}
-          <div className="flex flex-col items-start gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-4">
-            <p className="text-sm text-[#D1D5DB]">상세 내용과 연락처는 로그인한 회원만 볼 수 있습니다.</p>
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-[#3a332c] bg-[#141110] px-4 py-8 text-center">
+            <LockIcon className="size-6 text-[#e7c98a]" aria-hidden />
+            <p className="text-[15px] font-semibold text-white">
+              {isJobPost ? "근무 조건·연락처와 상세 내용은" : "글 내용은"} 로그인한 회원만 볼 수 있습니다.
+            </p>
+            <p className="text-sm text-[#9CA3AF]">카카오 또는 구글로 10초 만에 가입할 수 있어요.</p>
             <Link
               href={loginHref(`/posts/${post.id}`)}
-              className="touch-target inline-flex min-h-11 items-center rounded-full bg-[#8b2222] px-5 text-sm font-bold text-white hover:bg-[#a12a2a]"
+              className="touch-target inline-flex min-h-12 items-center rounded-full bg-[#8b2222] px-6 text-sm font-bold text-white hover:bg-[#a12a2a]"
             >
-              로그인하고 연락처 보기
+              {isJobPost ? "로그인하고 공고 보기" : "로그인하고 글 보기"}
             </Link>
           </div>
         </div>
       ) : null}
 
-      {post.isPrivate && !canReveal ? (
+      {post.isPrivate && !canReveal && !guest ? (
         <div className="p-4">
           <UnlockPostForm postId={post.id} />
         </div>

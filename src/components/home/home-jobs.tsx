@@ -100,9 +100,6 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
                       <span className="rounded-full border border-emerald-600/60 px-2 py-0.5 text-emerald-300">차비 {travel}</span>
                     ) : null}
                   </div>
-                  {job.jobLocation ? (
-                    <p className="truncate text-xs text-[#9CA3AF]">{job.jobLocation}</p>
-                  ) : null}
                 </Link>
               </li>
             );
