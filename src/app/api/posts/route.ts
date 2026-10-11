@@ -98,6 +98,9 @@ export async function POST(request: Request) {
       }
       jobKind = kind;
       jobData = jobFieldsFromBody(body, jobKind);
+      if (!jobData.jobLocation) {
+        return NextResponse.json({ error: "지역을 선택하세요." }, { status: 400 });
+      }
       title = jobData.title;
     }
 

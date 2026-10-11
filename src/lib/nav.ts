@@ -46,14 +46,15 @@ export type SidebarIcon =
   | "shield"
   | "check"
   | "spade"
-  | "badge"
-  | "mask";
+  | "badge";
 
 export type SidebarItem = NavItem & { icon: SidebarIcon };
 
 export type SidebarGroup = {
   title: string | null;
   items: SidebarItem[];
+  /** PC 사이드바에서 접어 둘 수 있는 그룹. 현재 페이지가 속하면 펼친 채로 엽니다. */
+  collapsible?: boolean;
 };
 
 /** 홈 사이드바(시안). 피드 검증용 BOARD_NAV와 분리 */
@@ -76,15 +77,14 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "커뮤니티",
     items: [
-      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다", icon: "message" },
-      { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진", icon: "camera" },
-      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정", icon: "help" },
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "message" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
     ],
   },
   {
     title: "정보센터",
+    collapsible: true,
     items: [
       { href: "/practice", label: "딜러 연습", hint: "사이드팟 · 미니멈 레이즈", icon: "book" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
@@ -93,9 +93,9 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   },
   {
     title: "기타",
+    collapsible: true,
     items: [
       { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
-      { href: "/codex", label: "요괴 도감", hint: "수집 업적", icon: "mask" },
       { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "check" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "megaphone" },
@@ -140,9 +140,7 @@ export const BOARD_NAV: NavGroup[] = [
     accent: "emerald",
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 출석 EXP" },
-      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 판정" },
-      { href: "/boards/sketch", label: "현장 스케치", hint: "현장 사진" },
-      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 수다" },
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능" },
     ],
@@ -337,6 +335,5 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   SKETCH: "현장 사진과 스케치를 공유하세요.",
   HAND_REVIEW:
     "제목 앞에 홀덤 핸드리뷰가 붙습니다. 테이블을 그리고 등록하면 폴드/체크/콜/레이즈 투표가 열립니다.",
-  ANONYMOUS_REVIEW: "닉네임은 화면에 보이지 않습니다. 작성 책임은 본인에게 있습니다.",
   SUGGESTION: "운영 개선 건의. 비밀글을 켜면 비밀번호(4자리 이상)가 필요합니다. 작성자와 관리자는 바로 볼 수 있습니다.",
 };

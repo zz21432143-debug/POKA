@@ -27,6 +27,13 @@ const ALIASES: Record<string, string> = {
   "store-review": "/community",
 };
 
+/** 자유게시판 말머리 탭. 질문·현장 스케치는 자유게시판 안에서 함께 봅니다. */
+const FREE_TABS = [
+  { slug: "free", label: "전체" },
+  { slug: "rules", label: "질문" },
+  { slug: "sketch", label: "현장 스케치" },
+] as const;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const board = resolveBoardSlug(slug);
@@ -58,7 +65,7 @@ export default async function BoardPage({
     <div className="flex flex-col gap-4">
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1>{board.title}</h1>
+          <h1>{FREE_TABS.some((tab) => tab.slug === canonical) ? "자유게시판" : board.title}</h1>
           <p className="mt-2">{BOARD_DESCRIPTIONS[board.boardType]}</p>
           {canWrite || !("masterOnly" in board && board.masterOnly) ? (
             <p className="mt-1.5 text-xs text-[#9CA3AF]">글 작성 시 {postRewardLine(board.boardType)}</p>
@@ -66,13 +73,33 @@ export default async function BoardPage({
         </div>
         {canWrite || !("masterOnly" in board && board.masterOnly) ? (
           <Link
-            href={board.writeHref}
+            href={FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref}
             className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
           >
             {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
           </Link>
         ) : null}
       </header>
+
+      {FREE_TABS.some((tab) => tab.slug === canonical) ? (
+        <nav aria-label="말머리" className="flex gap-1.5">
+          {FREE_TABS.map((tab) => (
+            <Link
+              key={tab.slug}
+              href={`/boards/${tab.slug}`}
+              aria-current={tab.slug === canonical ? "page" : undefined}
+              className={cn(
+                "touch-target inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13px] font-semibold",
+                tab.slug === canonical
+                  ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]"
+                  : "border-white/15 text-[#E5E7EB] hover:border-[#c9a25c]/60",
+              )}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
       {gallery ? (
         <PromoGallery posts={page.gallery} />
@@ -84,7 +111,16 @@ export default async function BoardPage({
           initialItems={page.posts}
           initialTotal={page.total}
           initialNextOffset={page.nextOffset}
-          emptyText="이 게시판에 글이 없습니다."
+          emptyText="아직 이 게시판에 글이 없습니다."
+          emptyAction={
+            canWrite || !("masterOnly" in board && board.masterOnly)
+              ? {
+                  href: FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref,
+                  label: "첫 글 쓰기",
+                }
+              : undefined
+          }
+          showBoard={canonical === "free"}
           nativeSponsor={nativeSponsor}
         />
       )}

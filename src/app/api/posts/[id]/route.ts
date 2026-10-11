@@ -33,6 +33,9 @@ export async function PATCH(
       return NextResponse.json({ error: "구인 종류를 확인하세요." }, { status: 400 });
     }
     const jobData = jobFieldsFromBody(body, jobKind);
+    if (!jobData.jobLocation) {
+      return NextResponse.json({ error: "지역을 선택하세요." }, { status: 400 });
+    }
     const updated = await prisma.post.update({
       where: { id },
       data: {

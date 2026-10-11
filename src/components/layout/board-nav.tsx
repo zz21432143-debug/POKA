@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, type SidebarIcon } from "@/lib/nav";
 
@@ -102,12 +102,6 @@ function SealIcon({ kind, active }: { kind: SidebarIcon; active?: boolean }) {
           <path fill={red} d="m7.6 12.2 2.6 2.6 6.2-6.2 1.2 1.2-7.4 7.4-3.8-3.8 1.2-1.2Z" />
         </>
       ) : null}
-      {kind === "mask" ? (
-        <>
-          <path fill={gold} d="M5 6.2h14v8.2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V6.2Z" />
-          <path fill={red} d="M8.2 10.2h2.2v2.2H8.2zm5.4 0H16v2.2h-2.4z" />
-        </>
-      ) : null}
     </svg>
   );
 }
@@ -151,13 +145,8 @@ export function BoardNav({
           inDrawer ? "flex flex-col gap-4 py-3" : "flex flex-col gap-3 px-3 py-3"
         }
       >
-        {groups.map((group, index) => (
-          <div key={group.title ?? `g-${index}`}>
-            {group.title ? (
-              <p className="mb-2 rounded-lg bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]">
-                {group.title}
-              </p>
-            ) : null}
+        {groups.map((group, index) => {
+          const items = (
             <ul className="flex flex-col gap-1">
               {group.items.map((item) => {
                 const active =
@@ -188,25 +177,33 @@ export function BoardNav({
                 );
               })}
             </ul>
-          </div>
-        ))}
+          );
+          const heading = "rounded-lg bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]";
+          if (group.collapsible && group.title) {
+            const containsActive = group.items.some((item) => navItemActive(pathname, item.href));
+            return (
+              <details key={group.title} className="group/nav" open={containsActive || undefined}>
+                <summary
+                  className={cn(
+                    heading,
+                    "touch-target flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden",
+                  )}
+                >
+                  {group.title}
+                  <ChevronDownIcon className="size-4 transition-transform group-open/nav:rotate-180" />
+                </summary>
+                <div className="mt-2">{items}</div>
+              </details>
+            );
+          }
+          return (
+            <div key={group.title ?? `g-${index}`}>
+              {group.title ? <p className={cn(heading, "mb-2")}>{group.title}</p> : null}
+              {items}
+            </div>
+          );
+        })}
       </div>
-      <a
-        href="/codex"
-        onClick={onNavigate}
-        className={cn(
-          inDrawer ? "my-2" : "m-3",
-          "flex items-center gap-3 rounded-2xl bg-[#1e1212] px-3 py-3 hover:bg-[#2a1618]",
-        )}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/theme/broken-gourd.jpg" alt="" width={56} height={56} className="size-14 shrink-0 rounded-xl object-cover" />
-        <p className="text-sm font-bold leading-5 text-[#f3eadb]">
-          호리병이 깨졌다!
-          <br />
-          <span className="font-semibold text-[#d98a7e]">108요괴를 모아보세요</span>
-        </p>
-      </a>
     </nav>
   );
 }

@@ -18,6 +18,8 @@ const ALIASES: Record<string, string> = {
   events: "/boards/schedule/write",
   promo: "/boards/official/write",
   "store-review": "/community",
+  rules: "/boards/free/write?type=RULE_QA",
+  sketch: "/boards/free/write?type=SKETCH",
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -35,7 +37,7 @@ export default async function BoardWritePage({
   if (ALIASES[slug]) replaceTo(ALIASES[slug]);
   const board = resolveBoardSlug(slug);
   if (!board) notFound();
-  if (slug === "free" || slug === "hand-review" || slug === "store-review") {
+  if (slug === "free" || slug === "hand-review") {
     notFound();
   }
 

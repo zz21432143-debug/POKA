@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { JobCards, type JobCardData } from "@/components/jobs/job-cards";
 import { Button } from "@/components/ui/button";
 import { PAGE_SIZE } from "@/lib/feed";
+import type { EmptyAction } from "@/components/posts/empty-board";
 
 type FeedResponse = {
   total: number;
@@ -17,11 +18,19 @@ export function InfiniteJobList({
   initialItems,
   initialTotal,
   initialNextOffset,
+  region = null,
+  openOnly = false,
+  emptyText,
+  emptyAction,
 }: {
   feedKey: string;
   initialItems: JobCardData[];
   initialTotal: number;
   initialNextOffset: number | null;
+  region?: string | null;
+  openOnly?: boolean;
+  emptyText?: string;
+  emptyAction?: EmptyAction;
 }) {
   const [items, setItems] = useState(initialItems);
   const [nextOffset, setNextOffset] = useState(initialNextOffset);
@@ -35,9 +44,10 @@ export function InfiniteJobList({
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(
-        `/api/feed?key=${encodeURIComponent(feedKey)}&offset=${nextOffset}&limit=${PAGE_SIZE}`,
-      );
+      const params = new URLSearchParams({ key: feedKey, offset: String(nextOffset), limit: String(PAGE_SIZE) });
+      if (region) params.set("region", region);
+      if (openOnly) params.set("open", "1");
+      const response = await fetch(`/api/feed?${params.toString()}`);
       const payload = (await response.json()) as FeedResponse;
       if (!response.ok) throw new Error(payload.error ?? "목록을 불러오지 못했습니다.");
       setItems((prev) => {
@@ -70,7 +80,7 @@ export function InfiniteJobList({
   return (
     <div className="flex flex-col gap-3">
       {total > 0 ? <p className="text-xs text-[#9CA3AF]">총 {total}개</p> : null}
-      <JobCards jobs={items} />
+      <JobCards jobs={items} emptyText={emptyText} emptyAction={emptyAction} />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div ref={sentinel} />
       {nextOffset != null ? (

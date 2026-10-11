@@ -26,6 +26,13 @@ import { ReportButton } from "@/components/posts/report-button";
 import { UnlockPostForm } from "@/components/posts/unlock-post-form";
 import { canRevealPrivatePost } from "@/lib/private-post";
 import { UNLOCK_COOKIE, hasUnlock } from "@/lib/unlock-cookie";
+import { CrownIcon } from "lucide-react";
+import { JobStatusBadge } from "@/components/jobs/job-cards";
+import { PremiumToggle } from "@/components/jobs/premium-toggle";
+import { jobExpiresOn, jobStatus } from "@/lib/job-status";
+import { formatWon } from "@/lib/jobs";
+import { isStaff } from "@/lib/roles";
+import { loginHref } from "@/lib/login-path";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +55,38 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const post = await prisma.post
-    .findUnique({ where: { id }, select: { title: true, boardType: true, hidden: true, isPrivate: true } })
+    .findUnique({
+      where: { id },
+      select: {
+        title: true,
+        boardType: true,
+        hidden: true,
+        isPrivate: true,
+        jobKind: true,
+        jobLocation: true,
+        jobPayType: true,
+        jobPayAmount: true,
+        jobWorkDate: true,
+      },
+    })
     .catch(() => null);
   if (!post || post.hidden || post.boardType === "ANONYMOUS_REVIEW") return { title: "게시글" };
   const board = BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시글";
+  if (post.boardType === "JOBS" && post.jobKind) {
+    const kindLabel = JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL];
+    const pay = formatWon(post.jobPayAmount);
+    return {
+      title: `${post.title} · ${kindLabel}`,
+      description: [
+        post.jobLocation ? `${post.jobLocation} 홀덤펍` : "홀덤펍",
+        kindLabel,
+        pay ? `${post.jobPayType ?? "급여"} ${pay}` : null,
+        post.jobWorkDate ? `근무일 ${post.jobWorkDate}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    };
+  }
   return {
     title: post.isPrivate ? `비밀글 · ${board}` : `${post.title} · ${board}`,
     robots: post.isPrivate ? { index: false } : undefined,
@@ -65,7 +100,6 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params;
   const viewer = await getCurrentUser().catch(() => null);
-  if (!viewer) replaceToLogin(`/posts/${id}`);
   const post = await prisma.post.findUnique({
     where: { id },
     include: {
@@ -83,6 +117,9 @@ export default async function PostDetailPage({
     },
   });
   if (!post) notFound();
+  // 구인구직 공고는 검색 유입을 위해 제목·조건까지는 누구나 봅니다. 본문·연락처·댓글은 로그인 후.
+  const guestJob = !viewer && post.boardType === "JOBS";
+  if (!viewer && !guestJob) replaceToLogin(`/posts/${id}`);
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
       <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
@@ -101,15 +138,19 @@ export default async function PostDetailPage({
 
   const jar = await cookies();
   const unlocked = hasUnlock(jar.get(UNLOCK_COOKIE)?.value, post.id);
-  const canRead = canRevealPrivatePost({
+  const canReveal = canRevealPrivatePost({
     isPrivate: post.isPrivate,
     authorId: post.authorId,
     viewerId: viewer?.id,
     isAdmin: Boolean(viewer?.isAdmin),
     unlocked,
   });
+  const canRead = canReveal && !guestJob;
+  const status = post.boardType === "JOBS" ? jobStatus(post) : null;
+  const expiresOn = status === "open" ? jobExpiresOn(post) : null;
+  const staff = Boolean(viewer && isStaff(viewer));
 
-  if (canRead) {
+  if (canReveal) {
     void prisma.post
       .update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } })
       .catch(() => undefined);
@@ -155,7 +196,13 @@ export default async function PostDetailPage({
               {JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL]}
             </Badge>
           ) : null}
-          {post.isPaid ? <Badge>유료 고정</Badge> : null}
+          {status ? <JobStatusBadge status={status} seeking={post.jobKind === "SEEKING"} /> : null}
+          {post.isPaid && status === "open" ? (
+            <Badge className="gap-1 bg-gradient-to-r from-[#e7c98a] to-[#c59b27] text-[#1d1611]">
+              <CrownIcon className="size-3" />
+              프리미엄
+            </Badge>
+          ) : null}
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
         </div>
@@ -170,11 +217,27 @@ export default async function PostDetailPage({
         ) : null}
         <div className="article-meta-side">
           <time dateTime={post.createdAt.toISOString()}>{formatPostDateTime(post.createdAt)}</time>
-          <span>조회 {(post.viewCount + (canRead ? 1 : 0)).toLocaleString()}</span>
+          <span>조회 {(post.viewCount + (canReveal ? 1 : 0)).toLocaleString()}</span>
         </div>
       </div>
 
-      {post.isPrivate && !canRead ? (
+      {guestJob ? (
+        <div className="article-body">
+          {post.jobKind ? <JobFacts job={post} /> : null}
+          {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
+          <div className="flex flex-col items-start gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-4">
+            <p className="text-sm text-[#D1D5DB]">상세 내용과 연락처는 로그인한 회원만 볼 수 있습니다.</p>
+            <Link
+              href={loginHref(`/posts/${post.id}`)}
+              className="touch-target inline-flex min-h-11 items-center rounded-full bg-[#8b2222] px-5 text-sm font-bold text-white hover:bg-[#a12a2a]"
+            >
+              로그인하고 연락처 보기
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {post.isPrivate && !canReveal ? (
         <div className="p-4">
           <UnlockPostForm postId={post.id} />
         </div>
@@ -183,6 +246,8 @@ export default async function PostDetailPage({
       {canRead ? (
         <div className="article-body">
       {post.jobKind ? <JobFacts job={post} /> : null}
+      {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
+      {post.jobKind && staff ? <PremiumToggle postId={post.id} isPaid={post.isPaid} /> : null}
 
       {post.boardType === "SCHEDULE" ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-3 text-sm text-[#E5E7EB] sm:grid-cols-3">
@@ -237,11 +302,15 @@ export default async function PostDetailPage({
         </section>
       ) : null}
 
-      {post.jobKind && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+      {post.jobKind && !post.jobFilled && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
         <HireButton postId={post.id} filled={post.jobFilled} />
-      ) : post.jobFilled ? (
+      ) : status === "filled" ? (
         <p className="text-sm text-primary">
           {post.jobKind === "SEEKING" ? "구직이 마감된 글입니다." : "채용이 완료된 공고입니다."}
+        </p>
+      ) : status === "expired" ? (
+        <p className="text-sm text-[#9CA3AF]">
+          {post.jobKind === "URGENT" ? "근무일이 지나 마감된 급구입니다." : "등록 후 30일이 지나 자동 마감된 공고입니다."}
         </p>
       ) : null}
 

@@ -6,6 +6,7 @@ import type { HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { getSponsorCreative } from "@/lib/inventory";
 import { getTodayHandSpotlight, getWeeklyHubPost, getVerifiedDealers } from "@/lib/growth-ops";
 import { getTickerEvents } from "@/lib/ticker";
+import { openJobWhere } from "@/lib/job-status";
 
 const HOME_AUTHOR_SELECT = {
   nickname: true,
@@ -56,7 +57,8 @@ async function loadHomeFeed() {
     _count: { select: { comments: true } },
   } as const;
   const base = { isAttendanceThread: false, hidden: false, boardType: { not: "ANONYMOUS_REVIEW" as const } };
-  const notUrgentJob = { NOT: { AND: [{ boardType: "JOBS" as const }, { jobKind: "URGENT" as const }] } };
+  // 커뮤니티 최신글에는 공고를 넣지 않습니다. 공고는 홈의 급구·최신 공고 박스에서만 봅니다.
+  const communityOnly = { boardType: { notIn: ["ANONYMOUS_REVIEW" as const, "JOBS" as const] } };
 
   const [nativeSponsor, handSpot, hub, dealers, allRows, freeRows, jobRows, handRows, urgentRows] =
     await Promise.all([
@@ -66,7 +68,7 @@ async function loadHomeFeed() {
       getVerifiedDealers().catch(() => []),
       prisma.post
         .findMany({
-          where: { ...base, ...notUrgentJob },
+          where: { ...base, ...communityOnly },
           orderBy: { createdAt: "desc" },
           take: 6,
           include,
@@ -82,9 +84,9 @@ async function loadHomeFeed() {
         .catch(() => []),
       prisma.post
         .findMany({
-          where: { ...base, boardType: "JOBS", jobKind: { not: "URGENT" } },
-          orderBy: { createdAt: "desc" },
-          take: 6,
+          where: { AND: [{ ...base, boardType: "JOBS", jobKind: { not: "URGENT" } }, openJobWhere()] },
+          orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
+          take: 5,
           include,
         })
         .catch(() => []),
@@ -98,7 +100,7 @@ async function loadHomeFeed() {
         .catch(() => []),
       prisma.post
         .findMany({
-          where: { ...base, boardType: "JOBS", jobKind: "URGENT" },
+          where: { AND: [{ ...base, boardType: "JOBS", jobKind: "URGENT" }, openJobWhere()] },
           orderBy: { createdAt: "desc" },
           take: 5,
           select: {

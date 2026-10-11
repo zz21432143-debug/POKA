@@ -3,6 +3,8 @@ import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import { PAGE_SIZE, feedWhere, isJobFeed, parseFeedKey } from "@/lib/feed";
+import { parseJobRegion } from "@/lib/job-status";
+import { loadJobPage } from "@/lib/load-feed";
 
 export const dynamic = "force-dynamic";
 
@@ -44,10 +46,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ key, total, offset, items, nextOffset });
   }
 
+  if (isJobFeed(key)) {
+    const page = await loadJobPage(key, {
+      offset,
+      limit,
+      region: parseJobRegion(url.searchParams.get("region")),
+      openOnly: url.searchParams.get("open") === "1",
+    });
+    return NextResponse.json({ key, total: page.total, offset, items: page.jobs, nextOffset: page.nextOffset });
+  }
+
   const where = feedWhere(key);
-  const orderBy = isJobFeed(key)
-    ? [{ isPaid: "desc" as const }, { createdAt: "desc" as const }]
-    : [{ createdAt: "desc" as const }];
+  const orderBy = [{ createdAt: "desc" as const }];
 
   const [total, rows] = await Promise.all([
     prisma.post.count({ where }),
@@ -84,26 +94,6 @@ export async function GET(request: Request) {
     eventDate: post.eventDate,
     eventEndDate: post.eventEndDate,
     eventPrize: post.eventPrize,
-    jobKind: post.jobKind,
-    isPaid: post.isPaid,
-    authorNickname: post.author?.nickname ?? null,
-    authorLevel: post.author?.level ?? null,
-    jobLocation: post.jobLocation,
-    jobCompanyName: post.jobCompanyName,
-    jobPayType: post.jobPayType,
-    jobPayAmount: post.jobPayAmount,
-    jobSchedule: post.jobSchedule,
-    jobWorkHours: post.jobWorkHours,
-    jobBenefits: post.jobBenefits,
-    jobExperience: post.jobExperience,
-    jobWorkDate: post.jobWorkDate,
-    jobDateFlexible: post.jobDateFlexible,
-    jobGuaranteedHours: post.jobGuaranteedHours,
-    jobOvertime: post.jobOvertime,
-    jobTravelPay: post.jobTravelPay,
-    jobSnacks: post.jobSnacks,
-    jobDressCode: post.jobDressCode,
-    jobApplyMethod: post.jobApplyMethod,
   }));
 
   const nextOffset = offset + items.length < total ? offset + items.length : null;

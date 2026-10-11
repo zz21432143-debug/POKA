@@ -5,7 +5,15 @@ import { BoardWriteForm } from "@/components/posts/board-write-form";
 
 export const metadata: Metadata = { title: "자유게시판 글쓰기", robots: { index: false } };
 
-export default function FreeWritePage() {
+const CATEGORIES = [
+  { boardType: "FREE" as const, label: "자유" },
+  { boardType: "RULE_QA" as const, label: "질문" },
+  { boardType: "SKETCH" as const, label: "현장 스케치" },
+];
+
+export default async function FreeWritePage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
+  const { type } = await searchParams;
+  const initial = CATEGORIES.find((category) => category.boardType === type)?.boardType ?? "FREE";
   return (
     <RequireLogin>
       <div className="flex flex-col gap-4">
@@ -13,7 +21,11 @@ export default function FreeWritePage() {
         <header className="board-intro">
           <h1>자유게시판 작성</h1>
         </header>
-        <BoardWriteForm boardType="FREE" hint="자유 수다, 잡담, 현장 이야기" />
+        <BoardWriteForm
+          boardType={initial}
+          hint="자유 수다, 룰·판정 질문, 현장 이야기. 말머리를 골라 주세요"
+          categories={CATEGORIES}
+        />
       </div>
     </RequireLogin>
   );

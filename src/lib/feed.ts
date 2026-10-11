@@ -9,7 +9,6 @@ export type FeedKey =
   | "free"
   | "hand-review"
   | "suggestions"
-  | "anonymous"
   | "notices"
   | "jobs"
   | "jobs/fixed"
@@ -37,6 +36,9 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/jobs/seek": "jobs/seek",
 };
 
+/** 자유게시판 말머리. 순서대로 탭에 나옵니다. */
+export const FREE_BOARD_TYPES = ["FREE", "RULE_QA", "SKETCH"] as const;
+
 export function parseFeedKey(raw: string | null): FeedKey | null {
   if (!raw) return null;
   const value = raw.replace(/^\/boards\//, "").replace(/^\//, "") as FeedKey;
@@ -52,10 +54,12 @@ export function feedWhere(key: FeedKey) {
   }
   if (key === "rules") return { boardType: "RULE_QA" as const, hidden: false, isAttendanceThread: false };
   if (key === "sketch") return { boardType: "SKETCH" as const, hidden: false, isAttendanceThread: false };
-  if (key === "free") return { boardType: "FREE" as const, hidden: false, isAttendanceThread: false };
+  if (key === "free") {
+    // 자유게시판은 질문·현장 스케치를 말머리로 함께 보여줍니다.
+    return { boardType: { in: [...FREE_BOARD_TYPES] }, hidden: false, isAttendanceThread: false };
+  }
   if (key === "hand-review") return { boardType: "HAND_REVIEW" as const, hidden: false, isAttendanceThread: false };
   if (key === "suggestions") return { boardType: "SUGGESTION" as const, hidden: false, isAttendanceThread: false };
-  if (key === "anonymous") return { boardType: "ANONYMOUS_REVIEW" as const, hidden: false, isAttendanceThread: false };
   if (key === "notices") return { boardType: "NOTICE" as const, hidden: false, isAttendanceThread: false };
   if (key === "jobs") return { boardType: "JOBS" as const, hidden: false, isAttendanceThread: false };
   const jobKind = {

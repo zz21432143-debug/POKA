@@ -14,16 +14,15 @@ import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { isWithdrawnRecord, withdrawnDisplayName } from "@/lib/account-privacy";
 import { Fragment } from "react";
 import { SponsoredPostLine } from "@/components/ads/sponsored-post-line";
+import { EmptyBoard, type EmptyAction } from "@/components/posts/empty-board";
 import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";
 
 function boardBadgeClass(board: string) {
   if (board === "FREE") return "bg-primary text-white";
   if (board === "HAND_REVIEW") return "bg-[#2563eb] text-white";
-  if (board === "PROMO" || board === "OFFICIAL_POSTER" || board === "EVENT_POSTER") {
-    return "border border-[#c9a25c]/45 bg-[#2a2017] text-[#e7c98a]";
-  }
-  if (board === "JOBS" || board === "PICKUP" || board === "TALENT") return "bg-[#5a2a1e] text-white";
+  if (board === "PROMO") return "border border-[#c9a25c]/45 bg-[#2a2017] text-[#e7c98a]";
+  if (board === "JOBS") return "bg-[#5a2a1e] text-white";
   return "bg-[#efe4cc] text-[#5c4a2a]";
 }
 
@@ -50,6 +49,7 @@ export function PostList({
   framed = true,
   compact = false,
   nativeSponsor = null,
+  emptyAction,
 }: {
   posts: PostSummary[];
   emptyText: string;
@@ -57,19 +57,10 @@ export function PostList({
   framed?: boolean;
   compact?: boolean;
   nativeSponsor?: DirectCreative | null;
+  emptyAction?: EmptyAction;
 }) {
   if (posts.length === 0) {
-    return (
-      <p
-        className={
-          framed
-            ? "ink-panel rounded-2xl px-4 py-10 text-center text-base text-[#D1D5DB]"
-            : "px-4 py-10 text-center text-sm text-[#9CA3AF]"
-        }
-      >
-        {emptyText}
-      </p>
-    );
+    return <EmptyBoard text={emptyText} action={emptyAction} framed={framed} />;
   }
 
   if (framed) {

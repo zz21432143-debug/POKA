@@ -3,26 +3,53 @@ import Link from "next/link";
 import { BriefcaseIcon, PenSquareIcon, UserRoundSearchIcon } from "lucide-react";
 import { HomeUrgentJobs, type HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
+import { JobFilters } from "@/components/jobs/job-filters";
+import { RegionUrgentAlert } from "@/components/jobs/region-urgent-alert";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { PAGE_SIZE } from "@/lib/feed";
-import { loadFeedPage } from "@/lib/load-feed";
+import { openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
+import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "홀덤펍 딜러 구인구직",
-  description: "홀덤펍 고정·스팟 딜러 구인, 급구 대타, 개인 구직을 한곳에서. 제목에 지역이 붙어 바로 찾을 수 있습니다.",
-};
+type SearchParams = Promise<{ region?: string; open?: string }>;
 
-export default async function JobsHubPage() {
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const region = parseJobRegion((await searchParams).region);
+  if (region) {
+    return {
+      title: `${region} 홀덤펍 딜러 구인구직`,
+      description: `${region} 지역 홀덤펍 고정·스팟 딜러 구인, 급구 대타, 개인 구직 공고를 모아 봅니다.`,
+    };
+  }
+  return {
+    title: "홀덤펍 딜러 구인구직",
+    description: "홀덤펍 고정·스팟 딜러 구인, 급구 대타, 개인 구직을 한곳에서. 지역별로 골라 볼 수 있습니다.",
+  };
+}
+
+export default async function JobsHubPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const region = parseJobRegion(params.region);
+  const openOnly = params.open === "1";
   const [page, urgent] = await Promise.all([
-    loadFeedPage("jobs", 0, PAGE_SIZE).catch(() => ({ jobs: [], total: 0, nextOffset: null })),
+    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly }).catch(() => ({
+      jobs: [],
+      total: 0,
+      nextOffset: null,
+    })),
     prisma.post
       .findMany({
-        where: { boardType: "JOBS", jobKind: "URGENT", hidden: false, isAttendanceThread: false },
+        where: {
+          AND: [
+            { boardType: "JOBS", jobKind: "URGENT", hidden: false, isAttendanceThread: false },
+            regionWhere(region),
+            openJobWhere(),
+          ],
+        },
         orderBy: { createdAt: "desc" },
         take: 5,
         select: { id: true, title: true, jobLocation: true, jobWorkDate: true, jobPayAmount: true },
@@ -34,8 +61,11 @@ export default async function JobsHubPage() {
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
-        <h1>구인구직</h1>
-        <p className="mt-2">홀덤펍 딜러·스태프 구인과 개인 구직. 제목에 지역이 붙고, 연락처는 로그인 회원만 봅니다.</p>
+        <h1>{region ? `${region} 구인구직` : "구인구직"}</h1>
+        <p className="mt-2">
+          홀덤펍 딜러·스태프 구인과 개인 구직. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다. 급구는
+          근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
+        </p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">
           <Link href="/boards/jobs/write" className={cn(buttonVariants({ size: "touch" }), "relative z-10 gap-1.5")}>
             <PenSquareIcon className="size-4" />
@@ -56,7 +86,7 @@ export default async function JobsHubPage() {
           {kinds.map(([slug, job]) => (
             <li key={slug}>
               <Link
-                href={`/boards/jobs/${slug}`}
+                href={region ? `/boards/jobs/${slug}?region=${encodeURIComponent(region)}` : `/boards/jobs/${slug}`}
                 className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[#c9a25c]/35 bg-[#1d1611] px-4 text-sm font-semibold text-[#f3eadb] hover:border-[#c9a25c]/70 hover:bg-[#2a2017]"
               >
                 <BriefcaseIcon className="size-3.5 text-[#C59B27]" />
@@ -67,15 +97,23 @@ export default async function JobsHubPage() {
         </ul>
       </nav>
 
-      <HomeUrgentJobs jobs={urgent} />
+      <RegionUrgentAlert />
+
+      <HomeUrgentJobs jobs={urgent} region={region} />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold text-white">최신 공고</h2>
+        <h2 className="text-lg font-bold text-white">{region ? `${region} 공고` : "전체 공고"}</h2>
+        <JobFilters basePath="/boards/jobs" region={region} openOnly={openOnly} />
         <InfiniteJobList
+          key={`${region ?? "all"}-${openOnly}`}
           feedKey="jobs"
           initialItems={page.jobs}
           initialTotal={page.total}
           initialNextOffset={page.nextOffset}
+          region={region}
+          openOnly={openOnly}
+          emptyText={region ? `${region} 지역 공고가 아직 없습니다.` : "아직 올라온 공고가 없습니다."}
+          emptyAction={{ href: "/boards/jobs/write", label: "첫 공고 올리기" }}
         />
       </section>
     </div>

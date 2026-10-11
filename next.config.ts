@@ -13,8 +13,16 @@ const nextConfig: NextConfig = {
         destination: "https://pokerwiki.co.kr/:path*",
         permanent: true,
       },
-      { source: "/boards/anonymous", destination: "/community", permanent: false },
-      { source: "/boards/anonymous/:path*", destination: "/community", permanent: false },
+      // 종료·통합된 주소. 페이지 파일 없이 여기서만 관리합니다.
+      { source: "/boards/anonymous", destination: "/community", permanent: true },
+      { source: "/boards/anonymous/:path*", destination: "/community", permanent: true },
+      { source: "/boards/store-review/:path*", destination: "/community", permanent: true },
+      { source: "/intro", destination: "/about", permanent: true },
+      { source: "/plan", destination: "/about", permanent: true },
+      { source: "/schema", destination: "/", permanent: true },
+      { source: "/issues", destination: "/boards/free", permanent: true },
+      { source: "/codex", destination: "/shop", permanent: true },
+      { source: "/notifications", destination: "/", permanent: false },
     ];
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg"],

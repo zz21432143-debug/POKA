@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SirenIcon } from "lucide-react";
+import { formatWon } from "@/lib/jobs";
 
 export type HomeUrgentJob = {
   id: string;
@@ -9,25 +10,31 @@ export type HomeUrgentJob = {
   jobPayAmount: string | null;
 };
 
-export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
+export function HomeUrgentJobs({ jobs, region = null }: { jobs: HomeUrgentJob[]; region?: string | null }) {
+  const listHref = region
+    ? `/boards/jobs/urgent?region=${encodeURIComponent(region)}&open=1`
+    : "/boards/jobs/urgent?open=1";
   return (
     <section className="lounge-card overflow-hidden rounded-[1.35rem]">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2.5">
         <span className="inline-flex items-center gap-1.5 text-base font-bold">
           <SirenIcon className="size-4 text-rose-600" />
-          급구 / 대타
+          {region ? `${region} 급구 / 대타` : "급구 / 대타"}
         </span>
-        <Link href="/boards/jobs/urgent" className="more-link ml-auto">
+        <Link href={listHref} className="more-link ml-auto">
           더보기
         </Link>
       </div>
       {jobs.length === 0 ? (
-        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-          올라온 급구가 없습니다.{" "}
-          <Link href="/boards/jobs/urgent/write" className="font-semibold text-primary">
-            급구 등록
+        <div className="flex flex-col items-center gap-2 px-4 py-7 text-center text-sm text-muted-foreground">
+          <p>지금 모집중인 급구가 없습니다.</p>
+          <Link
+            href="/boards/jobs/urgent/write"
+            className="touch-target inline-flex min-h-10 items-center rounded-full bg-[#8b2222] px-4 font-semibold text-white hover:bg-[#a12a2a]"
+          >
+            급구 올리기
           </Link>
-        </p>
+        </div>
       ) : (
         <ul className="divide-y divide-border">
           {jobs.map((job) => (
@@ -42,7 +49,11 @@ export function HomeUrgentJobs({ jobs }: { jobs: HomeUrgentJob[] }) {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-bold leading-snug">{job.title}</span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                    {[job.jobLocation, job.jobWorkDate, job.jobPayAmount ? `${job.jobPayAmount}` : null]
+                    {[
+                      job.jobLocation,
+                      job.jobWorkDate,
+                      formatWon(job.jobPayAmount) ? `시급 ${formatWon(job.jobPayAmount)}` : null,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </span>

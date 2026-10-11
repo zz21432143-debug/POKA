@@ -37,6 +37,7 @@ export function YokaiPointShop({
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const [tab, setTab] = useState<ShopTab>("shop");
   const loggedIn = Boolean(catalog?.loggedIn);
   const points = loggedIn ? (catalog?.points ?? 0) : demoPoints;
 
@@ -151,17 +152,36 @@ export function YokaiPointShop({
     }
   }
 
+  const tabs: { key: ShopTab; label: string; count?: number }[] = [
+    { key: "shop", label: "상점" },
+    { key: "rewards", label: "보상 마크" },
+    { key: "inventory", label: "내 인벤토리", count: inventory.length },
+    { key: "extra", label: "변경권 · 기타" },
+  ];
+
   return (
     <section className="yokai-shop">
       <header className="yokai-shop-head">
         <div>
-          <p className="yokai-shop-kicker">108요괴</p>
+          <p className="yokai-shop-kicker">마크 상점</p>
           <h1>포인트 상점</h1>
+          <p>활동으로 모은 포인트로 마크를 사고, 닉네임 옆에 착용하세요.</p>
         </div>
         <p className="yokai-points">
-          보유 포인트: <strong>{points.toLocaleString()} P</strong>
+          {loggedIn ? "보유 포인트" : "체험 포인트"}: <strong>{points.toLocaleString()} P</strong>
         </p>
       </header>
+
+      {!loggedIn ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#c9a25c]/40 bg-[#2a2017] px-4 py-3 text-sm">
+          <p className="text-[#f3eadb]">
+            지금은 체험 모드입니다. 구매·착용은 미리보기만 되고 저장되지 않습니다.
+          </p>
+          <Link href="/login?next=/shop" className={buttonVariants({ size: "sm" })}>
+            로그인하고 내 포인트 쓰기
+          </Link>
+        </div>
+      ) : null}
 
       <div className="yokai-layout">
         <aside className="yokai-preview" aria-label="내 프로필 미리보기">
@@ -179,106 +199,147 @@ export function YokaiPointShop({
           </p>
         </aside>
 
-        <MarkGrid title="레벨 보상" marks={rewards} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
-        <MarkGrid title="랭킹 보상" marks={kings} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
+        <nav aria-label="상점 메뉴" className="card-scroller -mx-1 overflow-x-auto px-1">
+          <ul role="tablist" className="flex w-max gap-1.5">
+            {tabs.map((item) => (
+              <li key={item.key}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === item.key}
+                  onClick={() => setTab(item.key)}
+                  className={cn(
+                    "touch-target inline-flex min-h-10 items-center gap-1 rounded-full border px-4 text-sm font-semibold",
+                    tab === item.key
+                      ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]"
+                      : "border-white/15 text-[#E5E7EB] hover:border-[#c9a25c]/60",
+                  )}
+                >
+                  {item.label}
+                  {item.count ? <span className="text-xs opacity-75">{item.count}</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        <section className="yokai-block" aria-label="내 인벤토리">
-          <h2>내 인벤토리</h2>
-          {inventory.length === 0 ? (
-            <p className="yokai-note">아직 보유한 마크가 없습니다.</p>
-          ) : (
-            <ul className="yokai-grid">
-              {inventory.map((mark) => (
-                <YokaiOfferCard
-                  key={mark.slug}
-                  mark={mark}
-                  points={points}
-                  pending={pending}
-                  selected={selected === mark.slug}
-                  onSelect={() => setSelected(mark.slug)}
-                  onEquip={() => void equip(mark)}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
+        {error ? <p className="yokai-error">{error}</p> : null}
 
-        <MarkGrid
-          title="한국 전설"
-          marks={legends}
-          points={points}
-          pending={pending}
-          selected={selected}
-          onSelect={setSelected}
-          onBuy={buy}
-          onEquip={equip}
-        />
-        <MarkGrid
-          title="마크 상점"
-          marks={regular}
-          points={points}
-          pending={pending}
-          selected={selected}
-          onSelect={setSelected}
-          onBuy={buy}
-          onEquip={equip}
-        />
-      </div>
+        {tab === "shop" ? (
+          <>
+            <MarkGrid
+              title="일반 마크"
+              marks={regular}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
+            <MarkGrid
+              title="한국 전설"
+              marks={legends}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
+          </>
+        ) : null}
 
-      {error ? <p className="yokai-error">{error}</p> : null}
+        {tab === "rewards" ? (
+          <>
+            <p className="yokai-note">보상 마크는 살 수 없고, 레벨을 올리거나 랭킹에 들면 받습니다.</p>
+            <MarkGrid title="레벨 보상" marks={rewards} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
+            <MarkGrid title="랭킹 보상" marks={kings} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
+          </>
+        ) : null}
 
-      <div className="yokai-extra">
-        <div className="yokai-extra-body" style={{ paddingTop: "1rem" }}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="font-bold text-white">{NICKNAME_TICKET_NAME}</p>
+        {tab === "inventory" ? (
+          <section className="yokai-block" aria-label="내 인벤토리">
+            <h2>내 인벤토리</h2>
+            {inventory.length === 0 ? (
               <p className="yokai-note">
-                {NICKNAME_TICKET_PRICE.toLocaleString()}P · 보유 {catalog?.nicknameTickets ?? 0}장.
+                아직 보유한 마크가 없습니다.{" "}
+                <button type="button" className="font-semibold text-[#e7c98a] underline" onClick={() => setTab("shop")}>
+                  상점 둘러보기
+                </button>
               </p>
-            </div>
-            {loggedIn ? (
-              <button
-                type="button"
-                className="yokai-buy"
-                style={{ width: "auto", padding: "0 1rem" }}
-                disabled={pending !== null || points < NICKNAME_TICKET_PRICE}
-                onClick={() => void buyTicket()}
-              >
-                {pending === "ticket" ? "구매 중…" : points < NICKNAME_TICKET_PRICE ? "포인트 부족" : "구매하기"}
-              </button>
             ) : (
-              <Link href="/login?next=/shop" className={buttonVariants({ size: "touch" })}>
-                로그인
-              </Link>
+              <ul className="yokai-grid">
+                {inventory.map((mark) => (
+                  <YokaiOfferCard
+                    key={mark.slug}
+                    mark={mark}
+                    points={points}
+                    pending={pending}
+                    selected={selected === mark.slug}
+                    onSelect={() => setSelected(mark.slug)}
+                    onEquip={() => void equip(mark)}
+                  />
+                ))}
+              </ul>
             )}
-          </div>
-        </div>
-      </div>
+          </section>
+        ) : null}
 
-      {loggedIn && others.length > 0 ? (
-        <details className="yokai-extra">
-          <summary>다른 마크</summary>
-          <div className="yokai-extra-body">
-            <ul className="yokai-grid">
-              {others.map((mark) => (
-                <YokaiOfferCard
-                  key={mark.id}
-                  mark={toCard(mark)}
-                  points={points}
-                  pending={pending}
-                  selected={selected === mark.slug}
-                  onSelect={() => setSelected(mark.slug)}
-                  onBuy={() => void buy(toCard(mark))}
-                  onEquip={() => void equip(toCard(mark))}
-                />
-              ))}
-            </ul>
-          </div>
-        </details>
-      ) : null}
+        {tab === "extra" ? (
+          <>
+            <section className="yokai-block" aria-label={NICKNAME_TICKET_NAME}>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#1a1617] p-4">
+                <div>
+                  <p className="font-bold text-white">{NICKNAME_TICKET_NAME}</p>
+                  <p className="yokai-note">
+                    {NICKNAME_TICKET_PRICE.toLocaleString()}P · 보유 {catalog?.nicknameTickets ?? 0}장
+                  </p>
+                </div>
+                {loggedIn ? (
+                  <button
+                    type="button"
+                    className="yokai-buy"
+                    style={{ width: "auto", padding: "0 1rem" }}
+                    disabled={pending !== null || points < NICKNAME_TICKET_PRICE}
+                    onClick={() => void buyTicket()}
+                  >
+                    {pending === "ticket" ? "구매 중…" : points < NICKNAME_TICKET_PRICE ? "포인트 부족" : "구매하기"}
+                  </button>
+                ) : (
+                  <Link href="/login?next=/shop" className={buttonVariants({ size: "touch" })}>
+                    로그인
+                  </Link>
+                )}
+              </div>
+            </section>
+            {loggedIn && others.length > 0 ? (
+              <section className="yokai-block" aria-label="다른 마크">
+                <h2>다른 마크</h2>
+                <ul className="yokai-grid">
+                  {others.map((mark) => (
+                    <YokaiOfferCard
+                      key={mark.id}
+                      mark={toCard(mark)}
+                      points={points}
+                      pending={pending}
+                      selected={selected === mark.slug}
+                      onSelect={() => setSelected(mark.slug)}
+                      onBuy={() => void buy(toCard(mark))}
+                      onEquip={() => void equip(toCard(mark))}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </>
+        ) : null}
+      </div>
     </section>
   );
 }
+
+type ShopTab = "shop" | "rewards" | "inventory" | "extra";
 
 function MarkGrid({
   title,

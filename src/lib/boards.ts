@@ -1,6 +1,6 @@
 export const BOARD_LABELS = {
   FREE: "자유게시판",
-  RULE_QA: "질문 & 답변",
+  RULE_QA: "질문",
   SKETCH: "현장 스케치",
   HAND_REVIEW: "핸드리뷰",
   ANONYMOUS_REVIEW: "익명 게시판",
@@ -18,9 +18,9 @@ export const BOARD_LABELS = {
 export type BoardTypeKey = keyof typeof BOARD_LABELS;
 
 export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
-  FREE: "자유 수다와 잡담",
-  RULE_QA: "룰·판정·진행이 맞는지 질문",
-  SKETCH: "현장 사진과 스케치",
+  FREE: "자유 수다, 룰·판정 질문, 현장 스케치를 말머리로 나눠 한곳에서 이야기합니다.",
+  RULE_QA: "자유게시판 질문 말머리. 룰·판정·진행이 맞는지 물어보세요.",
+  SKETCH: "자유게시판 현장 스케치 말머리. 현장 사진과 이야기를 나눠 주세요.",
   HAND_REVIEW: "핸드를 그려 올리고 폴드·체크·콜·레이즈로 투표하세요",
   ANONYMOUS_REVIEW: "닉네임 비공개. 글·댓글의 민·형사상 책임은 작성자 본인에게 있습니다.",
   JOBS: "홀덤펍 고정 딜러 · 스팟 · 팀 · 급구/대타 · 개인 구직. 제목은 [지역] 홀덤 형식으로 붙습니다.",

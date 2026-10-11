@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import type { DirectCreative } from "@/lib/inventory-policy";
+import type { EmptyAction } from "@/components/posts/empty-board";
 import { Button } from "@/components/ui/button";
 import { PAGE_SIZE } from "@/lib/feed";
 
@@ -21,6 +22,7 @@ export function InfinitePostList({
   emptyText,
   showBoard = false,
   nativeSponsor = null,
+  emptyAction,
 }: {
   feedKey: string;
   initialItems: PostSummary[];
@@ -29,6 +31,7 @@ export function InfinitePostList({
   emptyText: string;
   showBoard?: boolean;
   nativeSponsor?: DirectCreative | null;
+  emptyAction?: EmptyAction;
 }) {
   const [items, setItems] = useState(initialItems);
   const [nextOffset, setNextOffset] = useState(initialNextOffset);
@@ -77,7 +80,13 @@ export function InfinitePostList({
   return (
     <div className="flex flex-col gap-3">
       {total > 0 ? <p className="text-xs text-[#9CA3AF]">총 {total}개</p> : null}
-      <PostList posts={items} emptyText={emptyText} showBoard={showBoard} nativeSponsor={nativeSponsor} />
+      <PostList
+        posts={items}
+        emptyText={emptyText}
+        showBoard={showBoard}
+        nativeSponsor={nativeSponsor}
+        emptyAction={emptyAction}
+      />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div ref={sentinel} />
       {nextOffset != null ? (

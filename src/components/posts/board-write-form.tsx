@@ -8,28 +8,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BoardType } from "@/generated/prisma/enums";
 import { postRewardLine } from "@/lib/rewards";
-import { StarPicker } from "@/components/reviews/star-picker";
+import { cn } from "cn";
+
+export type BoardCategory = { boardType: BoardType; label: string };
 
 export function BoardWriteForm({
-  boardType,
+  boardType: initialBoardType,
   hint,
+  categories,
 }: {
   boardType: BoardType;
   hint: string;
+  /** 말머리. 주면 작성자가 고른 말머리가 게시판 종류가 됩니다. */
+  categories?: BoardCategory[];
 }) {
   const router = useRouter();
+  const [boardType, setBoardType] = useState<BoardType>(initialBoardType);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [bannerSlot, setBannerSlot] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [promoLocation, setPromoLocation] = useState("");
   const [promoTag, setPromoTag] = useState("");
-  const [ratings, setRatings] = useState({
-    ratingManner: 0,
-    ratingService: 0,
-    ratingFacility: 0,
-    ratingAtmosphere: 0,
-  });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [isPrivate, setIsPrivate] = useState(boardType === "SUGGESTION");
@@ -52,7 +52,6 @@ export function BoardWriteForm({
           promoTag,
           isPrivate: boardType === "SUGGESTION" ? isPrivate : false,
           password: boardType === "SUGGESTION" ? password : undefined,
-          ...ratings,
         }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
@@ -74,6 +73,30 @@ export function BoardWriteForm({
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
         {hint} · 작성 {postRewardLine(boardType)}
       </p>
+      {categories && categories.length > 1 ? (
+        <div className="grid gap-2">
+          <p className="write-label">말머리</p>
+          <div role="radiogroup" aria-label="말머리" className="flex flex-wrap gap-1.5">
+            {categories.map((category) => (
+              <button
+                key={category.boardType}
+                type="button"
+                role="radio"
+                aria-checked={boardType === category.boardType}
+                onClick={() => setBoardType(category.boardType)}
+                className={cn(
+                  "touch-target inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold",
+                  boardType === category.boardType
+                    ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]"
+                    : "border-white/15 text-[#E5E7EB] hover:border-[#c9a25c]/60",
+                )}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="grid gap-2">
         <Label htmlFor="title" className="write-label">제목</Label>
         <Input
@@ -82,10 +105,10 @@ export function BoardWriteForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={
-            boardType === "ANONYMOUS_REVIEW"
-              ? "예: 서울 강남 홀덤펍 후기"
-              : boardType === "HAND_REVIEW"
-                ? "예: BTN vs BB AJs 3벳팟"
+            boardType === "HAND_REVIEW"
+              ? "예: BTN vs BB AJs 3벳팟"
+              : boardType === "RULE_QA"
+                ? "예: 올인 후 사이드팟 분배가 맞나요?"
                 : "제목을 입력하세요"
           }
         />
@@ -111,15 +134,6 @@ export function BoardWriteForm({
               placeholder="비우면 일반 홍보글"
             />
           </div>
-        </div>
-      ) : null}
-      {boardType === "ANONYMOUS_REVIEW" ? (
-        <div className="grid gap-2">
-          <p className="text-sm text-muted-foreground">매장 후기라면 별점(선택, 4항목 모두)</p>
-          <StarPicker
-            values={ratings}
-            onChange={(key, value) => setRatings((prev) => ({ ...prev, [key]: value }))}
-          />
         </div>
       ) : null}
       {boardType === "SKETCH" ? (
@@ -165,7 +179,7 @@ export function BoardWriteForm({
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending} onClick={submit}>
-        {pending ? "등록 중…" : boardType === "ANONYMOUS_REVIEW" ? "익명으로 등록" : "등록"}
+        {pending ? "등록 중…" : "등록"}
       </Button>
     </div>
   );
