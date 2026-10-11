@@ -5,6 +5,7 @@ import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { ScheduleForm } from "@/components/listing/schedule-form";
 import { OfficialPromoForm } from "@/components/promo/official-promo-form";
 import { BoardWriteForm } from "@/components/posts/board-write-form";
+import { TdaWriteForm } from "@/components/tda/tda-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { WRITE_HINT, resolveBoardSlug } from "@/lib/nav";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
@@ -61,6 +62,8 @@ export default async function BoardWritePage({
         <ScheduleForm hint={hint} />
       ) : "gallery" in board && board.gallery ? (
         <OfficialPromoForm hint={hint} />
+      ) : board.boardType === "TDA" ? (
+        <TdaWriteForm hint={hint} />
       ) : (
         <BoardWriteForm boardType={board.boardType} hint={hint} />
       )}

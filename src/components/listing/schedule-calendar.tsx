@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { todayKstDate } from "@/lib/dates";
 
 export type ScheduleEvent = {
@@ -7,9 +6,12 @@ export type ScheduleEvent = {
   eventDate: string | null;
   eventEndDate?: string | null;
   eventPrize?: string | null;
+  eventLink?: string | null;
   poster?: string | null;
   promoLocation: string | null;
   jobLocation: string | null;
+  /** 상세 내용. 비로그인이면 null로 내려옵니다. */
+  content?: string | null;
 };
 
 function monthMatrix(year: number, month: number) {
@@ -42,14 +44,17 @@ function eachDay(start: string, end: string) {
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
+/** 달력. 날짜 칸에는 대회명만 보이고, 누르면 onSelect로 상세 창을 엽니다. */
 export function ScheduleCalendar({
   events,
   year,
   month,
+  onSelect,
 }: {
   events: ScheduleEvent[];
   year: number;
   month: number;
+  onSelect: (event: ScheduleEvent) => void;
 }) {
   const weeks = monthMatrix(year, month);
   const today = todayKstDate();
@@ -108,17 +113,14 @@ export function ScheduleCalendar({
                     <ul className="mt-0.5 flex flex-col gap-0.5 sm:mt-1 sm:gap-1">
                       {items.map((item) => (
                         <li key={`${item.id}-${iso}`}>
-                          <Link
-                            href={`/posts/${item.id}`}
-                            className="overflow-hidden rounded bg-[#3a2426] px-1 py-0.5 text-[10px] font-medium leading-tight break-all text-white line-clamp-2 sm:line-clamp-none sm:rounded-md sm:px-1.5 sm:py-1 sm:text-[11px] sm:leading-snug sm:break-keep hover:bg-[#8B2222] hover:text-white"
+                          <button
+                            type="button"
+                            title={item.title}
+                            onClick={() => onSelect(item)}
+                            className="block w-full cursor-pointer overflow-hidden rounded bg-[#3a2426] px-1 py-0.5 text-left text-[10px] font-semibold leading-tight break-all text-white line-clamp-2 transition-colors hover:bg-[#8B2222] hover:underline hover:underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a25c] sm:rounded-md sm:px-1.5 sm:py-1 sm:text-[11px] sm:leading-snug sm:break-keep"
                           >
                             {item.title}
-                            {item.promoLocation || item.jobLocation ? (
-                              <span className="mt-1 hidden truncate text-[10px] font-medium text-[#C59B27] sm:block">
-                                {item.promoLocation || item.jobLocation}
-                              </span>
-                            ) : null}
-                          </Link>
+                          </button>
                         </li>
                       ))}
                     </ul>

@@ -155,6 +155,8 @@ export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) 
     eventDate: post.eventDate,
     eventEndDate: post.eventEndDate,
     eventPrize: post.eventPrize,
+    eventLink: post.eventLink,
+    content: post.content,
     poster: post.bannerImageUrl,
     promoLocation: post.promoLocation,
     jobLocation: post.jobLocation,

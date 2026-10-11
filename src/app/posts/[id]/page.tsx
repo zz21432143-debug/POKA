@@ -19,6 +19,7 @@ import type { Metadata } from "next";
 import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { LinkifiedText } from "@/components/posts/linkified-text";
+import { canWriteBoard } from "@/lib/permissions";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
@@ -230,7 +231,8 @@ export default async function PostDetailPage({
       </header>
       <div className="article-meta">
         <AuthorChip author={post.author} anonymous={false} size="md" />
-        {post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
+        {(post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin)) ||
+        (post.boardType === "TDA" && canWriteBoard(viewer, "TDA")) ? (
           <Link href={`/posts/${post.id}/edit`} className="text-sm font-semibold text-primary">
             수정
           </Link>

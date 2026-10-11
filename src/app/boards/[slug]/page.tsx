@@ -17,6 +17,9 @@ import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { getSponsorCreative } from "@/lib/inventory";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { TdaViewer } from "@/components/tda/tda-viewer";
+import { prisma } from "@/lib/db";
+import { sortTdaSections } from "@/lib/tda";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +62,28 @@ export default async function BoardPage({
   const gallery = "gallery" in board && board.gallery;
   const calendar = "calendar" in board && board.calendar;
   const now = new Date();
-  const page = await loadFeedPage(feedKey, 0, calendar || gallery ? 50 : PAGE_SIZE);
+  // TDA 룰은 쪽 넘김 없이 전체를 한 번에 읽는 문서 보기로 보여 줍니다.
+  const tda = board.boardType === "TDA";
+  const page = await loadFeedPage(feedKey, 0, calendar ? 300 : gallery ? 50 : tda ? 1 : PAGE_SIZE);
+  const tdaSections = tda
+    ? sortTdaSections(
+        (
+          await prisma.post.findMany({
+            where: { boardType: "TDA", hidden: false },
+            select: { id: true, title: true, content: true, createdAt: true },
+            take: 500,
+          })
+        ).map((row) => ({
+          id: row.id,
+          title: row.title,
+          // 비로그인은 제목만 봅니다(본문은 내려보내지 않음).
+          content: viewer ? row.content : "",
+          createdAt: row.createdAt.toISOString(),
+        })),
+      )
+    : [];
+  // 대회 상세 내용도 로그인 회원에게만 내려보냅니다.
+  const scheduleEvents = viewer ? page.events : page.events.map((event) => ({ ...event, content: null }));
   const nativeSponsor = gallery || calendar ? null : await getSponsorCreative("NATIVE").catch(() => null);
 
   return (
@@ -105,7 +129,14 @@ export default async function BoardPage({
       {gallery ? (
         <PromoGallery posts={page.gallery} />
       ) : calendar ? (
-        <ScheduleBoard year={now.getFullYear()} month={now.getMonth()} events={page.events} />
+        <ScheduleBoard
+          year={now.getFullYear()}
+          month={now.getMonth()}
+          events={scheduleEvents}
+          loggedIn={Boolean(viewer)}
+        />
+      ) : tda ? (
+        <TdaViewer sections={tdaSections} loggedIn={Boolean(viewer)} canManage={canWrite} />
       ) : (
         <InfinitePostList
           feedKey={feedKey}

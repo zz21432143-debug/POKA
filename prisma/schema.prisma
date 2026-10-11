@@ -498,3 +498,15 @@ model SiteSetting {
   kakaoChannelUrl  String?
   updatedAt        DateTime @updatedAt
 }
+
+/// 사이트에 올린 이미지(대회 포스터 등). 외부 저장소 없이 DB에 바로 넣고 /api/images/{id}로 보여 줍니다.
+model UploadedImage {
+  id         String   @id @default(cuid())
+  mime       String
+  data       Bytes
+  size       Int
+  uploaderId String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -106,6 +106,9 @@ export async function POST(request: Request) {
       if (!jobData.jobLocation) {
         return NextResponse.json({ error: "지역을 선택하세요." }, { status: 400 });
       }
+      if (jobData.contactError) {
+        return NextResponse.json({ error: jobData.contactError }, { status: 400 });
+      }
       title = jobData.title;
     }
 

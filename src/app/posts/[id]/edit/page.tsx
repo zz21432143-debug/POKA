@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { prisma } from "@/lib/db";
 import { parseJobEvents } from "@/lib/job-events";
+import { TdaWriteForm } from "@/components/tda/tda-write-form";
+import { canWriteBoard } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "글 수정", robots: { index: false } };
 
@@ -19,6 +21,22 @@ export default async function EditJobPage({
   const viewer = await getCurrentUser();
   if (!viewer) replaceToLogin(`/posts/${id}/edit`);
   const post = await prisma.post.findUnique({ where: { id } });
+  // TDA 룰은 마스터(POKA 공식 계정)만 수정·삭제합니다.
+  if (post && post.boardType === "TDA" && !post.hidden) {
+    if (!canWriteBoard(viewer, "TDA")) replaceTo(`/posts/${id}`);
+    return (
+      <div className="flex flex-col gap-4">
+        <header>
+          <h1 className="text-2xl font-semibold">TDA 룰 수정</h1>
+        </header>
+        <TdaWriteForm
+          hint="POKA 공식 계정만 수정·삭제할 수 있습니다."
+          postId={post.id}
+          initial={{ title: post.title, content: post.content }}
+        />
+      </div>
+    );
+  }
   if (!post || post.boardType !== "JOBS" || !post.jobKind) notFound();
   if (post.authorId !== viewer.id && !viewer.isAdmin) {
     replaceTo(`/posts/${id}`);

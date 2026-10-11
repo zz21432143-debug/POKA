@@ -11,6 +11,7 @@ import { postRewardLine } from "@/lib/rewards";
 import { JOB_NAME_LABEL, buildJobTitle } from "@/lib/jobs";
 import { JOB_REGIONS } from "@/lib/job-status";
 import { parseJobPost } from "@/lib/job-parse";
+import { checkJobContact } from "@/lib/contact";
 import { todayKstDate } from "@/lib/dates";
 import { addDays, eventsDateLabel, type JobEvent } from "@/lib/job-events";
 import { DateField, JobEventsEditor } from "@/components/jobs/date-picker";
@@ -174,6 +175,7 @@ export function JobWriteForm({
   const [paste, setPaste] = useState("");
   const [pasteNote, setPasteNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [contactError, setContactError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   function set<K extends keyof JobFormValues>(key: K, value: JobFormValues[K]) {
@@ -306,7 +308,11 @@ export function JobWriteForm({
     if (form.jobApplyValue.trim() && !/^https?:\/\/\S+$/i.test(form.jobApplyValue.trim())) {
       return "지원서 링크는 https:// 로 시작해야 합니다.";
     }
-    if (!form.jobContact.trim() && !form.jobApplyValue.trim()) return "연락처나 지원서 링크 중 하나는 입력하세요.";
+    const contact = checkJobContact(form.jobContact);
+    if (!contact.ok) {
+      setContactError(contact.error);
+      return contact.error;
+    }
     if (!form.content.trim()) return "상세 내용을 입력하세요.";
     return null;
   }
@@ -540,12 +546,35 @@ export function JobWriteForm({
             />
           ) : null}
 
-          <Field
-            label="연락처"
-            value={form.jobContact}
-            onChange={(v) => set("jobContact", v)}
-            placeholder="김포카 010-0000-0000 또는 카카오 오픈채팅"
-          />
+          <div className="grid gap-2">
+            <Label htmlFor="job-contact">
+              연락처 <Required />
+            </Label>
+            <Input
+              id="job-contact"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              className={contactError ? "h-11 border-rose-500" : "h-11"}
+              aria-invalid={Boolean(contactError)}
+              aria-describedby="job-contact-help"
+              value={form.jobContact}
+              placeholder="010-1234-5678 (이름을 앞에 붙여도 됩니다)"
+              onChange={(event) => {
+                set("jobContact", event.target.value);
+                if (contactError) setContactError(null);
+              }}
+              onBlur={() => {
+                if (!form.jobContact.trim()) return;
+                const check = checkJobContact(form.jobContact);
+                if (check.ok) set("jobContact", check.value);
+                setContactError(check.ok ? null : check.error);
+              }}
+            />
+            <p id="job-contact-help" className={contactError ? "text-xs font-semibold text-rose-400" : "text-xs text-[#9CA3AF]"}>
+              {contactError ?? "전화번호만 입력할 수 있습니다. 카카오톡 아이디는 받지 않습니다."}
+            </p>
+          </div>
 
           {hasApplyLink ? (
             <Field
@@ -568,7 +597,6 @@ export function JobWriteForm({
             </label>
           ) : null}
         </div>
-        <p className="text-xs text-[#9CA3AF]">연락처나 지원서 링크 중 하나는 꼭 넣어 주세요.</p>
       </section>
 
       <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3" aria-label="추가 정보">

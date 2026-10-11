@@ -20,6 +20,7 @@ const FILES = [
   "prisma/migrations/20261011150000_jobs_v2_sync/migration.sql",
   "prisma/migrations/20261012100000_tournament_jobs/migration.sql",
   "prisma/migrations/20261012180000_tda_board_job_events/migration.sql",
+  "prisma/migrations/20261013090000_uploaded_images/migration.sql",
 ];
 
 function databaseUrl() {

@@ -1,5 +1,6 @@
 import type { JobKind } from "@/generated/prisma/enums";
 import { buildJobTitle } from "@/lib/jobs";
+import { checkJobContact } from "@/lib/contact";
 import {
   eventsDateLabel,
   eventsHeadcountTotal,
@@ -37,6 +38,8 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
   const endDate = endRaw && workDate && endRaw > workDate ? endRaw : null;
   const schedule = events.length > 0 ? eventsScheduleLines(events).join(" / ") : str("jobSchedule");
   const headcount = str("jobHeadcount") ?? (eventsHeadcountTotal(events) || null);
+  // 연락처는 전화번호만(카카오톡 아이디 불가). 맞으면 010-0000-0000 형식으로 맞춰 저장합니다.
+  const contact = checkJobContact(str("jobContact"));
   return {
     title: buildJobTitle(jobKind, {
       location,
@@ -55,7 +58,8 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
     jobWorkHours: str("jobWorkHours"),
     jobBenefits: str("jobBenefits"),
     jobExperience: str("jobExperience"),
-    jobContact: str("jobContact"),
+    jobContact: contact.ok ? contact.value : str("jobContact"),
+    contactError: contact.ok ? null : contact.error,
     jobWorkDate: workDate,
     jobEndDate: endDate,
     jobDeadline: alwaysOpen ? null : date("jobDeadline"),
