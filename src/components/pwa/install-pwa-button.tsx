@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import { DownloadIcon, ShareIcon, PlusSquareIcon, SmartphoneIcon, XIcon } from "lucide-react";
 
-/** 띠를 닫은 시각 저장 키. layout.tsx의 첫 화면 스크립트와 같은 키를 씁니다. */
-export const STRIP_KEY = "poka-app-strip-hidden-until";
-const STRIP_HIDE_MS = 7 * 24 * 60 * 60 * 1000;
-
-/**
- * 첫 화면을 그리기 전에 실행하는 짧은 스크립트. 띠를 닫아 둔 기간이면 html에 표시를 달아
- * CSS가 처음부터 숨기게 합니다(나타났다 사라지는 깜빡임 방지).
- */
-export const APP_STRIP_BOOT_SCRIPT = `try{if(Number(localStorage.getItem("${STRIP_KEY}")||0)>Date.now())document.documentElement.setAttribute("data-app-strip","hidden")}catch(e){}`;
+import { STRIP_HIDE_MS, STRIP_KEY } from "@/lib/app-strip";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
