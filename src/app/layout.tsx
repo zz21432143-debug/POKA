@@ -92,8 +92,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ko"
       className={`${sans.variable} ${script.variable} ${display.variable} ${brush.variable} h-full antialiased`}
+      // 아래 첫 화면 스크립트가 html에 data-app-strip을 달 수 있어 그 차이는 경고하지 않습니다.
+      suppressHydrationWarning
     >
       <head>
+        {/* 앱 다운로드 띠를 닫아 둔 경우 첫 화면부터 숨깁니다(나타났다 사라지는 깜빡임 방지). */}
+        <script dangerouslySetInnerHTML={{ __html: APP_STRIP_BOOT_SCRIPT }} />
         <link rel="icon" type="image/png" href="/images/poka-flame-favicon.png" />
         {adsense ? (
           <script
