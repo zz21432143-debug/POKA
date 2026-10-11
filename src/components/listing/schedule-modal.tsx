@@ -21,10 +21,13 @@ export function ScheduleModal({
   event,
   loggedIn,
   onClose,
+  color,
 }: {
   event: ScheduleEvent;
   loggedIn: boolean;
   onClose: () => void;
+  /** 캘린더에서 이 대회에 쓴 색 */
+  color?: string;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   // 포스터만 크게 보기(원본 그대로, 화면 가득)
@@ -89,7 +92,8 @@ export function ScheduleModal({
             </button>
           ) : null}
           <div className="grid gap-3 p-4 sm:p-5">
-            <h2 id="schedule-modal-title" className="pr-10 text-xl font-black leading-snug text-white">
+            <h2 id="schedule-modal-title" className="flex items-center gap-2 pr-10 text-xl font-black leading-snug text-white">
+              {color ? <span aria-hidden className="size-3 shrink-0 rounded-full" style={{ backgroundColor: color }} /> : null}
               {event.title}
             </h2>
             <dl className="grid gap-2 text-sm">
