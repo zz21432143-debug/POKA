@@ -1,5 +1,6 @@
-const CACHE = "poka-pwa-v2";
-const PRECACHE = ["/icons/poka-192.png", "/icons/poka-512.png"];
+// v3: 마스코트 아이콘으로 바꾸며 예전(초록 캐릭터) 아이콘 캐시를 지웁니다.
+const CACHE = "poka-pwa-v3";
+const PRECACHE = ["/icons/poka-192.png", "/icons/poka-512.png", "/icons/poka-maskable-192.png", "/icons/poka-maskable-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

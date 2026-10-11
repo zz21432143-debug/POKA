@@ -13,7 +13,7 @@ export function PokaLogo({
     <span
       className={cn(
         "inline-flex items-center gap-2.5 whitespace-nowrap bg-transparent",
-        !onDark && "rounded-xl bg-[#07150f] px-2 py-1",
+        !onDark && "rounded-xl bg-[#120b0b] px-2 py-1",
         className,
       )}
     >

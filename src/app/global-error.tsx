@@ -14,7 +14,7 @@ export default function GlobalError({ reset }: { reset: () => void }) {
 
   return (
     <html lang="ko">
-      <body className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#07150f] px-6 text-center text-white">
+      <body className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#120b0b] px-6 text-center text-white">
         <p className="text-lg font-semibold">POKA를 불러오지 못했습니다.</p>
         <p className="text-sm text-white/70">서버가 잠시 잠들어 있습니다. 곧 다시 엽니다.</p>
         <button
