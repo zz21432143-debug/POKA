@@ -6,7 +6,12 @@ import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { prisma } from "@/lib/db";
 import { parseJobEvents } from "@/lib/job-events";
 import { TdaWriteForm } from "@/components/tda/tda-write-form";
-import { canWriteBoard } from "@/lib/permissions";
+import { canManagePost } from "@/lib/post-manage";
+import { ScheduleForm } from "@/components/listing/schedule-form";
+import { PostEditForm } from "@/components/posts/post-edit-form";
+import { BackToList } from "@/components/posts/back-to-list";
+import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
+import { boardListHref } from "@/lib/nav";
 
 export const metadata: Metadata = { title: "글 수정", robots: { index: false } };
 
@@ -21,9 +26,62 @@ export default async function EditJobPage({
   const viewer = await getCurrentUser();
   if (!viewer) replaceToLogin(`/posts/${id}/edit`);
   const post = await prisma.post.findUnique({ where: { id } });
+  if (!post || post.hidden) notFound();
+  // 공식 게시판은 POKA 공식 계정, 그 밖은 글쓴이·관리자만 고칠 수 있습니다.
+  if (!canManagePost(viewer, post)) replaceTo(`/posts/${id}`);
+  const listHref = boardListHref(post.boardType, post.jobKind);
+  const boardLabel = BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시판";
+
+  if (post.boardType === "SCHEDULE") {
+    return (
+      <div className="flex flex-col gap-4">
+        <BackToList href={`/posts/${post.id}`} className="self-start" />
+        <header>
+          <h1 className="text-2xl font-semibold">대회 캘린더 수정</h1>
+        </header>
+        <ScheduleForm
+          hint="POKA 공식 계정만 수정·삭제할 수 있습니다."
+          postId={post.id}
+          initial={{
+            title: post.title,
+            venue: post.promoLocation ?? "",
+            start: post.eventDate ?? "",
+            end: post.eventEndDate ?? "",
+            prize: post.eventPrize ?? "",
+            poster: post.bannerImageUrl ?? "",
+            link: post.eventLink ?? "",
+            content: post.content,
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (post.boardType !== "JOBS" && post.boardType !== "TDA") {
+    return (
+      <div className="flex flex-col gap-4">
+        <BackToList href={`/posts/${post.id}`} className="self-start" />
+        <header>
+          <h1 className="text-2xl font-semibold">{boardLabel} 글 수정</h1>
+        </header>
+        <PostEditForm
+          postId={post.id}
+          boardType={post.boardType}
+          listHref={listHref}
+          initial={{
+            title: post.title,
+            content: post.content,
+            promoLocation: post.promoLocation,
+            promoTag: post.promoTag,
+            bannerImageUrl: post.bannerImageUrl,
+          }}
+        />
+      </div>
+    );
+  }
+
   // TDA 룰은 마스터(POKA 공식 계정)만 수정·삭제합니다.
-  if (post && post.boardType === "TDA" && !post.hidden) {
-    if (!canWriteBoard(viewer, "TDA")) replaceTo(`/posts/${id}`);
+  if (post.boardType === "TDA") {
     return (
       <div className="flex flex-col gap-4">
         <header>
@@ -37,10 +95,7 @@ export default async function EditJobPage({
       </div>
     );
   }
-  if (!post || post.boardType !== "JOBS" || !post.jobKind) notFound();
-  if (post.authorId !== viewer.id && !viewer.isAdmin) {
-    replaceTo(`/posts/${id}`);
-  }
+  if (!post.jobKind) notFound();
 
   return (
     <div className="flex flex-col gap-4">

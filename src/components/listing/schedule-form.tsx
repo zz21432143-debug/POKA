@@ -53,18 +53,38 @@ const PASTE_EXAMPLE = [
  * A. 대회 안내 글을 붙여넣으면 대회명·장소·날짜·총상금·링크·상세 내용으로 자동으로 나눕니다(비용 없음).
  * B. 포스터 이미지를 올리거나 주소를 넣으면 캘린더 상세 창과 게시글에 포스터 원본이 그대로 보입니다(글자 인식 없음).
  */
-export function ScheduleForm({ hint }: { hint: string }) {
+export type ScheduleInitial = {
+  title: string;
+  venue: string;
+  start: string;
+  end: string;
+  prize: string;
+  poster: string;
+  link: string;
+  content: string;
+};
+
+export function ScheduleForm({
+  hint,
+  postId,
+  initial,
+}: {
+  hint: string;
+  /** 있으면 수정 모드(PATCH) */
+  postId?: string;
+  initial?: ScheduleInitial;
+}) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [paste, setPaste] = useState("");
-  const [title, setTitle] = useState("");
-  const [venue, setVenue] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [prize, setPrize] = useState("");
-  const [poster, setPoster] = useState("");
-  const [link, setLink] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [venue, setVenue] = useState(initial?.venue ?? "");
+  const [start, setStart] = useState(initial?.start ?? "");
+  const [end, setEnd] = useState(initial?.end ?? "");
+  const [prize, setPrize] = useState(initial?.prize ?? "");
+  const [poster, setPoster] = useState(initial?.poster && !initial.poster.startsWith("/banners/") ? initial.poster : "");
+  const [link, setLink] = useState(initial?.link ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
   const [step, setStep] = useState<Step>("idle");
   const [pasteNote, setPasteNote] = useState<Note>(null);
   const [parsed, setParsed] = useState<ReturnType<typeof parseScheduleText> | null>(null);
@@ -127,8 +147,8 @@ export function ScheduleForm({ hint }: { hint: string }) {
       if (poster && !/^(https?:\/\/|\/api\/images\/)/.test(poster.trim())) {
         throw new Error("포스터 이미지 주소는 https:// 로 시작해야 합니다.");
       }
-      const response = await fetch("/api/posts", {
-        method: "POST",
+      const response = await fetch(postId ? `/api/posts/${postId}` : "/api/posts", {
+        method: postId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           boardType: "SCHEDULE",
@@ -313,7 +333,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="button" size="touch" disabled={pending || busy} onClick={() => void submit()}>
-        {pending ? "등록 중…" : "캘린더에 등록"}
+        {pending ? "저장 중…" : postId ? "수정 저장" : "캘린더에 등록"}
       </Button>
     </div>
   );

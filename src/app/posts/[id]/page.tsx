@@ -19,7 +19,8 @@ import type { Metadata } from "next";
 import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { LinkifiedText } from "@/components/posts/linkified-text";
-import { canWriteBoard } from "@/lib/permissions";
+import { canManagePost } from "@/lib/post-manage";
+import { PostManageBar } from "@/components/posts/post-manage-bar";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
 import { TdaViewer } from "@/components/tda/tda-viewer";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
@@ -237,17 +238,16 @@ export default async function PostDetailPage({
       </header>
       <div className="article-meta">
         <AuthorChip author={post.author} anonymous={false} size="md" />
-        {(post.boardType === "JOBS" && (viewer?.id === post.authorId || viewer?.isAdmin)) ||
-        (post.boardType === "TDA" && canWriteBoard(viewer, "TDA")) ? (
-          <Link href={`/posts/${post.id}/edit`} className="text-sm font-semibold text-primary">
-            수정
-          </Link>
-        ) : null}
         <div className="article-meta-side">
           <time dateTime={post.createdAt.toISOString()}>{formatPostDateTime(post.createdAt)}</time>
           <span>조회 {(post.viewCount + (canRead ? 1 : 0)).toLocaleString()}</span>
         </div>
       </div>
+      {canManagePost(viewer, post) ? (
+        <div className="px-4 pb-1 sm:px-6">
+          <PostManageBar postId={post.id} listHref={listHref} />
+        </div>
+      ) : null}
 
       {guest ? (
         <div className="article-body">

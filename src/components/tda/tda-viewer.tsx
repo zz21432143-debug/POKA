@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon, ListIcon, PencilIcon, SearchIcon, XIcon } from "lucide-react";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
 import { PdfDocViewer } from "@/components/docs/pdf-doc-viewer";
+import { DeletePostButton } from "@/components/posts/post-manage-bar";
+import { TdaClearButton } from "@/components/tda/tda-clear-button";
 import { findMatches } from "@/lib/tda";
 import { loginHref } from "@/lib/login-path";
 import { cn } from "cn";
@@ -180,6 +182,13 @@ export function TdaViewer({
         ) : null}
       </div>
 
+      {canManage ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+          <span className="mr-auto text-xs font-semibold text-[#9CA3AF]">관리 · 문서마다 수정·삭제 버튼이 있습니다</span>
+          <TdaClearButton count={sections.length} />
+        </div>
+      ) : null}
+
       {!loggedIn ? (
         <p className="ink-panel rounded-xl px-4 py-3 text-sm text-[#c9c0b2]">
           조항 제목만 보입니다. 본문 전체는{" "}
@@ -199,14 +208,15 @@ export function TdaViewer({
               // PDF 원본을 올린 조항: 쪽마다 이어지는 PDF 뷰어
               <section key={s.id} id={`tda-${s.id}`} className="scroll-mt-40" aria-label={s.title}>
                 {canManage ? (
-                  <div className="mb-1 flex justify-end">
+                  <div className="mb-2 flex justify-end gap-2">
                     <Link
                       href={`/posts/${s.id}/edit`}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#c9c0b2] hover:bg-white/10"
+                      className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[#c9a25c]/70 bg-[#c9a25c]/15 px-3 text-sm font-bold text-[#f3dca6] hover:bg-[#c9a25c]/25"
                     >
-                      <PencilIcon className="size-3.5" />
+                      <PencilIcon className="size-4" />
                       수정
                     </Link>
+                    <DeletePostButton postId={s.id} />
                   </div>
                 ) : null}
                 <PdfDocViewer url={s.pdfUrl} title={s.title} />
@@ -217,15 +227,20 @@ export function TdaViewer({
                   id={`tda-${s.id}`}
                   html={s.html}
                   pageLabel={`- ${index + 1} / ${sections.length} -`}
-                  actions={canManage ? (
-                  <Link
-                    href={`/posts/${s.id}/edit`}
-                    className="inline-flex items-center gap-1 rounded-md bg-black/5 px-2 py-1 text-xs font-semibold text-[#444] hover:bg-black/10"
-                  >
-                    <PencilIcon className="size-3.5" />
-                    수정
-                  </Link>
-                ) : undefined}
+                  actions={
+                    canManage ? (
+                      <>
+                        <Link
+                          href={`/posts/${s.id}/edit`}
+                          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-black/15 bg-white px-2.5 text-xs font-bold text-[#333] shadow-sm hover:bg-black/5"
+                        >
+                          <PencilIcon className="size-3.5" />
+                          수정
+                        </Link>
+                        <DeletePostButton postId={s.id} tone="paper" className="min-h-9 px-2.5 text-xs" />
+                      </>
+                    ) : undefined
+                  }
                 />
               </DocDesk>
             ),

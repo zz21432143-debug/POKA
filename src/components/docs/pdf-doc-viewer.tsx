@@ -7,7 +7,40 @@ import { DownloadIcon, Loader2Icon } from "lucide-react";
 const PDFJS_BASE = "/vendor/pdfjs-4.10.38";
 const PDF_WORKER_SRC = "/vendor/pdf.worker-4.10.38.min.mjs";
 
-type Status = { kind: "loading"; done: number; total: number } | { kind: "ready"; total: number } | { kind: "error"; message: string };
+type Status =
+  | { kind: "downloading"; done: number; total: number }
+  | { kind: "loading"; done: number; total: number }
+  | { kind: "ready"; total: number }
+  | { kind: "error"; message: string };
+
+/**
+ * PDF 원본 바이트를 받아 옵니다. 큰 PDF는 3MB 조각(/api/files/{id}/{n})으로 나눠 받아 합칩니다.
+ * 이 사이트 파일 주소가 아니면 주소에서 그대로 받습니다.
+ */
+async function fetchPdfBytes(url: string, onProgress: (done: number, total: number) => void): Promise<Uint8Array> {
+  const m = url.match(/^\/api\/files\/([a-z0-9]+)$/i);
+  if (!m) return new Uint8Array(await (await fetch(url)).arrayBuffer());
+  const meta = (await (await fetch(`${url}/meta`)).json()) as { size: number; parts: number };
+  const out = new Uint8Array(meta.size);
+  let done = 0;
+  onProgress(0, meta.parts);
+  let offset = 0;
+  const parts = await Promise.all(
+    Array.from({ length: meta.parts }, async (_, idx) => {
+      const response = await fetch(`${url}/${idx}`);
+      if (!response.ok) throw new Error("PDF 조각을 받지 못했습니다.");
+      const buf = new Uint8Array(await response.arrayBuffer());
+      done += 1;
+      onProgress(done, meta.parts);
+      return buf;
+    }),
+  );
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.byteLength;
+  }
+  return out;
+}
 
 /**
  * PDF 원본을 쪽 넘김 없이 위에서 아래로 이어서 보여 줍니다.
@@ -16,7 +49,9 @@ type Status = { kind: "loading"; done: number; total: number } | { kind: "ready"
  */
 export function PdfDocViewer({ url, title }: { url: string; title: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<Status>({ kind: "loading", done: 0, total: 0 });
+  const [status, setStatus] = useState<Status>({ kind: "downloading", done: 0, total: 0 });
+  // "원본" 버튼: 받은 바이트로 만든 PDF 주소(조각으로 받은 큰 파일도 브라우저 PDF 보기로 열림)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -24,11 +59,21 @@ export function PdfDocViewer({ url, title }: { url: string; title: string }) {
     let cancelled = false;
     let destroy: (() => void) | null = null;
 
+    let objectUrl: string | null = null;
+
     (async () => {
-      const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+      const [pdfjs, bytes] = await Promise.all([
+        import("pdfjs-dist/legacy/build/pdf.mjs"),
+        fetchPdfBytes(url, (done, total) => {
+          if (!cancelled) setStatus({ kind: "downloading", done, total });
+        }),
+      ]);
+      if (cancelled) return;
+      objectUrl = URL.createObjectURL(new Blob([bytes.slice()], { type: "application/pdf" }));
+      setBlobUrl(objectUrl);
       pdfjs.GlobalWorkerOptions.workerSrc = PDF_WORKER_SRC;
       const task = pdfjs.getDocument({
-        url,
+        data: bytes,
         cMapUrl: `${PDFJS_BASE}/cmaps/`,
         cMapPacked: true,
         standardFontDataUrl: `${PDFJS_BASE}/standard_fonts/`,
@@ -120,6 +165,7 @@ export function PdfDocViewer({ url, title }: { url: string; title: string }) {
       cancelled = true;
       destroy?.();
       host.replaceChildren();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [url]);
 
@@ -128,20 +174,31 @@ export function PdfDocViewer({ url, title }: { url: string; title: string }) {
       <div className="pdf-doc-bar">
         <span className="truncate">{title}</span>
         <span className="shrink-0 text-xs text-[#9CA3AF]">
-          {status.kind === "loading"
-            ? status.total
-              ? `불러오는 중 ${status.done}/${status.total}쪽`
-              : "PDF 여는 중…"
-            : status.kind === "ready"
-              ? `${status.total}쪽`
-              : ""}
+          {status.kind === "downloading"
+            ? status.total > 1
+              ? `받는 중 ${status.done}/${status.total}`
+              : "PDF 받는 중…"
+            : status.kind === "loading"
+              ? status.total
+                ? `불러오는 중 ${status.done}/${status.total}쪽`
+                : "PDF 여는 중…"
+              : status.kind === "ready"
+                ? `${status.total}쪽`
+                : ""}
         </span>
-        <a href={url} target="_blank" rel="noopener noreferrer" className="pdf-doc-download" aria-label="PDF 원본 열기">
+        <a
+          href={blobUrl ?? url}
+          target="_blank"
+          rel="noopener noreferrer"
+          download={`${title}.pdf`}
+          className="pdf-doc-download"
+          aria-label="PDF 원본 내려받기"
+        >
           <DownloadIcon className="size-4" />
           원본
         </a>
       </div>
-      {status.kind === "loading" && status.done === 0 ? (
+      {status.kind === "downloading" || (status.kind === "loading" && status.done === 0) ? (
         <p className="flex items-center justify-center gap-2 py-16 text-sm text-[#c9c0b2]">
           <Loader2Icon className="size-5 animate-spin" />
           PDF를 여는 중입니다…
@@ -149,7 +206,7 @@ export function PdfDocViewer({ url, title }: { url: string; title: string }) {
       ) : null}
       {status.kind === "error" ? (
         <p className="py-12 text-center text-sm text-rose-300">
-          PDF를 보여 주지 못했습니다. <a href={url} className="underline">원본 열기</a>
+          PDF를 보여 주지 못했습니다. ({status.message})
         </p>
       ) : null}
       {/* pdf.js가 쪽(그림 + 글자층)을 이 안에 직접 그립니다. React는 이 안을 건드리지 않습니다. */}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DocEditor } from "@/components/docs/doc-editor";
 import { isRuleHeading } from "@/lib/tda";
+import { PDF_MAX_BYTES } from "@/lib/uploads";
 
 /** pdf.js 작업 파일. 패키지 버전(pdfjs-dist 4.10.38)과 같은 파일을 public/vendor에 둡니다. */
 const PDF_WORKER_SRC = "/vendor/pdf.worker-4.10.38.min.mjs";
@@ -73,6 +74,7 @@ export function TdaWriteForm({
   const pdfRef = useRef<HTMLInputElement>(null);
   const [pdfUrl, setPdfUrl] = useState(initial?.pdfUrl ?? "");
   const [pdfName, setPdfName] = useState(initial?.pdfUrl ? "올려 둔 PDF" : "");
+  const [progress, setProgress] = useState<string | null>(null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [loading, setLoading] = useState(false);
@@ -86,7 +88,14 @@ export function TdaWriteForm({
     setNote(null);
     try {
       const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-      const text = isPdf ? await pdfToText(file) : await file.text();
+      if (isPdf) {
+        // PDF는 글로 바꾸지 않고 원본 그대로 올립니다.
+        setLoading(false);
+        if (fileRef.current) fileRef.current.value = "";
+        await uploadPdf(file);
+        return;
+      }
+      const text = await file.text();
       if (!text.trim()) throw new Error("글자를 찾지 못했습니다. 스캔한 이미지 PDF는 글자를 읽을 수 없습니다.");
       setContent((prev) => (prev.trim() ? `${prev.trim()}\n\n${text.trim()}` : text.trim()));
       if (!title.trim()) setTitle(file.name.replace(/\.(pdf|txt|md)$/i, ""));
@@ -105,12 +114,27 @@ export function TdaWriteForm({
     setLoading(true);
     setNote(null);
     try {
-      if (file.size > 4 * 1024 * 1024) throw new Error("PDF가 너무 큽니다(최대 4MB). 용량을 줄여 다시 올려 주세요.");
-      const form = new FormData();
-      form.append("file", file);
-      const response = await fetch("/api/uploads/file", { method: "POST", body: form });
-      const payload = (await response.json()) as { url?: string; error?: string };
-      if (!response.ok || !payload.url) throw new Error(payload.error ?? "PDF를 올리지 못했습니다.");
+      if (file.size > PDF_MAX_BYTES) throw new Error("PDF가 너무 큽니다(최대 30MB).");
+      // 1) 파일 자리 만들기 → 2) 3MB 조각 올리기 → 3) 마치기
+      const start = await fetch("/api/uploads/file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ size: file.size, name: file.name }),
+      });
+      const slot = (await start.json()) as { id?: string; partSize?: number; parts?: number; error?: string };
+      if (!start.ok || !slot.id || !slot.partSize || !slot.parts) throw new Error(slot.error ?? "PDF를 올리지 못했습니다.");
+      for (let idx = 0; idx < slot.parts; idx += 1) {
+        setProgress(`PDF 올리는 중 ${idx + 1}/${slot.parts}`);
+        const chunk = file.slice(idx * slot.partSize, (idx + 1) * slot.partSize);
+        const put = await fetch(`/api/uploads/file/${slot.id}/${idx}`, { method: "PUT", body: chunk });
+        if (!put.ok) {
+          const err = (await put.json().catch(() => ({}))) as { error?: string };
+          throw new Error(err.error ?? "PDF 조각을 올리지 못했습니다.");
+        }
+      }
+      const done = await fetch(`/api/uploads/file/${slot.id}/complete`, { method: "POST" });
+      const payload = (await done.json()) as { url?: string; error?: string };
+      if (!done.ok || !payload.url) throw new Error(payload.error ?? "PDF를 올리지 못했습니다.");
       setPdfUrl(payload.url);
       setPdfName(file.name);
       if (!title.trim()) setTitle(file.name.replace(/\.pdf$/i, ""));
@@ -126,6 +150,7 @@ export function TdaWriteForm({
       setNote({ ok: false, text: err instanceof Error ? err.message : "PDF를 올리지 못했습니다." });
     } finally {
       setLoading(false);
+      setProgress(null);
       if (pdfRef.current) pdfRef.current.value = "";
     }
   }
@@ -173,7 +198,7 @@ export function TdaWriteForm({
       <section className="grid gap-2 rounded-xl border-2 border-[#FEE500] bg-[#FEE500]/[0.1] p-3" aria-label="PDF 원본 올리기">
         <p className="text-base font-black text-[#FEE500]">PDF 원본 그대로 올리기 (추천)</p>
         <p className="text-xs text-[#f3eccd]">
-          PDF 파일 자체를 올리면 게시글에서 실제 서류처럼 쪽마다 위에서 아래로 이어서 보입니다. 위 검색창과 Ctrl+F로 PDF 속 단어를 찾을 수 있습니다. (최대 4MB)
+          PDF 파일 자체를 올리면 게시글에 PDF가 그대로 보입니다. 쪽마다 위에서 아래로 이어서 읽고, 위 검색창과 Ctrl+F로 PDF 속 단어를 찾을 수 있습니다. (최대 30MB)
         </p>
         <input
           ref={pdfRef}
@@ -208,7 +233,7 @@ export function TdaWriteForm({
           onClick={() => pdfRef.current?.click()}
         >
           {loading ? <Loader2Icon className="size-4 animate-spin" /> : <FileUpIcon className="size-4" />}
-          {loading ? "PDF 올리는 중…" : pdfUrl ? "다른 PDF로 바꾸기" : "PDF 파일 고르기"}
+          {loading ? (progress ?? "PDF 올리는 중…") : pdfUrl ? "다른 PDF로 바꾸기" : "PDF 파일 고르기"}
         </Button>
         {note ? (
           <p
@@ -233,7 +258,7 @@ export function TdaWriteForm({
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+          accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf"
           className="sr-only"
           onChange={(event) => void importFile(event.target.files?.[0])}
         />

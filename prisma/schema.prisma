@@ -512,3 +512,12 @@ model UploadedImage {
 
   @@index([createdAt])
 }
+
+/// 큰 파일(PDF)을 3MB 조각으로 나눠 저장합니다. 서버 요청·응답 한도(4.5MB) 때문에 조각 단위로 주고받습니다.
+model UploadChunk {
+  fileId String
+  idx    Int
+  data   Bytes
+
+  @@id([fileId, idx])
+}
