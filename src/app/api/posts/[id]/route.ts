@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { jobFieldsFromBody } from "@/lib/job-fields";
+import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
+import { HoldemOnlyError, assertHoldemOnly } from "@/lib/holdem-only";
 import type { JobKind } from "@/generated/prisma/enums";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
@@ -36,6 +38,10 @@ export async function PATCH(
     if (!jobData.jobLocation) {
       return NextResponse.json({ error: "지역을 선택하세요." }, { status: 400 });
     }
+    // 수정할 때도 새로 쓸 때와 같은 금지어 검사를 합니다.
+    const nextContent = typeof body.content === "string" ? body.content : post.content;
+    assertHoldemOnly(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
+    await assertNoForbiddenWords(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
     const updated = await prisma.post.update({
       where: { id },
       data: {
@@ -65,6 +71,9 @@ export async function PATCH(
     });
     return NextResponse.json({ id: updated.id });
   } catch (error) {
+    if (error instanceof ForbiddenWordError || error instanceof HoldemOnlyError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     const message = error instanceof Error ? error.message : "수정에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DownloadIcon, ShareIcon, PlusSquareIcon, SmartphoneIcon } from "lucide-react";
+import { DownloadIcon, ShareIcon, PlusSquareIcon, SmartphoneIcon, XIcon } from "lucide-react";
+
+const STRIP_KEY = "poka-app-strip-hidden-until";
+const STRIP_HIDE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function stripDismissed() {
+  try {
+    return Number(window.localStorage.getItem(STRIP_KEY) ?? 0) > Date.now();
+  } catch {
+    return false;
+  }
+}
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,17 +53,22 @@ export function InstallPwaButton({
   variant,
 }: {
   compact?: boolean;
-  /** header: 상단 바에 글자와 함께 보이는 "앱 받기" 버튼 */
-  variant?: "header";
+  /** header: 상단 바 아이콘 버튼 · strip: 휴대폰 화면 상단 "POKA 앱 다운로드" 띠 */
+  variant?: "header" | "strip";
 }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [iosOpen, setIosOpen] = useState(false);
   const [androidOpen, setAndroidOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [installed, setInstalled] = useState(false);
+  // 띠는 화면이 그려진 뒤(브라우저 확인 후)에만 보여 줍니다. 닫으면 7일 동안 숨깁니다.
+  const [stripVisible, setStripVisible] = useState(false);
 
   useEffect(() => {
-    const check = window.setTimeout(() => setInstalled(isStandalone()), 0);
+    const check = window.setTimeout(() => {
+      setInstalled(isStandalone());
+      if (variant === "strip") setStripVisible(!stripDismissed());
+    }, 0);
     const onPrompt = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
@@ -68,9 +84,19 @@ export function InstallPwaButton({
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, []);
+  }, [variant]);
 
   if (installed) return null;
+  if (variant === "strip" && !stripVisible) return null;
+
+  function closeStrip() {
+    try {
+      window.localStorage.setItem(STRIP_KEY, String(Date.now() + STRIP_HIDE_MS));
+    } catch {
+      // 저장소를 못 쓰면 이번 화면에서만 닫습니다.
+    }
+    setStripVisible(false);
+  }
 
   async function install() {
     if (deferred) {
@@ -96,7 +122,31 @@ export function InstallPwaButton({
 
   return (
     <>
-      {variant === "header" ? (
+      {variant === "strip" ? (
+        <div className="flex items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-3 py-2 lg:hidden">
+          <SmartphoneIcon className="size-5 shrink-0 text-[#e7c98a]" aria-hidden />
+          <p className="min-w-0 flex-1 text-[13px] leading-tight text-[#f3eadb]">
+            <strong className="block font-bold">POKA 앱 다운로드</strong>
+            <span className="block truncate text-xs text-[#d1c7b5]">홈 화면에 추가하고 급구 알림 받기</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => void install()}
+            className="touch-target inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-3.5 text-[13px] font-bold text-[#1d1611] hover:bg-[#e7c98a]"
+          >
+            <DownloadIcon className="size-4" />
+            다운로드
+          </button>
+          <button
+            type="button"
+            onClick={closeStrip}
+            aria-label="앱 다운로드 안내 닫기"
+            className="touch-target inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#d1c7b5] hover:bg-white/10"
+          >
+            <XIcon className="size-4" />
+          </button>
+        </div>
+      ) : variant === "header" ? (
         <button
           type="button"
           onClick={() => void install()}

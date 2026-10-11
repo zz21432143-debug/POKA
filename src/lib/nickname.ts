@@ -1,4 +1,5 @@
 import { holdemOnlyViolation } from "@/lib/holdem-only";
+import { PROFANITY_LABEL, findProfanity } from "@/lib/profanity";
 
 const RESERVED_EXACT = new Set(
   [
@@ -45,6 +46,12 @@ export function nicknameError(raw: string): string | null {
   if (!/^[가-힣a-zA-Z0-9_]+$/.test(nickname)) return "닉네임은 한글, 영문, 숫자, _ 만 됩니다.";
   if (isReservedNickname(nickname)) return "운영자·POKA 관련 닉네임은 쓸 수 없습니다.";
   if (holdemOnlyViolation(nickname)) return "이 닉네임은 등록할 수 없습니다.";
+  const bad = findProfanity(nickname, { nickname: true });
+  if (bad) {
+    return bad.category === "impersonation"
+      ? "운영진으로 오해될 수 있는 닉네임(관리자·운영자·공식 등)은 쓸 수 없습니다."
+      : `${PROFANITY_LABEL[bad.category]}이(가) 들어간 닉네임은 쓸 수 없습니다.`;
+  }
   return null;
 }
 

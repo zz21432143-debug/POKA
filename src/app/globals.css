@@ -500,7 +500,9 @@ select {
 }
 
 .led-marquee {
-  animation: led-scroll 60s linear infinite;
+  /* 실제 시간은 소식 길이에 맞춰 led-ticker.tsx 가 정합니다(초당 약 80px). */
+  animation: led-scroll 30s linear infinite;
+  will-change: transform;
 }
 
 .led-board:hover .led-marquee,
@@ -524,7 +526,7 @@ select {
  */
 @media (prefers-reduced-motion: reduce) {
   .led-marquee {
-    animation-duration: 120s !important;
+    animation-duration: 75s !important;
   }
 }
 

@@ -13,6 +13,7 @@ import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
+import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { getCurrentUser } from "@/lib/current-user";
 import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
@@ -98,6 +99,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <ConnectedTicker />
         </Suspense>
       </div>
+      {/* 휴대폰 전용 앱 다운로드 띠. 고정(sticky) 영역 밖에 두어 헤더·전광판과 겹치지 않고 스크롤하면 사라집니다. */}
+      <InstallPwaButton variant="strip" />
       <Suspense fallback={null}>
         <ConnectedNotice />
       </Suspense>

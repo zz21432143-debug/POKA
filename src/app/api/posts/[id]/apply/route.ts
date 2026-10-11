@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { jobStatus } from "@/lib/job-status";
 import { assertAccountActive, AccountRestrictedError } from "@/lib/account-restriction";
+import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
 
 const MAX_MESSAGE = 500;
 
@@ -44,6 +45,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
     const body = (await request.json().catch(() => ({}))) as { message?: unknown };
     const message = typeof body.message === "string" ? body.message.trim().slice(0, MAX_MESSAGE) : "";
+    await assertNoForbiddenWords(message);
     const existing = await prisma.jobApplication.findUnique({
       where: { postId_applicantId: { postId: id, applicantId: user.id } },
       select: { id: true },
@@ -58,6 +60,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   } catch (error) {
     if (error instanceof AccountRestrictedError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof ForbiddenWordError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     const message = error instanceof Error ? error.message : "지원에 실패했습니다.";
     return NextResponse.json({ error: message }, { status: 500 });
