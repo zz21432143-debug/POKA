@@ -2,14 +2,14 @@ import Link from "next/link";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 
 /**
- * 모든 게시판 목록 아래 구글 애드센스 배너 자리.
- * Vercel에 NEXT_PUBLIC_ADSENSE_SLOT_BOARD_BOTTOM(광고 단위 ID)을 넣으면 실제 광고가 나오고,
- * 그 전에는 광고 문의 자리로 보입니다.
+ * 게시판 목록·메인 하단 구글 애드센스 배너 자리.
+ * Vercel에 광고 단위 ID(게시판: NEXT_PUBLIC_ADSENSE_SLOT_BOARD_BOTTOM, 메인: NEXT_PUBLIC_ADSENSE_SLOT_HOME_BOTTOM)를
+ * 넣으면 실제 광고가 나오고, 그 전에는 광고 문의 자리로 보입니다.
  */
-export function BoardBottomAd() {
+export function BoardBottomAd({ placement = "board-bottom" }: { placement?: "board-bottom" | "home-bottom" }) {
   return (
     <GoogleAdUnit
-      placement="board-bottom"
+      placement={placement}
       className="mt-2"
       fallback={
         <Link

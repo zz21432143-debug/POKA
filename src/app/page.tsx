@@ -7,6 +7,7 @@ import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 function HomePanelFallback({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-2xl bg-white/[0.06] ${className}`} />;
@@ -66,6 +67,7 @@ export default async function HomePage() {
       >
         <HomeFeedSections />
       </Suspense>
+      <BoardBottomAd placement="home-bottom" />
     </div>
   );
 }
