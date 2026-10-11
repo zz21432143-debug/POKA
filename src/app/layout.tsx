@@ -13,6 +13,7 @@ import {
   searchEngineVerificationMeta,
 } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
+import { APP_STRIP_BOOT_SCRIPT } from "@/lib/app-strip";
 import "./globals.css";
 
 const sans = Noto_Sans_KR({
