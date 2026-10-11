@@ -4,7 +4,7 @@ import { ttlCache } from "@/lib/ttl-cache";
 import type { PostSummary } from "@/components/posts/post-list";
 import type { HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { getSponsorCreative } from "@/lib/inventory";
-import { getTodayHandSpotlight, getWeeklyHubPost, getVerifiedDealers } from "@/lib/growth-ops";
+import { getTodayHandSpotlight, getWeeklyHubPost } from "@/lib/growth-ops";
 import { getTickerEvents } from "@/lib/ticker";
 import { openJobWhere } from "@/lib/job-status";
 
@@ -60,17 +60,16 @@ async function loadHomeFeed() {
   // 커뮤니티 최신글에는 공고를 넣지 않습니다. 공고는 홈의 급구·최신 공고 박스에서만 봅니다.
   const communityOnly = { boardType: { notIn: ["ANONYMOUS_REVIEW" as const, "JOBS" as const] } };
 
-  const [nativeSponsor, handSpot, hub, dealers, allRows, freeRows, jobRows, handRows, urgentRows] =
+  const [nativeSponsor, handSpot, hub, allRows, freeRows, jobRows, handRows, urgentRows] =
     await Promise.all([
       getSponsorCreative("NATIVE").catch(() => null),
       getTodayHandSpotlight().catch(() => ({ post: null, isToday: false as const })),
       getWeeklyHubPost().catch(() => null),
-      getVerifiedDealers().catch(() => []),
       prisma.post
         .findMany({
           where: { ...base, ...communityOnly },
           orderBy: { createdAt: "desc" },
-          take: 6,
+          take: 5,
           include,
         })
         .catch(() => []),
@@ -78,7 +77,7 @@ async function loadHomeFeed() {
         .findMany({
           where: { ...base, boardType: "FREE" },
           orderBy: { createdAt: "desc" },
-          take: 6,
+          take: 5,
           include,
         })
         .catch(() => []),
@@ -94,7 +93,7 @@ async function loadHomeFeed() {
         .findMany({
           where: { ...base, boardType: "HAND_REVIEW" },
           orderBy: { createdAt: "desc" },
-          take: 6,
+          take: 5,
           include,
         })
         .catch(() => []),
@@ -125,7 +124,6 @@ async function loadHomeFeed() {
       ? { id: handSpot.post.id, title: handSpot.post.title, isToday: handSpot.isToday }
       : null,
     hub,
-    dealers,
   };
 }
 

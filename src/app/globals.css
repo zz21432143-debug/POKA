@@ -201,16 +201,20 @@ body {
   pointer-events: none;
 }
 
+/* 호리병 대기실 배경. 흐림 없이 원본이 보이도록 위·아래만 살짝 어둡게 합니다. */
 .felt-bg::before {
-  inset: -32px;
+  inset: 0;
   background: url("/theme/yokai-gourd-bg.jpg") center top / cover no-repeat;
-  filter: blur(8px) brightness(0.6);
 }
 
 .felt-bg::after {
   inset: 0;
-  background-color: rgba(10, 8, 12, 0.85);
-  background-image: radial-gradient(ellipse 70% 55% at 50% 0%, rgba(122, 28, 34, 0.28) 0%, transparent 70%);
+  background: linear-gradient(
+    180deg,
+    rgba(13, 11, 11, 0.35) 0%,
+    rgba(13, 11, 11, 0.2) 40%,
+    rgba(13, 11, 11, 0.65) 100%
+  );
 }
 
 .felt-bg :is(main, aside) .text-primary {
