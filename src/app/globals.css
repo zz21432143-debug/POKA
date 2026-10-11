@@ -318,6 +318,20 @@ body {
   color: #ffffff;
 }
 
+/*
+ * 앱 받기 버튼·띠. 홈 화면에 설치한 앱으로 열었을 때와 띠를 닫아 둔 기간에는
+ * 첫 화면부터 숨깁니다. 자바스크립트가 늦게 판단해 깜빡이는 것을 막기 위해 CSS로 처리합니다.
+ */
+@media (display-mode: standalone) {
+  .app-get {
+    display: none !important;
+  }
+}
+
+html[data-app-strip="hidden"] .app-get-strip {
+  display: none !important;
+}
+
 /* 카카오톡 공식 노란색 버튼 */
 .btn-kakao {
   border: 0;
