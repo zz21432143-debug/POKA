@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const image = await prisma.uploadedImage.findUnique({ where: { id }, select: { mime: true, data: true } });
-  if (!image) return new Response("Not found", { status: 404 });
+  if (!image || !image.mime.startsWith("image/")) return new Response("Not found", { status: 404 });
   return new Response(Buffer.from(image.data), {
     headers: {
       "Content-Type": image.mime,

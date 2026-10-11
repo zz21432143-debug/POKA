@@ -175,6 +175,8 @@ model Post {
   jobEndDate         String?
   /// 일정 목록 JSON [{date:"YYYY-MM-DD", name, headcount}] (대회·지원 딜러 여러 날짜)
   jobEvents          String?
+  /// TDA 룰 등 문서 게시글에 붙인 PDF 원본 주소(/api/files/{id}). 있으면 PDF 뷰어로 보여 줍니다.
+  docPdfUrl          String?
   /// 모집 마감일 YYYY-MM-DD. 지나면 자동 마감
   jobDeadline        String?
   jobDateFlexible    Boolean   @default(false)

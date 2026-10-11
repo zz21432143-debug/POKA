@@ -17,6 +17,7 @@ import { ensureBannerSlots } from "@/lib/premium-banners";
 import { parseJobRegion } from "@/lib/job-status";
 import { titleRegion } from "@/lib/jobs";
 import { notifyRegion } from "@/lib/push";
+import { fileIdFromUrl } from "@/lib/uploads";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import {
   HoldemOnlyError,
@@ -236,6 +237,11 @@ export async function POST(request: Request) {
             ? (typeof body.promoLocation === "string" ? body.promoLocation.trim() : null) || null
             : null,
         promoTag: boardType === "PROMO" ? body.promoTag?.trim() || null : null,
+        // TDA 룰 PDF 원본(이 사이트에 올린 /api/files/… 주소만)
+        docPdfUrl:
+          boardType === "TDA" && typeof body.docPdfUrl === "string" && fileIdFromUrl(body.docPdfUrl)
+            ? body.docPdfUrl.trim()
+            : null,
       },
     });
 

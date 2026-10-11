@@ -86,7 +86,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "정보센터",
     collapsible: true,
     items: [
-      { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
+      { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "shield" },
     ],
@@ -121,7 +121,7 @@ export const BOARD_NAV: NavGroup[] = [
     ],
   },
   {
-    title: "대회 스케줄",
+    title: "대회 캘린더",
     href: "/boards/schedule",
     hint: "일자별 / 월별 일정표",
     accent: "emerald",
@@ -228,7 +228,7 @@ export const BOARD_SLUGS = {
     masterOnly: true,
   },
   schedule: {
-    title: "대회 스케줄",
+    title: "대회 캘린더",
     boardType: "SCHEDULE" as const,
     writeHref: "/boards/schedule/write",
     calendar: true,

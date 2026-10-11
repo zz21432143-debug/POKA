@@ -7,7 +7,7 @@ export const RESET_GROUPS = {
     label: "커뮤니티 글 (자유·질문·현장·핸드리뷰·건의)",
     boards: ["FREE", "RULE_QA", "SKETCH", "HAND_REVIEW", "SUGGESTION", "ANONYMOUS_REVIEW"],
   },
-  promo: { label: "공식 홍보 · 대회 스케줄", boards: ["PROMO", "SCHEDULE", "EVENT_POSTER", "OFFICIAL_POSTER"] },
+  promo: { label: "공식 홍보 · 대회 캘린더", boards: ["PROMO", "SCHEDULE", "EVENT_POSTER", "OFFICIAL_POSTER"] },
   notice: { label: "공지사항", boards: ["NOTICE"] },
   attendance: { label: "출석체크 기록", boards: [] },
 } as const satisfies Record<string, { label: string; boards: readonly BoardType[] }>;

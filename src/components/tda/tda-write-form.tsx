@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileUpIcon, Loader2Icon, Trash2Icon } from "lucide-react";
+import { FileTextIcon, FileUpIcon, Loader2Icon, Trash2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +54,9 @@ async function pdfToText(file: File): Promise<string> {
 }
 
 /**
- * TDA 룰 작성·수정. 본문을 직접 쓰거나 문서 파일(.txt, .md, .pdf)을 불러와 채웁니다.
+ * TDA 룰 작성·수정.
+ * - PDF 원본 그대로 올리기: 게시글에서 PDF 뷰어로 쪽마다 이어서 보여 줍니다(글자층이 있어 검색·Ctrl+F 가능).
+ * - 글로 불러오기: 문서 파일(.txt, .md, .pdf)의 글자를 꺼내 본문으로 씁니다(종이 문서 모양).
  * 문서 보기에서 "1.", "제3조", "Rule 4"로 시작하는 줄은 조항 머리줄로 굵게 보입니다.
  */
 export function TdaWriteForm({
@@ -64,10 +66,13 @@ export function TdaWriteForm({
 }: {
   hint: string;
   postId?: string;
-  initial?: { title: string; content: string };
+  initial?: { title: string; content: string; pdfUrl?: string | null };
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+  const [pdfUrl, setPdfUrl] = useState(initial?.pdfUrl ?? "");
+  const [pdfName, setPdfName] = useState(initial?.pdfUrl ? "올려 둔 PDF" : "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [loading, setLoading] = useState(false);
@@ -94,16 +99,47 @@ export function TdaWriteForm({
     }
   }
 
+  /** PDF 원본을 올립니다. 글자층은 검색용으로 본문에도 담아 둡니다(화면에는 PDF가 보임). */
+  async function uploadPdf(file: File | undefined) {
+    if (!file) return;
+    setLoading(true);
+    setNote(null);
+    try {
+      if (file.size > 4 * 1024 * 1024) throw new Error("PDF가 너무 큽니다(최대 4MB). 용량을 줄여 다시 올려 주세요.");
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/uploads/file", { method: "POST", body: form });
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) throw new Error(payload.error ?? "PDF를 올리지 못했습니다.");
+      setPdfUrl(payload.url);
+      setPdfName(file.name);
+      if (!title.trim()) setTitle(file.name.replace(/\.pdf$/i, ""));
+      const text = await pdfToText(file).catch(() => "");
+      setContent(text.trim());
+      setNote({
+        ok: true,
+        text: text.trim()
+          ? `${file.name}을(를) 올렸습니다. 게시글에서 PDF 그대로 보이고, 글자 ${text.length.toLocaleString()}자로 검색할 수 있습니다.`
+          : `${file.name}을(를) 올렸습니다. 글자층이 없는 스캔 PDF라 검색은 되지 않습니다.`,
+      });
+    } catch (err) {
+      setNote({ ok: false, text: err instanceof Error ? err.message : "PDF를 올리지 못했습니다." });
+    } finally {
+      setLoading(false);
+      if (pdfRef.current) pdfRef.current.value = "";
+    }
+  }
+
   async function submit() {
     setPending(true);
     setError(null);
     try {
       if (title.trim().length < 2) throw new Error("제목을 입력하세요.");
-      if (!content.trim()) throw new Error("내용을 입력하거나 문서를 불러오세요.");
+      if (!content.trim() && !pdfUrl) throw new Error("PDF를 올리거나 내용을 입력하세요.");
       const response = await fetch(postId ? `/api/posts/${postId}` : "/api/posts", {
         method: postId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardType: "TDA", title, content }),
+        body: JSON.stringify({ boardType: "TDA", title, content: content.trim() || title.trim(), docPdfUrl: pdfUrl || null }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
       if (!response.ok || !payload.id) throw new Error(payload.error ?? "저장에 실패했습니다.");
@@ -134,27 +170,45 @@ export function TdaWriteForm({
     <div className="ink-panel flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">{hint}</p>
 
-      <section className="grid gap-2 rounded-xl border-2 border-[#FEE500] bg-[#FEE500]/[0.08] p-3" aria-label="문서 불러오기">
-        <p className="text-base font-black text-[#FEE500]">TDA 문서 불러오기</p>
+      <section className="grid gap-2 rounded-xl border-2 border-[#FEE500] bg-[#FEE500]/[0.1] p-3" aria-label="PDF 원본 올리기">
+        <p className="text-base font-black text-[#FEE500]">PDF 원본 그대로 올리기 (추천)</p>
         <p className="text-xs text-[#f3eccd]">
-          PDF·텍스트(.txt, .md) 파일을 고르면 글자를 꺼내 본문에 넣습니다. 쪽 넘김 없이 한 문서로 이어서 보입니다.
-          &quot;1.&quot;, &quot;제3조&quot;, &quot;Rule 4&quot;로 시작하는 줄은 조항 제목으로 굵게 표시됩니다.
+          PDF 파일 자체를 올리면 게시글에서 실제 서류처럼 쪽마다 위에서 아래로 이어서 보입니다. 위 검색창과 Ctrl+F로 PDF 속 단어를 찾을 수 있습니다. (최대 4MB)
         </p>
         <input
-          ref={fileRef}
+          ref={pdfRef}
           type="file"
-          accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+          accept=".pdf,application/pdf"
           className="sr-only"
-          onChange={(event) => void importFile(event.target.files?.[0])}
+          onChange={(event) => void uploadPdf(event.target.files?.[0])}
         />
+        {pdfUrl ? (
+          <div className="flex items-center gap-2 rounded-lg border border-[#FEE500]/40 bg-[#141110] px-3 py-2 text-sm">
+            <FileTextIcon className="size-5 shrink-0 text-[#FEE500]" />
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate font-semibold text-white underline">
+              {pdfName || "PDF"}
+            </a>
+            <button
+              type="button"
+              aria-label="PDF 빼기"
+              className="grid size-9 place-items-center rounded-md text-[#9CA3AF] hover:bg-white/10"
+              onClick={() => {
+                setPdfUrl("");
+                setPdfName("");
+              }}
+            >
+              <XIcon className="size-4" />
+            </button>
+          </div>
+        ) : null}
         <Button
           type="button"
           disabled={loading}
           className="min-h-12 gap-1.5 bg-[#FEE500] font-black text-[#1d1611] hover:bg-[#ffeb3b]"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => pdfRef.current?.click()}
         >
           {loading ? <Loader2Icon className="size-4 animate-spin" /> : <FileUpIcon className="size-4" />}
-          {loading ? "문서 읽는 중…" : "문서 파일 고르기"}
+          {loading ? "PDF 올리는 중…" : pdfUrl ? "다른 PDF로 바꾸기" : "PDF 파일 고르기"}
         </Button>
         {note ? (
           <p
@@ -169,6 +223,27 @@ export function TdaWriteForm({
         ) : null}
       </section>
 
+      {pdfUrl ? null : (
+      <section className="grid gap-2 rounded-xl border border-white/15 bg-[#141110] p-3" aria-label="글로 불러오기">
+        <p className="text-sm font-black text-[#e7c98a]">또는 글로 불러오기</p>
+        <p className="text-xs text-[#f3eccd]">
+          PDF·텍스트(.txt, .md) 파일을 고르면 글자를 꺼내 본문에 넣습니다. 쪽 넘김 없이 한 문서로 이어서 보입니다.
+          &quot;1.&quot;, &quot;제3조&quot;, &quot;Rule 4&quot;로 시작하는 줄은 조항 제목으로 굵게 표시됩니다.
+        </p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"
+          className="sr-only"
+          onChange={(event) => void importFile(event.target.files?.[0])}
+        />
+        <Button type="button" variant="secondary" disabled={loading} className="min-h-11 gap-1.5" onClick={() => fileRef.current?.click()}>
+          {loading ? <Loader2Icon className="size-4 animate-spin" /> : <FileUpIcon className="size-4" />}
+          {loading ? "문서 읽는 중…" : "문서 파일에서 글 꺼내기"}
+        </Button>
+      </section>
+      )}
+
       <div className="grid gap-2">
         <Label htmlFor="tda-title" className="write-label">
           제목
@@ -181,6 +256,11 @@ export function TdaWriteForm({
           onChange={(event) => setTitle(event.target.value)}
         />
       </div>
+      {pdfUrl ? (
+        <p className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-[#c9c0b2]">
+          PDF를 올렸으므로 게시글에는 PDF 원본이 보입니다. 본문 입력은 필요 없습니다.
+        </p>
+      ) : (
       <div className="grid gap-2">
         <Label htmlFor="tda-content" className="write-label">
           내용 <span className="text-xs font-normal text-[#9CA3AF]">{content.length.toLocaleString()}자</span>
@@ -193,6 +273,7 @@ export function TdaWriteForm({
           onChange={setContent}
         />
       </div>
+      )}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="button" size="touch" className="flex-1" disabled={pending || loading} onClick={() => void submit()}>

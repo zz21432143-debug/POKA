@@ -5,7 +5,7 @@ import { canWriteBoard } from "@/lib/permissions";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, imageUrl } from "@/lib/uploads";
 
 /**
- * 포스터 이미지 업로드. 대회 스케줄을 쓸 수 있는 공식 계정만 올릴 수 있습니다.
+ * 포스터 이미지 업로드. 대회 캘린더를 쓸 수 있는 공식 계정만 올릴 수 있습니다.
  * 브라우저에서 미리 줄인 JPEG/PNG/WebP를 multipart(file)로 받아 DB에 저장합니다.
  */
 export async function POST(request: Request) {

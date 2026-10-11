@@ -10,7 +10,7 @@ export const BOARD_LABELS = {
   OFFICIAL_POSTER: "공식 홍보",
   TALENT: "개인 구직",
   PICKUP: "급구 / 대타",
-  SCHEDULE: "대회 스케줄",
+  SCHEDULE: "대회 캘린더",
   NOTICE: "공지사항",
   SUGGESTION: "건의사항",
   TDA: "TDA 룰",

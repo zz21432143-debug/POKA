@@ -80,7 +80,7 @@ export default async function BoardPage({
         (
           await prisma.post.findMany({
             where: { boardType: "TDA", hidden: false },
-            select: { id: true, title: true, content: true, createdAt: true },
+            select: { id: true, title: true, content: true, createdAt: true, docPdfUrl: true },
             take: 500,
           })
         ).map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
@@ -92,6 +92,7 @@ export default async function BoardPage({
           `<h1 class="doc-title">${escapeHtml(row.title)}</h1>` +
           `<div class="doc-meta">${formatKstLabel(todayKstFrom(row.createdAt))}</div>` +
           (viewer ? contentToDocHtml(row.content) : ""),
+        pdfUrl: viewer ? row.docPdfUrl : null,
       }))
     : [];
   // 대회 상세 내용도 로그인 회원에게만 내려보냅니다.

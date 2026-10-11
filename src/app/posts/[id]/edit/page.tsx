@@ -32,7 +32,7 @@ export default async function EditJobPage({
         <TdaWriteForm
           hint="POKA 공식 계정만 수정·삭제할 수 있습니다."
           postId={post.id}
-          initial={{ title: post.title, content: post.content }}
+          initial={{ title: post.title, content: post.content, pdfUrl: post.docPdfUrl }}
         />
       </div>
     );

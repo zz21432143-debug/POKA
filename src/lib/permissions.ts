@@ -10,7 +10,7 @@ export type WriteUser = {
 
 export type WriteRole = "master" | "member";
 
-/** 대회 스케줄·공식 홍보·공지·TDA 룰을 쓸 수 있는 공식 계정 닉네임 */
+/** 대회 캘린더·공식 홍보·공지·TDA 룰을 쓸 수 있는 공식 계정 닉네임 */
 export const OFFICIAL_ACCOUNT_NICKNAME = "POKA";
 
 /** 공식 계정: 마스터 권한이 있고 닉네임이 POKA인 계정 하나뿐입니다. */
@@ -18,7 +18,7 @@ export function isOfficialAccount(user: WriteUser | null | undefined) {
   return Boolean(user?.isMaster && user.nickname === OFFICIAL_ACCOUNT_NICKNAME);
 }
 
-/** 대회 스케줄·공식 홍보·공지는 공식 계정(POKA 마스터)만. 그 외는 로그인한 회원이면 레벨과 무관. */
+/** 대회 캘린더·공식 홍보·공지는 공식 계정(POKA 마스터)만. 그 외는 로그인한 회원이면 레벨과 무관. */
 export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   EVENT_POSTER: "master",
   OFFICIAL_POSTER: "master",

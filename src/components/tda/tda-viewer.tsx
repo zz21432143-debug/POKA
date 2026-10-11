@@ -4,12 +4,13 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon, ListIcon, PencilIcon, SearchIcon, XIcon } from "lucide-react";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
+import { PdfDocViewer } from "@/components/docs/pdf-doc-viewer";
 import { findMatches } from "@/lib/tda";
 import { loginHref } from "@/lib/login-path";
 import { cn } from "cn";
 
 /** html: 서버에서 거른 문서 HTML(제목·날짜 포함). 검색 칠하기가 제목까지 닿도록 한 덩어리로 받습니다. */
-export type TdaDocSection = { id: string; title: string; html: string };
+export type TdaDocSection = { id: string; title: string; html: string; /** PDF 원본(로그인 회원에게만 내려옴) */ pdfUrl?: string | null };
 
 /** 문서 본문(서식 HTML) 안의 글자 조각마다 검색어를 찾아 <mark>로 감쌉니다. 찾은 개수를 돌려줍니다. */
 function highlight(bodies: HTMLElement[], term: string): number {
@@ -63,7 +64,8 @@ export function TdaViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const bodies = () => Array.from(rootRef.current?.querySelectorAll<HTMLElement>("[data-doc-body]") ?? []);
+  // 검색 대상: 종이 문서 본문 + PDF 글자층
+  const bodies = () => Array.from(rootRef.current?.querySelectorAll<HTMLElement>("[data-doc-body], .textLayer") ?? []);
 
   function focusHit(index: number) {
     const root = rootRef.current;
@@ -191,15 +193,31 @@ export function TdaViewer({
       {sections.length === 0 ? (
         <p className="ink-panel rounded-xl px-4 py-10 text-center text-sm text-[#D1D5DB]">아직 올라온 TDA 룰이 없습니다.</p>
       ) : (
-        <DocDesk>
-          {sections.map((s, index) => (
-            <DocSheet
-              key={s.id}
-              id={`tda-${s.id}`}
-              html={s.html}
-              pageLabel={`- ${index + 1} / ${sections.length} -`}
-              actions={
-                canManage ? (
+        <div className="flex flex-col gap-4">
+          {sections.map((s, index) =>
+            s.pdfUrl ? (
+              // PDF 원본을 올린 조항: 쪽마다 이어지는 PDF 뷰어
+              <section key={s.id} id={`tda-${s.id}`} className="scroll-mt-40" aria-label={s.title}>
+                {canManage ? (
+                  <div className="mb-1 flex justify-end">
+                    <Link
+                      href={`/posts/${s.id}/edit`}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#c9c0b2] hover:bg-white/10"
+                    >
+                      <PencilIcon className="size-3.5" />
+                      수정
+                    </Link>
+                  </div>
+                ) : null}
+                <PdfDocViewer url={s.pdfUrl} title={s.title} />
+              </section>
+            ) : (
+              <DocDesk key={s.id}>
+                <DocSheet
+                  id={`tda-${s.id}`}
+                  html={s.html}
+                  pageLabel={`- ${index + 1} / ${sections.length} -`}
+                  actions={canManage ? (
                   <Link
                     href={`/posts/${s.id}/edit`}
                     className="inline-flex items-center gap-1 rounded-md bg-black/5 px-2 py-1 text-xs font-semibold text-[#444] hover:bg-black/10"
@@ -207,11 +225,12 @@ export function TdaViewer({
                     <PencilIcon className="size-3.5" />
                     수정
                   </Link>
-                ) : undefined
-              }
-            />
-          ))}
-        </DocDesk>
+                ) : undefined}
+                />
+              </DocDesk>
+            ),
+          )}
+        </div>
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { canWriteBoard } from "@/lib/permissions";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
+import { TdaViewer } from "@/components/tda/tda-viewer";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { commentRewardLine } from "@/lib/rewards";
@@ -353,7 +354,7 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
-      {post.boardType === "SCHEDULE" && post.bannerImageUrl ? (
+      {post.boardType === "SCHEDULE" && post.bannerImageUrl && !post.bannerImageUrl.startsWith("/banners/") ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={post.bannerImageUrl} alt={post.title} className="w-full rounded-2xl border border-border object-cover" />
       ) : null}
@@ -396,7 +397,14 @@ export default async function PostDetailPage({
         />
       ) : null}
 
-      {post.content && docBoard ? (
+      {post.boardType === "TDA" && post.docPdfUrl ? (
+        // PDF 원본이 있는 TDA 룰: 위 검색창 + 연속 스크롤 PDF 뷰어
+        <TdaViewer
+          sections={[{ id: post.id, title: post.title, html: "", pdfUrl: post.docPdfUrl }]}
+          loggedIn
+          canManage={false}
+        />
+      ) : post.content && docBoard ? (
         <DocDesk className="-mx-2 sm:mx-0">
           <DocSheet
             title={post.title}

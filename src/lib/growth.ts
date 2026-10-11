@@ -21,7 +21,7 @@ export function weeklyHubContent(events: { title: string; eventDate?: string | n
 
 ${list}
 
-개별 대회 글과 달력은 대회 스케줄 게시판에서 이어서 보세요.`;
+개별 대회 글과 달력은 대회 캘린더 게시판에서 이어서 보세요.`;
 }
 
 export function kstDayStart(date = todayKstDate()) {

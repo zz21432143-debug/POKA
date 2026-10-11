@@ -5,7 +5,7 @@ import { BookOpenIcon, CalendarDaysIcon, MegaphoneIcon } from "lucide-react";
 export const metadata: Metadata = { title: "정보센터" };
 
 const CARDS = [
-  { href: "/boards/schedule", title: "홀덤 대회 스케줄", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
+  { href: "/boards/schedule", title: "홀덤 대회 캘린더", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
   { href: "/boards/official", title: "공식 홍보", body: "제휴 · 협찬 포스터.", icon: MegaphoneIcon },
   { href: "/boards/tda", title: "TDA 룰", body: "토너먼트 공식 홀덤 룰 정리.", icon: BookOpenIcon },
 ] as const;

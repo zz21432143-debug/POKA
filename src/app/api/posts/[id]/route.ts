@@ -5,6 +5,7 @@ import { jobFieldsFromBody } from "@/lib/job-fields";
 import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
 import { HoldemOnlyError, assertHoldemOnly } from "@/lib/holdem-only";
 import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
+import { fileIdFromUrl } from "@/lib/uploads";
 import type { JobKind } from "@/generated/prisma/enums";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
@@ -28,14 +29,21 @@ export async function PATCH(
       if (!canWriteBoard(user, "TDA")) {
         return NextResponse.json({ error: writeDeniedMessage("TDA") }, { status: 403 });
       }
-      const body = (await request.json()) as { title?: string; content?: string };
+      const body = (await request.json()) as { title?: string; content?: string; docPdfUrl?: string | null };
       const title = typeof body.title === "string" ? body.title.trim() : post.title;
       const content = typeof body.content === "string" ? body.content.trim() : post.content;
+      // PDF: 주소를 주면 바꾸고, 빈 값·null이면 뗍니다. 이 사이트에 올린 파일 주소만 받습니다.
+      const docPdfUrl =
+        body.docPdfUrl === undefined
+          ? post.docPdfUrl
+          : typeof body.docPdfUrl === "string" && fileIdFromUrl(body.docPdfUrl)
+            ? body.docPdfUrl.trim()
+            : null;
       if (title.length < 2) return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
-      if (!content) return NextResponse.json({ error: "내용을 입력하세요." }, { status: 400 });
+      if (!content && !docPdfUrl) return NextResponse.json({ error: "내용을 입력하거나 PDF를 올려 주세요." }, { status: 400 });
       assertHoldemOnly(title, content);
       await assertNoForbiddenWords(title, content);
-      const updated = await prisma.post.update({ where: { id }, data: { title, content } });
+      const updated = await prisma.post.update({ where: { id }, data: { title, content, docPdfUrl } });
       return NextResponse.json({ id: updated.id });
     }
     if (post.authorId !== user.id && !user.isAdmin) {
