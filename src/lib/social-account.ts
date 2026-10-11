@@ -98,12 +98,7 @@ export async function upsertSocialUser(
     },
   });
 
-  const { pushTicker } = await import("@/lib/ticker");
-  const via = profile.provider === "kakao" ? "카카오" : "구글";
-  await pushTicker({
-    kind: `JOIN:${user.id}`,
-    message: `👋 ${user.nickname}님이 ${via}로 POKA에 들어왔습니다!`,
-    href: `/u/${encodeURIComponent(user.nickname)}`,
-  });
+  // 가입 소식은 전광판에 올리지 않습니다. 구글·카카오 이름이 실명일 수 있어서,
+  // 회원이 닉네임을 정하기 전에 사이트 전체에 퍼지지 않게 합니다.
   return { user, isNew: true };
 }

@@ -55,9 +55,6 @@ export function MobileDrawer({
             <KakaoInquiryLink className="w-full" />
           </div>
           <InstallPwaButton />
-          {profile?.isAdmin ? (
-            <p className="mt-4 px-3 text-xs text-muted-foreground">관리자 메뉴는 헤더에서 열 수 있습니다.</p>
-          ) : null}
         </div>
       </SheetContent>
     </Sheet>

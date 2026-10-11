@@ -19,7 +19,7 @@ export const TOP_NAV = [
   { href: "/boards/jobs", label: "구인구직" },
   { href: "/community", label: "커뮤니티" },
   { href: "/info", label: "정보센터" },
-  { href: "/boards/rules", label: "규칙" },
+  { href: "/boards/rules", label: "질문" },
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [
@@ -84,7 +84,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "정보센터",
     collapsible: true,
     items: [
-      { href: "/practice", label: "딜러 연습", hint: "사이드팟 · 미니멈 레이즈", icon: "book" },
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
     ],

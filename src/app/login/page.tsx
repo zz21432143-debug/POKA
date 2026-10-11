@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo } from "@/lib/history-redirect";
+import { safeNextPath } from "@/lib/oauth-consent";
 import { cn } from "cn";
 
 export const metadata: Metadata = { title: "로그인 · 회원가입" };
@@ -26,7 +27,8 @@ export default async function LoginPage({
 }) {
   const user = await getCurrentUser().catch(() => null);
   const { next, error, tab, msg } = await searchParams;
-  const nextPath = next?.startsWith("/") ? next : "/";
+  // "//다른사이트" 같은 주소로 튕겨 나가지 않도록 사이트 안 경로만 받습니다.
+  const nextPath = safeNextPath(next);
   if (user) replaceTo(nextPath);
   const signup = tab === "signup";
   const errorMessage = msg?.trim()

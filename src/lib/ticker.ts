@@ -15,6 +15,24 @@ export async function pushTicker(entry: { kind: string; message: string; href: s
   }
 }
 
+/**
+ * 닉네임을 바꾸거나 탈퇴하면 예전 닉네임이 담긴 전광판 소식을 지웁니다.
+ * (예전 이름이 계속 흐르거나, 없는 프로필로 가는 링크가 남지 않게)
+ */
+export async function forgetTickerName(nickname: string) {
+  const name = nickname.trim();
+  if (!name) return;
+  try {
+    await prisma.tickerEvent.deleteMany({
+      where: {
+        OR: [{ message: { contains: `${name}님` } }, { href: `/u/${encodeURIComponent(name)}` }],
+      },
+    });
+  } catch {
+    // 전광판 정리는 실패해도 본 작업은 계속합니다.
+  }
+}
+
 export async function ensureWeeklyBestHand() {
   const week = weekStartKst();
   const kind = `WEEKLY_HAND:${week}`;
@@ -43,6 +61,8 @@ export async function ensureWeeklyBestHand() {
 export async function getTickerEvents() {
   try {
     const rows = await prisma.tickerEvent.findMany({
+      // 예전 가입 소식(실명일 수 있음)은 내보내지 않습니다.
+      where: { NOT: { kind: { startsWith: "JOIN:" } } },
       orderBy: { createdAt: "desc" },
       take: 24,
     });

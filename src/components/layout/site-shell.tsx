@@ -16,7 +16,7 @@ import { LedTicker } from "@/components/home/led-ticker";
 import { getCurrentUser } from "@/lib/current-user";
 import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
-import { OFFICIAL_NOTICES } from "@/lib/notices";
+import { OFFICIAL_NOTICES, formatNoticeDate, getLatestNotices } from "@/lib/notices";
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
@@ -42,6 +42,20 @@ async function ConnectedHeader() {
 async function ConnectedNotice() {
   const settings = await getSiteSettings().catch(() => null);
   return <SiteNoticeBanner text={settings?.noticeBanner} />;
+}
+
+/** 사이드바 공지. 공지 게시판에 글이 있으면 최신 3개, 없으면 기본 안내를 보여줍니다. */
+async function ConnectedNoticeList() {
+  const rows = await getLatestNotices().catch(() => []);
+  const items = rows.length
+    ? rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        date: formatNoticeDate(row.createdAt),
+        href: `/posts/${row.id}`,
+      }))
+    : OFFICIAL_NOTICES;
+  return <NoticeWidget items={items} />;
 }
 
 async function ConnectedProfile() {
@@ -109,7 +123,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <ConnectedSidebarSponsor />
             </Suspense>
             <PromoApplyCta />
-            <NoticeWidget items={OFFICIAL_NOTICES} />
+            <Suspense fallback={<NoticeWidget items={OFFICIAL_NOTICES} />}>
+              <ConnectedNoticeList />
+            </Suspense>
             <Suspense fallback={null}>
               <PopularPosts />
             </Suspense>

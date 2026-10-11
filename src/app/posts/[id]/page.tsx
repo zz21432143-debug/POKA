@@ -40,6 +40,8 @@ import { loginHref } from "@/lib/login-path";
 
 export const dynamic = "force-dynamic";
 
+const GUEST_READABLE_BOARDS = new Set<string>(["PROMO", "SCHEDULE", "NOTICE"]);
+
 function formatPostDateTime(value: Date) {
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Asia/Seoul",
@@ -80,6 +82,7 @@ export async function generateMetadata({
     const kindLabel = JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL];
     const pay = formatWon(post.jobPayAmount);
     return {
+      alternates: { canonical: `/posts/${id}` },
       title: `${post.title} · ${kindLabel}`,
       description: [
         post.jobLocation ? `${post.jobLocation} 홀덤펍` : "홀덤펍",
@@ -92,6 +95,7 @@ export async function generateMetadata({
     };
   }
   return {
+    alternates: { canonical: `/posts/${id}` },
     title: post.isPrivate ? `비밀글 · ${board}` : `${post.title} · ${board}`,
     robots: post.isPrivate ? { index: false } : undefined,
   };
@@ -125,7 +129,9 @@ export default async function PostDetailPage({
   if (post.jobKind === "SEEKING" && viewer?.id !== post.authorId && !viewer?.isAdmin) notFound();
   // 구인구직 공고는 검색 유입을 위해 제목·조건까지는 누구나 봅니다. 본문·연락처·댓글은 로그인 후.
   const guestJob = !viewer && post.boardType === "JOBS";
-  if (!viewer && !guestJob) replaceToLogin(`/posts/${id}`);
+  // 홍보 포스터·대회 일정·공지는 광고주와 첫 방문자를 위해 비회원도 전부 읽습니다. 댓글·추천만 로그인.
+  const guestPublic = !viewer && GUEST_READABLE_BOARDS.has(post.boardType);
+  if (!viewer && !guestJob && !guestPublic) replaceToLogin(`/posts/${id}`);
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
       <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
@@ -391,7 +397,7 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
-      {canRead ? (
+      {canRead && viewer ? (
         <div className="article-votes">
           <div className="vote-bar">
             <VoteButtons
@@ -417,7 +423,7 @@ export default async function PostDetailPage({
         ) : (
           <p className="rounded-xl border border-[#3a332c] bg-[#141110] px-3 py-3 text-sm text-[#D1D5DB]">
             댓글은 로그인 후 남길 수 있습니다. {commentRewardLine()}가 지급됩니다.{" "}
-            <Link href="/login" className="font-medium text-primary underline">
+            <Link href={loginHref(`/posts/${post.id}`)} className="font-medium text-primary underline">
               로그인
             </Link>
           </p>

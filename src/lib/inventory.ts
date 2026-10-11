@@ -39,6 +39,9 @@ function asCreative(
   };
 }
 
+/** 개발 중 시안 광고주 이름. 운영에 남아 있으면 지웁니다. */
+const DEMO_ADVERTISER = "DEALER FIT";
+
 let unitsReady: Promise<void> | null = null;
 let creativeMemo: { at: number; byPlacement: Map<string, DirectCreative | null> } | null = null;
 const CREATIVE_TTL_MS = 20_000;
@@ -46,6 +49,11 @@ const CREATIVE_TTL_MS = 20_000;
 export async function ensureSponsorUnits() {
   if (!unitsReady) {
     unitsReady = (async () => {
+      // 예전에 시안으로 넣어 둔 가짜 광고주 소재를 비웁니다. 실제 광고는 /admin/banners에서 넣습니다.
+      await prisma.sponsorUnit.updateMany({
+        where: { advertiser: DEMO_ADVERTISER },
+        data: { title: "", advertiser: "", imageUrl: null, href: "/advertise" },
+      });
       const existing = await prisma.sponsorUnit.findMany();
       const have = new Set(existing.map((row) => row.placement));
       const missing = SPONSOR_PLACEMENTS.filter((placement) => !have.has(placement));
@@ -54,8 +62,8 @@ export async function ensureSponsorUnits() {
         data: missing.map((placement) => ({
           placement,
           href: "/advertise",
-          title: placement === "NATIVE" ? "딜러 전용 유니폼, 지금 런칭 혜택으로 맞추세요" : "",
-          advertiser: placement === "NATIVE" ? "DEALER FIT" : "",
+          title: "",
+          advertiser: "",
           mark: "제휴",
           enabled: true,
         })),

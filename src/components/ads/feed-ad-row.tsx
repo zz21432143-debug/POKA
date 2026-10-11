@@ -1,7 +1,7 @@
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { getFeedCreatives } from "@/lib/inventory";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
-import type { AdSensePlacement } from "@/lib/adsense";
+import { adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
 import Link from "next/link";
 
 function DirectCard({ creative }: { creative: DirectCreative }) {
@@ -32,6 +32,11 @@ export async function FeedAdRow() {
     { unit: a2, google: "a2" },
     { unit: a3, google: "a3" },
   ];
+  // 직판 소재도, 애드센스 광고 단위도 없으면 빈 칸을 남기지 않습니다.
+  const anything = units.some(
+    (item) => pickFill(item.unit, "adsense", true).kind === "direct" || Boolean(adsenseSlotId(item.google)),
+  );
+  if (!anything) return null;
 
   return (
     <section aria-label="추천 배너" className="mt-5">

@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/schema", destination: "/", permanent: true },
       { source: "/issues", destination: "/boards/free", permanent: true },
       { source: "/codex", destination: "/shop", permanent: true },
+      { source: "/practice", destination: "/", permanent: true },
+      { source: "/practice/:path*", destination: "/", permanent: true },
       { source: "/boards/jobs/seek", destination: "/boards/jobs", permanent: true },
       { source: "/boards/jobs/seek/:path*", destination: "/boards/jobs", permanent: true },
       { source: "/notifications", destination: "/", permanent: false },

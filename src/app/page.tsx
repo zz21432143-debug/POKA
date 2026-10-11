@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { HomePosterCarousel, type HomePoster } from "@/components/home/home-poster-carousel";
 import { HomeLatest } from "@/components/home/home-latest";
@@ -8,6 +9,8 @@ import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 function HomePanelFallback({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-2xl bg-white/[0.06] ${className}`} />;

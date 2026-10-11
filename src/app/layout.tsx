@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { canonical: "/" },
+  // canonical은 페이지마다 따로 둡니다. 여기서 "/"를 주면 모든 페이지가 홈으로 합쳐집니다.
   verification: searchEngineVerificationMeta(),
   other: {
     "google-adsense-account": DEFAULT_ADSENSE_CLIENT,
@@ -55,7 +55,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "/",
     siteName: SITE_NAME,
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,

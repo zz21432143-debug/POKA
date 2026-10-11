@@ -27,7 +27,7 @@ export default async function MemberPage({
   params: Promise<{ nickname: string }>;
 }) {
   const { nickname } = await params;
-  const decoded = decodeURIComponent(nickname);
+  const decoded = safeDecode(nickname);
   const user = await prisma.user.findUnique({ where: { nickname: decoded } });
   if (!user || user.withdrawnAt) notFound();
   const viewer = await getCurrentUser().catch(() => null);

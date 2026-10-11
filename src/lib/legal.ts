@@ -1,5 +1,5 @@
 import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
-import { publicContactEmail } from "@/lib/legal-contact";
+import { privacyOfficerName, publicContactEmail } from "@/lib/legal-contact";
 
 export const MEMBER_LIABILITY_TEXT =
   "본 서비스에 가입하여 작성하는 모든 글과 댓글에 대한 민·형사상 법적 책임은 작성자 본인에게 있습니다.";
@@ -97,6 +97,18 @@ export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
     body: `${LEGAL_OPERATOR}는 「개인정보 보호법」 및 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」에 따라 이용자의 개인정보를 보호하고 이와 관련한 고충을 신속하게 처리하기 위하여 다음과 같이 처리방침을 둡니다. 시행일 ${LEGAL_EFFECTIVE_DATE}.`,
   },
   ...PRIVACY_CONSENT_SECTIONS,
+  {
+    title: "8. 기능별 추가 처리 정보",
+    body: "구인 공고 지원: 지원자가 남긴 지원 메시지와 지원 시각을 공고 작성자에게만 보여 주며, 공고가 삭제되거나 회원이 탈퇴하면 함께 삭제합니다. 급구 휴대폰 알림: 알림을 켠 브라우저의 푸시 구독 정보(주소·암호 키)와 고른 지역을 보관하고, 알림을 끄거나 구독이 만료되면 삭제합니다. 알림은 브라우저 제조사의 푸시 서비스(Google, Apple, Mozilla 등)를 거쳐 전달됩니다. 광고 문의: 문의자가 적은 업체명·연락처·내용을 상담 목적으로 1년 보관 후 파기합니다.",
+  },
+  {
+    title: "9. 이용 행태 정보와 광고 쿠키",
+    body: "서비스 개선을 위해 Google Analytics(Google LLC, 미국)로 방문 페이지·체류 시간 등 이용 통계를 수집하며, 광고 게재를 위해 Google AdSense(Google LLC, 미국)가 쿠키로 관심 기반 광고를 보여 줄 수 있습니다. 이 정보는 개인을 직접 식별하지 않습니다. 브라우저 설정에서 쿠키 저장을 거부할 수 있고, 맞춤 광고는 https://adssettings.google.com 에서, 통계 수집은 https://tools.google.com/dlpage/gaoptout 에서 끌 수 있습니다. 쿠키를 거부해도 서비스 이용에는 지장이 없습니다.",
+  },
+  {
+    title: "10. 개인정보 보호책임자",
+    body: `개인정보 처리에 관한 업무를 총괄하고 관련 불만 처리와 피해 구제를 위해 아래와 같이 개인정보 보호책임자를 지정합니다. 성명: ${privacyOfficerName()}. 연락처(이메일): ${publicContactEmail()}. 개인정보 침해에 대한 신고나 상담은 개인정보침해신고센터(privacy.kisa.or.kr, 국번 없이 118), 개인정보분쟁조정위원회(kopico.go.kr, 1833-6972), 대검찰청 사이버수사과(spo.go.kr, 국번 없이 1301), 경찰청 사이버수사국(ecrm.police.go.kr, 국번 없이 182)에 문의할 수 있습니다.`,
+  },
 ];
 
 export const YOUTH_PROTECTION_SECTIONS: LegalSection[] = [

@@ -44,6 +44,9 @@ export async function withdrawAccount(userId: string) {
     data: { jobContact: null },
   });
 
+  const { forgetTickerName } = await import("@/lib/ticker");
+  await forgetTickerName(user.nickname);
+
   const nick = `탈퇴_${user.id.replace(/[^a-zA-Z0-9]/g, "").slice(-12) || user.id.slice(-8)}`;
   await prisma.user.update({
     where: { id: userId },

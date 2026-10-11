@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { forgetTickerName } from "@/lib/ticker";
 import { getCurrentUser, setSessionNickname } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { nicknameChangeBlocked } from "@/lib/nickname-change";
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
       },
     });
     await setSessionNickname(next);
+    await forgetTickerName(user.nickname);
     return NextResponse.json({ ok: true, nickname: next, usedFree });
   } catch (error) {
     if (error instanceof AccountRestrictedError) {
