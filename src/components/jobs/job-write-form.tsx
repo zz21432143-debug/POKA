@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { JobKind } from "@/generated/prisma/enums";
 import { postRewardLine } from "@/lib/rewards";
-import { buildJobTitle } from "@/lib/jobs";
+import { JOB_NAME_LABEL, buildJobTitle } from "@/lib/jobs";
 import { JOB_REGIONS } from "@/lib/job-status";
 
 export type JobFormValues = {
@@ -89,9 +89,37 @@ export function JobWriteForm({
 
   const location = [region, place.trim()].filter(Boolean).join(" ");
   const dated = jobKind === "APPLY" || jobKind === "URGENT";
-  const named = jobKind === "FIXED" || jobKind === "TEAM" || jobKind === "SEEKING";
-  const nameLabel = jobKind === "FIXED" ? "상호명" : jobKind === "TEAM" ? "팀 명" : "표시 이름";
-  const namePlaceholder = jobKind === "FIXED" ? "POKA 펍" : jobKind === "TEAM" ? "ACE 딜러팀" : "펠트딜러";
+  // 모든 분류가 이름 칸을 가집니다. 구인은 상호명, 팀은 팀 명, 구직은 본명이 제목에 올라갑니다.
+  const nameLabel = JOB_NAME_LABEL[jobKind];
+  const namePlaceholder = jobKind === "TEAM" ? "ACE 딜러팀" : jobKind === "SEEKING" ? "홍길동" : "POKA 펍";
+
+  // 차비는 지원 딜러·급구에만 있고, 금액은 이 분류에서 쓰지 않는 jobBenefits 칸에 저장합니다.
+  const travelPayField = (
+    <div className="grid gap-2">
+      <label className="flex min-h-11 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={form.jobTravelPay}
+          onChange={(event) => {
+            set("jobTravelPay", event.target.checked);
+            if (!event.target.checked) set("jobBenefits", "");
+          }}
+        />
+        차비 지원
+      </label>
+      {form.jobTravelPay ? (
+        <Field
+          label="차비 금액"
+          required
+          numeric
+          value={form.jobBenefits}
+          onChange={(v) => set("jobBenefits", v)}
+          placeholder="20000"
+        />
+      ) : null}
+    </div>
+  );
   const regionLabel = jobKind === "SEEKING" || jobKind === "APPLY" ? "희망 지역" : jobKind === "TEAM" ? "주요 활동 지역" : "근무 지역";
 
   const preview = buildJobTitle(jobKind, {
@@ -127,6 +155,7 @@ export function JobWriteForm({
             ? [
                 ["근무 시간", form.jobWorkHours],
                 ["경력 요구조건", form.jobExperience],
+                ...(form.jobTravelPay ? ([["차비 금액", form.jobBenefits]] as [string, string][]) : []),
               ]
             : [
                 ["가능 일정", form.jobSchedule],
@@ -136,7 +165,7 @@ export function JobWriteForm({
   function missingField(): string | null {
     if (!region) return `${regionLabel}을 선택하세요.`;
     if (!place.trim()) return "상세주소를 입력하세요.";
-    if (named && !form.jobCompanyName.trim()) return `${nameLabel}을(를) 입력하세요.`;
+    if (!form.jobCompanyName.trim()) return `${nameLabel}을(를) 입력하세요.`;
     if (dated && !form.jobDateFlexible && !form.jobWorkDate) return "날짜를 고르거나 협의를 선택하세요.";
     if (jobKind !== "TEAM" && !form.jobPayAmount.trim()) return "급여를 입력하세요.";
     if (!form.jobContact.trim()) return "연락처를 입력하세요.";
@@ -225,15 +254,13 @@ export function JobWriteForm({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {named ? (
-            <Field
-              label={nameLabel}
-              required
-              value={form.jobCompanyName}
-              onChange={(v) => set("jobCompanyName", v)}
-              placeholder={namePlaceholder}
-            />
-          ) : null}
+          <Field
+            label={nameLabel}
+            required
+            value={form.jobCompanyName}
+            onChange={(v) => set("jobCompanyName", v)}
+            placeholder={namePlaceholder}
+          />
 
           {dated ? (
             <div className="grid gap-2">
@@ -345,30 +372,7 @@ export function JobWriteForm({
               </div>
               <Field label="복장 규정" required value={form.jobDressCode} onChange={(v) => set("jobDressCode", v)} placeholder="올블랙" />
               <Field label="경력 사항" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="스팟 딜러 경험" />
-              <div className="grid gap-2">
-                <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    checked={form.jobTravelPay}
-                    onChange={(event) => {
-                      set("jobTravelPay", event.target.checked);
-                      if (!event.target.checked) set("jobBenefits", "");
-                    }}
-                  />
-                  차비 지원
-                </label>
-                {form.jobTravelPay ? (
-                  <Field
-                    label="차비 금액"
-                    required
-                    numeric
-                    value={form.jobBenefits}
-                    onChange={(v) => set("jobBenefits", v)}
-                    placeholder="20000"
-                  />
-                ) : null}
-              </div>
+              {travelPayField}
               <label className="flex min-h-11 items-center gap-2 self-start text-sm">
                 <input
                   type="checkbox"
@@ -399,6 +403,7 @@ export function JobWriteForm({
             <>
               <Field label="근무 시간" required value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="22:00–06:00" />
               <Field label="경력 요구조건" required value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="대타 경험" />
+              {travelPayField}
             </>
           ) : null}
 

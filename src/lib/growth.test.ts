@@ -32,7 +32,7 @@ describe("job seo titles", () => {
   it("puts region and holdem in the title", () => {
     assert.equal(
       buildJobTitle("FIXED", { location: "서울 강남", companyName: "펠트하우스" }),
-      "[서울 강남] 홀덤펍 딜러 구인 · 펠트하우스",
+      "[서울] 홀덤펍 딜러 구인 · 펠트하우스",
     );
     assert.match(buildJobTitle("APPLY", { location: "부산 서면", payAmount: "20000" }), /홀덤 스팟 딜러 구인/);
     assert.match(buildJobTitle("URGENT", { location: "수원", workDate: "즉시" }), /홀덤펍 급구/);

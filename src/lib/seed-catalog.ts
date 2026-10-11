@@ -346,7 +346,8 @@ export function catalogPosts(
   });
 
   const jobsFixed: CatalogPost[] = times((i) => {
-    const company = ["POKA 펍", "에이스 룸", "펠트하우스", "미드나잇", "골드칩"][i % 5];
+    // 제목에는 광역 지역만 들어가므로 상호명에 번호를 붙여 제목이 겹치지 않게 합니다.
+    const company = `${["POKA 펍", "에이스 룸", "펠트하우스", "미드나잇", "골드칩"][i % 5]} ${i + 1}호점`;
     const location = LOCS[i];
     const amount = String(2800000 + i * 50000);
     return {
@@ -377,7 +378,8 @@ export function catalogPosts(
     return {
       boardType: "JOBS" as const,
       jobKind: "APPLY" as const,
-      title: buildJobTitle("APPLY", { location, payAmount: amount }),
+      title: buildJobTitle("APPLY", { location, companyName: `스팟펍 ${i + 1}호점`, payAmount: amount }),
+      jobCompanyName: `스팟펍 ${i + 1}호점`,
       content: `${location} 홀덤 단기 스팟 지원 딜러를 찾습니다.`,
       authorNickname: nick(0),
       daysAgo: i,
@@ -399,7 +401,7 @@ export function catalogPosts(
 
   const jobsTeam: CatalogPost[] = times((i) => {
     const location = LOCS[i];
-    const company = ["ACE 딜러팀", "나이트크루", "골드스태프", "리버팀", "버튼크루"][i % 5];
+    const company = `${["ACE 딜러팀", "나이트크루", "골드스태프", "리버팀", "버튼크루"][i % 5]} ${i + 1}기`;
     return {
       boardType: "JOBS" as const,
       jobKind: "TEAM" as const,
@@ -425,8 +427,10 @@ export function catalogPosts(
       jobKind: "URGENT" as const,
       title: buildJobTitle("URGENT", {
         location,
+        companyName: `급구펍 ${i + 1}호점`,
         workDate: workDate || "즉시",
       }),
+      jobCompanyName: `급구펍 ${i + 1}호점`,
       content: `${location} 홀덤펍 급구/대타입니다. 오늘·내일 가능한 분만.`,
       authorNickname: nick(0),
       daysAgo: i % 5,
