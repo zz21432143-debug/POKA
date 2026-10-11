@@ -14,7 +14,9 @@ describe("board feed keys", () => {
   it("rejects unknown keys", () => {
     assert.equal(parseFeedKey("nope"), null);
     assert.equal(parseFeedKey("rules"), "rules");
-    assert.equal(parseFeedKey("jobs/seek"), "jobs/seek");
+    assert.equal(parseFeedKey("jobs/apply"), "jobs/apply");
+    // 개인 구직은 운영 종료
+    assert.equal(parseFeedKey("jobs/seek"), null);
   });
 
   it("filters jobs by kind", () => {

@@ -446,26 +446,6 @@ export function catalogPosts(
     } as CatalogPost;
   });
 
-  const jobsSeek: CatalogPost[] = times((i) => {
-    const location = LOCS[i];
-    const name = nick(i + 2);
-    return {
-      boardType: "JOBS" as const,
-      jobKind: "SEEKING" as const,
-      title: buildJobTitle("SEEKING", { location, companyName: name }),
-      content: `${location} 홀덤 딜러 구직. 야간·주말 가능합니다. 이력은 본문에 적었습니다.`,
-      authorNickname: name,
-      daysAgo: i,
-      upvoteCount: i % 4,
-      jobLocation: location,
-      jobCompanyName: name,
-      jobPayAmount: "시급 2만원대",
-      jobSchedule: i % 2 ? "주말 · 야간" : "주중 야간",
-      jobExperience: i % 3 ? "라이브 1년" : "아카데미 수료",
-      jobContact: `010-6${String(500 + i).padStart(3, "0")}-5555`,
-    };
-  });
-
   return {
     schedule,
     official,
@@ -477,7 +457,6 @@ export function catalogPosts(
     "jobs/apply": jobsApply,
     "jobs/team": jobsTeam,
     "jobs/urgent": jobsUrgent,
-    "jobs/seek": jobsSeek,
   };
 }
 

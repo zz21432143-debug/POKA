@@ -14,8 +14,7 @@ export type FeedKey =
   | "jobs/fixed"
   | "jobs/apply"
   | "jobs/team"
-  | "jobs/urgent"
-  | "jobs/seek";
+  | "jobs/urgent";
 
 export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/schedule": "schedule",
@@ -33,7 +32,6 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/jobs/apply": "jobs/apply",
   "/boards/jobs/team": "jobs/team",
   "/boards/jobs/urgent": "jobs/urgent",
-  "/boards/jobs/seek": "jobs/seek",
 };
 
 /** 자유게시판 말머리. 순서대로 탭에 나옵니다. */
@@ -61,25 +59,31 @@ export function feedWhere(key: FeedKey) {
   if (key === "hand-review") return { boardType: "HAND_REVIEW" as const, hidden: false, isAttendanceThread: false };
   if (key === "suggestions") return { boardType: "SUGGESTION" as const, hidden: false, isAttendanceThread: false };
   if (key === "notices") return { boardType: "NOTICE" as const, hidden: false, isAttendanceThread: false };
-  if (key === "jobs") return { boardType: "JOBS" as const, hidden: false, isAttendanceThread: false };
+  if (key === "jobs") {
+    // 개인 구직은 운영 종료. 예전 구직 글은 목록에 내지 않습니다.
+    return {
+      boardType: "JOBS" as const,
+      hidden: false,
+      isAttendanceThread: false,
+      OR: [{ jobKind: null }, { jobKind: { not: "SEEKING" as const } }],
+    };
+  }
   const jobKind = {
     "jobs/fixed": "FIXED",
     "jobs/apply": "APPLY",
     "jobs/team": "TEAM",
     "jobs/urgent": "URGENT",
-    "jobs/seek": "SEEKING",
-  }[key] as "FIXED" | "APPLY" | "TEAM" | "URGENT" | "SEEKING";
+  }[key] as "FIXED" | "APPLY" | "TEAM" | "URGENT";
   return { boardType: "JOBS" as const, jobKind, hidden: false, isAttendanceThread: false };
 }
 
-export function jobFeedKey(kind: "FIXED" | "APPLY" | "TEAM" | "URGENT" | "SEEKING") {
+export function jobFeedKey(kind: "FIXED" | "APPLY" | "TEAM" | "URGENT") {
   return (
     {
       FIXED: "jobs/fixed",
       APPLY: "jobs/apply",
       TEAM: "jobs/team",
       URGENT: "jobs/urgent",
-      SEEKING: "jobs/seek",
     } as const
   )[kind];
 }

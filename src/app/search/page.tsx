@@ -49,7 +49,9 @@ export default async function SearchPage({
         { AND: [{ isPrivate: false }, { content: { contains: query } }] },
       ],
     };
-    const jobWhere = { AND: [base, { boardType: "JOBS" as const }] };
+    const jobWhere = {
+      AND: [base, { boardType: "JOBS" as const, OR: [{ jobKind: null }, { jobKind: { not: "SEEKING" as const } }] }],
+    };
     const postWhere = { AND: [base, { boardType: { not: "JOBS" as const } }] };
     const include = { author: { select: AUTHOR_SELECT }, _count: { select: { comments: true } } } as const;
     const [jobRows, postRows, jobCount, postCount] = await Promise.all([

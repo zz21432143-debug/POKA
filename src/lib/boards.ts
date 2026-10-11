@@ -23,7 +23,7 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   SKETCH: "자유게시판 현장 스케치 말머리. 현장 사진과 이야기를 나눠 주세요.",
   HAND_REVIEW: "핸드를 그려 올리고 폴드·체크·콜·레이즈로 투표하세요",
   ANONYMOUS_REVIEW: "닉네임 비공개. 글·댓글의 민·형사상 책임은 작성자 본인에게 있습니다.",
-  JOBS: "지원 딜러 · 급구/대타 · 고정 딜러 · 팀 · 개인 구직. 제목은 [지역] 상호명 형식으로 붙습니다.",
+  JOBS: "지원 딜러 · 급구/대타 · 고정 딜러 · 팀 구인. 제목은 [지역] 상호명 형식으로 붙습니다.",
   PROMO: "팀·브랜드 공식 홍보와 제휴·협찬 소식",
   EVENT_POSTER: "대회 포스터 (일정 게시판으로 이전)",
   OFFICIAL_POSTER: "공식 홍보 (검증 매장 게시판으로 이전)",

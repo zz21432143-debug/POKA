@@ -12,8 +12,10 @@ import { YokaiOfferCard, type CardMark } from "@/components/shop/yokai-card";
 import { markPriceTag } from "@/lib/yokai-catalog";
 import {
   KOREAN_LEGEND_MARKS,
+  LOGO_MARKS,
   YOKAI_MARKS,
   isLegendSlug,
+  isLogoSlug,
   isShopMarkSlug,
   isYokaiSlug,
 } from "@/lib/yokai-marks";
@@ -49,6 +51,10 @@ export function YokaiPointShop({
     () => mergeFrom(KOREAN_LEGEND_MARKS, catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
   );
+  const logos = useMemo(
+    () => mergeFrom(LOGO_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
   const rewards = useMemo(
     () =>
       mergeFrom(
@@ -70,10 +76,15 @@ export function YokaiPointShop({
     [catalog, demoOwned, demoEquipped],
   );
   const preview =
-    [...regular, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
-  const inventory = [...rewards, ...kings, ...legends, ...regular].filter((mark) => mark.owned);
+    [...logos, ...regular, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
+  const inventory = [...rewards, ...kings, ...logos, ...legends, ...regular].filter((mark) => mark.owned);
   const others = (catalog?.marks ?? []).filter(
-    (mark) => !isYokaiSlug(mark.slug) && !isLegendSlug(mark.slug) && !isAchievementSlug(mark.slug) && !isKingSlug(mark.slug),
+    (mark) =>
+      !isYokaiSlug(mark.slug) &&
+      !isLegendSlug(mark.slug) &&
+      !isLogoSlug(mark.slug) &&
+      !isAchievementSlug(mark.slug) &&
+      !isKingSlug(mark.slug),
   );
 
   async function reload() {
@@ -227,6 +238,16 @@ export function YokaiPointShop({
 
         {tab === "shop" ? (
           <>
+            <MarkGrid
+              title="로고 마크"
+              marks={logos}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
             <MarkGrid
               title="일반 마크"
               marks={regular}

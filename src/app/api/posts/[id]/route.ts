@@ -56,6 +56,7 @@ export async function PATCH(
         jobGuaranteedHours: jobData.jobGuaranteedHours,
         jobOvertime: jobData.jobOvertime,
         jobTravelPay: jobData.jobTravelPay,
+        jobTravelPayAmount: jobData.jobTravelPayAmount,
         jobSnacks: jobData.jobSnacks,
         jobDressCode: jobData.jobDressCode,
         jobApplyMethod: jobData.jobApplyMethod,

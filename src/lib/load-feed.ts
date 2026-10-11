@@ -44,6 +44,7 @@ export function toJobCard(post: FeedRow, now = new Date(), today = todayKstDate(
     jobGuaranteedHours: post.jobGuaranteedHours,
     jobOvertime: post.jobOvertime,
     jobTravelPay: post.jobTravelPay,
+    jobTravelPayAmount: post.jobTravelPayAmount,
     jobSnacks: post.jobSnacks,
     jobDressCode: post.jobDressCode,
     jobApplyMethod: post.jobApplyMethod,
@@ -80,7 +81,8 @@ export async function loadJobPage(key: FeedKey, options: JobPageOptions = {}) {
     rows.push(
       ...(await findFeedRows({
         where: openWhere,
-        orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
+        // 모집중: 프리미엄 → 끌어올린(또는 등록한) 시각 순
+        orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
         skip: offset,
         take: limit,
       })),

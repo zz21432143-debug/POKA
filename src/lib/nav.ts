@@ -71,7 +71,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "briefcase" },
-      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건", icon: "badge" },
     ],
   },
   {
@@ -79,7 +78,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "message" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
-      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
     ],
   },
   {
@@ -98,6 +96,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
       { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "check" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
+      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "megaphone" },
       { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },
     ],
@@ -109,14 +108,13 @@ export const BOARD_NAV: NavGroup[] = [
   {
     title: "구인 / 구직",
     href: "/boards/jobs/apply",
-    hint: "지원 딜러부터 개인 구직",
+    hint: "지원 딜러 · 급구 · 고정 · 팀",
     accent: "gold",
     items: [
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
-      { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건" },
     ],
   },
   {
@@ -246,7 +244,10 @@ export function resolveBoardSlug(slug: string) {
   return BOARD_SLUGS[slug as BoardSlug] ?? null;
 }
 
-/** 순서대로 분류 칩·작성 선택지에 나옵니다. 지원 딜러 구인이 메인, 급구/대타가 그다음입니다. */
+/**
+ * 순서대로 분류 칩·작성 선택지에 나옵니다. 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
+ * 개인 구직(SEEKING)은 운영을 종료해 여기 없습니다. 예전 글은 DB에만 남습니다.
+ */
 export const JOB_KINDS = {
   apply: {
     title: "지원 딜러 구인",
@@ -272,12 +273,6 @@ export const JOB_KINDS = {
     kind: "TEAM" as const,
     cta: "구인 등록",
   },
-  seek: {
-    title: "개인 구직",
-    blurb: "홀덤 딜러·스태프 개인 구직",
-    kind: "SEEKING" as const,
-    cta: "구직 등록",
-  },
 } as const;
 
 export const JOB_ALIASES: Record<string, keyof typeof JOB_KINDS> = {
@@ -285,7 +280,6 @@ export const JOB_ALIASES: Record<string, keyof typeof JOB_KINDS> = {
   staff: "apply",
   player: "team",
   pickup: "urgent",
-  talent: "seek",
 };
 
 export function resolveJobKind(kind: string) {
@@ -314,7 +308,8 @@ const BOARD_LIST_HREF: Partial<Record<BoardType, string>> = {
 };
 
 export function boardListHref(boardType: BoardType, jobKind?: JobKind | null) {
-  if (boardType === "JOBS" && jobKind) return `/boards/jobs/${JOB_KIND_SLUG[jobKind]}`;
+  // 개인 구직 게시판은 없어졌으므로 예전 구직 글은 구인구직 홈으로 돌아갑니다.
+  if (boardType === "JOBS" && jobKind && jobKind !== "SEEKING") return `/boards/jobs/${JOB_KIND_SLUG[jobKind]}`;
   return BOARD_LIST_HREF[boardType] ?? "/community";
 }
 

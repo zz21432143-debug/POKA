@@ -1,3 +1,5 @@
+import { TEAM_MARK_FILES } from "@/lib/mark-assets";
+
 export type YokaiMarkDef = {
   slug: string;
   name: string;
@@ -41,8 +43,20 @@ export const KOREAN_LEGEND_MARKS: YokaiMarkDef[] = [
   { slug: "yokai-samdugumi", name: "삼두구미", imageUrl: "/marks/yokai/samdugumi.png", pricePoints: LEGEND_MARK_PRICE },
 ];
 
+/**
+ * 팀·브랜드 로고 마크. 일률 3,000P.
+ * 예전 팀 마크(team-a~f)와 같은 행을 써서 이미 가진 회원은 그대로 보유합니다.
+ */
+export const LOGO_MARKS: YokaiMarkDef[] = TEAM_MARK_FILES.map((team) => ({
+  slug: team.slug,
+  name: team.name,
+  imageUrl: team.imageUrl,
+  pricePoints: REGULAR_MARK_PRICE,
+}));
+
 const YOKAI_SLUGS = new Set(YOKAI_MARKS.map((mark) => mark.slug));
 const LEGEND_SLUGS = new Set(KOREAN_LEGEND_MARKS.map((mark) => mark.slug));
+const LOGO_SLUGS = new Set(LOGO_MARKS.map((mark) => mark.slug));
 
 export function isYokaiSlug(slug: string) {
   return YOKAI_SLUGS.has(slug);
@@ -52,8 +66,12 @@ export function isLegendSlug(slug: string) {
   return LEGEND_SLUGS.has(slug);
 }
 
-export function isShopMarkSlug(slug: string) {
-  return isYokaiSlug(slug) || isLegendSlug(slug);
+export function isLogoSlug(slug: string) {
+  return LOGO_SLUGS.has(slug);
 }
 
-export const SHOP_MARKS = [...YOKAI_MARKS, ...KOREAN_LEGEND_MARKS];
+export function isShopMarkSlug(slug: string) {
+  return isYokaiSlug(slug) || isLegendSlug(slug) || isLogoSlug(slug);
+}
+
+export const SHOP_MARKS = [...LOGO_MARKS, ...YOKAI_MARKS, ...KOREAN_LEGEND_MARKS];

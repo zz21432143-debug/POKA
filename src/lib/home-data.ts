@@ -85,7 +85,7 @@ async function loadHomeFeed() {
         .findMany({
           // 홈 메인 공고는 지원 딜러 구인입니다.
           where: { AND: [{ ...base, boardType: "JOBS", jobKind: "APPLY" }, openJobWhere()] },
-          orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
+          orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
           take: 5,
           include,
         })
@@ -101,7 +101,7 @@ async function loadHomeFeed() {
       prisma.post
         .findMany({
           where: { AND: [{ ...base, boardType: "JOBS", jobKind: "URGENT" }, openJobWhere()] },
-          orderBy: { createdAt: "desc" },
+          orderBy: { bumpedAt: "desc" },
           take: 5,
           select: {
             id: true,

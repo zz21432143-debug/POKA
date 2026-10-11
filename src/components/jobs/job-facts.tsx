@@ -16,19 +16,21 @@ export type JobFactsPost = {
   jobGuaranteedHours: string | null;
   jobOvertime: string | null;
   jobTravelPay: boolean;
+  jobTravelPayAmount: string | null;
   jobSnacks: boolean;
   jobDressCode: string | null;
   jobApplyMethod: string | null;
 };
 
-/**
- * 지원 딜러(APPLY)·급구(URGENT) 공고의 차비. 금액은 이 분류들에서 쓰지 않는 jobBenefits 칸에 저장합니다.
- * 예전 글처럼 금액이 없으면 "지원"만 표시합니다.
- */
+/** 지원 딜러(APPLY)·급구(URGENT) 공고의 차비. 금액이 없는 예전 글은 "차비 지원"만 표시합니다. */
 export function travelPayLabel(job: JobFactsPost): string | null {
   if (!job.jobTravelPay) return null;
-  const amount = formatWon(job.jobBenefits);
+  const amount = formatWon(job.jobTravelPayAmount);
   return amount ? `차비 ${amount}` : "차비 지원";
+}
+
+function travelPayFact(job: JobFactsPost) {
+  return job.jobTravelPay ? formatWon(job.jobTravelPayAmount) || "있음" : "없음";
 }
 
 export function jobTags(job: JobFactsPost): string[] {
@@ -93,7 +95,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["급여", `시급 ${formatWon(job.jobPayAmount) || job.jobPayAmount || "미정"}`],
             ["보장 시간", job.jobGuaranteedHours],
             ["연장", job.jobOvertime],
-            ["차비 지원", job.jobTravelPay ? (formatWon(job.jobBenefits) || "있음") : "없음"],
+            ["차비 지원", travelPayFact(job)],
             ["간식 제공", job.jobSnacks ? "있음" : "없음"],
             ["복장 규정", job.jobDressCode],
             ["경력 사항", job.jobExperience],
@@ -105,7 +107,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["필요 날짜", job.jobDateFlexible ? "즉시 / 날짜 협의" : job.jobWorkDate],
             ["시급", formatWon(job.jobPayAmount) || job.jobPayAmount],
             ["근무 시간", job.jobWorkHours],
-            ["차비 지원", job.jobTravelPay ? (formatWon(job.jobBenefits) || "있음") : "없음"],
+            ["차비 지원", travelPayFact(job)],
             ["경력 요구조건", job.jobExperience],
           ]
         : job.jobKind === "SEEKING"

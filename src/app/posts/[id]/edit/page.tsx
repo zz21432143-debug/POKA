@@ -48,6 +48,7 @@ export default async function EditJobPage({
           jobGuaranteedHours: post.jobGuaranteedHours ?? "",
           jobOvertime: post.jobOvertime ?? "가능",
           jobTravelPay: post.jobTravelPay,
+          jobTravelPayAmount: post.jobTravelPayAmount ?? "",
           jobSnacks: post.jobSnacks,
           jobDressCode: post.jobDressCode ?? "",
           jobApplyMethod: post.jobApplyMethod ?? "",

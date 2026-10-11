@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const ALIASES: Record<string, string> = {
   hire: "/boards/jobs/fixed/write",
   pickup: "/boards/jobs/urgent/write",
-  talent: "/boards/jobs/seek/write",
+  talent: "/boards/jobs/write",
   events: "/boards/schedule/write",
   promo: "/boards/official/write",
   "store-review": "/community",

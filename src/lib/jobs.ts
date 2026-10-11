@@ -64,6 +64,7 @@ export type JobFormPayload = {
   jobGuaranteedHours?: string;
   jobOvertime?: string;
   jobTravelPay?: boolean;
+  jobTravelPayAmount?: string;
   jobSnacks?: boolean;
   jobDressCode?: string;
   jobApplyMethod?: string;

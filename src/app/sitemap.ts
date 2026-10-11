@@ -19,7 +19,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let jobs: { id: string; updatedAt: Date }[] = [];
   try {
     jobs = await prisma.post.findMany({
-      where: { boardType: "JOBS", hidden: false, isAttendanceThread: false, createdAt: { gte: since } },
+      where: {
+        boardType: "JOBS",
+        hidden: false,
+        isAttendanceThread: false,
+        createdAt: { gte: since },
+        OR: [{ jobKind: null }, { jobKind: { not: "SEEKING" } }],
+      },
       orderBy: { createdAt: "desc" },
       take: 5000,
       select: { id: true, updatedAt: true },

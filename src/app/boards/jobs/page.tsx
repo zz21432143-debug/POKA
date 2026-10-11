@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BriefcaseIcon, PenSquareIcon, UserRoundSearchIcon } from "lucide-react";
+import { BriefcaseIcon, PenSquareIcon, SirenIcon } from "lucide-react";
 import { HomeUrgentJobs, type HomeUrgentJob } from "@/components/home/home-urgent-jobs";
 import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
 import { JobFilters } from "@/components/jobs/job-filters";
@@ -23,12 +23,12 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   if (region) {
     return {
       title: `${region} 홀덤펍 딜러 구인구직`,
-      description: `${region} 지역 홀덤펍 고정·스팟 딜러 구인, 급구 대타, 개인 구직 공고를 모아 봅니다.`,
+      description: `${region} 지역 홀덤펍 지원 딜러 구인, 급구 대타, 고정·팀 구인 공고를 모아 봅니다.`,
     };
   }
   return {
     title: "홀덤펍 딜러 구인구직",
-    description: "홀덤펍 고정·스팟 딜러 구인, 급구 대타, 개인 구직을 한곳에서. 지역별로 골라 볼 수 있습니다.",
+    description: "홀덤펍 지원 딜러 구인과 급구 대타, 고정·팀 구인을 한곳에서. 지역별로 골라 볼 수 있습니다.",
   };
 }
 
@@ -51,7 +51,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
             openJobWhere(),
           ],
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { bumpedAt: "desc" },
         take: 5,
         select: { id: true, title: true, jobLocation: true, jobWorkDate: true, jobPayAmount: true },
       })
@@ -64,20 +64,29 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
       <header className="board-intro">
         <h1>{region ? `${region} 구인구직` : "구인구직"}</h1>
         <p className="mt-2">
-          홀덤펍 딜러·스태프 구인과 개인 구직. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다. 급구는
-          근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
+          홀덤펍 지원 딜러·급구 대타·고정 딜러·팀 구인. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다.
+          급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">
-          <Link href="/boards/jobs/write" className={cn(buttonVariants({ size: "touch" }), "relative z-10 gap-1.5")}>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:items-center">
+          <Link
+            href="/boards/jobs/apply/write"
+            className={cn(buttonVariants({ size: "touch" }), "relative z-10 gap-1.5")}
+          >
             <PenSquareIcon className="size-4" />
-            구인 등록
+            지원 딜러 구인 등록
           </Link>
           <Link
-            href="/boards/jobs/seek/write"
+            href="/boards/jobs/urgent/write"
             className={cn(buttonVariants({ size: "touch", variant: "outline" }), "relative z-10 gap-1.5")}
           >
-            <UserRoundSearchIcon className="size-4" />
-            구직 등록
+            <SirenIcon className="size-4" />
+            급구 / 대타 등록
+          </Link>
+          <Link
+            href="/boards/jobs/write"
+            className="col-span-2 text-center text-sm font-semibold text-[#e7c98a] underline-offset-4 hover:underline sm:col-span-1 sm:ml-1"
+          >
+            고정 · 팀 구인 등록
           </Link>
         </div>
       </header>

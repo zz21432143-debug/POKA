@@ -33,6 +33,11 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
     jobGuaranteedHours: str("jobGuaranteedHours"),
     jobOvertime: str("jobOvertime"),
     jobTravelPay: bool("jobTravelPay"),
+    // 차비 금액은 지원 딜러·급구에서 차비 지원을 켰을 때만 저장합니다.
+    jobTravelPayAmount:
+      (jobKind === "APPLY" || jobKind === "URGENT") && bool("jobTravelPay")
+        ? str("jobTravelPayAmount")?.replace(/[^\d]/g, "") || null
+        : null,
     jobSnacks: bool("jobSnacks"),
     jobDressCode: str("jobDressCode"),
     jobApplyMethod: str("jobApplyMethod"),

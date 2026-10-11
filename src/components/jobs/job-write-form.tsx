@@ -26,6 +26,7 @@ export type JobFormValues = {
   jobGuaranteedHours: string;
   jobOvertime: string;
   jobTravelPay: boolean;
+  jobTravelPayAmount: string;
   jobSnacks: boolean;
   jobDressCode: string;
   jobApplyMethod: string;
@@ -47,6 +48,7 @@ const EMPTY: JobFormValues = {
   jobGuaranteedHours: "",
   jobOvertime: "가능",
   jobTravelPay: false,
+  jobTravelPayAmount: "",
   jobSnacks: false,
   jobDressCode: "",
   jobApplyMethod: "",
@@ -93,7 +95,7 @@ export function JobWriteForm({
   const nameLabel = JOB_NAME_LABEL[jobKind];
   const namePlaceholder = jobKind === "TEAM" ? "ACE (팀 ACE 모집으로 표시)" : jobKind === "SEEKING" ? "홍길동" : "POKA홀덤";
 
-  // 차비는 지원 딜러·급구에만 있고, 금액은 이 분류에서 쓰지 않는 jobBenefits 칸에 저장합니다.
+  // 차비는 지원 딜러·급구에만 있습니다.
   const travelPayField = (
     <div className="grid gap-2">
       <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -103,7 +105,7 @@ export function JobWriteForm({
           checked={form.jobTravelPay}
           onChange={(event) => {
             set("jobTravelPay", event.target.checked);
-            if (!event.target.checked) set("jobBenefits", "");
+            if (!event.target.checked) set("jobTravelPayAmount", "");
           }}
         />
         차비 지원
@@ -113,8 +115,8 @@ export function JobWriteForm({
           label="차비 금액"
           required
           numeric
-          value={form.jobBenefits}
-          onChange={(v) => set("jobBenefits", v)}
+          value={form.jobTravelPayAmount}
+          onChange={(v) => set("jobTravelPayAmount", v)}
           placeholder="20000"
         />
       ) : null}
@@ -143,7 +145,7 @@ export function JobWriteForm({
             ["보장 시간", form.jobGuaranteedHours],
             ["복장 규정", form.jobDressCode],
             ["경력 사항", form.jobExperience],
-            ...(form.jobTravelPay ? ([["차비 금액", form.jobBenefits]] as [string, string][]) : []),
+            ...(form.jobTravelPay ? ([["차비 금액", form.jobTravelPayAmount]] as [string, string][]) : []),
           ]
         : jobKind === "TEAM"
           ? [
@@ -155,7 +157,7 @@ export function JobWriteForm({
             ? [
                 ["근무 시간", form.jobWorkHours],
                 ["경력 요구조건", form.jobExperience],
-                ...(form.jobTravelPay ? ([["차비 금액", form.jobBenefits]] as [string, string][]) : []),
+                ...(form.jobTravelPay ? ([["차비 금액", form.jobTravelPayAmount]] as [string, string][]) : []),
               ]
             : [
                 ["가능 일정", form.jobSchedule],

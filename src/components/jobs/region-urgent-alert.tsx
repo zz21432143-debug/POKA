@@ -59,9 +59,70 @@ export function RegionUrgentAlert() {
   function choose(value: string) {
     const next = value || null;
     write(REGION_KEY, next);
-    if (next) write(SEEN_KEY, String(Date.now() - 24 * 60 * 60 * 1000));
+    if (next) write(SEEN_KEY, String(oneDayAgo()));
     setCount(0);
     setRegion(next);
+    // 휴대폰 알림을 켜 둔 상태면 받는 지역도 함께 바꿉니다.
+    if (next && pushOn) void subscribePush(next).catch(() => undefined);
+  }
+
+  const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pushKey || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPushSupported(true);
+    void navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setPushOn(Boolean(sub)))
+      .catch(() => undefined);
+  }, [pushKey]);
+
+  async function subscribePush(targetRegion: string) {
+    const reg = await navigator.serviceWorker.ready;
+    const sub =
+      (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlToBytes(pushKey) }));
+    const response = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ region: targetRegion, subscription: sub.toJSON() }),
+    });
+    if (!response.ok) throw new Error("알림 등록에 실패했습니다.");
+  }
+
+  async function togglePush() {
+    if (!region) return;
+    setPushBusy(true);
+    setPushError(null);
+    try {
+      if (pushOn) {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await fetch("/api/push/subscribe", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+          await sub.unsubscribe();
+        }
+        setPushOn(false);
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") throw new Error("브라우저 알림 권한을 허용해 주세요.");
+      await subscribePush(region);
+      setPushOn(true);
+    } catch (err) {
+      setPushError(err instanceof Error ? err.message : "알림 설정에 실패했습니다.");
+    } finally {
+      setPushBusy(false);
+    }
   }
 
   function markSeen() {
@@ -108,6 +169,34 @@ export function RegionUrgentAlert() {
       ) : (
         <span className="text-xs text-[#9CA3AF]">지역을 고르면 새 급구가 올라올 때 여기 표시됩니다.</span>
       )}
+      {region && pushSupported ? (
+        <button
+          type="button"
+          onClick={() => void togglePush()}
+          disabled={pushBusy}
+          className={
+            pushOn
+              ? "touch-target inline-flex min-h-9 items-center rounded-full border border-emerald-600 px-3 text-xs font-bold text-emerald-300"
+              : "touch-target inline-flex min-h-9 items-center rounded-full bg-[#8b2222] px-3 text-xs font-bold text-white hover:bg-[#a12a2a]"
+          }
+        >
+          {pushBusy ? "설정 중…" : pushOn ? `${region} 휴대폰 알림 켜짐 · 끄기` : "휴대폰 알림 켜기"}
+        </button>
+      ) : null}
+      {pushError ? <p className="w-full text-xs text-destructive">{pushError}</p> : null}
     </section>
   );
+}
+
+/** 지역을 처음 고르면 최근 하루치 급구부터 새 글로 셉니다. */
+function oneDayAgo() {
+  return Date.now() - 24 * 60 * 60 * 1000;
+}
+
+function base64UrlToBytes(value: string) {
+  const padded = `${value}${"=".repeat((4 - (value.length % 4)) % 4)}`.replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(padded);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
+  return bytes;
 }

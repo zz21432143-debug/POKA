@@ -35,3 +35,34 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(request)),
   );
 });
+
+// 급구 웹 푸시. 서버(src/lib/push.ts)가 { title, body, url } 을 보냅니다.
+self.addEventListener("push", (event) => {
+  let data = { title: "POKA 급구 알림", body: "새 급구/대타가 올라왔습니다.", url: "/boards/jobs/urgent" };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch {
+    // 형식이 다르면 기본 문구로 보냅니다.
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icons/poka-192.png",
+      badge: "/icons/poka-192.png",
+      data: { url: data.url },
+      tag: data.url,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((client) => client.url === target);
+      if (open) return open.focus();
+      return self.clients.openWindow(target);
+    }),
+  );
+});

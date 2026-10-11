@@ -29,6 +29,10 @@ import { UNLOCK_COOKIE, hasUnlock } from "@/lib/unlock-cookie";
 import { CrownIcon } from "lucide-react";
 import { JobStatusBadge } from "@/components/jobs/job-cards";
 import { PremiumToggle } from "@/components/jobs/premium-toggle";
+import { ApplyPanel } from "@/components/jobs/apply-panel";
+import { ApplicantList } from "@/components/jobs/applicant-list";
+import { BumpButton } from "@/components/jobs/bump-button";
+import { canBumpNow, nextBumpAt } from "@/lib/job-bump";
 import { jobExpiresOn, jobStatus } from "@/lib/job-status";
 import { formatWon } from "@/lib/jobs";
 import { isStaff } from "@/lib/roles";
@@ -117,6 +121,8 @@ export default async function PostDetailPage({
     },
   });
   if (!post) notFound();
+  // 개인 구직은 운영 종료. 본명이 담긴 예전 구직 글은 작성자와 관리자만 봅니다.
+  if (post.jobKind === "SEEKING" && viewer?.id !== post.authorId && !viewer?.isAdmin) notFound();
   // 구인구직 공고는 검색 유입을 위해 제목·조건까지는 누구나 봅니다. 본문·연락처·댓글은 로그인 후.
   const guestJob = !viewer && post.boardType === "JOBS";
   if (!viewer && !guestJob) replaceToLogin(`/posts/${id}`);
@@ -149,6 +155,28 @@ export default async function PostDetailPage({
   const status = post.boardType === "JOBS" ? jobStatus(post) : null;
   const expiresOn = status === "open" ? jobExpiresOn(post) : null;
   const staff = Boolean(viewer && isStaff(viewer));
+  const isJobPost = post.boardType === "JOBS" && Boolean(post.jobKind) && post.jobKind !== "SEEKING";
+  const isJobOwner = isJobPost && Boolean(viewer && (viewer.id === post.authorId || viewer.isAdmin));
+  // 지원 기록: 작성자는 지원자 목록을, 다른 회원은 내 지원 여부만 봅니다.
+  const [applicants, myApplication] = await Promise.all([
+    isJobOwner
+      ? prisma.jobApplication
+          .findMany({
+            where: { postId: post.id },
+            orderBy: { createdAt: "desc" },
+            include: { applicant: { select: { nickname: true, level: true, isDealerVerified: true } } },
+          })
+          .catch(() => [])
+      : Promise.resolve([]),
+    isJobPost && viewer && !isJobOwner
+      ? prisma.jobApplication
+          .findUnique({
+            where: { postId_applicantId: { postId: post.id, applicantId: viewer.id } },
+            select: { id: true },
+          })
+          .catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
   if (canReveal) {
     void prisma.post
@@ -225,6 +253,9 @@ export default async function PostDetailPage({
         <div className="article-body">
           {post.jobKind ? <JobFacts job={post} /> : null}
           {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
+          {isJobPost && status === "open" ? (
+            <ApplyPanel postId={post.id} applied={false} loggedIn={false} loginHref={loginHref(`/posts/${post.id}`)} />
+          ) : null}
           <div className="flex flex-col items-start gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-4">
             <p className="text-sm text-[#D1D5DB]">상세 내용과 연락처는 로그인한 회원만 볼 수 있습니다.</p>
             <Link
@@ -248,6 +279,33 @@ export default async function PostDetailPage({
       {post.jobKind ? <JobFacts job={post} /> : null}
       {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
       {post.jobKind && staff ? <PremiumToggle postId={post.id} isPaid={post.isPaid} /> : null}
+      {isJobPost && !isJobOwner && status === "open" ? (
+        <ApplyPanel
+          postId={post.id}
+          applied={Boolean(myApplication)}
+          loggedIn={Boolean(viewer)}
+          loginHref={loginHref(`/posts/${post.id}`)}
+        />
+      ) : null}
+      {isJobOwner ? (
+        <>
+          {status === "open" ? (
+            <BumpButton
+              postId={post.id}
+              nextAt={staff ? null : nextBumpAt(post.bumpedAt).toISOString()}
+              waiting={!staff && !canBumpNow(post.bumpedAt)}
+            />
+          ) : null}
+          <ApplicantList
+            applicants={applicants.map((row) => ({
+              id: row.id,
+              message: row.message,
+              createdAt: row.createdAt.toISOString(),
+              applicant: row.applicant,
+            }))}
+          />
+        </>
+      ) : null}
 
       {post.boardType === "SCHEDULE" ? (
         <dl className="grid grid-cols-2 gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-3 text-sm text-[#E5E7EB] sm:grid-cols-3">

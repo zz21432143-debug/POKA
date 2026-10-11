@@ -14,6 +14,9 @@ import { isStaff } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { ensureBannerSlots } from "@/lib/premium-banners";
+import { parseJobRegion } from "@/lib/job-status";
+import { titleRegion } from "@/lib/jobs";
+import { notifyRegion } from "@/lib/push";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import {
   HoldemOnlyError,
@@ -33,7 +36,8 @@ const BOARDS: BoardType[] = [
   "SUGGESTION",
 ];
 
-const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
+// 개인 구직(SEEKING)은 운영 종료로 새 글을 받지 않습니다.
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT"];
 
 export async function POST(request: Request) {
   try {
@@ -140,6 +144,31 @@ export async function POST(request: Request) {
       isAdmin: user.isAdmin,
     });
 
+    // 도배 방지: 같은 회원이 같은 분류·같은 상호로 24시간 안에 다시 올릴 수 없습니다.
+    if (boardType === "JOBS" && jobKind && jobData && !isStaff(user)) {
+      const duplicate = await prisma.post.findFirst({
+        where: {
+          boardType: "JOBS",
+          authorId: user.id,
+          jobKind,
+          jobCompanyName: jobData.jobCompanyName,
+          hidden: false,
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+        select: { id: true },
+      });
+      if (duplicate) {
+        return NextResponse.json(
+          {
+            error:
+              "같은 상호의 같은 분류 공고는 하루에 한 번만 올릴 수 있습니다. 기존 공고를 수정하거나 끌어올리기를 이용해 주세요.",
+            existingId: duplicate.id,
+          },
+          { status: 429 },
+        );
+      }
+    }
+
     const wantPrivate = boardType === "SUGGESTION" && Boolean(body.isPrivate);
     const unlockPassword = typeof body.password === "string" ? body.password : "";
     if (wantPrivate && unlockPassword.trim().length < 4) {
@@ -172,6 +201,7 @@ export async function POST(request: Request) {
         jobGuaranteedHours: jobData?.jobGuaranteedHours ?? null,
         jobOvertime: jobData?.jobOvertime ?? null,
         jobTravelPay: jobData?.jobTravelPay ?? false,
+        jobTravelPayAmount: jobData?.jobTravelPayAmount ?? null,
         jobSnacks: jobData?.jobSnacks ?? false,
         jobDressCode: jobData?.jobDressCode ?? null,
         jobApplyMethod: jobData?.jobApplyMethod ?? null,
@@ -205,6 +235,18 @@ export async function POST(request: Request) {
       message: `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${title.slice(0, 28)}`,
       href: `/posts/${post.id}`,
     });
+
+    // 새 급구는 그 지역 알림 구독자에게 휴대폰 푸시를 보냅니다. 실패해도 글 등록은 그대로 성공입니다.
+    if (jobKind === "URGENT" && jobData?.jobLocation) {
+      const region = parseJobRegion(titleRegion(jobData.jobLocation));
+      if (region) {
+        await notifyRegion(region, {
+          title: `${region} 새 급구/대타`,
+          body: title,
+          url: `/posts/${post.id}`,
+        }).catch(() => undefined);
+      }
+    }
 
     if (bannerSlot) {
       await ensureBannerSlots();
