@@ -121,7 +121,7 @@ export function InstallPwaButton({
   return (
     <>
       {variant === "strip" ? (
-        <div className="flex items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-3 py-2 lg:hidden">
+        <div className="app-get app-get-strip flex items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-3 py-2 lg:hidden">
           <SmartphoneIcon className="size-5 shrink-0 text-[#e7c98a]" aria-hidden />
           <p className="min-w-0 flex-1 text-[13px] leading-tight text-[#f3eadb]">
             <strong className="block font-bold">POKA 앱 다운로드</strong>
