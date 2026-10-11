@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DocEditor } from "@/components/docs/doc-editor";
 import type { BoardType } from "@/generated/prisma/enums";
 import { postRewardLine } from "@/lib/rewards";
 import { cn } from "cn";
@@ -141,13 +142,18 @@ export function BoardWriteForm({
       ) : null}
       <div className="grid gap-2">
         <Label htmlFor="content" className="write-label">내용</Label>
-        <Textarea
-          id="content"
-          className="write-body-input"
-          placeholder="내용을 입력하세요"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+        {boardType === "NOTICE" ? (
+          // 공지사항은 종이 문서(A4) 모양으로 보이므로 서식 버튼·미리보기가 있는 편집기를 씁니다.
+          <DocEditor id="content" title={title} value={content} onChange={setContent} placeholder="내용을 입력하세요" />
+        ) : (
+          <Textarea
+            id="content"
+            className="write-body-input"
+            placeholder="내용을 입력하세요"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        )}
       </div>
       {boardType === "SUGGESTION" ? (
         <fieldset className="rounded-xl border border-border bg-muted/40 p-3">

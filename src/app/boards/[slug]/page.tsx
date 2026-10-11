@@ -20,6 +20,16 @@ import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { TdaViewer } from "@/components/tda/tda-viewer";
 import { prisma } from "@/lib/db";
 import { sortTdaSections } from "@/lib/tda";
+import { contentToDocHtml } from "@/lib/doc-sanitize";
+import { escapeHtml } from "@/lib/doc-html";
+import { formatKstLabel } from "@/lib/dates";
+
+/** ISO 시각 → 한국 날짜 YYYY-MM-DD */
+function todayKstFrom(iso: string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(
+    new Date(iso),
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -73,14 +83,16 @@ export default async function BoardPage({
             select: { id: true, title: true, content: true, createdAt: true },
             take: 500,
           })
-        ).map((row) => ({
-          id: row.id,
-          title: row.title,
-          // 비로그인은 제목만 봅니다(본문은 내려보내지 않음).
-          content: viewer ? row.content : "",
-          createdAt: row.createdAt.toISOString(),
-        })),
-      )
+        ).map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
+      ).map((row) => ({
+        id: row.id,
+        title: row.title,
+        // 종이 한 장 = 제목 + 날짜 + 본문(거른 HTML). 비로그인은 본문을 내려보내지 않습니다.
+        html:
+          `<h1 class="doc-title">${escapeHtml(row.title)}</h1>` +
+          `<div class="doc-meta">${formatKstLabel(todayKstFrom(row.createdAt))}</div>` +
+          (viewer ? contentToDocHtml(row.content) : ""),
+      }))
     : [];
   // 대회 상세 내용도 로그인 회원에게만 내려보냅니다.
   const scheduleEvents = viewer ? page.events : page.events.map((event) => ({ ...event, content: null }));

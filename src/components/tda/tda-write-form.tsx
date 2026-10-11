@@ -6,7 +6,7 @@ import { FileUpIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { DocEditor } from "@/components/docs/doc-editor";
 import { isRuleHeading } from "@/lib/tda";
 
 /** pdf.js 작업 파일. 패키지 버전(pdfjs-dist 4.10.38)과 같은 파일을 public/vendor에 둡니다. */
@@ -185,12 +185,12 @@ export function TdaWriteForm({
         <Label htmlFor="tda-content" className="write-label">
           내용 <span className="text-xs font-normal text-[#9CA3AF]">{content.length.toLocaleString()}자</span>
         </Label>
-        <Textarea
+        <DocEditor
           id="tda-content"
-          className="write-body-input min-h-[50dvh] font-[inherit] leading-7"
+          title={title}
           value={content}
           placeholder={"1. 플로어 결정\n플로어의 결정은 최종입니다…"}
-          onChange={(event) => setContent(event.target.value)}
+          onChange={setContent}
         />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

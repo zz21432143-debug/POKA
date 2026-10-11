@@ -20,6 +20,8 @@ import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { canWriteBoard } from "@/lib/permissions";
+import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
+import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
@@ -119,6 +121,8 @@ export default async function PostDetailPage({
   if (post.jobKind === "SEEKING" && viewer?.id !== post.authorId && !viewer?.isAdmin) notFound();
   // 비회원은 모든 글에서 제목(게시판·작성자·작성일)까지만 봅니다. 본문·조건·연락처·사진·댓글은 로그인 후.
   const guest = !viewer;
+  // 공지사항·TDA 룰은 종이 문서(A4) 모양으로 보여 줍니다.
+  const docBoard = post.boardType === "NOTICE" || post.boardType === "TDA";
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
       <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
@@ -227,7 +231,8 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
         </div>
-        <h1 className="article-title">{post.title}</h1>
+        {/* 공지·TDA 룰은 아래 종이 문서에 제목이 크게 들어가므로 여기 제목은 화면에서 숨깁니다. */}
+        <h1 className={docBoard ? "sr-only" : "article-title"}>{post.title}</h1>
       </header>
       <div className="article-meta">
         <AuthorChip author={post.author} anonymous={false} size="md" />
@@ -391,7 +396,15 @@ export default async function PostDetailPage({
         />
       ) : null}
 
-      {post.content ? (
+      {post.content && docBoard ? (
+        <DocDesk className="-mx-2 sm:mx-0">
+          <DocSheet
+            title={post.title}
+            meta={formatPostDateTime(post.createdAt)}
+            html={contentToDocHtml(post.content)}
+          />
+        </DocDesk>
+      ) : post.content ? (
         <div className="article-copy">
           <LinkifiedText text={post.content} />
         </div>

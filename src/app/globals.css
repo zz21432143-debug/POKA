@@ -1666,3 +1666,211 @@ select {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+/* ───────── 종이 문서 보기 (TDA 룰 · 공지사항) ─────────
+   어두운 책상 위에 A4 비율 흰 종이를 띄웁니다. 본문 서식은 관리자가 넣은 HTML/클래스를 따릅니다.
+   서식 클래스: .red(빨강 굵게) .underline / u(밑줄 강조) .doc-sub(밑줄 소제목) .center .right footer(문서 맨 아래) */
+.doc-desk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(ellipse at top, rgb(255 255 255 / 0.04), transparent 60%),
+    #0d0b0a;
+  padding: 1.25rem 0.5rem;
+}
+@media (min-width: 640px) {
+  .doc-desk {
+    padding: 2.25rem 1.5rem;
+  }
+}
+.doc-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 210 / 297;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111111;
+  padding: 32px 22px 24px;
+  font-size: 15px;
+  line-height: 1.85;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.35),
+    0 14px 36px rgb(0 0 0 / 0.55);
+  scroll-margin-top: 9rem;
+}
+@media (min-width: 640px) {
+  .doc-sheet {
+    padding: 56px 60px 36px;
+    font-size: 16px;
+  }
+}
+/* 사이트 기본 글자색(밝은색)·.ink-panel 제목(흰색)이 종이 안으로 새지 않게, 종이 안은 모두 검은 글자를 물려받습니다.
+   .red·링크·푸터처럼 따로 정한 색과 인라인 style color는 이보다 우선합니다. */
+.doc-sheet :where(*) {
+  color: inherit;
+}
+.doc-sheet .doc-actions {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+}
+.doc-sheet .doc-title,
+.doc-sheet .doc-body h1 {
+  margin: 0 0 0.4em;
+  text-align: center;
+  font-size: 1.6em;
+  font-weight: 900;
+  line-height: 1.35;
+  color: #111111;
+}
+.doc-sheet .doc-meta {
+  margin-bottom: 1.6em;
+  text-align: center;
+  font-size: 0.8em;
+  color: #666666;
+}
+.doc-sheet .doc-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.doc-sheet .doc-body > :first-child {
+  margin-top: 0;
+}
+.doc-sheet .doc-body h2 {
+  margin: 1.5em 0 0.6em;
+  text-align: center;
+  font-size: 1.3em;
+  font-weight: 800;
+}
+.doc-sheet .doc-body h3,
+.doc-sheet .doc-body .doc-sub {
+  margin: 1.4em 0 0.45em;
+  font-size: 1.06em;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.doc-sheet .doc-body h4 {
+  margin: 1.1em 0 0.35em;
+  font-weight: 800;
+}
+.doc-sheet .doc-body p {
+  margin: 0 0 0.85em;
+}
+.doc-sheet .doc-body strong,
+.doc-sheet .doc-body b {
+  font-weight: 800;
+}
+.doc-sheet .doc-body em,
+.doc-sheet .doc-body i {
+  font-style: italic;
+}
+.doc-sheet .doc-body u,
+.doc-sheet .doc-body .underline {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.doc-sheet .doc-body .red,
+.doc-sheet .doc-body .doc-red,
+.doc-sheet .doc-body .emph {
+  color: red;
+  font-weight: 800;
+}
+.doc-sheet .doc-body .center {
+  text-align: center;
+}
+.doc-sheet .doc-body .right {
+  text-align: right;
+}
+.doc-sheet .doc-body a {
+  color: #0645ad;
+  text-decoration: underline;
+  word-break: break-all;
+}
+.doc-sheet .doc-body ul,
+.doc-sheet .doc-body ol {
+  margin: 0 0 0.85em;
+  padding-left: 1.5em;
+}
+.doc-sheet .doc-body ul {
+  list-style: disc;
+}
+.doc-sheet .doc-body ol {
+  list-style: decimal;
+}
+.doc-sheet .doc-body li {
+  margin: 0.15em 0;
+}
+.doc-sheet .doc-body blockquote {
+  margin: 0 0 0.85em;
+  border-left: 3px solid #cccccc;
+  padding-left: 0.9em;
+  color: #333333;
+}
+.doc-sheet .doc-body hr {
+  margin: 1.4em 0;
+  border: 0;
+  border-top: 1px solid #cccccc;
+}
+.doc-sheet .doc-body table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+.doc-sheet .doc-body th,
+.doc-sheet .doc-body td {
+  border: 1px solid #999999;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+.doc-sheet .doc-body th {
+  background: #f2f2f2;
+  font-weight: 800;
+}
+.doc-sheet .doc-body img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.5em auto;
+}
+.doc-sheet .doc-body footer,
+.doc-sheet .doc-body .doc-footer {
+  margin-top: auto;
+  border-top: 1px solid #dddddd;
+  padding-top: 1em;
+  text-align: center;
+  font-size: 0.78em;
+  line-height: 1.6;
+  color: #555555;
+}
+.doc-sheet .doc-body footer p,
+.doc-sheet .doc-body .doc-footer p {
+  margin: 0.15em 0;
+}
+.doc-sheet .doc-pageno {
+  margin-top: 1.2em;
+  text-align: center;
+  font-size: 0.78em;
+  color: #888888;
+}
+.doc-sheet .doc-body mark[data-hit] {
+  border-radius: 2px;
+  background: #ffe600;
+  color: #111111;
+}
+.doc-sheet .doc-body mark[data-hit].is-current {
+  background: #ff9a1f;
+  box-shadow: 0 0 0 2px #ff9a1f;
+}

@@ -1,89 +1,100 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronUpIcon, ListIcon, PencilIcon, SearchIcon, XIcon } from "lucide-react";
-import { findMatches, isRuleHeading, type TdaSection } from "@/lib/tda";
+import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
+import { findMatches } from "@/lib/tda";
 import { loginHref } from "@/lib/login-path";
 import { cn } from "cn";
 
+/** html: 서버에서 거른 문서 HTML(제목·날짜 포함). 검색 칠하기가 제목까지 닿도록 한 덩어리로 받습니다. */
+export type TdaDocSection = { id: string; title: string; html: string };
+
+/** 문서 본문(서식 HTML) 안의 글자 조각마다 검색어를 찾아 <mark>로 감쌉니다. 찾은 개수를 돌려줍니다. */
+function highlight(bodies: HTMLElement[], term: string): number {
+  for (const body of bodies) {
+    body.querySelectorAll("mark[data-hit]").forEach((mark) => mark.replaceWith(document.createTextNode(mark.textContent ?? "")));
+    body.normalize();
+  }
+  if (!term) return 0;
+  let hit = 0;
+  for (const body of bodies) {
+    const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node as Text);
+    for (const node of nodes) {
+      const text = node.data;
+      const matches = findMatches(text, term);
+      if (matches.length === 0) continue;
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      for (const m of matches) {
+        if (m.start > last) frag.append(text.slice(last, m.start));
+        const mark = document.createElement("mark");
+        mark.dataset.hit = String(hit++);
+        mark.textContent = text.slice(m.start, m.end);
+        frag.append(mark);
+        last = m.end;
+      }
+      if (last < text.length) frag.append(text.slice(last));
+      node.replaceWith(frag);
+    }
+  }
+  return hit;
+}
+
 /**
- * TDA 룰 문서 보기. 쪽 넘김 없이 모든 조항을 한 화면에 이어 붙여 스크롤로 읽습니다.
- * 글자는 그대로 화면(DOM)에 있으므로 브라우저 Ctrl+F도 그대로 찾습니다.
- * 위 검색창은 일치하는 곳을 노랗게 칠하고, 현재 위치(주황)로 스크롤합니다.
+ * TDA 룰 문서 보기. 조항(글)마다 A4 종이 한 장씩, 쪽 넘김 없이 세로로 이어 붙여 스크롤로 읽습니다.
+ * 본문 글자는 그대로 화면(DOM)에 있어 브라우저 Ctrl+F도 찾고, 위 검색창은 일치하는 곳을 칠하고 그 자리로 스크롤합니다.
  */
 export function TdaViewer({
   sections,
   loggedIn,
   canManage,
 }: {
-  sections: TdaSection[];
+  sections: TdaDocSection[];
   loggedIn: boolean;
   canManage: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const [total, setTotal] = useState(0);
   const [active, setActive] = useState(0);
   const [tocOpen, setTocOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const term = query.trim();
-  // 제목·본문 전체에서 일치 개수. 화면에 칠하는 순서와 같은 순서로 셉니다.
-  const total = useMemo(
-    () =>
-      term
-        ? sections.reduce(
-            (sum, s) =>
-              sum +
-              findMatches(s.title, term).length +
-              // 본문은 줄 단위로 칠하므로 개수도 줄 단위로 셉니다.
-              (loggedIn ? s.content.split("\n").reduce((n, line) => n + findMatches(line, term).length, 0) : 0),
-            0,
-          )
-        : 0,
-    [sections, term, loggedIn],
-  );
-  const current = total > 0 ? Math.min(active, total - 1) : 0;
+  const bodies = () => Array.from(rootRef.current?.querySelectorAll<HTMLElement>("[data-doc-body]") ?? []);
 
-  useEffect(() => {
-    if (!term || total === 0) return;
-    const el = rootRef.current?.querySelector<HTMLElement>(`mark[data-hit="${current}"]`);
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [term, current, total]);
+  function focusHit(index: number) {
+    const root = rootRef.current;
+    if (!root) return;
+    root.querySelectorAll("mark.is-current").forEach((m) => m.classList.remove("is-current"));
+    const el = root.querySelector<HTMLElement>(`mark[data-hit="${index}"]`);
+    if (!el) return;
+    el.classList.add("is-current");
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
-  const move = (delta: number) => {
+  function search(next: string) {
+    setQuery(next);
+    const count = highlight(bodies(), next.trim());
+    setTotal(count);
+    setActive(0);
+    if (count > 0) focusHit(0);
+  }
+
+  function move(delta: number) {
     if (total === 0) return;
-    setActive((current + delta + total) % total);
-  };
+    const next = (active + delta + total) % total;
+    setActive(next);
+    focusHit(next);
+  }
 
-  // 렌더하면서 일치 번호를 매깁니다(제목 → 본문 순서).
-  let hit = 0;
-  const paint = (text: string): ReactNode => {
-    if (!term) return text;
-    const matches = findMatches(text, term);
-    if (matches.length === 0) return text;
-    const parts: ReactNode[] = [];
-    let last = 0;
-    for (const m of matches) {
-      if (m.start > last) parts.push(text.slice(last, m.start));
-      const n = hit++;
-      parts.push(
-        <mark
-          key={`${n}`}
-          data-hit={n}
-          className={cn("rounded-sm px-0.5", n === current ? "bg-orange-400 text-black" : "bg-[#FEE500] text-black")}
-        >
-          {text.slice(m.start, m.end)}
-        </mark>,
-      );
-      last = m.end;
-    }
-    if (last < text.length) parts.push(text.slice(last));
-    return parts;
-  };
+  const term = query.trim();
 
   return (
     <div ref={rootRef} className="flex flex-col gap-3">
-      <div className="sticky top-[6.25rem] z-30 xl:top-[7.25rem] -mx-1 rounded-xl border border-[#c9a25c]/50 bg-[#1d1611]/95 p-2 shadow-[0_8px_20px_rgb(0_0_0/0.45)] backdrop-blur">
+      <div className="sticky top-[6.25rem] z-30 -mx-1 rounded-xl border border-[#c9a25c]/50 bg-[#1d1611]/95 p-2 shadow-[0_8px_20px_rgb(0_0_0/0.45)] backdrop-blur xl:top-[7.25rem]">
         <div className="flex items-center gap-1.5">
           <label className="relative flex-1">
             <span className="sr-only">TDA 룰에서 찾기</span>
@@ -93,21 +104,18 @@ export function TdaViewer({
               value={query}
               placeholder="단어 찾기 (예: 올인, 미스딜, 플로어)"
               className="h-11 w-full rounded-lg border border-white/15 bg-[#141110] pl-9 pr-3 text-base text-white placeholder:text-[#6b6460] focus:border-[#c9a25c] focus:outline-none"
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setActive(0);
-              }}
+              onChange={(event) => search(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
                   move(event.shiftKey ? -1 : 1);
                 }
-                if (event.key === "Escape") setQuery("");
+                if (event.key === "Escape") search("");
               }}
             />
           </label>
           <span className="min-w-14 text-center text-xs font-semibold text-[#c9c0b2]" aria-live="polite">
-            {term ? (total > 0 ? `${current + 1} / ${total}` : "0건") : ""}
+            {term ? (total > 0 ? `${active + 1} / ${total}` : "0건") : ""}
           </span>
           <button
             type="button"
@@ -131,7 +139,7 @@ export function TdaViewer({
             <button
               type="button"
               aria-label="검색 지우기"
-              onClick={() => setQuery("")}
+              onClick={() => search("")}
               className="grid size-10 place-items-center rounded-lg text-[#9CA3AF] hover:bg-white/10"
             >
               <XIcon className="size-4" />
@@ -153,13 +161,14 @@ export function TdaViewer({
         {tocOpen ? (
           <nav aria-label="목차" className="mt-2 max-h-60 overflow-y-auto border-t border-white/10 pt-2">
             <ol className="grid gap-0.5">
-              {sections.map((s) => (
+              {sections.map((s, index) => (
                 <li key={s.id}>
                   <a
                     href={`#tda-${s.id}`}
                     onClick={() => setTocOpen(false)}
-                    className="block rounded-md px-2 py-1.5 text-sm text-[#E5E7EB] hover:bg-white/10"
+                    className="flex gap-2 rounded-md px-2 py-1.5 text-sm text-[#E5E7EB] hover:bg-white/10"
                   >
+                    <span className="w-6 shrink-0 text-right text-[#9CA3AF]">{index + 1}</span>
                     {s.title}
                   </a>
                 </li>
@@ -182,43 +191,27 @@ export function TdaViewer({
       {sections.length === 0 ? (
         <p className="ink-panel rounded-xl px-4 py-10 text-center text-sm text-[#D1D5DB]">아직 올라온 TDA 룰이 없습니다.</p>
       ) : (
-        <article className="ink-panel rounded-2xl px-4 py-2 sm:px-6" aria-label="TDA 룰 전체">
+        <DocDesk>
           {sections.map((s, index) => (
-            <section
+            <DocSheet
               key={s.id}
               id={`tda-${s.id}`}
-              className={cn("scroll-mt-56 py-5", index > 0 && "border-t border-white/10")}
-            >
-              <div className="flex items-start gap-2">
-                <h2 className="flex-1 text-lg font-black leading-snug text-[#e7c98a] sm:text-xl">{paint(s.title)}</h2>
-                {canManage ? (
+              html={s.html}
+              pageLabel={`- ${index + 1} / ${sections.length} -`}
+              actions={
+                canManage ? (
                   <Link
                     href={`/posts/${s.id}/edit`}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-[#9CA3AF] hover:bg-white/10 hover:text-white"
+                    className="inline-flex items-center gap-1 rounded-md bg-black/5 px-2 py-1 text-xs font-semibold text-[#444] hover:bg-black/10"
                   >
                     <PencilIcon className="size-3.5" />
                     수정
                   </Link>
-                ) : null}
-              </div>
-              {loggedIn ? (
-                <div className="mt-2 text-[15px] leading-7 text-[#E5E7EB]">
-                  {s.content.split("\n").map((line, i) => (
-                    <Fragment key={i}>
-                      {line.trim() === "" ? (
-                        <div className="h-3" aria-hidden />
-                      ) : isRuleHeading(line) ? (
-                        <p className="mt-2 font-bold text-white">{paint(line)}</p>
-                      ) : (
-                        <p className="whitespace-pre-wrap break-words">{paint(line)}</p>
-                      )}
-                    </Fragment>
-                  ))}
-                </div>
-              ) : null}
-            </section>
+                ) : undefined
+              }
+            />
           ))}
-        </article>
+        </DocDesk>
       )}
     </div>
   );
