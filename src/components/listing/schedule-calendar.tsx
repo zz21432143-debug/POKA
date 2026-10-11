@@ -1,6 +1,6 @@
 import { todayKstDate } from "@/lib/dates";
 import { prizeToWon } from "@/lib/prize";
-import { assignScheduleColors, colorFor } from "@/lib/schedule-colors";
+import { SCHEDULE_TEXT, assignScheduleColors, colorFor } from "@/lib/schedule-colors";
 import { cn } from "cn";
 
 export type ScheduleEvent = {
@@ -66,7 +66,7 @@ const DESKTOP_MAX = 3;
 
 /**
  * 대회 캘린더. 날짜 칸에는 대회명만, 총상금 큰 순서로 보여 줍니다.
- * 대회마다 색이 다르고(같은 대회는 여러 날이어도 같은 색), 눈이 편하도록 낮은 채도·얇은 글씨를 씁니다.
+ * 대회마다 확실히 다른 색 칸(같은 대회는 여러 날이어도 같은 색)에 어두운 글자를 올려 구분이 쉽고 눈부시지 않게 합니다.
  */
 export function ScheduleCalendar({
   events,
@@ -157,8 +157,8 @@ export function ScheduleCalendar({
                               type="button"
                               title={item.eventPrize ? `${item.title} · ${item.eventPrize}` : item.title}
                               onClick={() => onSelect(item, color)}
-                              style={{ borderLeftColor: color, backgroundColor: `${color}33` }}
-                              className="line-clamp-2 w-full cursor-pointer break-keep [overflow-wrap:anywhere] rounded-[4px] border-l-[3px] px-1 py-[3px] text-left text-[10px] font-medium leading-tight tracking-tight sm:line-clamp-1 text-[#ebe5d9] transition-[filter,background-color] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a25c] sm:px-1.5 sm:py-1 sm:text-[11.5px]"
+                              style={{ backgroundColor: color, color: SCHEDULE_TEXT }}
+                              className="line-clamp-2 w-full cursor-pointer break-keep [overflow-wrap:anywhere] rounded-[4px] px-1 py-[3px] text-left text-[10px] font-bold leading-tight tracking-tight sm:line-clamp-1 transition-[filter] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a25c] sm:px-1.5 sm:py-1 sm:text-[11.5px]"
                             >
                               {item.title}
                             </button>

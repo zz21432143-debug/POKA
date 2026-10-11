@@ -8,7 +8,7 @@ import { ScheduleCalendar, sortByPrize, type ScheduleEvent } from "@/components/
 import { ScheduleModal } from "@/components/listing/schedule-modal";
 import { dayLabel } from "@/lib/job-events";
 import { prizeToWon } from "@/lib/prize";
-import { assignScheduleColors, colorFor } from "@/lib/schedule-colors";
+import { SCHEDULE_TEXT, assignScheduleColors, colorFor } from "@/lib/schedule-colors";
 
 type Selected = { event: ScheduleEvent; color: string };
 type DayList = { date: string; items: ScheduleEvent[] };
@@ -185,11 +185,11 @@ function DayListModal({
                 <button
                   type="button"
                   onClick={() => onPick(event, color)}
-                  style={{ borderLeftColor: color, backgroundColor: `${color}1f` }}
-                  className="flex w-full items-center gap-2 rounded-lg border-l-4 px-3 py-2.5 text-left hover:brightness-125"
+                  style={{ backgroundColor: color, color: SCHEDULE_TEXT }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left hover:brightness-110"
                 >
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#ebe5d9]">{event.title}</span>
-                  {event.eventPrize ? <span className="shrink-0 text-xs font-semibold text-[#c9c0b2]">{event.eventPrize}</span> : null}
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{event.title}</span>
+                  {event.eventPrize ? <span className="shrink-0 text-xs font-bold opacity-80">{event.eventPrize}</span> : null}
                 </button>
               </li>
             );

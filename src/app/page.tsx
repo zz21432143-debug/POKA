@@ -10,6 +10,7 @@ import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { FREE_PROMO } from "@/lib/free-promo";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -19,14 +20,27 @@ function HomePanelFallback({ className }: { className: string }) {
 
 async function HomePosters() {
   const banners = await getPremiumBanners();
-  const posters: HomePoster[] = banners.map((banner) => ({
-    key: `slot-${banner.id}`,
-    slot: banner.id,
-    href: banner.href,
-    title: banner.title,
-    image: banner.vacant ? null : banner.image || null,
-    mark: banner.mark,
-  }));
+  // 비어 있는 구좌(이미지 없이 기본 그림 /banners/slot-N.svg만 있는 홍보 포함)는 "POKA 무료 홍보 이벤트" 포스터로 채웁니다.
+  const posters: HomePoster[] = banners.map((banner) =>
+    banner.vacant || !banner.image || banner.image.startsWith("/banners/slot-")
+      ? {
+          key: `slot-${banner.id}`,
+          slot: banner.id,
+          href: FREE_PROMO.href,
+          title: FREE_PROMO.title,
+          image: FREE_PROMO.image,
+          mark: FREE_PROMO.mark,
+          plain: true,
+        }
+      : {
+          key: `slot-${banner.id}`,
+          slot: banner.id,
+          href: banner.href,
+          title: banner.title,
+          image: banner.image,
+          mark: banner.mark,
+        },
+  );
   return <HomePosterCarousel posters={posters} />;
 }
 

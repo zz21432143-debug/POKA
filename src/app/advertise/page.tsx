@@ -39,6 +39,29 @@ export default function AdvertisePage() {
         </a>
       </header>
 
+      <section
+        id="free-promo"
+        className="scroll-mt-24 overflow-hidden rounded-2xl border-2 border-[#c9952f]/80 bg-gradient-to-br from-[#5a1418] via-[#2a0f10] to-[#140a0a] p-5 sm:p-6"
+      >
+        <span className="rounded-full bg-gradient-to-r from-[#f6dfa0] to-[#c9952f] px-3 py-0.5 text-[11px] font-black tracking-[0.25em] text-[#2a0f10]">
+          EVENT
+        </span>
+        <h2 className="mt-3 text-2xl font-black text-white">
+          POKA <span className="text-[#f6dfa0]">무료 홍보</span> 이벤트
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-[#f3eadb]">
+          매장 오픈, 대회, 팀 모집 포스터를 POKA 메인 포스터 자리에 무료로 올려 드립니다. 아래 문의 양식에
+          &quot;무료 홍보 이벤트&quot;라고 적고 업체명·연락처를 남겨 주시면, 확인 후 포스터를 받아 바로 걸어 드립니다.
+        </p>
+        <p className="mt-1 text-xs text-[#bfae92]">자리가 차면 순서대로 안내하며, 이벤트는 운영 상황에 따라 끝날 수 있습니다.</p>
+        <a
+          href="#inquiry"
+          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-gradient-to-r from-[#f6dfa0] to-[#c9952f] px-6 text-sm font-black text-[#2a0f10] hover:brightness-110"
+        >
+          무료 홍보 신청하기 →
+        </a>
+      </section>
+
       <section>
         <h2 className="text-lg font-bold text-white">누가 보나요</h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-3">

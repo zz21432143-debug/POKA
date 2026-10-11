@@ -24,6 +24,8 @@ export type HomePoster = {
   image: string | null;
   mark: string;
   slot: number;
+  /** true면 포스터 그림만(표시 딱지·제목 띠 없이). 글자가 이미 들어간 이벤트 포스터용 */
+  plain?: boolean;
 };
 
 /** 홈 상단 포스터 6구좌. 한 줄 3장, 한 칸씩 밀렸다 멈추기를 반복하고 들어올 때마다 순서를 섞습니다. */
@@ -138,12 +140,16 @@ function PosterCard({ poster, focusable }: { poster: HomePoster; focusable: bool
         loading="lazy"
         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       />
-      <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/30">
-        {poster.mark}
-      </span>
-      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-1.5 text-[11px] font-semibold leading-tight text-white sm:text-xs">
-        <span className="line-clamp-1">{poster.title}</span>
-      </span>
+      {poster.plain ? null : (
+        <>
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/30">
+            {poster.mark}
+          </span>
+          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-1.5 text-[11px] font-semibold leading-tight text-white sm:text-xs">
+            <span className="line-clamp-1">{poster.title}</span>
+          </span>
+        </>
+      )}
     </Link>
   );
 }

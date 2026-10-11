@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a1418"/>
+      <stop offset="0.55" stop-color="#2a0f10"/>
+      <stop offset="1" stop-color="#140a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6dfa0"/>
+      <stop offset="1" stop-color="#c9952f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.32" r="0.55">
+      <stop offset="0" stop-color="#ffcf6b" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="500" height="700" rx="26" fill="url(#bg)"/>
+  <rect width="500" height="700" rx="26" fill="url(#glow)"/>
+  <rect x="18" y="18" width="464" height="664" rx="18" stroke="url(#gold)" stroke-width="3"/>
+  <!-- 카드 무늬 -->
+  <g opacity="0.16" fill="#f6dfa0">
+    <path d="M70 92c10 12 22 20 22 32a11 11 0 0 1-19 7 11 11 0 0 1-19-7c0-12 12-20 16-32z"/>
+    <path d="M430 92l14 20-14 20-14-20z"/>
+    <path d="M70 608c-12-10-22-18-22-28a11 11 0 0 1 22-4 11 11 0 0 1 22 4c0 10-10 18-22 28z"/>
+    <circle cx="420" cy="600" r="8"/><circle cx="440" cy="600" r="8"/><circle cx="430" cy="586" r="8"/><rect x="427" y="600" width="6" height="16"/>
+  </g>
+  <!-- EVENT 띠 -->
+  <rect x="170" y="64" width="160" height="40" rx="20" fill="url(#gold)"/>
+  <text x="250" y="91" text-anchor="middle" fill="#2a0f10" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="20" font-weight="900" letter-spacing="6">EVENT</text>
+  <text x="250" y="178" text-anchor="middle" fill="#f6dfa0" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="46" font-weight="900" letter-spacing="10">POKA</text>
+  <text x="250" y="278" text-anchor="middle" fill="#ffffff" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="74" font-weight="900">무료 홍보</text>
+  <text x="250" y="356" text-anchor="middle" fill="url(#gold)" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="58" font-weight="900">이벤트</text>
+  <line x1="120" y1="398" x2="380" y2="398" stroke="#c9952f" stroke-opacity="0.6" stroke-width="2"/>
+  <text x="250" y="446" text-anchor="middle" fill="#f3eadb" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="24" font-weight="700">매장 · 대회 · 팀 포스터를</text>
+  <text x="250" y="482" text-anchor="middle" fill="#f3eadb" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="24" font-weight="700">POKA 메인에 무료로 올려 드려요</text>
+  <rect x="120" y="540" width="260" height="62" rx="31" fill="url(#gold)"/>
+  <text x="250" y="580" text-anchor="middle" fill="#2a0f10" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="25" font-weight="900">지금 신청하기 →</text>
+  <text x="250" y="648" text-anchor="middle" fill="#bfae92" font-family="Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="16" font-weight="600">홀덤 딜러 · 플레이어 커뮤니티 POKA</text>
+</svg>

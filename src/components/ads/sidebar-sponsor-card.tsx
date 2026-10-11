@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AdvertiseInquiryCta } from "@/components/ads/advertise-inquiry-dialog";
+import { FreePromoBanner } from "@/components/ads/free-promo-banner";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 
 export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
@@ -32,13 +32,10 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
     );
   }
 
+  // 제휴 배너가 비어 있으면 "POKA 무료 홍보 이벤트"로 채웁니다.
   return (
-    <section
-      aria-label="사이드바 제휴 배너 공석"
-      className="ink-panel mx-auto flex min-h-[132px] w-full max-w-[300px] flex-col items-center justify-center rounded-[1.25rem] px-3 py-5"
-    >
-      <p className="mb-3 text-center text-sm font-semibold text-[#D1D5DB]">매장·브랜드를 POKA 회원에게 알려보세요</p>
-      <AdvertiseInquiryCta />
+    <section aria-label="POKA 무료 홍보 이벤트" className="mx-auto w-full max-w-[300px]">
+      <FreePromoBanner variant="card" />
     </section>
   );
 }
