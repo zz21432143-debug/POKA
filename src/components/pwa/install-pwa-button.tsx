@@ -61,14 +61,10 @@ export function InstallPwaButton({
   const [androidOpen, setAndroidOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [installed, setInstalled] = useState(false);
-  // 띠는 화면이 그려진 뒤(브라우저 확인 후)에만 보여 줍니다. 닫으면 7일 동안 숨깁니다.
-  const [stripVisible, setStripVisible] = useState(false);
+  const [stripClosed, setStripClosed] = useState(false);
 
   useEffect(() => {
-    const check = window.setTimeout(() => {
-      setInstalled(isStandalone());
-      if (variant === "strip") setStripVisible(!stripDismissed());
-    }, 0);
+    const check = window.setTimeout(() => setInstalled(isStandalone()), 0);
     const onPrompt = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
