@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BriefcaseIcon, MegaphoneIcon, UsersIcon } from "lucide-react";
 import { AdvertiseForm } from "@/components/ads/advertise-form";
 import { AD_PRODUCTS } from "@/lib/sponsor";
+import { PokaMascot } from "@/components/ads/free-promo-banner";
 
 export const metadata: Metadata = {
   title: "광고 · 제휴 문의",
@@ -46,11 +47,14 @@ export default function AdvertisePage() {
         <span className="rounded-full bg-gradient-to-r from-[#f6dfa0] to-[#c9952f] px-3 py-0.5 text-[11px] font-black tracking-[0.25em] text-[#2a0f10]">
           EVENT
         </span>
-        <h2 className="mt-3 text-2xl font-black text-white">
-          POKA <span className="text-[#f6dfa0]">무료 홍보</span> 이벤트
-        </h2>
+        <div className="mt-3 flex items-center gap-3">
+          <PokaMascot className="size-14" />
+          <h2 className="text-2xl font-black text-white">
+            POKA <span className="text-[#f6dfa0]">무료 홍보</span> 이벤트
+          </h2>
+        </div>
         <p className="mt-2 text-sm leading-6 text-[#f3eadb]">
-          매장 오픈, 대회, 팀 모집 포스터를 POKA 메인 포스터 자리에 무료로 올려 드립니다. 아래 문의 양식에
+          매장 오픈, 대회, 팀 모집, 유튜브 채널 홍보를 POKA 메인 포스터 자리에 무료로 올려 드립니다. 아래 문의 양식에
           &quot;무료 홍보 이벤트&quot;라고 적고 업체명·연락처를 남겨 주시면, 확인 후 포스터를 받아 바로 걸어 드립니다.
         </p>
         <p className="mt-1 text-xs text-[#bfae92]">자리가 차면 순서대로 안내하며, 이벤트는 운영 상황에 따라 끝날 수 있습니다.</p>
