@@ -84,8 +84,10 @@ async function loadHomeFeed() {
         }),
       prisma.post
         .findMany({
-          // 홈 메인 공고는 지원 딜러 구인입니다. 카드에 조건을 보여 주려고 공고 칸을 함께 읽습니다.
-          where: { AND: [{ ...base, boardType: "JOBS", jobKind: "APPLY" }, openJobWhere()] },
+          // 홈 메인 공고는 지원 딜러·대회 딜러 구인입니다. 카드에 조건을 보여 주려고 공고 칸을 함께 읽습니다.
+          where: {
+            AND: [{ ...base, boardType: "JOBS", jobKind: { in: ["APPLY", "TOURNAMENT"] } }, openJobWhere()],
+          },
           orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
           take: 6,
           select: {
@@ -96,7 +98,9 @@ async function loadHomeFeed() {
             jobLocation: true,
             jobCompanyName: true,
             jobPayAmount: true,
+            jobKind: true,
             jobWorkDate: true,
+            jobEndDate: true,
             jobDateFlexible: true,
             jobGuaranteedHours: true,
             jobTravelPay: true,

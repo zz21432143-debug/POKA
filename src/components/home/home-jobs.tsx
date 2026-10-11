@@ -13,7 +13,9 @@ export type HomeApplyJob = {
   jobLocation: string | null;
   jobCompanyName: string | null;
   jobPayAmount: string | null;
+  jobKind: string | null;
   jobWorkDate: string | null;
+  jobEndDate: string | null;
   jobDateFlexible: boolean;
   jobGuaranteedHours: string | null;
   jobTravelPay: boolean;
@@ -28,8 +30,16 @@ function shortDate(value: string | null) {
   return `${m}/${d}(${day})`;
 }
 
+/** 시작~끝 날짜. 끝 날짜가 없으면 하루만. */
+function dateRange(start: string | null, end: string | null) {
+  const a = shortDate(start);
+  if (!a) return null;
+  if (!end || end === start) return a;
+  return `${a}~${shortDate(end)}`;
+}
+
 /**
- * 홈 메인 공고. 사이트의 중심인 지원 딜러 구인을 카드로 크게 보여 줍니다.
+ * 홈 메인 공고. 사이트의 중심인 지원 딜러·대회 딜러 구인을 카드로 크게 보여 줍니다.
  * 지역·시급·근무일·보장 시간·차비를 제목 아래 바로 보여 줘 눌러 보지 않아도 조건이 보이게 합니다.
  */
 export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
@@ -38,7 +48,7 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
       <div className="flex flex-wrap items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-4 py-3">
         <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
           <BriefcaseIcon className="size-5 text-[#e7c98a]" />
-          지원 딜러 구인
+          지원 · 대회 딜러 구인
           {jobs.length ? (
             <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-bold text-white">
               모집중 {jobs.length}
@@ -61,7 +71,12 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
           {jobs.map((job) => {
             const pay = formatWon(job.jobPayAmount);
             const travel = job.jobTravelPay ? formatWon(job.jobTravelPayAmount) || "지원" : null;
-            const when = job.jobDateFlexible ? "날짜 협의" : shortDate(job.jobWorkDate);
+            const tournament = job.jobKind === "TOURNAMENT";
+            const when = job.jobDateFlexible
+              ? tournament
+                ? "일정 추후 공지"
+                : "날짜 협의"
+              : dateRange(job.jobWorkDate, job.jobEndDate);
             return (
               <li key={job.id}>
                 <Link
@@ -74,6 +89,14 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
                   <div className="flex items-center gap-1.5">
                     <span className="rounded-md bg-[#7a1c22] px-1.5 py-0.5 text-[11px] font-bold text-white">
                       {titleRegion(job.jobLocation)}
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-md px-1.5 py-0.5 text-[11px] font-bold",
+                        tournament ? "bg-[#1f4e79] text-white" : "bg-white/10 text-[#E5E7EB]",
+                      )}
+                    >
+                      {tournament ? "대회" : "지원"}
                     </span>
                     {job.isPaid ? (
                       <span className="inline-flex items-center gap-0.5 rounded-md bg-gradient-to-r from-[#e7c98a] to-[#c59b27] px-1.5 py-0.5 text-[11px] font-bold text-[#1d1611]">

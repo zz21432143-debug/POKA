@@ -13,6 +13,7 @@ export type FeedKey =
   | "jobs"
   | "jobs/fixed"
   | "jobs/apply"
+  | "jobs/tournament"
   | "jobs/team"
   | "jobs/urgent";
 
@@ -30,6 +31,7 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/jobs": "jobs",
   "/boards/jobs/fixed": "jobs/fixed",
   "/boards/jobs/apply": "jobs/apply",
+  "/boards/jobs/tournament": "jobs/tournament",
   "/boards/jobs/team": "jobs/team",
   "/boards/jobs/urgent": "jobs/urgent",
 };
@@ -71,17 +73,19 @@ export function feedWhere(key: FeedKey) {
   const jobKind = {
     "jobs/fixed": "FIXED",
     "jobs/apply": "APPLY",
+    "jobs/tournament": "TOURNAMENT",
     "jobs/team": "TEAM",
     "jobs/urgent": "URGENT",
-  }[key] as "FIXED" | "APPLY" | "TEAM" | "URGENT";
+  }[key] as "FIXED" | "APPLY" | "TEAM" | "URGENT" | "TOURNAMENT";
   return { boardType: "JOBS" as const, jobKind, hidden: false, isAttendanceThread: false };
 }
 
-export function jobFeedKey(kind: "FIXED" | "APPLY" | "TEAM" | "URGENT") {
+export function jobFeedKey(kind: "FIXED" | "APPLY" | "TEAM" | "URGENT" | "TOURNAMENT") {
   return (
     {
       FIXED: "jobs/fixed",
       APPLY: "jobs/apply",
+      TOURNAMENT: "jobs/tournament",
       TEAM: "jobs/team",
       URGENT: "jobs/urgent",
     } as const

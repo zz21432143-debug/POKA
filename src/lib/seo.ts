@@ -65,6 +65,7 @@ export const SITEMAP_PATHS = [
   { path: "/boards/jobs", changeFrequency: "daily" as const, priority: 0.8 },
   { path: "/boards/jobs/fixed", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/jobs/apply", changeFrequency: "daily" as const, priority: 0.7 },
+  { path: "/boards/jobs/tournament", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/jobs/team", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/jobs/urgent", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/rules", changeFrequency: "daily" as const, priority: 0.7 },

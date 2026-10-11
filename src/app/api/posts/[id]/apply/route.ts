@@ -19,6 +19,8 @@ async function loadJob(id: string) {
       jobFilled: true,
       jobAlwaysOpen: true,
       jobWorkDate: true,
+      jobEndDate: true,
+      jobDeadline: true,
       createdAt: true,
     },
   });

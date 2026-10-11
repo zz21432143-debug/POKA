@@ -48,6 +48,11 @@ export function toJobCard(post: FeedRow, now = new Date(), today = todayKstDate(
     jobSnacks: post.jobSnacks,
     jobDressCode: post.jobDressCode,
     jobApplyMethod: post.jobApplyMethod,
+    jobEndDate: post.jobEndDate,
+    jobDeadline: post.jobDeadline,
+    jobHeadcount: post.jobHeadcount,
+    jobApplyValue: post.jobApplyValue,
+    jobAlwaysOpen: post.jobAlwaysOpen,
   };
 }
 

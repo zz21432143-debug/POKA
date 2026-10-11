@@ -37,6 +37,29 @@ describe("job status", () => {
     );
   });
 
+  it("closes multi-day tournaments after the last day", () => {
+    const base = { jobKind: "TOURNAMENT", jobFilled: false, createdAt: daysAgo(1), jobWorkDate: "2026-10-10" };
+    assert.equal(jobStatus({ ...base, jobEndDate: "2026-10-11" }, now, today), "open");
+    assert.equal(jobStatus({ ...base, jobEndDate: null }, now, today), "expired");
+  });
+
+  it("closes dated apply posts by their date, not 30 days", () => {
+    const base = { jobKind: "APPLY", jobFilled: false, createdAt: daysAgo(1) };
+    assert.equal(jobStatus({ ...base, jobWorkDate: "2026-10-10" }, now, today), "expired");
+    assert.equal(jobStatus({ ...base, jobWorkDate: "2026-12-01" }, now, today), "open");
+  });
+
+  it("closes any post once the application deadline has passed", () => {
+    const base = { jobKind: "TOURNAMENT", jobFilled: false, createdAt: daysAgo(1), jobWorkDate: "2026-12-23" };
+    assert.equal(jobStatus({ ...base, jobDeadline: "2026-10-11" }, now, today), "open");
+    assert.equal(jobStatus({ ...base, jobDeadline: "2026-10-10" }, now, today), "expired");
+    assert.equal(jobStatus({ ...base, jobKind: "TEAM", jobAlwaysOpen: true, jobDeadline: "2026-10-10" }, now, today), "expired");
+    assert.equal(
+      jobExpiresOn({ ...base, jobEndDate: "2026-12-27", jobDeadline: "2026-12-13" }),
+      "2026-12-13",
+    );
+  });
+
   it("reports the auto-close date", () => {
     assert.equal(
       jobExpiresOn({ jobKind: "FIXED", jobFilled: false, jobWorkDate: null, createdAt: "2026-10-01T03:00:00Z" }),
@@ -66,6 +89,20 @@ describe("job status", () => {
     );
     assert.equal(buildJobTitle("SEEKING", { location: "인천", companyName: "홍길동" }), "[인천] 홀덤 딜러 구직 · 홍길동");
     assert.equal(buildJobTitle("TEAM", { location: "부산 해운대구", companyName: "ACE" }), "[부산] 팀 ACE 모집");
+    assert.equal(buildJobTitle("TEAM", { location: "전국", companyName: "HAN AGENCY" }), "[전국] 팀 HAN AGENCY 모집");
+    assert.equal(
+      buildJobTitle("TOURNAMENT", {
+        location: "서울 구로 G스타디움",
+        companyName: "RABBIT FESTIVAL",
+        workDate: "2026-10-31",
+        endDate: "2026-11-01",
+      }),
+      "[서울] RABBIT FESTIVAL 대회딜러 구인 (10/31~11/1)",
+    );
+    assert.equal(
+      buildJobTitle("TOURNAMENT", { location: "서울", companyName: "ACE POKER LEAGUE", workDate: null }),
+      "[서울] ACE POKER LEAGUE 대회딜러 구인",
+    );
   });
 
   it("accepts only known regions", () => {

@@ -18,6 +18,7 @@ import { BackToList } from "@/components/posts/back-to-list";
 import type { Metadata } from "next";
 import { JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
+import { LinkifiedText } from "@/components/posts/linkified-text";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
@@ -267,6 +268,16 @@ export default async function PostDetailPage({
       {canRead ? (
         <div className="article-body">
       {post.jobKind ? <JobFacts job={post} /> : null}
+      {post.jobKind && post.jobApplyValue && status === "open" ? (
+        <a
+          href={post.jobApplyValue}
+          target="_blank"
+          rel="noopener noreferrer nofollow ugc"
+          className="touch-target flex min-h-12 items-center justify-center rounded-xl bg-[#c9a25c] px-4 text-sm font-bold text-[#1d1611] hover:bg-[#e7c98a]"
+        >
+          지원서 작성하기 ↗
+        </a>
+      ) : null}
       {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
       {post.jobKind && staff ? <PremiumToggle postId={post.id} isPaid={post.isPaid} /> : null}
       {isJobPost && !isJobOwner && status === "open" ? (
@@ -377,7 +388,11 @@ export default async function PostDetailPage({
         />
       ) : null}
 
-      {post.content ? <div className="article-copy">{post.content}</div> : null}
+      {post.content ? (
+        <div className="article-copy">
+          <LinkifiedText text={post.content} />
+        </div>
+      ) : null}
         </div>
       ) : null}
 

@@ -25,6 +25,7 @@ export const JOB_NAME_LABEL: Record<JobKind, string> = {
   URGENT: "상호명",
   TEAM: "팀 명",
   SEEKING: "본명",
+  TOURNAMENT: "대회명",
 };
 
 export function buildJobTitle(kind: JobKind, fields: {
@@ -32,6 +33,7 @@ export function buildJobTitle(kind: JobKind, fields: {
   companyName?: string | null;
   payAmount?: string | null;
   workDate?: string | null;
+  endDate?: string | null;
 }): string {
   // 상호명(팀 명)이 제목 앞에 옵니다. 예: [서울] POKA홀덤 구인, [부산] 팀 ACE 모집
   const loc = titleRegion(fields.location);
@@ -45,8 +47,27 @@ export function buildJobTitle(kind: JobKind, fields: {
     const when = fields.workDate?.trim() || "즉시";
     return `[${loc}] ${name} 급구/대타 (${when})`;
   }
+  if (kind === "TOURNAMENT") {
+    const range = dateRangeLabel(fields.workDate, fields.endDate);
+    return `[${loc}] ${name} 대회딜러 구인${range ? ` (${range})` : ""}`;
+  }
   if (kind === "SEEKING") return `[${loc}] 홀덤 딜러 구직 · ${name}`;
   return `[${loc}] 팀 ${name} 모집`;
+}
+
+/** "2026-10-31" → "10/31". 형식이 다르면 그대로 둡니다. */
+export function shortDate(value: string | null | undefined): string {
+  const v = value?.trim() ?? "";
+  const m = v.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  return m ? `${Number(m[1])}/${Number(m[2])}` : v;
+}
+
+/** 시작~끝 날짜를 "10/31~11/1"처럼 짧게. 끝 날짜가 없거나 같으면 하루만. */
+export function dateRangeLabel(start: string | null | undefined, end: string | null | undefined): string {
+  const a = shortDate(start);
+  const b = shortDate(end);
+  if (!a) return "";
+  return b && b !== a ? `${a}~${b}` : a;
 }
 
 export type JobFormPayload = {
@@ -60,6 +81,11 @@ export type JobFormPayload = {
   jobExperience?: string;
   jobContact?: string;
   jobWorkDate?: string;
+  jobEndDate?: string;
+  jobDeadline?: string;
+  jobHeadcount?: string;
+  jobApplyValue?: string;
+  jobAlwaysOpen?: boolean;
   jobDateFlexible?: boolean;
   jobGuaranteedHours?: string;
   jobOvertime?: string;

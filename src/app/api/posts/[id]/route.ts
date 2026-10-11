@@ -6,7 +6,7 @@ import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-word
 import { HoldemOnlyError, assertHoldemOnly } from "@/lib/holdem-only";
 import type { JobKind } from "@/generated/prisma/enums";
 
-const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
 
 export async function PATCH(
   request: Request,
@@ -58,6 +58,11 @@ export async function PATCH(
         jobExperience: jobData.jobExperience,
         jobContact: jobData.jobContact,
         jobWorkDate: jobData.jobWorkDate,
+        jobEndDate: jobData.jobEndDate,
+        jobDeadline: jobData.jobDeadline,
+        jobAlwaysOpen: jobData.jobAlwaysOpen,
+        jobHeadcount: jobData.jobHeadcount,
+        jobApplyValue: jobData.jobApplyValue,
         jobDateFlexible: jobData.jobDateFlexible,
         jobGuaranteedHours: jobData.jobGuaranteedHours,
         jobOvertime: jobData.jobOvertime,

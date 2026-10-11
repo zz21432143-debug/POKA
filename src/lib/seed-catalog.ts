@@ -96,6 +96,8 @@ export type CatalogPost = {
   jobExperience?: string;
   jobContact?: string;
   jobWorkDate?: string;
+  jobEndDate?: string;
+  jobHeadcount?: string;
   jobDateFlexible?: boolean;
   jobGuaranteedHours?: string;
   jobOvertime?: string;
@@ -419,6 +421,34 @@ export function catalogPosts(
     };
   });
 
+  const jobsTournament: CatalogPost[] = times((i) => {
+    const location = LOCS[i];
+    const companyName = `POKA 오픈 시즌 ${i + 1}`;
+    const workDate = `${today.slice(0, 8)}${String((i % 26) + 1).padStart(2, "0")}`;
+    const [y, m, d] = workDate.split("-").map(Number);
+    const endDate = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+    return {
+      boardType: "JOBS" as const,
+      jobKind: "TOURNAMENT" as const,
+      title: buildJobTitle("TOURNAMENT", { location, companyName, workDate, endDate }),
+      jobCompanyName: companyName,
+      content: `${location} 홀덤 대회 딜러를 모집합니다.`,
+      authorNickname: nick(0),
+      daysAgo: i,
+      upvoteCount: i % 5,
+      jobLocation: location,
+      jobPayType: "시급",
+      jobPayAmount: "20000",
+      jobWorkDate: workDate,
+      jobEndDate: endDate,
+      jobHeadcount: `${30 + i}명`,
+      jobGuaranteedHours: "6시간",
+      jobDressCode: "상의 검정 셔츠 · 하의 검정 슬랙스",
+      jobExperience: "TDA 룰 숙지자",
+      jobContact: `010-4${String(200 + i).padStart(3, "0")}-3333`,
+    };
+  });
+
   const jobsUrgent: CatalogPost[] = times((i) => {
     const location = LOCS[i];
     const workDate = i % 3 === 0 ? "" : `${today.slice(0, 8)}${String((i % 27) + 1).padStart(2, "0")}`;
@@ -455,6 +485,7 @@ export function catalogPosts(
     "hand-review": hand,
     "jobs/fixed": jobsFixed,
     "jobs/apply": jobsApply,
+    "jobs/tournament": jobsTournament,
     "jobs/team": jobsTeam,
     "jobs/urgent": jobsUrgent,
   };

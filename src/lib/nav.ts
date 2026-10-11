@@ -68,6 +68,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       // 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
+      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "spade" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "briefcase" },
@@ -112,6 +113,7 @@ export const BOARD_NAV: NavGroup[] = [
     accent: "gold",
     items: [
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
+      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
@@ -255,6 +257,12 @@ export const JOB_KINDS = {
     kind: "APPLY" as const,
     cta: "구인 등록",
   },
+  tournament: {
+    title: "대회 딜러 구인",
+    blurb: "홀덤 대회·행사 딜러 모집",
+    kind: "TOURNAMENT" as const,
+    cta: "대회 구인 등록",
+  },
   urgent: {
     title: "급구 / 대타",
     blurb: "홀덤펍 당일·긴급 대타",
@@ -290,6 +298,7 @@ export function resolveJobKind(kind: string) {
 const JOB_KIND_SLUG: Record<JobKind, string> = {
   FIXED: "fixed",
   APPLY: "apply",
+  TOURNAMENT: "tournament",
   TEAM: "team",
   URGENT: "urgent",
   SEEKING: "seek",
@@ -316,6 +325,7 @@ export function boardListHref(boardType: BoardType, jobKind?: JobKind | null) {
 export const JOB_KIND_LABEL: Record<JobKind, string> = {
   FIXED: "고정 직원 구인",
   APPLY: "지원 딜러 구인",
+  TOURNAMENT: "대회 딜러 구인",
   TEAM: "팀 구인",
   URGENT: "급구 / 대타",
   SEEKING: "개인 구직",

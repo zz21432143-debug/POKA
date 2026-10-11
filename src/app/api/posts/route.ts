@@ -37,7 +37,7 @@ const BOARDS: BoardType[] = [
 ];
 
 // 개인 구직(SEEKING)은 운영 종료로 새 글을 받지 않습니다.
-const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT"];
+const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "TOURNAMENT"];
 
 export async function POST(request: Request) {
   try {
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     // 도배 방지: 같은 회원이 같은 분류·같은 상호로 24시간 안에 같은 공고를 다시 올릴 수 없습니다.
     // 지원 딜러·급구처럼 날짜가 있는 공고는 근무 날짜가 다르면 다른 공고로 보고 허용합니다.
     if (boardType === "JOBS" && jobKind && jobData && !isStaff(user)) {
-      const dated = jobKind === "APPLY" || jobKind === "URGENT";
+      const dated = jobKind === "APPLY" || jobKind === "URGENT" || jobKind === "TOURNAMENT";
       const duplicate = await prisma.post.findFirst({
         where: {
           boardType: "JOBS",
@@ -201,6 +201,11 @@ export async function POST(request: Request) {
         jobExperience: jobData?.jobExperience ?? null,
         jobContact: jobData?.jobContact ?? null,
         jobWorkDate: jobData?.jobWorkDate ?? null,
+        jobEndDate: jobData?.jobEndDate ?? null,
+        jobDeadline: jobData?.jobDeadline ?? null,
+        jobAlwaysOpen: jobData?.jobAlwaysOpen ?? false,
+        jobHeadcount: jobData?.jobHeadcount ?? null,
+        jobApplyValue: jobData?.jobApplyValue ?? null,
         jobDateFlexible: jobData?.jobDateFlexible ?? false,
         jobGuaranteedHours: jobData?.jobGuaranteedHours ?? null,
         jobOvertime: jobData?.jobOvertime ?? null,

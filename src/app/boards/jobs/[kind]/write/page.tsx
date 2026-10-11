@@ -24,7 +24,9 @@ export default async function JobWritePage({
     FIXED: "제목은 [서울] POKA홀덤 구인 형식입니다. 상세주소는 제목에 나오지 않습니다. 연락처는 로그인 회원만 볼 수 있습니다.",
     APPLY: "제목은 [서울] POKA홀덤 지원딜러 구인 (시급) 형식입니다. 상세주소는 제목에 나오지 않습니다.",
     TEAM: "제목은 [부산] 팀 ACE 모집 형식입니다. 상세주소는 제목에 나오지 않습니다.",
-    URGENT: "제목은 [서울] POKA홀덤 급구/대타 (날짜) 형식입니다. 당일 대타·급구용입니다.",  } as const;
+    URGENT: "제목은 [서울] POKA홀덤 급구/대타 (날짜) 형식입니다. 당일 대타·급구용입니다.",
+    TOURNAMENT: "제목은 [서울] RABBIT FESTIVAL 대회딜러 구인 (10/31~11/1) 형식입니다. 마지막 대회일이나 모집 마감일이 지나면 자동 마감됩니다.",
+  } as const;
 
   return (
     <RequireLogin>

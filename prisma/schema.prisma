@@ -46,6 +46,8 @@ enum JobKind {
   TEAM
   URGENT
   SEEKING
+  /// 대회 딜러 구인(행사 단위, 여러 날짜)
+  TOURNAMENT
 }
 
 enum MemberKind {
@@ -167,6 +169,10 @@ model Post {
   jobExperience      String?
   jobContact         String?
   jobWorkDate        String?
+  /// 여러 날 근무하는 공고의 마지막 근무일 YYYY-MM-DD (대회·지원 딜러)
+  jobEndDate         String?
+  /// 모집 마감일 YYYY-MM-DD. 지나면 자동 마감
+  jobDeadline        String?
   jobDateFlexible    Boolean   @default(false)
   jobGuaranteedHours String?
   jobOvertime        String?

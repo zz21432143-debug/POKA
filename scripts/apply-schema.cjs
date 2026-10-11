@@ -16,7 +16,10 @@ const { Client } = require("pg");
 
 dns.setDefaultResultOrder("ipv4first");
 
-const FILES = ["prisma/migrations/20261011150000_jobs_v2_sync/migration.sql"];
+const FILES = [
+  "prisma/migrations/20261011150000_jobs_v2_sync/migration.sql",
+  "prisma/migrations/20261012100000_tournament_jobs/migration.sql",
+];
 
 function databaseUrl() {
   const raw = String(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || "")
