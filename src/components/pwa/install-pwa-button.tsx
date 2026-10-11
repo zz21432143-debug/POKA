@@ -80,10 +80,12 @@ export function InstallPwaButton({
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [variant]);
+  }, []);
 
+  // 설치한 앱으로 열었을 때와 띠를 닫아 둔 경우는 첫 화면부터 CSS가 숨깁니다(globals.css의 app-get).
+  // 여기서는 화면을 연 뒤에 설치·닫기를 한 경우만 처리합니다.
   if (installed) return null;
-  if (variant === "strip" && !stripVisible) return null;
+  if (variant === "strip" && stripClosed) return null;
 
   function closeStrip() {
     try {
@@ -91,7 +93,7 @@ export function InstallPwaButton({
     } catch {
       // 저장소를 못 쓰면 이번 화면에서만 닫습니다.
     }
-    setStripVisible(false);
+    setStripClosed(true);
   }
 
   async function install() {
