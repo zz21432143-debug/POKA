@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardPasteIcon, ImageUpIcon, Loader2Icon, SparklesIcon, XIcon } from "lucide-react";
+import { ClipboardPasteIcon, ImageUpIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,24 +11,32 @@ import { DateField } from "@/components/jobs/date-picker";
 import { postRewardLine } from "@/lib/rewards";
 import { todayKstDate } from "@/lib/dates";
 import { parseScheduleText } from "@/lib/schedule-parse";
-import { imageIdFromUrl } from "@/lib/uploads";
-import type { PosterFields } from "@/lib/poster-analyze";
+import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES } from "@/lib/uploads";
 
-/** 긴 변 1600px JPEG로 줄여 업로드 용량을 줄입니다. */
+/**
+ * 포스터는 원본 그대로 올립니다. 업로드 한도(3MB)를 넘거나 지원하지 않는 형식일 때만
+ * 긴 변 2400px 고화질 JPEG로 바꿔 올립니다.
+ */
+async function posterFile(file: File): Promise<File> {
+  if (IMAGE_MIME_TYPES.includes(file.type) && file.size <= IMAGE_MAX_BYTES) return file;
+  const blob = await shrinkImage(file);
+  return new File([blob], "poster.jpg", { type: "image/jpeg" });
+}
+
 async function shrinkImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("이미지를 줄이지 못했습니다."))), "image/jpeg", 0.85),
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("이미지를 줄이지 못했습니다."))), "image/jpeg", 0.92),
   );
 }
 
-type Step = "idle" | "uploading" | "analyzing";
+type Step = "idle" | "uploading";
 type Note = { ok: boolean; text: string } | null;
 
 const PASTE_EXAMPLE = [
@@ -43,8 +51,7 @@ const PASTE_EXAMPLE = [
 /**
  * 대회 캘린더 등록. 두 가지 방법을 함께 씁니다.
  * A. 대회 안내 글을 붙여넣으면 대회명·장소·날짜·총상금·링크·상세 내용으로 자동으로 나눕니다(비용 없음).
- * B. 포스터 이미지를 올리거나 주소를 넣으면 캘린더 상세 창과 게시글에 그대로 보입니다.
- *    포스터 글자를 AI로 읽는 기능은 선택(유료)이며 누를 때만 동작합니다.
+ * B. 포스터 이미지를 올리거나 주소를 넣으면 캘린더 상세 창과 게시글에 포스터 원본이 그대로 보입니다(글자 인식 없음).
  */
 export function ScheduleForm({ hint }: { hint: string }) {
   const router = useRouter();
@@ -60,6 +67,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
   const [content, setContent] = useState("");
   const [step, setStep] = useState<Step>("idle");
   const [pasteNote, setPasteNote] = useState<Note>(null);
+  const [parsed, setParsed] = useState<ReturnType<typeof parseScheduleText> | null>(null);
   const [posterNote, setPosterNote] = useState<Note>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -78,23 +86,24 @@ export function ScheduleForm({ hint }: { hint: string }) {
     if (p.totalPrize) setPrize(p.totalPrize);
     if (p.link) setLink(p.link);
     setContent(p.description);
-    const found = [p.title && "대회명", p.location && "장소", p.startDate && "날짜", p.totalPrize && "총상금", p.link && "링크"].filter(Boolean);
-    const missing = [!p.location && "장소", !p.startDate && "날짜", !p.totalPrize && "총상금"].filter(Boolean);
+    setParsed(p);
+    const missing = [!p.title && "대회명", !p.startDate && "날짜", !p.totalPrize && "총상금", !p.location && "개최 장소"].filter(Boolean);
     setPasteNote({
       ok: true,
-      text: `${found.join(", ") || "상세 내용"}을(를) 채웠습니다.${missing.length ? ` ${missing.join(", ")}은(는) 찾지 못했으니 직접 넣어 주세요.` : ""}`,
+      text: missing.length
+        ? `자동으로 나눴습니다. ${missing.join(", ")}은(는) 찾지 못했으니 아래 칸에 직접 넣어 주세요.`
+        : "자동으로 나눴습니다. 아래 칸을 확인하고 등록하세요.",
     });
   }
 
-  /** B. 포스터 이미지를 올려 주소를 넣습니다. AI 분석은 하지 않습니다. */
+  /** B. 포스터 이미지를 원본 그대로 올려 주소를 넣습니다. */
   async function onPick(file: File | undefined) {
     if (!file) return;
     setPosterNote(null);
     setStep("uploading");
     try {
-      const blob = await shrinkImage(file);
       const form = new FormData();
-      form.append("file", new File([blob], "poster.jpg", { type: "image/jpeg" }));
+      form.append("file", await posterFile(file));
       const response = await fetch("/api/uploads/image", { method: "POST", body: form });
       const payload = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !payload.url) throw new Error(payload.error ?? "이미지를 올리지 못했습니다.");
@@ -105,34 +114,6 @@ export function ScheduleForm({ hint }: { hint: string }) {
     } finally {
       setStep("idle");
       if (fileRef.current) fileRef.current.value = "";
-    }
-  }
-
-  /** 선택: 올린 포스터 글자를 AI로 읽어 빈칸을 채웁니다(서버에 ANTHROPIC_API_KEY가 있을 때만, 1회당 요금 발생). */
-  async function analyze() {
-    setPosterNote(null);
-    setStep("analyzing");
-    try {
-      const response = await fetch("/api/schedule/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: poster }),
-      });
-      const payload = (await response.json()) as { fields?: PosterFields; error?: string };
-      if (!response.ok || !payload.fields) throw new Error(payload.error ?? "포스터를 읽지 못했습니다.");
-      const f = payload.fields;
-      if (f.title && !title) setTitle(f.title);
-      if (f.location && !venue) setVenue(f.location);
-      if (f.startDate && !start) setStart(f.startDate);
-      if (f.endDate && !end) setEnd(f.endDate);
-      if (f.totalPrize && !prize) setPrize(f.totalPrize);
-      if (f.link && !link) setLink(f.link);
-      if (f.description && !content) setContent(f.description);
-      setPosterNote({ ok: true, text: "포스터 글자로 빈칸을 채웠습니다. 이미 적은 칸은 그대로 두었습니다." });
-    } catch (err) {
-      setPosterNote({ ok: false, text: err instanceof Error ? err.message : "포스터를 읽지 못했습니다." });
-    } finally {
-      setStep("idle");
     }
   }
 
@@ -210,6 +191,24 @@ export function ScheduleForm({ hint }: { hint: string }) {
           자동 나누기
         </Button>
         {pasteNote ? <p className={noteClass(pasteNote)}>{pasteNote.text}</p> : null}
+        {parsed ? (
+          <dl className="grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-1 rounded-lg bg-[#141110] px-3 py-2 text-xs" aria-label="나눈 결과">
+            {(
+              [
+                ["대회명", parsed.title],
+                ["시작일", parsed.startDate],
+                ["종료일", parsed.endDate],
+                ["총상금", parsed.totalPrize],
+                ["개최 장소", parsed.location],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label} className="contents">
+                <dt className="text-[#9CA3AF]">{label}</dt>
+                <dd className={value ? "font-semibold text-white" : "text-rose-300"}>{value || "찾지 못함"}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
       </section>
 
       {/* 방식 B: 포스터 첨부 */}
@@ -222,7 +221,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
         >
           {poster ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={poster} alt="첨부한 포스터" className="absolute inset-0 size-full object-cover" />
+            <img src={poster} alt="첨부한 포스터" className="absolute inset-0 size-full bg-black object-contain" />
           ) : (
             <span className="grid justify-items-center gap-1 text-xs font-bold">
               <ImageUpIcon className="size-7" />
@@ -233,7 +232,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
             <span className="absolute inset-0 grid place-items-center bg-black/60 text-xs font-bold text-white">
               <span className="grid justify-items-center gap-1">
                 <Loader2Icon className="size-6 animate-spin" />
-                {step === "uploading" ? "올리는 중…" : "읽는 중…"}
+                올리는 중…
               </span>
             </span>
           ) : null}
@@ -243,7 +242,7 @@ export function ScheduleForm({ hint }: { hint: string }) {
             <span className="rounded-md bg-[#c9a25c] px-1.5 text-sm text-[#1d1611]">B</span>
             포스터 첨부
           </p>
-          <p className="text-xs text-[#c9c0b2]">이미지를 올리거나 주소를 넣으면 캘린더 상세 창과 게시글에 포스터가 그대로 보입니다.</p>
+          <p className="text-xs text-[#c9c0b2]">이미지를 올리거나 주소를 넣으면 캘린더 상세 창과 게시글에 포스터 원본이 자르지 않고 그대로 보입니다.</p>
           <input
             ref={fileRef}
             type="file"
@@ -271,18 +270,6 @@ export function ScheduleForm({ hint }: { hint: string }) {
               <ImageUpIcon className="size-4" />
               {poster ? "다른 이미지 올리기" : "이미지 파일 고르기"}
             </Button>
-            {imageIdFromUrl(poster) ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={busy}
-                className="min-h-11 gap-1.5 border-white/20 text-xs text-[#c9c0b2]"
-                onClick={() => void analyze()}
-              >
-                <SparklesIcon className="size-4" />
-                AI로 포스터 글자 읽기 (선택 · 유료)
-              </Button>
-            ) : null}
           </div>
           {posterNote ? <p className={noteClass(posterNote)}>{posterNote.text}</p> : null}
         </div>
@@ -300,16 +287,16 @@ export function ScheduleForm({ hint }: { hint: string }) {
           />
         </div>
         <div className="grid gap-2 sm:col-span-2">
-          <Label htmlFor="venue">개최 장소</Label>
+          <Label htmlFor="venue">개최 장소 (주소)</Label>
           <Input id="venue" className="h-11" value={venue} placeholder="서울 코엑스" onChange={(e) => setVenue(e.target.value)} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="start">시작일</Label>
-          <DateField id="start" value={start} onChange={setStart} />
+          <DateField id="start" value={start} onChange={setStart} iso />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="end">종료일</Label>
-          <DateField id="end" value={end} onChange={setEnd} placeholder="하루면 비워 두세요" />
+          <DateField id="end" value={end} onChange={setEnd} placeholder="하루면 비워 두세요" iso />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="prize">총상금</Label>

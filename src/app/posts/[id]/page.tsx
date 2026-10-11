@@ -356,7 +356,7 @@ export default async function PostDetailPage({
 
       {post.boardType === "SCHEDULE" && post.bannerImageUrl && !post.bannerImageUrl.startsWith("/banners/") ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.bannerImageUrl} alt={post.title} className="w-full rounded-2xl border border-border object-cover" />
+        <img src={post.bannerImageUrl} alt={`${post.title} 포스터`} className="mx-auto block h-auto max-h-[85dvh] w-auto max-w-full rounded-2xl border border-border bg-black object-contain" />
       ) : null}
 
       {post.jobKind ? (

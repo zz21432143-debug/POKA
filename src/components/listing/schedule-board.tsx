@@ -81,7 +81,7 @@ export function ScheduleBoard({
                 >
                   {event.poster ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={event.poster} alt="" className="size-20 shrink-0 rounded-lg object-cover" />
+                    <img src={event.poster} alt="" className="h-24 w-[4.5rem] shrink-0 rounded-lg bg-black object-contain" />
                   ) : null}
                   <div className="min-w-0">
                     <p className="font-bold text-white">{event.title}</p>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { CalendarDaysIcon, ExternalLinkIcon, MapPinIcon, TrophyIcon, XIcon } from "lucide-react";
+import { CalendarDaysIcon, ExternalLinkIcon, MapPinIcon, TrophyIcon, XIcon, ZoomInIcon } from "lucide-react";
 import type { ScheduleEvent } from "@/components/listing/schedule-calendar";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { dayLabel } from "@/lib/job-events";
@@ -27,20 +27,27 @@ export function ScheduleModal({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  // 포스터만 크게 보기(원본 그대로, 화면 가득)
+  const [posterOnly, setPosterOnly] = useState(false);
 
   useEffect(() => {
     closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
     return () => {
-      window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (posterOnly) setPosterOnly(false);
+      else onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, posterOnly]);
 
   const place = event.promoLocation || event.jobLocation;
   const poster = event.poster && !event.poster.startsWith("/banners/") ? event.poster : null;
@@ -66,10 +73,20 @@ export function ScheduleModal({
         </button>
         <div className="overflow-y-auto overscroll-contain">
           {poster ? (
-            <a href={poster} target="_blank" rel="noopener noreferrer" className="block bg-black">
+            // 포스터는 글자 인식 없이 원본 그대로, 자르지 않고 보여 줍니다. 누르면 포스터만 크게 봅니다.
+            <button
+              type="button"
+              onClick={() => setPosterOnly(true)}
+              className="group relative block w-full cursor-zoom-in bg-black"
+              aria-label="포스터 크게 보기"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={poster} alt={`${event.title} 포스터`} className="mx-auto max-h-[55dvh] w-auto object-contain" />
-            </a>
+              <img src={poster} alt={`${event.title} 포스터`} className="mx-auto block h-auto max-h-[60dvh] w-auto max-w-full object-contain" />
+              <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[11px] font-semibold text-white opacity-80 group-hover:opacity-100">
+                <ZoomInIcon className="size-3.5" />
+                크게 보기
+              </span>
+            </button>
           ) : null}
           <div className="grid gap-3 p-4 sm:p-5">
             <h2 id="schedule-modal-title" className="pr-10 text-xl font-black leading-snug text-white">
@@ -134,6 +151,21 @@ export function ScheduleModal({
           </div>
         </div>
       </div>
+      {posterOnly && poster ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black" role="dialog" aria-modal="true" aria-label="포스터 원본">
+          <button type="button" aria-label="포스터 닫기" className="absolute inset-0 cursor-zoom-out" onClick={() => setPosterOnly(false)} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={poster} alt={`${event.title} 포스터 원본`} className="relative max-h-[100dvh] max-w-full object-contain" />
+          <button
+            type="button"
+            aria-label="포스터 닫기"
+            onClick={() => setPosterOnly(false)}
+            className="absolute right-3 top-3 grid size-11 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25"
+          >
+            <XIcon className="size-6" />
+          </button>
+        </div>
+      ) : null}
     </div>,
     document.body,
   );

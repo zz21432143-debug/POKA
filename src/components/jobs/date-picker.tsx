@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { todayKstDate } from "@/lib/dates";
 import { parseDateList } from "@/lib/job-parse";
-import { MAX_JOB_EVENTS, dayLabel, groupDateLabel, groupJobEvents, type JobEvent } from "@/lib/job-events";
+import { MAX_JOB_EVENTS, dayLabel, groupDateLabel, groupJobEvents, weekdayKo, type JobEvent } from "@/lib/job-events";
 import { cn } from "cn";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -135,12 +135,15 @@ export function DateField({
   onChange,
   disabled = false,
   placeholder = "예: 10/31",
+  iso = false,
 }: {
   id?: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** true면 칸에 "2026-10-31 (토)"처럼 YYYY-MM-DD로 보여 줍니다. */
+  iso?: boolean;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -166,7 +169,7 @@ export function DateField({
         <Input
           id={id}
           className={cn("h-11 text-base", bad && "border-rose-500")}
-          value={draft ?? (value ? longLabel(value) : "")}
+          value={draft ?? (value ? (iso ? `${value} (${weekdayKo(value)})` : longLabel(value)) : "")}
           placeholder={placeholder}
           disabled={disabled}
           onFocus={() => setDraft(value ? `${Number(value.slice(5, 7))}/${Number(value.slice(8))}` : "")}
