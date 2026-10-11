@@ -10,6 +10,7 @@ import { parseJobRegion } from "@/lib/job-status";
 import { loadJobPage } from "@/lib/load-feed";
 import { resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,7 @@ export default async function JobBoardPage({
         emptyText={region ? `${region} 지역 ${job.title} 글이 아직 없습니다.` : `아직 ${job.title} 글이 없습니다.`}
         emptyAction={{ href: writeHref, label: `첫 ${job.cta}하기` }}
       />
+      <BoardBottomAd />
     </div>
   );
 }

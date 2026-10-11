@@ -14,6 +14,7 @@ import {
   STREAK_REPEAT_EXP,
   STREAK_REPEAT_POINTS,
 } from "@/lib/rewards";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const metadata: Metadata = { title: "출석체크" };
 
@@ -86,6 +87,7 @@ export default async function AttendancePage() {
           initialNextOffset={stats.todayCount > PAGE_SIZE ? PAGE_SIZE : null}
         />
       </section>
+      <BoardBottomAd />
     </div>
   );
 }

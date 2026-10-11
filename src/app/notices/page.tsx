@@ -8,6 +8,7 @@ import { canWriteBoard } from "@/lib/permissions";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const metadata: Metadata = { title: "공지사항" };
 
@@ -69,6 +70,7 @@ export default async function NoticesPage() {
           emptyText="등록된 공지가 없습니다."
         />
       )}
+      <BoardBottomAd />
     </div>
   );
 }

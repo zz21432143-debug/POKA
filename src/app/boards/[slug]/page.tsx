@@ -16,6 +16,7 @@ import { postRewardLine } from "@/lib/rewards";
 import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { getSponsorCreative } from "@/lib/inventory";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,7 @@ export default async function BoardPage({
           nativeSponsor={nativeSponsor}
         />
       )}
+      <BoardBottomAd />
     </div>
   );
 }

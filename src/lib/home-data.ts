@@ -83,7 +83,8 @@ async function loadHomeFeed() {
         .catch(() => []),
       prisma.post
         .findMany({
-          where: { AND: [{ ...base, boardType: "JOBS", jobKind: { not: "URGENT" } }, openJobWhere()] },
+          // 홈 메인 공고는 지원 딜러 구인입니다.
+          where: { AND: [{ ...base, boardType: "JOBS", jobKind: "APPLY" }, openJobWhere()] },
           orderBy: [{ isPaid: "desc" }, { createdAt: "desc" }],
           take: 5,
           include,

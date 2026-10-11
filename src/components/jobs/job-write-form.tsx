@@ -91,7 +91,7 @@ export function JobWriteForm({
   const dated = jobKind === "APPLY" || jobKind === "URGENT";
   // 모든 분류가 이름 칸을 가집니다. 구인은 상호명, 팀은 팀 명, 구직은 본명이 제목에 올라갑니다.
   const nameLabel = JOB_NAME_LABEL[jobKind];
-  const namePlaceholder = jobKind === "TEAM" ? "ACE 딜러팀" : jobKind === "SEEKING" ? "홍길동" : "POKA 펍";
+  const namePlaceholder = jobKind === "TEAM" ? "ACE (팀 ACE 모집으로 표시)" : jobKind === "SEEKING" ? "홍길동" : "POKA홀덤";
 
   // 차비는 지원 딜러·급구에만 있고, 금액은 이 분류에서 쓰지 않는 jobBenefits 칸에 저장합니다.
   const travelPayField = (

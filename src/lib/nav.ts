@@ -66,9 +66,10 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "구인구직",
     items: [
+      // 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
-      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "briefcase" },
       { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건", icon: "badge" },
     ],
@@ -107,14 +108,14 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
 export const BOARD_NAV: NavGroup[] = [
   {
     title: "구인 / 구직",
-    href: "/boards/jobs/fixed",
-    hint: "고정부터 개인 구직",
+    href: "/boards/jobs/apply",
+    hint: "지원 딜러부터 개인 구직",
     accent: "gold",
     items: [
-      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟" },
-      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정" },
+      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집" },
       { href: "/boards/jobs/seek", label: "개인 구직", hint: "이력 · 희망 조건" },
     ],
   },
@@ -245,23 +246,12 @@ export function resolveBoardSlug(slug: string) {
   return BOARD_SLUGS[slug as BoardSlug] ?? null;
 }
 
+/** 순서대로 분류 칩·작성 선택지에 나옵니다. 지원 딜러 구인이 메인, 급구/대타가 그다음입니다. */
 export const JOB_KINDS = {
-  fixed: {
-    title: "고정 직원 구인",
-    blurb: "홀덤펍 상시 고정 딜러·스태프 모집",
-    kind: "FIXED" as const,
-    cta: "구인 등록",
-  },
   apply: {
     title: "지원 딜러 구인",
     blurb: "홀덤 단기·스팟 딜러 지원",
     kind: "APPLY" as const,
-    cta: "구인 등록",
-  },
-  team: {
-    title: "팀 구인",
-    blurb: "홀덤 딜러 팀원 모집",
-    kind: "TEAM" as const,
     cta: "구인 등록",
   },
   urgent: {
@@ -269,6 +259,18 @@ export const JOB_KINDS = {
     blurb: "홀덤펍 당일·긴급 대타",
     kind: "URGENT" as const,
     cta: "급구 등록",
+  },
+  fixed: {
+    title: "고정 직원 구인",
+    blurb: "홀덤펍 상시 고정 딜러·스태프 모집",
+    kind: "FIXED" as const,
+    cta: "구인 등록",
+  },
+  team: {
+    title: "팀 구인",
+    blurb: "홀덤 딜러 팀원 모집",
+    kind: "TEAM" as const,
+    cta: "구인 등록",
   },
   seek: {
     title: "개인 구직",
@@ -328,7 +330,7 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   PROMO: "마스터만 올립니다. 팀·브랜드 공식 홍보, 제휴 및 협찬 소식. 배너 구좌 1~6과 연동됩니다.",
   SCHEDULE: "마스터만 올립니다. 주간 허브 글이 매주 자동으로 생깁니다.",
   NOTICE: "마스터만 올리는 운영 공지입니다.",
-  JOBS: "제목은 [지역] 홀덤펍 딜러 구인 형식으로 자동 생성됩니다.",
+  JOBS: "제목은 [지역] 상호명 구인 형식으로 자동 생성됩니다.",
   FREE: "자유 수다, 잡담, 현장 이야기.",
   RULE_QA: "룰·판정·진행이 맞는지 질문하세요.",
   SKETCH: "현장 사진과 스케치를 공유하세요.",

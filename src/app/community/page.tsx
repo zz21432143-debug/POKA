@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SIDEBAR_NAV } from "@/lib/nav";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const metadata: Metadata = { title: "커뮤니티" };
 
@@ -27,6 +28,7 @@ export default function CommunityHubPage() {
           </li>
         ))}
       </ul>
+      <BoardBottomAd />
     </div>
   );
 }

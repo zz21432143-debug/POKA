@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { adsensePublisherId, adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ declare global {
 const SIZE: Record<AdSensePlacement, string> = {
   "post-top": "min-h-[90px] w-full",
   "post-bottom": "min-h-[90px] w-full",
+  "board-bottom": "min-h-[100px] w-full",
   sidebar: "mx-auto min-h-[250px] w-full max-w-[300px]",
   a1: "aspect-[2/1] w-full",
   a2: "aspect-[2/1] w-full",
@@ -22,9 +23,12 @@ const SIZE: Record<AdSensePlacement, string> = {
 export function GoogleAdUnit({
   placement,
   className,
+  fallback = null,
 }: {
   placement: AdSensePlacement;
   className?: string;
+  /** 광고 단위 ID가 아직 없을 때 대신 보여줄 내용. 기본은 아무것도 그리지 않습니다. */
+  fallback?: ReactNode;
 }) {
   const client = adsensePublisherId();
   const unit = adsenseSlotId(placement);
@@ -62,5 +66,5 @@ export function GoogleAdUnit({
     );
   }
 
-  return null;
+  return fallback;
 }

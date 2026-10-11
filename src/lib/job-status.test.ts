@@ -53,19 +53,19 @@ describe("job status", () => {
     assert.equal(titleRegion("분당 정자동"), "분당");
     assert.equal(titleRegion(""), "미정");
     assert.equal(
-      buildJobTitle("FIXED", { location: "서울 강남구 테헤란로 123", companyName: "POKA 펍" }),
-      "[서울] 홀덤펍 딜러 구인 · POKA 펍",
+      buildJobTitle("FIXED", { location: "서울 강남구 테헤란로 123", companyName: "POKA홀덤" }),
+      "[서울] POKA홀덤 구인",
     );
     assert.equal(
       buildJobTitle("URGENT", { location: "부산 서면", companyName: "에이스펍", workDate: "2026-10-12" }),
-      "[부산] 홀덤펍 급구/대타 · 에이스펍 (2026-10-12)",
+      "[부산] 에이스펍 급구/대타 (2026-10-12)",
     );
     assert.equal(
       buildJobTitle("APPLY", { location: "경기 분당", companyName: "킹스펍", payAmount: "20000" }),
-      "[경기] 홀덤 스팟 딜러 구인 · 킹스펍 (시급 20,000원)",
+      "[경기] 킹스펍 지원딜러 구인 (시급 20,000원)",
     );
     assert.equal(buildJobTitle("SEEKING", { location: "인천", companyName: "홍길동" }), "[인천] 홀덤 딜러 구직 · 홍길동");
-    assert.equal(buildJobTitle("TEAM", { location: "대구 수성구", companyName: "ACE 딜러팀" }), "[대구] 홀덤 딜러팀 모집 · ACE 딜러팀");
+    assert.equal(buildJobTitle("TEAM", { location: "부산 해운대구", companyName: "ACE" }), "[부산] 팀 ACE 모집");
   });
 
   it("accepts only known regions", () => {

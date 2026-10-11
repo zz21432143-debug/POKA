@@ -12,6 +12,7 @@ import { openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
 import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +117,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           emptyAction={{ href: "/boards/jobs/write", label: "첫 공고 올리기" }}
         />
       </section>
+      <BoardBottomAd />
     </div>
   );
 }

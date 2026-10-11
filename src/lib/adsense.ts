@@ -1,5 +1,5 @@
 /** AdSense 게시자 ID. 없으면 잔여 칸에 목업이 뜹니다. */
-export type AdSensePlacement = "post-top" | "post-bottom" | "sidebar" | "a1" | "a2" | "a3";
+export type AdSensePlacement = "post-top" | "post-bottom" | "board-bottom" | "sidebar" | "a1" | "a2" | "a3";
 
 export const DEFAULT_ADSENSE_CLIENT = "ca-pub-9633875249094546";
 
@@ -15,6 +15,7 @@ export function adsenseSlotId(placement: AdSensePlacement): string {
   const byPlacement = {
     "post-top": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_TOP,
     "post-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_BOTTOM,
+    "board-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOARD_BOTTOM,
     sidebar: process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR,
     a1: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A1,
     a2: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A2,
@@ -39,6 +40,12 @@ export const GOOGLE_REMNANT_MOCKS: Record<
     title: "자정 전 주문 내일 도착",
     line: "구글 디스플레이 · 본문 하단",
     tone: "from-amber-100 to-white",
+  },
+  "board-bottom": {
+    kicker: "쇼핑",
+    title: "오늘의 추천 상품",
+    line: "구글 디스플레이 · 게시판 하단",
+    tone: "from-emerald-100 to-white",
   },
   sidebar: {
     kicker: "금융",
