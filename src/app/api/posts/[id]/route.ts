@@ -59,6 +59,7 @@ export async function PATCH(
         jobContact: jobData.jobContact,
         jobWorkDate: jobData.jobWorkDate,
         jobEndDate: jobData.jobEndDate,
+        jobEvents: jobData.jobEvents,
         jobDeadline: jobData.jobDeadline,
         jobAlwaysOpen: jobData.jobAlwaysOpen,
         jobHeadcount: jobData.jobHeadcount,

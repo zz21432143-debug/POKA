@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
-import { parseJobPost } from "./job-parse";
+import { parseDateList, parseJobPost } from "./job-parse";
 
 const TODAY = "2026-10-12";
 const sample = (name: string) => readFileSync(join(__dirname, "__fixtures__", `job-${name}.txt`), "utf8");
@@ -77,6 +77,52 @@ describe("parseJobPost", () => {
       "포커 업계에 열정이 많으신 분, 평소 딜러팀에 관심이 있었던 분, 타지역 출장 근무가 용이하신 분",
     );
     assert.equal(job.contact, "김종욱 010-5678-5247, 권순호 010-2693-0330, 문준서 010-7799-0165");
+  });
+
+  it("날짜별 일정(행사명·인원)을 뽑고 기간은 하루씩 펼칩니다", () => {
+    assert.deepEqual(parseJobPost(sample("rabbit-festival"), TODAY).events, [
+      { date: "2026-10-31", name: "MAIN EVENT", headcount: "65명" },
+      { date: "2026-11-01", name: "러너펍 3rd 매장대항전", headcount: "35명" },
+    ]);
+    const ace = parseJobPost(sample("ace-poker-league"), TODAY).events;
+    assert.deepEqual(
+      ace.map((e) => e.date),
+      ["2026-12-23", "2026-12-24", "2026-12-25", "2026-12-26", "2026-12-27"],
+    );
+  });
+
+  it("POKA 양식: 0 자리는 비워 두고 고친 값은 읽습니다", () => {
+    const blank = parseJobPost(
+      "【 POKA 홀덤 대회 】\n\n• MAIN EVENT\n00월 00일 (토) - 00명\n\n장소 : POKA호텔 3층 베리언스 룸\n시급 : 00,000원 (0시간 보장)",
+      TODAY,
+    );
+    assert.equal(blank.companyName, "POKA 홀덤 대회");
+    assert.equal(blank.address, "POKA호텔 3층 베리언스 룸");
+    assert.deepEqual(blank.events, []);
+    assert.equal(blank.payAmount, null);
+    assert.equal(blank.guaranteedHours, null);
+    const filled = parseJobPost(
+      "【 POKA 홀덤 대회 】\n\n• MAIN EVENT\n11월 14일 (토) - 40명\n\n• SIDE EVENT\n11월 15일 (일) - 20명\n\n장소 : POKA호텔 3층 베리언스 룸\n시급 : 20,000원 (6시간 보장)",
+      TODAY,
+    );
+    assert.deepEqual(filled.events, [
+      { date: "2026-11-14", name: "MAIN EVENT", headcount: "40명" },
+      { date: "2026-11-15", name: "SIDE EVENT", headcount: "20명" },
+    ]);
+    assert.equal(filled.payAmount, "20000");
+    assert.equal(filled.guaranteedHours, "6시간");
+    assert.equal(filled.headcount, "60명");
+  });
+
+  it("손으로 친 날짜 여러 개와 기간을 읽습니다", () => {
+    assert.deepEqual(parseDateList("10/31", TODAY), ["2026-10-31"]);
+    assert.deepEqual(parseDateList("10월 31일", TODAY), ["2026-10-31"]);
+    assert.deepEqual(parseDateList("1031", TODAY), ["2026-10-31"]);
+    assert.deepEqual(parseDateList("2026-10-31", TODAY), ["2026-10-31"]);
+    assert.deepEqual(parseDateList("10/31, 10/24", TODAY), ["2026-10-24", "2026-10-31"]);
+    assert.deepEqual(parseDateList("10/24 10/31", TODAY), ["2026-10-24", "2026-10-31"]);
+    assert.deepEqual(parseDateList("12/30~1/2", TODAY), ["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"]);
+    assert.deepEqual(parseDateList("엉뚱한 글", TODAY), []);
   });
 
   it("연도 없는 지난 달 날짜는 내년으로 봅니다", () => {

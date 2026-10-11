@@ -10,7 +10,7 @@ export type WriteUser = {
 
 export type WriteRole = "master" | "member";
 
-/** 대회 스케줄·공식 홍보·공지를 쓸 수 있는 공식 계정 닉네임 */
+/** 대회 스케줄·공식 홍보·공지·TDA 룰을 쓸 수 있는 공식 계정 닉네임 */
 export const OFFICIAL_ACCOUNT_NICKNAME = "POKA";
 
 /** 공식 계정: 마스터 권한이 있고 닉네임이 POKA인 계정 하나뿐입니다. */
@@ -25,6 +25,7 @@ export const BOARD_WRITE_ROLE: Partial<Record<BoardType, WriteRole>> = {
   SCHEDULE: "master",
   PROMO: "master",
   NOTICE: "master",
+  TDA: "master",
   JOBS: "member",
   TALENT: "member",
   PICKUP: "member",

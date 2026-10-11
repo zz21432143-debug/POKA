@@ -74,6 +74,7 @@ export const SITEMAP_PATHS = [
   { path: "/attendance", changeFrequency: "daily" as const, priority: 0.6 },
   { path: "/boards/schedule", changeFrequency: "daily" as const, priority: 0.8 },
   { path: "/boards/official", changeFrequency: "daily" as const, priority: 0.7 },
+  { path: "/boards/tda", changeFrequency: "weekly" as const, priority: 0.7 },
   { path: "/notices", changeFrequency: "weekly" as const, priority: 0.5 },
   { path: "/shop", changeFrequency: "weekly" as const, priority: 0.4 },
   { path: "/login", changeFrequency: "monthly" as const, priority: 0.3 },

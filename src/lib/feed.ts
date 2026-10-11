@@ -10,6 +10,7 @@ export type FeedKey =
   | "hand-review"
   | "suggestions"
   | "notices"
+  | "tda"
   | "jobs"
   | "jobs/fixed"
   | "jobs/apply"
@@ -28,6 +29,7 @@ export const FEED_BY_HREF: Record<string, FeedKey> = {
   "/boards/hand-review": "hand-review",
   "/boards/suggestions": "suggestions",
   "/notices": "notices",
+  "/boards/tda": "tda",
   "/boards/jobs": "jobs",
   "/boards/jobs/fixed": "jobs/fixed",
   "/boards/jobs/apply": "jobs/apply",
@@ -60,6 +62,7 @@ export function feedWhere(key: FeedKey) {
   }
   if (key === "hand-review") return { boardType: "HAND_REVIEW" as const, hidden: false, isAttendanceThread: false };
   if (key === "suggestions") return { boardType: "SUGGESTION" as const, hidden: false, isAttendanceThread: false };
+  if (key === "tda") return { boardType: "TDA" as const, hidden: false, isAttendanceThread: false };
   if (key === "notices") return { boardType: "NOTICE" as const, hidden: false, isAttendanceThread: false };
   if (key === "jobs") {
     // 개인 구직은 운영 종료. 예전 구직 글은 목록에 내지 않습니다.

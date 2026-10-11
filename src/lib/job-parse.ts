@@ -1,4 +1,5 @@
 import type { JobRegion } from "@/lib/job-status";
+import { addDays, normalizeJobEvents, type JobEvent } from "@/lib/job-events";
 
 /**
  * 카톡 오픈채팅방에 올라오는 구인 공고 글을 붙여넣으면 글쓰기 칸을 자동으로 채웁니다.
@@ -14,6 +15,8 @@ export type ParsedJob = {
   deadline: string | null;
   alwaysOpen: boolean;
   schedule: string | null;
+  /** 날짜별 일정(행사명·인원). 기간(12/23~12/27)은 하루씩 풀어 넣습니다. */
+  events: JobEvent[];
   headcount: string | null;
   payType: string | null;
   payAmount: string | null;
@@ -135,7 +138,9 @@ function wonDigits(raw: string): string | null {
   const man = raw.match(/(\d+(?:\.\d+)?)\s*만\s*원?/);
   if (man) return String(Math.round(Number(man[1]) * 10000));
   const digits = raw.match(/\d[\d,]*/);
-  return digits ? digits[0].replace(/,/g, "") : null;
+  const value = digits ? digits[0].replace(/,/g, "") : "";
+  // 양식의 "00,000원"처럼 0이면 비워 둡니다.
+  return Number(value) > 0 ? String(Number(value)) : null;
 }
 
 /** "키 : 값" 줄의 값. 키 뒤 콜론이 없으면 null. */
@@ -161,6 +166,34 @@ function sectionAfter(lines: string[], header: RegExp): string[] {
   return out;
 }
 
+/** 시작~끝 날짜를 하루씩 펼칩니다(최대 31일). */
+function expandRange(start: string, end: string): string[] {
+  if (end <= start) return [start];
+  const out: string[] = [];
+  for (let d = start; d <= end && out.length < 31; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
+/**
+ * 손으로 친 날짜를 읽습니다. "10/31", "10월 31일", "1031", "2026-10-31".
+ * 여러 개는 쉼표·띄어쓰기로, 기간은 "12/23~12/27"처럼 물결로 씁니다. 연도가 없으면 가까운 미래로 봅니다.
+ */
+export function parseDateList(text: string, today: string): string[] {
+  const normalized = text
+    .replace(/(\d{4})-(\d{1,2})-(\d{1,2})/g, "$1년 $2월 $3일")
+    .replace(/(?<![\d/])(\d{2})(\d{2})(?![\d/])/g, (all, m: string, d: string) =>
+      Number(m) >= 1 && Number(m) <= 12 ? `${Number(m)}/${Number(d)}` : all,
+    )
+    .replace(/\s*~\s*/g, "~");
+  const out: string[] = [];
+  for (const part of normalized.split(/[,\n]|(?<!년)\s+(?=\d+\s*[/월])/)) {
+    const found = datesIn(part, today);
+    if (found.length === 2 && /~/.test(part)) out.push(...expandRange(found[0], found[1]));
+    else out.push(...found);
+  }
+  return [...new Set(out)].sort();
+}
+
 export function parseJobPost(raw: string, today: string): ParsedJob {
   const text = raw.replace(/\r\n?/g, "\n").trim();
   const lines = text.split("\n");
@@ -182,6 +215,7 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
   let deadline: string | null = null;
   const workDates: string[] = [];
   const scheduleRows: string[] = [];
+  const eventRows: JobEvent[] = [];
   let headTotal = 0;
   let headPlus = false;
   let headcount: string | null = null;
@@ -202,6 +236,12 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
     const dateText = (valueAfter(line, /(날짜|일정|일시|근무일)/) ?? line).replace(/\s+/g, " ");
     scheduleRows.push(title ? `${title} · ${dateText}` : dateText);
     const people = line.match(/(\d+)\s*명\s*(\+\s*@)?/);
+    // 양식의 "00명"처럼 0인 값은 비워 둡니다.
+    const dayHead = people && Number(people[1]) > 0 ? `${Number(people[1])}명${people[2] ? "+@" : ""}` : "";
+    const days = found.length === 2 && /~/.test(line) ? expandRange(found[0], found[1]) : found;
+    days.forEach((date, n) =>
+      eventRows.push({ date, ...(title ? { name: title } : {}), ...(dayHead && n === 0 ? { headcount: dayHead } : {}) }),
+    );
     if (people) {
       headTotal += Number(people[1]);
       if (people[2]) headPlus = true;
@@ -251,13 +291,13 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
       payType = m[1];
       payAmount = wonDigits(m[2]);
       const g = line.match(/(\d+(?:\.\d+)?)\s*시간\s*보장/);
-      if (g) guaranteedHours = `${g[1]}시간`;
+      if (g && Number(g[1]) > 0) guaranteedHours = `${g[1]}시간`;
       break;
     }
   }
   if (!guaranteedHours) {
     const g = text.match(/(\d+(?:\.\d+)?)\s*시간\s*보장/);
-    if (g) guaranteedHours = `${g[1]}시간`;
+    if (g && Number(g[1]) > 0) guaranteedHours = `${g[1]}시간`;
   }
 
   const workHoursLine = plain.map((l) => valueAfter(l, /(출근\s*시간|근무\s*시간)/)).find(Boolean) ?? null;
@@ -333,6 +373,7 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
     deadline,
     alwaysOpen,
     schedule: scheduleRows.length > 0 ? scheduleRows.join(" / ") : null,
+    events: normalizeJobEvents(eventRows),
     headcount,
     payType,
     payAmount,

@@ -101,6 +101,7 @@ async function loadHomeFeed() {
             jobKind: true,
             jobWorkDate: true,
             jobEndDate: true,
+            jobEvents: true,
             jobDateFlexible: true,
             jobGuaranteedHours: true,
             jobTravelPay: true,

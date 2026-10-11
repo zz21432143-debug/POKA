@@ -3,6 +3,7 @@ import { BriefcaseIcon, ChevronRightIcon, CrownIcon, PenSquareIcon } from "lucid
 import { EmptyBoard } from "@/components/posts/empty-board";
 import { formatRelativeKst } from "@/lib/dates";
 import { formatWon, titleRegion } from "@/lib/jobs";
+import { eventsDateLabel, parseJobEvents } from "@/lib/job-events";
 import { cn } from "cn";
 
 export type HomeApplyJob = {
@@ -16,6 +17,7 @@ export type HomeApplyJob = {
   jobKind: string | null;
   jobWorkDate: string | null;
   jobEndDate: string | null;
+  jobEvents: string | null;
   jobDateFlexible: boolean;
   jobGuaranteedHours: string | null;
   jobTravelPay: boolean;
@@ -76,7 +78,7 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
               ? tournament
                 ? "일정 추후 공지"
                 : "날짜 협의"
-              : dateRange(job.jobWorkDate, job.jobEndDate);
+              : eventsDateLabel(parseJobEvents(job.jobEvents)) || dateRange(job.jobWorkDate, job.jobEndDate);
             return (
               <li key={job.id}>
                 <Link

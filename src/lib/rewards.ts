@@ -20,6 +20,7 @@ export const POST_EXP: Record<BoardType, number> = {
   PROMO: 4,
   NOTICE: 4,
   SUGGESTION: 4,
+  TDA: 4,
 };
 
 export const POST_POINTS: Record<BoardType, number> = {
@@ -37,6 +38,7 @@ export const POST_POINTS: Record<BoardType, number> = {
   PROMO: 12,
   NOTICE: 12,
   SUGGESTION: 12,
+  TDA: 12,
 };
 
 export const ATTENDANCE_EXP = 100;

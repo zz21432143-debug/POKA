@@ -1,5 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { dateRangeLabel, formatWon } from "@/lib/jobs";
+import { todayKstDate } from "@/lib/dates";
+import { eventsDateLabel, groupDateLabel, groupJobEvents, parseJobEvents } from "@/lib/job-events";
+import { cn } from "cn";
 
 export type JobFactsPost = {
   jobKind: string | null;
@@ -25,12 +28,15 @@ export type JobFactsPost = {
   jobHeadcount?: string | null;
   jobApplyValue?: string | null;
   jobAlwaysOpen?: boolean;
+  jobEvents?: string | null;
 };
 
 /** 근무 날짜. 여러 날이면 "10/31~11/1" 범위로 보여 줍니다. */
 function workDateLabel(job: JobFactsPost, flexibleText: string): string | null {
   if (job.jobAlwaysOpen) return "상시 모집";
   if (job.jobDateFlexible) return flexibleText;
+  const events = parseJobEvents(job.jobEvents);
+  if (events.length > 0) return eventsDateLabel(events);
   if (job.jobEndDate) return dateRangeLabel(job.jobWorkDate, job.jobEndDate);
   return job.jobWorkDate;
 }
@@ -64,7 +70,7 @@ export function jobTags(job: JobFactsPost): string[] {
   if (job.jobKind === "APPLY") {
     return [
       formatWon(job.jobPayAmount) ? `시급 ${formatWon(job.jobPayAmount)}` : null,
-      workDateLabel(job, "날짜 협의"),
+      job.jobEvents ? null : workDateLabel(job, "날짜 협의"),
       job.jobGuaranteedHours ? `보장 ${job.jobGuaranteedHours}` : null,
       job.jobOvertime ? `연장 ${job.jobOvertime}` : null,
       travelPayLabel(job),
@@ -75,7 +81,7 @@ export function jobTags(job: JobFactsPost): string[] {
   if (job.jobKind === "TOURNAMENT") {
     return [
       formatWon(job.jobPayAmount) ? `시급 ${formatWon(job.jobPayAmount)}` : null,
-      workDateLabel(job, "일정 추후 공지"),
+      job.jobEvents ? null : workDateLabel(job, "일정 추후 공지"),
       job.jobHeadcount ? `${job.jobHeadcount} 모집` : null,
       job.jobGuaranteedHours ? `보장 ${job.jobGuaranteedHours}` : null,
       travelPayLabel(job),
@@ -119,7 +125,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["상호명", job.jobCompanyName],
             ["희망 근무지", job.jobLocation],
             ["근무 날짜", workDateLabel(job, "날짜 협의")],
-            ["행사 일정", job.jobSchedule],
+            ["행사 일정", job.jobEvents ? null : job.jobSchedule],
             ["모집 인원", job.jobHeadcount],
             ["급여", `시급 ${formatWon(job.jobPayAmount) || job.jobPayAmount || "미정"}`],
             ["보장 시간", job.jobGuaranteedHours],
@@ -139,7 +145,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["대회 일정", workDateLabel(job, "추후 공지")],
             ["급여", `시급 ${formatWon(job.jobPayAmount) || job.jobPayAmount || "미정"}`],
             ["보장 시간", job.jobGuaranteedHours],
-            ["행사 일정", job.jobSchedule],
+            ["행사 일정", job.jobEvents ? null : job.jobSchedule],
             ["모집 인원", job.jobHeadcount],
             ["모집 마감", job.jobDeadline],
             ["출근 시간", job.jobWorkHours],
@@ -185,6 +191,61 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+/**
+ * 날짜별 일정 목록. 지난 날짜는 회색·취소선으로 보여 줍니다.
+ * compact는 목록 카드용 작은 칩입니다.
+ */
+export function JobEventList({ job, compact = false }: { job: JobFactsPost; compact?: boolean }) {
+  const groups = groupJobEvents(parseJobEvents(job.jobEvents));
+  if (groups.length === 0) return null;
+  const today = todayKstDate();
+  if (compact) {
+    return (
+      <ul className="mt-2 flex flex-wrap gap-1" aria-label="일정">
+        {groups.map((g) => {
+          const past = g.end < today;
+          return (
+            <li
+              key={`${g.start}-${g.name}`}
+              className={cn(
+                "rounded-md px-1.5 py-0.5 text-[12px] font-semibold",
+                past ? "bg-white/5 text-[#6b6460] line-through" : "bg-[#2a2017] text-[#e7c98a]",
+              )}
+            >
+              {groupDateLabel(g)}
+              {g.name ? ` ${g.name}` : ""}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+  return (
+    <section className="rounded-xl border border-[#3a332c] bg-[#141110] p-3" aria-label="일정">
+      <p className="mb-2 text-xs font-semibold text-[#9CA3AF]">일정 · 지난 날짜는 회색으로 표시됩니다</p>
+      <ul className="grid gap-1.5">
+        {groups.map((g) => {
+          const past = g.end < today;
+          return (
+            <li
+              key={`${g.start}-${g.name}`}
+              className={cn(
+                "flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-2.5 py-2 text-sm",
+                past ? "bg-white/[0.03] text-[#6b6460]" : "bg-[#2a2017] text-white",
+              )}
+            >
+              <span className={cn("font-bold", past ? "line-through" : "text-[#e7c98a]")}>{groupDateLabel(g)}</span>
+              {g.name ? <span className={cn(past && "line-through")}>{g.name}</span> : null}
+              {g.headcount ? <span className={cn("text-[#c9c0b2]", past && "text-[#6b6460]")}>{g.headcount}</span> : null}
+              {past ? <span className="ml-auto text-xs">종료</span> : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

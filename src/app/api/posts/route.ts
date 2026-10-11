@@ -34,6 +34,7 @@ const BOARDS: BoardType[] = [
   "SCHEDULE",
   "NOTICE",
   "SUGGESTION",
+  "TDA",
 ];
 
 // 개인 구직(SEEKING)은 운영 종료로 새 글을 받지 않습니다.
@@ -202,6 +203,7 @@ export async function POST(request: Request) {
         jobContact: jobData?.jobContact ?? null,
         jobWorkDate: jobData?.jobWorkDate ?? null,
         jobEndDate: jobData?.jobEndDate ?? null,
+        jobEvents: jobData?.jobEvents ?? null,
         jobDeadline: jobData?.jobDeadline ?? null,
         jobAlwaysOpen: jobData?.jobAlwaysOpen ?? false,
         jobHeadcount: jobData?.jobHeadcount ?? null,

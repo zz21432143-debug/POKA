@@ -4,6 +4,7 @@ import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo, replaceToLogin } from "@/lib/history-redirect";
 import { prisma } from "@/lib/db";
+import { parseJobEvents } from "@/lib/job-events";
 
 export const metadata: Metadata = { title: "글 수정", robots: { index: false } };
 
@@ -45,6 +46,7 @@ export default async function EditJobPage({
           jobContact: post.jobContact ?? "",
           jobWorkDate: post.jobWorkDate ?? "",
           jobEndDate: post.jobEndDate ?? "",
+          jobEvents: parseJobEvents(post.jobEvents),
           jobDeadline: post.jobDeadline ?? "",
           jobAlwaysOpen: post.jobAlwaysOpen,
           jobHeadcount: post.jobHeadcount ?? "",

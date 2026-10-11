@@ -140,7 +140,7 @@ export const ATTENDANCE_LINES = times(
 
 export function catalogPosts(
   today: string,
-): Record<Exclude<FeedKey, "attendance" | "notices" | "suggestions" | "jobs">, CatalogPost[]> {
+): Record<Exclude<FeedKey, "attendance" | "notices" | "suggestions" | "jobs" | "tda">, CatalogPost[]> {
   const y = Number(today.slice(0, 4));
   const m = Number(today.slice(5, 7));
 
@@ -494,5 +494,5 @@ export function catalogPosts(
 export function seedCountByFeed(catalog: ReturnType<typeof catalogPosts>) {
   return Object.fromEntries(
     Object.entries(catalog).map(([key, rows]) => [key, rows.length]),
-  ) as Record<Exclude<FeedKey, "attendance" | "notices" | "suggestions" | "jobs">, number>;
+  ) as Record<Exclude<FeedKey, "attendance" | "notices" | "suggestions" | "jobs" | "tda">, number>;
 }

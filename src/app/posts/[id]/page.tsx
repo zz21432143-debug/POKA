@@ -16,7 +16,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { JOB_KIND_LABEL, boardListHref } from "@/lib/nav";
 import { BackToList } from "@/components/posts/back-to-list";
 import type { Metadata } from "next";
-import { JobFacts } from "@/components/jobs/job-facts";
+import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
@@ -268,6 +268,7 @@ export default async function PostDetailPage({
       {canRead ? (
         <div className="article-body">
       {post.jobKind ? <JobFacts job={post} /> : null}
+      {post.jobKind ? <JobEventList job={post} /> : null}
       {post.jobKind && post.jobApplyValue && status === "open" ? (
         <a
           href={post.jobApplyValue}

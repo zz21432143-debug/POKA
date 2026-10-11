@@ -25,6 +25,8 @@ enum BoardType {
   SCHEDULE
   NOTICE
   SUGGESTION
+  /// 정보센터 TDA 룰 (공식 계정만 작성)
+  TDA
 }
 
 enum AccountStatus {
@@ -171,6 +173,8 @@ model Post {
   jobWorkDate        String?
   /// 여러 날 근무하는 공고의 마지막 근무일 YYYY-MM-DD (대회·지원 딜러)
   jobEndDate         String?
+  /// 일정 목록 JSON [{date:"YYYY-MM-DD", name, headcount}] (대회·지원 딜러 여러 날짜)
+  jobEvents          String?
   /// 모집 마감일 YYYY-MM-DD. 지나면 자동 마감
   jobDeadline        String?
   jobDateFlexible    Boolean   @default(false)

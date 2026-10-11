@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { JobTagList, jobTags } from "@/components/jobs/job-facts";
+import { JobEventList, JobTagList, jobTags } from "@/components/jobs/job-facts";
 import { JOB_KIND_LABEL } from "@/lib/nav";
 import type { JobFactsPost } from "@/components/jobs/job-facts";
 import type { JobStatus } from "@/lib/job-status";
@@ -54,7 +54,7 @@ export function JobCards({
             className={cn(
               "ink-panel rounded-xl p-3 hover:bg-[#241c1e]",
               premium && "border border-[#c9a25c]/70 shadow-[0_0_0_1px_rgba(201,162,92,0.25)]",
-              closed && "opacity-55",
+              closed && "bg-[#151313] opacity-60 grayscale",
             )}
           >
             <Link href={`/posts/${job.id}`} className="touch-target block text-white hover:text-white">
@@ -74,6 +74,7 @@ export function JobCards({
               <p className={cn("mt-2 text-lg font-bold", closed ? "text-[#c9c0b2] line-through decoration-1" : "text-white")}>
                 {job.title}
               </p>
+              <JobEventList job={job} compact />
               <JobTagList tags={jobTags(job)} />
             </Link>
             <div className="mt-2">

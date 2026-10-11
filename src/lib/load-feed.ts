@@ -49,6 +49,7 @@ export function toJobCard(post: FeedRow, now = new Date(), today = todayKstDate(
     jobDressCode: post.jobDressCode,
     jobApplyMethod: post.jobApplyMethod,
     jobEndDate: post.jobEndDate,
+    jobEvents: post.jobEvents,
     jobDeadline: post.jobDeadline,
     jobHeadcount: post.jobHeadcount,
     jobApplyValue: post.jobApplyValue,
@@ -86,8 +87,12 @@ export async function loadJobPage(key: FeedKey, options: JobPageOptions = {}) {
     rows.push(
       ...(await findFeedRows({
         where: openWhere,
-        // 모집중: 프리미엄 → 끌어올린(또는 등록한) 시각 순
-        orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
+        // 모집중: 프리미엄 → 끌어올린(또는 등록한) 시각 순.
+        // 대회 딜러는 날짜가 가까운 대회부터 보이게 첫 날짜 순으로 정리합니다(날짜 미정은 뒤로).
+        orderBy:
+          key === "jobs/tournament"
+            ? [{ isPaid: "desc" }, { jobWorkDate: { sort: "asc", nulls: "last" } }, { bumpedAt: "desc" }]
+            : [{ isPaid: "desc" }, { bumpedAt: "desc" }],
         skip: offset,
         take: limit,
       })),

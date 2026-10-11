@@ -12,6 +12,9 @@ import { JOB_NAME_LABEL, buildJobTitle } from "@/lib/jobs";
 import { JOB_REGIONS } from "@/lib/job-status";
 import { parseJobPost } from "@/lib/job-parse";
 import { todayKstDate } from "@/lib/dates";
+import { addDays, eventsDateLabel, type JobEvent } from "@/lib/job-events";
+import { DateField, JobEventsEditor } from "@/components/jobs/date-picker";
+import { ClipboardPasteIcon, SparklesIcon } from "lucide-react";
 
 export type JobFormValues = {
   jobLocation: string;
@@ -25,6 +28,7 @@ export type JobFormValues = {
   jobContact: string;
   jobWorkDate: string;
   jobEndDate: string;
+  jobEvents: JobEvent[];
   jobDeadline: string;
   jobDateFlexible: boolean;
   jobAlwaysOpen: boolean;
@@ -52,6 +56,7 @@ const EMPTY: JobFormValues = {
   jobContact: "",
   jobWorkDate: "",
   jobEndDate: "",
+  jobEvents: [],
   jobDeadline: "",
   jobDateFlexible: false,
   jobAlwaysOpen: false,
@@ -80,6 +85,68 @@ function splitLocation(value: string) {
 
 const PAY_TYPES = ["협의", "월급", "일급", "시급"];
 
+/** 분류별 공고 양식. "양식 넣기"로 붙여넣기 칸에 넣고 0 자리만 고친 뒤 자동 채우기를 누릅니다. */
+const TEMPLATES: Partial<Record<JobKind, string>> = {
+  TOURNAMENT: [
+    "【 POKA 홀덤 대회 】",
+    "",
+    "• MAIN EVENT",
+    "00월 00일 (토) - 00명",
+    "",
+    "장소 : POKA호텔 3층 베리언스 룸",
+    "시급 : 00,000원 (0시간 보장)",
+  ].join("\n"),
+  APPLY: [
+    "【 POKA홀덤 】",
+    "",
+    "• 지원 딜러",
+    "00월 00일 (토) - 00명",
+    "",
+    "장소 : 서울시 강남구 POKA로 00",
+    "시급 : 00,000원 (0시간 보장)",
+  ].join("\n"),
+  URGENT: [
+    "【 POKA홀덤 】",
+    "",
+    "• 급구 / 대타",
+    "00월 00일 (토) - 00명",
+    "",
+    "장소 : 서울시 강남구 POKA로 00",
+    "근무시간 : 20:00 ~ 04:00",
+    "시급 : 00,000원",
+  ].join("\n"),
+  FIXED: [
+    "【 POKA홀덤 】",
+    "",
+    "장소 : 서울시 강남구 POKA로 00",
+    "월급 : 0,000,000원",
+    "근무시간 : 20:00 ~ 04:00",
+    "",
+    "문의 : 010-0000-0000",
+  ].join("\n"),
+  TEAM: [
+    "【 POKA 】",
+    "팀원 공개 모집",
+    "",
+    "[지원서 양식]",
+    "https://forms.gle/…",
+    "",
+    "[모집 기간]",
+    "• 상시 모집",
+    "",
+    "[문의사항 연락처]",
+    "김포카 010-0000-0000",
+  ].join("\n"),
+};
+
+/** 예전 글(일정 목록 없이 시작~끝 날짜만 있는 글)을 날짜 목록으로 펼칩니다. */
+function eventsFromRange(start: string | undefined, end: string | undefined): JobEvent[] {
+  if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return [];
+  const out: JobEvent[] = [];
+  for (let d = start; d <= (end || start) && out.length < 31; d = addDays(d, 1)) out.push({ date: d });
+  return out;
+}
+
 export function JobWriteForm({
   jobKind,
   hint,
@@ -97,6 +164,10 @@ export function JobWriteForm({
     ...EMPTY,
     jobPayType: hourly ? "시급" : "월급",
     ...initial,
+    jobEvents:
+      initial?.jobEvents && initial.jobEvents.length > 0
+        ? initial.jobEvents
+        : eventsFromRange(initial?.jobWorkDate, initial?.jobEndDate),
   });
   const [region, setRegion] = useState(() => splitLocation(initial?.jobLocation ?? "").region);
   const [place, setPlace] = useState(() => splitLocation(initial?.jobLocation ?? "").detail);
@@ -111,7 +182,7 @@ export function JobWriteForm({
 
   const location = [region, place.trim()].filter(Boolean).join(" ");
   const dated = jobKind === "APPLY" || jobKind === "URGENT" || jobKind === "TOURNAMENT";
-  // 지원 딜러·대회 딜러는 여러 날 일정(시작~끝)을 받을 수 있습니다.
+  // 지원 딜러·대회 딜러는 여러 날짜 일정(날짜별 행사명·인원)을 받습니다.
   const multiDay = jobKind === "APPLY" || jobKind === "TOURNAMENT";
   const canAlwaysOpen = jobKind === "TEAM" || jobKind === "FIXED";
   const hasApplyLink = jobKind === "TOURNAMENT" || jobKind === "TEAM" || jobKind === "APPLY";
@@ -123,11 +194,12 @@ export function JobWriteForm({
       : jobKind === "SEEKING"
         ? "홍길동"
         : jobKind === "TOURNAMENT"
-          ? "RABBIT FESTIVAL"
+          ? "POKA 홀덤 대회"
           : "POKA홀덤";
   const regions: string[] = jobKind === "TEAM" ? [NATIONWIDE, ...JOB_REGIONS] : [...JOB_REGIONS];
   const flexibleLabel =
     jobKind === "URGENT" ? "즉시 / 날짜 협의" : jobKind === "TOURNAMENT" ? "일정 추후 공지" : "날짜 협의";
+  const template = TEMPLATES[jobKind] ?? TEMPLATES.APPLY ?? "";
 
   /** 카톡 공고 원문을 읽어 빈칸을 채웁니다. 못 찾은 칸은 그대로 둡니다. */
   function applyPaste() {
@@ -142,10 +214,12 @@ export function JobWriteForm({
       if (value) (next as Record<string, unknown>)[key] = value;
     };
     put("jobCompanyName", parsed.companyName);
-    put("jobWorkDate", parsed.workDate);
-    if (multiDay) put("jobEndDate", parsed.endDate);
+    if (multiDay) {
+      if (parsed.events.length > 0) next.jobEvents = parsed.events;
+    } else {
+      put("jobWorkDate", parsed.workDate);
+    }
     put("jobDeadline", parsed.deadline);
-    put("jobSchedule", parsed.schedule);
     put("jobHeadcount", parsed.headcount);
     put("jobPayAmount", parsed.payAmount);
     if (!hourly && parsed.payType && PAY_TYPES.includes(parsed.payType)) put("jobPayType", parsed.payType);
@@ -162,7 +236,7 @@ export function JobWriteForm({
       put("jobTravelPayAmount", parsed.travelPayAmount);
     }
     if (parsed.alwaysOpen && canAlwaysOpen) next.jobAlwaysOpen = true;
-    if (dated && !parsed.workDate) next.jobDateFlexible = true;
+    if (dated) next.jobDateFlexible = !parsed.workDate;
     setForm((prev) => ({ ...prev, ...next }));
     if (parsed.region) setRegion(parsed.region);
     else if (jobKind === "TEAM") setRegion(NATIONWIDE);
@@ -219,16 +293,14 @@ export function JobWriteForm({
     companyName: form.jobCompanyName,
     payAmount: form.jobPayAmount,
     workDate: form.jobDateFlexible ? (jobKind === "TOURNAMENT" ? "" : "날짜 협의") : form.jobWorkDate,
-    endDate: form.jobDateFlexible ? "" : form.jobEndDate,
+    dateLabel: multiDay && !form.jobDateFlexible ? eventsDateLabel(form.jobEvents) : null,
   });
 
   function missingField(): string | null {
     if (!region) return `${regionLabel}을 선택하세요.`;
     if (!form.jobCompanyName.trim()) return `${nameLabel}을(를) 입력하세요.`;
-    if (dated && !form.jobDateFlexible && !form.jobWorkDate) return `날짜를 고르거나 "${flexibleLabel}"를 선택하세요.`;
-    if (multiDay && form.jobEndDate && form.jobWorkDate && form.jobEndDate < form.jobWorkDate) {
-      return "마지막 날짜가 시작 날짜보다 빠릅니다.";
-    }
+    const hasDate = multiDay ? form.jobEvents.length > 0 : Boolean(form.jobWorkDate);
+    if (dated && !form.jobDateFlexible && !hasDate) return `날짜를 추가하거나 "${flexibleLabel}"를 선택하세요.`;
     const payOptional = jobKind === "TEAM" || (jobKind === "FIXED" && form.jobPayType === "협의");
     if (!payOptional && !form.jobPayAmount.trim()) return "급여를 입력하세요.";
     if (form.jobApplyValue.trim() && !/^https?:\/\/\S+$/i.test(form.jobApplyValue.trim())) {
@@ -275,27 +347,53 @@ export function JobWriteForm({
       </p>
 
       <section
-        className="grid gap-2 rounded-xl border border-[#FEE500]/40 bg-[#FEE500]/[0.06] p-3"
+        className="grid gap-2 rounded-xl border-2 border-[#FEE500] bg-gradient-to-b from-[#FEE500]/[0.16] to-[#FEE500]/[0.04] p-3 shadow-[0_0_0_4px_rgb(254_229_0/0.08)]"
         aria-label="카톡 공고 붙여넣기"
       >
-        <Label htmlFor="job-paste" className="text-sm font-bold text-[#FEE500]">
-          카톡 공고 붙여넣기 → 자동 채우기
-        </Label>
-        <p className="text-xs text-[#c9c0b2]">
-          오픈채팅방에 올리던 공고를 그대로 붙여넣으면 대회명·날짜·장소·시급·복장·연락처를 찾아 채워 줍니다. 원문은 본문에
-          그대로 들어갑니다.
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#FEE500] text-[#1d1611]">
+            <SparklesIcon className="size-4" />
+          </span>
+          <Label htmlFor="job-paste" className="text-base font-black text-[#FEE500]">
+            카톡 공고 붙여넣기 → 자동 채우기
+          </Label>
+        </div>
+        <p className="text-xs text-[#f3eccd]">
+          아래 양식대로 적거나 오픈채팅방 공고를 그대로 붙여넣고 <b className="text-[#FEE500]">자동 채우기</b>를 누르세요.
+          이름·날짜·인원·장소·시급·연락처가 채워지고, 원문은 본문에 그대로 들어갑니다.
         </p>
         <Textarea
           id="job-paste"
-          className="min-h-32 text-sm"
-          placeholder={"【 RABBIT FESTIVAL 】\n• MAIN EVENT\n10월 31일 (토) - 65명\n장소 : …\n시급 : 20,000원 (6시간 보장)"}
+          className="min-h-40 border-[#FEE500]/50 bg-[#141110] font-mono text-sm leading-relaxed"
+          placeholder={template}
           value={paste}
           onChange={(event) => setPaste(event.target.value)}
         />
-        <Button type="button" variant="secondary" className="min-h-11" onClick={applyPaste}>
-          자동 채우기
-        </Button>
-        {pasteNote ? <p className="text-xs text-[#e7c98a]">{pasteNote}</p> : null}
+        <div className="grid grid-cols-[auto_1fr] gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-12 gap-1.5 border-[#FEE500]/60 text-[#FEE500] hover:bg-[#FEE500]/10"
+            onClick={() => {
+              setPaste(template);
+              setPasteNote("양식을 넣었습니다. 0 자리와 내용을 고친 뒤 자동 채우기를 누르세요.");
+            }}
+          >
+            <ClipboardPasteIcon className="size-4" />
+            양식 넣기
+          </Button>
+          <Button
+            type="button"
+            className="min-h-12 gap-1.5 bg-[#FEE500] text-base font-black text-[#1d1611] shadow-[0_4px_14px_rgb(254_229_0/0.35)] hover:bg-[#ffeb3b]"
+            onClick={applyPaste}
+          >
+            <SparklesIcon className="size-5" />
+            자동 채우기
+          </Button>
+        </div>
+        {pasteNote ? (
+          <p className="rounded-lg bg-[#FEE500]/10 px-2.5 py-1.5 text-xs font-semibold text-[#FEE500]">{pasteNote}</p>
+        ) : null}
       </section>
 
       <div className="grid gap-2">
@@ -341,7 +439,7 @@ export function JobWriteForm({
               jobKind === "TEAM"
                 ? "예: 강남구 전역"
                 : jobKind === "TOURNAMENT"
-                  ? "예: 구로 G스타디움 · 서울시 구로구 구로중앙로 134"
+                  ? "예: POKA호텔 3층 베리언스 룸"
                   : "예: 강남구 테헤란로 123"
             }
             onChange={(event) => setPlace(event.target.value)}
@@ -358,34 +456,32 @@ export function JobWriteForm({
           />
 
           {dated ? (
-            <div className="grid gap-2">
-              <Label htmlFor="work-date">
-                {jobKind === "URGENT" ? "필요 날짜" : jobKind === "TOURNAMENT" ? "대회 시작일" : "근무 날짜"} <Required />
-              </Label>
-              <Input
-                id="work-date"
-                type="date"
-                className="h-11 text-base"
-                value={form.jobWorkDate}
-                disabled={form.jobDateFlexible}
-                onChange={(event) => set("jobWorkDate", event.target.value)}
-              />
+            <div className={multiDay ? "grid gap-2 sm:col-span-2" : "grid gap-2"}>
               {multiDay ? (
                 <>
-                  <Label htmlFor="end-date" className="mt-1">
-                    마지막 날짜 <span className="text-xs text-[#9CA3AF]">(여러 날이면)</span>
+                  <Label>
+                    {jobKind === "TOURNAMENT" ? "대회 일정" : "근무 일정"} <Required />
+                    <span className="ml-1 text-xs font-normal text-[#9CA3AF]">여러 날짜를 한 번에 올릴 수 있습니다</span>
                   </Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    className="h-11 text-base"
-                    value={form.jobEndDate}
-                    min={form.jobWorkDate || undefined}
+                  <JobEventsEditor
+                    events={form.jobEvents}
                     disabled={form.jobDateFlexible}
-                    onChange={(event) => set("jobEndDate", event.target.value)}
+                    onChange={(events) => set("jobEvents", events)}
                   />
                 </>
-              ) : null}
+              ) : (
+                <>
+                  <Label htmlFor="work-date">
+                    필요 날짜 <Required />
+                  </Label>
+                  <DateField
+                    id="work-date"
+                    value={form.jobWorkDate}
+                    disabled={form.jobDateFlexible}
+                    onChange={(value) => set("jobWorkDate", value)}
+                  />
+                </>
+              )}
               <label className="flex min-h-11 items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -492,12 +588,11 @@ export function JobWriteForm({
           {jobKind === "APPLY" || jobKind === "TOURNAMENT" ? (
             <>
               <Field
-                label="행사 일정 · 인원"
-                value={form.jobSchedule}
-                onChange={(v) => set("jobSchedule", v)}
-                placeholder="MAIN EVENT 10/31 65명 / 매장대항전 11/1 35명"
+                label="총 모집 인원"
+                value={form.jobHeadcount}
+                onChange={(v) => set("jobHeadcount", v)}
+                placeholder="비우면 날짜별 인원 합계"
               />
-              <Field label="모집 인원" value={form.jobHeadcount} onChange={(v) => set("jobHeadcount", v)} placeholder="70명+@" />
               <Field label="보장 시간" value={form.jobGuaranteedHours} onChange={(v) => set("jobGuaranteedHours", v)} placeholder="6시간" />
               <Field label="출근 시간" value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="추후 공지" />
               <Field label="복지 · 복리후생" value={form.jobBenefits} onChange={(v) => set("jobBenefits", v)} placeholder="식사 제공, 주차" />
@@ -507,13 +602,7 @@ export function JobWriteForm({
               {jobKind === "TOURNAMENT" ? (
                 <div className="grid gap-2">
                   <Label htmlFor="deadline">모집 마감일</Label>
-                  <Input
-                    id="deadline"
-                    type="date"
-                    className="h-11 text-base"
-                    value={form.jobDeadline}
-                    onChange={(event) => set("jobDeadline", event.target.value)}
-                  />
+                  <DateField id="deadline" value={form.jobDeadline} onChange={(value) => set("jobDeadline", value)} />
                 </div>
               ) : (
                 <div className="grid gap-2">

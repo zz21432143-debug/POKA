@@ -13,6 +13,7 @@ export const BOARD_LABELS = {
   SCHEDULE: "대회 스케줄",
   NOTICE: "공지사항",
   SUGGESTION: "건의사항",
+  TDA: "TDA 룰",
 } as const;
 
 export type BoardTypeKey = keyof typeof BOARD_LABELS;
@@ -32,4 +33,5 @@ export const BOARD_DESCRIPTIONS: Record<BoardTypeKey, string> = {
   SCHEDULE: "전국 홀덤 대회 일정을 달력으로 확인하세요",
   NOTICE: "POKA 운영 공지",
   SUGGESTION: "운영진에게 건의하세요. 비밀글로도 쓸 수 있습니다.",
+  TDA: "TDA(토너먼트 디렉터 협회) 공식 홀덤 룰을 정리해 올립니다.",
 };

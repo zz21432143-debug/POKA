@@ -88,6 +88,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/schedule", label: "대회 스케줄", hint: "일자별 · 월별", icon: "calendar" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
+      { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "shield" },
     ],
   },
   {
@@ -233,6 +234,12 @@ export const BOARD_SLUGS = {
     calendar: true,
     masterOnly: true,
   },
+  tda: {
+    title: "TDA 룰",
+    boardType: "TDA" as const,
+    writeHref: "/boards/tda/write",
+    masterOnly: true,
+  },
   suggestions: {
     title: "건의사항",
     boardType: "SUGGESTION" as const,
@@ -314,6 +321,7 @@ const BOARD_LIST_HREF: Partial<Record<BoardType, string>> = {
   SCHEDULE: "/boards/schedule",
   NOTICE: "/notices",
   SUGGESTION: "/boards/suggestions",
+  TDA: "/boards/tda",
 };
 
 export function boardListHref(boardType: BoardType, jobKind?: JobKind | null) {
@@ -335,6 +343,7 @@ export const WRITE_HINT: Partial<Record<BoardType, string>> = {
   PROMO: "마스터만 올립니다. 팀·브랜드 공식 홍보, 제휴 및 협찬 소식. 배너 구좌 1~6과 연동됩니다.",
   SCHEDULE: "마스터만 올립니다. 주간 허브 글이 매주 자동으로 생깁니다.",
   NOTICE: "마스터만 올리는 운영 공지입니다.",
+  TDA: "POKA 공식 계정만 올립니다. TDA 룰 조항을 번호와 함께 정리해 주세요.",
   JOBS: "제목은 [지역] 상호명 구인 형식으로 자동 생성됩니다.",
   FREE: "자유 수다, 잡담, 현장 이야기.",
   RULE_QA: "룰·판정·진행이 맞는지 질문하세요.",
