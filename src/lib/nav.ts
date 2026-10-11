@@ -66,7 +66,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: "구인구직",
     items: [
-      { href: "/boards/jobs", label: "구인구직 홈", hint: "전체 공고", icon: "briefcase" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
