@@ -77,7 +77,7 @@ describe("job status", () => {
     assert.equal(titleRegion(""), "미정");
     assert.equal(
       buildJobTitle("FIXED", { location: "서울 강남구 테헤란로 123", companyName: "POKA홀덤" }),
-      "[서울] POKA홀덤 구인",
+      "[서울] POKA홀덤",
     );
     assert.equal(
       buildJobTitle("URGENT", { location: "부산 서면", companyName: "에이스펍", workDate: "2026-10-12" }),
@@ -85,7 +85,7 @@ describe("job status", () => {
     );
     assert.equal(
       buildJobTitle("APPLY", { location: "경기 분당", companyName: "킹스펍", payAmount: "20000" }),
-      "[경기] 킹스펍 지원딜러 구인 (시급 20,000원)",
+      "[경기] 킹스펍 지원딜러 (시급 20,000원)",
     );
     assert.equal(buildJobTitle("SEEKING", { location: "인천", companyName: "홍길동" }), "[인천] 홀덤 딜러 구직 · 홍길동");
     assert.equal(buildJobTitle("TEAM", { location: "부산 해운대구", companyName: "ACE" }), "[부산] 팀 ACE 모집");
@@ -97,11 +97,11 @@ describe("job status", () => {
         workDate: "2026-10-31",
         endDate: "2026-11-01",
       }),
-      "[서울] RABBIT FESTIVAL 대회딜러 구인 (10/31~11/1)",
+      "[서울] RABBIT FESTIVAL 대회딜러 (10/31~11/1)",
     );
     assert.equal(
       buildJobTitle("TOURNAMENT", { location: "서울", companyName: "ACE POKER LEAGUE", workDate: null }),
-      "[서울] ACE POKER LEAGUE 대회딜러 구인",
+      "[서울] ACE POKER LEAGUE 대회딜러",
     );
   });
 

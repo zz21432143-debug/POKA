@@ -32,9 +32,9 @@ describe("job seo titles", () => {
   it("puts region and holdem in the title", () => {
     assert.equal(
       buildJobTitle("FIXED", { location: "서울 강남", companyName: "펠트하우스" }),
-      "[서울] 펠트하우스 구인",
+      "[서울] 펠트하우스",
     );
-    assert.match(buildJobTitle("APPLY", { location: "부산 서면", payAmount: "20000" }), /지원딜러 구인/);
+    assert.match(buildJobTitle("APPLY", { location: "부산 서면", payAmount: "20000" }), /지원딜러 \(시급/);
     assert.match(buildJobTitle("URGENT", { location: "수원", workDate: "즉시" }), /급구\/대타/);
   });
 });
@@ -73,7 +73,8 @@ describe("evergreen guides and verified dealers", () => {
   it("seeds holdem-only catalog titles", () => {
     const catalog = catalogPosts("2026-09-22");
     assert.match(catalog["hand-review"][0].title, /오늘의 홀덤 핸드리뷰/);
-    assert.match(catalog["jobs/fixed"][0].title, /^\[서울\] .+ 구인$/);
+    assert.match(catalog["jobs/fixed"][0].title, /^\[서울\] .+$/);
+    assert.equal(/구인$/.test(catalog["jobs/fixed"][0].title), false);
     const blob = JSON.stringify(catalog);
     assert.equal(/바카라/.test(blob), false);
   });

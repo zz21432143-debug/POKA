@@ -37,13 +37,14 @@ export function buildJobTitle(kind: JobKind, fields: {
   /** 여러 날짜 일정의 짧은 표기(예: 10/24·10/31). 있으면 시작~끝 대신 씁니다. */
   dateLabel?: string | null;
 }): string {
-  // 상호명(팀 명)이 제목 앞에 옵니다. 예: [서울] POKA홀덤 구인, [부산] 팀 ACE 모집
+  // 상호명(팀 명)이 제목 앞에 옵니다. 예: [서울] POKA홀덤, [부산] 팀 ACE 모집
+  // 구직 게시판이 없어져 제목 끝에 "구인"은 붙이지 않습니다.
   const loc = titleRegion(fields.location);
   const name = fields.companyName?.trim() || `${JOB_NAME_LABEL[kind]} 미입력`;
-  if (kind === "FIXED") return `[${loc}] ${name} 구인`;
+  if (kind === "FIXED") return `[${loc}] ${name}`;
   if (kind === "APPLY") {
     const pay = formatWon(fields.payAmount) || "미정";
-    return `[${loc}] ${name} 지원딜러 구인 (시급 ${pay})`;
+    return `[${loc}] ${name} 지원딜러 (시급 ${pay})`;
   }
   if (kind === "URGENT") {
     const when = fields.workDate?.trim() || "즉시";
@@ -51,7 +52,7 @@ export function buildJobTitle(kind: JobKind, fields: {
   }
   if (kind === "TOURNAMENT") {
     const range = fields.dateLabel || dateRangeLabel(fields.workDate, fields.endDate);
-    return `[${loc}] ${name} 대회딜러 구인${range ? ` (${range})` : ""}`;
+    return `[${loc}] ${name} 대회딜러${range ? ` (${range})` : ""}`;
   }
   if (kind === "SEEKING") return `[${loc}] 홀덤 딜러 구직 · ${name}`;
   return `[${loc}] 팀 ${name} 모집`;

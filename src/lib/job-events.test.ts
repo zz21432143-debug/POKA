@@ -55,7 +55,7 @@ describe("job events", () => {
     );
     assert.equal(data.jobWorkDate, "2026-11-14");
     assert.equal(data.jobEndDate, "2026-11-15");
-    assert.equal(data.title, "[서울] POKA 홀덤 대회 대회딜러 구인 (11/14~11/15)");
+    assert.equal(data.title, "[서울] POKA 홀덤 대회 대회딜러 (11/14~11/15)");
     assert.equal(data.jobHeadcount, "60명");
     assert.equal(data.jobSchedule, "MAIN EVENT · 11/14(토) · 40명 / SIDE EVENT · 11/15(일) · 20명");
     const later = jobFieldsFromBody({ jobEvents: [{ date: "2026-11-14" }], jobDateFlexible: true }, "TOURNAMENT");
