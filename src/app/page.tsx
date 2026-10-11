@@ -44,11 +44,9 @@ async function HomeFeedSections() {
   const today = todayKstDate();
   return (
     <>
-      {/* 메인은 지원 딜러 구인, 그다음 급구/대타. PC에서는 나란히 둬 홈 스크롤을 줄입니다. */}
-      <div className="grid gap-3.5 lg:grid-cols-2">
-        <HomeJobs jobs={feed.jobs} />
-        <HomeUrgentJobs jobs={feed.urgent} />
-      </div>
+      {/* 메인은 지원 딜러 구인: 전체 폭 카드로 크게 보여 주고, 그 아래 급구/대타. */}
+      <HomeJobs jobs={feed.jobs} />
+      <HomeUrgentJobs jobs={feed.urgent} />
       <HomeAttendanceCta />
       <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />

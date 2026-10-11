@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { ttlCache } from "@/lib/ttl-cache";
 import type { PostSummary } from "@/components/posts/post-list";
 import type { HomeUrgentJob } from "@/components/home/home-urgent-jobs";
+import type { HomeApplyJob } from "@/components/home/home-jobs";
+import { toIsoString } from "@/lib/dates";
 import { getSponsorCreative } from "@/lib/inventory";
 import { getTodayHandSpotlight, getWeeklyHubPost } from "@/lib/growth-ops";
 import { getTickerEvents } from "@/lib/ticker";
@@ -82,11 +84,24 @@ async function loadHomeFeed() {
         }),
       prisma.post
         .findMany({
-          // 홈 메인 공고는 지원 딜러 구인입니다.
+          // 홈 메인 공고는 지원 딜러 구인입니다. 카드에 조건을 보여 주려고 공고 칸을 함께 읽습니다.
           where: { AND: [{ ...base, boardType: "JOBS", jobKind: "APPLY" }, openJobWhere()] },
           orderBy: [{ isPaid: "desc" }, { bumpedAt: "desc" }],
-          take: 5,
-          include,
+          take: 6,
+          select: {
+            id: true,
+            title: true,
+            isPaid: true,
+            createdAt: true,
+            jobLocation: true,
+            jobCompanyName: true,
+            jobPayAmount: true,
+            jobWorkDate: true,
+            jobDateFlexible: true,
+            jobGuaranteedHours: true,
+            jobTravelPay: true,
+            jobTravelPayAmount: true,
+          },
         }),
       prisma.post
         .findMany({
@@ -113,7 +128,9 @@ async function loadHomeFeed() {
   return {
     all: allRows.map(toSummary),
     free: freeRows.map(toSummary),
-    jobs: jobRows.map(toSummary),
+    jobs: jobRows.map(
+      (row): HomeApplyJob => ({ ...row, createdAt: toIsoString(row.createdAt) }),
+    ),
     hands: handRows.map(toSummary),
     urgent: urgentRows as HomeUrgentJob[],
     nativeSponsor,

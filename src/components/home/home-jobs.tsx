@@ -1,34 +1,131 @@
 import Link from "next/link";
-import { BriefcaseIcon, ChevronRightIcon } from "lucide-react";
-import { PostList, type PostSummary } from "@/components/posts/post-list";
+import { BriefcaseIcon, ChevronRightIcon, CrownIcon, PenSquareIcon } from "lucide-react";
+import { EmptyBoard } from "@/components/posts/empty-board";
+import { formatRelativeKst } from "@/lib/dates";
+import { formatWon, titleRegion } from "@/lib/jobs";
+import { cn } from "cn";
 
-/** 홈 메인 공고. 사이트의 중심인 지원 딜러 구인 중 모집중인 최신 5개를 보여줍니다. */
-export function HomeJobs({ jobs }: { jobs: PostSummary[] }) {
+export type HomeApplyJob = {
+  id: string;
+  title: string;
+  isPaid: boolean;
+  createdAt: string;
+  jobLocation: string | null;
+  jobCompanyName: string | null;
+  jobPayAmount: string | null;
+  jobWorkDate: string | null;
+  jobDateFlexible: boolean;
+  jobGuaranteedHours: string | null;
+  jobTravelPay: boolean;
+  jobTravelPayAmount: string | null;
+};
+
+/** "2026-10-17" → "10/17(금)" */
+function shortDate(value: string | null) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const [y, m, d] = value.split("-").map(Number);
+  const day = "일월화수목금토"[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${m}/${d}(${day})`;
+}
+
+/**
+ * 홈 메인 공고. 사이트의 중심인 지원 딜러 구인을 카드로 크게 보여 줍니다.
+ * 지역·시급·근무일·보장 시간·차비를 제목 아래 바로 보여 줘 눌러 보지 않아도 조건이 보이게 합니다.
+ */
+export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
   return (
-    <section className="lounge-card overflow-hidden rounded-[1.35rem]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-2.5">
-        <h2 className="inline-flex items-center gap-1.5 text-base font-bold text-white">
-          <BriefcaseIcon className="size-4 text-[#C59B27]" />
+    <section className="overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/50 bg-[#1d1611]/95 shadow-[0_10px_28px_rgb(0_0_0/0.35)]">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-4 py-3">
+        <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
+          <BriefcaseIcon className="size-5 text-[#e7c98a]" />
           지원 딜러 구인
+          {jobs.length ? (
+            <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-bold text-white">
+              모집중 {jobs.length}
+            </span>
+          ) : null}
         </h2>
         <Link href="/boards/jobs/apply?open=1" className="more-link ml-auto">
-          더보기
+          전체보기
         </Link>
       </div>
-      <PostList
-        posts={jobs}
-        emptyText="지금 모집중인 지원 딜러 공고가 없습니다."
-        framed={false}
-        compact
-        emptyAction={{ href: "/boards/jobs/apply/write", label: "지원 딜러 구인 올리기" }}
-      />
-      <Link
-        href="/boards/jobs"
-        className="touch-target flex min-h-11 items-center justify-center gap-1 border-t border-white/10 text-sm font-bold text-[#e7c98a] hover:bg-[#2a2017]"
-      >
-        지역별 · 분류별 전체 공고 보기
-        <ChevronRightIcon className="size-4" />
-      </Link>
+
+      {jobs.length === 0 ? (
+        <EmptyBoard
+          text="지금 모집중인 지원 딜러 공고가 없습니다."
+          framed={false}
+          action={{ href: "/boards/jobs/apply/write", label: "지원 딜러 구인 올리기" }}
+        />
+      ) : (
+        <ul className="grid gap-2 p-3 sm:grid-cols-2">
+          {jobs.map((job) => {
+            const pay = formatWon(job.jobPayAmount);
+            const travel = job.jobTravelPay ? formatWon(job.jobTravelPayAmount) || "지원" : null;
+            const when = job.jobDateFlexible ? "날짜 협의" : shortDate(job.jobWorkDate);
+            return (
+              <li key={job.id}>
+                <Link
+                  href={`/posts/${job.id}`}
+                  className={cn(
+                    "touch-target flex h-full flex-col gap-2 rounded-xl border bg-[#141110] p-3 hover:border-[#c9a25c]/80 hover:bg-[#201915]",
+                    job.isPaid ? "border-[#c9a25c]/70" : "border-white/10",
+                  )}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded-md bg-[#7a1c22] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                      {titleRegion(job.jobLocation)}
+                    </span>
+                    {job.isPaid ? (
+                      <span className="inline-flex items-center gap-0.5 rounded-md bg-gradient-to-r from-[#e7c98a] to-[#c59b27] px-1.5 py-0.5 text-[11px] font-bold text-[#1d1611]">
+                        <CrownIcon className="size-3" />
+                        프리미엄
+                      </span>
+                    ) : null}
+                    <span className="ml-auto text-[11px] text-[#9CA3AF]">{formatRelativeKst(job.createdAt)}</span>
+                  </div>
+                  <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
+                    {job.jobCompanyName || job.title}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-semibold">
+                    {pay ? (
+                      <span className="rounded-full bg-[#c9a25c] px-2 py-0.5 text-[#1d1611]">시급 {pay}</span>
+                    ) : null}
+                    {when ? <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">{when}</span> : null}
+                    {job.jobGuaranteedHours ? (
+                      <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">
+                        보장 {job.jobGuaranteedHours}
+                      </span>
+                    ) : null}
+                    {travel ? (
+                      <span className="rounded-full border border-emerald-600/60 px-2 py-0.5 text-emerald-300">차비 {travel}</span>
+                    ) : null}
+                  </div>
+                  {job.jobLocation ? (
+                    <p className="truncate text-xs text-[#9CA3AF]">{job.jobLocation}</p>
+                  ) : null}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="grid grid-cols-2 border-t border-white/10">
+        <Link
+          href="/boards/jobs/apply/write"
+          className="touch-target flex min-h-12 items-center justify-center gap-1.5 bg-[#8b2222] text-sm font-bold text-white hover:bg-[#a12a2a]"
+        >
+          <PenSquareIcon className="size-4" />
+          구인 올리기
+        </Link>
+        <Link
+          href="/boards/jobs"
+          className="touch-target flex min-h-12 items-center justify-center gap-1 text-sm font-bold text-[#e7c98a] hover:bg-[#2a2017]"
+        >
+          지역별 공고
+          <ChevronRightIcon className="size-4" />
+        </Link>
+      </div>
     </section>
   );
 }

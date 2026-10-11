@@ -144,8 +144,10 @@ export async function POST(request: Request) {
       isAdmin: user.isAdmin,
     });
 
-    // 도배 방지: 같은 회원이 같은 분류·같은 상호로 24시간 안에 다시 올릴 수 없습니다.
+    // 도배 방지: 같은 회원이 같은 분류·같은 상호로 24시간 안에 같은 공고를 다시 올릴 수 없습니다.
+    // 지원 딜러·급구처럼 날짜가 있는 공고는 근무 날짜가 다르면 다른 공고로 보고 허용합니다.
     if (boardType === "JOBS" && jobKind && jobData && !isStaff(user)) {
+      const dated = jobKind === "APPLY" || jobKind === "URGENT";
       const duplicate = await prisma.post.findFirst({
         where: {
           boardType: "JOBS",
@@ -154,14 +156,16 @@ export async function POST(request: Request) {
           jobCompanyName: jobData.jobCompanyName,
           hidden: false,
           createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          ...(dated ? { jobWorkDate: jobData.jobWorkDate } : {}),
         },
         select: { id: true },
       });
       if (duplicate) {
         return NextResponse.json(
           {
-            error:
-              "같은 상호의 같은 분류 공고는 하루에 한 번만 올릴 수 있습니다. 기존 공고를 수정하거나 끌어올리기를 이용해 주세요.",
+            error: dated
+              ? "같은 상호·같은 날짜의 공고가 이미 있습니다. 다른 날짜는 따로 올릴 수 있고, 같은 날짜는 기존 공고를 수정하거나 끌어올려 주세요."
+              : "같은 상호의 같은 분류 공고는 하루에 한 번만 올릴 수 있습니다. 기존 공고를 수정하거나 끌어올리기를 이용해 주세요.",
             existingId: duplicate.id,
           },
           { status: 429 },
