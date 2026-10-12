@@ -34,6 +34,11 @@ export async function grantRewards(
     },
   });
 
+  if (exp > 0) {
+    const { recordExpGain } = await import("@/lib/exp-ledger");
+    await recordExpGain(userId, exp, "reward").catch(() => undefined);
+  }
+
   if (grantedPoints > 0) {
     const { recordPointGain } = await import("@/lib/point-ledger");
     await recordPointGain(userId, grantedPoints, "reward").catch(() => undefined);

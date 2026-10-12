@@ -2,7 +2,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { displayMarkSrc } from "@/lib/mark-assets";
-import { ensurePointLedger } from "@/lib/point-ledger";
+import { ensureExpLedger } from "@/lib/exp-ledger";
 import { shiftDate } from "@/lib/dates";
 import { SHOP_MARKS } from "@/lib/yokai-marks";
 
@@ -25,10 +25,6 @@ export function parseRankTab(value: string | undefined): RankTab {
   return "level";
 }
 
-/** 기간을 나눌 수 있는 탭(레벨은 지금 순위만 있음) */
-export function tabHasPeriods(tab: RankTab) {
-  return tab !== "level";
-}
 
 export function parseRankPeriod(value: string | undefined): RankPeriod {
   if (value === "week" || value === "month") return value;
@@ -70,8 +66,25 @@ function toRows(raw: RawRow[]): RankRow[] {
     }));
 }
 
-/** 레벨 랭킹: 레벨 높은 순, 같은 레벨이면 누적 경험치 많은 순 */
-async function levelRows(): Promise<RawRow[]> {
+/**
+ * 레벨 랭킹
+ * - 전체: 레벨 높은 순, 같은 레벨이면 누적 경험치 많은 순(점수 = 누적 경험치)
+ * - 이번 주·이번 달: 그 기간에 얻은 경험치 순, 같으면 레벨·누적 경험치 순(점수 = 얻은 경험치)
+ */
+async function levelRows(period: RankPeriod): Promise<RawRow[]> {
+  const start = periodStart(period);
+  if (start) {
+    await ensureExpLedger();
+    return prisma.$queryRaw<RawRow[]>`
+      SELECT u.nickname, u.level, SUM(x.delta)::int AS score, u."profileMarkImageUrl", u."isMaster"
+      FROM "ExpLedger" x
+      JOIN "User" u ON u.id = x."userId"
+      WHERE x.delta > 0 AND x."createdAt" >= ${start} AND u."withdrawnAt" IS NULL
+      GROUP BY u.id
+      ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
+      LIMIT 20
+    `;
+  }
   return prisma.$queryRaw<RawRow[]>`
     SELECT nickname, level, exp AS score, "profileMarkImageUrl", "isMaster"
     FROM "User"
@@ -135,23 +148,24 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
 
 export async function getRanking(tab: RankTab, period: RankPeriod): Promise<RankRow[]> {
   const raw =
-    tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await levelRows();
+    tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await levelRows(period);
   return toRows(raw);
 }
 
-export async function weeklyPointsWinner(weekStart: string) {
-  await ensurePointLedger();
+/** 지난주 경험치 1위(같으면 레벨 높은 순 → 누적 경험치 많은 순). 주간 보상 마크를 받습니다. */
+export async function weeklyExpWinner(weekStart: string) {
+  await ensureExpLedger();
   const start = new Date(`${weekStart}T00:00:00+09:00`);
   const end = new Date(`${shiftDate(weekStart, 7)}T00:00:00+09:00`);
   const rows = await prisma.$queryRaw<
     { id: string; nickname: string; score: number }[]
   >`
-    SELECT u.id, u.nickname, SUM(p.delta)::int AS score
-    FROM "PointLedger" p
-    JOIN "User" u ON u.id = p."userId"
-    WHERE p.delta > 0 AND p."createdAt" >= ${start} AND p."createdAt" < ${end} AND u."withdrawnAt" IS NULL
+    SELECT u.id, u.nickname, SUM(x.delta)::int AS score
+    FROM "ExpLedger" x
+    JOIN "User" u ON u.id = x."userId"
+    WHERE x.delta > 0 AND x."createdAt" >= ${start} AND x."createdAt" < ${end} AND u."withdrawnAt" IS NULL
     GROUP BY u.id
-    ORDER BY score DESC, u.level DESC, u.nickname ASC
+    ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
     LIMIT 1
   `;
   const row = rows[0];
@@ -159,7 +173,8 @@ export async function weeklyPointsWinner(weekStart: string) {
   return { id: row.id, nickname: row.nickname, score: Number(row.score) };
 }
 
-export function rankScoreLabel(tab: RankTab, score: number) {
+export function rankScoreLabel(tab: RankTab, score: number, period: RankPeriod = "all") {
+  if (tab === "level" && period !== "all") return `+${score.toLocaleString()} EXP`;
   if (tab === "marks") return `${score.toLocaleString()}종`;
   if (tab === "attendance") return `${score.toLocaleString()}일`;
   return `${score.toLocaleString()} EXP`;
@@ -173,14 +188,11 @@ export async function getCrownNicknames(): Promise<string[]> {
   if (crownCache && now - crownCache.at < 20_000) return crownCache.names;
   const names = new Set<string>();
   for (const period of ["week", "month"] as const) {
-    for (const tab of ["marks", "attendance"] as const) {
+    for (const tab of ["level", "marks", "attendance"] as const) {
       const [first] = await getRanking(tab, period).catch(() => []);
       if (first) names.add(first.nickname);
     }
   }
-  // 레벨 랭킹 1위
-  const [topLevel] = await getRanking("level", "all").catch(() => []);
-  if (topLevel) names.add(topLevel.nickname);
   const list = [...names];
   crownCache = { at: now, names: list };
   return list;

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { shiftDate, weekStartKst } from "@/lib/dates";
 import { ensureYokaiMarks } from "@/lib/ensure-yokai-marks";
-import { weeklyPointsWinner } from "@/lib/ranking";
+import { weeklyExpWinner } from "@/lib/ranking";
 import { levelRewardSlugs } from "@/lib/yokai-achievements";
 import { FOUR_KINGS_MARKS, pickUnusedKingSlug } from "@/lib/yokai-kings";
 
@@ -53,7 +53,8 @@ export async function awardLastWeekKingMark() {
     SELECT "weekStart" FROM "WeeklyRankReward" WHERE "weekStart" = ${lastWeek} LIMIT 1
   `;
   if (existing.length > 0) return null;
-  const winner = await weeklyPointsWinner(lastWeek);
+  // 지난주 경험치 1위(같으면 레벨 → 누적 경험치 순)
+  const winner = await weeklyExpWinner(lastWeek);
   if (!winner) {
     await prisma.$executeRaw`
       INSERT INTO "WeeklyRankReward" ("weekStart", "userId", "markSlug")
