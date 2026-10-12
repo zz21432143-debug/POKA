@@ -57,7 +57,8 @@ export type RotationStateView = {
 };
 
 export type RotationAction =
-  | { type: "addDealers"; dealers: { name: string; startTime?: string | null }[] }
+  | { type: "addDealers"; dealers: { name: string; startTime?: string | null; endTime?: string | null }[] }
+  | { type: "setTimes"; id: string; start?: string | null; end?: string | null }
   | { type: "updateDealer"; id: string; name?: string; startTime?: string | null }
   | { type: "removeDealer"; id: string }
   | { type: "checkIn"; id: string }
