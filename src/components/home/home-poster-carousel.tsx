@@ -11,10 +11,10 @@ import {
   snapLoopIndex,
 } from "@/lib/promo-rotate";
 
-/** 한 칸 이동 뒤 멈춰 있는 시간까지 포함한 주기. */
-const STEP_MS = 3200;
-/** 한 칸 옆으로 미끄러지는 시간. 나머지(약 2.5초)는 멈춰서 보여줍니다. */
-const SLIDE_MS = 700;
+/** 한 칸 이동 뒤 멈춰 있는 시간까지 포함한 주기(어지러움을 줄이려고 3.2초 → 5.5초). */
+const STEP_MS = 5500;
+/** 한 칸 옆으로 미끄러지는 시간. 나머지(약 5초)는 멈춰서 보여줍니다. */
+const SLIDE_MS = 600;
 const VISIBLE = 3;
 
 export type HomePoster = {
@@ -57,7 +57,9 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
 
   useEffect(() => {
     // PC에서 마우스가 올라가 있어도 멈추지 않고 계속 돕니다.
+    // 기기의 '동작 줄이기'가 켜져 있으면 자동으로 넘기지 않습니다(어지러움 방지).
     if (deck.length <= VISIBLE) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => {
       if (document.hidden) return;
       indexRef.current += 1;
