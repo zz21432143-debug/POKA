@@ -162,13 +162,31 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const futureSeats = new Set(future.flatMap((s) => s.seats));
   // 다음 칸이나 마지막 칸에 없으면(한 칸만 손으로 넣은 경우 포함) 다시 짜기를 안내합니다.
   const inSlot = (slot: RotationPlan["slots"][number] | undefined, id: string) => Boolean(slot && (slot.seats.includes(id) || slot.rest.includes(id)));
+  // 예정 퇴근 시각(분, 시간표 기준)
+  const endAt = new Map(planDealers(state.dealers, start).map((d) => [d.id, d.to]));
+  const workingAt = (id: string, at: number) => {
+    const to = endAt.get(id);
+    return to == null || at < to;
+  };
   const missing = future.length
-    ? state.dealers.filter((d) => d.status === "IN" && (!futureAll.has(d.id) || !inSlot(future[0], d.id) || !inSlot(future[future.length - 1], d.id)))
+    ? state.dealers.filter((d) => {
+        if (d.status !== "IN") return false;
+        const firstAt = future[0].at;
+        const lastAt = future[future.length - 1].at;
+        if (!workingAt(d.id, firstAt)) return false;
+        return !futureAll.has(d.id) || !inSlot(future[0], d.id) || (workingAt(d.id, lastAt) && !inSlot(future[future.length - 1], d.id));
+      })
     : [];
-  // 퇴근·휴무 딜러: 지금 칸부터 들어가 있으면 빨간색
+  // 퇴근·휴무 딜러가 지금 칸부터 들어가 있거나, 예정 퇴근 시각 뒤에 들어가 있으면 빨간색
   const gone = new Map(state.dealers.filter((d) => d.status === "LEFT" || d.status === "OFF").map((d) => [d.id, d.status === "LEFT" ? "퇴근" : "휴무"]));
-  const isGone = (id: string | null | undefined, index: number) => Boolean(id && gone.has(id) && index >= current);
-  const leftInPlan = state.dealers.filter((d) => (d.status === "LEFT" || d.status === "OFF") && futureSeats.has(d.id));
+  const isGone = (id: string | null | undefined, index: number) => {
+    if (!id || index < current || !plan?.slots[index]) return false;
+    return gone.has(id) || !workingAt(id, plan.slots[index].at);
+  };
+  const goneLabel = (id: string) => gone.get(id) ?? "퇴근 시간";
+  const leftInPlan = state.dealers.filter((d) =>
+    plan ? plan.slots.some((slot, index) => index > current && (slot.seats.includes(d.id) || slot.rest.includes(d.id)) && isGone(d.id, index)) : false,
+  );
 
   function makePlan(fromNow: boolean) {
     const keep = fromNow && plan ? plan.slots.filter((_, index) => index <= current) : [];

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import {
   MAX_DEALERS,
+  kstDateAt,
   normalizeTime,
   parseTableLabels,
   tableLabelsOf,
@@ -56,6 +57,7 @@ export async function loadRotation(): Promise<RotationStateView> {
       id: d.id,
       name: d.name,
       startTime: d.startTime,
+      endTime: d.endTime ?? null,
       status: toDealerStatus(d.status),
       checkedInAt: d.checkedInAt?.toISOString() ?? null,
       leftAt: d.leftAt?.toISOString() ?? null,
@@ -96,7 +98,7 @@ export async function applyRotation(action: RotationAction) {
       case "addDealers": {
         const count = await tx.rotationDealer.count();
         const rows = action.dealers
-          .map((d) => ({ name: String(d.name ?? "").trim().slice(0, 20), startTime: normalizeTime(d.startTime) }))
+          .map((d) => ({ name: String(d.name ?? "").trim().slice(0, 20), startTime: normalizeTime(d.startTime), endTime: normalizeTime(d.endTime) }))
           .filter((d) => d.name);
         if (count + rows.length > MAX_DEALERS) throw new RotationError(`딜러는 최대 ${MAX_DEALERS}명까지 등록할 수 있습니다.`);
         const last = await tx.rotationDealer.aggregate({ _max: { sort: true } });
@@ -112,6 +114,25 @@ export async function applyRotation(action: RotationAction) {
             ...(action.startTime !== undefined ? { startTime: normalizeTime(action.startTime) } : {}),
           },
         });
+        break;
+      }
+      case "setTimes": {
+        // 출근: 출근 체크했으면 실제 출근 시각, 아니면 예정 출근 시각을 바꿉니다.
+        // 퇴근: 퇴근했으면 실제 퇴근 시각, 아니면 예정 퇴근 시각을 바꿉니다.
+        const dealer = await tx.rotationDealer.findUnique({ where: { id: action.id } });
+        if (!dealer) throw new RotationError("딜러를 찾을 수 없습니다.");
+        const start = normalizeTime(action.start);
+        const end = normalizeTime(action.end);
+        const data: { startTime?: string | null; checkedInAt?: Date; endTime?: string | null; leftAt?: Date } = {};
+        if (action.start !== undefined) {
+          if (dealer.checkedInAt && start) data.checkedInAt = kstDateAt(start, dealer.checkedInAt);
+          else if (!dealer.checkedInAt) data.startTime = start;
+        }
+        if (action.end !== undefined) {
+          if (dealer.status === "LEFT" && end) data.leftAt = kstDateAt(end, dealer.leftAt ?? now);
+          else if (dealer.status !== "LEFT") data.endTime = end;
+        }
+        await tx.rotationDealer.update({ where: { id: action.id }, data });
         break;
       }
       case "removeDealer": {
