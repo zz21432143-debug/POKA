@@ -159,7 +159,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   // 출근했는데 남은 시간표에 없는 딜러 / 퇴근·휴무인데 남은 시간표에 있는 딜러 → 다시 짜기 안내
   const future = plan ? plan.slots.slice(Math.max(0, current + 1)) : [];
   const futureAll = new Set(future.flatMap((s) => [...s.seats, ...s.rest]));
-  const futureSeats = new Set(future.flatMap((s) => s.seats));
   // 다음 칸이나 마지막 칸에 없으면(한 칸만 손으로 넣은 경우 포함) 다시 짜기를 안내합니다.
   const inSlot = (slot: RotationPlan["slots"][number] | undefined, id: string) => Boolean(slot && (slot.seats.includes(id) || slot.rest.includes(id)));
   // 예정 퇴근 시각(분, 시간표 기준)
@@ -332,15 +331,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {online ? "실시간 연결됨" : "연결 끊김"}
           </span>
           <span className="text-sm font-black text-amber-300">지금 {kstClock(clock)}</span>
-          <button
-            type="button"
-            disabled={busy || state.dealers.length === 0}
-            onClick={runAuto}
-            title="지금 칸 빈자리(퇴근·컨바인)를 채우고, 다음 칸부터 딜·휴식 시간을 맞춰 자동으로 다시 짭니다"
-            className="ml-auto min-h-11 rounded-lg bg-amber-400 px-6 text-lg font-black text-black disabled:opacity-40"
-          >
-            Auto
-          </button>
         </div>
         <dl className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           {[
@@ -678,7 +668,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                           >
                             <span className={cn("text-[10px] font-black", goneHere ? "text-white" : "text-emerald-300")}>
                               T{label} · {time}
-                              {goneHere ? ` · ${gone.get(id as string)}` : ""}
+                              {goneHere ? ` · ${goneLabel(id as string)}` : ""}
                             </span>
                             <span className={cn("truncate text-base font-black", id ? "text-white" : "text-rose-300")}>{id ? name(id) : "비어 있음"}</span>
                           </button>
