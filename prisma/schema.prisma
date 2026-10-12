@@ -535,3 +535,13 @@ model UploadChunk {
 
   @@id([fileId, idx])
 }
+
+/// 일별 방문자(브라우저 1개 = 하루 1명). visitor는 무작위 쿠키 값의 해시이며 IP는 저장하지 않습니다.
+model DailyVisit {
+  day       String
+  visitor   String
+  createdAt DateTime @default(now())
+
+  @@id([day, visitor])
+  @@index([day])
+}

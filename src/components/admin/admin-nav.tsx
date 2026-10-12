@@ -13,6 +13,7 @@ export function AdminNav({
     { href: "/admin?tab=words", label: "금지어" },
     ...(isMaster ? [{ href: "/admin?tab=settings", label: "사이트 설정" }] : []),
     { href: "/admin/banners", label: "배너" },
+    { href: "/admin/stats", label: "통계" },
     { href: "/admin/inquiries", label: "광고 문의" },
     ...(isMaster ? [{ href: "/admin/launch", label: "오픈 준비" }] : []),
   ];

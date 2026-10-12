@@ -21,6 +21,7 @@ import { OFFICIAL_NOTICES, formatNoticeDate, getLatestNotices } from "@/lib/noti
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
+import { VisitBeacon } from "@/components/analytics/visit-beacon";
 
 async function ConnectedTicker() {
   const events = await getCachedTickerEvents().catch(() => []);
@@ -101,6 +102,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </div>
       {/* 휴대폰 전용 앱 다운로드 띠. 고정(sticky) 영역 밖에 두어 헤더·전광판과 겹치지 않고 스크롤하면 사라집니다. */}
       <InstallPwaButton variant="strip" />
+      <VisitBeacon />
       <Suspense fallback={null}>
         <ConnectedNotice />
       </Suspense>
