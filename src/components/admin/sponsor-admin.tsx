@@ -5,8 +5,30 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PLACEMENT_META, SPONSOR_PLACEMENTS, type SponsorPlacement } from "@/lib/inventory-policy";
+import { PLACEMENT_IMAGE, PLACEMENT_META, SPONSOR_PLACEMENTS, type SponsorPlacement } from "@/lib/inventory-policy";
 import { SizeTag } from "@/components/admin/size-tag";
+import { PromoImageUpload } from "@/components/promo/promo-image-upload";
+
+/** 직판 소재 사진: 올리면 칸 크기에 맞춰 자동 정렬. 저장 버튼으로 함께 저장됩니다. */
+function SponsorImageField({ placement, initial, size }: { placement: SponsorPlacement; initial: string; size: string }) {
+  const [url, setUrl] = useState(initial);
+  const box = PLACEMENT_IMAGE[placement];
+  return (
+    <div>
+      <input type="hidden" name="imageUrl" value={url} />
+      <PromoImageUpload
+        value={url}
+        onChange={setUrl}
+        width={box.width}
+        height={box.height}
+        title={placement === "NATIVE" ? "썸네일 사진 (선택)" : "광고 사진"}
+        sizeLabel={size.replace(/ · .*$/, "")}
+        showUrl
+      />
+      <p className="mt-1 text-xs text-muted-foreground">사진을 올리거나 뺀 뒤 아래 저장을 눌러야 반영됩니다.</p>
+    </div>
+  );
+}
 
 type Unit = {
   placement: string;
@@ -91,18 +113,7 @@ export function SponsorAdmin({ units }: { units: Unit[] }) {
                   className="mt-1"
                 />
               </div>
-              <div>
-                <Label htmlFor={`${unit.placement}-image`}>
-                  이미지 URL{unit.placement.startsWith("A") ? " (300×150)" : unit.placement === "SIDEBAR" ? " (300×250)" : " (선택)"}
-                </Label>
-                <Input
-                  id={`${unit.placement}-image`}
-                  name="imageUrl"
-                  defaultValue={unit.imageUrl ?? ""}
-                  className="mt-1"
-                  placeholder="/images/posters/official-1.png"
-                />
-              </div>
+              <SponsorImageField placement={unit.placement as SponsorPlacement} initial={unit.imageUrl ?? ""} size={meta?.size ?? ""} />
               <div>
                 <Label htmlFor={`${unit.placement}-href`}>링크</Label>
                 <Input id={`${unit.placement}-href`} name="href" defaultValue={unit.href} className="mt-1" />

@@ -15,6 +15,17 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
         <span className="h-6 shrink-0 rounded-full border border-[#C59B27] bg-[#1C1819] px-2.5 text-[11px] font-semibold text-[#C59B27]">
           {creative.mark}
         </span>
+        {creative.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={creative.imageUrl}
+            alt=""
+            width={80}
+            height={60}
+            loading="lazy"
+            className="aspect-[4/3] w-20 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
+          />
+        ) : null}
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-bold leading-snug text-white">{creative.title}</p>
           <p className="mt-1 truncate text-xs text-[#9CA3AF]">

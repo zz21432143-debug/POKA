@@ -2,14 +2,32 @@
 
 import { useRef, useState } from "react";
 import { ImageUpIcon, Loader2Icon } from "lucide-react";
-import { fitPosterImage } from "@/lib/poster-fit";
+import { POSTER_H, POSTER_W, fitImage } from "@/lib/poster-fit";
 import { POSTER_SIZE } from "@/lib/inventory-policy";
 
 /**
- * 공식 홍보물 사진 올리기. 고른 사진을 세로 포스터(5:7)에 맞춰 자동 정렬한 뒤 올립니다.
+ * 홍보물 사진 올리기. 고른 사진을 칸 크기(기본: 세로 포스터 5:7)에 맞춰 자동 정렬한 뒤 올립니다.
  * value: 올린 이미지 주소("/api/images/…"). 비어 있으면 기본 이미지가 쓰입니다.
  */
-export function PromoImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+export function PromoImageUpload({
+  value,
+  onChange,
+  width = POSTER_W,
+  height = POSTER_H,
+  title = "공식 홍보물 사진",
+  sizeLabel = POSTER_SIZE,
+  showUrl = false,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  width?: number;
+  height?: number;
+  title?: string;
+  sizeLabel?: string;
+  /** 지금 들어 있는 주소를 작게 보여줍니다(예전 URL 소재 확인용) */
+  showUrl?: boolean;
+}) {
+  const wide = width > height;
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
@@ -22,7 +40,7 @@ export function PromoImageUpload({ value, onChange }: { value: string; onChange:
     try {
       if (!file.type.startsWith("image/")) throw new Error("사진 파일을 골라 주세요.");
       const form = new FormData();
-      form.append("file", await fitPosterImage(file));
+      form.append("file", await fitImage(file, width, height));
       const response = await fetch("/api/uploads/image", { method: "POST", body: form });
       const payload = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !payload.url) throw new Error(payload.error ?? "사진을 올리지 못했습니다.");
@@ -37,13 +55,14 @@ export function PromoImageUpload({ value, onChange }: { value: string; onChange:
   }
 
   return (
-    <div className="grid gap-3 rounded-xl border border-[#c9a25c]/50 bg-[#141110] p-3 sm:grid-cols-[9rem_1fr]">
+    <div className={`grid gap-3 rounded-xl border border-[#c9a25c]/50 bg-[#141110] p-3 ${wide ? "sm:grid-cols-[12rem_1fr]" : "sm:grid-cols-[9rem_1fr]"}`}>
       <button
         type="button"
         disabled={busy}
         onClick={() => fileRef.current?.click()}
         aria-label={shown ? "홍보물 사진 바꾸기" : "홍보물 사진 올리기"}
-        className="relative mx-auto grid aspect-[5/7] w-32 place-items-center overflow-hidden rounded-lg border border-dashed border-[#c9a25c]/60 bg-[#1d1611] text-[#e7c98a] hover:bg-[#241c16] sm:w-36"
+        style={{ aspectRatio: `${width} / ${height}` }}
+        className={`relative mx-auto grid place-items-center overflow-hidden rounded-lg border border-dashed border-[#c9a25c]/60 bg-[#1d1611] text-[#e7c98a] hover:bg-[#241c16] ${wide ? "w-48" : "w-32 sm:w-36"}`}
       >
         {shown ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -64,11 +83,12 @@ export function PromoImageUpload({ value, onChange }: { value: string; onChange:
         ) : null}
       </button>
       <div className="grid content-start gap-2 text-sm">
-        <p className="font-bold text-[#e7c98a]">공식 홍보물 사진</p>
+        <p className="font-bold text-[#e7c98a]">{title}</p>
         <p className="text-xs leading-5 text-[#c9c0b2]">
-          휴대폰 사진·포스터 아무 크기나 올리면 메인 홍보 칸({POSTER_SIZE})에 맞춰 자동으로 정렬됩니다. 비율이 다르면
-          사진이 잘리지 않게 가운데 두고, 남는 곳은 같은 사진을 흐리게 채웁니다.
+          휴대폰 사진·포스터 아무 크기나 올리면 이 칸({sizeLabel})에 맞춰 자동으로 정렬됩니다. 비율이 다르면 사진이
+          잘리지 않게 가운데 두고, 남는 곳은 같은 사진을 흐리게 채웁니다.
         </p>
+        {showUrl && value ? <p className="truncate text-[11px] text-[#9CA3AF]">현재: {value}</p> : null}
         <input
           ref={fileRef}
           type="file"

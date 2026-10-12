@@ -2,17 +2,18 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { canWriteBoard } from "@/lib/permissions";
+import { isStaff } from "@/lib/roles";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, imageUrl } from "@/lib/uploads";
 
 /**
- * 포스터 이미지 업로드. 대회 캘린더를 쓸 수 있는 공식 계정만 올릴 수 있습니다.
+ * 포스터·홍보물 이미지 업로드. 공식 계정(대회 캘린더·공식 홍보)과 관리자(배너 직판 소재)만 올릴 수 있습니다.
  * 브라우저에서 미리 줄인 JPEG/PNG/WebP를 multipart(file)로 받아 DB에 저장합니다.
  */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "로그인된 회원이 없습니다." }, { status: 401 });
-  if (!canWriteBoard(user, "SCHEDULE")) {
-    return NextResponse.json({ error: "POKA 공식 계정만 이미지를 올릴 수 있습니다." }, { status: 403 });
+  if (!canWriteBoard(user, "SCHEDULE") && !isStaff(user)) {
+    return NextResponse.json({ error: "POKA 공식 계정·관리자만 이미지를 올릴 수 있습니다." }, { status: 403 });
   }
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");

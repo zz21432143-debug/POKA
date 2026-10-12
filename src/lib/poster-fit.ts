@@ -1,5 +1,5 @@
 /**
- * 공식 홍보물 자동 맞춤(브라우저 전용).
+ * 홍보물 사진 자동 맞춤(브라우저 전용). 공식 홍보 포스터와 사이드바·배너 직판 소재에 씁니다.
  * 메인 B1–B6·홍보 갤러리 칸은 세로 5:7이라 다른 비율 사진은 잘립니다.
  * 1000×1400 캔버스에 사진 전체가 보이게 가운데 놓고, 남는 여백은 같은 사진을 흐리게 깔아 채웁니다.
  * 비율이 거의 같으면(±3%) 여백 없이 꽉 채웁니다.
@@ -23,17 +23,22 @@ export function fitRects(srcW: number, srcH: number, dstW = POSTER_W, dstH = POS
 }
 
 export async function fitPosterImage(file: File): Promise<File> {
+  return fitImage(file, POSTER_W, POSTER_H);
+}
+
+/** 사진을 w×h 칸에 맞춥니다(배너·사이드바 등 다른 크기에도 씀). */
+export async function fitImage(file: File, width: number, height: number): Promise<File> {
   const bitmap = await createImageBitmap(file).catch(() => {
     throw new Error("이 사진 형식은 열 수 없습니다. JPG·PNG로 바꿔 올려 주세요.");
   });
   const canvas = document.createElement("canvas");
-  canvas.width = POSTER_W;
-  canvas.height = POSTER_H;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("이미지를 맞추지 못했습니다.");
-  const { background, image } = fitRects(bitmap.width, bitmap.height);
+  const { background, image } = fitRects(bitmap.width, bitmap.height, width, height);
   ctx.fillStyle = "#120b0b";
-  ctx.fillRect(0, 0, POSTER_W, POSTER_H);
+  ctx.fillRect(0, 0, width, height);
   if (background) {
     ctx.save();
     ctx.filter = "blur(36px) brightness(0.55)";
@@ -46,5 +51,5 @@ export async function fitPosterImage(file: File): Promise<File> {
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("이미지를 맞추지 못했습니다."))), "image/jpeg", 0.9),
   );
-  return new File([blob], "promo-poster.jpg", { type: "image/jpeg" });
+  return new File([blob], "promo-image.jpg", { type: "image/jpeg" });
 }
