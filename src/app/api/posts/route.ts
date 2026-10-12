@@ -18,6 +18,7 @@ import { parseJobRegion } from "@/lib/job-status";
 import { titleRegion } from "@/lib/jobs";
 import { notifyRegion } from "@/lib/push";
 import { fileIdFromUrl } from "@/lib/uploads";
+import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import {
   HoldemOnlyError,
@@ -69,6 +70,15 @@ export async function POST(request: Request) {
     if (!boardType || !BOARDS.includes(boardType)) {
       return NextResponse.json({ error: "게시판을 확인하세요." }, { status: 400 });
     }
+
+    // 글 사진: 회원 게시판만. 구인·구직 글에는 사진을 받지 않습니다.
+    const photos = parsePostPhotos(body.imageUrls);
+    if (photos.length && !boardAllowsPhotos(boardType)) {
+      return NextResponse.json(
+        { error: boardType === "JOBS" ? "구인·구직 글에는 사진을 올릴 수 없습니다." : "이 게시판에는 사진을 올릴 수 없습니다." },
+        { status: 400 },
+      );
+    }
     if (!canWriteBoard(user, boardType)) {
       return NextResponse.json({ error: writeDeniedMessage(boardType) }, { status: 403 });
     }
@@ -115,6 +125,8 @@ export async function POST(request: Request) {
 
     let bannerSlot: number | null = null;
     let bannerImageUrl: string | null = body.bannerImageUrl?.trim() || null;
+    // 현장 스케치 목록 썸네일은 첫 사진을 씁니다.
+    if (boardType === "SKETCH") bannerImageUrl = photos[0] ?? null;
     if (boardType === "PROMO" && body.bannerSlot) {
       const slot = Number(body.bannerSlot);
       if (!Number.isInteger(slot) || slot < 1 || slot > 6) {
@@ -232,6 +244,7 @@ export async function POST(request: Request) {
         isPaid: boardType === "JOBS" && isStaff(user) ? Boolean(body.isPaid) : false,
         bannerSlot,
         bannerImageUrl,
+        imageUrls: photos,
         promoLocation:
           boardType === "PROMO" || boardType === "SCHEDULE"
             ? (typeof body.promoLocation === "string" ? body.promoLocation.trim() : null) || null

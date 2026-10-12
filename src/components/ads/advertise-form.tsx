@@ -84,11 +84,15 @@ export function AdvertiseForm({ loggedIn = true }: { loggedIn?: boolean }) {
           defaultValue="상담 후 결정"
         >
           <option value="상담 후 결정">상담 후 결정</option>
-          {AD_PRODUCTS.map((item) => (
-            <option key={item.id} value={item.name}>
-              {item.code} · {item.name}
-            </option>
-          ))}
+          <option value="무료 홍보 이벤트">무료 홍보 이벤트</option>
+          {AD_PRODUCTS.map((item) => {
+            const label = item.key ? `${item.key} ${item.name}` : item.name;
+            return (
+              <option key={item.id} value={label}>
+                {label}
+              </option>
+            );
+          })}
         </select>
       </div>
       <div>

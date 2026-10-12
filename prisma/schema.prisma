@@ -206,6 +206,8 @@ model Post {
   /// 메인 프리미엄 배너 1~6. 비어 있으면 일반 홍보글.
   bannerSlot         Int?      @unique
   bannerImageUrl     String?
+  /// 글 사진(회원 게시판, 최대 5장). 구인 글에는 넣지 않습니다.
+  imageUrls          String[]  @default([])
   promoLocation      String?
   promoTag           String?
   jobFilled          Boolean   @default(false)

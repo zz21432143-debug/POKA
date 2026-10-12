@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DocEditor } from "@/components/docs/doc-editor";
 import { DeletePostButton } from "@/components/posts/post-manage-bar";
 import { PromoImageUpload } from "@/components/promo/promo-image-upload";
+import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
+import { boardAllowsPhotos } from "@/lib/post-photos";
 import type { BoardType } from "@/generated/prisma/enums";
 
 export type PostEditInitial = {
@@ -17,6 +19,7 @@ export type PostEditInitial = {
   promoLocation?: string | null;
   promoTag?: string | null;
   bannerImageUrl?: string | null;
+  imageUrls?: string[];
 };
 
 /**
@@ -40,10 +43,18 @@ export function PostEditForm({
   const [promoLocation, setPromoLocation] = useState(initial.promoLocation ?? "");
   const [promoTag, setPromoTag] = useState(initial.promoTag ?? "");
   const [imageUrl, setImageUrl] = useState(initial.bannerImageUrl ?? "");
+  // 예전에 주소로 넣은 현장 스케치 사진은 첫 사진으로 옮겨 보여 줍니다.
+  const [photos, setPhotos] = useState<string[]>(() =>
+    initial.imageUrls?.length
+      ? initial.imageUrls
+      : boardType === "SKETCH" && initial.bannerImageUrl && !initial.bannerImageUrl.startsWith("/banners/")
+        ? [initial.bannerImageUrl]
+        : [],
+  );
+  const photoBoard = boardAllowsPhotos(boardType);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const promo = boardType === "PROMO";
-  const sketch = boardType === "SKETCH";
 
   async function submit() {
     setPending(true);
@@ -58,7 +69,7 @@ export function PostEditForm({
           title,
           content,
           ...(promo ? { promoLocation, promoTag, bannerImageUrl: imageUrl } : {}),
-          ...(sketch ? { bannerImageUrl: imageUrl } : {}),
+          ...(photoBoard ? { imageUrls: photos } : {}),
         }),
       });
       const payload = (await response.json()) as { id?: string; error?: string };
@@ -91,7 +102,6 @@ export function PostEditForm({
         </div>
       ) : null}
       {promo ? <PromoImageUpload value={imageUrl} onChange={setImageUrl} /> : null}
-      {sketch ? <Field id="edit-image" label="사진 URL" value={imageUrl} onChange={setImageUrl} /> : null}
       <div className="grid gap-2">
         <Label htmlFor="edit-content" className="write-label">
           내용
@@ -102,6 +112,7 @@ export function PostEditForm({
           <Textarea id="edit-content" className="write-body-input" value={content} onChange={(e) => setContent(e.target.value)} />
         )}
       </div>
+      {photoBoard ? <PostPhotoPicker value={photos} onChange={setPhotos} /> : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="button" size="touch" className="flex-1" disabled={pending} onClick={() => void submit()}>

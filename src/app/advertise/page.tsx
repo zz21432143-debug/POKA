@@ -4,6 +4,7 @@ import { AdvertiseForm } from "@/components/ads/advertise-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { AD_PRODUCTS } from "@/lib/sponsor";
 import { FreePromoTitle, PokaBrush, PokaMascot } from "@/components/ads/free-promo-banner";
+import { AdSlotMap, AdSlotTag } from "@/components/ads/ad-slot-map";
 
 export const metadata: Metadata = {
   title: "광고 · 제휴 문의",
@@ -80,20 +81,38 @@ export default async function AdvertisePage() {
         </ul>
       </section>
 
-      <section>
-        <h2 className="text-lg font-bold text-white">광고 상품</h2>
+      <section id="slots" className="scroll-mt-24">
+        <h2 className="text-lg font-bold text-white">광고 자리 · 상품</h2>
+        <p className="mt-1 text-sm text-[#c9c0b2]">
+          광고가 들어가는 자리는 네 곳(B·A·S·C)입니다. 아래 그림에서 화면 속 위치를 확인하세요.
+        </p>
+        <div className="ink-panel mt-3 rounded-2xl p-3 sm:p-4">
+          <AdSlotMap />
+        </div>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
           {AD_PRODUCTS.map((item) => (
             <li key={item.id} className="ink-panel rounded-2xl p-4">
-              <p className="text-xs font-semibold text-[#e7c98a]">
-                {item.code} · {item.size}
+              <p className="flex items-center gap-2">
+                {item.key ? <AdSlotTag k={item.key} className="size-7 text-sm" /> : null}
+                <span className="text-base font-bold text-white">{item.name}</span>
+                <span className="text-xs font-semibold text-[#e7c98a]">
+                  {item.key ? item.code.replace(`${item.key} · `, "") : item.code}
+                </span>
               </p>
-              <p className="mt-1 text-base font-bold text-white">{item.name}</p>
-              <p className="mt-1 text-xs font-medium text-emerald-300">{item.exclusive}</p>
-              <p className="mt-2 text-sm leading-6 text-[#D1D5DB]">{item.where}</p>
+              <p className="mt-2 text-sm leading-6 text-[#E5E7EB]">
+                <b className="text-[#e7c98a]">위치:</b> {item.where}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[#D1D5DB]">{item.detail}</p>
+              <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
+                <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-amber-300 ring-1 ring-amber-500/40">{item.size}</span>
+                <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-emerald-300 ring-1 ring-emerald-500/30">{item.exclusive}</span>
+              </p>
             </li>
           ))}
         </ul>
+        <p className="mt-2 text-xs text-[#9CA3AF]">
+          포스터·배너는 아무 크기로 보내 주셔도 각 자리에 맞춰 정렬해 드립니다. 금액은 자리와 기간에 따라 상담 후 안내합니다.
+        </p>
       </section>
 
       <section>

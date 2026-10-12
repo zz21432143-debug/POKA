@@ -25,6 +25,7 @@ const FILES = [
   "prisma/migrations/20261013150000_upload_chunks/migration.sql",
   "prisma/migrations/20261014090000_job_title_no_guin/migration.sql",
   "prisma/migrations/20261014120000_admin_alerts_words/migration.sql",
+  "prisma/migrations/20261014150000_post_photos/migration.sql",
 ];
 
 function databaseUrl() {

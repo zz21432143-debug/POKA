@@ -74,6 +74,7 @@ export default async function EditJobPage({
             promoLocation: post.promoLocation,
             promoTag: post.promoTag,
             bannerImageUrl: post.bannerImageUrl,
+            imageUrls: post.imageUrls,
           }}
         />
       </div>

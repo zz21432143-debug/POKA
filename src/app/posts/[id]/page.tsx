@@ -18,6 +18,7 @@ import { BackToList } from "@/components/posts/back-to-list";
 import type { Metadata } from "next";
 import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
+import { PostPhotos } from "@/components/posts/post-photos";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { canManagePost } from "@/lib/post-manage";
 import { PostManageBar } from "@/components/posts/post-manage-bar";
@@ -389,7 +390,7 @@ export default async function PostDetailPage({
         <HandPoll postId={post.id} initialCounts={pollCounts} initialChoice={myPollChoice} />
       ) : null}
 
-      {post.boardType === "SKETCH" && post.bannerImageUrl ? (
+      {post.boardType === "SKETCH" && post.bannerImageUrl && post.imageUrls.length === 0 ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={post.bannerImageUrl}
@@ -425,6 +426,8 @@ export default async function PostDetailPage({
           <LinkifiedText text={post.content} />
         </div>
       ) : null}
+      {/* 글 사진(회원 게시판). 구인 글에는 사진이 없습니다. */}
+      {post.jobKind ? null : <PostPhotos urls={post.imageUrls} title={post.title} />}
         </div>
       ) : null}
 

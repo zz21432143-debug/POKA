@@ -1,45 +1,40 @@
+import { AD_SLOTS } from "@/lib/ad-slots";
+
 export type SponsorMark = "AD" | "제휴";
 
-/** 광고 문의 페이지에 소개하는 상품. 금액은 상담 후 안내합니다. */
+/**
+ * 광고 문의 페이지에 소개하는 상품. 금액은 상담 후 안내합니다.
+ * 홍보 자리(B·A·S·C)는 관리자 「홍보 자리 관리」와 같은 설명(AD_SLOTS)을 씁니다.
+ */
 export const AD_PRODUCTS = [
-  {
-    id: "poster",
-    code: "메인",
-    name: "메인 포스터 슬라이드",
-    size: "세로 포스터 · 6구좌",
-    exclusive: "구좌마다 1곳",
-    where: "홈 맨 위에 한 줄 3장씩 보이며 자동으로 넘어갑니다. 방문할 때마다 순서가 바뀌어 모든 구좌가 고르게 노출됩니다. 대회·이벤트·매장 오픈 포스터에 잘 맞습니다.",
-  },
+  ...AD_SLOTS.map((slot) => ({
+    id: `slot-${slot.key}`,
+    key: slot.key as string | null,
+    code: `${slot.key} · ${slot.code}`,
+    name: slot.name,
+    size: slot.size,
+    exclusive: slot.count,
+    where: slot.where,
+    detail: slot.buyer as string,
+  })),
   {
     id: "premium-job",
+    key: null,
     code: "구인",
     name: "구인공고 프리미엄 상단 고정",
     size: "공고 1건",
     exclusive: "기간 동안 목록 맨 위",
-    where: "지원 딜러·급구·고정 구인 목록 맨 위에 금색 '프리미엄' 배지와 함께 고정됩니다. 딜러를 빨리 구해야 하는 매장에 효과적입니다.",
-  },
-  {
-    id: "sidebar",
-    code: "사이드",
-    name: "우측 사이드 배너",
-    size: "300×250",
-    exclusive: "동시에 1곳 · PC 전 페이지",
-    where: "PC 화면 오른쪽, 프로필 카드 아래에 모든 페이지에서 따라다닙니다. 모바일에서는 목록 아래에 한 번 더 보입니다.",
-  },
-  {
-    id: "native",
-    code: "목록",
-    name: "게시판 목록 한 줄 광고",
-    size: "글 목록 한 줄",
-    exclusive: "동시에 1곳",
-    where: "홈 최신글과 게시판 목록 중간에 글처럼 한 줄로 들어가며 [제휴] 표시가 붙습니다.",
+    where: "지원 딜러·대회 딜러·급구·고정 구인 목록 맨 위에 금색 '프리미엄' 배지와 함께 고정됩니다.",
+    detail: "딜러를 빨리 구해야 하는 매장에 효과적입니다.",
   },
   {
     id: "official",
+    key: null,
     code: "홍보",
     name: "공식 홍보 게시판 등록",
     size: "포스터 + 소개글",
     exclusive: "기간 협의",
-    where: "공식 홍보 게시판에 포스터와 상세 소개를 올려 드립니다. 메인 포스터 슬라이드와 함께 진행하면 효과가 큽니다.",
+    where: "정보센터 → 공식 홍보 게시판에 포스터와 상세 소개를 올려 드립니다.",
+    detail: "메인 포스터(B)와 함께 하면 포스터를 누른 회원이 바로 상세 소개를 봅니다.",
   },
-] as const;
+];

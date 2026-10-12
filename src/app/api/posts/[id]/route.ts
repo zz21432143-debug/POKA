@@ -7,6 +7,7 @@ import { HoldemOnlyError, assertHoldemOnly, normalizeHandTitle } from "@/lib/hol
 import { canManagePost, manageDeniedMessage } from "@/lib/post-manage";
 import { fileIdFromUrl } from "@/lib/uploads";
 import type { JobKind } from "@/generated/prisma/enums";
+import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -79,7 +80,12 @@ export async function PATCH(
         data.promoTag = text(body, "promoTag", post.promoTag);
         data.bannerImageUrl = imageUrlOrNull(text(body, "bannerImageUrl", post.bannerImageUrl)) ?? post.bannerImageUrl;
       }
-      if (post.boardType === "SKETCH") {
+      if (boardAllowsPhotos(post.boardType) && "imageUrls" in body) {
+        const photos = parsePostPhotos(body.imageUrls);
+        data.imageUrls = photos;
+        // 현장 스케치 목록 썸네일은 첫 사진을 씁니다.
+        if (post.boardType === "SKETCH") data.bannerImageUrl = photos[0] ?? null;
+      } else if (post.boardType === "SKETCH") {
         data.bannerImageUrl = imageUrlOrNull(text(body, "bannerImageUrl", post.bannerImageUrl));
       }
       assertHoldemOnly(title, content, data.promoLocation as string | null);
@@ -88,6 +94,9 @@ export async function PATCH(
       return NextResponse.json({ id: updated.id });
     }
 
+    if (parsePostPhotos(body.imageUrls).length) {
+      return NextResponse.json({ error: "구인·구직 글에는 사진을 올릴 수 없습니다." }, { status: 400 });
+    }
     const jobKind = (
       typeof body.jobKind === "string" && JOB_KINDS.includes(body.jobKind as JobKind) ? body.jobKind : post.jobKind
     ) as JobKind | null;

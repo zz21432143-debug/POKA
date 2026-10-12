@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DocEditor } from "@/components/docs/doc-editor";
 import type { BoardType } from "@/generated/prisma/enums";
 import { postRewardLine } from "@/lib/rewards";
+import { boardAllowsPhotos } from "@/lib/post-photos";
+import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
 import { cn } from "cn";
 
 export type BoardCategory = { boardType: BoardType; label: string };
@@ -29,6 +31,8 @@ export function BoardWriteForm({
   const [content, setContent] = useState("");
   const [bannerSlot, setBannerSlot] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const photoBoard = boardAllowsPhotos(boardType);
   const [promoLocation, setPromoLocation] = useState("");
   const [promoTag, setPromoTag] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +53,7 @@ export function BoardWriteForm({
           content,
           bannerSlot: bannerSlot ? Number(bannerSlot) : null,
           bannerImageUrl,
+          imageUrls: photoBoard ? photos : [],
           promoLocation,
           promoTag,
           isPrivate: boardType === "SUGGESTION" ? isPrivate : false,
@@ -137,9 +142,6 @@ export function BoardWriteForm({
           </div>
         </div>
       ) : null}
-      {boardType === "SKETCH" ? (
-        <Field label="사진 URL" value={bannerImageUrl} onChange={setBannerImageUrl} placeholder="/banners/slot-4.svg" />
-      ) : null}
       <div className="grid gap-2">
         <Label htmlFor="content" className="write-label">내용</Label>
         {boardType === "NOTICE" ? (
@@ -155,6 +157,7 @@ export function BoardWriteForm({
           />
         )}
       </div>
+      {photoBoard ? <PostPhotoPicker value={photos} onChange={setPhotos} /> : null}
       {boardType === "SUGGESTION" ? (
         <fieldset className="rounded-xl border border-border bg-muted/40 p-3">
           <legend className="px-1 text-sm font-semibold">비밀글</legend>
