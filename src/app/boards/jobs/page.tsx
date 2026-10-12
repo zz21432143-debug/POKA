@@ -13,6 +13,7 @@ import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { getCurrentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
   const region = parseJobRegion(params.region);
   const openOnly = params.open === "1";
   const [page, urgent] = await Promise.all([
-    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly }).catch(() => ({
+    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly, guest: !(await getCurrentUser().catch(() => null)) }).catch(() => ({
       jobs: [],
       total: 0,
       nextOffset: null,

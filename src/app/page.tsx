@@ -10,6 +10,7 @@ import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { HomeHero } from "@/components/home/home-hero";
 import { FREE_PROMO } from "@/lib/free-promo";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -71,6 +72,8 @@ async function HomeFeedSections() {
 export default async function HomePage() {
   return (
     <div className="flex flex-col gap-3.5">
+      {/* 맨 위: POKA 대표 그림, 그 아래 홍보 포스터 */}
+      <HomeHero />
       <Suspense fallback={<HomePanelFallback className="aspect-[15/7]" />}>
         <HomePosters />
       </Suspense>

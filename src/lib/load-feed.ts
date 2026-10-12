@@ -56,11 +56,45 @@ export function toJobCard(post: FeedRow, now = new Date(), today = todayKstDate(
   };
 }
 
+/**
+ * 비로그인용 구인 카드: 제목·분류·모집 상태·글쓴이만 남기고 조건·주소·일정 등은 비웁니다.
+ * 화면뿐 아니라 브라우저로 내려가는 데이터에서도 빠지게 하려고 서버에서 비웁니다.
+ */
+export function guestJobCard(card: JobCardData): JobCardData {
+  return {
+    ...card,
+    jobLocation: null,
+    jobCompanyName: null,
+    jobPayType: null,
+    jobPayAmount: null,
+    jobSchedule: null,
+    jobWorkHours: null,
+    jobBenefits: null,
+    jobExperience: null,
+    jobWorkDate: null,
+    jobDateFlexible: false,
+    jobGuaranteedHours: null,
+    jobOvertime: null,
+    jobTravelPay: false,
+    jobTravelPayAmount: null,
+    jobSnacks: false,
+    jobDressCode: null,
+    jobApplyMethod: null,
+    jobEndDate: null,
+    jobEvents: null,
+    jobDeadline: null,
+    jobHeadcount: null,
+    jobAlwaysOpen: false,
+  };
+}
+
 export type JobPageOptions = {
   offset?: number;
   limit?: number;
   region?: JobRegion | null;
   openOnly?: boolean;
+  /** 비로그인이면 제목만(guestJobCard) */
+  guest?: boolean;
 };
 
 /**
@@ -111,7 +145,8 @@ export async function loadJobPage(key: FeedKey, options: JobPageOptions = {}) {
 
   const total = openCount + closedCount;
   const nextOffset = offset + rows.length < total ? offset + rows.length : null;
-  return { total, openCount, nextOffset, jobs: rows.map((row) => toJobCard(row, now, today)) };
+  const jobs = rows.map((row) => toJobCard(row, now, today));
+  return { total, openCount, nextOffset, jobs: options.guest ? jobs.map(guestJobCard) : jobs };
 }
 
 export async function loadFeedPage(key: FeedKey, offset = 0, limit = PAGE_SIZE) {

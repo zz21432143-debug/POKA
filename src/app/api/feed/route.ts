@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/current-user";
 import { todayKstDate } from "@/lib/dates";
 import { PAGE_SIZE, feedWhere, isJobFeed, parseFeedKey } from "@/lib/feed";
 import { parseJobRegion } from "@/lib/job-status";
@@ -52,6 +53,8 @@ export async function GET(request: Request) {
       limit,
       region: parseJobRegion(url.searchParams.get("region")),
       openOnly: url.searchParams.get("open") === "1",
+      // 비로그인은 제목만
+      guest: !(await getCurrentUser().catch(() => null)),
     });
     return NextResponse.json({ key, total: page.total, offset, items: page.jobs, nextOffset: page.nextOffset });
   }

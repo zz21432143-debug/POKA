@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AD_PRODUCTS } from "@/lib/sponsor";
 
-export function AdvertiseForm() {
+export function AdvertiseForm({ loggedIn = true }: { loggedIn?: boolean }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -34,6 +34,21 @@ export function AdvertiseForm() {
     } finally {
       setPending(false);
     }
+  }
+
+  if (!loggedIn) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-[#1a1617] px-4 py-8 text-center">
+        <p className="text-[15px] font-semibold text-white">문의는 로그인한 회원만 보낼 수 있습니다.</p>
+        <p className="text-sm text-[#9CA3AF]">카카오 또는 구글로 10초 만에 가입할 수 있어요.</p>
+        <a
+          href={`/login?next=${encodeURIComponent("/advertise#inquiry")}`}
+          className="inline-flex min-h-12 items-center rounded-full bg-[#8b2222] px-6 text-sm font-bold text-white hover:bg-[#a12a2a]"
+        >
+          로그인하고 문의하기
+        </a>
+      </div>
+    );
   }
 
   if (done) {

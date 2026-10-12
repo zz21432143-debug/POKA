@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { clientIp } from "@/lib/request";
 import { CoolDownError, REPORT_COOLDOWN_MS, writeAudit } from "@/lib/security";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/current-user";
 
+/** 제휴·광고(무료 홍보 이벤트 포함) 문의. 로그인한 회원만 보낼 수 있습니다. */
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "로그인 후 문의를 보낼 수 있습니다." }, { status: 401 });
+    }
     const body = (await request.json()) as {
       company?: string;
       contact?: string;
@@ -20,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const ip = clientIp(request);
-    const key = `ad:ip:${ip}`;
+    const key = `ad:user:${user.id}`;
     const last = await prisma.writeThrottle.findUnique({ where: { key } });
     if (last && Date.now() - last.lastAt.getTime() < REPORT_COOLDOWN_MS) {
       return NextResponse.json({ error: "잠시 후 다시 보내 주세요." }, { status: 429 });
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
     await writeAudit({
       kind: "AD_INQUIRY",
       ip,
-      detail: JSON.stringify({ company, contact, product, message: message.slice(0, 500) }),
+      detail: JSON.stringify({ nickname: user.nickname, company, contact, product, message: message.slice(0, 500) }),
     });
 
     return NextResponse.json({ ok: true });

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { JobCards, type JobCardData } from "@/components/jobs/job-cards";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
-import { toJobCard } from "@/lib/load-feed";
+import { guestJobCard, toJobCard } from "@/lib/load-feed";
 import { cn } from "cn";
 import { getCurrentUser } from "@/lib/current-user";
 
@@ -69,7 +69,7 @@ export default async function SearchPage({
     ]);
     jobTotal = jobCount;
     postTotal = postCount;
-    jobs = jobRows.map((row) => toJobCard(row));
+    jobs = jobRows.map((row) => (viewer ? toJobCard(row) : guestJobCard(toJobCard(row))));
     posts = postRows.map((post) => ({
       id: post.id,
       boardType: post.boardType,

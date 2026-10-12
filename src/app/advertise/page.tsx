@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { BriefcaseIcon, MegaphoneIcon, UsersIcon } from "lucide-react";
 import { AdvertiseForm } from "@/components/ads/advertise-form";
+import { getCurrentUser } from "@/lib/current-user";
 import { AD_PRODUCTS } from "@/lib/sponsor";
-import { PokaMascot } from "@/components/ads/free-promo-banner";
+import { FreePromoTitle, PokaBrush, PokaMascot } from "@/components/ads/free-promo-banner";
 
 export const metadata: Metadata = {
   title: "광고 · 제휴 문의",
@@ -22,7 +23,8 @@ const STEPS = [
   { title: "게재 시작", body: "확인 후 바로 노출되고, 기간이 끝나면 알려 드립니다." },
 ] as const;
 
-export default function AdvertisePage() {
+export default async function AdvertisePage() {
+  const viewer = await getCurrentUser().catch(() => null);
   return (
     <div className="flex flex-col gap-6">
       <header className="board-intro">
@@ -42,25 +44,24 @@ export default function AdvertisePage() {
 
       <section
         id="free-promo"
-        className="scroll-mt-24 overflow-hidden rounded-2xl border-2 border-[#c9952f]/80 bg-gradient-to-br from-[#5a1418] via-[#2a0f10] to-[#140a0a] p-5 sm:p-6"
+        className="scroll-mt-24 overflow-hidden rounded-2xl border border-[#c9a36a]/50 bg-gradient-to-br from-[#241011] via-[#140d0d] to-[#0c0a0a] p-5 sm:p-6"
       >
-        <span className="rounded-full bg-gradient-to-r from-[#f6dfa0] to-[#c9952f] px-3 py-0.5 text-[11px] font-black tracking-[0.25em] text-[#2a0f10]">
-          EVENT
-        </span>
-        <div className="mt-3 flex items-center gap-3">
-          <PokaMascot className="size-14" />
-          <h2 className="text-2xl font-black text-white">
-            POKA <span className="text-[#f6dfa0]">무료 홍보</span> 이벤트
+        <span className="text-[11px] font-bold tracking-[0.4em] text-[#c9a36a]">FREE PROMOTION EVENT</span>
+        <div className="mt-3 flex items-center gap-4">
+          <PokaMascot className="size-16" />
+          <h2 className="flex flex-col items-start gap-2">
+            <PokaBrush className="w-32" />
+            <FreePromoTitle className="text-2xl sm:text-3xl" />
           </h2>
         </div>
-        <p className="mt-2 text-sm leading-6 text-[#f3eadb]">
+        <p className="mt-4 text-sm leading-6 text-[#e8dfd3]">
           매장 오픈, 대회, 팀 모집, 유튜브 채널 홍보를 POKA 메인 포스터 자리에 무료로 올려 드립니다. 아래 문의 양식에
           &quot;무료 홍보 이벤트&quot;라고 적고 업체명·연락처를 남겨 주시면, 확인 후 포스터를 받아 바로 걸어 드립니다.
         </p>
         <p className="mt-1 text-xs text-[#bfae92]">자리가 차면 순서대로 안내하며, 이벤트는 운영 상황에 따라 끝날 수 있습니다.</p>
         <a
           href="#inquiry"
-          className="mt-4 inline-flex min-h-11 items-center rounded-full bg-gradient-to-r from-[#f6dfa0] to-[#c9952f] px-6 text-sm font-black text-[#2a0f10] hover:brightness-110"
+          className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-[#c8282c] px-6 text-sm font-black text-[#f6efe6] hover:bg-[#d93a3e]"
         >
           무료 홍보 신청하기 →
         </a>
@@ -110,7 +111,7 @@ export default function AdvertisePage() {
 
       <section id="inquiry" className="scroll-mt-24">
         <h2 className="mb-3 text-lg font-bold text-white">광고 문의하기</h2>
-        <AdvertiseForm />
+        <AdvertiseForm loggedIn={Boolean(viewer)} />
       </section>
     </div>
   );

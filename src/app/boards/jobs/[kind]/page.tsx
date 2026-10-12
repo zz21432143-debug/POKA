@@ -11,6 +11,7 @@ import { loadJobPage } from "@/lib/load-feed";
 import { resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { getCurrentUser } from "@/lib/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,9 @@ export default async function JobBoardPage({
   const region = parseJobRegion(query.region);
   const openOnly = query.open === "1";
   const feedKey = jobFeedKey(job.kind);
-  const page = await loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly });
+  // 비로그인은 제목만 보이게 조건·주소 등을 빼고 내려보냅니다.
+  const guest = !(await getCurrentUser().catch(() => null));
+  const page = await loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly, guest });
   const writeHref = `/boards/jobs/${kind}/write`;
 
   return (
