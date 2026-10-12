@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { weekStartKst } from "@/lib/dates";
+import { withCurrentTitle } from "@/lib/ticker-text";
 import { POPULAR_UPVOTE_THRESHOLD, WEEKLY_HAND_EXP } from "@/lib/rewards";
 import { isSeedCatalogNickname, tickerMentionsSeedCatalog } from "@/lib/purge-demo-catalog";
 
@@ -66,7 +67,24 @@ export async function getTickerEvents() {
       orderBy: { createdAt: "desc" },
       take: 24,
     });
-    return rows.filter((row) => !tickerMentionsSeedCatalog(row.message));
+    // 글 소식은 지금 글 제목으로 다시 씁니다(예전 28자 잘림·수정된 제목 반영). 지워졌거나 숨긴 글은 뺍니다.
+    const postIds = rows
+      .map((row) => /^(?:POST|POPULAR):(.+)$/.exec(row.kind)?.[1])
+      .filter((id): id is string => Boolean(id));
+    const posts = postIds.length
+      ? await prisma.post.findMany({ where: { id: { in: postIds } }, select: { id: true, title: true, hidden: true } })
+      : [];
+    const byId = new Map(posts.map((post) => [post.id, post]));
+    return rows
+      .filter((row) => !tickerMentionsSeedCatalog(row.message))
+      .flatMap((row) => {
+        const match = /^(POST|POPULAR):(.+)$/.exec(row.kind);
+        if (!match) return [row];
+        const post = byId.get(match[2]);
+        if (!post || post.hidden) return [];
+        if (match[1] === "POST") return [{ ...row, message: withCurrentTitle(row.message, post.title) }];
+        return [row];
+      });
   } catch {
     return [];
   }

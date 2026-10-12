@@ -21,6 +21,7 @@ import { fileIdFromUrl } from "@/lib/uploads";
 import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
 import { needsTax } from "@/lib/job-tax";
+import { tickerTitle } from "@/lib/ticker-text";
 import {
   HoldemOnlyError,
   assertHoldemOnly,
@@ -272,7 +273,7 @@ export async function POST(request: Request) {
     const boardLabel = BOARD_LABELS[boardType as BoardTypeKey] ?? "게시판";
     await pushTicker({
       kind: `POST:${post.id}`,
-      message: `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${title.slice(0, 28)}`,
+      message: `📝 ${user.nickname}님이 [${boardLabel}]에 글을 남겼습니다 — ${tickerTitle(title)}`,
       href: `/posts/${post.id}`,
     });
 
