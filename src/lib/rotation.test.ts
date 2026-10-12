@@ -51,3 +51,13 @@ describe("dealer rotation rules", () => {
     ]);
   });
 });
+
+describe("table numbers", async () => {
+  const { parseTableLabels, formatTableLabels } = await import("./rotation");
+  it("reads ranges and single numbers", () => {
+    assert.deepEqual(parseTableLabels("5-8, 12 15").labels, [5, 6, 7, 8, 12, 15]);
+    assert.deepEqual(parseTableLabels("3,3,1").labels, [3, 1]);
+    assert.deepEqual(parseTableLabels("1-3, x").errors, ["x"]);
+    assert.equal(formatTableLabels([5, 6, 7, 8, 12, 13, 20]), "5-8, 12, 13, 20");
+  });
+});

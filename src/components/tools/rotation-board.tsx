@@ -5,20 +5,25 @@ import { cn } from "cn";
 import {
   INTERVAL_CHOICES,
   MAX_DEALERS,
-  MAX_TABLES,
   STATUS_LABEL,
+  formatTableLabels,
   kstClock,
   nowMinutes,
   parseDealerLines,
+  parseTableLabels,
   planDealers,
   type DealerStatus,
   type RotationAction,
   type RotationStateView,
 } from "@/lib/rotation";
 import { buildPlan, dealerSchedule, formatClock, parseClock, slotIndexAt, swapInSlot, type RotationPlan } from "@/lib/rotation-plan";
+import { downloadDealerImage, downloadTimeImage, timeSheetText } from "@/components/tools/rotation-export";
 
 /** 다른 기기 변경 확인 간격 */
 const POLL_MS = 2000;
+/** 시간표에서 최소로 보여 줄 줄 수 */
+const MIN_ROWS = 4;
+const SETUP_CHOICES = [0, 15, 30, 45, 60] as const;
 
 const CHIP: Record<DealerStatus, string> = {
   WAIT: "bg-zinc-600 text-white",
@@ -28,7 +33,7 @@ const CHIP: Record<DealerStatus, string> = {
 };
 
 function StatusChip({ status }: { status: DealerStatus }) {
-  return <span className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-black", CHIP[status])}>{STATUS_LABEL[status]}</span>;
+  return <span className={cn("rounded px-1 py-0.5 text-[10px] font-black whitespace-nowrap", CHIP[status])}>{STATUS_LABEL[status]}</span>;
 }
 
 function untilLabel(minutes: number) {
@@ -38,8 +43,8 @@ function untilLabel(minutes: number) {
 }
 
 /**
- * 딜러 로테이션(시간표). 시작·끝 시각과 간격(예: 20분)을 정하고 "로테이션 짜기"를 누르면
- * 칸마다 누가 몇 번 테이블에 들어가고 누가 쉬는지 미리 짜 줍니다. 출근 체크·퇴근을 반영해 "지금 이후 다시 짜기"도 됩니다.
+ * 딜러 로테이션(시간표). 게임 시작·끝 시각, 간격, 세팅 칸, 테이블 번호를 정하고 "로테이션 짜기"를 누르면
+ * 칸마다 누가 몇 번 테이블에 들어가고 누가 쉬는지 미리 짜 줍니다.
  * 2초마다 다른 기기 변경을 확인해 새로고침 없이 반영합니다.
  */
 export function RotationBoard({ initial }: { initial: RotationStateView }) {
@@ -49,10 +54,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [online, setOnline] = useState(true);
   const [busy, setBusy] = useState(false);
   const [bulk, setBulk] = useState("");
+  const [labelsText, setLabelsText] = useState(() => formatTableLabels(initial.tableLabels));
   const [editing, setEditing] = useState<{ id: string; name: string; startTime: string } | null>(null);
   const [cell, setCell] = useState<{ slot: number; table: number } | null>(null);
   const [view, setView] = useState<"table" | "dealer">("table");
-  const [showPast, setShowPast] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [copied, setCopied] = useState(false);
   const versionRef = useRef(initial.version);
 
   useEffect(() => {
@@ -96,6 +103,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       if (!response.ok || !data.state) throw new Error(data.error ?? "저장하지 못했습니다.");
       versionRef.current = data.state.version;
       setState(data.state);
+      setLabelsText(formatTableLabels(data.state.tableLabels));
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장하지 못했습니다.");
@@ -108,16 +116,29 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const start = parseClock(state.planStart) ?? 600;
   const end = parseClock(state.planEnd) ?? 1320;
   const now = nowMinutes(start, clock);
+  const labels = state.tableLabels;
   const plan = state.plan && state.plan.tables === state.tableCount ? state.plan : null;
   const names = useMemo(() => new Map(state.dealers.map((d) => [d.id, d.name])), [state.dealers]);
-  const name = (id: string | null) => (id ? (names.get(id) ?? "(삭제됨)") : "—");
+  const name = useCallback((id: string | null) => (id ? (names.get(id) ?? "(삭제됨)") : ""), [names]);
   const { current, next } = plan ? slotIndexAt(plan, now) : { current: -1, next: -1 };
+  const slotLabel = useCallback((index: number) => (plan && index === 0 && (plan.setup ?? 0) > 0 ? "세팅" : null), [plan]);
 
   const counts = useMemo(() => {
     const c: Record<DealerStatus, number> = { WAIT: 0, IN: 0, OFF: 0, LEFT: 0 };
     for (const dealer of state.dealers) c[dealer.status] += 1;
     return c;
   }, [state.dealers]);
+
+  // 출근했는데 남은 시간표에 없는 딜러 / 퇴근·휴무인데 남은 시간표에 있는 딜러 → 다시 짜기 안내
+  const future = plan ? plan.slots.slice(Math.max(0, current + 1)) : [];
+  const futureAll = new Set(future.flatMap((s) => [...s.seats, ...s.rest]));
+  const futureSeats = new Set(future.flatMap((s) => s.seats));
+  // 다음 칸이나 마지막 칸에 없으면(한 칸만 손으로 넣은 경우 포함) 다시 짜기를 안내합니다.
+  const inSlot = (slot: RotationPlan["slots"][number] | undefined, id: string) => Boolean(slot && (slot.seats.includes(id) || slot.rest.includes(id)));
+  const missing = future.length
+    ? state.dealers.filter((d) => d.status === "IN" && (!futureAll.has(d.id) || !inSlot(future[0], d.id) || !inSlot(future[future.length - 1], d.id)))
+    : [];
+  const leftInPlan = state.dealers.filter((d) => (d.status === "LEFT" || d.status === "OFF") && futureSeats.has(d.id));
 
   function makePlan(fromNow: boolean) {
     const keep = fromNow && plan ? plan.slots.filter((_, index) => index <= current) : [];
@@ -127,6 +148,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       start,
       end,
       interval: state.interval,
+      setup: state.setupMinutes,
       keep,
     });
     void send({ type: "savePlan", plan: built });
@@ -139,24 +161,49 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     setCell(null);
   }
 
-  // 다음 교대: 바뀌는 자리만
   const changes = useMemo(() => {
     if (!plan || next < 0) return null;
     const before = current >= 0 ? plan.slots[current] : null;
     const after = plan.slots[next];
     const moves = after.seats
-      .map((id, table) => ({ table: table + 1, id, prev: before?.seats[table] ?? null }))
-      .filter((row) => row.id !== row.prev);
+      .map((id, table) => ({ table: labels[table], id, prev: before?.seats[table] ?? null }))
+      .filter((row) => row.id !== row.prev && row.id);
     const toRest = after.rest.filter((id) => !before?.rest.includes(id));
     return { at: after.at, moves, toRest };
-  }, [plan, current, next]);
+  }, [plan, current, next, labels]);
 
-  const visibleSlots = plan ? plan.slots.map((slot, index) => ({ slot, index })).filter(({ index }) => showPast || index >= Math.max(0, current)) : [];
+  // 보여 줄 줄: 지금 칸부터, 최소 4줄(뒤가 모자라면 앞 칸까지)
+  const rows = useMemo(() => {
+    if (!plan) return [];
+    const all = plan.slots.map((slot, index) => ({ slot, index }));
+    if (showAll) return all;
+    let from = Math.max(0, current);
+    if (all.length - from < MIN_ROWS) from = Math.max(0, all.length - MIN_ROWS);
+    return all.slice(from);
+  }, [plan, current, showAll]);
+  const rowIndexes = rows.map((r) => r.index);
+
+  const endPassed = Boolean(plan && plan.slots.length > 0 && now >= plan.slots[plan.slots.length - 1].at + plan.interval);
+  const parsedLabels = parseTableLabels(labelsText);
+
+  // 칸 바꾸기 후보: 그 시각에 일할 수 있는 모든 딜러(휴무·그 시각 전 퇴근 제외)
+  const candidates = useMemo(() => {
+    if (!plan || !cell) return null;
+    const slot = plan.slots[cell.slot];
+    const available = new Set(planDealers(state.dealers, start).filter((d) => d.to == null || d.to > slot.at).map((d) => d.id));
+    const resting = slot.rest.filter((id) => names.has(id));
+    const seated = slot.seats
+      .map((id, t) => ({ id, t }))
+      .filter((row): row is { id: string; t: number } => Boolean(row.id) && row.t !== cell.table);
+    const inSlot = new Set([...slot.seats, ...slot.rest]);
+    const outside = state.dealers.filter((d) => available.has(d.id) && !inSlot.has(d.id));
+    return { slot, resting, seated, outside };
+  }, [plan, cell, state.dealers, start, names]);
 
   return (
-    <div className="grid gap-4 pb-10 text-white">
-      {/* 상단: 연결·인원·설정 */}
-      <section className="grid gap-3 rounded-2xl border border-white/15 bg-black p-3">
+    <div className="grid gap-3 pb-10 text-white">
+      {/* 설정 */}
+      <section className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", online ? "text-emerald-400" : "text-rose-400")}>
             <span className={cn("size-2.5 rounded-full", online ? "animate-pulse bg-emerald-400" : "bg-rose-500")} />
@@ -164,15 +211,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </span>
           <span className="text-sm font-black text-amber-300">지금 {kstClock(clock)}</span>
           {(Object.keys(counts) as DealerStatus[]).map((status) => (
-            <span key={status} className="inline-flex items-center gap-1 text-sm font-bold">
+            <span key={status} className="inline-flex items-center gap-1 text-xs font-bold">
               <StatusChip status={status} /> {counts[status]}
             </span>
           ))}
-          <span className="text-sm text-zinc-400">· 딜러 {state.dealers.length}/{MAX_DEALERS}</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:flex-wrap lg:items-end">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <label className="grid gap-1 text-xs font-bold text-zinc-300">
-            시작
+            게임 시작
             <input
               type="time"
               defaultValue={state.planStart}
@@ -207,37 +253,56 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </select>
           </label>
           <label className="grid gap-1 text-xs font-bold text-zinc-300">
-            테이블
+            시작 전 세팅 칸
             <select
-              value={state.tableCount}
+              value={state.setupMinutes}
               disabled={busy}
-              onChange={(e) => void send({ type: "setSettings", tableCount: Number(e.target.value) })}
+              onChange={(e) => void send({ type: "setSettings", setupMinutes: Number(e.target.value) })}
               className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
-              {Array.from({ length: MAX_TABLES }, (_, i) => i + 1).map((n) => (
+              {SETUP_CHOICES.map((n) => (
                 <option key={n} value={n}>
-                  {n}개
+                  {n ? `${n}분 전부터` : "없음"}
                 </option>
               ))}
             </select>
           </label>
+          <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-4">
+            테이블 번호 ({state.tableCount}개) · 예: 5-12, 15
+            <span className="flex gap-1.5">
+              <input
+                value={labelsText}
+                onChange={(e) => setLabelsText(e.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold text-white"
+              />
+              <button
+                type="button"
+                disabled={busy || labelsText === formatTableLabels(labels) || parsedLabels.labels.length === 0}
+                onClick={() => {
+                  if (parsedLabels.labels.length !== state.tableCount && plan && !window.confirm("테이블 수가 바뀌면 시간표를 다시 짜야 합니다. 바꿀까요?")) return;
+                  void send({ type: "setSettings", tableLabels: labelsText });
+                }}
+                className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold disabled:opacity-40"
+              >
+                적용
+              </button>
+            </span>
+            {parsedLabels.errors.length ? <span className="text-rose-300">못 읽은 값: {parsedLabels.errors.join(", ")}</span> : null}
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             disabled={busy || state.dealers.length === 0}
             onClick={() => {
               if (!plan || window.confirm("시간표를 처음부터 새로 짤까요? 손으로 바꾼 칸도 다시 짜집니다.")) makePlan(false);
             }}
-            className="col-span-2 min-h-11 rounded-lg bg-amber-400 px-4 text-base font-black text-black disabled:opacity-40 sm:col-span-1"
+            className="min-h-11 rounded-lg bg-amber-400 px-5 text-base font-black text-black disabled:opacity-40"
           >
             로테이션 짜기
           </button>
           {plan ? (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => makePlan(true)}
-              className="col-span-2 min-h-11 rounded-lg border-2 border-amber-400 px-4 text-sm font-black text-amber-300 sm:col-span-1"
-            >
+            <button type="button" disabled={busy} onClick={() => makePlan(true)} className="min-h-11 rounded-lg border-2 border-amber-400 px-4 text-sm font-black text-amber-300">
               지금 이후 다시 짜기
             </button>
           ) : null}
@@ -249,17 +314,30 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 void send({ type: "newDay" });
               }
             }}
-            className="min-h-11 rounded-lg border border-white/25 px-3 text-sm font-bold hover:bg-white/10"
+            className="ml-auto min-h-11 rounded-lg border border-white/25 px-3 text-sm font-bold hover:bg-white/10"
           >
             새 근무일
           </button>
         </div>
-        <p className="text-xs text-zinc-400">
-          출근 체크·퇴근이 생기면 <b className="text-amber-300">지금 이후 다시 짜기</b>를 누르세요. 이미 지난 칸은 그대로 두고 남은 칸만 다시 짭니다.
-        </p>
       </section>
 
       {error ? <p className="rounded-lg bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">{error}</p> : null}
+
+      {/* 다시 짜기 안내 */}
+      {missing.length || leftInPlan.length || endPassed ? (
+        <section aria-label="다시 짜기 안내" className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-rose-500 bg-rose-950/50 p-3 text-sm font-bold">
+          <span className="text-rose-200">
+            {missing.length ? `출근한 ${missing.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 빠져 있습니다. ` : ""}
+            {leftInPlan.length ? `퇴근·휴무인 ${leftInPlan.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 있습니다. ` : ""}
+            {endPassed ? `시간표 끝(${formatClock(end)})이 지났습니다. 끝 시각을 늘리고 다시 짜세요.` : ""}
+          </span>
+          {!endPassed ? (
+            <button type="button" disabled={busy} onClick={() => makePlan(true)} className="ml-auto min-h-10 rounded-lg bg-amber-400 px-3 text-sm font-black text-black">
+              지금 이후 다시 짜기
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* 다음 교대 */}
       {plan && changes ? (
@@ -268,32 +346,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <span className="text-2xl font-black text-amber-300">다음 교대 {formatClock(changes.at)}</span>
             <span className="text-sm font-bold text-amber-100">{untilLabel(changes.at - now)}</span>
           </p>
-          {changes.moves.length === 0 && changes.toRest.length === 0 ? (
-            <p className="text-sm text-zinc-300">바뀌는 자리가 없습니다.</p>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-              <ul className="flex flex-wrap gap-1.5">
-                {changes.moves.map((move) => (
-                  <li key={move.table} className="rounded-lg bg-black px-2.5 py-1.5 text-sm font-bold">
-                    <span className="text-emerald-300">T{move.table}</span> ← {name(move.id)}
-                  </li>
-                ))}
-              </ul>
-              {changes.toRest.length ? (
-                <p className="text-sm font-bold">
-                  <span className="mr-1 rounded-md bg-amber-400 px-1.5 py-0.5 text-xs text-black">휴식</span>
-                  {changes.toRest.map(name).join(", ")}
-                </p>
-              ) : null}
-            </div>
-          )}
+          <ul className="flex flex-wrap gap-1.5">
+            {changes.moves.map((move) => (
+              <li key={move.table} className="rounded-lg bg-black px-2.5 py-1.5 text-base font-black">
+                <span className="text-amber-300">{formatClock(changes.at)}</span> <span className="text-emerald-300">T{move.table}</span> {name(move.id)}
+              </li>
+            ))}
+            {changes.toRest.length ? (
+              <li className="rounded-lg bg-amber-400 px-2.5 py-1.5 text-base font-black text-black">휴식 {changes.toRest.map(name).join(", ")}</li>
+            ) : null}
+          </ul>
         </section>
       ) : null}
 
       {/* 시간표 */}
       <section aria-label="시간표" className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-black">로테이션 시간표</h2>
+          <h2 className="text-xl font-black">로테이션 시간표</h2>
           {plan ? (
             <>
               <div className="flex rounded-full border border-white/20 p-0.5">
@@ -304,14 +373,37 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     onClick={() => setView(key)}
                     className={cn("min-h-9 rounded-full px-3 text-xs font-bold", view === key ? "bg-white text-black" : "text-zinc-300")}
                   >
-                    {key === "table" ? "테이블별" : "딜러별"}
+                    {key === "table" ? "시간별" : "딜러별"}
                   </button>
                 ))}
               </div>
-              <label className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-zinc-300">
-                <input type="checkbox" checked={showPast} onChange={(e) => setShowPast(e.target.checked)} className="size-4" />
-                지난 칸도 보기
+              <label className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-300">
+                <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} className="size-4" />
+                전체 보기(지난 칸 포함)
               </label>
+              <div className="ml-auto flex flex-wrap gap-1.5">
+                <button type="button" onClick={() => downloadTimeImage(plan, labels, name, rowIndexes, slotLabel)} className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black">
+                  시간별 이미지 저장
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadDealerImage(plan, labels, state.dealers.filter((d) => d.status !== "OFF"), rowIndexes, slotLabel)}
+                  className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black"
+                >
+                  딜러별 이미지 저장
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(timeSheetText(plan, labels, name, rowIndexes, slotLabel)).catch(() => undefined);
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1500);
+                  }}
+                  className="min-h-9 rounded-lg bg-[#FEE500] px-3 text-xs font-black text-black"
+                >
+                  {copied ? "복사됨 ✓" : "단톡방 텍스트"}
+                </button>
+              </div>
             </>
           ) : null}
         </div>
@@ -319,70 +411,80 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         {!plan ? (
           <p className="rounded-xl border border-dashed border-white/25 p-4 text-sm text-zinc-300">
             {state.plan ? "테이블 수가 바뀌어 시간표를 다시 짜야 합니다. " : ""}
-            딜러를 등록하고 시작·끝 시각, 간격, 테이블 수를 정한 뒤 <b className="text-amber-300">로테이션 짜기</b>를 누르세요.
+            딜러를 등록하고 게임 시작·끝, 간격, 테이블 번호를 정한 뒤 <b className="text-amber-300">로테이션 짜기</b>를 누르세요.
           </p>
         ) : view === "table" ? (
-          <div className="overflow-x-auto rounded-xl border border-white/15">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="sticky top-0 bg-zinc-900">
+          <div className="max-h-[78dvh] overflow-auto rounded-xl border border-white/15">
+            <table className="min-w-full border-collapse">
+              <thead className="sticky top-0 z-20 bg-zinc-900">
                 <tr>
-                  <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-2 text-left text-xs font-black text-zinc-300">시각</th>
-                  {Array.from({ length: plan.tables }, (_, t) => (
-                    <th key={t} className="px-2 py-2 text-xs font-black text-emerald-300">
-                      T{t + 1}
+                  <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">시각</th>
+                  {labels.map((label) => (
+                    <th key={label} className="px-1 py-2 text-base font-black text-emerald-300">
+                      T{label}
                     </th>
                   ))}
-                  <th className="px-2 py-2 text-left text-xs font-black text-amber-300">휴식</th>
+                  <th className="px-2 py-2 text-left text-sm font-black text-amber-300">휴식</th>
+                  <th className="px-2 py-2 text-sm font-black text-zinc-300">시각</th>
                 </tr>
               </thead>
               <tbody>
-                {visibleSlots.map(({ slot, index }) => (
-                  <tr
-                    key={slot.at}
-                    data-slot={formatClock(slot.at)}
-                    className={cn(
-                      "border-t border-white/10",
-                      index === current && "bg-emerald-950/70",
-                      index === next && "bg-amber-950/40",
-                      index < current && "opacity-50",
-                    )}
-                  >
-                    <th className="sticky left-0 z-10 bg-inherit px-2 py-1.5 text-left font-black whitespace-nowrap">
-                      <span className={cn(index === current ? "text-emerald-300" : index === next ? "text-amber-300" : "text-white")}>
-                        {formatClock(slot.at)}
-                      </span>
-                      {index === current ? <span className="ml-1 text-[10px] text-emerald-300">지금</span> : null}
-                      {index === next ? <span className="ml-1 text-[10px] text-amber-300">다음</span> : null}
-                    </th>
-                    {slot.seats.map((id, t) => (
-                      <td key={t} className="px-1 py-1">
-                        <button
-                          type="button"
-                          onClick={() => setCell({ slot: index, table: t })}
-                          className={cn(
-                            "w-full min-w-[4.5rem] truncate rounded-md px-1.5 py-1.5 text-center text-sm font-bold",
-                            id ? "bg-zinc-800 hover:bg-zinc-700" : "border border-dashed border-rose-500/60 text-rose-300",
-                            cell?.slot === index && cell.table === t && "ring-2 ring-amber-300",
-                          )}
-                        >
-                          {id ? name(id) : "비어 있음"}
-                        </button>
-                      </td>
-                    ))}
-                    <td className="px-2 py-1.5 text-xs font-bold whitespace-nowrap text-amber-200">{slot.rest.map(name).join(", ") || "—"}</td>
-                  </tr>
-                ))}
+                {rows.map(({ slot, index }) => {
+                  const time = formatClock(slot.at);
+                  return (
+                    <tr
+                      key={slot.at}
+                      data-slot={time}
+                      className={cn(
+                        "border-t-2 border-white/10",
+                        index === current ? "bg-emerald-950" : index === next ? "bg-[#2a1d05]" : "bg-black",
+                        index < current && "opacity-50",
+                      )}
+                    >
+                      <th className="sticky left-0 z-10 bg-inherit px-2 py-2 text-left whitespace-nowrap">
+                        <span className={cn("block text-xl font-black", index === current ? "text-emerald-300" : index === next ? "text-amber-300" : "text-white")}>
+                          {time}
+                        </span>
+                        <span className="block text-[11px] font-bold text-zinc-400">{slotLabel(index) ?? (index === current ? "지금" : index === next ? "다음" : "")}</span>
+                      </th>
+                      {slot.seats.map((id, t) => (
+                        <td key={t} className="px-1 py-1.5">
+                          <button
+                            type="button"
+                            data-cell={`${time}-T${labels[t]}`}
+                            onClick={() => setCell({ slot: index, table: t })}
+                            className={cn(
+                              "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
+                              id ? "bg-zinc-800 hover:bg-zinc-700" : "border-2 border-dashed border-rose-500/70",
+                              cell?.slot === index && cell.table === t && "ring-2 ring-amber-300",
+                            )}
+                          >
+                            <span className="text-[10px] font-black text-emerald-300">
+                              {time} · T{labels[t]}
+                            </span>
+                            <span className={cn("truncate text-base font-black", id ? "text-white" : "text-rose-300")}>{id ? name(id) : "비어 있음"}</span>
+                          </button>
+                        </td>
+                      ))}
+                      <td className="px-2 py-1.5 text-sm font-bold text-amber-200">{slot.rest.map(name).join(", ") || "—"}</td>
+                      <td className="px-2 py-1.5 text-base font-black whitespace-nowrap text-zinc-300">{time}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             {state.dealers
               .filter((d) => d.status !== "OFF")
               .map((dealer) => {
-                const schedule = dealerSchedule(plan, dealer.id).filter((_, index) => showPast || index >= Math.max(0, current));
+                const visible = new Set(rowIndexes);
+                const schedule = dealerSchedule(plan, dealer.id)
+                  .map((row, index) => ({ ...row, index }))
+                  .filter((row) => visible.has(row.index));
                 return (
-                  <div key={dealer.id} data-schedule={dealer.name} className="grid gap-1.5 rounded-xl border border-white/15 bg-zinc-950 p-2 sm:grid-cols-[8rem_1fr] sm:items-center">
+                  <div key={dealer.id} data-schedule={dealer.name} className="grid gap-1.5 rounded-xl border border-white/15 bg-zinc-950 p-2 sm:grid-cols-[7rem_1fr] sm:items-center">
                     <p className="flex items-center gap-1.5 text-base font-black">
                       {dealer.name} <StatusChip status={dealer.status} />
                     </p>
@@ -391,15 +493,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         <li
                           key={row.at}
                           className={cn(
-                            "rounded-md px-1.5 py-1 text-xs font-bold",
-                            row.table == null
-                              ? "bg-zinc-900 text-zinc-600"
-                              : row.table === 0
-                                ? "bg-amber-400 text-black"
-                                : "bg-emerald-600 text-white",
+                            "rounded-md px-2 py-1 text-sm font-black",
+                            row.table == null ? "bg-zinc-900 text-zinc-600" : row.table === 0 ? "bg-amber-400 text-black" : "bg-emerald-600 text-white",
+                            row.index === current && "ring-2 ring-white",
                           )}
                         >
-                          {formatClock(row.at)} {row.table == null ? "—" : row.table === 0 ? "휴식" : `T${row.table}`}
+                          {formatClock(row.at)} {row.table == null ? "—" : row.table === 0 ? "휴식" : `T${labels[row.table - 1]}`}
                         </li>
                       ))}
                     </ul>
@@ -410,104 +509,124 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         )}
       </section>
 
-      {/* 딜러 · 출근 체크 */}
+      {/* 딜러 · 출근 체크(작게) */}
       <section aria-label="딜러" className="grid gap-2">
-        <h2 className="text-lg font-black">딜러 · 출근 체크</h2>
+        <h2 className="text-base font-black text-zinc-200">딜러 · 출근 체크</h2>
         {state.dealers.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/25 p-4 text-sm text-zinc-400">아래에서 딜러를 등록하세요.</p>
+          <p className="rounded-xl border border-dashed border-white/25 p-3 text-sm text-zinc-400">아래에서 딜러를 등록하세요.</p>
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19.5rem),1fr))] gap-1">
             {state.dealers.map((dealer) => (
-              <div key={dealer.id} data-dealer={dealer.name} className="grid gap-2 rounded-xl border border-white/15 bg-zinc-950 p-2">
-                <div className="flex items-center justify-between gap-2">
-                  <button type="button" onClick={() => setEditing({ id: dealer.id, name: dealer.name, startTime: dealer.startTime ?? "" })} className="truncate text-left text-base font-black underline-offset-2 hover:underline">
-                    {dealer.name}
-                  </button>
-                  <StatusChip status={dealer.status} />
-                </div>
-                <p className="text-xs text-zinc-300">
-                  예정 {dealer.startTime ?? "—"}
-                  {dealer.checkedInAt ? <b className="ml-2 text-emerald-300">출근 {kstClock(dealer.checkedInAt)}</b> : null}
-                  {dealer.leftAt ? <b className="ml-2 text-slate-300">퇴근 {kstClock(dealer.leftAt)}</b> : null}
-                </p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void send({ type: "checkIn", id: dealer.id })}
-                    className={cn("min-h-10 rounded-lg text-sm font-black", dealer.status === "IN" ? "bg-emerald-900 text-emerald-300" : "bg-emerald-500 text-black")}
-                  >
-                    {dealer.status === "IN" ? "출근 ✓" : "출근 체크"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void send({ type: "setStatus", id: dealer.id, status: dealer.status === "OFF" ? "WAIT" : "OFF" })}
-                    className="min-h-10 rounded-lg bg-rose-600 text-sm font-black text-white"
-                  >
-                    {dealer.status === "OFF" ? "휴무 취소" : "휴무"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy || dealer.status === "LEFT"}
-                    onClick={() => void send({ type: "setStatus", id: dealer.id, status: "LEFT" })}
-                    className="min-h-10 rounded-lg bg-slate-500 text-sm font-black text-white disabled:opacity-40"
-                  >
-                    퇴근
-                  </button>
-                </div>
+              <div key={dealer.id} data-dealer={dealer.name} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1">
+                <button
+                  type="button"
+                  onClick={() => setEditing({ id: dealer.id, name: dealer.name, startTime: dealer.startTime ?? "" })}
+                  className="min-w-0 flex-1 truncate text-left text-sm font-black hover:underline"
+                >
+                  {dealer.name}
+                </button>
+                <span className="text-[10px] text-zinc-400 tabular-nums">
+                  {dealer.checkedInAt ? <b className="text-emerald-300">{kstClock(dealer.checkedInAt)}</b> : (dealer.startTime ?? "")}
+                </span>
+                <StatusChip status={dealer.status} />
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void send({ type: "checkIn", id: dealer.id })}
+                  className={cn("min-h-8 rounded px-2 text-xs font-black", dealer.status === "IN" ? "bg-emerald-900 text-emerald-300" : "bg-emerald-500 text-black")}
+                >
+                  출근
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void send({ type: "setStatus", id: dealer.id, status: dealer.status === "OFF" ? "WAIT" : "OFF" })}
+                  className="min-h-8 rounded bg-rose-600 px-2 text-xs font-black text-white"
+                >
+                  {dealer.status === "OFF" ? "취소" : "휴무"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || dealer.status === "LEFT"}
+                  onClick={() => void send({ type: "setStatus", id: dealer.id, status: "LEFT" })}
+                  className="min-h-8 rounded bg-slate-500 px-2 text-xs font-black text-white disabled:opacity-40"
+                >
+                  퇴근
+                </button>
               </div>
             ))}
           </div>
         )}
-      </section>
-
-      {/* 딜러 등록 */}
-      <section aria-label="딜러 등록" className="grid gap-2 rounded-2xl border border-white/15 bg-zinc-950 p-3">
-        <h2 className="text-lg font-black">딜러 등록</h2>
-        <p className="text-xs text-zinc-400">한 줄에 한 명 · 예정 출근 시간은 선택 (예: 김딜러 18:00). 최대 {MAX_DEALERS}명.</p>
-        <textarea
-          value={bulk}
-          onChange={(event) => setBulk(event.target.value)}
-          rows={4}
-          className="rounded-lg border border-white/20 bg-black p-2 text-base"
-          placeholder={"김딜러 10:00\n이딜러 10:00\n박딜러 10:30"}
-        />
-        <button
-          type="button"
-          disabled={busy || !bulk.trim()}
-          onClick={async () => {
-            const dealers = parseDealerLines(bulk);
-            if (dealers.length && (await send({ type: "addDealers", dealers }))) setBulk("");
-          }}
-          className="min-h-11 justify-self-start rounded-lg bg-emerald-500 px-4 text-sm font-black text-black disabled:opacity-40"
-        >
-          {parseDealerLines(bulk).length || ""}명 등록
-        </button>
+        <details className="rounded-xl border border-white/15 bg-zinc-950 p-2" open={state.dealers.length === 0}>
+          <summary className="min-h-9 cursor-pointer text-sm font-bold text-zinc-200">딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 · 최대 {MAX_DEALERS}명)</summary>
+          <div className="mt-2 grid gap-2">
+            <textarea
+              value={bulk}
+              onChange={(event) => setBulk(event.target.value)}
+              rows={4}
+              className="rounded-lg border border-white/20 bg-black p-2 text-base"
+              placeholder={"김딜러 10:00\n이딜러 10:00\n박딜러 10:30"}
+            />
+            <button
+              type="button"
+              disabled={busy || !bulk.trim()}
+              onClick={async () => {
+                const dealers = parseDealerLines(bulk);
+                if (dealers.length && (await send({ type: "addDealers", dealers }))) setBulk("");
+              }}
+              className="min-h-10 justify-self-start rounded-lg bg-emerald-500 px-4 text-sm font-black text-black disabled:opacity-40"
+            >
+              {parseDealerLines(bulk).length || ""}명 등록
+            </button>
+          </div>
+        </details>
       </section>
 
       {/* 칸 바꾸기 */}
-      {plan && cell ? (
+      {plan && cell && candidates ? (
         <div className="fixed inset-0 z-[60] grid place-items-end bg-black/70 p-3 sm:place-items-center" role="dialog" aria-label="칸 바꾸기">
-          <div className="grid max-h-[80dvh] w-full max-w-md gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
+          <div className="grid max-h-[85dvh] w-full max-w-lg gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
-              {formatClock(plan.slots[cell.slot].at)} · T{cell.table + 1} <span className="text-sm text-zinc-400">지금: {name(plan.slots[cell.slot].seats[cell.table])}</span>
+              {formatClock(candidates.slot.at)} · T{labels[cell.table]}{" "}
+              <span className="text-sm text-zinc-400">지금: {name(candidates.slot.seats[cell.table]) || "비어 있음"}</span>
             </h3>
-            <p className="text-xs text-zinc-400">고른 딜러가 다른 테이블에 있으면 자리를 맞바꾸고, 쉬던 딜러면 지금 딜러가 휴식으로 갑니다. 이 칸만 바뀝니다.</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {plan.slots[cell.slot].rest.map((id) => (
-                <button key={id} type="button" onClick={() => changeCell(id)} className="min-h-11 rounded-lg bg-amber-400 px-2 text-sm font-black text-black">
-                  {name(id)} <span className="text-[10px]">(휴식)</span>
-                </button>
-              ))}
-              {plan.slots[cell.slot].seats.map((id, t) =>
-                id && t !== cell.table ? (
-                  <button key={id} type="button" onClick={() => changeCell(id)} className="min-h-11 rounded-lg bg-zinc-800 px-2 text-sm font-bold">
-                    {name(id)} <span className="text-[10px] text-zinc-400">(T{t + 1}와 바꾸기)</span>
-                  </button>
-                ) : null,
-              )}
-            </div>
+            <p className="text-xs text-zinc-400">이 칸만 바뀝니다. 다른 테이블 딜러를 고르면 자리를 맞바꾸고, 지금 딜러는 휴식으로 갑니다.</p>
+            {candidates.resting.length ? (
+              <div className="grid gap-1">
+                <p className="text-xs font-bold text-amber-300">휴식 중</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {candidates.resting.map((id) => (
+                    <button key={id} type="button" onClick={() => changeCell(id)} className="min-h-11 rounded-lg bg-amber-400 px-2 text-sm font-black text-black">
+                      {name(id)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {candidates.outside.length ? (
+              <div className="grid gap-1">
+                <p className="text-xs font-bold text-emerald-300">시간표에 없는 딜러(새로 넣기)</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {candidates.outside.map((dealer) => (
+                    <button key={dealer.id} type="button" onClick={() => changeCell(dealer.id)} className="min-h-11 rounded-lg bg-emerald-600 px-2 text-sm font-black text-white">
+                      {dealer.name} <span className="text-[10px]">{STATUS_LABEL[dealer.status]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {candidates.seated.length ? (
+              <div className="grid gap-1">
+                <p className="text-xs font-bold text-zinc-300">다른 테이블과 맞바꾸기</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {candidates.seated.map(({ id, t }) => (
+                    <button key={id} type="button" onClick={() => changeCell(id)} className="min-h-11 rounded-lg bg-zinc-800 px-2 text-sm font-bold">
+                      {name(id)} <span className="text-[10px] text-zinc-400">T{labels[t]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="flex gap-2">
               <button type="button" onClick={() => changeCell(null)} className="min-h-11 rounded-lg border border-rose-500/60 px-3 text-sm font-bold text-rose-300">
                 이 칸 비우기
@@ -566,4 +685,3 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     </div>
   );
 }
-

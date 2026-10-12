@@ -28,11 +28,14 @@ export type PlanSlot = {
 };
 
 export type RotationPlan = {
+  /** 게임 시작 시각(분). 세팅 칸은 이보다 setup분 앞 */
   start: number;
   end: number;
   interval: number;
   tables: number;
   slots: PlanSlot[];
+  /** 세팅 칸 길이(분). 0이면 없음 */
+  setup?: number;
 };
 
 export const MINUTES_PER_DAY = 1440;
@@ -74,6 +77,8 @@ export function buildPlan(options: {
   end: number;
   interval: number;
   keep?: PlanSlot[];
+  /** 게임 시작 전 세팅 칸(분). 예: 30이면 시작 30분 전에 세팅 칸 하나를 두고, 시작부터 간격대로 돕니다. */
+  setup?: number;
 }): RotationPlan {
   const tables = Math.max(1, Math.floor(options.tables));
   const interval = Math.max(5, Math.floor(options.interval));
@@ -106,12 +111,20 @@ export function buildPlan(options: {
     slots.push(slot);
   };
 
-  const keep = (options.keep ?? []).filter((slot) => slot.at >= start && slot.at < end);
+  const setup = Math.max(0, Math.floor(options.setup ?? 0));
+  const first = start - setup;
+  const keep = (options.keep ?? []).filter((slot) => slot.at >= first && slot.at < end);
   for (const slot of keep) record({ at: slot.at, seats: slot.seats.slice(0, tables).concat(Array(Math.max(0, tables - slot.seats.length)).fill(null)), rest: slot.rest });
 
-  const firstAt = keep.length ? keep[keep.length - 1].at + interval : start;
-  for (let at = firstAt; at < end; at += interval) {
-    const available = options.dealers.filter((d) => availableAt(d, at));
+  // 칸 시각: (세팅 칸) + 시작부터 간격마다. 이미 둔 칸(keep) 다음부터 짭니다.
+  const times: number[] = [];
+  if (setup > 0) times.push(first);
+  for (let at = start; at < end; at += interval) times.push(at);
+  const lastKept = keep.length ? keep[keep.length - 1].at : Number.NEGATIVE_INFINITY;
+  for (const at of times.filter((t) => t > lastKept)) {
+    // 세팅 칸은 게임 시작 때 올 딜러(예정 출근이 시작 시각 이전)를 모두 넣습니다.
+    const checkAt = setup > 0 && at === first ? start : at;
+    const available = options.dealers.filter((d) => availableAt(d, checkAt));
     const breaks = Math.max(0, available.length - tables);
     const cap = breaks > 0 ? Math.max(1, Math.round(tables / breaks)) : Number.POSITIVE_INFINITY;
 
@@ -154,7 +167,7 @@ export function buildPlan(options: {
     });
   }
 
-  return { start, end, interval, tables, slots };
+  return { start, end, interval, tables, slots, setup };
 }
 
 /** 지금(분) 기준 현재 칸·다음 칸 */

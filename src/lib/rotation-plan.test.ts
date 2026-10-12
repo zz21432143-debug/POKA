@@ -75,3 +75,16 @@ describe("rotation timetable", () => {
     assert.equal(moved.seats[1], slot.seats[0]);
   });
 });
+
+describe("setup slot before the game", () => {
+  it("adds a setup slot 30 minutes before start, then rotates from the start", () => {
+    const plan = buildPlan({ dealers: dealers(5, 600), tables: 4, start: 600, end: 680, interval: 20, setup: 30 });
+    assert.deepEqual(plan.slots.map((s) => formatClock(s.at)), ["09:30", "10:00", "10:20", "10:40", "11:00"]);
+    // 10:00에 오는 딜러들도 세팅 칸에 들어감
+    assert.equal(plan.slots[0].seats.filter(Boolean).length, 4);
+    // 다시 짜기에서도 세팅 칸 유지
+    const again = buildPlan({ dealers: dealers(5, 600), tables: 4, start: 600, end: 680, interval: 20, setup: 30, keep: plan.slots.slice(0, 2) });
+    assert.deepEqual(again.slots.slice(0, 2), plan.slots.slice(0, 2));
+    assert.equal(again.slots.length, 5);
+  });
+});

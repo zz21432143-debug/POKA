@@ -594,4 +594,8 @@ model RotationMeta {
   planEnd      String   @default("22:00")
   /// 짜 둔 시간표(JSON)
   planJson     String?
+  /// 쓰는 테이블 번호("5,6,7,12"). 없으면 1번부터
+  tableLabels  String?
+  /// 게임 시작 전 세팅 칸(분, 0이면 없음)
+  setupMinutes Int      @default(30)
 }

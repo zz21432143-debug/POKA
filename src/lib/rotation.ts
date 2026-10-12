@@ -34,6 +34,10 @@ export type RotationDealerView = {
 export type RotationStateView = {
   version: number;
   tableCount: number;
+  /** 테이블 번호(T5 등). 길이 = tableCount */
+  tableLabels: number[];
+  /** 게임 시작 전 세팅 칸(분) */
+  setupMinutes: number;
   interval: number;
   planStart: string;
   planEnd: string;
@@ -47,7 +51,7 @@ export type RotationAction =
   | { type: "removeDealer"; id: string }
   | { type: "checkIn"; id: string }
   | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
-  | { type: "setSettings"; tableCount?: number; interval?: number; planStart?: string; planEnd?: string }
+  | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number }
   | { type: "savePlan"; plan: RotationPlan | null }
   | { type: "newDay" };
 
@@ -109,4 +113,47 @@ export function planDealers(dealers: RotationDealerView[], start: number): PlanD
       const leftClock = d.status === "LEFT" && d.leftAt ? parseClock(kstClock(d.leftAt)) : null;
       return { id: d.id, from, to: leftClock == null ? null : alignToStart(leftClock, start) };
     });
+}
+
+/** "5-12, 15, 18" → [5,6,…,12,15,18]. 중복은 빼고 최대 40개. 못 읽은 부분은 errors로 */
+export function parseTableLabels(text: string): { labels: number[]; errors: string[] } {
+  const labels: number[] = [];
+  const errors: string[] = [];
+  for (const raw of text.split(/[,\s/]+/).filter(Boolean)) {
+    const range = /^(\d{1,3})\s*[-~]\s*(\d{1,3})$/.exec(raw);
+    const single = /^(\d{1,3})$/.exec(raw);
+    if (range) {
+      const a = Number(range[1]);
+      const b = Number(range[2]);
+      const [lo, hi] = a <= b ? [a, b] : [b, a];
+      for (let n = lo; n <= hi && labels.length < MAX_TABLES * 3; n += 1) labels.push(n);
+    } else if (single) {
+      labels.push(Number(single[1]));
+    } else {
+      errors.push(raw);
+    }
+  }
+  const unique = [...new Set(labels.filter((n) => n >= 1 && n <= 999))];
+  if (unique.length > MAX_TABLES) errors.push(`테이블은 최대 ${MAX_TABLES}개입니다`);
+  return { labels: unique.slice(0, MAX_TABLES), errors };
+}
+
+/** [5,6,7,8,12] → "5-8, 12" */
+export function formatTableLabels(labels: number[]) {
+  const sorted = [...labels];
+  const parts: string[] = [];
+  for (let i = 0; i < sorted.length; ) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j += 1;
+    parts.push(j > i + 1 ? `${sorted[i]}-${sorted[j]}` : j === i + 1 ? `${sorted[i]}, ${sorted[j]}` : `${sorted[i]}`);
+    i = j + 1;
+  }
+  return parts.join(", ");
+}
+
+/** 저장된 테이블 번호(없으면 1번부터 tableCount개) */
+export function tableLabelsOf(state: { tableCount: number; tableLabels?: number[] | null }) {
+  return state.tableLabels && state.tableLabels.length === state.tableCount
+    ? state.tableLabels
+    : Array.from({ length: state.tableCount }, (_, i) => i + 1);
 }

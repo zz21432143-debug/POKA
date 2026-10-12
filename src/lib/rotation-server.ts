@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { MAX_DEALERS, MAX_TABLES, normalizeTime, toDealerStatus, type RotationAction, type RotationStateView } from "@/lib/rotation";
+import { MAX_DEALERS, normalizeTime, parseTableLabels, tableLabelsOf, toDealerStatus, type RotationAction, type RotationStateView } from "@/lib/rotation";
 import type { RotationPlan } from "@/lib/rotation-plan";
 
 const META_ID = "default";
@@ -26,6 +26,8 @@ export async function loadRotation(): Promise<RotationStateView> {
   return {
     version: m.version,
     tableCount: m.tableCount,
+    tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
+    setupMinutes: m.setupMinutes,
     interval: m.interval,
     planStart: m.planStart,
     planEnd: m.planEnd,
@@ -116,8 +118,14 @@ export async function applyRotation(action: RotationAction) {
         break;
       }
       case "setSettings": {
-        const data: { tableCount?: number; interval?: number; planStart?: string; planEnd?: string } = {};
-        if (action.tableCount !== undefined) data.tableCount = Math.max(1, Math.min(MAX_TABLES, Math.floor(Number(action.tableCount) || 1)));
+        const data: { tableCount?: number; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number } = {};
+        if (action.tableLabels !== undefined) {
+          const { labels, errors } = parseTableLabels(String(action.tableLabels));
+          if (labels.length === 0 || errors.length) throw new RotationError(`테이블 번호를 확인하세요${errors.length ? `: ${errors.join(", ")}` : ""}`);
+          data.tableCount = labels.length;
+          data.tableLabels = labels.join(",");
+        }
+        if (action.setupMinutes !== undefined) data.setupMinutes = Math.max(0, Math.min(120, Math.floor(Number(action.setupMinutes) || 0)));
         if (action.interval !== undefined) data.interval = Math.max(5, Math.min(120, Math.floor(Number(action.interval) || 20)));
         if (action.planStart !== undefined) {
           const t = normalizeTime(action.planStart);
