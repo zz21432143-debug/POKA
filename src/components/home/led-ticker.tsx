@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ChevronsUpIcon } from "lucide-react";
 
-/** 소식 하나를 보여 주는 시간. 옆으로 흐르지 않고 제자리에서 바뀝니다(어지러움 방지). */
+/** 소식 하나를 보여 주는 시간 */
 const SHOW_MS = 4000;
-/** 바뀔 때 흐려졌다 나타나는 시간 */
-const FADE_MS = 250;
 
 export type TickerItem = {
   id: string;
@@ -15,9 +14,9 @@ export type TickerItem = {
 };
 
 /**
- * 상단 전광판. 예전에는 글자가 계속 옆으로 흘러 일부 회원이 어지러움을 호소해서,
- * 소식을 한 번에 하나씩 제자리에서 바꿔 보여 줍니다. 마우스를 올리거나 누르고 있으면 멈춥니다.
- * 기기의 '동작 줄이기'가 켜져 있으면 흐려지는 효과 없이 바뀝니다.
+ * 상단 전광판. 소식이 한 줄씩 아래에서 위로 올라오며 바뀝니다(롤링).
+ * 예전처럼 옆으로 계속 흐르면 어지럽다는 의견이 있어, 한 줄 높이만 짧게 움직입니다.
+ * 마우스를 올리거나 누르고 있으면 멈춥니다.
  */
 export function LedTicker({ items }: { items: TickerItem[] }) {
   const source =
@@ -25,30 +24,16 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
       ? items
       : [{ id: "empty", message: "POKA 소식 — 글 작성 · 레벨업 · 마크 구매가 여기 나옵니다", href: "/" }];
   const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
   const [paused, setPaused] = useState(false);
   const current = source[index % source.length];
+  const previous = index > 0 ? source[(index - 1) % source.length] : null;
 
   useEffect(() => {
     if (paused || source.length <= 1) return;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    let swap = 0;
     const timer = window.setInterval(() => {
-      if (document.hidden) return;
-      if (reduce) {
-        setIndex((value) => value + 1);
-        return;
-      }
-      setVisible(false);
-      swap = window.setTimeout(() => {
-        setIndex((value) => value + 1);
-        setVisible(true);
-      }, FADE_MS);
+      if (!document.hidden) setIndex((value) => value + 1);
     }, SHOW_MS);
-    return () => {
-      window.clearInterval(timer);
-      window.clearTimeout(swap);
-    };
+    return () => window.clearInterval(timer);
   }, [paused, source.length]);
 
   return (
@@ -65,17 +50,30 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
       <div className="flex shrink-0 items-center pr-2 pl-2">
         <span className="live-glow rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">LIVE</span>
       </div>
-      <Link
-        key={`${current.id}-${index}`}
-        href={current.href}
-        aria-live="polite"
-        className="flex min-h-10 min-w-0 flex-1 items-center text-sm font-medium tracking-wide text-[#f4eadf] hover:text-white"
-        style={{ opacity: visible ? 1 : 0, transition: `opacity ${FADE_MS}ms ease` }}
-      >
-        <span className="truncate">{current.message}</span>
-      </Link>
+      <div className="relative h-10 min-w-0 flex-1 overflow-hidden">
+        {/* 나가는 소식(위로 올라가며 사라짐) */}
+        {previous ? (
+          <span
+            key={`out-${index}`}
+            aria-hidden
+            className="led-roll-out absolute inset-0 flex items-center text-sm font-medium tracking-wide text-[#f4eadf]"
+          >
+            <span className="truncate">{previous.message}</span>
+          </span>
+        ) : null}
+        {/* 들어오는 소식(아래에서 올라옴) */}
+        <Link
+          key={`in-${index}`}
+          href={current.href}
+          aria-live="polite"
+          className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-sm font-medium tracking-wide text-[#f4eadf] hover:text-white`}
+        >
+          <span className="truncate">{current.message}</span>
+        </Link>
+      </div>
       {source.length > 1 ? (
-        <span className="shrink-0 pr-3 pl-2 text-[11px] tabular-nums text-[#9a8b74]" aria-hidden>
+        <span className="flex shrink-0 items-center gap-0.5 pr-3 pl-2 text-[11px] tabular-nums text-[#c9a25c]" aria-hidden>
+          <ChevronsUpIcon className={paused ? "size-3.5 opacity-40" : "led-roll-hint size-3.5"} />
           {(index % source.length) + 1}/{source.length}
         </span>
       ) : null}
