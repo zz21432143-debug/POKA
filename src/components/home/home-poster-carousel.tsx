@@ -1,20 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MegaphoneIcon, PlusIcon } from "lucide-react";
-import {
-  buildLoopTrack,
-  carouselCloneCount,
-  loopTrackStartIndex,
-  shuffleInPlaceCopy,
-  snapLoopIndex,
-} from "@/lib/promo-rotate";
+import { shuffleInPlaceCopy } from "@/lib/promo-rotate";
 
-/** 한 칸 이동 뒤 멈춰 있는 시간까지 포함한 주기(어지러움을 줄이려고 3.2초 → 5.5초). */
-const STEP_MS = 5500;
-/** 한 칸 옆으로 미끄러지는 시간. 나머지(약 5초)는 멈춰서 보여줍니다. */
-const SLIDE_MS = 600;
+/** 한 번 바뀐 뒤 다음에 바뀔 때까지의 간격 */
+const STEP_MS = 3500;
+/** 포스터 한 장이 흐려졌다 나타나는 시간 */
+const FADE_MS = 380;
+/** 왼쪽부터 차례로 바뀌는 간격(물결처럼) */
+const STAGGER_MS = 110;
 const VISIBLE = 3;
 
 export type HomePoster = {
@@ -28,17 +24,15 @@ export type HomePoster = {
   plain?: boolean;
 };
 
-/** 홈 상단 포스터 6구좌. 한 줄 3장, 한 칸씩 밀렸다 멈추기를 반복하고 들어올 때마다 순서를 섞습니다. */
+/**
+ * 홈 상단 포스터 6구좌. 한 줄 3장을 보여 주고 3.5초마다 한 칸씩 넘깁니다.
+ * 옆으로 미끄러지면 어지럽다는 의견이 있어, 제자리에서 왼쪽부터 차례로 부드럽게 바뀝니다(살짝 흐려졌다 나타남).
+ * 들어올 때마다 순서를 섞고, PC에서 마우스가 올라가 있어도 계속 돕니다.
+ */
 export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
   const [deck, setDeck] = useState(posters);
-  const cloneCount = carouselCloneCount(deck.length, VISIBLE);
-  const track = useMemo(() => buildLoopTrack(deck, cloneCount), [deck, cloneCount]);
-  const startIndex = loopTrackStartIndex(cloneCount);
-
-  const [index, setIndex] = useState(startIndex);
-  const [animate, setAnimate] = useState(true);
-  const indexRef = useRef(startIndex);
-  const settleTimer = useRef<number>(0);
+  const [start, setStart] = useState(0);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     // 서버와 첫 화면을 맞춘 뒤, 브라우저에서 방문마다 순서를 섞습니다.
@@ -46,31 +40,27 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
     setDeck(shuffleInPlaceCopy(posters));
   }, [posters]);
 
-  const settle = useCallback(() => {
-    const snapped = snapLoopIndex(indexRef.current, deck.length, cloneCount);
-    if (snapped === null) return;
-    setAnimate(false);
-    indexRef.current = snapped;
-    setIndex(snapped);
-    requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
-  }, [cloneCount, deck.length]);
-
   useEffect(() => {
-    // PC에서 마우스가 올라가 있어도 멈추지 않고 계속 돕니다.
-    // 기기의 '동작 줄이기'가 켜져 있으면 자동으로 넘기지 않습니다(어지러움 방지).
     if (deck.length <= VISIBLE) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    let swap = 0;
+    let show = 0;
     const timer = window.setInterval(() => {
       if (document.hidden) return;
-      indexRef.current += 1;
-      setIndex(indexRef.current);
-      window.clearTimeout(settleTimer.current);
-      settleTimer.current = window.setTimeout(settle, SLIDE_MS + 20);
+      setHidden(true);
+      // 마지막(오른쪽) 포스터까지 다 흐려진 뒤 다음 포스터로 바꾸고 다시 나타나게 합니다.
+      swap = window.setTimeout(() => {
+        setStart((value) => (value + 1) % deck.length);
+        show = window.setTimeout(() => setHidden(false), 30);
+      }, FADE_MS + STAGGER_MS * (VISIBLE - 1));
     }, STEP_MS);
-    return () => window.clearInterval(timer);
-  }, [deck.length, settle]);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(swap);
+      window.clearTimeout(show);
+    };
+  }, [deck.length]);
 
-  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+  const visible = Array.from({ length: Math.min(VISIBLE, deck.length) }, (_, i) => deck[(start + i) % deck.length]);
 
   return (
     <section aria-label="홍보 포스터" className="flex flex-col gap-2">
@@ -83,31 +73,30 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           포스터 홍보 문의
         </Link>
       </div>
-      <div className="overflow-hidden">
-        <ul
-          className="flex"
-          style={{
-            width: `${(track.length * 100) / VISIBLE}%`,
-            transform: `translate3d(${(-index * 100) / track.length}%, 0, 0)`,
-            transition: animate ? `transform ${SLIDE_MS}ms ease-in-out` : "none",
-            willChange: "transform",
-          }}
-        >
-          {track.map((poster, trackIndex) => {
-            const offscreen = trackIndex < index || trackIndex >= index + VISIBLE;
-            return (
-              <li
-                key={`${poster.key}-${trackIndex}`}
-                className="shrink-0 px-1"
-                style={{ width: `${100 / track.length}%` }}
-                aria-hidden={offscreen || undefined}
-              >
-                <PosterCard poster={poster} focusable={!offscreen} />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <ul className="grid grid-cols-3 gap-2">
+        {visible.map((poster, position) => (
+          <li
+            key={`slot-${position}`}
+            style={{
+              opacity: hidden ? 0 : 1,
+              transform: hidden ? "scale(0.97)" : "scale(1)",
+              transition: `opacity ${FADE_MS}ms ease ${position * STAGGER_MS}ms, transform ${FADE_MS}ms ease ${position * STAGGER_MS}ms`,
+            }}
+          >
+            <PosterCard poster={poster} focusable />
+          </li>
+        ))}
+      </ul>
+      {deck.length > VISIBLE ? (
+        <div className="flex justify-center gap-1.5" aria-hidden>
+          {deck.map((poster, i) => (
+            <span
+              key={poster.key}
+              className={i === start ? "h-1.5 w-4 rounded-full bg-[#c9a25c] transition-all" : "size-1.5 rounded-full bg-white/25 transition-all"}
+            />
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

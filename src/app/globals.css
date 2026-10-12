@@ -513,6 +513,53 @@ select {
   background: #0f0b08;
 }
 
+/* 전광판 롤링: 한 줄 높이만 아래에서 위로(옆으로 흐르지 않아 덜 어지러움). 동작 줄이기 설정에서도 보이게 둡니다. */
+.led-roll-in {
+  animation: led-roll-in 450ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.led-roll-out {
+  animation: led-roll-out 450ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+@keyframes led-roll-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes led-roll-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* 돌고 있다는 표시: 작은 화살표가 위로 살짝 움직입니다. */
+.led-roll-hint {
+  animation: led-roll-hint 4s ease-in-out infinite;
+}
+
+@keyframes led-roll-hint {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  88% {
+    transform: translateY(-3px);
+  }
+}
+
 
 /* 프로필 마크 슬롯. 프레임·이펙트 cssClass가 붙으면 테두리/후광을 그립니다. */
 .profile-mark {
