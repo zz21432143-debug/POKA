@@ -1,5 +1,14 @@
 import { prisma } from "@/lib/db";
-import { MAX_DEALERS, normalizeTime, parseTableLabels, tableLabelsOf, toDealerStatus, type RotationAction, type RotationStateView } from "@/lib/rotation";
+import {
+  MAX_DEALERS,
+  normalizeTime,
+  parseTableLabels,
+  tableLabelsOf,
+  toDealerStatus,
+  type RotationAction,
+  type RotationStateView,
+  type TableState,
+} from "@/lib/rotation";
 import type { RotationPlan } from "@/lib/rotation-plan";
 
 const META_ID = "default";
@@ -8,6 +17,16 @@ const MAX_SLOTS = 300;
 
 async function meta() {
   return prisma.rotationMeta.upsert({ where: { id: META_ID }, create: { id: META_ID }, update: {} });
+}
+
+function parseTableState(json: string | null): Record<string, TableState> {
+  if (!json) return {};
+  try {
+    const value = JSON.parse(json) as Record<string, TableState>;
+    return value && typeof value === "object" ? value : {};
+  } catch {
+    return {};
+  }
 }
 
 function parsePlan(json: string | null): RotationPlan | null {
@@ -28,6 +47,7 @@ export async function loadRotation(): Promise<RotationStateView> {
     tableCount: m.tableCount,
     tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
     setupMinutes: m.setupMinutes,
+    tableState: parseTableState(m.tableStateJson),
     interval: m.interval,
     planStart: m.planStart,
     planEnd: m.planEnd,
@@ -151,10 +171,25 @@ export async function applyRotation(action: RotationAction) {
         await tx.rotationMeta.update({ where: { id: META_ID }, data: { planJson: action.plan ? JSON.stringify(action.plan) : null } });
         break;
       }
+      case "setTable": {
+        // 버튼 자리(1~10)·컨바인 시각. 값을 안 주면 그대로, null이면 지움
+        const m = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
+        const all = parseTableState(m?.tableStateJson ?? null);
+        const key = String(Math.floor(Number(action.label)));
+        const row: TableState = { ...(all[key] ?? {}) };
+        if (action.button !== undefined) {
+          const b = action.button == null ? null : Math.floor(Number(action.button));
+          row.button = b != null && b >= 1 && b <= 10 ? b : null;
+        }
+        if (action.closedAt !== undefined) row.closedAt = action.closedAt == null || !Number.isFinite(Number(action.closedAt)) ? null : Math.floor(Number(action.closedAt));
+        all[key] = row;
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { tableStateJson: JSON.stringify(all) } });
+        break;
+      }
       case "newDay": {
         // 새 근무일: 출근 기록을 지우고 모두 '출근 전'으로, 시간표도 비웁니다.
         await tx.rotationDealer.updateMany({ data: { status: "WAIT", tableNo: null, checkedInAt: null, leftAt: null, statusSince: now } });
-        await tx.rotationMeta.update({ where: { id: META_ID }, data: { dayStartedAt: now, planJson: null } });
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { dayStartedAt: now, planJson: null, tableStateJson: null } });
         await tx.rotationEvent.deleteMany({});
         break;
       }

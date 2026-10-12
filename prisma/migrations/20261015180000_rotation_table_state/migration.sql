@@ -1,0 +1,1 @@
+ALTER TABLE "RotationMeta" ADD COLUMN IF NOT EXISTS "tableStateJson" TEXT;

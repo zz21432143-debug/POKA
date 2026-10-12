@@ -112,3 +112,18 @@ describe("open-ended rotation", async () => {
     assert.equal(extendPlan(shifted, dealers(6), 2, 60).slots[3].at, 665);
   });
 });
+
+describe("table combine", () => {
+  it("stops staffing a combined table from its close time and skips it when rotating", () => {
+    const plan = buildPlan({ dealers: dealers(6), tables: 4, start: 600, end: 720, interval: 20, closedFrom: [null, null, 640, null] });
+    for (const slot of plan.slots) {
+      if (slot.at >= 640) {
+        assert.equal(slot.seats[2], null, formatClock(slot.at));
+        assert.equal(slot.seats.filter(Boolean).length, 3);
+        assert.equal(slot.rest.length, 3);
+      } else {
+        assert.equal(slot.seats.filter(Boolean).length, 4);
+      }
+    }
+  });
+});

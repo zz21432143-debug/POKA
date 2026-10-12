@@ -1,14 +1,67 @@
 "use client";
 
 import type { RotationDealerView } from "@/lib/rotation";
-import { dealerSchedule, formatClock, type RotationPlan } from "@/lib/rotation-plan";
+import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
 
 /**
- * 로테이션 시간표 내보내기(단톡방 공유용). 시간과 테이블 번호가 늘 붙어 있게 그립니다.
- * 표처럼 시각은 왼쪽 끝, 테이블은 위쪽 끝에 떨어져 있으면 딜러가 줄을 헷갈려 다른 테이블로 갈 수 있어서입니다.
+ * 로테이션 공유(단톡방·캡처)는 "지금 교대" 한 번만 보여 줍니다.
+ * 테이블마다 "T5 박딜러 → 김딜러"처럼 나가는 딜러 → 들어가는 딜러를 한 줄에 적어, 시간·테이블·사람을 헷갈리지 않게 합니다.
  */
 
 const FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+
+export type SwapRow = { label: number; from: string | null; to: string | null; closed: boolean };
+
+export type SwapInfo = {
+  at: number;
+  prevAt: number | null;
+  rows: SwapRow[];
+  /** 이번 교대로 쉬러 가는 딜러 */
+  toRest: string[];
+  /** 계속 쉬는 딜러 */
+  stillRest: string[];
+};
+
+/** 다음 교대(지금 칸 → 다음 칸) 정리. 다음 칸이 없으면 null */
+export function swapInfo(
+  plan: RotationPlan,
+  labels: number[],
+  current: number,
+  next: number,
+  closedFrom: (number | null)[],
+): SwapInfo | null {
+  if (next < 0 || !plan.slots[next]) return null;
+  const before = current >= 0 ? plan.slots[current] : null;
+  const after = plan.slots[next];
+  const rows = labels.map((label, t) => ({
+    label,
+    from: before?.seats[t] ?? null,
+    to: after.seats[t] ?? null,
+    closed: closedFrom[t] != null && after.at >= (closedFrom[t] as number),
+  }));
+  const toRest = after.rest.filter((id) => !before?.rest.includes(id));
+  const stillRest = after.rest.filter((id) => before?.rest.includes(id));
+  return { at: after.at, prevAt: before?.at ?? null, rows, toRest, stillRest };
+}
+
+function rowText(row: SwapRow, name: (id: string | null) => string) {
+  if (row.closed) return row.from ? `${name(row.from)} → 컨바인(종료)` : "컨바인(종료)";
+  if (!row.from) return `→ ${name(row.to) || "비어 있음"}`;
+  if (row.from === row.to) return `${name(row.to)} (유지)`;
+  return `${name(row.from)} → ${name(row.to) || "비어 있음"}`;
+}
+
+/** 단톡방 텍스트 */
+export function swapText(info: SwapInfo, name: (id: string | null) => string, buttons: Record<number, number | null | undefined>) {
+  const lines = [`【 ${formatClock(info.at)} 교대 】`];
+  for (const row of info.rows) {
+    const btn = buttons[row.label] ? ` (BTN ${buttons[row.label]})` : "";
+    lines.push(`T${row.label}${btn}  ${rowText(row, name)}`);
+  }
+  if (info.toRest.length) lines.push(`휴식 들어감: ${info.toRest.map(name).join(", ")}`);
+  if (info.stillRest.length) lines.push(`계속 휴식: ${info.stillRest.map(name).join(", ")}`);
+  return lines.join("\n");
+}
 
 function save(canvas: HTMLCanvasElement, filename: string) {
   canvas.toBlob((blob) => {
@@ -22,120 +75,12 @@ function save(canvas: HTMLCanvasElement, filename: string) {
   }, "image/png");
 }
 
-function stamp() {
-  const d = new Date();
-  return `${d.getMonth() + 1}-${d.getDate()}`;
-}
-
-/** 단톡방 텍스트: 칸마다 "■ 23:00 교대" 아래에 "23:00 T5 김딜러" 줄 */
-export function timeSheetText(
-  plan: RotationPlan,
-  labels: number[],
-  name: (id: string | null) => string,
-  indexes: number[],
-  slotLabel: (index: number) => string | null,
-) {
-  const lines = ["【 딜러 로테이션 】", ""];
-  for (const index of indexes) {
-    const slot = plan.slots[index];
-    const time = formatClock(slot.at);
-    lines.push(`■ ${time} ${slotLabel(index) ?? "교대"}`);
-    slot.seats.forEach((id, t) => {
-      lines.push(`  ${time} T${labels[t]} ${id ? name(id) : "(비어 있음)"}`);
-    });
-    if (slot.rest.length) lines.push(`  ${time} 휴식 ${slot.rest.map(name).join(", ")}`);
-    lines.push("");
-  }
-  return lines.join("\n").trim();
-}
-
-/** 시간별 교대표 이미지: 칸마다 큰 시각 아래 "T5 김딜러" 목록 */
-export function downloadTimeImage(
-  plan: RotationPlan,
-  labels: number[],
-  name: (id: string | null) => string,
-  indexes: number[],
-  slotLabel: (index: number) => string | null,
-) {
-  const cols = Math.min(3, indexes.length);
-  const cardW = 340;
-  const lineH = 30;
-  const pad = 18;
-  const cardH = 70 + labels.length * lineH + 44;
-  const rows = Math.ceil(indexes.length / cols);
-  const scale = 2;
-  const canvas = document.createElement("canvas");
-  canvas.width = (pad + cols * (cardW + pad)) * scale;
-  canvas.height = (80 + rows * (cardH + pad)) * scale;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.scale(scale, scale);
-  ctx.fillStyle = "#0b0b0d";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#f5d76e";
-  ctx.font = `900 28px ${FONT}`;
-  ctx.fillText("딜러 로테이션 · 시간별", pad, 46);
-  ctx.fillStyle = "#a1a1aa";
-  ctx.font = `14px ${FONT}`;
-  ctx.fillText(`${plan.interval}분 간격 · 테이블 ${labels.map((l) => `T${l}`).join(" ")}`, pad, 68);
-
-  indexes.forEach((index, i) => {
-    const slot = plan.slots[index];
-    const time = formatClock(slot.at);
-    const x = pad + (i % cols) * (cardW + pad);
-    const y = 80 + Math.floor(i / cols) * (cardH + pad);
-    ctx.fillStyle = "#18181b";
-    ctx.fillRect(x, y, cardW, cardH);
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(x, y, cardW, 54);
-    ctx.fillStyle = "#000";
-    ctx.font = `900 34px ${FONT}`;
-    ctx.fillText(time, x + 14, y + 40);
-    const tag = slotLabel(index);
-    if (tag) {
-      ctx.font = `900 18px ${FONT}`;
-      ctx.fillText(tag, x + 130, y + 38);
-    }
-    slot.seats.forEach((id, t) => {
-      const ly = y + 54 + 26 + t * lineH;
-      ctx.fillStyle = "#34d399";
-      ctx.font = `900 20px ${FONT}`;
-      ctx.fillText(`T${labels[t]}`, x + 14, ly);
-      ctx.fillStyle = id ? "#ffffff" : "#fb7185";
-      ctx.font = `700 20px ${FONT}`;
-      ctx.fillText(id ? name(id) : "비어 있음", x + 84, ly);
-      ctx.fillStyle = "#71717a";
-      ctx.font = `13px ${FONT}`;
-      ctx.textAlign = "right";
-      ctx.fillText(time, x + cardW - 12, ly);
-      ctx.textAlign = "left";
-    });
-    ctx.fillStyle = "#fbbf24";
-    ctx.font = `700 15px ${FONT}`;
-    const restText = `휴식 ${slot.rest.map(name).join(", ") || "—"}`;
-    ctx.fillText(restText.length > 28 ? `${restText.slice(0, 27)}…` : restText, x + 14, y + cardH - 16);
-  });
-  save(canvas, `로테이션_시간별_${stamp()}.png`);
-}
-
-/** 딜러별 이미지: 딜러마다 "23:00 T5 · 23:20 휴식 …" 칩(시각과 테이블이 한 칩에) */
-export function downloadDealerImage(
-  plan: RotationPlan,
-  labels: number[],
-  dealers: RotationDealerView[],
-  indexes: number[],
-  slotLabel: (index: number) => string | null,
-) {
-  const chipW = 118;
-  const chipH = 34;
-  const gap = 6;
-  const nameW = 120;
-  const pad = 18;
-  const perRow = Math.min(8, Math.max(1, indexes.length));
-  const width = pad * 2 + nameW + perRow * (chipW + gap);
-  const lineCount = (n: number) => Math.max(1, Math.ceil(n / perRow));
-  const rowH = (n: number) => lineCount(n) * (chipH + gap) + 10;
-  const height = 90 + dealers.reduce((sum) => sum + rowH(indexes.length), 0) + pad;
+/** 시간별(교대표) 이미지: 큰 교대 시간 + "T5 박딜러 → 김딜러" 줄 */
+export function downloadSwapImage(info: SwapInfo, name: (id: string | null) => string, buttons: Record<number, number | null | undefined>) {
+  const width = 640;
+  const lineH = 46;
+  const restLines = (info.toRest.length ? 1 : 0) + (info.stillRest.length ? 1 : 0);
+  const height = 130 + info.rows.length * lineH + restLines * 36 + 30;
   const scale = 2;
   const canvas = document.createElement("canvas");
   canvas.width = width * scale;
@@ -145,34 +90,107 @@ export function downloadDealerImage(
   ctx.scale(scale, scale);
   ctx.fillStyle = "#0b0b0d";
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "#f5d76e";
-  ctx.font = `900 28px ${FONT}`;
-  ctx.fillText("딜러 로테이션 · 딜러별", pad, 46);
-  ctx.fillStyle = "#a1a1aa";
-  ctx.font = `14px ${FONT}`;
-  ctx.fillText(`${plan.interval}분 간격 · 초록 = 테이블, 노랑 = 휴식`, pad, 68);
-
-  let y = 86;
-  for (const dealer of dealers) {
-    const schedule = dealerSchedule(plan, dealer.id).filter((_, index) => indexes.includes(index));
-    ctx.fillStyle = "#18181b";
-    ctx.fillRect(pad - 6, y - 4, width - pad * 2 + 12, rowH(schedule.length) - 4);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `900 18px ${FONT}`;
-    ctx.fillText(dealer.name.slice(0, 7), pad, y + 24);
-    schedule.forEach((row, i) => {
-      const cx = pad + nameW + (i % perRow) * (chipW + gap);
-      const cy = y + Math.floor(i / perRow) * (chipH + gap);
-      ctx.fillStyle = row.table == null ? "#27272a" : row.table === 0 ? "#fbbf24" : "#059669";
-      ctx.fillRect(cx, cy, chipW, chipH);
-      ctx.fillStyle = row.table === 0 ? "#000000" : "#ffffff";
-      ctx.font = `900 16px ${FONT}`;
-      const idx = plan.slots.findIndex((s) => s.at === row.at);
-      const tag = slotLabel(idx);
-      const where = row.table == null ? "—" : row.table === 0 ? "휴식" : `T${labels[row.table - 1]}`;
-      ctx.fillText(`${formatClock(row.at)} ${where}${tag ? "·" + tag : ""}`, cx + 8, cy + 23);
-    });
-    y += rowH(schedule.length);
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(0, 0, width, 96);
+  ctx.fillStyle = "#000";
+  ctx.font = `900 54px ${FONT}`;
+  ctx.fillText(`${formatClock(info.at)} 교대`, 24, 68);
+  if (info.prevAt != null) {
+    ctx.font = `700 16px ${FONT}`;
+    ctx.textAlign = "right";
+    ctx.fillText(`이전 ${formatClock(info.prevAt)} → ${formatClock(info.at)}`, width - 24, 62);
+    ctx.textAlign = "left";
   }
-  save(canvas, `로테이션_딜러별_${stamp()}.png`);
+  info.rows.forEach((row, i) => {
+    const y = 130 + i * lineH;
+    ctx.fillStyle = i % 2 ? "#141417" : "#1c1c20";
+    ctx.fillRect(12, y - 32, width - 24, lineH - 4);
+    ctx.fillStyle = row.closed ? "#71717a" : "#34d399";
+    ctx.font = `900 28px ${FONT}`;
+    ctx.fillText(`T${row.label}`, 24, y);
+    if (buttons[row.label]) {
+      ctx.fillStyle = "#a1a1aa";
+      ctx.font = `700 13px ${FONT}`;
+      ctx.fillText(`BTN ${buttons[row.label]}`, 24, y + 10);
+    }
+    ctx.font = `800 24px ${FONT}`;
+    if (row.closed) {
+      ctx.fillStyle = "#71717a";
+      ctx.fillText("컨바인(종료)", 130, y);
+    } else if (row.from && row.from === row.to) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(`${name(row.to)}  (유지)`, 130, y);
+    } else {
+      ctx.fillStyle = "#a1a1aa";
+      const fromText = row.from ? name(row.from) : "";
+      ctx.fillText(fromText, 130, y);
+      const w = ctx.measureText(fromText).width;
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillText(" → ", 130 + w, y);
+      const aw = ctx.measureText(" → ").width;
+      ctx.fillStyle = row.to ? "#ffffff" : "#fb7185";
+      ctx.fillText(row.to ? name(row.to) : "비어 있음", 130 + w + aw, y);
+    }
+  });
+  let y = 130 + info.rows.length * lineH + 10;
+  ctx.font = `800 20px ${FONT}`;
+  if (info.toRest.length) {
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText(`휴식 들어감  ${info.toRest.map(name).join(", ")}`, 24, y);
+    y += 36;
+  }
+  if (info.stillRest.length) {
+    ctx.fillStyle = "#a1a1aa";
+    ctx.fillText(`계속 휴식  ${info.stillRest.map(name).join(", ")}`, 24, y);
+  }
+  save(canvas, `교대_${formatClock(info.at).replace(":", "")}.png`);
+}
+
+/** 딜러별 이미지: 딜러마다 "지금 → 교대 후" */
+export function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan, current: number, next: number, labels: number[], dealers: RotationDealerView[]) {
+  const before = current >= 0 ? plan.slots[current] : null;
+  const after = plan.slots[next];
+  const where = (slot: typeof after | null, id: string) => {
+    if (!slot) return "—";
+    const t = slot.seats.indexOf(id);
+    if (t >= 0) return `T${labels[t]}`;
+    return slot.rest.includes(id) ? "휴식" : "—";
+  };
+  const list = dealers.filter((d) => where(before, d.id) !== "—" || where(after, d.id) !== "—");
+  const width = 600;
+  const lineH = 42;
+  const height = 120 + list.length * lineH + 20;
+  const scale = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#0b0b0d";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#fbbf24";
+  ctx.font = `900 40px ${FONT}`;
+  ctx.fillText(`${formatClock(info.at)} 교대 · 딜러별`, 24, 56);
+  ctx.fillStyle = "#a1a1aa";
+  ctx.font = `700 15px ${FONT}`;
+  ctx.fillText(`${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 24, 86);
+  list.forEach((dealer, i) => {
+    const y = 128 + i * lineH;
+    ctx.fillStyle = i % 2 ? "#141417" : "#1c1c20";
+    ctx.fillRect(12, y - 30, width - 24, lineH - 4);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 22px ${FONT}`;
+    ctx.fillText(dealer.name.slice(0, 8), 24, y);
+    const now = where(before, dealer.id);
+    const then = where(after, dealer.id);
+    ctx.fillStyle = "#a1a1aa";
+    ctx.font = `800 22px ${FONT}`;
+    ctx.fillText(now, 230, y);
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText("→", 320, y);
+    ctx.fillStyle = then === "휴식" ? "#fbbf24" : now === then ? "#ffffff" : "#34d399";
+    ctx.fillText(`${then}${now === then ? " (유지)" : ""}`, 360, y);
+  });
+  save(canvas, `교대_딜러별_${formatClock(info.at).replace(":", "")}.png`);
 }

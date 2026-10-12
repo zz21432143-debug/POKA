@@ -79,6 +79,8 @@ export function buildPlan(options: {
   keep?: PlanSlot[];
   /** 게임 시작 전 세팅 칸(분). 예: 30이면 시작 30분 전에 세팅 칸 하나를 두고, 시작부터 간격대로 돕니다. */
   setup?: number;
+  /** 테이블별 컨바인(닫은) 시각(분). 이 시각부터 그 테이블은 비워 둡니다. null이면 러닝 중 */
+  closedFrom?: (number | null)[];
 }): RotationPlan {
   const tables = Math.max(1, Math.floor(options.tables));
   const interval = Math.max(5, Math.floor(options.interval));
@@ -111,6 +113,16 @@ export function buildPlan(options: {
     slots.push(slot);
   };
 
+  const closedFrom = options.closedFrom ?? [];
+  const isOpen = (t: number, at: number) => closedFrom[t] == null || at < (closedFrom[t] as number);
+  /** 다음 러닝 테이블(한 칸씩 이동, 닫힌 테이블은 건너뜀) */
+  const nextOpen = (from: number, open: number[]) => {
+    for (let k = 1; k <= tables; k += 1) {
+      const t = (from + k) % tables;
+      if (open.includes(t)) return t;
+    }
+    return null;
+  };
   const setup = Math.max(0, Math.floor(options.setup ?? 0));
   const first = start - setup;
   const keep = (options.keep ?? []).filter((slot) => slot.at >= first && slot.at < end);
@@ -130,8 +142,10 @@ export function buildPlan(options: {
     // 세팅 칸은 게임 시작 때 올 딜러(예정 출근이 시작 시각 이전)를 모두 넣습니다.
     const checkAt = setup > 0 && at === first ? start : at;
     const available = options.dealers.filter((d) => availableAt(d, checkAt));
-    const breaks = Math.max(0, available.length - tables);
-    const cap = breaks > 0 ? Math.max(1, Math.round(tables / breaks)) : Number.POSITIVE_INFINITY;
+    // 러닝 중인 테이블(컨바인한 테이블 제외)
+    const open = [...Array(tables).keys()].filter((t) => isOpen(t, at));
+    const breaks = Math.max(0, available.length - open.length);
+    const cap = breaks > 0 ? Math.max(1, Math.round(open.length / breaks)) : Number.POSITIVE_INFINITY;
 
     // 근무 우선순위: 0 이어서 일하기(cap 전) · 1 쉬던 사람(오래 쉰 순) · 2 cap 채운 사람(쉬어야 함)
     const ranked = [...available].sort((a, b) => {
@@ -144,8 +158,8 @@ export function buildPlan(options: {
       if (sa.work !== sb.work) return sa.work - sb.work;
       return (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0);
     });
-    const workers = ranked.slice(0, tables);
-    const rest = ranked.slice(tables).map((d) => d.id);
+    const workers = ranked.slice(0, open.length);
+    const rest = ranked.slice(open.length).map((d) => d.id);
 
     // 테이블: 이어서 일하는 딜러는 다음 테이블로, 들어오는 딜러는 빈 테이블로
     const seats: (string | null)[] = Array(tables).fill(null);
@@ -153,15 +167,16 @@ export function buildPlan(options: {
     for (const dealer of workers) {
       const s = state.get(dealer.id)!;
       if (s.lastTable != null) {
-        const next = (s.lastTable + 1) % tables;
-        if (seats[next] == null) {
+        const next = nextOpen(s.lastTable, open);
+        if (next != null && seats[next] == null) {
           seats[next] = dealer.id;
           continue;
         }
       }
       incoming.push(dealer.id);
     }
-    for (let t = 0; t < tables && incoming.length; t += 1) {
+    for (const t of open) {
+      if (!incoming.length) break;
       if (seats[t] == null) seats[t] = incoming.shift()!;
     }
     // 처음 들어오는 딜러들이 한꺼번에 같은 때 쉬지 않도록 쉬는 차례를 엇갈리게 둡니다.
@@ -227,7 +242,13 @@ export function retimeFrom(plan: RotationPlan, index: number, at: number, interv
 }
 
 /** 남은 칸이 적으면 그 흐름 그대로 뒤를 이어 짭니다(끝 시간 없음). 지난 칸은 KEEP_PAST_SLOTS개만 남깁니다. */
-export function extendPlan(plan: RotationPlan, dealers: PlanDealer[], current: number, horizon = PLAN_HORIZON): RotationPlan {
+export function extendPlan(
+  plan: RotationPlan,
+  dealers: PlanDealer[],
+  current: number,
+  horizon = PLAN_HORIZON,
+  closedFrom?: (number | null)[],
+): RotationPlan {
   const last = plan.slots[plan.slots.length - 1];
   if (!last) return plan;
   const built = buildPlan({
@@ -238,6 +259,7 @@ export function extendPlan(plan: RotationPlan, dealers: PlanDealer[], current: n
     interval: plan.interval,
     setup: plan.setup,
     keep: plan.slots,
+    closedFrom,
   });
   const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
   return { ...built, slots: built.slots.slice(trimFrom) };

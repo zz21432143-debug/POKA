@@ -19,6 +19,13 @@ export const STATUS_LABEL: Record<DealerStatus, string> = {
   LEFT: "퇴근",
 };
 
+export type TableState = { button?: number | null; closedAt?: number | null };
+
+/** 시간표 테이블 순서대로 컨바인 시각(없으면 null) */
+export function closedFromOf(labels: number[], tableState: Record<string, TableState>) {
+  return labels.map((label) => tableState[String(label)]?.closedAt ?? null);
+}
+
 export type RotationDealerView = {
   id: string;
   name: string;
@@ -38,6 +45,8 @@ export type RotationStateView = {
   tableLabels: number[];
   /** 게임 시작 전 세팅 칸(분) */
   setupMinutes: number;
+  /** 테이블 번호별 버튼 자리·컨바인 시각(분, 시간표 기준) */
+  tableState: Record<string, TableState>;
   interval: number;
   planStart: string;
   planEnd: string;
@@ -53,6 +62,7 @@ export type RotationAction =
   | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
   | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number }
   | { type: "savePlan"; plan: RotationPlan | null }
+  | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
   | { type: "newDay" };
 
 /** 예전 값(근무중·휴식)은 출근으로 봅니다. */

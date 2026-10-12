@@ -598,4 +598,6 @@ model RotationMeta {
   tableLabels  String?
   /// 게임 시작 전 세팅 칸(분, 0이면 없음)
   setupMinutes Int      @default(30)
+  /// 테이블별 버튼 자리·컨바인 시각 {"5":{"button":3,"closedAt":1410}}
+  tableStateJson String?
 }
