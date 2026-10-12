@@ -181,18 +181,53 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["지원 방법", job.jobApplyMethod],
           ];
 
+  // 선택 항목이 많아 비어 있는 칸은 숨깁니다.
+  const filled = rows.filter((row): row is [string, string] => Boolean(row[1]));
+  const key = filled.filter(([label]) => KEY_FACTS.has(label));
+  const rest = filled.filter(([label]) => !KEY_FACTS.has(label));
+
   return (
-    <dl className="grid grid-cols-2 gap-2 rounded-xl border border-[#3a332c] bg-[#141110] p-3 text-sm text-[#E5E7EB] sm:grid-cols-3">
-      {/* 선택 항목이 많아 비어 있는 칸은 숨깁니다. */}
-      {rows.filter(([, value]) => Boolean(value)).map(([label, value]) => (
-        <div key={label}>
-          <dt className="text-xs text-[#9CA3AF]">{label}</dt>
-          <dd className="break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <section aria-label="근무 조건" className="grid gap-3 rounded-xl border border-[#4a3f33] bg-[#17120f] p-3 sm:p-4">
+      {/* 핵심 조건(장소·날짜·급여·시간)은 크게 */}
+      {key.length > 0 ? (
+        <dl className="grid grid-cols-2 gap-2">
+          {key.map(([label, value]) => (
+            <div key={label} className="rounded-lg border border-[#c9a25c]/35 bg-[#241b14] px-2.5 py-2 sm:px-3 sm:py-2.5">
+              <dt className="text-[13px] font-bold text-[#e7c98a]">{label}</dt>
+              <dd className="mt-0.5 break-words text-[17px] font-bold leading-snug text-white sm:text-lg">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      {rest.length > 0 ? (
+        <dl className="divide-y divide-white/10 rounded-lg bg-black/25">
+          {rest.map(([label, value]) => (
+            <div key={label} className="grid grid-cols-[6.5rem_1fr] items-baseline gap-3 px-3 py-2.5 sm:grid-cols-[8rem_1fr]">
+              <dt className="text-sm font-semibold text-[#c9b48a]">{label}</dt>
+              <dd className="break-words text-base font-medium leading-relaxed text-[#f3eadb]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </section>
   );
 }
+
+/** 상세에서 크게 보여 줄 핵심 조건 */
+const KEY_FACTS = new Set([
+  "근무지",
+  "희망 근무지",
+  "장소",
+  "근무 날짜",
+  "대회 일정",
+  "필요 날짜",
+  "급여",
+  "시급",
+  "급여 금액",
+  "근무 시간",
+  "출근 시간",
+  "보장 시간",
+]);
 
 /**
  * 날짜별 일정 목록. 지난 날짜는 회색·취소선으로 보여 줍니다.

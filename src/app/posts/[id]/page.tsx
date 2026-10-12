@@ -277,6 +277,17 @@ export default async function PostDetailPage({
         <div className="article-body">
       {post.jobKind ? <JobFacts job={post} /> : null}
       {post.jobKind ? <JobEventList job={post} /> : null}
+      {post.jobKind ? (
+        <section className="rounded-xl border-2 border-emerald-700/60 bg-[#0f1a14] p-4">
+          <p className="mb-2 text-sm font-bold text-emerald-200">연락처</p>
+          <ContactReveal
+            hasContact={Boolean(post.jobContact || post.jobApplyValue)}
+            loggedIn={Boolean(viewer)}
+            contact={viewer ? post.jobContact || post.jobApplyValue || null : null}
+            loginHref={loginHref(`/posts/${post.id}`)}
+          />
+        </section>
+      ) : null}
       {post.jobKind && post.jobApplyValue && status === "open" ? (
         <a
           href={post.jobApplyValue}
@@ -359,16 +370,6 @@ export default async function PostDetailPage({
         <img src={post.bannerImageUrl} alt={`${post.title} 포스터`} className="mx-auto block h-auto max-h-[85dvh] w-auto max-w-full rounded-2xl border border-border bg-black object-contain" />
       ) : null}
 
-      {post.jobKind ? (
-        <section className="rounded-xl border border-[#3a332c] bg-[#141110] p-3">
-          <p className="mb-2 text-xs text-[#9CA3AF]">연락처</p>
-          <ContactReveal
-            postId={post.id}
-            hasContact={Boolean(post.jobContact)}
-            loggedIn={Boolean(viewer)}
-          />
-        </section>
-      ) : null}
 
       {post.jobKind && !post.jobFilled && (viewer?.id === post.authorId || viewer?.isAdmin) ? (
         <HireButton postId={post.id} filled={post.jobFilled} />
@@ -412,6 +413,13 @@ export default async function PostDetailPage({
             html={contentToDocHtml(post.content)}
           />
         </DocDesk>
+      ) : post.content && post.jobKind ? (
+        <section aria-label="상세 내용" className="rounded-xl border border-[#4a3f33] bg-[#17120f] p-3 sm:p-4">
+          <p className="mb-2 text-sm font-bold text-[#e7c98a]">상세 내용</p>
+          <div className="article-copy">
+            <LinkifiedText text={post.content} />
+          </div>
+        </section>
       ) : post.content ? (
         <div className="article-copy">
           <LinkifiedText text={post.content} />
