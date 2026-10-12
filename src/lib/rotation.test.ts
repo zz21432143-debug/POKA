@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { normalizeTime, parseDealerLines, planDealers, toDealerStatus, type RotationDealerView } from "./rotation";
+import { kstDateAt, normalizeTime, parseDealerLines, planDealers, toDealerStatus, type RotationDealerView } from "./rotation";
 
 const dealer = (over: Partial<RotationDealerView>): RotationDealerView => ({
   id: "x",
   name: "x",
   startTime: null,
+  endTime: null,
   status: "WAIT",
   checkedInAt: null,
   leftAt: null,
@@ -16,10 +17,14 @@ const dealer = (over: Partial<RotationDealerView>): RotationDealerView => ({
 describe("dealer rotation rules", () => {
   it("reads dealer lines with optional start time", () => {
     assert.deepEqual(parseDealerLines("김딜러 18:00\n이딜러 1930\n박딜러\n최딜러 7시"), [
-      { name: "김딜러", startTime: "18:00" },
-      { name: "이딜러", startTime: "19:30" },
-      { name: "박딜러", startTime: null },
-      { name: "최딜러", startTime: "07:00" },
+      { name: "김딜러", startTime: "18:00", endTime: null },
+      { name: "이딜러", startTime: "19:30", endTime: null },
+      { name: "박딜러", startTime: null, endTime: null },
+      { name: "최딜러", startTime: "07:00", endTime: null },
+    ]);
+    assert.deepEqual(parseDealerLines("김딜러 18:00-02:00\n이딜러 10시~18시"), [
+      { name: "김딜러", startTime: "18:00", endTime: "02:00" },
+      { name: "이딜러", startTime: "10:00", endTime: "18:00" },
     ]);
     assert.equal(normalizeTime("25:00"), null);
   });
@@ -59,5 +64,20 @@ describe("table numbers", async () => {
     assert.deepEqual(parseTableLabels("3,3,1").labels, [3, 1]);
     assert.deepEqual(parseTableLabels("1-3, x").errors, ["x"]);
     assert.equal(formatTableLabels([5, 6, 7, 8, 12, 13, 20]), "5-8, 12, 13, 20");
+  });
+
+  it("stops planning at the planned leave time, across midnight too", () => {
+    const list = planDealers([dealer({ id: "a", startTime: "18:00", endTime: "02:00" }), dealer({ id: "b", startTime: "18:00", endTime: "22:00" })], 1080);
+    assert.deepEqual(list, [
+      { id: "a", from: 1080, to: 1560 },
+      { id: "b", from: 1080, to: 1320 },
+    ]);
+  });
+
+  it("turns a KST clock into the nearest date (overnight)", () => {
+    // 2026-10-12 23:50 KST 근처에서 00:10 → 다음 날 00:10 KST
+    const near = new Date("2026-10-12T14:50:00.000Z");
+    assert.equal(kstDateAt("00:10", near).toISOString(), "2026-10-12T15:10:00.000Z");
+    assert.equal(kstDateAt("23:00", near).toISOString(), "2026-10-12T14:00:00.000Z");
   });
 });

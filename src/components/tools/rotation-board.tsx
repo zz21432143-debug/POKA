@@ -71,6 +71,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [bulk, setBulk] = useState("");
   const [labelsText, setLabelsText] = useState(() => formatTableLabels(initial.tableLabels));
   const [editing, setEditing] = useState<{ id: string; name: string; startTime: string } | null>(null);
+  const [times, setTimes] = useState<{ id: string; name: string; start: string; end: string; startReal: boolean; endReal: boolean } | null>(null);
   const [cell, setCell] = useState<{ slot: number; table: number } | null>(null);
   const [timeEdit, setTimeEdit] = useState<{ index: number; value: string } | null>(null);
   const [view, setView] = useState<"table" | "dealer">("table");
@@ -151,6 +152,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const isClosedAt = (t: number, at: number) => closedFrom[t] != null && at >= (closedFrom[t] as number);
   // 운영 현황(지금 칸 기준, 시작 전이면 첫 칸)
   const nowSlot = plan ? plan.slots[Math.max(0, current)] : null;
+  // 이미 컨바인된(지금 칸부터 닫힌) 테이블은 시간표 줄에서 빼서 자리를 아낍니다. 다음 교대에 닫히는 테이블은 빨간색으로 남겨 둡니다.
+  const hiddenTable = (t: number) => closedFrom[t] != null && (closedFrom[t] as number) <= (nowSlot?.at ?? now);
+  const hiddenLabels = labels.filter((_, t) => hiddenTable(t));
   const runningLabels = labels.filter((_, t) => !isClosedAt(t, nowSlot?.at ?? now));
   const dealing = nowSlot ? nowSlot.seats.filter(Boolean).length : 0;
   const resting = nowSlot ? nowSlot.rest.length : 0;
@@ -622,7 +626,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </tr>
               </thead>
               <tbody>
-                {labels.map((label, t) => (
+                {labels.map((label, t) => hiddenTable(t) ? null : (
                   <tr key={label} className="border-t-2 border-white/10">
                     <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left whitespace-nowrap">
                       <span className={cn("block text-xl font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>
@@ -738,6 +742,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               })}
           </div>
         )}
+        {plan && hiddenLabels.length ? (
+          <p className="flex flex-wrap items-center gap-1.5 text-sm font-bold">
+            <span className="text-rose-300">컨바인된 테이블(시간표에서 숨김)</span>
+            {hiddenLabels.map((label) => (
+              <button
+                key={label}
+                type="button"
+                disabled={busy}
+                onClick={() => void toggleCombine(labels.indexOf(label))}
+                title="다시 열기"
+                className="min-h-8 rounded-md bg-rose-600 px-2 text-xs font-black text-white hover:bg-rose-500"
+              >
+                T{label} · 다시 열기
+              </button>
+            ))}
+          </p>
+        ) : null}
       </section>
 
       {/* 딜러 · 출근 체크(작게) */}
@@ -756,9 +777,30 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 >
                   {dealer.name}
                 </button>
-                <span className="text-[10px] text-zinc-400 tabular-nums">
-                  {dealer.checkedInAt ? <b className="text-emerald-300">{kstClock(dealer.checkedInAt)}</b> : (dealer.startTime ?? "")}
-                </span>
+                {/* 출근·퇴근 시간(누르면 바꾸기). 실제 체크한 시간은 색으로, 예정 시간은 회색 */}
+                <button
+                  type="button"
+                  data-times={dealer.name}
+                  onClick={() =>
+                    setTimes({
+                      id: dealer.id,
+                      name: dealer.name,
+                      start: dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? ""),
+                      end: dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ?? ""),
+                      startReal: Boolean(dealer.checkedInAt),
+                      endReal: dealer.status === "LEFT" && Boolean(dealer.leftAt),
+                    })
+                  }
+                  title="출근·퇴근 시간 바꾸기"
+                  className="grid shrink-0 rounded px-1 text-left text-[10px] leading-tight font-bold tabular-nums hover:bg-white/10"
+                >
+                  <span className={dealer.checkedInAt ? "text-emerald-300" : "text-zinc-400"}>
+                    출근 {dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? "—")}
+                  </span>
+                  <span className={dealer.status === "LEFT" ? "text-rose-300" : "text-zinc-400"}>
+                    퇴근 {dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ?? "—")}
+                  </span>
+                </button>
                 <StatusChip status={dealer.status} />
                 <button
                   type="button"
@@ -789,7 +831,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </div>
         )}
         <details className="rounded-xl border border-white/15 bg-zinc-950 p-2" open={state.dealers.length === 0}>
-          <summary className="min-h-9 cursor-pointer text-sm font-bold text-zinc-200">딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 · 최대 {MAX_DEALERS}명)</summary>
+          <summary className="min-h-9 cursor-pointer text-sm font-bold text-zinc-200">딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 또는 김딜러 18:00-02:00 · 최대 {MAX_DEALERS}명)</summary>
           <div className="mt-2 grid gap-2">
             <textarea
               value={bulk}
@@ -887,6 +929,49 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 이 칸 비우기
               </button>
               <button type="button" onClick={() => setCell(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 출근·퇴근 시간 바꾸기 */}
+      {times ? (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="출근·퇴근 시간">
+          <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">{times.name} · 출근/퇴근 시간</h3>
+            <label className="grid gap-1 text-sm font-bold">
+              {times.startReal ? "출근 시간(출근 체크한 시간)" : "예정 출근 시간"}
+              <input
+                type="time"
+                value={times.start}
+                onChange={(e) => setTimes({ ...times, start: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              {times.endReal ? "퇴근 시간(퇴근 누른 시간)" : "예정 퇴근 시간(비우면 끝까지)"}
+              <input
+                type="time"
+                value={times.end}
+                onChange={(e) => setTimes({ ...times, end: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+              />
+            </label>
+            <p className="text-xs text-zinc-400">저장한 뒤 시간표 옆 <b className="text-amber-300">Auto</b>를 누르면 바뀐 시간에 맞춰 다시 정리됩니다.</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={async () => {
+                  if (await send({ type: "setTimes", id: times.id, start: times.start || null, end: times.end || null })) setTimes(null);
+                }}
+                className="min-h-11 rounded-lg bg-emerald-500 px-4 text-sm font-black text-black"
+              >
+                저장
+              </button>
+              <button type="button" onClick={() => setTimes(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
                 닫기
               </button>
             </div>
