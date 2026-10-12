@@ -560,6 +560,8 @@ model RotationDealer {
   id          String   @id @default(cuid())
   name        String
   startTime   String?
+  /// 예정 퇴근 시각 "02:00"(이 시각부터 시간표에 넣지 않음)
+  endTime     String?
   status      String   @default("OFF")
   tableNo     Int?
   statusSince DateTime @default(now())

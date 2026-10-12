@@ -31,6 +31,8 @@ export type RotationDealerView = {
   name: string;
   /** 예정 출근 시각 "18:00" */
   startTime: string | null;
+  /** 예정 퇴근 시각 "02:00" */
+  endTime: string | null;
   status: DealerStatus;
   /** 실제 출근 체크 시각(ISO) */
   checkedInAt: string | null;
