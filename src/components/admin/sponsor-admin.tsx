@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PLACEMENT_META, SPONSOR_PLACEMENTS, type SponsorPlacement } from "@/lib/inventory-policy";
+import { SizeTag } from "@/components/admin/size-tag";
 
 type Unit = {
   placement: string;
@@ -64,6 +65,7 @@ export function SponsorAdmin({ units }: { units: Unit[] }) {
             return (
           <li key={unit.placement} className="rounded-xl border border-border bg-card p-3">
             <p className="font-medium">{meta?.name ?? unit.placement}</p>
+            {meta?.size ? <SizeTag>{meta.size}</SizeTag> : null}
             <p className="mt-1 text-xs text-muted-foreground">{meta?.hint}</p>
             <form
               className="mt-3 grid gap-2"

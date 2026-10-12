@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { findProfanity } from "./profanity";
+import { BASE_WORDS, findProfanity } from "./profanity";
 
 const category = (text: string, nickname = false) => findProfanity(text, { nickname })?.category ?? null;
 
@@ -53,5 +53,22 @@ describe("profanity filter", () => {
     assert.equal(category("공식딜러", true), "impersonation");
     assert.equal(category("관리자님 질문 있어요"), null);
     assert.equal(category("리버샤크", true), null);
+    assert.equal(category("홀덤마스터", true), "impersonation");
+    assert.equal(category("pokamaster", true), "impersonation");
+  });
+
+  it("skips base words the admin turned off, keeps fixed patterns", () => {
+    assert.equal(category("씨발"), "abuse");
+    assert.equal(findProfanity("씨발", { disabled: new Set(["씨발"]) }), null);
+    assert.equal(findProfanity("씨1발", { disabled: new Set(["씨발"]) }), null);
+    // 다른 단어와 고정 패턴(단축 링크)은 그대로 막힙니다.
+    assert.equal(findProfanity("병신", { disabled: new Set(["씨발"]) })?.category, "abuse");
+    const allSpam = new Set(BASE_WORDS.spam);
+    assert.equal(findProfanity("t.me/abc 문의", { disabled: allSpam })?.category, "spam");
+    assert.equal(findProfanity("텔레그램", { disabled: allSpam }), null);
+    // 한 카테고리 단어를 모두 꺼도 모든 글이 막히지 않습니다.
+    const allHate = new Set(BASE_WORDS.hate);
+    assert.equal(findProfanity("안녕하세요 딜러 구합니다", { disabled: allHate }), null);
+    assert.equal(findProfanity("마스터", { nickname: true, disabled: new Set(["마스터"]) }), null);
   });
 });

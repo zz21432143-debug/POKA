@@ -3,6 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
+import { SITE_SETTING_ID } from "@/lib/site-settings";
+import { markInquiriesSeen } from "@/lib/inquiry-alerts";
+import { AdminAlertToggle } from "@/components/admin/admin-alert-toggle";
 
 export const metadata: Metadata = { title: "광고 문의", robots: { index: false } };
 
@@ -33,11 +36,17 @@ function formatKst(value: Date) {
 export default async function AdminInquiriesPage() {
   const user = await getCurrentUser();
   if (!user?.isAdmin) notFound();
-  const rows = await prisma.auditLog.findMany({
-    where: { kind: "AD_INQUIRY" },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const [rows, seen] = await Promise.all([
+    prisma.auditLog.findMany({
+      where: { kind: "AD_INQUIRY" },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID }, select: { inquirySeenAt: true } }),
+  ]);
+  // 목록을 열었으니 모두 읽음으로(이번 화면에서는 새 문의 표시를 남겨 둡니다)
+  await markInquiriesSeen().catch(() => undefined);
+  const seenAt = seen?.inquirySeenAt ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -49,6 +58,7 @@ export default async function AdminInquiriesPage() {
         <Link href="/admin" className="inline-flex min-h-11 items-center text-sm text-primary">
           관리자 페이지
         </Link>
+        <AdminAlertToggle />
       </header>
       {rows.length === 0 ? (
         <p className="ink-panel rounded-2xl px-4 py-10 text-center text-sm text-[#D1D5DB]">아직 들어온 문의가 없습니다.</p>
@@ -59,6 +69,9 @@ export default async function AdminInquiriesPage() {
             return (
               <li key={row.id} className="ink-panel rounded-2xl p-4">
                 <div className="flex flex-wrap items-center gap-2">
+                  {!seenAt || row.createdAt > seenAt ? (
+                    <span className="rounded-full bg-[#8B2222] px-2 py-0.5 text-xs font-bold text-white">새 문의</span>
+                  ) : null}
                   <p className="text-base font-bold text-white">{inquiry.company || "(업체명 없음)"}</p>
                   {inquiry.product ? (
                     <span className="rounded-full bg-[#2a2017] px-2 py-0.5 text-xs font-semibold text-[#e7c98a]">

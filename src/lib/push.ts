@@ -29,10 +29,27 @@ export function pushEnabled() {
 
 export type PushPayload = { title: string; body: string; url: string };
 
-/** 지역 구독자에게 새 급구를 알립니다. 만료된 구독(404/410)은 지웁니다. */
+/** 지역 구독자에게 새 급구를 알립니다. */
 export async function notifyRegion(region: string, payload: PushPayload) {
   if (!configure()) return { sent: 0 };
   const subs = await prisma.pushSubscription.findMany({ where: { region }, take: 2000 });
+  return sendAll(subs, payload);
+}
+
+/** 관리자 알림을 켜 둔 기기(지금도 관리자인 회원)에 보냅니다. 새 광고·홍보 문의 등. */
+export async function notifyAdmins(payload: PushPayload) {
+  if (!configure()) return { sent: 0 };
+  const subs = await prisma.pushSubscription.findMany({
+    where: { adminAlerts: true, user: { OR: [{ isAdmin: true }, { isMaster: true }, { role: { in: ["ADMIN", "MASTER"] } }] } },
+    take: 50,
+  });
+  return sendAll(subs, payload);
+}
+
+type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
+
+/** 만료된 구독(404/410)은 지웁니다. */
+async function sendAll(subs: Sub[], payload: PushPayload) {
   let sent = 0;
   const gone: string[] = [];
   await Promise.allSettled(

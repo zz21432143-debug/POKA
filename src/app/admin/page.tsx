@@ -11,6 +11,7 @@ import { SiteSettingsAdmin } from "@/components/admin/site-settings-admin";
 import { isStaff } from "@/lib/roles";
 import { getSiteSettings } from "@/lib/site-settings";
 import type { Prisma } from "@/generated/prisma/client";
+import { BASE_WORDS, PROFANITY_CATEGORIES, PROFANITY_LABEL } from "@/lib/profanity";
 
 export const metadata: Metadata = { title: "관리자", robots: { index: false } };
 
@@ -60,7 +61,7 @@ export default async function AdminPage({
     banReason: true,
   } as const;
 
-  const [restricted, matches, words, settings] = await Promise.all([
+  const [restricted, matches, words, settings, disabledWords] = await Promise.all([
     prisma.user.findMany({
       where: { status: { in: ["SUSPENDED", "BANNED"] } },
       orderBy: { updatedAt: "desc" },
@@ -70,6 +71,7 @@ export default async function AdminPage({
     query ? prisma.user.findMany({ where: search, take: 20, select: userSelect }) : Promise.resolve([]),
     prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } }),
     user.isMaster ? getSiteSettings() : Promise.resolve(null),
+    active === "words" ? prisma.disabledBaseWord.findMany({ select: { word: true } }) : Promise.resolve([]),
   ]);
 
   const currentHref =
@@ -138,15 +140,17 @@ export default async function AdminPage({
         <section>
           <h2 className="mb-3 text-lg font-semibold">금지어 관리</h2>
           <p className="mb-3 text-sm text-muted-foreground">
-            등록된 단어가 글·댓글 제목이나 본문에 있으면 작성이 막힙니다. 아래에 있는 목록이 현재 적용 중인 내역입니다.
-            단어를 추가하거나 삭제하면 바로 반영됩니다.
+            아래 단어가 글·댓글 제목이나 본문에 있으면 작성이 막힙니다. 기본 금지어는 처음부터 들어 있는 단어이고,
+            누르면 끄고 켤 수 있습니다. 바꾸면 바로 반영됩니다.
           </p>
           <ForbiddenWordsAdmin
-            words={words.map((row) => ({
-              id: row.id,
-              word: row.word,
-              createdAt: row.createdAt.toISOString(),
+            words={words.map((row) => ({ id: row.id, word: row.word }))}
+            base={PROFANITY_CATEGORIES.map((category) => ({
+              category,
+              label: PROFANITY_LABEL[category],
+              words: BASE_WORDS[category],
             }))}
+            disabled={disabledWords.map((row) => row.word)}
           />
         </section>
       ) : null}

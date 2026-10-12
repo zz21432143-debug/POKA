@@ -2,16 +2,32 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-export type ForbiddenWordRow = { id: string; word: string; createdAt: string };
+export type ForbiddenWordRow = { id: string; word: string };
+export type BaseWordGroup = { category: string; label: string; words: string[] };
 
-export function ForbiddenWordsAdmin({ words }: { words: ForbiddenWordRow[] }) {
+const CHIP = "inline-flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm transition-colors";
+
+export function ForbiddenWordsAdmin({
+  words,
+  base,
+  disabled,
+}: {
+  words: ForbiddenWordRow[];
+  base: BaseWordGroup[];
+  disabled: string[];
+}) {
   const router = useRouter();
   const [word, setWord] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [off, setOff] = useState(() => new Set(disabled));
+
+  const baseTotal = base.reduce((sum, group) => sum + group.words.length, 0);
 
   async function add() {
     setPending(true);
@@ -40,8 +56,26 @@ export function ForbiddenWordsAdmin({ words }: { words: ForbiddenWordRow[] }) {
     router.refresh();
   }
 
+  async function toggle(target: string) {
+    const enabled = off.has(target);
+    const next = new Set(off);
+    if (enabled) next.delete(target);
+    else next.add(target);
+    setOff(next);
+    setMessage(null);
+    const response = await fetch("/api/admin/forbidden-words", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ word: target, enabled }),
+    }).catch(() => null);
+    if (!response?.ok) {
+      setOff(off);
+      setMessage("바꾸지 못했습니다. 다시 시도해 주세요.");
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <form
         className="flex flex-col gap-2 sm:flex-row"
         onSubmit={(event) => {
@@ -59,29 +93,74 @@ export function ForbiddenWordsAdmin({ words }: { words: ForbiddenWordRow[] }) {
         </Button>
       </form>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
-      <p className="text-sm font-medium">현재 금지어 {words.length}개</p>
-      {words.length === 0 ? (
-        <p className="text-sm text-muted-foreground">아직 직접 추가한 단어가 없습니다. 위에서 등록하면 이 목록에 쌓입니다.</p>
-      ) : (
-        <ul className="grid gap-2">
-          {words.map((row) => (
-            <li
-              key={row.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 text-sm"
-            >
-              <div className="min-w-0">
-                <p className="font-medium">{row.word}</p>
-                <p className="text-xs text-muted-foreground">
-                  등록 {new Date(row.createdAt).toLocaleString("ko-KR")}
-                </p>
-              </div>
-              <Button type="button" size="touch" variant="ghost" disabled={pending} onClick={() => void remove(row.id)}>
-                삭제
-              </Button>
-            </li>
+
+      <section className="rounded-xl border border-border bg-card p-3">
+        <p className="mb-2 text-sm font-semibold">직접 추가한 금지어 {words.length}개</p>
+        {words.length === 0 ? (
+          <p className="text-sm text-muted-foreground">아직 없습니다. 위에서 추가하면 여기에 쌓입니다.</p>
+        ) : (
+          <ul className="flex flex-wrap gap-1.5">
+            {words.map((row) => (
+              <li key={row.id}>
+                <span className={cn(CHIP, "border-primary/40 bg-primary/10 pr-1")}>
+                  {row.word}
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => void remove(row.id)}
+                    aria-label={`${row.word} 삭제`}
+                    className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+                  >
+                    <XIcon className="size-3.5" />
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-3">
+        <p className="text-sm font-semibold">
+          기본 금지어 {baseTotal - off.size}개 적용 중{off.size ? ` · 끔 ${off.size}개` : ""}
+        </p>
+        <p className="mb-3 text-xs text-muted-foreground">
+          단어를 누르면 끄고 켭니다. 끈 단어는 줄이 그어져 보입니다. 숫자 은어(18놈 등)·단축 링크(t.me, bit.ly 등)는 항상 막습니다.
+          운영진 사칭 단어는 닉네임에만 적용됩니다.
+        </p>
+        <div className="grid gap-3">
+          {base.map((group) => (
+            <div key={group.category}>
+              <p className="mb-1.5 text-xs font-bold text-muted-foreground">
+                {group.label} <span className="font-normal">({group.words.length})</span>
+              </p>
+              <ul className="flex flex-wrap gap-1.5">
+                {group.words.map((item) => {
+                  const isOff = off.has(item);
+                  return (
+                    <li key={item}>
+                      <button
+                        type="button"
+                        onClick={() => void toggle(item)}
+                        aria-pressed={!isOff}
+                        title={isOff ? "꺼짐 · 눌러서 켜기" : "적용 중 · 눌러서 끄기"}
+                        className={cn(
+                          CHIP,
+                          isOff
+                            ? "border-dashed border-border text-muted-foreground line-through opacity-60"
+                            : "border-border bg-muted/40 hover:border-destructive/50",
+                        )}
+                      >
+                        {item}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           ))}
-        </ul>
-      )}
+        </div>
+      </section>
     </div>
   );
 }

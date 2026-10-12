@@ -3,6 +3,7 @@ import { ttlCache, ttlCacheClear } from "@/lib/ttl-cache";
 import { PROFANITY_LABEL, findProfanity } from "@/lib/profanity";
 
 export const FORBIDDEN_CACHE_KEY = "forbidden-words";
+const DISABLED_CACHE_KEY = "forbidden-words-disabled";
 
 export class ForbiddenWordError extends Error {
   word: string;
@@ -35,14 +36,23 @@ export async function loadForbiddenWords() {
   });
 }
 
+/** 관리자가 끈 기본 금지어 */
+export async function loadDisabledBaseWords(): Promise<ReadonlySet<string>> {
+  return ttlCache(DISABLED_CACHE_KEY, 30_000, async () => {
+    const rows = await prisma.disabledBaseWord.findMany({ select: { word: true } });
+    return new Set(rows.map((row) => row.word));
+  });
+}
+
 export function clearForbiddenWordsCache() {
   ttlCacheClear(FORBIDDEN_CACHE_KEY);
+  ttlCacheClear(DISABLED_CACHE_KEY);
 }
 
 /** 기본 금지어(욕설·음란·도박·스팸·혐오) + 관리자가 추가한 금지어를 모두 검사합니다. */
 export async function assertNoForbiddenWords(...parts: Array<string | null | undefined>) {
   const text = parts.filter(Boolean).join("\n");
-  const builtin = findProfanity(text);
+  const builtin = findProfanity(text, { disabled: await loadDisabledBaseWords() });
   if (builtin) throw new ForbiddenWordError(builtin.match, PROFANITY_LABEL[builtin.category]);
   const words = await loadForbiddenWords();
   const hit = findForbiddenWord(text, words);

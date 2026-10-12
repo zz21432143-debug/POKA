@@ -8,6 +8,7 @@ import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
+import { InquiryBadge } from "@/components/admin/inquiry-badge";
 export { MarkImage };
 
 function ProfileAction({
@@ -150,6 +151,7 @@ export function ProfileWidget({
         lastAttendanceDate={profile.lastAttendanceDate}
       />
       <div className="mt-3 flex flex-col gap-2 pb-3">
+        {profile.isAdmin ? <InquiryBadge /> : null}
         {profile.isAdmin ? <ProfileAction href="/admin">관리자 페이지</ProfileAction> : null}
         {profile.isMaster ? <ProfileAction href="/admin/members">인증 달기</ProfileAction> : null}
         <ProfileAction href="/shop" tone="green">

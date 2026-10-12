@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
+import { loadDisabledBaseWords } from "@/lib/forbidden-words";
 
 export async function findNicknameOwner(nickname: string, exceptUserId?: string) {
   const next = normalizeNickname(nickname);
@@ -15,7 +16,7 @@ export async function findNicknameOwner(nickname: string, exceptUserId?: string)
 
 export async function nicknameAvailability(nickname: string, exceptUserId?: string) {
   const next = normalizeNickname(nickname);
-  const invalid = nicknameError(next);
+  const invalid = nicknameError(next, await loadDisabledBaseWords().catch(() => undefined));
   if (invalid) return { ok: false as const, nickname: next, error: invalid };
   const owner = await findNicknameOwner(next, exceptUserId);
   if (owner) return { ok: false as const, nickname: next, error: "이미 쓰는 닉네임입니다." };

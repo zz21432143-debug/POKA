@@ -3,6 +3,7 @@ import { clientIp } from "@/lib/request";
 import { CoolDownError, REPORT_COOLDOWN_MS, writeAudit } from "@/lib/security";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
+import { notifyAdmins } from "@/lib/push";
 
 /** 제휴·광고(무료 홍보 이벤트 포함) 문의. 로그인한 회원만 보낼 수 있습니다. */
 export async function POST(request: Request) {
@@ -42,6 +43,13 @@ export async function POST(request: Request) {
       ip,
       detail: JSON.stringify({ nickname: user.nickname, company, contact, product, message: message.slice(0, 500) }),
     });
+
+    // 관리자 휴대폰·PC로 알림(알림을 켜 둔 기기만). 실패해도 문의 접수는 성공으로 둡니다.
+    await notifyAdmins({
+      title: "POKA 새 광고 문의",
+      body: `${user.nickname} · ${company}${product ? ` · ${product}` : ""}`.slice(0, 120),
+      url: "/admin/inquiries",
+    }).catch(() => undefined);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

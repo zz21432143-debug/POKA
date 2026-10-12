@@ -40,13 +40,14 @@ export function isReservedNickname(raw: string) {
   return false;
 }
 
-export function nicknameError(raw: string): string | null {
+/** disabled: 관리자가 끈 기본 금지어 */
+export function nicknameError(raw: string, disabled?: ReadonlySet<string>): string | null {
   const nickname = normalizeNickname(raw);
   if (nickname.length < 2 || nickname.length > 12) return "닉네임은 2~12자입니다.";
   if (!/^[가-힣a-zA-Z0-9_]+$/.test(nickname)) return "닉네임은 한글, 영문, 숫자, _ 만 됩니다.";
   if (isReservedNickname(nickname)) return "운영자·POKA 관련 닉네임은 쓸 수 없습니다.";
   if (holdemOnlyViolation(nickname)) return "이 닉네임은 등록할 수 없습니다.";
-  const bad = findProfanity(nickname, { nickname: true });
+  const bad = findProfanity(nickname, { nickname: true, disabled });
   if (bad) {
     return bad.category === "impersonation"
       ? "운영진으로 오해될 수 있는 닉네임(관리자·운영자·공식 등)은 쓸 수 없습니다."

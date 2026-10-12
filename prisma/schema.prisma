@@ -288,6 +288,8 @@ model PushSubscription {
   region    String
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// 관리자 알림(새 광고·홍보 문의) 받기. 급구 지역 알림과 따로 켭니다.
+  adminAlerts Boolean @default(false)
   createdAt DateTime @default(now())
 
   @@index([region])
@@ -498,7 +500,15 @@ model SiteSetting {
   noticeBanner     String?
   footerEmail      String   @default("POKA4444444@gmail.com")
   kakaoChannelUrl  String?
+  /// 관리자가 광고 문의 목록을 마지막으로 연 시각(이후 문의가 "새 문의")
+  inquirySeenAt    DateTime?
   updatedAt        DateTime @updatedAt
+}
+
+/// 끈 기본 금지어. 코드에 들어 있는 기본 금지어 중 관리자가 끈 단어입니다.
+model DisabledBaseWord {
+  word      String   @id
+  createdAt DateTime @default(now())
 }
 
 /// 사이트에 올린 이미지(대회 포스터 등). 외부 저장소 없이 DB에 바로 넣고 /api/images/{id}로 보여 줍니다.

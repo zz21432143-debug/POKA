@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { SizeTag } from "@/components/admin/size-tag";
+import { POSTER_SIZE } from "@/lib/inventory-policy";
 
 type Slot = {
   slot: number;
@@ -50,7 +52,8 @@ export function BannerAdmin({
       <ul className="grid gap-3">
         {slots.map((slot) => (
           <li key={slot.slot} className="rounded-xl border border-border bg-card p-3">
-            <p className="font-medium">구좌 {slot.slot}</p>
+            <p className="font-medium">구좌 B{slot.slot}</p>
+            <SizeTag>{POSTER_SIZE}</SizeTag>
             <div className="mt-2 flex flex-wrap gap-2">
               <Button
                 type="button"

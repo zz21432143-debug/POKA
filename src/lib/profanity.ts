@@ -49,66 +49,80 @@ const SAFE_PHRASES = [
   "토토로",
 ];
 
-export const PROFANITY_RULES: { category: ProfanityCategory; pattern: RegExp }[] = [
-  {
-    category: "abuse",
-    pattern: rule(
-      [
-        "씨발", "시발", "씨바", "씨팔", "시팔", "씨빨", "십발", "쓰발", "ㅆㅂ", "ㅅㅂ", "ㅆ발",
-        "개새끼", "개새기", "개색끼", "개색기", "개세끼", "개쉐끼", "개섀끼", "개새",
-        "좆", "좃까", "졷", "씹새", "씹할", "씹팔", "씹년", "씹창", "씹놈", "씹썅",
-        "병신", "븅신", "빙신", "병싄", "ㅂㅅ", "ㅄ",
-        "느금마", "느금", "니애미", "니미", "니엄마", "엠창", "애미", "애비없",
-        "지랄", "ㅈㄹ", "염병", "썅", "썅년", "미친년", "미친놈", "꺼져", "닥쳐", "좆밥",
-        "fuck", "shit", "bitch", "fxck", "sibal", "ssibal",
-      ],
-      // 숫자 은어(ㅅ1ㅂ, 시1발 등은 위에서 처리). "18"은 18시·18세 오탐이 커서 욕설 조합만 막습니다.
-      ["(?:^|[^0-9])18(?:놈|년|새끼|롬|럼)", "ㅅ\\s*1\\s*ㅂ", "c\\s*8"],
-    ),
-  },
-  {
-    category: "adult",
-    pattern: rule([
-      "조건만남", "조건만", "출장안마", "출장마사지", "출장샵", "오피", "op사이트", "야동", "야설",
-      "성인용품", "휴게텔", "섹파", "섹스", "sex", "porn", "폰섹", "립카페", "키스방", "안마방",
-      "유흥업소", "애인대행", "만남어플", "19금방",
-    ]),
-  },
-  {
-    category: "gambling",
-    pattern: rule([
-      "온라인카지노", "카지노사이트", "라이브카지노", "바카라사이트", "온라인바카라", "슬롯사이트", "슬롯게임",
-      // "먹튀"는 홀덤펍에서 '계산 안 하고 간 손님' 뜻으로도 써서 사이트 홍보 형태만 막습니다.
-      "사설토토", "토토사이트", "스포츠토토", "토토가입", "꽁머니", "먹튀검증", "먹튀사이트", "첫충", "매충",
-      "환전보장", "대부업", "급전", "소액결제", "소액결제현금화", "현금화", "작업대출", "내구제",
-      "주식리딩", "리딩방", "코인리딩", "무료리딩", "수익보장", "원금보장",
-    ]),
-  },
-  {
-    category: "spam",
-    pattern: rule(
-      ["텔레그램", "텔그", "라인아이디", "라인id", "최저가", "100%증정", "무료증정", "광고문의환영"],
-      // 링크 단축·텔레그램 주소는 우회 없이 그대로 잡습니다.
-      ["t\\.me\\/", "telegram\\.me", "bit\\.ly", "tinyurl\\.com", "han\\.gl", "me2\\.do", "vo\\.la", "url\\.kr"],
-    ),
-  },
-  {
-    category: "hate",
-    pattern: rule([
-      // "한남"(한남동), "라도"(~라도), "홍어"(음식)는 정상 문장에 많아 혐오 조합만 막습니다.
-      "김치녀", "된장녀", "한남충", "꼴페미", "메갈", "워마드", "보슬아치", "냄저", "맘충", "급식충",
-      "틀딱", "노인충", "잼민이", "홍어새끼", "홍어족", "전라디언", "경상디언", "짱깨", "짱개", "쪽바리",
-      "쪽발이", "깜둥이", "흑형", "똥남아", "조선족새끼", "장애인새끼", "애자", "정신병자", "게이새끼",
-      "똥꼬충", "트랜스충", "벌레새끼",
-    ]),
-  },
-];
+/**
+ * 기본 금지어(카테고리별). 관리자 페이지 '금지어 관리'에 그대로 보이고, 단어마다 끄고 켤 수 있습니다.
+ * impersonation(운영진 사칭)은 닉네임에만 적용합니다.
+ */
+export const BASE_WORDS: Record<ProfanityCategory, string[]> = {
+  abuse: [
+    "씨발", "시발", "씨바", "씨팔", "시팔", "씨빨", "십발", "쓰발", "ㅆㅂ", "ㅅㅂ", "ㅆ발",
+    "개새끼", "개새기", "개색끼", "개색기", "개세끼", "개쉐끼", "개섀끼", "개새",
+    "좆", "좃까", "졷", "씹새", "씹할", "씹팔", "씹년", "씹창", "씹놈", "씹썅",
+    "병신", "븅신", "빙신", "병싄", "ㅂㅅ", "ㅄ",
+    "느금마", "느금", "니애미", "니미", "니엄마", "엠창", "애미", "애비없",
+    "지랄", "ㅈㄹ", "염병", "썅", "썅년", "미친년", "미친놈", "꺼져", "닥쳐", "좆밥",
+    "fuck", "shit", "bitch", "fxck", "sibal", "ssibal",
+  ],
+  adult: [
+    "조건만남", "조건만", "출장안마", "출장마사지", "출장샵", "오피", "op사이트", "야동", "야설",
+    "성인용품", "휴게텔", "섹파", "섹스", "sex", "porn", "폰섹", "립카페", "키스방", "안마방",
+    "유흥업소", "애인대행", "만남어플", "19금방",
+  ],
+  gambling: [
+    "온라인카지노", "카지노사이트", "라이브카지노", "바카라사이트", "온라인바카라", "슬롯사이트", "슬롯게임",
+    // "먹튀"는 홀덤펍에서 '계산 안 하고 간 손님' 뜻으로도 써서 사이트 홍보 형태만 막습니다.
+    "사설토토", "토토사이트", "스포츠토토", "토토가입", "꽁머니", "먹튀검증", "먹튀사이트", "첫충", "매충",
+    "환전보장", "대부업", "급전", "소액결제", "소액결제현금화", "현금화", "작업대출", "내구제",
+    "주식리딩", "리딩방", "코인리딩", "무료리딩", "수익보장", "원금보장",
+  ],
+  spam: ["텔레그램", "텔그", "라인아이디", "라인id", "최저가", "100%증정", "무료증정", "광고문의환영"],
+  hate: [
+    // "한남"(한남동), "라도"(~라도), "홍어"(음식)는 정상 문장에 많아 혐오 조합만 막습니다.
+    "김치녀", "된장녀", "한남충", "꼴페미", "메갈", "워마드", "보슬아치", "냄저", "맘충", "급식충",
+    "틀딱", "노인충", "잼민이", "홍어새끼", "홍어족", "전라디언", "경상디언", "짱깨", "짱개", "쪽바리",
+    "쪽발이", "깜둥이", "흑형", "똥남아", "조선족새끼", "장애인새끼", "애자", "정신병자", "게이새끼",
+    "똥꼬충", "트랜스충", "벌레새끼",
+  ],
+  impersonation: [
+    "admin", "administrator", "moderator", "operator", "official", "system", "sysop", "master",
+    "관리자", "운영자", "운영진", "운영팀", "매니저", "공식", "시스템", "어드민", "고객센터", "마스터",
+  ],
+};
 
-/** 닉네임 전용: 운영진처럼 보이는 이름 */
-export const IMPERSONATION_PATTERN = rule([
-  "admin", "administrator", "moderator", "operator", "official", "system", "sysop",
-  "관리자", "운영자", "운영진", "운영팀", "매니저", "공식", "시스템", "어드민", "고객센터",
-]);
+/** 끌 수 없는 고정 패턴(우회 없이 그대로 잡음) */
+const FIXED_PATTERNS: Partial<Record<ProfanityCategory, string[]>> = {
+  // 숫자 은어. "18"은 18시·18세 오탐이 커서 욕설 조합만 막습니다.
+  abuse: ["(?:^|[^0-9])18(?:놈|년|새끼|롬|럼)", "ㅅ\\s*1\\s*ㅂ", "c\\s*8"],
+  // 링크 단축·텔레그램 주소
+  spam: ["t\\.me\\/", "telegram\\.me", "bit\\.ly", "tinyurl\\.com", "han\\.gl", "me2\\.do", "vo\\.la", "url\\.kr"],
+};
+
+export const PROFANITY_CATEGORIES = Object.keys(BASE_WORDS) as ProfanityCategory[];
+
+type Rule = { category: ProfanityCategory; pattern: RegExp };
+
+function buildRules(disabled: ReadonlySet<string>): Rule[] {
+  const rules: Rule[] = [];
+  for (const category of PROFANITY_CATEGORIES) {
+    const words = BASE_WORDS[category].filter((word) => !disabled.has(word));
+    const fixed = FIXED_PATTERNS[category] ?? [];
+    // 빈 패턴은 모든 글에 걸리므로 만들지 않습니다.
+    if (words.length + fixed.length === 0) continue;
+    rules.push({ category, pattern: rule(words, fixed) });
+  }
+  return rules;
+}
+
+const DEFAULT_RULES = buildRules(new Set());
+let cachedRules: { key: string; rules: Rule[] } = { key: "", rules: DEFAULT_RULES };
+
+/** 관리자가 끈 단어를 뺀 규칙(같은 목록이면 다시 만들지 않음) */
+function rulesFor(disabled?: ReadonlySet<string>) {
+  if (!disabled || disabled.size === 0) return DEFAULT_RULES;
+  const key = [...disabled].sort().join("\n");
+  if (cachedRules.key !== key) cachedRules = { key, rules: buildRules(disabled) };
+  return cachedRules.rules;
+}
 
 /**
  * 비교용 정규화: 전각 영숫자→반각, 소문자, 보이지 않는 문자 제거, 오탐 단어 제거.
@@ -126,16 +140,17 @@ export function normalizeForFilter(text: string) {
 
 export type ProfanityHit = { category: ProfanityCategory; match: string };
 
-export function findProfanity(text: string, opts: { nickname?: boolean } = {}): ProfanityHit | null {
+/** disabled: 관리자가 끈 기본 금지어 */
+export function findProfanity(
+  text: string,
+  opts: { nickname?: boolean; disabled?: ReadonlySet<string> } = {},
+): ProfanityHit | null {
   if (!text) return null;
   const normalized = normalizeForFilter(text);
-  for (const { category, pattern } of PROFANITY_RULES) {
+  for (const { category, pattern } of rulesFor(opts.disabled)) {
+    if (category === "impersonation" && !opts.nickname) continue;
     const found = normalized.match(pattern);
     if (found) return { category, match: found[0] };
-  }
-  if (opts.nickname) {
-    const found = normalized.match(IMPERSONATION_PATTERN);
-    if (found) return { category: "impersonation", match: found[0] };
   }
   return null;
 }

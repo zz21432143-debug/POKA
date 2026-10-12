@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BellRingIcon } from "lucide-react";
 import { JOB_REGIONS } from "@/lib/job-status";
+import { ensurePushSubscription, pushSupported } from "@/lib/push-client";
 
 const REGION_KEY = "poka-alert-region";
 const SEEN_KEY = "poka-alert-urgent-seen";
@@ -67,15 +68,15 @@ export function RegionUrgentAlert() {
   }
 
   const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-  const [pushSupported, setPushSupported] = useState(false);
+  const [canPush, setCanPush] = useState(false);
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushError, setPushError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pushKey || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!pushSupported(pushKey)) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPushSupported(true);
+    setCanPush(true);
     void navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => setPushOn(Boolean(sub)))
@@ -83,10 +84,7 @@ export function RegionUrgentAlert() {
   }, [pushKey]);
 
   async function subscribePush(targetRegion: string) {
-    const reg = await navigator.serviceWorker.ready;
-    const sub =
-      (await reg.pushManager.getSubscription()) ??
-      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64UrlToBytes(pushKey) }));
+    const sub = await ensurePushSubscription(pushKey);
     const response = await fetch("/api/push/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -104,12 +102,14 @@ export function RegionUrgentAlert() {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-          await fetch("/api/push/subscribe", {
+          const response = await fetch("/api/push/subscribe", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ endpoint: sub.endpoint }),
           });
-          await sub.unsubscribe();
+          const data = (await response.json().catch(() => ({}))) as { keep?: boolean };
+          // 관리자 알림도 이 기기로 받고 있으면 브라우저 구독은 남겨 둡니다.
+          if (!data.keep) await sub.unsubscribe();
         }
         setPushOn(false);
         return;
@@ -169,7 +169,7 @@ export function RegionUrgentAlert() {
       ) : (
         <span className="text-xs text-[#9CA3AF]">지역을 고르면 새 급구가 올라올 때 여기 표시됩니다.</span>
       )}
-      {region && pushSupported ? (
+      {region && canPush ? (
         <button
           type="button"
           onClick={() => void togglePush()}
@@ -191,12 +191,4 @@ export function RegionUrgentAlert() {
 /** 지역을 처음 고르면 최근 하루치 급구부터 새 글로 셉니다. */
 function oneDayAgo() {
   return Date.now() - 24 * 60 * 60 * 1000;
-}
-
-function base64UrlToBytes(value: string) {
-  const padded = `${value}${"=".repeat((4 - (value.length % 4)) % 4)}`.replace(/-/g, "+").replace(/_/g, "/");
-  const raw = window.atob(padded);
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
-  return bytes;
 }

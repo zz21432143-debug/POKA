@@ -32,11 +32,16 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true, region });
 }
 
-/** 구독 해제 */
+/** 구독 해제. 관리자 알림을 켜 둔 기기는 급구 지역만 비우고 keep:true를 돌려줍니다. */
 export async function DELETE(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
   const endpoint = body.endpoint?.trim();
   if (!endpoint) return NextResponse.json({ error: "endpoint가 필요합니다." }, { status: 400 });
+  const row = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { adminAlerts: true } });
+  if (row?.adminAlerts) {
+    await prisma.pushSubscription.update({ where: { endpoint }, data: { region: "" } });
+    return NextResponse.json({ ok: true, keep: true });
+  }
   await prisma.pushSubscription.deleteMany({ where: { endpoint } });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, keep: false });
 }
