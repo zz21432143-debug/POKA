@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { weekStartKst } from "@/lib/dates";
-import { withCurrentTitle } from "@/lib/ticker-text";
+import { popularTickerMessage, withCurrentTitle } from "@/lib/ticker-text";
 import { POPULAR_UPVOTE_THRESHOLD, WEEKLY_HAND_EXP } from "@/lib/rewards";
 import { isSeedCatalogNickname, tickerMentionsSeedCatalog } from "@/lib/purge-demo-catalog";
 
@@ -26,7 +26,12 @@ export async function forgetTickerName(nickname: string) {
   try {
     await prisma.tickerEvent.deleteMany({
       where: {
-        OR: [{ message: { contains: `${name}님` } }, { href: `/u/${encodeURIComponent(name)}` }],
+        OR: [
+          { message: { contains: `${name}님` } },
+          // 짧은 형식("📝 [게시판] 제목 · 닉네임")
+          { message: { endsWith: ` · ${name}` } },
+          { href: `/u/${encodeURIComponent(name)}` },
+        ],
       },
     });
   } catch {
@@ -82,8 +87,7 @@ export async function getTickerEvents() {
         if (!match) return [row];
         const post = byId.get(match[2]);
         if (!post || post.hidden) return [];
-        if (match[1] === "POST") return [{ ...row, message: withCurrentTitle(row.message, post.title) }];
-        return [row];
+        return [{ ...row, message: withCurrentTitle(row.message, post.title, match[1] as "POST" | "POPULAR") }];
       });
   } catch {
     return [];
@@ -99,7 +103,7 @@ export async function maybePopularPost(postId: string) {
   if (isSeedCatalogNickname(post.author.nickname)) return;
   await pushTicker({
     kind: `POPULAR:${post.id}`,
-    message: `⭐ ${post.author.nickname}님의 [${post.title}]이 인기 게시물로 선정되었습니다!`,
+    message: popularTickerMessage(post.author.nickname, post.title),
     href: `/posts/${post.id}`,
   });
 }
