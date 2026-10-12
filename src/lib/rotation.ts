@@ -87,16 +87,20 @@ export function normalizeTime(value: string | null | undefined): string | null {
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
-/** "홍길동 18:00" 한 줄씩 → 딜러 목록(시간은 선택) */
+/** "홍길동 18:00" 또는 "홍길동 18:00-02:00"(출근-퇴근) 한 줄씩 → 딜러 목록(시간은 선택) */
 export function parseDealerLines(text: string) {
   return text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
+      const span = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)\s*[-~]\s*(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
+      const spanStart = span ? normalizeTime(span[2]) : null;
+      const spanEnd = span ? normalizeTime(span[3]) : null;
+      if (span && spanStart && spanEnd) return { name: span[1].trim().slice(0, 20), startTime: spanStart, endTime: spanEnd as string | null };
       const m = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
       const time = m ? normalizeTime(m[2]) : null;
-      return { name: (time && m ? m[1] : line).trim().slice(0, 20), startTime: time };
+      return { name: (time && m ? m[1] : line).trim().slice(0, 20), startTime: time, endTime: null as string | null };
     })
     .filter((row) => row.name);
 }
