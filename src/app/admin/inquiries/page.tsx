@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "광고 문의", robots: { index: fal
 
 export const dynamic = "force-dynamic";
 
-type Inquiry = { company?: string; contact?: string; product?: string; message?: string };
+type Inquiry = { nickname?: string; company?: string; contact?: string; product?: string; message?: string };
 
 function parse(detail: string | null): Inquiry {
   try {
@@ -68,6 +68,14 @@ export default async function AdminInquiriesPage() {
                   <span className="ml-auto text-xs text-[#9CA3AF]">{formatKst(row.createdAt)}</span>
                 </div>
                 <p className="mt-1 text-sm font-semibold text-emerald-300">연락처: {inquiry.contact || "-"}</p>
+                {inquiry.nickname ? (
+                  <p className="mt-0.5 text-xs text-[#c9c0b2]">
+                    보낸 회원:{" "}
+                    <Link href={`/u/${encodeURIComponent(inquiry.nickname)}`} className="font-semibold text-[#e7c98a] underline">
+                      {inquiry.nickname}
+                    </Link>
+                  </p>
+                ) : null}
                 <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[#D1D5DB]">
                   {inquiry.message || "(내용 없음)"}
                 </p>
