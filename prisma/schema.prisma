@@ -548,3 +548,9 @@ model DailyVisit {
   @@id([day, visitor])
   @@index([day])
 }
+
+/// 관리자 「콘텐츠 발행」에서 뺀(올리지 않을) 계획 글
+model ContentPlanSkip {
+  planId    String   @id
+  createdAt DateTime @default(now())
+}

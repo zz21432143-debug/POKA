@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2Icon, Loader2Icon, SendIcon } from "lucide-react";
+import { CheckCircle2Icon, Loader2Icon, RotateCcwIcon, SendIcon, Trash2Icon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
@@ -24,9 +24,19 @@ export type PublishItem = {
   manualHand: boolean;
   note: string | null;
   publishedId: string | null;
+  /** 올리지 않기로 뺀 글 */
+  skipped: boolean;
 };
 
-type State = { title: string; content: string; photos: string[]; busy: boolean; error: string | null; doneId: string | null };
+type State = {
+  title: string;
+  content: string;
+  photos: string[];
+  busy: boolean;
+  error: string | null;
+  doneId: string | null;
+  skipped: boolean;
+};
 
 const KIND_TONE: Record<string, string> = {
   초보: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/40",
@@ -42,7 +52,15 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
     Object.fromEntries(
       items.map((item) => [
         item.id,
-        { title: item.title, content: item.content, photos: [], busy: false, error: null, doneId: item.publishedId },
+        {
+          title: item.title,
+          content: item.content,
+          photos: [],
+          busy: false,
+          error: null,
+          doneId: item.publishedId,
+          skipped: item.skipped,
+        },
       ]),
     ),
   );
@@ -88,8 +106,22 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
     }
   }
 
-  const ready = items.filter((item) => !state[item.id].doneId && !problem(item, state[item.id]));
-  const doneCount = items.filter((item) => state[item.id].doneId).length;
+  /** 빼기·되돌리기(서버에 저장해서 새로고침·다른 기기에서도 유지) */
+  async function setSkip(item: PublishItem, skip: boolean) {
+    patch(item.id, { busy: true, error: null });
+    const response = await fetch("/api/admin/content-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, skip }),
+    }).catch(() => null);
+    if (response?.ok) patch(item.id, { busy: false, skipped: skip });
+    else patch(item.id, { busy: false, error: "저장하지 못했습니다. 다시 시도해 주세요." });
+  }
+
+  const active = items.filter((item) => !state[item.id].skipped);
+  const skippedItems = items.filter((item) => state[item.id].skipped);
+  const ready = active.filter((item) => !state[item.id].doneId && !problem(item, state[item.id]));
+  const doneCount = active.filter((item) => state[item.id].doneId).length;
 
   async function publishAll() {
     setRunningAll(true);
@@ -103,7 +135,8 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
     <div className="grid gap-3">
       <div className="sticky top-[7.5rem] z-10 flex flex-wrap items-center gap-3 rounded-xl border border-[#c9a25c]/50 bg-[#1d1611]/95 p-3 backdrop-blur">
         <p className="text-sm font-semibold">
-          올림 <b className="text-emerald-300">{doneCount}</b> / {items.length} · 바로 올릴 수 있는 글 <b className="text-[#e7c98a]">{ready.length}</b>개
+          올림 <b className="text-emerald-300">{doneCount}</b> / {active.length} · 바로 올릴 수 있는 글 <b className="text-[#e7c98a]">{ready.length}</b>개
+          {skippedItems.length ? <span className="text-muted-foreground"> · 뺀 글 {skippedItems.length}개</span> : null}
         </p>
         <button
           type="button"
@@ -117,7 +150,7 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
       </div>
 
       <ol className="grid gap-3">
-        {items.map((item) => {
+        {active.map((item) => {
           const s = state[item.id];
           const blocked = problem(item, s);
           return (
@@ -177,6 +210,15 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
                         이 글 올리기
                       </button>
                     )}
+                    <button
+                      type="button"
+                      disabled={s.busy || runningAll}
+                      onClick={() => void setSkip(item, true)}
+                      className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-rose-500/60 px-4 text-sm font-bold text-rose-300 hover:bg-rose-500/10 disabled:opacity-50"
+                    >
+                      <Trash2Icon className="size-4" />
+                      빼기
+                    </button>
                     {blocked && !s.error ? <span className="text-xs text-muted-foreground">{blocked}</span> : null}
                   </div>
                 </div>
@@ -185,6 +227,31 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
           );
         })}
       </ol>
+
+      {skippedItems.length ? (
+        <section aria-label="뺀 글" className="rounded-2xl border border-dashed border-border p-3 sm:p-4">
+          <p className="text-sm font-bold text-muted-foreground">뺀 글 {skippedItems.length}개 · 올리지 않습니다</p>
+          <ul className="mt-2 grid gap-1.5">
+            {skippedItems.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-white/[0.03] px-3 py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {item.day} {item.time} · {item.boardLabel}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-muted-foreground line-through">{state[item.id].title}</span>
+                <button
+                  type="button"
+                  disabled={state[item.id].busy}
+                  onClick={() => void setSkip(item, false)}
+                  className="touch-target inline-flex min-h-10 items-center gap-1 rounded-lg border border-border px-3 text-xs font-bold hover:bg-muted"
+                >
+                  <RotateCcwIcon className="size-3.5" />
+                  되돌리기
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

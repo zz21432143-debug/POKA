@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS "ContentPlanSkip" (
+  "planId" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "ContentPlanSkip_pkey" PRIMARY KEY ("planId")
+);

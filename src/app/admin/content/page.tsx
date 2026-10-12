@@ -26,7 +26,7 @@ export default async function AdminContentPage() {
   const sunday = shiftDate(monday, 6);
   const saturday = shiftDate(monday, 5);
   const titles = CONTENT_PLAN.map((item) => (item.boardType === "HAND_REVIEW" ? normalizeHandTitle(item.title) : item.title));
-  const [events, published] = await Promise.all([
+  const [events, published, skips] = await Promise.all([
     prisma.post.findMany({
       where: { boardType: "SCHEDULE", hidden: false, eventDate: { not: null, lte: sunday } },
       select: { id: true, title: true, eventDate: true, eventEndDate: true, promoLocation: true, eventPrize: true },
@@ -38,7 +38,9 @@ export default async function AdminContentPage() {
       select: { id: true, title: true },
       orderBy: { createdAt: "desc" },
     }),
+    prisma.contentPlanSkip.findMany({ select: { planId: true } }),
   ]);
+  const skipped = new Set(skips.map((row) => row.planId));
   const doneByTitle = new Map(published.map((row) => [row.title, row.id]));
 
   const items: PublishItem[] = CONTENT_PLAN.map((item, index) => {
@@ -69,6 +71,7 @@ export default async function AdminContentPage() {
       manualHand: Boolean(item.manualHand),
       note,
       publishedId: doneByTitle.get(titles[index]) ?? null,
+      skipped: skipped.has(item.id),
     };
   });
 
