@@ -51,7 +51,7 @@ export const PLACEMENT_META: Record<
   NATIVE: {
     name: "글 목록 속 광고 (C)",
     hint: "커뮤니티 게시판·홈 최신글 목록에서 3번째 글 바로 아래 한 줄(구인 게시판 제외). 제목을 넣어야 보이고, 비우면 안 나옵니다.",
-    size: "썸네일 600×450px (4:3) · 사진은 선택",
+    size: "사진 600×450px (4:3) · 사진은 선택",
     empty: "hide",
     needImage: false,
   },

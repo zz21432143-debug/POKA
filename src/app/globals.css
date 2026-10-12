@@ -1297,12 +1297,6 @@ select {
   display: none;
 }
 
-.board-sponsor a {
-  min-height: 3.1rem;
-  padding-top: 0.65rem;
-  padding-bottom: 0.65rem;
-}
-
 .article-sheet {
   overflow: hidden;
   border: 1px solid rgba(243, 215, 161, 0.16);
