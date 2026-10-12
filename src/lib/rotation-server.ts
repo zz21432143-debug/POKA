@@ -1,44 +1,43 @@
 import { prisma } from "@/lib/db";
-import {
-  MAX_DEALERS,
-  MAX_TABLES,
-  isDealerStatus,
-  normalizeTime,
-  type RotationAction,
-  type RotationStateView,
-} from "@/lib/rotation";
+import { MAX_DEALERS, MAX_TABLES, normalizeTime, toDealerStatus, type RotationAction, type RotationStateView } from "@/lib/rotation";
+import type { RotationPlan } from "@/lib/rotation-plan";
 
 const META_ID = "default";
+/** 시간표 칸 수 상한(5분 간격 24시간 = 288칸) */
+const MAX_SLOTS = 300;
 
 async function meta() {
   return prisma.rotationMeta.upsert({ where: { id: META_ID }, create: { id: META_ID }, update: {} });
 }
 
-/** 지금 로테이션 상태 전체(근무일 시작 이후 기록 포함) */
+function parsePlan(json: string | null): RotationPlan | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as RotationPlan;
+  } catch {
+    return null;
+  }
+}
+
+/** 지금 로테이션 상태 전체 */
 export async function loadRotation(): Promise<RotationStateView> {
   const m = await meta();
-  const [dealers, events] = await Promise.all([
-    prisma.rotationDealer.findMany({ orderBy: [{ sort: "asc" }, { createdAt: "asc" }] }),
-    prisma.rotationEvent.findMany({ where: { at: { gte: m.dayStartedAt } }, orderBy: { at: "asc" }, take: 5000 }),
-  ]);
+  const dealers = await prisma.rotationDealer.findMany({ orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
   return {
     version: m.version,
     tableCount: m.tableCount,
-    dayStartedAt: m.dayStartedAt.toISOString(),
+    interval: m.interval,
+    planStart: m.planStart,
+    planEnd: m.planEnd,
+    plan: parsePlan(m.planJson),
     dealers: dealers.map((d) => ({
       id: d.id,
       name: d.name,
       startTime: d.startTime,
-      status: isDealerStatus(d.status) ? d.status : "OFF",
-      tableNo: d.tableNo,
-      statusSince: d.statusSince.toISOString(),
+      status: toDealerStatus(d.status),
+      checkedInAt: d.checkedInAt?.toISOString() ?? null,
+      leftAt: d.leftAt?.toISOString() ?? null,
       sort: d.sort,
-    })),
-    events: events.map((e) => ({
-      dealerId: e.dealerId,
-      status: isDealerStatus(e.status) ? e.status : "OFF",
-      tableNo: e.tableNo,
-      at: e.at.toISOString(),
     })),
   };
 }
@@ -49,34 +48,45 @@ export async function rotationVersion() {
 
 export class RotationError extends Error {}
 
-/** 상태를 바꾸고 기록을 남깁니다. 다른 기기는 version이 바뀐 걸 보고 새로 받습니다. */
+/** 시간표가 형식에 맞는지(딜러 id는 문자열, 칸 수 상한) 확인 */
+function validPlan(plan: RotationPlan, tableCount: number) {
+  return (
+    Array.isArray(plan.slots) &&
+    plan.slots.length <= MAX_SLOTS &&
+    plan.tables === tableCount &&
+    plan.slots.every(
+      (slot) =>
+        Number.isFinite(slot.at) &&
+        Array.isArray(slot.seats) &&
+        slot.seats.length === tableCount &&
+        slot.seats.every((id) => id === null || typeof id === "string") &&
+        Array.isArray(slot.rest) &&
+        slot.rest.every((id) => typeof id === "string"),
+    )
+  );
+}
+
+/** 상태를 바꿉니다. 다른 기기는 version이 바뀐 걸 보고 새로 받습니다. */
 export async function applyRotation(action: RotationAction) {
   const now = new Date();
   await prisma.$transaction(async (tx) => {
-    const setDealer = async (id: string, status: string, tableNo: number | null) => {
-      await tx.rotationDealer.update({ where: { id }, data: { status, tableNo, statusSince: now } });
-      await tx.rotationEvent.create({ data: { dealerId: id, status, tableNo, at: now } });
-    };
-
     switch (action.type) {
       case "addDealers": {
         const count = await tx.rotationDealer.count();
         const rows = action.dealers
-          .map((d) => ({ name: d.name.trim().slice(0, 20), startTime: normalizeTime(d.startTime) }))
+          .map((d) => ({ name: String(d.name ?? "").trim().slice(0, 20), startTime: normalizeTime(d.startTime) }))
           .filter((d) => d.name);
         if (count + rows.length > MAX_DEALERS) throw new RotationError(`딜러는 최대 ${MAX_DEALERS}명까지 등록할 수 있습니다.`);
         const last = await tx.rotationDealer.aggregate({ _max: { sort: true } });
         let sort = (last._max.sort ?? 0) + 1;
-        for (const row of rows) {
-          await tx.rotationDealer.create({ data: { ...row, status: "OFF", sort: sort++ } });
-        }
+        for (const row of rows) await tx.rotationDealer.create({ data: { ...row, status: "WAIT", sort: sort++ } });
         break;
       }
       case "updateDealer": {
         await tx.rotationDealer.update({
           where: { id: action.id },
           data: {
-            ...(action.name !== undefined ? { name: action.name.trim().slice(0, 20) } : {}),
+            ...(action.name !== undefined ? { name: String(action.name).trim().slice(0, 20) } : {}),
             ...(action.startTime !== undefined ? { startTime: normalizeTime(action.startTime) } : {}),
           },
         });
@@ -87,45 +97,57 @@ export async function applyRotation(action: RotationAction) {
         await tx.rotationDealer.delete({ where: { id: action.id } });
         break;
       }
-      case "assign": {
-        const m = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
-        const tableCount = m?.tableCount ?? 20;
-        if (!Number.isInteger(action.tableNo) || action.tableNo < 1 || action.tableNo > tableCount) {
-          throw new RotationError(`테이블 번호는 1~${tableCount}번입니다.`);
-        }
-        // 그 테이블에 있던 딜러는 휴식으로 빠집니다(교대).
-        const sitting = await tx.rotationDealer.findMany({
-          where: { tableNo: action.tableNo, status: "WORKING", NOT: { id: action.id } },
-        });
-        for (const dealer of sitting) await setDealer(dealer.id, "BREAK", null);
-        await setDealer(action.id, "WORKING", action.tableNo);
+      case "checkIn": {
+        await tx.rotationDealer.update({ where: { id: action.id }, data: { status: "IN", checkedInAt: now, leftAt: null, statusSince: now } });
         break;
       }
       case "setStatus": {
-        // 요청 값은 밖에서 오므로 다시 확인합니다(근무중은 테이블 배정으로만).
         const status: string = action.status;
-        if (!isDealerStatus(status) || status === "WORKING") throw new RotationError("상태를 확인하세요.");
-        await setDealer(action.id, status, null);
+        if (status !== "WAIT" && status !== "OFF" && status !== "LEFT") throw new RotationError("상태를 확인하세요.");
+        await tx.rotationDealer.update({
+          where: { id: action.id },
+          data: {
+            status,
+            statusSince: now,
+            ...(status === "LEFT" ? { leftAt: now } : { leftAt: null }),
+            ...(status === "WAIT" ? { checkedInAt: null } : {}),
+          },
+        });
         break;
       }
-      case "clearTable": {
-        const sitting = await tx.rotationDealer.findMany({ where: { tableNo: action.tableNo, status: "WORKING" } });
-        for (const dealer of sitting) await setDealer(dealer.id, "BREAK", null);
+      case "setSettings": {
+        const data: { tableCount?: number; interval?: number; planStart?: string; planEnd?: string } = {};
+        if (action.tableCount !== undefined) data.tableCount = Math.max(1, Math.min(MAX_TABLES, Math.floor(Number(action.tableCount) || 1)));
+        if (action.interval !== undefined) data.interval = Math.max(5, Math.min(120, Math.floor(Number(action.interval) || 20)));
+        if (action.planStart !== undefined) {
+          const t = normalizeTime(action.planStart);
+          if (!t) throw new RotationError("시작 시각을 확인하세요.");
+          data.planStart = t;
+        }
+        if (action.planEnd !== undefined) {
+          const t = normalizeTime(action.planEnd);
+          if (!t) throw new RotationError("끝 시각을 확인하세요.");
+          data.planEnd = t;
+        }
+        // 테이블 수가 바뀌면 짜 둔 시간표는 맞지 않으므로 비웁니다(다시 짜기).
+        const current = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
+        const tablesChanged = data.tableCount !== undefined && data.tableCount !== current?.tableCount;
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { ...data, ...(tablesChanged ? { planJson: null } : {}) } });
         break;
       }
-      case "setTableCount": {
-        const count = Math.max(1, Math.min(MAX_TABLES, Math.floor(action.tableCount)));
-        // 줄어든 테이블에 있던 딜러는 휴식으로
-        const outside = await tx.rotationDealer.findMany({ where: { status: "WORKING", tableNo: { gt: count } } });
-        for (const dealer of outside) await setDealer(dealer.id, "BREAK", null);
-        await tx.rotationMeta.update({ where: { id: META_ID }, data: { tableCount: count } });
+      case "savePlan": {
+        const m = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
+        if (action.plan && !validPlan(action.plan, m?.tableCount ?? 20)) {
+          throw new RotationError("시간표 형식이 맞지 않습니다. 다시 짜 주세요.");
+        }
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { planJson: action.plan ? JSON.stringify(action.plan) : null } });
         break;
       }
       case "newDay": {
-        // 새 근무일: 모두 휴무로, 지난 기록은 집계에서 빠집니다(지난 기록은 7일 지나면 지움).
-        await tx.rotationDealer.updateMany({ data: { status: "OFF", tableNo: null, statusSince: now } });
-        await tx.rotationMeta.update({ where: { id: META_ID }, data: { dayStartedAt: now } });
-        await tx.rotationEvent.deleteMany({ where: { at: { lt: new Date(now.getTime() - 7 * 24 * 3600 * 1000) } } });
+        // 새 근무일: 출근 기록을 지우고 모두 '출근 전'으로, 시간표도 비웁니다.
+        await tx.rotationDealer.updateMany({ data: { status: "WAIT", tableNo: null, checkedInAt: null, leftAt: null, statusSince: now } });
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { dayStartedAt: now, planJson: null } });
+        await tx.rotationEvent.deleteMany({});
         break;
       }
     }

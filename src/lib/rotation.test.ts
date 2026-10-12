@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { dealerSegments, dealerTotals, formatDuration, normalizeTime, parseDealerLines, type RotationEventView } from "./rotation";
+import { normalizeTime, parseDealerLines, planDealers, toDealerStatus, type RotationDealerView } from "./rotation";
+
+const dealer = (over: Partial<RotationDealerView>): RotationDealerView => ({
+  id: "x",
+  name: "x",
+  startTime: null,
+  status: "WAIT",
+  checkedInAt: null,
+  leftAt: null,
+  sort: 0,
+  ...over,
+});
 
 describe("dealer rotation rules", () => {
   it("reads dealer lines with optional start time", () => {
@@ -13,26 +24,30 @@ describe("dealer rotation rules", () => {
     assert.equal(normalizeTime("25:00"), null);
   });
 
-  it("totals work and break time from the day's events", () => {
-    const t0 = Date.UTC(2026, 9, 12, 9, 0);
-    const min = 60_000;
-    const events: RotationEventView[] = [
-      { dealerId: "a", status: "WORKING", tableNo: 3, at: new Date(t0).toISOString() },
-      { dealerId: "a", status: "BREAK", tableNo: null, at: new Date(t0 + 40 * min).toISOString() },
-      { dealerId: "a", status: "WORKING", tableNo: 5, at: new Date(t0 + 55 * min).toISOString() },
-      { dealerId: "b", status: "WORKING", tableNo: 1, at: new Date(t0).toISOString() },
-    ];
-    const segments = dealerSegments(events, "a", t0 + 90 * min, t0);
-    assert.deepEqual(segments.map((s) => [s.status, s.tableNo]), [["WORKING", 3], ["BREAK", null], ["WORKING", 5]]);
-    const totals = dealerTotals(segments);
-    assert.equal(formatDuration(totals.work), "1:15");
-    assert.equal(formatDuration(totals.rest), "0:15");
+  it("maps old statuses to the new ones", () => {
+    assert.equal(toDealerStatus("WORKING"), "IN");
+    assert.equal(toDealerStatus("BREAK"), "IN");
+    assert.equal(toDealerStatus("OFF"), "OFF");
   });
 
-  it("ignores time before the work day started", () => {
-    const t0 = Date.UTC(2026, 9, 12, 9, 0);
-    const events: RotationEventView[] = [{ dealerId: "a", status: "WORKING", tableNo: 1, at: new Date(t0 - 3_600_000).toISOString() }];
-    const totals = dealerTotals(dealerSegments(events, "a", t0 + 600_000, t0));
-    assert.equal(formatDuration(totals.work), "0:10");
+  it("uses check-in time first, then planned start, skips day-off and ends at leave time", () => {
+    const start = 600; // 10:00
+    const list = planDealers(
+      [
+        dealer({ id: "a", startTime: "10:30" }),
+        // 10:12 KST 출근 체크
+        dealer({ id: "b", startTime: "10:00", status: "IN", checkedInAt: "2026-10-12T01:12:00.000Z" }),
+        dealer({ id: "c", status: "OFF" }),
+        dealer({ id: "d", status: "LEFT", checkedInAt: "2026-10-12T01:00:00.000Z", leftAt: "2026-10-12T03:00:00.000Z" }),
+        dealer({ id: "e" }),
+      ],
+      start,
+    );
+    assert.deepEqual(list, [
+      { id: "a", from: 630, to: null },
+      { id: "b", from: 612, to: null },
+      { id: "d", from: 600, to: 720 },
+      { id: "e", from: 600, to: null },
+    ]);
   });
 });

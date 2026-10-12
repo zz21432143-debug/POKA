@@ -555,7 +555,7 @@ model ContentPlanSkip {
   createdAt DateTime @default(now())
 }
 
-/// 딜러 로테이션: 딜러 (status: WORKING 근무중 · BREAK 휴식 · OFF 휴무 · LEFT 퇴근)
+/// 딜러 로테이션: 딜러 (status: WAIT 출근 전 · IN 출근 · OFF 휴무 · LEFT 퇴근)
 model RotationDealer {
   id          String   @id @default(cuid())
   name        String
@@ -563,6 +563,10 @@ model RotationDealer {
   status      String   @default("OFF")
   tableNo     Int?
   statusSince DateTime @default(now())
+  /// 실제 출근 체크 시각
+  checkedInAt DateTime?
+  /// 퇴근 시각
+  leftAt      DateTime?
   sort        Int      @default(0)
   createdAt   DateTime @default(now())
 }
@@ -584,4 +588,10 @@ model RotationMeta {
   version      Int      @default(0)
   tableCount   Int      @default(20)
   dayStartedAt DateTime @default(now())
+  /// 로테이션 간격(분)
+  interval     Int      @default(20)
+  planStart    String   @default("10:00")
+  planEnd      String   @default("22:00")
+  /// 짜 둔 시간표(JSON)
+  planJson     String?
 }

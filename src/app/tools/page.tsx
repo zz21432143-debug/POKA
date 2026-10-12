@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "딜러 툴", robots: { index: false 
 export const dynamic = "force-dynamic";
 
 const TOOLS = [
-  { href: "/tools/rotation", title: "딜러 로테이션", body: "테이블 최대 40개 · 딜러 55명. 배정·휴식·휴무·퇴근을 실시간으로 함께 봅니다." },
+  { href: "/tools/rotation", title: "딜러 로테이션", body: "테이블 최대 40개 · 딜러 55명. 간격(예: 20분)마다 누가 몇 번 테이블로 들어가고 쉬는지 시간표로 미리 짭니다." },
   { href: "/tools/seat-draw", title: "DAY2 싯드로우", body: "진출자 칩을 테이블마다 고르게 나누고 좌석은 무작위로 배정합니다." },
 ];
 

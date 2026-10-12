@@ -1,17 +1,20 @@
 /**
  * 딜러 로테이션 공용 규칙(서버·화면 공통, DB 없이 계산만).
- * 상태: WORKING 근무중(테이블 배정) · BREAK 휴식 · OFF 휴무 · LEFT 퇴근
+ * 딜러 상태: WAIT 출근 전 · IN 출근 · OFF 휴무 · LEFT 퇴근
+ * 근무·휴식은 시간표(rotation-plan)로 정합니다.
  */
+import { alignToStart, parseClock, type PlanDealer, type RotationPlan } from "@/lib/rotation-plan";
 
 export const MAX_TABLES = 40;
 export const MAX_DEALERS = 55;
+export const INTERVAL_CHOICES = [10, 15, 20, 25, 30, 40, 45, 60] as const;
 
-export const DEALER_STATUSES = ["WORKING", "BREAK", "OFF", "LEFT"] as const;
+export const DEALER_STATUSES = ["WAIT", "IN", "OFF", "LEFT"] as const;
 export type DealerStatus = (typeof DEALER_STATUSES)[number];
 
 export const STATUS_LABEL: Record<DealerStatus, string> = {
-  WORKING: "근무중",
-  BREAK: "휴식",
+  WAIT: "출근 전",
+  IN: "출근",
   OFF: "휴무",
   LEFT: "퇴근",
 };
@@ -19,35 +22,40 @@ export const STATUS_LABEL: Record<DealerStatus, string> = {
 export type RotationDealerView = {
   id: string;
   name: string;
+  /** 예정 출근 시각 "18:00" */
   startTime: string | null;
   status: DealerStatus;
-  tableNo: number | null;
-  statusSince: string;
+  /** 실제 출근 체크 시각(ISO) */
+  checkedInAt: string | null;
+  leftAt: string | null;
   sort: number;
 };
-
-export type RotationEventView = { dealerId: string; status: DealerStatus; tableNo: number | null; at: string };
 
 export type RotationStateView = {
   version: number;
   tableCount: number;
-  dayStartedAt: string;
+  interval: number;
+  planStart: string;
+  planEnd: string;
   dealers: RotationDealerView[];
-  events: RotationEventView[];
+  plan: RotationPlan | null;
 };
 
 export type RotationAction =
   | { type: "addDealers"; dealers: { name: string; startTime?: string | null }[] }
   | { type: "updateDealer"; id: string; name?: string; startTime?: string | null }
   | { type: "removeDealer"; id: string }
-  | { type: "assign"; id: string; tableNo: number }
-  | { type: "setStatus"; id: string; status: Exclude<DealerStatus, "WORKING"> }
-  | { type: "clearTable"; tableNo: number }
-  | { type: "setTableCount"; tableCount: number }
+  | { type: "checkIn"; id: string }
+  | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
+  | { type: "setSettings"; tableCount?: number; interval?: number; planStart?: string; planEnd?: string }
+  | { type: "savePlan"; plan: RotationPlan | null }
   | { type: "newDay" };
 
-export function isDealerStatus(value: unknown): value is DealerStatus {
-  return typeof value === "string" && (DEALER_STATUSES as readonly string[]).includes(value);
+/** 예전 값(근무중·휴식)은 출근으로 봅니다. */
+export function toDealerStatus(value: string): DealerStatus {
+  if ((DEALER_STATUSES as readonly string[]).includes(value)) return value as DealerStatus;
+  if (value === "WORKING" || value === "BREAK") return "IN";
+  return "WAIT";
 }
 
 /** "18:00" · "1800" · "6시" → "18:00"(못 읽으면 null) */
@@ -76,43 +84,29 @@ export function parseDealerLines(text: string) {
     .filter((row) => row.name);
 }
 
-export type Segment = { status: DealerStatus; tableNo: number | null; from: number; to: number };
-
-/** 딜러 한 명의 상태 구간(근무일 시작 이후). 마지막 구간은 지금까지 */
-export function dealerSegments(events: RotationEventView[], dealerId: string, now: number, dayStart: number): Segment[] {
-  const mine = events
-    .filter((event) => event.dealerId === dealerId)
-    .map((event) => ({ ...event, t: Math.max(new Date(event.at).getTime(), dayStart) }))
-    .sort((a, b) => a.t - b.t);
-  const out: Segment[] = [];
-  mine.forEach((event, index) => {
-    const to = index + 1 < mine.length ? mine[index + 1].t : now;
-    if (to > event.t) out.push({ status: event.status, tableNo: event.tableNo, from: event.t, to });
-  });
-  return out;
+/** ISO 시각 → 한국 시간 "HH:MM" */
+export function kstClock(iso: string | Date) {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false }).format(
+    new Date(iso),
+  );
 }
 
-/** 근무·휴식 합계(밀리초) */
-export function dealerTotals(segments: Segment[]) {
-  let work = 0;
-  let rest = 0;
-  for (const segment of segments) {
-    const ms = segment.to - segment.from;
-    if (segment.status === "WORKING") work += ms;
-    else if (segment.status === "BREAK") rest += ms;
-  }
-  return { work, rest };
+/** 지금 시각(분, 시작 시각 기준으로 밤샘 펴기) */
+export function nowMinutes(start: number, now = new Date()) {
+  return alignToStart(parseClock(kstClock(now)) ?? 0, start);
 }
 
-/** 1시간 5분 → "1:05", 7분 → "0:07" */
-export function formatDuration(ms: number) {
-  const minutes = Math.max(0, Math.floor(ms / 60000));
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
-}
-
-/** 지금 상태로 지낸 시간 "23분" / "1시간 5분" */
-export function formatSince(ms: number) {
-  const minutes = Math.max(0, Math.floor(ms / 60000));
-  if (minutes < 60) return `${minutes}분`;
-  return `${Math.floor(minutes / 60)}시간 ${minutes % 60}분`;
+/**
+ * 시간표에 넣을 딜러와 일할 수 있는 시간.
+ * 출근 체크했으면 그 시각부터, 아니면 예정 출근 시각(없으면 시작 시각)부터. 휴무는 빼고, 퇴근은 그 시각까지.
+ */
+export function planDealers(dealers: RotationDealerView[], start: number): PlanDealer[] {
+  return dealers
+    .filter((d) => d.status !== "OFF")
+    .map((d) => {
+      const fromClock = d.checkedInAt ? parseClock(kstClock(d.checkedInAt)) : parseClock(d.startTime ?? "");
+      const from = fromClock == null ? start : alignToStart(fromClock, start);
+      const leftClock = d.status === "LEFT" && d.leftAt ? parseClock(kstClock(d.leftAt)) : null;
+      return { id: d.id, from, to: leftClock == null ? null : alignToStart(leftClock, start) };
+    });
 }

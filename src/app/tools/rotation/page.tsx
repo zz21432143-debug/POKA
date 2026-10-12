@@ -21,7 +21,7 @@ export default async function RotationPage() {
             ← 딜러 툴
           </Link>
           <h1 className="text-2xl font-black text-white">딜러 로테이션</h1>
-          <p className="text-xs text-zinc-400">딜러를 누르고 테이블을 누르면 배정됩니다(그 자리 딜러는 휴식으로 교대). 다른 기기에도 바로 반영됩니다.</p>
+          <p className="text-xs text-zinc-400">시작·끝 시각과 간격을 정하고 로테이션을 짜 두면, 몇 시 몇 분에 누가 몇 번 테이블로 들어가는지 미리 보입니다. 다른 기기에도 바로 반영됩니다.</p>
         </div>
       </header>
       <RotationBoard initial={initial} />
