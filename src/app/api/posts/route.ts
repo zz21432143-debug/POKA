@@ -234,6 +234,8 @@ export async function POST(request: Request) {
         jobTravelPay: jobData?.jobTravelPay ?? false,
         jobTravelPayAmount: jobData?.jobTravelPayAmount ?? null,
         jobTaxDeduction: jobData?.jobTaxDeduction ?? null,
+        jobLodging: jobData?.jobLodging ?? false,
+        jobLodgingNote: jobData?.jobLodgingNote ?? null,
         jobSnacks: jobData?.jobSnacks ?? false,
         jobDressCode: jobData?.jobDressCode ?? null,
         jobApplyMethod: jobData?.jobApplyMethod ?? null,

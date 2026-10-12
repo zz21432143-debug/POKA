@@ -26,6 +26,9 @@ export type ParsedJob = {
   benefits: string | null;
   travelPay: boolean;
   travelPayAmount: string | null;
+  /** 숙소 제공(대회 딜러) */
+  lodging: boolean;
+  lodgingNote: string | null;
   /** 3.3% 공제 여부(원문에서 찾은 경우) */
   taxDeduction: JobTax | null;
   dressCode: string | null;
@@ -318,6 +321,12 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
   const travel = benefitClean.find((b) => /(교통비|차비)/.test(b));
   const travelPay = Boolean(travel);
   const travelPayAmount = travel ? wonDigits(travel.replace(/^.*?(교통비|차비)/, "")) : null;
+  // 숙소: 복지 항목이나 본문에 "숙소/숙박 제공·지원"이 있으면 제공
+  const lodgingItem = benefitClean.find((b) => /(숙소|숙박)/.test(b) && !/(미제공|없음|불가|x)/i.test(b));
+  const lodging = Boolean(lodgingItem) || /(숙소|숙박)\s*(제공|지원|o\b|있음)/i.test(text);
+  const lodgingNote = lodgingItem
+    ? lodgingItem.replace(/^.*?(숙소|숙박)\s*(제공|지원)?\s*[:：]?\s*/, "").replace(/^[()\s]+|[()\s]+$/g, "") || null
+    : null;
 
   // 근무복장
   const dressParts = plain
@@ -385,6 +394,8 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
     benefits,
     travelPay,
     travelPayAmount,
+    lodging,
+    lodgingNote,
     taxDeduction: detectTax(text),
     dressCode,
     experience,

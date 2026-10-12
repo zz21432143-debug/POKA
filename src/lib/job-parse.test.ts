@@ -129,4 +129,14 @@ describe("parseJobPost", () => {
     const job = parseJobPost("【 테스트 】\n• 1월 5일 - 3명", TODAY);
     assert.equal(job.workDate, "2027-01-05");
   });
+
+  it("숙소 제공을 읽습니다(대회 딜러)", () => {
+    const withNote = parseJobPost("【 테스트 대회 】\n• 11월 21일 - 10명\n복지 : 식사 제공 / 숙소 제공 (2인 1실)", TODAY);
+    assert.equal(withNote.lodging, true);
+    assert.equal(withNote.lodgingNote, "2인 1실");
+    const inline = parseJobPost("【 테스트 대회 】\n숙박 지원합니다", TODAY);
+    assert.equal(inline.lodging, true);
+    const none = parseJobPost("【 테스트 대회 】\n복지 : 식사 제공 / 숙소 미제공", TODAY);
+    assert.equal(none.lodging, false);
+  });
 });

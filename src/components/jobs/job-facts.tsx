@@ -32,6 +32,9 @@ export type JobFactsPost = {
   jobEvents?: string | null;
   /** 3.3% 공제 여부 */
   jobTaxDeduction?: string | null;
+  /** 숙소 제공(대회 딜러) */
+  jobLodging?: boolean;
+  jobLodgingNote?: string | null;
 };
 
 /** 근무 날짜. 여러 날이면 "10/31~11/1" 범위로 보여 줍니다. */
@@ -53,6 +56,12 @@ export function travelPayLabel(job: JobFactsPost): string | null {
   if (!job.jobTravelPay) return null;
   const amount = formatWon(job.jobTravelPayAmount);
   return amount ? `차비 ${amount}` : "차비 지원";
+}
+
+/** 대회 딜러 숙소: 제공이면 "제공 · 2인 1실", 아니면 "미제공" */
+function lodgingFact(job: JobFactsPost) {
+  if (job.jobLodging === undefined) return null;
+  return job.jobLodging ? (job.jobLodgingNote ? `제공 · ${job.jobLodgingNote}` : "제공") : "미제공";
 }
 
 function travelPayFact(job: JobFactsPost) {
@@ -88,6 +97,7 @@ export function jobTags(job: JobFactsPost): string[] {
       job.jobHeadcount ? `${job.jobHeadcount} 모집` : null,
       job.jobGuaranteedHours ? `보장 ${job.jobGuaranteedHours}` : null,
       travelPayLabel(job),
+      job.jobLodging ? "숙소 제공" : null,
       deadlineLabel(job),
     ].filter((value): value is string => Boolean(value));
   }
@@ -155,6 +165,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["모집 마감", job.jobDeadline],
             ["출근 시간", job.jobWorkHours],
             ["차비", job.jobTravelPay ? travelPayFact(job) : null],
+            ["숙소", lodgingFact(job)],
             ["자격 · 경력", job.jobExperience],
             ["복리후생", job.jobBenefits],
             ["복장 규정", job.jobDressCode],

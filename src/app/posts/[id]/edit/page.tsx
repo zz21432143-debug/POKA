@@ -131,6 +131,8 @@ export default async function EditJobPage({
           jobTravelPay: post.jobTravelPay,
           jobTravelPayAmount: post.jobTravelPayAmount ?? "",
           jobTaxDeduction: post.jobTaxDeduction ?? "",
+          jobLodging: post.jobLodging,
+          jobLodgingNote: post.jobLodgingNote ?? "",
           jobSnacks: post.jobSnacks,
           jobDressCode: post.jobDressCode ?? "",
           jobApplyMethod: post.jobApplyMethod ?? "",

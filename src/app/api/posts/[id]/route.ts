@@ -146,6 +146,8 @@ export async function PATCH(
         jobTravelPay: jobData.jobTravelPay,
         jobTravelPayAmount: jobData.jobTravelPayAmount,
         jobTaxDeduction: jobData.jobTaxDeduction,
+        jobLodging: jobData.jobLodging,
+        jobLodgingNote: jobData.jobLodgingNote,
         jobSnacks: jobData.jobSnacks,
         jobDressCode: jobData.jobDressCode,
         jobApplyMethod: jobData.jobApplyMethod,

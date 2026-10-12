@@ -75,6 +75,9 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
       ? str("jobTravelPayAmount")?.replace(/[^\d]/g, "") || null
       : null,
     jobSnacks: bool("jobSnacks"),
+    // 숙소 제공(대회 딜러만). 내용은 숙소 제공을 켰을 때만 저장합니다.
+    jobLodging: jobKind === "TOURNAMENT" && bool("jobLodging"),
+    jobLodgingNote: jobKind === "TOURNAMENT" && bool("jobLodging") ? str("jobLodgingNote") : null,
     // 3.3% 공제 여부(지원 딜러·대회 딜러·급구만)
     jobTaxDeduction: needsTax(jobKind) ? parseTax(str("jobTaxDeduction")) : null,
     jobDressCode: str("jobDressCode"),

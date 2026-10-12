@@ -40,6 +40,9 @@ export type JobFormValues = {
   jobOvertime: string;
   jobTravelPay: boolean;
   jobTravelPayAmount: string;
+  /** 숙소 제공(대회 딜러) */
+  jobLodging: boolean;
+  jobLodgingNote: string;
   jobSnacks: boolean;
   /** 3.3% 공제 여부: "공제" | "없음" | ""(아직 안 고름) */
   jobTaxDeduction: string;
@@ -70,6 +73,8 @@ const EMPTY: JobFormValues = {
   jobOvertime: "가능",
   jobTravelPay: false,
   jobTravelPayAmount: "",
+  jobLodging: false,
+  jobLodgingNote: "",
   jobSnacks: false,
   jobTaxDeduction: "",
   jobDressCode: "",
@@ -245,6 +250,10 @@ export function JobWriteForm({
       next.jobTravelPay = true;
       put("jobTravelPayAmount", parsed.travelPayAmount);
     }
+    if (parsed.lodging && jobKind === "TOURNAMENT") {
+      next.jobLodging = true;
+      put("jobLodgingNote", parsed.lodgingNote);
+    }
     if (parsed.alwaysOpen && canAlwaysOpen) next.jobAlwaysOpen = true;
     if (parsed.taxDeduction && taxKind) next.jobTaxDeduction = parsed.taxDeduction;
     if (dated) next.jobDateFlexible = !parsed.workDate;
@@ -289,6 +298,31 @@ export function JobWriteForm({
           value={form.jobTravelPayAmount}
           onChange={(v) => set("jobTravelPayAmount", v)}
           placeholder="10000"
+        />
+      ) : null}
+    </div>
+  );
+  // 숙소 제공은 대회 딜러에만 있습니다(차비와 같은 방식).
+  const lodgingField = (
+    <div className="grid gap-2">
+      <label className={CHECK}>
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={form.jobLodging}
+          onChange={(event) => {
+            set("jobLodging", event.target.checked);
+            if (!event.target.checked) set("jobLodgingNote", "");
+          }}
+        />
+        숙소 제공
+      </label>
+      {form.jobLodging ? (
+        <Field
+          label="숙소 내용"
+          value={form.jobLodgingNote}
+          onChange={(v) => set("jobLodgingNote", v)}
+          placeholder="예: 2인 1실 · 대회장 도보 5분 (선택)"
         />
       ) : null}
     </div>
@@ -696,6 +730,7 @@ export function JobWriteForm({
                 </div>
               )}
               {travelPayField}
+              {jobKind === "TOURNAMENT" ? lodgingField : null}
               {jobKind === "APPLY" ? (
                 <label className={`${CHECK} self-start`}>
                   <input

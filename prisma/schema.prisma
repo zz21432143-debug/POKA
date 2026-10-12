@@ -187,6 +187,9 @@ model Post {
   jobTravelPayAmount String?
   /// 3.3% 공제 여부: "공제" | "없음" (지원 딜러·대회 딜러·급구)
   jobTaxDeduction    String?
+  /// 숙소 제공(대회 딜러). 내용은 선택(예: 2인 1실)
+  jobLodging         Boolean   @default(false)
+  jobLodgingNote     String?
   jobSnacks          Boolean   @default(false)
   jobDressCode       String?
   jobApplyMethod     String?
