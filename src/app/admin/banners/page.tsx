@@ -7,7 +7,7 @@ import { ensureBannerSlots } from "@/lib/premium-banners";
 import { ensureSponsorUnits } from "@/lib/inventory";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { BANNER_SIZE, PLACEMENT_META, POSTER_SIZE } from "@/lib/inventory-policy";
+import { AdSlotGuide } from "@/components/admin/ad-slot-guide";
 
 export const metadata: Metadata = { title: "배너 관리", robots: { index: false } };
 
@@ -35,31 +35,11 @@ export default async function AdminBannersPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">배너 구좌 관리</h1>
+        <h1 className="text-2xl font-semibold">홍보 자리 관리</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          메인 3×2(B1–B6)는 홍보글로 채우고, A1–A3·사이드바·인피드는 직판 소재로 지정합니다. A칸이 비면
-          구글이 채웁니다. 프리미엄·사이드바 공석은 문의 CTA입니다.
+          사이트에 광고·홍보가 들어가는 자리는 네 종류(B·A·S·C)입니다. 아래 그림에서 위치를 확인하세요. 사진은 아무 크기나
+          올려도 각 자리에 맞춰 자동으로 정렬됩니다.
         </p>
-        <ul className="mt-2 grid gap-1 rounded-xl border border-border bg-card p-3 text-sm sm:grid-cols-3">
-          <li>
-            <b>포스터 홍보물</b> (B1–B6)
-            <br />
-            <span className="text-muted-foreground">{POSTER_SIZE}</span>
-          </li>
-          <li>
-            <b>배너 홍보물</b> (A1–A3)
-            <br />
-            <span className="text-muted-foreground">{BANNER_SIZE}</span>
-          </li>
-          <li>
-            <b>사이드바</b> (S)
-            <br />
-            <span className="text-muted-foreground">{PLACEMENT_META.SIDEBAR.size}</span>
-          </li>
-          <li className="text-xs text-muted-foreground sm:col-span-3">
-            비율이 다르면 가장자리가 잘립니다. 글자·로고는 가장자리에서 안쪽 5% 이상 띄워 주세요. JPG·PNG·WEBP, 3MB 이하.
-          </li>
-        </ul>
         <div className="mt-2 flex flex-wrap gap-3">
           <Link href="/admin" className="inline-flex min-h-11 items-center text-sm text-primary">
             관리자 페이지
@@ -71,12 +51,17 @@ export default async function AdminBannersPage() {
           ) : null}
         </div>
       </header>
+      <AdSlotGuide />
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">메인 프리미엄 B1–B6</h2>
+        <h2 className="text-lg font-semibold">① 메인 포스터 B1–B6</h2>
+        <p className="text-sm text-muted-foreground">
+          사진은 「공식 홍보」 게시판에 글을 쓰면서 올립니다. 여기서는 어느 글을 몇 번 자리에 보여줄지만 정합니다.
+        </p>
         <BannerAdmin slots={slots} promo={promo} />
       </section>
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">사이드바 · 인피드 직판</h2>
+        <h2 className="text-lg font-semibold">② 하단 가로 배너 A · 오른쪽 사이드 배너 S · 글 목록 속 광고 C</h2>
+        <p className="text-sm text-muted-foreground">각 자리에 사진·제목·링크를 넣고 「사용」에 체크한 뒤 저장하세요.</p>
         <SponsorAdmin units={units} />
       </section>
     </div>

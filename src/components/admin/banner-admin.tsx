@@ -71,7 +71,7 @@ export function BannerAdmin({
                 disabled={pending === slot.slot}
                 onClick={() => save(slot.slot, { mode: "MANUAL" })}
               >
-                수동
+                고정
               </Button>
               <Button
                 type="button"
@@ -80,9 +80,12 @@ export function BannerAdmin({
                 disabled={pending === slot.slot}
                 onClick={() => save(slot.slot, { enabled: !slot.enabled })}
               >
-                {slot.enabled ? "사용 중" : "비활성"}
+                {slot.enabled ? "켜짐" : "꺼짐"}
               </Button>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              자동 = 공식 홍보 글이 알아서 채움 · 고정 = 고른 글을 이 자리에 계속 · 꺼짐 = 무료 홍보 이벤트 포스터가 나옴
+            </p>
             {slot.mode === "MANUAL" ? (
               <select
                 className="mt-2 h-11 w-full rounded-lg border border-input bg-background px-2 text-base"
@@ -99,7 +102,7 @@ export function BannerAdmin({
               </select>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                최신 홍보글을 자동 배정합니다. {slot.post ? `현재 후보: ${slot.post.title}` : ""}
+                자동: 공식 홍보 글이 최신순(유료 먼저)으로 알아서 들어갑니다. 글이 모자라면 무료 홍보 이벤트 포스터가 나옵니다.
               </p>
             )}
           </li>
