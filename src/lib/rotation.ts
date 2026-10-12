@@ -137,8 +137,11 @@ export function planDealers(dealers: RotationDealerView[], start: number): PlanD
     .map((d) => {
       const fromClock = d.checkedInAt ? parseClock(kstClock(d.checkedInAt)) : parseClock(d.startTime ?? "");
       const from = fromClock == null ? start : alignToStart(fromClock, start);
-      const leftClock = d.status === "LEFT" && d.leftAt ? parseClock(kstClock(d.leftAt)) : null;
-      return { id: d.id, from, to: leftClock == null ? null : alignToStart(leftClock, start) };
+      // 퇴근했으면 퇴근 시각, 아니면 예정 퇴근 시각까지
+      const leftClock = d.status === "LEFT" && d.leftAt ? parseClock(kstClock(d.leftAt)) : parseClock(d.endTime ?? "");
+      let to = leftClock == null ? null : alignToStart(leftClock, start);
+      if (to != null && to <= from) to += 1440;
+      return { id: d.id, from, to };
     });
 }
 
