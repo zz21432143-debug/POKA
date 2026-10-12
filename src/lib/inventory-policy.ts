@@ -9,7 +9,7 @@ export const PLACEMENT_IMAGE: Record<SponsorPlacement, { width: number; height: 
   A2: { width: 1200, height: 600 },
   A3: { width: 1200, height: 600 },
   SIDEBAR: { width: 600, height: 500 },
-  NATIVE: { width: 600, height: 450 },
+  NATIVE: { width: 1200, height: 400 },
 };
 
 /** 메인 B1–B6 세로 포스터(화면 비율 5:7) */
@@ -50,8 +50,8 @@ export const PLACEMENT_META: Record<
   },
   NATIVE: {
     name: "글 목록 속 광고 (C)",
-    hint: "커뮤니티 게시판·홈 최신글 목록에서 3번째 글 바로 아래 한 줄(구인 게시판 제외). 제목을 넣어야 보이고, 비우면 안 나옵니다.",
-    size: "사진 600×450px (4:3) · 사진은 선택",
+    hint: "커뮤니티 게시판·홈 최신글 목록에서 3번째 글 바로 아래, 목록 너비 가득 가로 배너(구인 게시판 제외). 사진·제목을 모두 비우면 안 나옵니다.",
+    size: "가로 배너 1200×400px (3:1)",
     empty: "hide",
     needImage: false,
   },

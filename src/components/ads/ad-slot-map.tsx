@@ -26,7 +26,7 @@ export function AdSlotMap({ className = "" }: { className?: string }) {
             <span className="h-1.5 rounded bg-white/15" />
             <span className="h-1.5 rounded bg-white/15" />
             <span className="h-1.5 rounded bg-white/15" />
-            <AdSlotTag k="C" className="h-3 text-[9px]" />
+            <AdSlotTag k="C" className="aspect-[3/1] text-[10px]" />
             <span className="h-1.5 rounded bg-white/15" />
             <span className="text-center">글 목록</span>
           </div>

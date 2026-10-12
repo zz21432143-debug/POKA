@@ -21,7 +21,7 @@ function SponsorImageField({ placement, initial, size }: { placement: SponsorPla
         onChange={setUrl}
         width={box.width}
         height={box.height}
-        title={placement === "NATIVE" ? "광고 사진 (선택)" : "광고 사진"}
+        title={placement === "NATIVE" ? "가로 배너 사진 (선택)" : "광고 사진"}
         sizeLabel={size.replace(/ · .*$/, "")}
         showUrl
       />
