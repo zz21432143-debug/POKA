@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { CONTENT_PLAN, PLACEHOLDER, scheduleSummary } from "./content-plan";
+import { CONTENT_PLAN, EXTRA_PLAN, PLACEHOLDER, scheduleSummary } from "./content-plan";
 import { findProfanity } from "./profanity";
 import { holdemOnlyViolation } from "./holdem-only";
 import { normalizeHand, validateHandReview } from "./hand-review";
@@ -12,7 +12,7 @@ describe("weekly content plan", () => {
   });
 
   it("passes the forbidden word and holdem-only filters", () => {
-    for (const post of CONTENT_PLAN) {
+    for (const post of [...CONTENT_PLAN, ...EXTRA_PLAN]) {
       const text = `${post.title}\n${post.content}`;
       assert.equal(findProfanity(text), null, `${post.id}: ${JSON.stringify(findProfanity(text))}`);
       assert.equal(holdemOnlyViolation(text), null, post.id);
@@ -29,6 +29,14 @@ describe("weekly content plan", () => {
   it("only the posts that need real data keep placeholders", () => {
     const withPlaceholder = CONTENT_PLAN.filter((p) => `${p.title}${p.content}`.includes(PLACEHOLDER)).map((p) => p.id);
     assert.deepEqual(withPlaceholder.sort(), ["sat-1", "sat-2", "sun-2"]);
+  });
+
+  it("extra posts are ready to publish and do not reuse titles", () => {
+    const titles = new Set(CONTENT_PLAN.map((p) => p.title));
+    for (const post of EXTRA_PLAN) {
+      assert.ok(!titles.has(post.title), post.id);
+      assert.ok(!`${post.title}${post.content}`.includes(PLACEHOLDER), post.id);
+    }
   });
 
   it("lists tournaments by prize", () => {

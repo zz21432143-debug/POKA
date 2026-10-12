@@ -4,7 +4,9 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ContentPlanPublisher, type PublishItem } from "@/components/admin/content-plan-publisher";
-import { CONTENT_PLAN, scheduleSummary, type ScheduleRow } from "@/lib/content-plan";
+import { CONTENT_PLAN, EXTRA_PLAN, scheduleSummary, type ScheduleRow } from "@/lib/content-plan";
+
+const PLAN = [...CONTENT_PLAN, ...EXTRA_PLAN];
 import { normalizeHandTitle } from "@/lib/holdem-only";
 import { shiftDate, todayKstDate, weekStartKst } from "@/lib/dates";
 
@@ -25,7 +27,7 @@ export default async function AdminContentPage() {
   const monday = weekStartKst(todayKstDate());
   const sunday = shiftDate(monday, 6);
   const saturday = shiftDate(monday, 5);
-  const titles = CONTENT_PLAN.map((item) => (item.boardType === "HAND_REVIEW" ? normalizeHandTitle(item.title) : item.title));
+  const titles = PLAN.map((item) => (item.boardType === "HAND_REVIEW" ? normalizeHandTitle(item.title) : item.title));
   const [events, published, skips] = await Promise.all([
     prisma.post.findMany({
       where: { boardType: "SCHEDULE", hidden: false, eventDate: { not: null, lte: sunday } },
@@ -43,7 +45,7 @@ export default async function AdminContentPage() {
   const skipped = new Set(skips.map((row) => row.planId));
   const doneByTitle = new Map(published.map((row) => [row.title, row.id]));
 
-  const items: PublishItem[] = CONTENT_PLAN.map((item, index) => {
+  const items: PublishItem[] = PLAN.map((item, index) => {
     let content = item.content;
     let note: string | null = null;
     if (item.schedule) {

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireMaster } from "@/lib/admin";
-import { CONTENT_PLAN } from "@/lib/content-plan";
+import { CONTENT_PLAN, EXTRA_PLAN } from "@/lib/content-plan";
 
-const PLAN_IDS = new Set(CONTENT_PLAN.map((item) => item.id));
+const PLAN_IDS = new Set([...CONTENT_PLAN, ...EXTRA_PLAN].map((item) => item.id));
 
 /** 콘텐츠 발행 계획에서 글 빼기·되돌리기: { id, skip } (마스터 전용) */
 export async function POST(request: Request) {
