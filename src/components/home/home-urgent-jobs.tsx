@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { SirenIcon } from "lucide-react";
+import { BrandIcon } from "@/components/brand/brand-icon";
+
 import { formatWon } from "@/lib/jobs";
 
 export type HomeUrgentJob = {
@@ -18,7 +19,7 @@ export function HomeUrgentJobs({ jobs, region = null }: { jobs: HomeUrgentJob[];
     <section className="lounge-card overflow-hidden rounded-[1.35rem]">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2.5">
         <span className="inline-flex items-center gap-1.5 text-base font-bold">
-          <SirenIcon className="size-4 text-rose-600" />
+          <BrandIcon name="flame" className="size-5" />
           {region ? `${region} 급구 / 대타` : "급구 / 대타"}
         </span>
         <Link href={listHref} className="more-link ml-auto">

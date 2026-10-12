@@ -56,6 +56,13 @@ export function InstallPwaButton({
 
   useEffect(() => {
     const check = window.setTimeout(() => setInstalled(isStandalone()), 0);
+    // <head>에서 미리 받아 둔 설치 창(화면이 그려지기 전에 온 경우)
+    const take = () => {
+      const early = (window as Window & { __pokaInstall?: BeforeInstallPromptEvent | null }).__pokaInstall;
+      if (early) setDeferred(early);
+    };
+    const early = window.setTimeout(take, 0);
+    window.addEventListener("poka-install-ready", take);
     const onPrompt = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
@@ -68,6 +75,8 @@ export function InstallPwaButton({
     window.addEventListener("appinstalled", onInstalled);
     return () => {
       window.clearTimeout(check);
+      window.clearTimeout(early);
+      window.removeEventListener("poka-install-ready", take);
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
@@ -93,6 +102,7 @@ export function InstallPwaButton({
       const choice = await deferred.userChoice;
       if (choice.outcome === "accepted") setInstalled(true);
       setDeferred(null);
+      (window as Window & { __pokaInstall?: unknown }).__pokaInstall = null;
       return;
     }
     if (isIosSafari()) {
@@ -139,7 +149,7 @@ export function InstallPwaButton({
         <button
           type="button"
           onClick={() => void install()}
-          aria-label="휴대폰에 POKA 앱 받기"
+          aria-label="POKA 앱 받기"
           className="app-get touch-target inline-flex size-10 shrink-0 items-center justify-center gap-1 rounded-full border border-[#c9a25c]/60 bg-[#2a2017] text-[13px] font-bold text-[#f3eadb] hover:border-[#c9a25c] hover:bg-[#3a2c1f] sm:w-auto sm:px-3"
         >
           <SmartphoneIcon className="size-4 shrink-0 text-[#e7c98a]" />
@@ -167,28 +177,37 @@ export function InstallPwaButton({
       <Dialog open={desktopOpen} onOpenChange={setDesktopOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>휴대폰에 POKA 앱 받기</DialogTitle>
+            <DialogTitle>PC에 POKA 앱 설치</DialogTitle>
             <DialogDescription>
-              POKA는 앱스토어 없이 휴대폰 홈 화면에 바로 설치됩니다. 설치하면 주소창 없이 앱처럼 열립니다.
+              POKA는 앱스토어 없이 PC에 바로 설치됩니다. 설치하면 바탕화면·작업표시줄에 POKA 아이콘이 생기고 창 하나로 열립니다.
             </DialogDescription>
           </DialogHeader>
-          <ol className="list-decimal space-y-3 pl-5 text-sm leading-6">
-            <li className="break-words">
-              휴대폰 브라우저에서 <strong>{siteHost}</strong> 에 접속합니다.
-            </li>
-            <li className="break-words">
-              상단의 <strong>앱</strong> 버튼을 누릅니다.
-            </li>
-            <li className="break-words">
-              안드로이드는 <strong>설치</strong>, 아이폰은 공유 <ShareIcon className="inline size-4 align-text-bottom" /> →{" "}
-              <strong>홈 화면에 추가</strong>를 누르면 끝입니다.
-            </li>
-          </ol>
-          {deferred ? null : (
-            <p className="text-xs leading-5 text-muted-foreground">
-              이 PC에도 설치하려면 주소창 오른쪽의 설치 아이콘을 누르세요.
-            </p>
-          )}
+          <div className="grid gap-3 text-sm leading-6">
+            <section>
+              <p className="font-bold">크롬 · 엣지 · 웨일</p>
+              <ol className="list-decimal space-y-1 pl-5">
+                <li className="break-words">
+                  주소창 오른쪽 끝의 <strong>설치 아이콘</strong>(모니터에 화살표 모양)을 누릅니다.
+                </li>
+                <li className="break-words">
+                  안 보이면 오른쪽 위 메뉴(⋮ 또는 …) → <strong>POKA 설치</strong> 또는 <strong>앱 → 이 사이트를 앱으로 설치</strong>를 누릅니다.
+                </li>
+              </ol>
+            </section>
+            <section>
+              <p className="font-bold">맥 사파리</p>
+              <p>
+                위 메뉴 <strong>파일 → Dock에 추가</strong>를 누릅니다.
+              </p>
+            </section>
+            <section className="rounded-lg bg-muted/40 p-3">
+              <p className="font-bold">휴대폰에 받기</p>
+              <p className="break-words">
+                휴대폰 브라우저에서 <strong>{siteHost}</strong> 에 접속해 위쪽 <strong>앱</strong> 버튼을 누르세요. 아이폰은 공유{" "}
+                <ShareIcon className="inline size-4 align-text-bottom" /> → <strong>홈 화면에 추가</strong>입니다.
+              </p>
+            </section>
+          </div>
         </DialogContent>
       </Dialog>
 

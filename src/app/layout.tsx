@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { adsensePublisherId, DEFAULT_ADSENSE_CLIENT } from "@/lib/adsense";
-import { PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
+import { PWA_APPLE_ICON, PWA_ICON_192, PWA_SHORT_NAME, PWA_THEME_COLOR } from "@/lib/pwa";
 import {
   OG_IMAGE_PATH,
   SITE_DESCRIPTION,
@@ -13,7 +13,7 @@ import {
   searchEngineVerificationMeta,
 } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
-import { APP_STRIP_BOOT_SCRIPT } from "@/lib/app-strip";
+import { APP_STRIP_BOOT_SCRIPT, PWA_INSTALL_BOOT_SCRIPT } from "@/lib/app-strip";
 import "./globals.css";
 
 const sans = Noto_Sans_KR({
@@ -75,8 +75,8 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    icon: [{ url: "/images/poka-flame-favicon.png", type: "image/png", sizes: "192x192" }],
-    apple: [{ url: "/images/poka-flame-favicon.png", type: "image/png" }],
+    icon: [{ url: PWA_ICON_192, type: "image/png", sizes: "192x192" }],
+    apple: [{ url: PWA_APPLE_ICON, type: "image/png", sizes: "180x180" }],
   },
 };
 
@@ -99,7 +99,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* 앱 다운로드 띠를 닫아 둔 경우 첫 화면부터 숨깁니다(나타났다 사라지는 깜빡임 방지). */}
         <script dangerouslySetInnerHTML={{ __html: APP_STRIP_BOOT_SCRIPT }} />
-        <link rel="icon" type="image/png" href="/images/poka-flame-favicon.png" />
+        <script dangerouslySetInnerHTML={{ __html: PWA_INSTALL_BOOT_SCRIPT }} />
+        <link rel="icon" type="image/png" href={PWA_ICON_192} />
         {adsense ? (
           <script
             async

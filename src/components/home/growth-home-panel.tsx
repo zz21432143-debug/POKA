@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatKstLabel } from "@/lib/dates";
-import { SpadeIcon, CalendarDaysIcon } from "lucide-react";
+import { BrandIcon } from "@/components/brand/brand-icon";
+
 
 export function GrowthHomePanel({
   today,
@@ -25,7 +26,7 @@ export function GrowthHomePanel({
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-[#f6efe2]">
-            <SpadeIcon className="size-4 shrink-0" />
+            <BrandIcon name="cards" className="size-4" />
           </span>
           {hand?.isToday ? "오늘의 홀덤 핸드" : "가장 최근 핸드리뷰"}
         </p>
@@ -52,7 +53,7 @@ export function GrowthHomePanel({
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#2a2426] text-[#e7c98a]">
-            <CalendarDaysIcon className="size-4 shrink-0" />
+            <BrandIcon name="moon" className="size-4" />
           </span>
           이번 주 홀덤 대회
         </p>

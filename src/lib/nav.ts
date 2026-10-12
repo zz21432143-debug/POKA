@@ -30,23 +30,8 @@ export const MOBILE_BOTTOM_NAV = [
   { href: "/account", label: "내정보", icon: "user" as const, match: "me" as const },
 ] as const;
 
-export type SidebarIcon =
-  | "home"
-  | "message"
-  | "camera"
-  | "briefcase"
-  | "help"
-  | "heart"
-  | "alert"
-  | "book"
-  | "lightbulb"
-  | "calendar"
-  | "megaphone"
-  | "bell"
-  | "shield"
-  | "check"
-  | "spade"
-  | "badge";
+/** 왼쪽 메뉴 아이콘: 브랜드 아이콘(오니·동양 테마) 이름 */
+export type SidebarIcon = import("@/components/brand/brand-icon").BrandIconName;
 
 export type SidebarItem = NavItem & { icon: SidebarIcon };
 
@@ -61,46 +46,46 @@ export type SidebarGroup = {
 export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: null,
-    items: [{ href: "/", label: "홈", hint: "커뮤니티 홈", icon: "home" }],
+    items: [{ href: "/", label: "홈", hint: "커뮤니티 홈", icon: "torii" }],
   },
   {
     title: "구인구직",
     items: [
       // 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
-      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "briefcase" },
-      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "spade" },
-      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "alert" },
-      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "briefcase" },
-      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "briefcase" },
+      { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "chips" },
+      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "lantern" },
+      { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "flame" },
+      { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "noren" },
+      { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "oni" },
     ],
   },
   {
     title: "커뮤니티",
     items: [
-      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "check" },
-      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "message" },
-      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "spade" },
+      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
+      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
     ],
   },
   {
     title: "정보센터",
     collapsible: true,
     items: [
-      { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "calendar" },
-      { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "megaphone" },
-      { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "shield" },
+      { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
+      { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "fan" },
+      { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
     ],
   },
   {
     title: "기타",
     collapsible: true,
     items: [
-      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "badge" },
-      { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "check" },
+      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
+      { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "pagoda" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
-      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "lightbulb" },
-      { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "megaphone" },
-      { href: "/terms", label: "운영 정책", hint: "약관", icon: "shield" },
+      { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "brush" },
+      { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "gourd" },
+      { href: "/terms", label: "운영 정책", hint: "약관", icon: "seal" },
     ],
   },
 ];

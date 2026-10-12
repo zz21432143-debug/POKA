@@ -5,9 +5,11 @@ export const PWA_DISPLAY = "standalone" as const;
 /** 앱 위쪽 막대·첫 화면 색: 마스코트 아이콘 바탕과 같은 짙은 흑적색 */
 export const PWA_THEME_COLOR = "#120b0b";
 export const PWA_BACKGROUND_COLOR = "#120b0b";
-export const PWA_ICON_192 = "/icons/poka-192.png";
-export const PWA_ICON_512 = "/icons/poka-512.png";
+/** 아이콘을 바꾸면 이 번호를 올립니다(설치 앱·브라우저가 예전 아이콘 캐시를 쓰지 않게). */
+export const PWA_ICON_VERSION = "20261012";
+export const PWA_ICON_192 = `/icons/poka-192.png?v=${PWA_ICON_VERSION}`;
+export const PWA_ICON_512 = `/icons/poka-512.png?v=${PWA_ICON_VERSION}`;
 /** 설치 앱용(모서리를 OS가 깎는) 꽉 찬 정사각형 아이콘 */
-export const PWA_ICON_MASKABLE_192 = "/icons/poka-maskable-192.png";
-export const PWA_ICON_MASKABLE_512 = "/icons/poka-maskable-512.png";
-export const PWA_APPLE_ICON = "/icons/poka-180.png";
+export const PWA_ICON_MASKABLE_192 = `/icons/poka-maskable-192.png?v=${PWA_ICON_VERSION}`;
+export const PWA_ICON_MASKABLE_512 = `/icons/poka-maskable-512.png?v=${PWA_ICON_VERSION}`;
+export const PWA_APPLE_ICON = `/icons/poka-180.png?v=${PWA_ICON_VERSION}`;

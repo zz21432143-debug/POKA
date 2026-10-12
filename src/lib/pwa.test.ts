@@ -20,8 +20,8 @@ describe("pwa manifest constants", () => {
     assert.equal(PWA_DISPLAY, "standalone");
     assert.equal(PWA_THEME_COLOR, "#120b0b");
     assert.equal(PWA_BACKGROUND_COLOR, "#120b0b");
-    assert.equal(PWA_ICON_192, "/icons/poka-192.png");
-    assert.equal(PWA_ICON_512, "/icons/poka-512.png");
+    assert.match(PWA_ICON_192, /^\/icons\/poka-192\.png\?v=\d+$/);
+    assert.match(PWA_ICON_512, /^\/icons\/poka-512\.png\?v=\d+$/);
   });
 });
 

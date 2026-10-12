@@ -17,7 +17,7 @@ describe("back navigation", () => {
   it("lets the service worker skip document navigations so Back works", () => {
     const sw = readFileSync(new URL("../../public/sw.js", import.meta.url), "utf8");
     assert.match(sw, /request\.mode === "navigate"/);
-    assert.match(sw, /poka-pwa-v3/);
+    assert.match(sw, /poka-pwa-v4/);
     assert.doesNotMatch(sw, /caches\.match\("\/"\)/);
   });
 

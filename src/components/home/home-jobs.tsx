@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { BriefcaseIcon, ChevronRightIcon, CrownIcon, PenSquareIcon } from "lucide-react";
+import { ChevronRightIcon, CrownIcon, PenSquareIcon } from "lucide-react";
 import { EmptyBoard } from "@/components/posts/empty-board";
 import { formatRelativeKst } from "@/lib/dates";
 import { formatWon, titleRegion } from "@/lib/jobs";
 import { eventsDateLabel, parseJobEvents } from "@/lib/job-events";
 import { cn } from "cn";
+import { BrandIcon } from "@/components/brand/brand-icon";
 
 export type HomeApplyJob = {
   id: string;
@@ -49,7 +50,7 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
     <section className="overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/50 bg-[#1d1611]/95 shadow-[0_10px_28px_rgb(0_0_0/0.35)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-4 py-3">
         <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
-          <BriefcaseIcon className="size-5 text-[#e7c98a]" />
+          <BrandIcon name="chips" className="size-6" />
           지원 · 대회 딜러 구인
           {jobs.length ? (
             <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-bold text-white">

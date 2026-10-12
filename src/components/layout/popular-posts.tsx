@@ -2,14 +2,15 @@ import Link from "next/link";
 import { getPopularPosts } from "@/lib/popular";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { formatRelativeKst, toIsoString } from "@/lib/dates";
-import { FlameIcon } from "lucide-react";
+import { BrandIcon } from "@/components/brand/brand-icon";
+
 
 export async function PopularPosts() {
   const posts = await getPopularPosts(5).catch(() => []);
   return (
     <section className="lounge-card rounded-[1.5rem] p-4">
       <p className="flex items-center gap-1.5 text-sm font-semibold">
-        <FlameIcon className="size-4 text-primary" />
+        <BrandIcon name="flame" className="size-5" />
         실시간 인기글
       </p>
       {posts.length === 0 ? (

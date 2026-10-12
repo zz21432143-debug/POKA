@@ -1,5 +1,5 @@
-// v3: 마스코트 아이콘으로 바꾸며 예전(초록 캐릭터) 아이콘 캐시를 지웁니다.
-const CACHE = "poka-pwa-v3";
+// v4: 새 브랜드(오니 캐릭터) 아이콘으로 바꾸며 예전 아이콘 캐시를 지웁니다.
+const CACHE = "poka-pwa-v4";
 const PRECACHE = ["/icons/poka-192.png", "/icons/poka-512.png", "/icons/poka-maskable-192.png", "/icons/poka-maskable-512.png"];
 
 self.addEventListener("install", (event) => {
