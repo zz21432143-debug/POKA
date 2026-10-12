@@ -569,6 +569,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </label>
             </>
           ) : null}
+          {/* Auto: 시간표 바로 옆(오른쪽) */}
+          <button
+            type="button"
+            disabled={busy || state.dealers.length === 0}
+            onClick={runAuto}
+            title="지금 칸 빈자리(퇴근·컨바인)를 채우고, 다음 칸부터 딜·휴식 시간을 맞춰 자동으로 다시 짭니다"
+            className="ml-auto min-h-12 rounded-xl bg-amber-400 px-8 text-xl font-black text-black shadow-[0_0_0_3px_rgba(251,191,36,0.25)] disabled:opacity-40"
+          >
+            Auto
+          </button>
         </div>
 
         {!plan ? (
