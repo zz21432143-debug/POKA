@@ -1,6 +1,7 @@
 import type { JobKind } from "@/generated/prisma/enums";
 import { buildJobTitle } from "@/lib/jobs";
 import { checkJobContact } from "@/lib/contact";
+import { needsTax, parseTax } from "@/lib/job-tax";
 import {
   eventsDateLabel,
   eventsHeadcountTotal,
@@ -74,6 +75,8 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
       ? str("jobTravelPayAmount")?.replace(/[^\d]/g, "") || null
       : null,
     jobSnacks: bool("jobSnacks"),
+    // 3.3% 공제 여부(지원 딜러·대회 딜러·급구만)
+    jobTaxDeduction: needsTax(jobKind) ? parseTax(str("jobTaxDeduction")) : null,
     jobDressCode: str("jobDressCode"),
     jobApplyMethod: str("jobApplyMethod"),
     // 지원 링크(구글폼 등). http(s) 주소만 받습니다.

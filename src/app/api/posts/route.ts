@@ -20,6 +20,7 @@ import { notifyRegion } from "@/lib/push";
 import { fileIdFromUrl } from "@/lib/uploads";
 import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 import type { BoardType, JobKind } from "@/generated/prisma/enums";
+import { needsTax } from "@/lib/job-tax";
 import {
   HoldemOnlyError,
   assertHoldemOnly,
@@ -119,6 +120,9 @@ export async function POST(request: Request) {
       }
       if (jobData.contactError) {
         return NextResponse.json({ error: jobData.contactError }, { status: 400 });
+      }
+      if (needsTax(jobKind) && !jobData.jobTaxDeduction) {
+        return NextResponse.json({ error: "3.3% 공제 여부를 선택하세요." }, { status: 400 });
       }
       title = jobData.title;
     }
@@ -229,6 +233,7 @@ export async function POST(request: Request) {
         jobOvertime: jobData?.jobOvertime ?? null,
         jobTravelPay: jobData?.jobTravelPay ?? false,
         jobTravelPayAmount: jobData?.jobTravelPayAmount ?? null,
+        jobTaxDeduction: jobData?.jobTaxDeduction ?? null,
         jobSnacks: jobData?.jobSnacks ?? false,
         jobDressCode: jobData?.jobDressCode ?? null,
         jobApplyMethod: jobData?.jobApplyMethod ?? null,

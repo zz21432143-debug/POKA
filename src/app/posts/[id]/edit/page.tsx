@@ -130,6 +130,7 @@ export default async function EditJobPage({
           jobOvertime: post.jobOvertime ?? "가능",
           jobTravelPay: post.jobTravelPay,
           jobTravelPayAmount: post.jobTravelPayAmount ?? "",
+          jobTaxDeduction: post.jobTaxDeduction ?? "",
           jobSnacks: post.jobSnacks,
           jobDressCode: post.jobDressCode ?? "",
           jobApplyMethod: post.jobApplyMethod ?? "",

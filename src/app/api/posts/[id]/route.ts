@@ -8,6 +8,7 @@ import { canManagePost, manageDeniedMessage } from "@/lib/post-manage";
 import { fileIdFromUrl } from "@/lib/uploads";
 import type { JobKind } from "@/generated/prisma/enums";
 import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
+import { needsTax } from "@/lib/job-tax";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -110,6 +111,9 @@ export async function PATCH(
     if (jobData.contactError) {
       return NextResponse.json({ error: jobData.contactError }, { status: 400 });
     }
+    if (needsTax(jobKind) && !jobData.jobTaxDeduction) {
+      return NextResponse.json({ error: "3.3% 공제 여부를 선택하세요." }, { status: 400 });
+    }
     // 수정할 때도 새로 쓸 때와 같은 금지어 검사를 합니다.
     const nextContent = typeof body.content === "string" ? body.content : post.content;
     assertHoldemOnly(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
@@ -141,6 +145,7 @@ export async function PATCH(
         jobOvertime: jobData.jobOvertime,
         jobTravelPay: jobData.jobTravelPay,
         jobTravelPayAmount: jobData.jobTravelPayAmount,
+        jobTaxDeduction: jobData.jobTaxDeduction,
         jobSnacks: jobData.jobSnacks,
         jobDressCode: jobData.jobDressCode,
         jobApplyMethod: jobData.jobApplyMethod,

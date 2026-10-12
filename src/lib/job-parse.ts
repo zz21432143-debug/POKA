@@ -1,5 +1,6 @@
 import type { JobRegion } from "@/lib/job-status";
 import { addDays, normalizeJobEvents, type JobEvent } from "@/lib/job-events";
+import { detectTax, type JobTax } from "@/lib/job-tax";
 
 /**
  * 카톡 오픈채팅방에 올라오는 구인 공고 글을 붙여넣으면 글쓰기 칸을 자동으로 채웁니다.
@@ -25,6 +26,8 @@ export type ParsedJob = {
   benefits: string | null;
   travelPay: boolean;
   travelPayAmount: string | null;
+  /** 3.3% 공제 여부(원문에서 찾은 경우) */
+  taxDeduction: JobTax | null;
   dressCode: string | null;
   experience: string | null;
   applyMethod: string | null;
@@ -382,6 +385,7 @@ export function parseJobPost(raw: string, today: string): ParsedJob {
     benefits,
     travelPay,
     travelPayAmount,
+    taxDeduction: detectTax(text),
     dressCode,
     experience,
     applyMethod,

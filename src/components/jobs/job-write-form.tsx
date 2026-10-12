@@ -15,7 +15,9 @@ import { checkJobContact } from "@/lib/contact";
 import { todayKstDate } from "@/lib/dates";
 import { addDays, eventsDateLabel, type JobEvent } from "@/lib/job-events";
 import { DateField, JobEventsEditor } from "@/components/jobs/date-picker";
-import { ClipboardPasteIcon, SparklesIcon } from "lucide-react";
+import { ChevronDownIcon, ClipboardPasteIcon, SparklesIcon } from "lucide-react";
+import { TAX_OPTIONS, needsTax } from "@/lib/job-tax";
+import { cn } from "cn";
 
 export type JobFormValues = {
   jobLocation: string;
@@ -39,6 +41,8 @@ export type JobFormValues = {
   jobTravelPay: boolean;
   jobTravelPayAmount: string;
   jobSnacks: boolean;
+  /** 3.3% 공제 여부: "공제" | "없음" | ""(아직 안 고름) */
+  jobTaxDeduction: string;
   jobDressCode: string;
   jobApplyMethod: string;
   jobApplyValue: string;
@@ -67,6 +71,7 @@ const EMPTY: JobFormValues = {
   jobTravelPay: false,
   jobTravelPayAmount: "",
   jobSnacks: false,
+  jobTaxDeduction: "",
   jobDressCode: "",
   jobApplyMethod: "",
   jobApplyValue: "",
@@ -174,6 +179,8 @@ export function JobWriteForm({
   const [place, setPlace] = useState(() => splitLocation(initial?.jobLocation ?? "").detail);
   const [paste, setPaste] = useState("");
   const [pasteNote, setPasteNote] = useState<string | null>(null);
+  // 새 글은 붙여넣기 칸을 펼쳐 두고, 수정할 때는 접어 둡니다.
+  const [pasteOpen, setPasteOpen] = useState(!postId);
   const [error, setError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -187,6 +194,7 @@ export function JobWriteForm({
   // 지원 딜러·대회 딜러는 여러 날짜 일정(날짜별 행사명·인원)을 받습니다.
   const multiDay = jobKind === "APPLY" || jobKind === "TOURNAMENT";
   const canAlwaysOpen = jobKind === "TEAM" || jobKind === "FIXED";
+  const taxKind = needsTax(jobKind);
   const hasApplyLink = jobKind === "TOURNAMENT" || jobKind === "TEAM" || jobKind === "APPLY";
   // 모든 분류가 이름 칸을 가집니다. 구인은 상호명, 팀은 팀 명, 대회는 대회명이 제목에 올라갑니다.
   const nameLabel = JOB_NAME_LABEL[jobKind];
@@ -238,6 +246,7 @@ export function JobWriteForm({
       put("jobTravelPayAmount", parsed.travelPayAmount);
     }
     if (parsed.alwaysOpen && canAlwaysOpen) next.jobAlwaysOpen = true;
+    if (parsed.taxDeduction && taxKind) next.jobTaxDeduction = parsed.taxDeduction;
     if (dated) next.jobDateFlexible = !parsed.workDate;
     setForm((prev) => ({ ...prev, ...next }));
     if (parsed.region) setRegion(parsed.region);
@@ -250,15 +259,18 @@ export function JobWriteForm({
       parsed.workDate && "날짜",
       parsed.payAmount && "급여",
       parsed.contact && "연락처",
+      parsed.taxDeduction && taxKind && "3.3% 공제",
       parsed.applyLink && "지원 링크",
     ].filter(Boolean);
     setPasteNote(`자동으로 채웠습니다: ${filled.join(", ") || "본문"}. 아래 내용을 확인하고 빈칸만 채워 등록하세요.`);
+    // 채운 뒤에는 붙여넣기 칸을 접어 아래 입력 칸이 바로 보이게 합니다.
+    setPasteOpen(false);
   }
 
   // 차비는 지원 딜러·급구·대회 딜러에만 있습니다.
   const travelPayField = (
     <div className="grid gap-2">
-      <label className="flex min-h-11 items-center gap-2 text-sm">
+      <label className={CHECK}>
         <input
           type="checkbox"
           className="size-5"
@@ -305,6 +317,7 @@ export function JobWriteForm({
     if (dated && !form.jobDateFlexible && !hasDate) return `날짜를 추가하거나 "${flexibleLabel}"를 선택하세요.`;
     const payOptional = jobKind === "TEAM" || (jobKind === "FIXED" && form.jobPayType === "협의");
     if (!payOptional && !form.jobPayAmount.trim()) return "급여를 입력하세요.";
+    if (taxKind && !form.jobTaxDeduction) return "3.3% 공제 여부를 선택하세요.";
     if (form.jobApplyValue.trim() && !/^https?:\/\/\S+$/i.test(form.jobApplyValue.trim())) {
       return "지원서 링크는 https:// 로 시작해야 합니다.";
     }
@@ -363,14 +376,25 @@ export function JobWriteForm({
           <Label htmlFor="job-paste" className="text-base font-black text-[#FEE500]">
             카톡 공고 붙여넣기 → 자동 채우기
           </Label>
+          <button
+            type="button"
+            onClick={() => setPasteOpen((open) => !open)}
+            aria-expanded={pasteOpen}
+            className="touch-target ml-auto inline-flex min-h-10 items-center gap-1 rounded-full border border-[#FEE500]/50 px-3 text-xs font-bold text-[#FEE500] hover:bg-[#FEE500]/10"
+          >
+            {pasteOpen ? "접기" : "펼치기"}
+            <ChevronDownIcon className={cn("size-4 transition-transform", pasteOpen && "rotate-180")} />
+          </button>
         </div>
+        {pasteOpen ? (
+        <>
         <p className="text-xs text-[#f3eccd]">
           아래 양식대로 적거나 오픈채팅방 공고를 그대로 붙여넣고 <b className="text-[#FEE500]">자동 채우기</b>를 누르세요.
           이름·날짜·인원·장소·시급·연락처가 채워지고, 원문은 본문에 그대로 들어갑니다.
         </p>
         <Textarea
           id="job-paste"
-          className="min-h-40 border-[#FEE500]/50 bg-[#141110] font-mono text-sm leading-relaxed"
+          className="min-h-32 border-[#FEE500]/50 bg-[#141110] font-mono text-sm leading-relaxed"
           placeholder={template}
           value={paste}
           onChange={(event) => setPaste(event.target.value)}
@@ -397,6 +421,8 @@ export function JobWriteForm({
             자동 채우기
           </Button>
         </div>
+        </>
+        ) : null}
         {pasteNote ? (
           <p className="rounded-lg bg-[#FEE500]/10 px-2.5 py-1.5 text-xs font-semibold text-[#FEE500]">{pasteNote}</p>
         ) : null}
@@ -409,12 +435,10 @@ export function JobWriteForm({
         <p className="write-title-input flex items-center break-keep">{preview}</p>
       </div>
 
-      <section className="grid gap-3" aria-label="기본 정보">
-        <p className="text-sm font-bold text-[#e7c98a]">
-          기본 정보 <span className="text-xs font-semibold text-[#9CA3AF]">· <Required /> 표시는 꼭 입력해야 합니다</span>
-        </p>
+      <section className={PANEL} aria-label="기본 정보">
+        <StepTitle n={1} title="기본 정보" hint={<><Required /> 표시는 꼭 입력해야 합니다</>} />
         <div className="grid gap-2">
-          <Label>
+          <Label className={LABEL}>
             {regionLabel} <Required />
           </Label>
           <div className="flex flex-wrap gap-1.5">
@@ -434,12 +458,12 @@ export function JobWriteForm({
               </button>
             ))}
           </div>
-          <Label htmlFor="job-address" className="mt-1">
+          <Label htmlFor="job-address" className={`${LABEL} mt-1`}>
             {jobKind === "TOURNAMENT" ? "장소 · 주소" : "상세주소"}
           </Label>
           <Input
             id="job-address"
-            className="h-11"
+            className={INPUT}
             value={place}
             placeholder={
               jobKind === "TEAM"
@@ -465,7 +489,7 @@ export function JobWriteForm({
             <div className={multiDay ? "grid gap-2 sm:col-span-2" : "grid gap-2"}>
               {multiDay ? (
                 <>
-                  <Label>
+                  <Label className={LABEL}>
                     {jobKind === "TOURNAMENT" ? "대회 일정" : "근무 일정"} <Required />
                     <span className="ml-1 text-xs font-normal text-[#9CA3AF]">여러 날짜를 한 번에 올릴 수 있습니다</span>
                   </Label>
@@ -477,7 +501,7 @@ export function JobWriteForm({
                 </>
               ) : (
                 <>
-                  <Label htmlFor="work-date">
+                  <Label htmlFor="work-date" className={LABEL}>
                     필요 날짜 <Required />
                   </Label>
                   <DateField
@@ -488,7 +512,7 @@ export function JobWriteForm({
                   />
                 </>
               )}
-              <label className="flex min-h-11 items-center gap-2 text-sm">
+              <label className={CHECK}>
                 <input
                   type="checkbox"
                   className="size-5"
@@ -502,13 +526,13 @@ export function JobWriteForm({
 
           {jobKind === "FIXED" ? (
             <div className="grid gap-2">
-              <Label htmlFor="pay-type">
+              <Label htmlFor="pay-type" className={LABEL}>
                 급여 <Required />
               </Label>
               <div className="flex gap-2">
                 <select
                   id="pay-type"
-                  className="h-11 shrink-0 rounded-lg border border-input bg-background px-2 text-base text-[#E5E7EB]"
+                  className={`${SELECT} shrink-0`}
                   value={form.jobPayType}
                   onChange={(event) => set("jobPayType", event.target.value)}
                 >
@@ -519,7 +543,7 @@ export function JobWriteForm({
                   ))}
                 </select>
                 <Input
-                  className="h-11"
+                  className={INPUT}
                   inputMode="numeric"
                   value={form.jobPayAmount}
                   placeholder="3000000"
@@ -546,8 +570,35 @@ export function JobWriteForm({
             />
           ) : null}
 
+          {taxKind ? (
+            <div className="grid gap-2" role="radiogroup" aria-label="3.3% 공제 여부">
+              <p className={LABEL}>
+                3.3% 공제 여부 <Required />
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {TAX_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.jobTaxDeduction === option.value}
+                    onClick={() => set("jobTaxDeduction", option.value)}
+                    className={cn(
+                      "touch-target min-h-12 rounded-xl border-2 text-base font-bold",
+                      form.jobTaxDeduction === option.value
+                        ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]"
+                        : "border-[#6b5a45] bg-[#0f0c0a] text-[#f3eadb] hover:border-[#c9a25c]",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-2">
-            <Label htmlFor="job-contact">
+            <Label htmlFor="job-contact" className={LABEL}>
               연락처 <Required />
             </Label>
             <Input
@@ -555,7 +606,7 @@ export function JobWriteForm({
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              className={contactError ? "h-11 border-rose-500" : "h-11"}
+              className={contactError ? `${INPUT} border-rose-500` : INPUT}
               aria-invalid={Boolean(contactError)}
               aria-describedby="job-contact-help"
               value={form.jobContact}
@@ -586,7 +637,7 @@ export function JobWriteForm({
           ) : null}
 
           {canAlwaysOpen ? (
-            <label className="flex min-h-11 items-center gap-2 self-end text-sm">
+            <label className={`${CHECK} self-end`}>
               <input
                 type="checkbox"
                 className="size-5"
@@ -599,10 +650,8 @@ export function JobWriteForm({
         </div>
       </section>
 
-      <section className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3" aria-label="추가 정보">
-        <p className="text-sm font-bold text-[#e7c98a]">
-          추가 정보 <span className="text-xs font-semibold text-[#9CA3AF]">· 아는 만큼만 적어 주세요</span>
-        </p>
+      <section className={PANEL} aria-label="추가 정보">
+        <StepTitle n={2} title="근무 조건 · 추가 정보" hint="아는 만큼만 적어 주세요" />
         <div className="grid gap-3 sm:grid-cols-2">
           {jobKind === "FIXED" ? (
             <>
@@ -629,15 +678,15 @@ export function JobWriteForm({
               <Field label="지원 방법" value={form.jobApplyMethod} onChange={(v) => set("jobApplyMethod", v)} placeholder="문자 지원 (성함/경력/거주지)" />
               {jobKind === "TOURNAMENT" ? (
                 <div className="grid gap-2">
-                  <Label htmlFor="deadline">모집 마감일</Label>
+                  <Label htmlFor="deadline" className={LABEL}>모집 마감일</Label>
                   <DateField id="deadline" value={form.jobDeadline} onChange={(value) => set("jobDeadline", value)} />
                 </div>
               ) : (
                 <div className="grid gap-2">
-                  <Label htmlFor="overtime">연장 유무</Label>
+                  <Label htmlFor="overtime" className={LABEL}>연장 유무</Label>
                   <select
                     id="overtime"
-                    className="h-11 w-full rounded-lg border border-input bg-background px-2 text-base text-[#E5E7EB]"
+                    className={`${SELECT} w-full`}
                     value={form.jobOvertime}
                     onChange={(event) => set("jobOvertime", event.target.value)}
                   >
@@ -648,7 +697,7 @@ export function JobWriteForm({
               )}
               {travelPayField}
               {jobKind === "APPLY" ? (
-                <label className="flex min-h-11 items-center gap-2 self-start text-sm">
+                <label className={`${CHECK} self-start`}>
                   <input
                     type="checkbox"
                     className="size-5"
@@ -689,14 +738,17 @@ export function JobWriteForm({
             </>
           ) : null}
         </div>
+      </section>
 
+      <section className={PANEL} aria-label="상세 내용">
         <div className="grid gap-2">
-          <Label htmlFor="job-content" className="write-label">
-            상세 내용 <Required />
+          <Label htmlFor="job-content" className="sr-only">
+            상세 내용
           </Label>
+          <StepTitle n={3} title={<>상세 내용 <Required /></>} hint="카톡 공고를 붙여넣었다면 원문이 들어가 있습니다" />
           <Textarea
             id="job-content"
-            className="write-body-input"
+            className="write-body-input min-h-56 border-[#6b5a45] bg-[#0f0c0a] text-base leading-relaxed text-white"
             placeholder="근무 조건, 분위기, 참고 사항을 적어 주세요 (카톡 공고를 붙여넣으면 원문이 들어갑니다)"
             value={form.content}
             onChange={(event) => set("content", event.target.value)}
@@ -708,6 +760,23 @@ export function JobWriteForm({
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
         {pending ? "저장 중…" : postId ? "수정" : "등록"}
       </Button>
+    </div>
+  );
+}
+
+/** 입력 영역 패널 · 글자 · 입력칸(어두운 배경에서도 잘 보이게) */
+const PANEL = "grid gap-4 rounded-xl border border-[#5a4a38] bg-[#17120f] p-3 sm:p-4";
+const LABEL = "text-[15px] font-bold text-[#f3eadb]";
+const INPUT = "h-12 border-[#6b5a45] bg-[#0f0c0a] text-base text-white placeholder:text-[#8b8178]";
+const SELECT = "h-12 rounded-lg border border-[#6b5a45] bg-[#0f0c0a] px-2 text-base text-white";
+const CHECK = "flex min-h-11 items-center gap-2 text-[15px] font-semibold text-[#f3eadb]";
+
+function StepTitle({ n, title, hint }: { n: number; title: React.ReactNode; hint?: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-white/10 pb-2">
+      <span className="grid size-7 place-items-center rounded-full bg-[#c9a25c] text-sm font-black text-[#1d1611]">{n}</span>
+      <h2 className="text-lg font-black text-[#f3eadb]">{title}</h2>
+      {hint ? <span className="text-xs font-semibold text-[#b8ab98]">{hint}</span> : null}
     </div>
   );
 }
@@ -737,11 +806,11 @@ function Field({
 }) {
   return (
     <div className="grid gap-2">
-      <Label>
+      <Label className={LABEL}>
         {label} {required ? <Required /> : null}
       </Label>
       <Input
-        className="h-11"
+        className={INPUT}
         value={value}
         inputMode={numeric ? "numeric" : undefined}
         placeholder={placeholder}

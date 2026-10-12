@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { dateRangeLabel, formatWon } from "@/lib/jobs";
 import { todayKstDate } from "@/lib/dates";
+import { taxLabel } from "@/lib/job-tax";
 import { eventsDateLabel, groupDateLabel, groupJobEvents, parseJobEvents } from "@/lib/job-events";
 import { cn } from "cn";
 
@@ -29,6 +30,8 @@ export type JobFactsPost = {
   jobApplyValue?: string | null;
   jobAlwaysOpen?: boolean;
   jobEvents?: string | null;
+  /** 3.3% 공제 여부 */
+  jobTaxDeduction?: string | null;
 };
 
 /** 근무 날짜. 여러 날이면 "10/31~11/1" 범위로 보여 줍니다. */
@@ -128,6 +131,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["행사 일정", job.jobEvents ? null : job.jobSchedule],
             ["모집 인원", job.jobHeadcount],
             ["급여", `시급 ${formatWon(job.jobPayAmount) || job.jobPayAmount || "미정"}`],
+            ["3.3% 공제", taxLabel(job.jobTaxDeduction)],
             ["보장 시간", job.jobGuaranteedHours],
             ["연장", job.jobOvertime],
             ["차비 지원", travelPayFact(job)],
@@ -144,6 +148,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["장소", job.jobLocation],
             ["대회 일정", workDateLabel(job, "추후 공지")],
             ["급여", `시급 ${formatWon(job.jobPayAmount) || job.jobPayAmount || "미정"}`],
+            ["3.3% 공제", taxLabel(job.jobTaxDeduction)],
             ["보장 시간", job.jobGuaranteedHours],
             ["행사 일정", job.jobEvents ? null : job.jobSchedule],
             ["모집 인원", job.jobHeadcount],
@@ -161,6 +166,7 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             ["근무지", job.jobLocation],
             ["필요 날짜", workDateLabel(job, "즉시 / 날짜 협의")],
             ["시급", formatWon(job.jobPayAmount) || job.jobPayAmount],
+            ["3.3% 공제", taxLabel(job.jobTaxDeduction)],
             ["근무 시간", job.jobWorkHours],
             ["차비 지원", travelPayFact(job)],
             ["경력 요구조건", job.jobExperience],
@@ -224,6 +230,7 @@ const KEY_FACTS = new Set([
   "급여",
   "시급",
   "급여 금액",
+  "3.3% 공제",
   "근무 시간",
   "출근 시간",
   "보장 시간",

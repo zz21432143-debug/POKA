@@ -185,6 +185,8 @@ model Post {
   jobTravelPay       Boolean   @default(false)
   /// 차비 금액(숫자 문자열). 지원 딜러·급구 공고
   jobTravelPayAmount String?
+  /// 3.3% 공제 여부: "공제" | "없음" (지원 딜러·대회 딜러·급구)
+  jobTaxDeduction    String?
   jobSnacks          Boolean   @default(false)
   jobDressCode       String?
   jobApplyMethod     String?
