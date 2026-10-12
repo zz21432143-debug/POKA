@@ -16,13 +16,26 @@ import {
   type RotationAction,
   type RotationStateView,
 } from "@/lib/rotation";
-import { buildPlan, dealerSchedule, formatClock, parseClock, slotIndexAt, swapInSlot, type RotationPlan } from "@/lib/rotation-plan";
+import {
+  EXTEND_WHEN_LEFT,
+  PLAN_HORIZON,
+  alignToStart,
+  buildPlan,
+  dealerSchedule,
+  extendPlan,
+  formatClock,
+  parseClock,
+  retimeFrom,
+  slotIndexAt,
+  swapInSlot,
+  type RotationPlan,
+} from "@/lib/rotation-plan";
 import { downloadDealerImage, downloadTimeImage, timeSheetText } from "@/components/tools/rotation-export";
 
 /** 다른 기기 변경 확인 간격 */
 const POLL_MS = 2000;
-/** 시간표에서 최소로 보여 줄 줄 수 */
-const MIN_ROWS = 4;
+/** 시간표에서 기본으로 보여 줄 칸 수(바로 앞 칸 1개 + 지금 + 다음 …) */
+const VISIBLE_COLS = 12;
 const SETUP_CHOICES = [0, 15, 30, 45, 60] as const;
 
 const CHIP: Record<DealerStatus, string> = {
@@ -57,6 +70,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [labelsText, setLabelsText] = useState(() => formatTableLabels(initial.tableLabels));
   const [editing, setEditing] = useState<{ id: string; name: string; startTime: string } | null>(null);
   const [cell, setCell] = useState<{ slot: number; table: number } | null>(null);
+  const [timeEdit, setTimeEdit] = useState<{ index: number; value: string } | null>(null);
   const [view, setView] = useState<"table" | "dealer">("table");
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -114,14 +128,17 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   }, []);
 
   const start = parseClock(state.planStart) ?? 600;
-  const end = parseClock(state.planEnd) ?? 1320;
   const now = nowMinutes(start, clock);
   const labels = state.tableLabels;
   const plan = state.plan && state.plan.tables === state.tableCount ? state.plan : null;
   const names = useMemo(() => new Map(state.dealers.map((d) => [d.id, d.name])), [state.dealers]);
   const name = useCallback((id: string | null) => (id ? (names.get(id) ?? "(삭제됨)") : ""), [names]);
   const { current, next } = plan ? slotIndexAt(plan, now) : { current: -1, next: -1 };
-  const slotLabel = useCallback((index: number) => (plan && index === 0 && (plan.setup ?? 0) > 0 ? "세팅" : null), [plan]);
+  // 세팅 칸: 게임 시작 setup분 전 칸(지난 칸을 덜어 내도 시각으로 알아봅니다)
+  const slotLabel = useCallback(
+    (index: number) => (plan && (plan.setup ?? 0) > 0 && plan.slots[index]?.at === plan.start - (plan.setup ?? 0) ? "세팅" : null),
+    [plan],
+  );
 
   const counts = useMemo(() => {
     const c: Record<DealerStatus, number> = { WAIT: 0, IN: 0, OFF: 0, LEFT: 0 };
@@ -142,16 +159,50 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   function makePlan(fromNow: boolean) {
     const keep = fromNow && plan ? plan.slots.filter((_, index) => index <= current) : [];
+    // 끝 시간 없음: 지금(또는 게임 시작)부터 12시간치를 짜 두고, 남은 칸이 줄면 자동으로 이어 짭니다.
     const built = buildPlan({
       dealers: planDealers(state.dealers, start),
       tables: state.tableCount,
       start,
-      end,
+      end: Math.max(now, start) + PLAN_HORIZON,
       interval: state.interval,
       setup: state.setupMinutes,
       keep,
     });
     void send({ type: "savePlan", plan: built });
+  }
+
+  // 남은 칸이 적으면 같은 흐름으로 이어 짜기(한 번만)
+  const extendingRef = useRef(0);
+  useEffect(() => {
+    if (!plan || busy) return;
+    const left = plan.slots.length - Math.max(0, current) - 1;
+    if (left >= EXTEND_WHEN_LEFT || extendingRef.current === state.version) return;
+    extendingRef.current = state.version;
+    void send({ type: "savePlan", plan: extendPlan(plan, planDealers(state.dealers, start), current) });
+  }, [plan, busy, current, state.version, state.dealers, start, send]);
+
+  /** 시간 바꾸기: 그 칸을 새 시간으로, 뒤 칸은 간격대로 */
+  function saveTime() {
+    if (!plan || !timeEdit) return;
+    const minutes = parseClock(timeEdit.value);
+    if (minutes == null) return;
+    const prev = timeEdit.index > 0 ? plan.slots[timeEdit.index - 1].at : -Infinity;
+    // 밤샘: 앞 칸보다 이르면 다음 날로
+    let at = alignToStart(minutes, start);
+    while (at <= prev) at += 1440;
+    void send({ type: "savePlan", plan: retimeFrom(plan, timeEdit.index, at) });
+    setTimeEdit(null);
+  }
+
+  /** 간격 바꾸기: 설정을 바꾸고, 지금 이후 칸 시간을 새 간격으로 맞춥니다. */
+  async function changeInterval(interval: number) {
+    if (!(await send({ type: "setSettings", interval }))) return;
+    if (!plan) return;
+    const from = Math.max(0, current + 1);
+    if (from >= plan.slots.length) return;
+    const base = from > 0 ? plan.slots[from - 1].at + interval : plan.slots[0].at;
+    await send({ type: "savePlan", plan: retimeFrom(plan, from, base, interval) });
   }
 
   function changeCell(dealerId: string | null) {
@@ -172,21 +223,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     return { at: after.at, moves, toRest };
   }, [plan, current, next, labels]);
 
-  // 보여 줄 줄: 지금 칸부터, 최소 4줄(뒤가 모자라면 앞 칸까지)
+  // 보여 줄 칸: 바로 앞 칸 1개, 지금 칸(2번째), 그 뒤 칸들
   const rows = useMemo(() => {
     if (!plan) return [];
     const all = plan.slots.map((slot, index) => ({ slot, index }));
     if (showAll) return all;
-    let from = Math.max(0, current);
-    if (all.length - from < MIN_ROWS) from = Math.max(0, all.length - MIN_ROWS);
-    return all.slice(from);
+    const from = Math.max(0, current - 1);
+    return all.slice(from, from + VISIBLE_COLS);
   }, [plan, current, showAll]);
   const rowIndexes = rows.map((r) => r.index);
 
-  const endPassed = Boolean(plan && plan.slots.length > 0 && now >= plan.slots[plan.slots.length - 1].at + plan.interval);
   const parsedLabels = parseTableLabels(labelsText);
 
-  // 칸 바꾸기 후보: 그 시각에 일할 수 있는 모든 딜러(휴무·그 시각 전 퇴근 제외)
+  // 칸 바꾸기 후보: 그 시간에 일할 수 있는 모든 딜러(휴무·그 시각 전 퇴근 제외)
   const candidates = useMemo(() => {
     if (!plan || !cell) return null;
     const slot = plan.slots[cell.slot];
@@ -216,7 +265,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </span>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <label className="grid gap-1 text-xs font-bold text-zinc-300">
             게임 시작
             <input
@@ -228,21 +277,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             />
           </label>
           <label className="grid gap-1 text-xs font-bold text-zinc-300">
-            끝
-            <input
-              type="time"
-              defaultValue={state.planEnd}
-              key={`e-${state.planEnd}`}
-              onBlur={(e) => e.target.value && e.target.value !== state.planEnd && void send({ type: "setSettings", planEnd: e.target.value })}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold text-white"
-            />
-          </label>
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
             로테이션 간격
             <select
               value={state.interval}
               disabled={busy}
-              onChange={(e) => void send({ type: "setSettings", interval: Number(e.target.value) })}
+              onChange={(e) => void changeInterval(Number(e.target.value))}
               className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
               {INTERVAL_CHOICES.map((n) => (
@@ -267,7 +306,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ))}
             </select>
           </label>
-          <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-4">
+          <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-3">
             테이블 번호 ({state.tableCount}개) · 예: 5-12, 15
             <span className="flex gap-1.5">
               <input
@@ -324,18 +363,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       {error ? <p className="rounded-lg bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">{error}</p> : null}
 
       {/* 다시 짜기 안내 */}
-      {missing.length || leftInPlan.length || endPassed ? (
+      {missing.length || leftInPlan.length ? (
         <section aria-label="다시 짜기 안내" className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-rose-500 bg-rose-950/50 p-3 text-sm font-bold">
           <span className="text-rose-200">
             {missing.length ? `출근한 ${missing.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 빠져 있습니다. ` : ""}
             {leftInPlan.length ? `퇴근·휴무인 ${leftInPlan.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 있습니다. ` : ""}
-            {endPassed ? `시간표 끝(${formatClock(end)})이 지났습니다. 끝 시각을 늘리고 다시 짜세요.` : ""}
           </span>
-          {!endPassed ? (
-            <button type="button" disabled={busy} onClick={() => makePlan(true)} className="ml-auto min-h-10 rounded-lg bg-amber-400 px-3 text-sm font-black text-black">
-              지금 이후 다시 짜기
-            </button>
-          ) : null}
+          <button type="button" disabled={busy} onClick={() => makePlan(true)} className="ml-auto min-h-10 rounded-lg bg-amber-400 px-3 text-sm font-black text-black">
+            지금 이후 다시 짜기
+          </button>
         </section>
       ) : null}
 
@@ -411,47 +447,58 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         {!plan ? (
           <p className="rounded-xl border border-dashed border-white/25 p-4 text-sm text-zinc-300">
             {state.plan ? "테이블 수가 바뀌어 시간표를 다시 짜야 합니다. " : ""}
-            딜러를 등록하고 게임 시작·끝, 간격, 테이블 번호를 정한 뒤 <b className="text-amber-300">로테이션 짜기</b>를 누르세요.
+            딜러를 등록하고 게임 시작, 간격, 테이블 번호를 정한 뒤 <b className="text-amber-300">로테이션 짜기</b>를 누르세요.
           </p>
         ) : view === "table" ? (
           <div className="max-h-[78dvh] overflow-auto rounded-xl border border-white/15">
-            <table className="min-w-full border-collapse">
-              <thead className="sticky top-0 z-20 bg-zinc-900">
+            {/* 시간은 맨 위 한 줄, 테이블 번호는 왼쪽 */}
+            <table className="border-collapse">
+              <thead className="sticky top-0 z-20">
                 <tr>
-                  <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">시각</th>
-                  {labels.map((label) => (
-                    <th key={label} className="px-1 py-2 text-base font-black text-emerald-300">
-                      T{label}
-                    </th>
-                  ))}
-                  <th className="px-2 py-2 text-left text-sm font-black text-amber-300">휴식</th>
-                  <th className="px-2 py-2 text-sm font-black text-zinc-300">시각</th>
+                  <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">테이블  시간</th>
+                  {rows.map(({ slot, index }) => {
+                    const time = formatClock(slot.at);
+                    return (
+                      <th
+                        key={slot.at}
+                        data-slot={time}
+                        className={cn("px-1 py-1.5", index === current ? "bg-emerald-700" : index === next ? "bg-amber-500" : "bg-zinc-900")}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setTimeEdit({ index, value: time })}
+                          title="시간 바꾸기"
+                          className={cn(
+                            "grid w-full min-w-[5.5rem] rounded-md px-1 py-0.5 text-center hover:bg-white/10",
+                            index === next ? "text-black" : "text-white",
+                            index < current && "opacity-60",
+                          )}
+                        >
+                          <span className="text-xl font-black">{time}</span>
+                          <span className="text-[11px] font-bold">
+                            {slotLabel(index) ?? (index === current ? "지금" : index === next ? "다음 교대" : "")} ✎
+                          </span>
+                        </button>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ slot, index }) => {
-                  const time = formatClock(slot.at);
-                  return (
-                    <tr
-                      key={slot.at}
-                      data-slot={time}
-                      className={cn(
-                        "border-t-2 border-white/10",
-                        index === current ? "bg-emerald-950" : index === next ? "bg-[#2a1d05]" : "bg-black",
-                        index < current && "opacity-50",
-                      )}
-                    >
-                      <th className="sticky left-0 z-10 bg-inherit px-2 py-2 text-left whitespace-nowrap">
-                        <span className={cn("block text-xl font-black", index === current ? "text-emerald-300" : index === next ? "text-amber-300" : "text-white")}>
-                          {time}
-                        </span>
-                        <span className="block text-[11px] font-bold text-zinc-400">{slotLabel(index) ?? (index === current ? "지금" : index === next ? "다음" : "")}</span>
-                      </th>
-                      {slot.seats.map((id, t) => (
-                        <td key={t} className="px-1 py-1.5">
+                {labels.map((label, t) => (
+                  <tr key={label} className="border-t-2 border-white/10">
+                    <th className="sticky left-0 z-10 bg-zinc-900 px-3 py-1.5 text-left text-xl font-black whitespace-nowrap text-emerald-300">T{label}</th>
+                    {rows.map(({ slot, index }) => {
+                      const id = slot.seats[t];
+                      const time = formatClock(slot.at);
+                      return (
+                        <td
+                          key={slot.at}
+                          className={cn("px-1 py-1", index === current ? "bg-emerald-950" : index === next ? "bg-[#2a1d05]" : "bg-black", index < current && "opacity-50")}
+                        >
                           <button
                             type="button"
-                            data-cell={`${time}-T${labels[t]}`}
+                            data-cell={`${time}-T${label}`}
                             onClick={() => setCell({ slot: index, table: t })}
                             className={cn(
                               "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
@@ -460,17 +507,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             )}
                           >
                             <span className="text-[10px] font-black text-emerald-300">
-                              {time} · T{labels[t]}
+                              T{label} · {time}
                             </span>
                             <span className={cn("truncate text-base font-black", id ? "text-white" : "text-rose-300")}>{id ? name(id) : "비어 있음"}</span>
                           </button>
                         </td>
-                      ))}
-                      <td className="px-2 py-1.5 text-sm font-bold text-amber-200">{slot.rest.map(name).join(", ") || "—"}</td>
-                      <td className="px-2 py-1.5 text-base font-black whitespace-nowrap text-zinc-300">{time}</td>
-                    </tr>
-                  );
-                })}
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-amber-400/40">
+                  <th className="sticky left-0 z-10 bg-zinc-900 px-3 py-1.5 text-left text-base font-black text-amber-300">휴식</th>
+                  {rows.map(({ slot, index }) => (
+                    <td key={slot.at} className={cn("max-w-[7rem] px-1.5 py-1.5 align-top text-xs font-bold text-amber-200", index < current && "opacity-50")}>
+                      {slot.rest.map(name).join(", ") || "—"}
+                    </td>
+                  ))}
+                </tr>
               </tbody>
             </table>
           </div>
@@ -581,6 +634,30 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </div>
         </details>
       </section>
+
+      {/* 시간 바꾸기 */}
+      {plan && timeEdit ? (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="시간 바꾸기">
+          <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">교대 시간 바꾸기</h3>
+            <p className="text-xs text-zinc-400">이 칸 시간을 바꾸면 뒤 칸은 로테이션 간격({plan.interval}분)대로 다시 맞춰집니다. 배정은 그대로입니다.</p>
+            <input
+              type="time"
+              value={timeEdit.value}
+              onChange={(e) => setTimeEdit({ ...timeEdit, value: e.target.value })}
+              className="h-12 rounded-lg border border-white/20 bg-black px-2 text-xl font-black text-white"
+            />
+            <div className="flex gap-2">
+              <button type="button" disabled={busy} onClick={saveTime} className="min-h-11 rounded-lg bg-amber-400 px-4 text-sm font-black text-black">
+                저장
+              </button>
+              <button type="button" onClick={() => setTimeEdit(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* 칸 바꾸기 */}
       {plan && cell && candidates ? (

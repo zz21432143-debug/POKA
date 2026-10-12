@@ -119,8 +119,13 @@ export function buildPlan(options: {
   // 칸 시각: (세팅 칸) + 시작부터 간격마다. 이미 둔 칸(keep) 다음부터 짭니다.
   const times: number[] = [];
   if (setup > 0) times.push(first);
-  for (let at = start; at < end; at += interval) times.push(at);
   const lastKept = keep.length ? keep[keep.length - 1].at : Number.NEGATIVE_INFINITY;
+  if (keep.length) {
+    // 이어 짜기: 마지막으로 둔 칸 + 간격부터(시간을 손으로 바꿔 간격이 어긋났어도 그 뒤부터 맞춤)
+    for (let at = lastKept + interval; at < end; at += interval) times.push(at);
+  } else {
+    for (let at = start; at < end; at += interval) times.push(at);
+  }
   for (const at of times.filter((t) => t > lastKept)) {
     // 세팅 칸은 게임 시작 때 올 딜러(예정 출근이 시작 시각 이전)를 모두 넣습니다.
     const checkAt = setup > 0 && at === first ? start : at;
@@ -204,4 +209,36 @@ export function swapInSlot(slot: PlanSlot, tableIndex: number, dealerId: string 
   }
   seats[tableIndex] = dealerId;
   return { ...slot, seats, rest };
+}
+
+/** 끝 없이 돌리기: 한 번에 미리 짜 두는 길이(분)와, 남은 칸이 이만큼 아래로 줄면 자동으로 이어 짭니다. */
+export const PLAN_HORIZON = 720;
+export const EXTEND_WHEN_LEFT = 8;
+/** 저장할 때 남겨 두는 지난 칸 수(너무 길어지지 않게) */
+export const KEEP_PAST_SLOTS = 60;
+
+/**
+ * 시간 바꾸기: index 칸을 at으로 바꾸고, 그 뒤 칸은 간격대로 다시 맞춥니다.
+ * (예: 13:30 → 13:35로 바꾸면 뒤는 13:50, 14:05 …) 배정은 그대로 둡니다.
+ */
+export function retimeFrom(plan: RotationPlan, index: number, at: number, interval = plan.interval): RotationPlan {
+  const slots = plan.slots.map((slot, j) => (j < index ? slot : { ...slot, at: at + (j - index) * interval }));
+  return { ...plan, interval, slots };
+}
+
+/** 남은 칸이 적으면 그 흐름 그대로 뒤를 이어 짭니다(끝 시간 없음). 지난 칸은 KEEP_PAST_SLOTS개만 남깁니다. */
+export function extendPlan(plan: RotationPlan, dealers: PlanDealer[], current: number, horizon = PLAN_HORIZON): RotationPlan {
+  const last = plan.slots[plan.slots.length - 1];
+  if (!last) return plan;
+  const built = buildPlan({
+    dealers,
+    tables: plan.tables,
+    start: plan.start,
+    end: last.at + plan.interval + horizon,
+    interval: plan.interval,
+    setup: plan.setup,
+    keep: plan.slots,
+  });
+  const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
+  return { ...built, slots: built.slots.slice(trimFrom) };
 }

@@ -88,3 +88,27 @@ describe("setup slot before the game", () => {
     assert.equal(again.slots.length, 5);
   });
 });
+
+describe("open-ended rotation", async () => {
+  const { retimeFrom, extendPlan } = await import("./rotation-plan");
+  it("retimes a slot and lines up later slots to the interval", () => {
+    const plan = buildPlan({ dealers: dealers(5), tables: 4, start: 780, end: 900, interval: 15 });
+    const moved = retimeFrom(plan, 2, 815); // 13:30 → 13:35
+    assert.deepEqual(moved.slots.map((s) => formatClock(s.at)), ["13:00", "13:15", "13:35", "13:50", "14:05", "14:20", "14:35", "14:50"]);
+    assert.deepEqual(moved.slots[2].seats, plan.slots[2].seats);
+    // 간격을 바꾸면 그 뒤 칸만 새 간격으로
+    const wider = retimeFrom(plan, 2, plan.slots[2].at, 20);
+    assert.deepEqual(wider.slots.slice(1, 4).map((s) => formatClock(s.at)), ["13:15", "13:30", "13:50"]);
+  });
+
+  it("keeps going past the first horizon without an end time", () => {
+    const plan = buildPlan({ dealers: dealers(6), tables: 4, start: 600, end: 600 + 60, interval: 20 });
+    const longer = extendPlan(plan, dealers(6), 2, 120);
+    assert.deepEqual(longer.slots.slice(0, 3), plan.slots);
+    assert.ok(longer.slots.length >= 9, String(longer.slots.length));
+    assert.equal(longer.slots[3].at, 660);
+    // 손으로 바꾼 시간 뒤로도 간격대로 이어짐
+    const shifted = retimeFrom(plan, 2, 645);
+    assert.equal(extendPlan(shifted, dealers(6), 2, 60).slots[3].at, 665);
+  });
+});
