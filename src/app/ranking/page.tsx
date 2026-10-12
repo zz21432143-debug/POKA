@@ -10,6 +10,7 @@ import {
   parseRankPeriod,
   parseRankTab,
   rankScoreLabel,
+  tabHasPeriods,
   type RankPeriod,
   type RankTab,
 } from "@/lib/ranking";
@@ -20,7 +21,7 @@ export const metadata: Metadata = { title: "랭킹" };
 export const dynamic = "force-dynamic";
 
 const TABS: { id: RankTab; label: string }[] = [
-  { id: "points", label: "포인트 랭킹" },
+  { id: "level", label: "레벨 랭킹" },
   { id: "marks", label: "마크 수집 랭킹" },
   { id: "attendance", label: "출석 랭킹" },
 ];
@@ -32,10 +33,10 @@ const PERIODS: { id: RankPeriod; label: string }[] = [
 ];
 
 const NOTES: Record<RankTab, Record<RankPeriod, string>> = {
-  points: {
-    all: "지금 보유한 포인트 순입니다.",
-    week: "이번 주 월요일부터 획득한 포인트입니다.",
-    month: "이번 달 1일부터 획득한 포인트입니다.",
+  level: {
+    all: "레벨이 높은 순입니다. 같은 레벨이면 누적 경험치가 많은 회원이 앞에 섭니다.",
+    week: "레벨이 높은 순입니다. 같은 레벨이면 누적 경험치가 많은 회원이 앞에 섭니다.",
+    month: "레벨이 높은 순입니다. 같은 레벨이면 누적 경험치가 많은 회원이 앞에 섭니다.",
   },
   marks: {
     all: "보유한 일반 요괴 마크 종수입니다. 업적 마크는 포함하지 않습니다.",
@@ -56,7 +57,8 @@ export default async function RankingPage({
 }) {
   const query = await searchParams;
   const tab = parseRankTab(query.tab);
-  const period = parseRankPeriod(query.period);
+  // 레벨 랭킹은 지금 순위만 있어서 기간을 나누지 않습니다.
+  const period = tabHasPeriods(tab) ? parseRankPeriod(query.period) : "all";
   const [rows, viewer] = await Promise.all([
     getRanking(tab, period).catch(() => []),
     getCurrentUser().catch(() => null),
@@ -68,7 +70,7 @@ export default async function RankingPage({
         <div>
           <p className="yokai-shop-kicker">실시간</p>
           <h1>랭킹</h1>
-          <p>주간·월간 1위는 프로필 마크에 황금 왕관과 오라가 붙습니다. 1~3위는 왕관으로 구분합니다.</p>
+          <p>레벨 랭킹 1위와 마크·출석 주간·월간 1위는 프로필 마크에 황금 왕관과 오라가 붙습니다. 1~3위는 왕관으로 구분합니다.</p>
         </div>
       </header>
       <div className="rank-tabs" role="tablist">
@@ -84,6 +86,7 @@ export default async function RankingPage({
           </Link>
         ))}
       </div>
+      {tabHasPeriods(tab) ? (
       <div className="rank-periods">
         {PERIODS.map((item) => (
           <Link
@@ -95,6 +98,7 @@ export default async function RankingPage({
           </Link>
         ))}
       </div>
+      ) : null}
       <p className="yokai-note">{NOTES[tab][period]}</p>
       {rows.length === 0 ? (
         <p className="rank-empty">아직 이 구간의 기록이 없습니다.</p>

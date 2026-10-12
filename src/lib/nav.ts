@@ -81,7 +81,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     collapsible: true,
     items: [
       { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
-      { href: "/ranking", label: "랭킹", hint: "포인트 · 수집 · 출석", icon: "pagoda" },
+      { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "brush" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "gourd" },

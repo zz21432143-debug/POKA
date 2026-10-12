@@ -6,7 +6,8 @@ import { ensurePointLedger } from "@/lib/point-ledger";
 import { shiftDate } from "@/lib/dates";
 import { SHOP_MARKS } from "@/lib/yokai-marks";
 
-export type RankTab = "points" | "marks" | "attendance";
+/** level: 레벨 높은 순(같은 레벨이면 경험치 많은 순). 예전 points 주소는 level로 엽니다. */
+export type RankTab = "level" | "marks" | "attendance";
 export type RankPeriod = "all" | "week" | "month";
 
 export type RankRow = {
@@ -21,7 +22,12 @@ const YOKAI_SLUGS = SHOP_MARKS.map((mark) => mark.slug);
 
 export function parseRankTab(value: string | undefined): RankTab {
   if (value === "marks" || value === "attendance") return value;
-  return "points";
+  return "level";
+}
+
+/** 기간을 나눌 수 있는 탭(레벨은 지금 순위만 있음) */
+export function tabHasPeriods(tab: RankTab) {
+  return tab !== "level";
 }
 
 export function parseRankPeriod(value: string | undefined): RankPeriod {
@@ -64,25 +70,13 @@ function toRows(raw: RawRow[]): RankRow[] {
     }));
 }
 
-async function pointRows(period: RankPeriod): Promise<RawRow[]> {
-  if (period === "all") {
-    return prisma.$queryRaw<RawRow[]>`
-      SELECT nickname, level, points AS score, "profileMarkImageUrl", "isMaster"
-      FROM "User"
-      WHERE "withdrawnAt" IS NULL AND points > 0
-      ORDER BY points DESC, level DESC, nickname ASC
-      LIMIT 20
-    `;
-  }
-  await ensurePointLedger();
-  const start = periodStart(period)!;
+/** 레벨 랭킹: 레벨 높은 순, 같은 레벨이면 누적 경험치 많은 순 */
+async function levelRows(): Promise<RawRow[]> {
   return prisma.$queryRaw<RawRow[]>`
-    SELECT u.nickname, u.level, SUM(p.delta)::int AS score, u."profileMarkImageUrl", u."isMaster"
-    FROM "PointLedger" p
-    JOIN "User" u ON u.id = p."userId"
-    WHERE p.delta > 0 AND p."createdAt" >= ${start} AND u."withdrawnAt" IS NULL
-    GROUP BY u.id
-    ORDER BY score DESC, u.level DESC, u.nickname ASC
+    SELECT nickname, level, exp AS score, "profileMarkImageUrl", "isMaster"
+    FROM "User"
+    WHERE "withdrawnAt" IS NULL AND exp > 0
+    ORDER BY level DESC, exp DESC, nickname ASC
     LIMIT 20
   `;
 }
@@ -141,7 +135,7 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
 
 export async function getRanking(tab: RankTab, period: RankPeriod): Promise<RankRow[]> {
   const raw =
-    tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await pointRows(period);
+    tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await levelRows();
   return toRows(raw);
 }
 
@@ -168,7 +162,7 @@ export async function weeklyPointsWinner(weekStart: string) {
 export function rankScoreLabel(tab: RankTab, score: number) {
   if (tab === "marks") return `${score.toLocaleString()}종`;
   if (tab === "attendance") return `${score.toLocaleString()}일`;
-  return `${score.toLocaleString()} P`;
+  return `${score.toLocaleString()} EXP`;
 }
 
 let crownCache: { at: number; names: string[] } | null = null;
@@ -179,11 +173,14 @@ export async function getCrownNicknames(): Promise<string[]> {
   if (crownCache && now - crownCache.at < 20_000) return crownCache.names;
   const names = new Set<string>();
   for (const period of ["week", "month"] as const) {
-    for (const tab of ["points", "marks", "attendance"] as const) {
+    for (const tab of ["marks", "attendance"] as const) {
       const [first] = await getRanking(tab, period).catch(() => []);
       if (first) names.add(first.nickname);
     }
   }
+  // 레벨 랭킹 1위
+  const [topLevel] = await getRanking("level", "all").catch(() => []);
+  if (topLevel) names.add(topLevel.nickname);
   const list = [...names];
   crownCache = { at: now, names: list };
   return list;
