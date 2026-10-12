@@ -69,7 +69,7 @@ export function ProfileWidget({
           처음이신가요?
           <Link
             href="/login?tab=signup"
-            className="touch-target inline-flex min-h-9 items-center font-semibold text-primary hover:underline"
+            className="touch-target inline-flex min-h-11 items-center px-2 font-semibold text-primary hover:underline"
           >
             회원가입
           </Link>
@@ -185,7 +185,7 @@ function AttendanceStreakCard({
       ) : (
         <Link
           href="/attendance"
-          className="mt-0.5 inline-flex min-h-8 items-center text-[13px] font-semibold text-primary hover:underline"
+          className="touch-target mt-0.5 inline-flex min-h-11 items-center text-[13px] font-semibold text-primary hover:underline"
         >
           출석체크 하러 가기 →
         </Link>

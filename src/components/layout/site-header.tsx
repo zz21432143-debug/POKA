@@ -22,7 +22,7 @@ export function SiteHeader({
             <PokaLogo onDark />
           </Link>
         </div>
-        <Link href="/" className="relative z-0 flex min-w-0 justify-center overflow-hidden lg:hidden">
+        <Link href="/" className="relative z-0 flex min-h-11 min-w-0 items-center justify-center overflow-hidden lg:hidden">
           <PokaLogo onDark compact />
         </Link>
         <TopNav />

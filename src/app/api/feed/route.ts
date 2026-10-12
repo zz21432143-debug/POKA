@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     id: post.id,
     boardType: post.boardType,
     title: post.title,
-    content: post.isPrivate ? "" : post.content,
+    // 본문(content)은 목록에 쓰지 않으며, 비로그인에게 본문이 새지 않도록 내려보내지 않습니다.
     isPrivate: post.isPrivate,
     author: post.author,
     upvoteCount: post.upvoteCount,

@@ -6,6 +6,7 @@ import { JobCards, type JobCardData } from "@/components/jobs/job-cards";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { toJobCard } from "@/lib/load-feed";
 import { cn } from "cn";
+import { getCurrentUser } from "@/lib/current-user";
 
 export const metadata: Metadata = { title: "검색", robots: { index: false } };
 
@@ -38,6 +39,8 @@ export default async function SearchPage({
   let posts: PostSummary[] = [];
   let jobTotal = 0;
   let postTotal = 0;
+  // 본문 검색은 로그인 회원만. 비로그인은 제목·지역으로만 찾아 본문을 떠볼 수 없게 합니다.
+  const viewer = query ? await getCurrentUser().catch(() => null) : null;
   if (query) {
     const base = {
       hidden: false,
@@ -46,7 +49,7 @@ export default async function SearchPage({
       OR: [
         { title: { contains: query } },
         { jobLocation: { contains: query } },
-        { AND: [{ isPrivate: false }, { content: { contains: query } }] },
+        ...(viewer ? [{ AND: [{ isPrivate: false }, { content: { contains: query } }] }] : []),
       ],
     };
     const jobWhere = {

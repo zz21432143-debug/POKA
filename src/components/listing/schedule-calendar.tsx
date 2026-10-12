@@ -125,7 +125,7 @@ export function ScheduleCalendar({
                   <td
                     key={col}
                     className={cn(
-                      "schedule-cell h-[5.5rem] border border-[#2a2522] p-0.5 align-top sm:h-28 sm:p-1.5",
+                      "schedule-cell h-[6.5rem] border border-[#2a2522] p-0.5 align-top sm:h-28 sm:p-1.5",
                       day ? "bg-[#1a1716]" : "bg-[#131110]",
                       past && "opacity-60",
                     )}
@@ -158,7 +158,7 @@ export function ScheduleCalendar({
                               title={item.eventPrize ? `${item.title} · ${item.eventPrize}` : item.title}
                               onClick={() => onSelect(item, color)}
                               style={{ backgroundColor: color, color: SCHEDULE_TEXT }}
-                              className="line-clamp-2 w-full cursor-pointer break-keep [overflow-wrap:anywhere] rounded-[4px] px-1 py-[3px] text-left text-[10px] font-bold leading-tight tracking-tight sm:line-clamp-1 transition-[filter] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a25c] sm:px-1.5 sm:py-1 sm:text-[11.5px]"
+                              className="line-clamp-2 min-h-7 w-full cursor-pointer sm:min-h-0 break-keep [overflow-wrap:anywhere] rounded-[4px] px-1 py-[3px] text-left text-[10px] font-bold leading-tight tracking-tight sm:line-clamp-1 transition-[filter] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#c9a25c] sm:px-1.5 sm:py-1 sm:text-[11.5px]"
                             >
                               {item.title}
                             </button>
@@ -170,7 +170,7 @@ export function ScheduleCalendar({
                           <button
                             type="button"
                             onClick={() => onMore(iso, items)}
-                            className="w-full rounded-[4px] px-1 py-[2px] text-left text-[10px] font-semibold text-[#c9a25c] hover:bg-white/5 sm:text-[11px]"
+                            className="min-h-7 w-full rounded-[4px] px-1 py-[2px] text-left text-[10px] font-semibold text-[#c9a25c] hover:bg-white/5 sm:min-h-0 sm:text-[11px]"
                           >
                             <span className="sm:hidden">+{items.length - MOBILE_MAX}</span>
                             <span className="hidden sm:inline">+{items.length - DESKTOP_MAX}개 더</span>

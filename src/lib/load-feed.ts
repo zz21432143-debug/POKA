@@ -52,7 +52,6 @@ export function toJobCard(post: FeedRow, now = new Date(), today = todayKstDate(
     jobEvents: post.jobEvents,
     jobDeadline: post.jobDeadline,
     jobHeadcount: post.jobHeadcount,
-    jobApplyValue: post.jobApplyValue,
     jobAlwaysOpen: post.jobAlwaysOpen,
   };
 }

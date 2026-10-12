@@ -43,7 +43,7 @@ export function GrowthHomePanel({
         </p>
         <Link
           href={hand ? handHref : "/boards/hand-review/write"}
-          className="mt-auto pt-3 text-sm font-semibold text-primary"
+          className="touch-target mt-auto inline-flex min-h-11 items-center pt-1 text-sm font-semibold text-primary"
         >
           {hand ? "투표하러 가기" : "오늘 핸드 올리기"}
         </Link>
@@ -68,7 +68,7 @@ export function GrowthHomePanel({
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
           달력에서 일자별로 이어집니다.
         </p>
-        <Link href="/boards/schedule" className="mt-auto pt-3 text-sm font-semibold text-primary">
+        <Link href="/boards/schedule" className="touch-target mt-auto inline-flex min-h-11 items-center pt-1 text-sm font-semibold text-primary">
           달력 보기
         </Link>
       </article>

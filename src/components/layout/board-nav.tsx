@@ -187,7 +187,7 @@ export function BoardNav({
                 <summary
                   className={cn(
                     heading,
-                    "touch-target flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden",
+                    "touch-target flex min-h-11 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden",
                   )}
                 >
                   {group.title}

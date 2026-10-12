@@ -20,7 +20,7 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
               <p className="font-semibold text-foreground">서비스명: {LEGAL_SERVICE_NAME}</p>
             </div>
             <p>홀덤·딜러 커뮤니티 · 만 19세 이상</p>
-            <a href={`mailto:${email}`} className="break-all hover:text-foreground">
+            <a href={`mailto:${email}`} className="inline-flex min-h-11 items-center break-all hover:text-foreground">
               문의 이메일: {email}
             </a>
             <p className="text-foreground">

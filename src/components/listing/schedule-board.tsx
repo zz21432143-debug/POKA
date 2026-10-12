@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "cn";
 import { ScheduleCalendar, sortByPrize, type ScheduleEvent } from "@/components/listing/schedule-calendar";
 import { ScheduleModal } from "@/components/listing/schedule-modal";
 import { dayLabel } from "@/lib/job-events";
@@ -44,10 +45,10 @@ export function ScheduleBoard({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" variant={mode === "calendar" ? "default" : "outline"} className={mode === "calendar" ? "ink-on" : "ink-btn"} onClick={() => setMode("calendar")}>
+        <Button type="button" size="sm" variant={mode === "calendar" ? "default" : "outline"} className={cn("min-h-10 px-4", mode === "calendar" ? "ink-on" : "ink-btn")} onClick={() => setMode("calendar")}>
           달력
         </Button>
-        <Button type="button" size="sm" variant={mode === "list" ? "default" : "outline"} className={mode === "list" ? "ink-on" : "ink-btn"} onClick={() => setMode("list")}>
+        <Button type="button" size="sm" variant={mode === "list" ? "default" : "outline"} className={cn("min-h-10 px-4", mode === "list" ? "ink-on" : "ink-btn")} onClick={() => setMode("list")}>
           리스트
         </Button>
         {mode === "calendar" ? (

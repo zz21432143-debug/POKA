@@ -127,7 +127,7 @@ export default async function BoardPage({
               href={`/boards/${tab.slug}`}
               aria-current={tab.slug === canonical ? "page" : undefined}
               className={cn(
-                "touch-target inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13px] font-semibold",
+                "touch-target inline-flex min-h-10 items-center rounded-full border px-3.5 text-[13px] font-semibold",
                 tab.slug === canonical
                   ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]"
                   : "border-white/15 text-[#E5E7EB] hover:border-[#c9a25c]/60",

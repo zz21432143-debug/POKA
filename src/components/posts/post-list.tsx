@@ -79,7 +79,7 @@ export function PostList({
             <li
               className={
                 compact
-                  ? "flex min-h-11 items-center gap-2.5 px-4 py-2 text-[#E5E7EB] even:bg-white/[0.03] hover:bg-white/[0.07]"
+                  ? "relative flex min-h-11 items-center gap-2.5 px-4 py-2 text-[#E5E7EB] even:bg-white/[0.03] hover:bg-white/[0.07]"
                   : "flex min-h-14 items-center gap-3 px-4 py-3.5 text-[#E5E7EB] even:bg-white/[0.03] hover:bg-white/[0.07]"
               }
             >
@@ -99,7 +99,7 @@ export function PostList({
                   href={`/posts/${post.id}`}
                   className={
                     compact
-                      ? "touch-target relative z-10 block truncate py-0.5 text-[13px] font-semibold leading-snug text-[#E5E7EB] hover:text-white"
+                      ? "touch-target block truncate py-0.5 text-[13px] font-semibold leading-snug text-[#E5E7EB] after:absolute after:inset-0 after:content-[''] hover:text-white"
                       : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-[#E5E7EB] hover:text-white sm:text-lg"
                   }
                 >

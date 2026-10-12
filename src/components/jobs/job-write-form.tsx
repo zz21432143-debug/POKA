@@ -426,8 +426,8 @@ export function JobWriteForm({
                 onClick={() => setRegion(region === name ? "" : name)}
                 className={
                   region === name
-                    ? "min-h-9 rounded-full border border-[#c9a25c] bg-[#c9a25c] px-3 text-[13px] font-semibold text-[#1d1611]"
-                    : "min-h-9 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-[#E5E7EB] hover:border-[#c9a25c]/60"
+                    ? "min-h-10 rounded-full border border-[#c9a25c] bg-[#c9a25c] px-3 text-[13px] font-semibold text-[#1d1611]"
+                    : "min-h-10 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-[#E5E7EB] hover:border-[#c9a25c]/60"
                 }
               >
                 {name}

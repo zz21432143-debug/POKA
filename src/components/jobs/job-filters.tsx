@@ -22,7 +22,7 @@ export function JobFilters({
   openOnly: boolean;
 }) {
   const chip =
-    "touch-target inline-flex min-h-9 shrink-0 items-center rounded-full border px-3 text-[13px] font-semibold";
+    "touch-target inline-flex min-h-10 shrink-0 items-center rounded-full border px-3 text-[13px] font-semibold";
   const on = "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]";
   const off = "border-white/15 text-[#E5E7EB] hover:border-[#c9a25c]/60 hover:text-white";
 

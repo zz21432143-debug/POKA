@@ -44,7 +44,7 @@ export function HomeLatest({
             type="button"
             onClick={() => setTab(item.key)}
             className={cn(
-              "relative py-1 text-[13px] font-semibold",
+              "touch-target relative min-h-11 px-1.5 text-[13px] font-semibold",
               tab === item.key ? "text-white" : "text-[#9CA3AF] hover:text-[#E5E7EB]",
             )}
           >
