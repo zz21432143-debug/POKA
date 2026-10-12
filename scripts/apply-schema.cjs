@@ -30,6 +30,7 @@ const FILES = [
   "prisma/migrations/20261014170000_visit_stats/migration.sql",
   "prisma/migrations/20261014180000_job_lodging/migration.sql",
   "prisma/migrations/20261014190000_content_plan_skip/migration.sql",
+  "prisma/migrations/20261015090000_dealer_rotation/migration.sql",
 ];
 
 function databaseUrl() {

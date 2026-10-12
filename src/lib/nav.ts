@@ -77,6 +77,15 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     ],
   },
   {
+    // 제작 중: 마스터 계정만 들어갈 수 있고, 다른 회원은 "준비 중" 화면이 나옵니다.
+    title: "딜러 툴",
+    collapsible: true,
+    items: [
+      { href: "/tools/rotation", label: "딜러 로테이션", hint: "준비 중", icon: "chips" },
+      { href: "/tools/seat-draw", label: "DAY2 싯드로우", hint: "준비 중", icon: "cards" },
+    ],
+  },
+  {
     title: "기타",
     collapsible: true,
     items: [

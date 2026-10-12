@@ -554,3 +554,34 @@ model ContentPlanSkip {
   planId    String   @id
   createdAt DateTime @default(now())
 }
+
+/// 딜러 로테이션: 딜러 (status: WORKING 근무중 · BREAK 휴식 · OFF 휴무 · LEFT 퇴근)
+model RotationDealer {
+  id          String   @id @default(cuid())
+  name        String
+  startTime   String?
+  status      String   @default("OFF")
+  tableNo     Int?
+  statusSince DateTime @default(now())
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+/// 딜러 로테이션: 상태·테이블 변경 기록(근무·휴식 시간 집계와 타임라인용)
+model RotationEvent {
+  id       String   @id @default(cuid())
+  dealerId String
+  status   String
+  tableNo  Int?
+  at       DateTime @default(now())
+
+  @@index([dealerId, at])
+}
+
+/// 딜러 로테이션: 변경 번호(다른 기기 즉시 반영용)·테이블 수·근무일 시작 시각
+model RotationMeta {
+  id           String   @id
+  version      Int      @default(0)
+  tableCount   Int      @default(20)
+  dayStartedAt DateTime @default(now())
+}

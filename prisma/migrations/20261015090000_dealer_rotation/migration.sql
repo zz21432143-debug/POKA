@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS "RotationDealer" (
+  "id" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "startTime" TEXT,
+  "status" TEXT NOT NULL DEFAULT 'OFF',
+  "tableNo" INTEGER,
+  "statusSince" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "sort" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "RotationDealer_pkey" PRIMARY KEY ("id")
+);
+CREATE TABLE IF NOT EXISTS "RotationEvent" (
+  "id" TEXT NOT NULL,
+  "dealerId" TEXT NOT NULL,
+  "status" TEXT NOT NULL,
+  "tableNo" INTEGER,
+  "at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "RotationEvent_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "RotationEvent_dealerId_at_idx" ON "RotationEvent"("dealerId", "at");
+CREATE TABLE IF NOT EXISTS "RotationMeta" (
+  "id" TEXT NOT NULL,
+  "version" INTEGER NOT NULL DEFAULT 0,
+  "tableCount" INTEGER NOT NULL DEFAULT 20,
+  "dayStartedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "RotationMeta_pkey" PRIMARY KEY ("id")
+);
