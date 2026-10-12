@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DocEditor } from "@/components/docs/doc-editor";
 import { DeletePostButton } from "@/components/posts/post-manage-bar";
+import { PromoImageUpload } from "@/components/promo/promo-image-upload";
 import type { BoardType } from "@/generated/prisma/enums";
 
 export type PostEditInitial = {
@@ -89,9 +90,8 @@ export function PostEditForm({
           <Field id="edit-tag" label="이벤트 태그" value={promoTag} onChange={setPromoTag} />
         </div>
       ) : null}
-      {promo || sketch ? (
-        <Field id="edit-image" label={promo ? "대표 이미지 URL" : "사진 URL"} value={imageUrl} onChange={setImageUrl} />
-      ) : null}
+      {promo ? <PromoImageUpload value={imageUrl} onChange={setImageUrl} /> : null}
+      {sketch ? <Field id="edit-image" label="사진 URL" value={imageUrl} onChange={setImageUrl} /> : null}
       <div className="grid gap-2">
         <Label htmlFor="edit-content" className="write-label">
           내용

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { postRewardLine } from "@/lib/rewards";
+import { PromoImageUpload } from "@/components/promo/promo-image-upload";
 
 export function OfficialPromoForm({ hint }: { hint: string }) {
   const router = useRouter();
@@ -70,15 +71,8 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
           <Label htmlFor="loc">지역</Label>
           <Input id="loc" className="h-11" value={location} placeholder="서울 강남" onChange={(e) => setLocation(e.target.value)} />
         </div>
-        <div className="grid gap-2 sm:col-span-2">
-          <Label htmlFor="img">공식 홍보물 이미지 URL</Label>
-          <Input
-            id="img"
-            className="h-11"
-            value={imageUrl}
-            placeholder="/banners/slot-1.svg"
-            onChange={(e) => setImageUrl(e.target.value)}
-          />
+        <div className="sm:col-span-2">
+          <PromoImageUpload value={imageUrl} onChange={setImageUrl} />
         </div>
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="slot">프리미엄 배너 구좌 (1~6, 비우면 갤러리만)</Label>
