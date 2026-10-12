@@ -112,6 +112,16 @@ export function kstClock(iso: string | Date) {
   );
 }
 
+/** "HH:MM"(한국 시각)을 near에 가장 가까운 날짜의 Date로(밤샘 근무 고려) */
+export function kstDateAt(clock: string, near: Date) {
+  const [h, m] = clock.split(":").map(Number);
+  const kst = new Date(near.getTime() + 9 * 3600_000);
+  const base = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate(), h, m) - 9 * 3600_000;
+  const options = [base - 86_400_000, base, base + 86_400_000];
+  options.sort((a, b) => Math.abs(a - near.getTime()) - Math.abs(b - near.getTime()));
+  return new Date(options[0]);
+}
+
 /** 지금 시각(분, 시작 시각 기준으로 밤샘 펴기) */
 export function nowMinutes(start: number, now = new Date()) {
   return alignToStart(parseClock(kstClock(now)) ?? 0, start);
