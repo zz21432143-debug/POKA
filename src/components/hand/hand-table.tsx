@@ -1,4 +1,5 @@
 import { PlayingCard } from "@/components/hand/playing-card";
+import { replayHand } from "@/lib/hand-engine";
 import {
   formatBb,
   seatsAroundHero,
@@ -54,6 +55,9 @@ export function HandTable({
   revealOpponents: boolean;
 }) {
   const around = seatsAroundHero(hand);
+  // 팟은 액션으로 계산합니다(액션이 없을 때만 저장된 값).
+  const hasActions = Object.values(hand.streets).some((rows) => rows.length > 0);
+  const pot = hasActions ? replayHand(hand).pot : hand.potBb;
   return (
     <div className="overflow-hidden rounded-2xl bg-[#141414] p-3 sm:p-4">
       <div className="relative mx-auto aspect-[16/11] w-full max-w-lg">
@@ -70,10 +74,10 @@ export function HandTable({
               <p className="text-xs text-white/50">보드 없음</p>
             ) : null}
           </div>
-          {hand.potBb ? (
+          {pot ? (
             <div className="flex items-center gap-1.5 rounded-full bg-black/45 px-2 py-1">
               <span className="size-4 rounded-full bg-gradient-to-br from-red-400 to-red-700 ring-1 ring-white/40" />
-              <span className="text-[11px] font-semibold text-amber-200">{formatBb(hand.potBb)}</span>
+              <span className="text-[11px] font-semibold text-amber-200">{formatBb(pot)}</span>
             </div>
           ) : null}
         </div>

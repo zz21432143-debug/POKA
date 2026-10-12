@@ -4,69 +4,22 @@ import { useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { cn } from "cn";
 import { HandTable } from "@/components/hand/hand-table";
-import {
-  ACTION_LABEL,
-  actionChipClass,
-  actionTimeline,
-  actorLabel,
-  formatBb,
-  sittingSeats,
-  type HandReviewData,
-  type StreetAction,
-} from "@/lib/hand-review";
+import { formatBb, sittingSeats, type HandReviewData } from "@/lib/hand-review";
+import { ActionLog } from "@/components/hand/action-log";
 
-function ActionRow({ row, hand }: { row: StreetAction; hand: HandReviewData }) {
-  return (
-    <li className="flex items-center justify-between gap-2 py-1">
-      <span className="text-[13px] font-medium text-zinc-200">{actorLabel(row.actor, hand)}</span>
-      <span className={cn("rounded-md px-2 py-0.5 text-[12px] font-bold", actionChipClass(row.action))}>
-        {ACTION_LABEL[row.action]}
-        {row.amount != null ? ` ${formatBb(row.amount)}` : ""}
-      </span>
-    </li>
-  );
-}
-
-function ActionLog({ hand }: { hand: HandReviewData }) {
+/** 베팅 라인 접기·펼치기 */
+function CollapsibleLog({ hand }: { hand: HandReviewData }) {
   const [open, setOpen] = useState(true);
-  const groups = actionTimeline(hand).filter((group) => group.street === "blinds" || group.rows.length > 0);
-
   return (
-    <div className="bg-[#2a2d33] text-zinc-100">
-      {open ? (
-        <ol className="grid gap-3 px-3 py-3">
-          {groups.map((group) => (
-            <li key={group.street}>
-              <div className="mb-1 flex items-baseline justify-between gap-2">
-                <p className="text-[12px] font-semibold text-zinc-300">{group.label}</p>
-                {group.pot != null ? (
-                  <p className="text-[11px] text-zinc-500">팟 {formatBb(group.pot)}</p>
-                ) : null}
-              </div>
-              {group.street === "blinds" ? (
-                <p className="text-[13px] text-zinc-200">
-                  {group.rows.map((row) => `${row.actor} ${formatBb(row.amount)}`).join(" · ")}
-                </p>
-              ) : group.rows.length === 0 ? (
-                <p className="text-[12px] text-zinc-500">액션 없음</p>
-              ) : (
-                <ul>
-                  {group.rows.map((row, index) => (
-                    <ActionRow key={`${group.street}-${index}`} row={row} hand={hand} />
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ol>
-      ) : null}
+    <div className="bg-[#1f2126]">
+      {open ? <ActionLog hand={hand} /> : null}
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-1 py-2 text-[12px] text-zinc-400 hover:text-white"
+        className="flex min-h-10 w-full items-center justify-center gap-1 text-[12px] text-zinc-400 hover:text-white"
         onClick={() => setOpen((value) => !value)}
       >
         <ChevronDownIcon className={cn("size-4 transition-transform", open ? "rotate-180" : "")} />
-        {open ? "액션 접기" : "액션 펼치기"}
+        {open ? "베팅 라인 접기" : "베팅 라인 펼치기"}
       </button>
     </div>
   );
