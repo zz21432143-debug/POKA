@@ -6,7 +6,7 @@ import { ToolsLocked } from "@/components/tools/tools-locked";
 import { RotationBoard } from "@/components/tools/rotation-board";
 import { loadRotation } from "@/lib/rotation-server";
 
-export const metadata: Metadata = { title: "딜러 로테이션", robots: { index: false } };
+export const metadata: Metadata = { title: "제작중", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function RotationPage() {

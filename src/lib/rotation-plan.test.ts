@@ -127,3 +127,37 @@ describe("table combine", () => {
     }
   });
 });
+
+describe("Auto arrange", async () => {
+  const { autoArrange } = await import("./rotation-plan");
+  it("keeps valid seats now, refills seats of a dealer who left, and re-plans the rest", () => {
+    const list = dealers(6);
+    const plan = buildPlan({ dealers: list, tables: 4, start: 600, end: 720, interval: 20 });
+    const current = 2; // 10:40
+    const leaver = plan.slots[current].seats[1]!;
+    const stayers = plan.slots[current].seats.filter((id, t) => t !== 1);
+    const after = autoArrange({
+      plan,
+      dealers: list.map((d) => (d.id === leaver ? { ...d, to: 645 } : d)),
+      current,
+      tables: 4,
+      start: 600,
+      interval: 20,
+      now: 645,
+    });
+    const now = after.slots[current];
+    assert.deepEqual(after.slots.slice(0, current), plan.slots.slice(0, current));
+    assert.deepEqual(now.seats.filter((_, t) => t !== 1), stayers);
+    assert.ok(now.seats[1] && now.seats[1] !== leaver, "빈자리를 다른 딜러로");
+    assert.ok(after.slots.slice(current).every((s) => !s.seats.includes(leaver) && !s.rest.includes(leaver)));
+  });
+
+  it("empties a table combined now and moves its dealer to rest", () => {
+    const list = dealers(5);
+    const plan = buildPlan({ dealers: list, tables: 4, start: 600, end: 720, interval: 20 });
+    const after = autoArrange({ plan, dealers: list, current: 1, tables: 4, start: 600, interval: 20, now: 625, closedFrom: [null, null, 620, null] });
+    assert.equal(after.slots[1].seats[2], null);
+    assert.equal(after.slots[1].rest.length, 2);
+    assert.ok(after.slots.slice(1).every((s) => s.seats[2] === null));
+  });
+});

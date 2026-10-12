@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools, DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 
-export const metadata: Metadata = { title: "딜러 툴", robots: { index: false } };
+export const metadata: Metadata = { title: "제작중", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const TOOLS = [

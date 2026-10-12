@@ -5,7 +5,7 @@ import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { SeatDraw } from "@/components/tools/seat-draw";
 
-export const metadata: Metadata = { title: "DAY2 싯드로우", robots: { index: false } };
+export const metadata: Metadata = { title: "제작중", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function SeatDrawPage() {

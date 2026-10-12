@@ -21,6 +21,7 @@ import {
   EXTEND_WHEN_LEFT,
   PLAN_HORIZON,
   alignToStart,
+  autoArrange,
   buildPlan,
   dealerSchedule,
   extendPlan,
@@ -164,6 +165,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const missing = future.length
     ? state.dealers.filter((d) => d.status === "IN" && (!futureAll.has(d.id) || !inSlot(future[0], d.id) || !inSlot(future[future.length - 1], d.id)))
     : [];
+  // 퇴근·휴무 딜러: 지금 칸부터 들어가 있으면 빨간색
+  const gone = new Map(state.dealers.filter((d) => d.status === "LEFT" || d.status === "OFF").map((d) => [d.id, d.status === "LEFT" ? "퇴근" : "휴무"]));
+  const isGone = (id: string | null | undefined, index: number) => Boolean(id && gone.has(id) && index >= current);
   const leftInPlan = state.dealers.filter((d) => (d.status === "LEFT" || d.status === "OFF") && futureSeats.has(d.id));
 
   function makePlan(fromNow: boolean) {
@@ -177,6 +181,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       interval: state.interval,
       setup: state.setupMinutes,
       keep,
+      closedFrom,
+    });
+    void send({ type: "savePlan", plan: built });
+  }
+
+  /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
+  function runAuto() {
+    const built = autoArrange({
+      plan,
+      dealers: planDealers(state.dealers, start),
+      current,
+      tables: state.tableCount,
+      start,
+      interval: plan?.interval ?? state.interval,
+      setup: plan?.setup ?? state.setupMinutes,
+      now: nowMinutes(start, new Date()),
       closedFrom,
     });
     void send({ type: "savePlan", plan: built });
@@ -294,6 +314,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {online ? "실시간 연결됨" : "연결 끊김"}
           </span>
           <span className="text-sm font-black text-amber-300">지금 {kstClock(clock)}</span>
+          <button
+            type="button"
+            disabled={busy || state.dealers.length === 0}
+            onClick={runAuto}
+            title="지금 칸 빈자리(퇴근·컨바인)를 채우고, 다음 칸부터 딜·휴식 시간을 맞춰 자동으로 다시 짭니다"
+            className="ml-auto min-h-11 rounded-lg bg-amber-400 px-6 text-lg font-black text-black disabled:opacity-40"
+          >
+            Auto
+          </button>
         </div>
         <dl className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           {[
@@ -317,11 +346,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ))}
           {labels.length !== runningLabels.length ? (
             <>
-              <span className="ml-2 text-zinc-400">컨바인</span>
+              <span className="ml-2 text-rose-300">컨바인</span>
               {labels
                 .filter((label) => !runningLabels.includes(label))
                 .map((label) => (
-                  <span key={label} className="rounded-md bg-zinc-700 px-1.5 py-0.5 text-xs font-black text-zinc-300 line-through">
+                  <span key={label} className="rounded-md bg-rose-600 px-1.5 py-0.5 text-xs font-black text-white">
                     T{label}
                   </span>
                 ))}
@@ -441,8 +470,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {missing.length ? `출근한 ${missing.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 빠져 있습니다. ` : ""}
             {leftInPlan.length ? `퇴근·휴무인 ${leftInPlan.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 있습니다. ` : ""}
           </span>
-          <button type="button" disabled={busy} onClick={() => makePlan(true)} className="ml-auto min-h-10 rounded-lg bg-amber-400 px-3 text-sm font-black text-black">
-            지금 이후 다시 짜기
+          <button type="button" disabled={busy} onClick={runAuto} className="ml-auto min-h-10 rounded-lg bg-amber-400 px-4 text-sm font-black text-black">
+            Auto
           </button>
         </section>
       ) : null}
@@ -479,12 +508,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </div>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5">
             {swap.rows.map((row) => (
-              <li key={row.label} data-swap={row.label} className={cn("flex items-center gap-2 rounded-lg bg-black px-2.5 py-1.5", row.closed && "opacity-50")}>
+              <li key={row.label} data-swap={row.label} className={cn("flex items-center gap-2 rounded-lg px-2.5 py-1.5", row.closed ? "border border-rose-500 bg-rose-950" : "bg-black")}>
                 <span className="text-lg font-black text-emerald-300">T{row.label}</span>
                 {row.closed ? (
                   <span className="text-base font-black">
                     {row.from ? <span className="text-zinc-400">{name(row.from)} <span className="text-amber-300">→</span> </span> : null}
-                    <span className="text-zinc-500">컨바인</span>
+                    <span className="text-rose-300">컨바인</span>
                   </span>
                 ) : row.from && row.from === row.to ? (
                   <span className="text-base font-black text-white">
@@ -578,7 +607,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 {labels.map((label, t) => (
                   <tr key={label} className="border-t-2 border-white/10">
                     <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left whitespace-nowrap">
-                      <span className={cn("block text-xl font-black", closedFrom[t] != null ? "text-zinc-500 line-through" : "text-emerald-300")}>T{label}</span>
+                      <span className={cn("block text-xl font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>
+                        T{label}
+                        {closedFrom[t] != null ? <span className="ml-1 rounded bg-rose-600 px-1 align-middle text-[10px] text-white">컨바인 {formatClock(closedFrom[t] as number)}</span> : null}
+                      </span>
                       <span className="mt-0.5 flex gap-1">
                         <button
                           type="button"
@@ -604,10 +636,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       if (isClosedAt(t, slot.at)) {
                         return (
                           <td key={slot.at} className={cn("px-1 py-1", index < current && "opacity-50")}>
-                            <span className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg bg-zinc-900 text-xs font-bold text-zinc-500">컨바인</span>
+                            <span data-closed className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border-2 border-rose-500 bg-rose-950 text-xs font-black text-rose-300">
+                              T{label} 컨바인
+                            </span>
                           </td>
                         );
                       }
+                      const goneHere = isGone(id, index);
                       return (
                         <td
                           key={slot.at}
@@ -619,12 +654,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             onClick={() => setCell({ slot: index, table: t })}
                             className={cn(
                               "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
-                              id ? "bg-zinc-800 hover:bg-zinc-700" : "border-2 border-dashed border-rose-500/70",
+                              goneHere ? "bg-rose-700 hover:bg-rose-600" : id ? "bg-zinc-800 hover:bg-zinc-700" : "border-2 border-dashed border-rose-500/70",
                               cell?.slot === index && cell.table === t && "ring-2 ring-amber-300",
                             )}
                           >
-                            <span className="text-[10px] font-black text-emerald-300">
+                            <span className={cn("text-[10px] font-black", goneHere ? "text-white" : "text-emerald-300")}>
                               T{label} · {time}
+                              {goneHere ? ` · ${gone.get(id as string)}` : ""}
                             </span>
                             <span className={cn("truncate text-base font-black", id ? "text-white" : "text-rose-300")}>{id ? name(id) : "비어 있음"}</span>
                           </button>
@@ -637,7 +673,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   <th className="sticky left-0 z-10 bg-zinc-900 px-3 py-1.5 text-left text-base font-black text-amber-300">휴식</th>
                   {rows.map(({ slot, index }) => (
                     <td key={slot.at} className={cn("max-w-[7rem] px-1.5 py-1.5 align-top text-xs font-bold text-amber-200", index < current && "opacity-50")}>
-                      {slot.rest.map(name).join(", ") || "—"}
+                      {slot.rest.length
+                        ? slot.rest.map((id, i) => (
+                            <span key={id} className={cn(isGone(id, index) && "rounded bg-rose-700 px-1 text-white")}>
+                              {i ? ", " : ""}
+                              {name(id)}
+                            </span>
+                          ))
+                        : "—"}
                     </td>
                   ))}
                 </tr>

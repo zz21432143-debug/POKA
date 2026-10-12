@@ -264,3 +264,71 @@ export function extendPlan(
   const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
   return { ...built, slots: built.slots.slice(trimFrom) };
 }
+
+/**
+ * Auto: 지금 칸과 그 뒤를 자동으로 정리합니다.
+ * - 지금 칸: 맞는 배정은 그대로 두고, 퇴근·휴무 딜러와 컨바인 테이블 자리만 비운 뒤
+ *   지금까지 딜한 칸이 적은 딜러(같으면 지금 쉬고 있던 딜러)부터 빈 러닝 테이블을 채웁니다.
+ * - 다음 칸부터: 지난 칸 기록(딜·휴식 흐름)을 이어 공평하게 다시 짭니다.
+ * current < 0(게임 시작 전)이면 처음부터 짭니다.
+ */
+export function autoArrange(options: {
+  plan: RotationPlan | null;
+  dealers: PlanDealer[];
+  current: number;
+  tables: number;
+  start: number;
+  interval: number;
+  setup?: number;
+  now: number;
+  closedFrom?: (number | null)[];
+  horizon?: number;
+}): RotationPlan {
+  const horizon = options.horizon ?? PLAN_HORIZON;
+  const closedFrom = options.closedFrom ?? [];
+  const end = Math.max(options.now, options.start) + horizon;
+  const base = { dealers: options.dealers, tables: options.tables, start: options.start, end, interval: options.interval, setup: options.setup, closedFrom };
+  const plan = options.plan;
+  if (!plan || options.current < 0 || !plan.slots[options.current]) return buildPlan(base);
+
+  const before = plan.slots.slice(0, options.current);
+  const cur = plan.slots[options.current];
+  const at = cur.at;
+  // 지금 칸: Auto를 누른 시각까지 출근했고, 이 칸이 끝나기 전에 퇴근하지 않는 딜러만(칸 중간 퇴근은 바로 교체)
+  const moment = Math.max(at, options.now);
+  const slotEnd = Math.max(at + options.interval, moment);
+  const available = new Set(options.dealers.filter((d) => d.from <= moment && (d.to == null || d.to >= slotEnd)).map((d) => d.id));
+  const isOpen = (t: number) => closedFrom[t] == null || at < (closedFrom[t] as number);
+
+  // 지금까지 딜한 칸 수(공평하게 채우기)
+  const work = new Map<string, number>();
+  for (const slot of before) for (const id of slot.seats) if (id) work.set(id, (work.get(id) ?? 0) + 1);
+
+  const seats: (string | null)[] = Array.from({ length: options.tables }, (_, t) => {
+    const id = cur.seats[t] ?? null;
+    if (!isOpen(t)) return null;
+    return id && available.has(id) ? id : null;
+  });
+  const seated = new Set(seats.filter(Boolean) as string[]);
+  const order = new Map(options.dealers.map((d, i) => [d.id, i]));
+  const candidates = [...available]
+    .filter((id) => !seated.has(id))
+    .sort((a, b) => {
+      const wa = work.get(a) ?? 0;
+      const wb = work.get(b) ?? 0;
+      if (wa !== wb) return wa - wb;
+      const ra = cur.rest.includes(a) ? 0 : 1;
+      const rb = cur.rest.includes(b) ? 0 : 1;
+      if (ra !== rb) return ra - rb;
+      return (order.get(a) ?? 0) - (order.get(b) ?? 0);
+    });
+  for (let t = 0; t < options.tables; t += 1) {
+    if (seats[t] == null && isOpen(t) && candidates.length) {
+      const id = candidates.shift()!;
+      seats[t] = id;
+      seated.add(id);
+    }
+  }
+  const rest = [...available].filter((id) => !seated.has(id));
+  return buildPlan({ ...base, keep: [...before, { at, seats, rest }] });
+}
