@@ -2014,3 +2014,20 @@ select {
   background: rgb(255 140 0 / 0.65);
   box-shadow: 0 0 0 2px rgb(255 140 0 / 0.8);
 }
+
+/* 딜러 툴 화면 캡처 방지 표시: 어느 부분을 잘라도 POKA 마크가 보이도록 옅은 무늬를 내용 위에 깝니다(클릭은 그대로 통과). */
+.poka-watermark {
+  position: relative;
+  isolation: isolate;
+}
+.poka-watermark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  border-radius: inherit;
+  background: url("/brand/poka-watermark-tile.png") repeat;
+  background-size: 340px 260px;
+  opacity: 0.1;
+}

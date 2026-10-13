@@ -779,7 +779,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 다음 교대 */}
       {plan && swap ? (
-        <section aria-label="다음 교대" className="grid gap-2 rounded-2xl border-2 border-amber-400 bg-amber-950/30 p-3">
+        <section aria-label="다음 교대" className="poka-watermark grid gap-2 rounded-2xl border-2 border-amber-400 bg-amber-950/30 p-3">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-2xl font-black text-amber-300">다음 교대 {formatClock(swap.at)}</span>
             <span className="text-sm font-bold text-amber-100">{untilLabel(swap.at - now)}</span>
@@ -839,7 +839,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       ) : null}
 
       {/* 시간표 */}
-      <section aria-label="시간표" className="grid gap-2">
+      <section aria-label="시간표" className="poka-watermark grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-xl font-black">로테이션 시간표</h2>
           {plan ? (

@@ -134,7 +134,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
     try {
       navigator.vibrate?.([300, 150, 300]);
       if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("POKA 교대 알림", { body: alertText, icon: "/brand/poka-holdem-logo.jpg", tag: key });
+        new Notification("POKA 교대 알림", { body: alertText, icon: "/brand/poka-oni-mark.png", tag: key });
       }
     } catch {
       /* 알림을 못 띄워도 화면 배너는 보입니다 */
@@ -171,10 +171,10 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   }
 
   const content = (
-    <div className={cn("grid gap-3 text-white", tv ? "fixed inset-0 z-[9999] content-start overflow-auto bg-black p-4" : "pb-10")}>
+    <div className={cn("poka-watermark grid gap-3 text-white", tv ? "fixed inset-0 z-[9999] content-start overflow-auto bg-black p-4" : "pb-10")}>
       <header className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3">
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 로고 한 장 */}
-        <img src="/brand/poka-holdem-logo.jpg" alt="POKA" className={cn("rounded-lg", tv ? "size-20" : "size-12")} />
+        <img src="/brand/poka-oni-mark.png" alt="POKA" className={cn("h-auto shrink-0", tv ? "w-20" : "w-12")} />
         <div className="grid min-w-0">
           <span className="text-xs font-bold text-zinc-400">교대표 · 보기 전용</span>
           <span className={cn("truncate font-black text-amber-300", tv ? "text-5xl" : "text-2xl")}>{state.game.name}</span>

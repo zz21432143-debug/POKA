@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { drawResultText, drawSeats, parsePlayers, type DrawResult } from "@/lib/seat-draw";
-import { BRAND_FONT, FOOTER_H, PRINT_FOOTER, PRINT_ON_LOAD, drawCredit, drawLogo, loadLogo, printHeader, saveCanvas } from "@/components/tools/brand-canvas";
+import { BRAND_FONT, FOOTER_H, PRINT_FOOTER, PRINT_ON_LOAD, drawCredit, printWatermark, drawLogo, drawWatermark, loadLogo, printHeader, saveCanvas } from "@/components/tools/brand-canvas";
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 /** 입력·결과는 이 기기에만 저장(새로고침해도 결과가 바뀌지 않게) */
@@ -33,11 +33,11 @@ async function downloadImage(result: DrawResult, title: string) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#f5d76e";
   ctx.font = `900 26px ${BRAND_FONT}`;
-  ctx.fillText(title, pad, 42);
-  drawLogo(ctx, logo, Math.max(width, 420) - 76, 8, 64);
+  drawLogo(ctx, logo, pad, 8, 62);
+  ctx.fillText(title, pad + 74, 42);
   ctx.fillStyle = "#a1a1aa";
   ctx.font = `700 14px ${BRAND_FONT}`;
-  ctx.fillText(`${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`, pad, 66);
+  ctx.fillText(`${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`, pad + 74, 66);
   result.tables.forEach((table, index) => {
     const x = pad + (index % cols) * (cardW + pad);
     const y = 90 + Math.floor(index / cols) * (cardH + pad);
@@ -63,6 +63,7 @@ async function downloadImage(result: DrawResult, title: string) {
       ctx.textAlign = "left";
     });
   });
+  drawWatermark(ctx, logo, Math.max(width, 420), 84, height - FOOTER_H);
   drawCredit(ctx, Math.max(width, 420), height);
   saveCanvas(canvas, `${title.replace(/\s+/g, "_")}.png`);
 }
@@ -162,7 +163,7 @@ export function SeatDraw() {
       body{font-family:sans-serif;margin:16px} h1{margin:0 0 4px} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
       section{border:1px solid #999;border-radius:8px;padding:8px;break-inside:avoid} h2{margin:0;font-size:18px} p{margin:2px 0 6px;font-size:12px;color:#444}
       table{width:100%;border-collapse:collapse;font-size:14px} td{border-top:1px solid #ddd;padding:3px} .s{width:28px;font-weight:bold} .c{text-align:right}
-    </style>${printHeader(title, `${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`)}<div class="grid">${cards}</div>${PRINT_FOOTER}${PRINT_ON_LOAD}`);
+    </style>${printHeader(title, `${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`)}<div class="grid">${cards}</div>${PRINT_FOOTER}${printWatermark()}${PRINT_ON_LOAD}`);
     w.document.close();
   }
 
@@ -252,10 +253,14 @@ export function SeatDraw() {
       </section>
 
       {result ? (
-        <section className="grid gap-3">
-          <h2 data-seat-title className="text-2xl font-black text-amber-300">
-            {title}
-          </h2>
+        <section className="poka-watermark grid gap-3 rounded-2xl">
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- 작은 마크 한 장 */}
+            <img src="/brand/poka-oni-mark.png" alt="POKA" className="h-auto w-10 shrink-0" />
+            <h2 data-seat-title className="text-2xl font-black text-amber-300">
+              {title}
+            </h2>
+          </div>
           <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-500/50 bg-emerald-950/40 p-3 text-sm">
             <span>
               전체 평균 <b>{won(result.overallAverage)}</b>

@@ -5,7 +5,7 @@ import { cn } from "cn";
 import { DEFAULT_RATES, calcPay, hoursText, payText, won, type InsuranceRates, type PayOptions, type PayShift } from "@/lib/pay-calc";
 import { kstDate } from "@/lib/rotation";
 import { PayImport } from "@/components/tools/pay-import";
-import { BRAND_FONT, FOOTER_H, drawCredit, drawLogo, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
+import { BRAND_FONT, FOOTER_H, drawCredit, drawLogo, drawWatermark, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
 
 /** 입력은 이 기기에만 저장(다른 사람·서버에는 안 보냄) */
 const STORE_KEY = "poka-pay-calc-v1";
@@ -44,8 +44,8 @@ async function downloadPayImage(text: string, title: string) {
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#fbbf24";
   ctx.font = `900 34px ${BRAND_FONT}`;
-  ctx.fillText(title, 24, 58);
-  drawLogo(ctx, logo, width - 84, 10, 72);
+  drawLogo(ctx, logo, 14, 10, 66);
+  ctx.fillText(title, 94, 58);
   lines.forEach((line, i) => {
     const y = 120 + i * lineH;
     const last = line.startsWith("실수령");
@@ -55,6 +55,7 @@ async function downloadPayImage(text: string, title: string) {
     ctx.font = `${last ? 900 : 700} ${last ? 22 : 16}px ${BRAND_FONT}`;
     ctx.fillText(line.length > 52 ? `${line.slice(0, 52)}…` : line, 24, y);
   });
+  drawWatermark(ctx, logo, width, 90, height - FOOTER_H);
   drawCredit(ctx, width, height);
   saveCanvas(canvas, `${title.replace(/[\\/:*?"<>|\s]+/g, "_")}.png`);
 }
@@ -268,7 +269,7 @@ export function PayCalculator() {
       </section>
 
       {/* 결과 */}
-      <section aria-label="급여 결과" className="grid gap-2 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 p-3 sm:p-4">
+      <section aria-label="급여 결과" className="poka-watermark grid gap-2 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 p-3 sm:p-4">
         <div className="flex flex-wrap items-baseline gap-2">
           <h2 className="text-lg font-black">결과</h2>
           <span className="text-sm text-zinc-300">

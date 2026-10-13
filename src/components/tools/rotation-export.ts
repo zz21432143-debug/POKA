@@ -2,7 +2,7 @@
 
 import type { RotationDealerView } from "@/lib/rotation";
 import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
-import { BRAND_FONT, CREDIT, FOOTER_H, drawCredit, drawLogo, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
+import { BRAND_FONT, CREDIT, FOOTER_H, drawCredit, drawLogo, drawWatermark, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
 
 /**
  * 로테이션 공유(단톡방·캡처)는 "지금 교대" 한 번만 보여 줍니다.
@@ -118,20 +118,20 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
   ctx.fillRect(0, 0, width, 96);
   ctx.fillStyle = "#000";
   ctx.font = `900 54px ${FONT}`;
-  ctx.fillText(`${formatClock(info.at)} 교대`, 24, 68);
+  drawLogo(ctx, logo, 12, 7, 80);
+  ctx.fillText(`${formatClock(info.at)} 교대`, 104, 68);
   const sub = [info.prevAt != null ? `이전 ${formatClock(info.prevAt)} → ${formatClock(info.at)}` : "", button ? `버튼 ${button}번` : ""].filter(Boolean).join(" · ");
   ctx.textAlign = "right";
   if (title) {
     // 게임 이름(예: POKA DAY-1)
     ctx.font = `900 24px ${FONT}`;
-    ctx.fillText(title, width - 104, 36);
+    ctx.fillText(title, width - 24, 36);
   }
   if (sub) {
     ctx.font = `800 16px ${FONT}`;
-    ctx.fillText(sub, width - 104, 66);
+    ctx.fillText(sub, width - 24, 66);
   }
   ctx.textAlign = "left";
-  drawLogo(ctx, logo, width - 92, 8, 80);
   info.rows.forEach((row, index) => {
     const col = Math.floor(index / perCol);
     const i = index % perCol;
@@ -171,6 +171,7 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
     ctx.fillText(line.text, 24, y);
     y += 32;
   }
+  drawWatermark(ctx, logo, width, 96, height - FOOTER_H);
   drawCredit(ctx, width, height);
   save(canvas, `${title ? `${title.replace(/[\\/:*?"<>|\s]+/g, "_")}_` : ""}교대_${formatClock(info.at).replace(":", "")}.png`);
 }
@@ -212,11 +213,11 @@ export async function downloadDealerSwapImage(
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#fbbf24";
   ctx.font = `900 40px ${FONT}`;
-  ctx.fillText(`${formatClock(info.at)} 교대 · 딜러별`, 24, 56);
+  drawLogo(ctx, logo, 14, 12, 66);
+  ctx.fillText(`${formatClock(info.at)} 교대 · 딜러별`, 94, 56);
   ctx.fillStyle = "#a1a1aa";
   ctx.font = `700 15px ${FONT}`;
-  ctx.fillText(`${title ? `${title} · ` : ""}${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 24, 86);
-  drawLogo(ctx, logo, width - 84, 10, 72);
+  ctx.fillText(`${title ? `${title} · ` : ""}${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 94, 86);
   list.forEach((dealer, index) => {
     const col = Math.floor(index / perCol);
     const i = index % perCol;
@@ -237,6 +238,7 @@ export async function downloadDealerSwapImage(
     ctx.fillStyle = then === "휴식" ? "#fbbf24" : now === then ? "#ffffff" : "#34d399";
     ctx.fillText(`${then}${now === then ? " (유지)" : ""}`, x + 360, y);
   });
+  drawWatermark(ctx, logo, width, 96, height - FOOTER_H);
   drawCredit(ctx, width, height);
   save(canvas, `${title ? `${title.replace(/[\\/:*?"<>|\s]+/g, "_")}_` : ""}교대_딜러별_${formatClock(info.at).replace(":", "")}.png`);
 }
