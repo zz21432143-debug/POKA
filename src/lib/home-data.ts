@@ -157,18 +157,32 @@ export function getCachedTickerEvents() {
   return ttlCache("ticker-events", 15_000, () => cachedTickerEvents());
 }
 
-/** 홈 요약 줄: 모집 중 공고 · 급구 · 이번 주 대회 수 · 최신 공지(1분 캐시) */
+/** 예정 대회: 오늘 이후 끝나는 대회(진행 중 포함) · 주간 모음 글 빼고 */
+function upcomingEvents(base: { isAttendanceThread: boolean; hidden: boolean }, today: string) {
+  return {
+    ...base,
+    boardType: "SCHEDULE" as const,
+    NOT: { title: { startsWith: "이번 주 홀덤 대회 일정" } },
+    OR: [{ eventEndDate: { gte: today } }, { eventEndDate: null, eventDate: { gte: today } }],
+  };
+}
+
+/** 홈 요약 줄: 모집 중 공고 · 급구 · 예정 대회 수 · 다음 대회 · 최신 공지(1분 캐시) */
 async function loadHomeCounts() {
   const base = { isAttendanceThread: false, hidden: false };
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
-  const weekEnd = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date(Date.now() + 6 * 86_400_000));
   const [jobs, urgent, events, notice] = await Promise.all([
     prisma.post.count({ where: { AND: [{ ...base, boardType: "JOBS", jobKind: { in: ["APPLY", "TOURNAMENT", "FIXED", "TEAM"] } }, openJobWhere()] } }),
     prisma.post.count({ where: { AND: [{ ...base, boardType: "JOBS", jobKind: "URGENT" }, openJobWhere()] } }),
-    prisma.post.count({ where: { ...base, boardType: "SCHEDULE", eventDate: { gte: today, lte: weekEnd } } }),
+    prisma.post.count({ where: upcomingEvents(base, today) }),
     prisma.post.findFirst({ where: { ...base, boardType: "NOTICE" }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }),
   ]);
-  return { jobs, urgent, events, notice };
+  const nextEvent = await prisma.post.findFirst({
+    where: upcomingEvents(base, today),
+    orderBy: { eventDate: "asc" },
+    select: { id: true, title: true, eventDate: true, eventEndDate: true },
+  });
+  return { jobs, urgent, events, notice, nextEvent };
 }
 
 const cachedHomeCounts = unstable_cache(loadHomeCounts, ["poka-home-counts"], { revalidate: 60 });

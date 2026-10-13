@@ -47,6 +47,10 @@ async function HomeFeedSections() {
       {/* 가장 급한 것부터: 급구 → 지원 · 대회 딜러 구인 */}
       <HomeUrgentJobs jobs={feed.urgent} />
       <HomeJobs jobs={feed.jobs} />
+      {/* 홍보 포스터(유료 구좌): 공고 바로 아래 — 잘 보이는 자리 */}
+      <Suspense fallback={<HomePanelFallback className="h-24" />}>
+        <HomePosters />
+      </Suspense>
       <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>
@@ -54,7 +58,7 @@ async function HomeFeedSections() {
 }
 
 /**
- * 홈 순서: 대문(POKA 하나로) → 오늘 요약 → 급구 → 구인 → 최신글 · 핸드/대회 → 홍보 → 매장 관리 바로가기.
+ * 홈 순서: 대문(POKA 하나로) → 오늘 요약 → 급구 → 구인 → 홍보 포스터 → 최신글 · 핸드/대회 → 매장 관리 바로가기.
  * 오른쪽 칸은 없애고(내 정보는 머리줄에서 펼침) 가운데를 넓게 씁니다.
  */
 export default async function HomePage() {
@@ -73,9 +77,6 @@ export default async function HomePage() {
         }
       >
         <HomeFeedSections />
-      </Suspense>
-      <Suspense fallback={<HomePanelFallback className="h-24" />}>
-        <HomePosters />
       </Suspense>
       <HomeDealerTools />
       <BoardBottomAd placement="home-bottom" />

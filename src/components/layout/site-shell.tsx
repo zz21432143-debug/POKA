@@ -55,7 +55,7 @@ async function ConnectedFeedAds() {
   return (
     <>
       <FeedAdRow />
-      <div className="mt-5">
+      <div className="mt-5 lg:hidden">
         <ConnectedSidebarSponsor />
       </div>
     </>
@@ -81,10 +81,14 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <ConnectedNotice />
       </Suspense>
       <div className="site-columns mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-6">
-        <aside className="hidden w-[16rem] shrink-0 lg:block">
+        <aside className="hidden w-[16rem] shrink-0 lg:flex lg:flex-col lg:gap-3">
           <div className="wood-frame flex flex-col">
             <BoardNav />
           </div>
+          {/* 사이드 광고 자리(모든 페이지): 팔리면 배너, 비어 있으면 '광고 문의' 작은 칸 */}
+          <Suspense fallback={null}>
+            <ConnectedSidebarSponsor />
+          </Suspense>
         </aside>
         <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
           {children}

@@ -122,27 +122,27 @@ export function InstallPwaButton({
   return (
     <>
       {variant === "strip" ? (
-        <div className="app-get app-get-strip flex items-center gap-2 border-b border-[#c9a25c]/30 bg-[#2a2017] px-3 py-2 lg:hidden">
-          <SmartphoneIcon className="size-5 shrink-0 text-[#e7c98a]" aria-hidden />
-          <p className="min-w-0 flex-1 text-[13px] leading-tight text-[#f3eadb]">
-            <strong className="block font-bold">POKA 앱 다운로드</strong>
-            <span className="block truncate text-xs text-[#d1c7b5]">홈 화면에 추가하고 급구 알림 받기</span>
+        <div className="app-get app-get-strip flex items-center gap-2 border-b border-[#c9a25c]/25 bg-[#2a2017] px-3 py-0.5 lg:hidden">
+          <SmartphoneIcon className="size-4 shrink-0 text-[#e7c98a]" aria-hidden />
+          <p className="min-w-0 flex-1 truncate text-xs text-[#f3eadb]">
+            <strong className="font-bold">POKA 앱</strong>
+            <span className="text-[#d1c7b5]"> · 급구 알림 받기</span>
           </p>
           <button
             type="button"
             onClick={() => void install()}
-            className="touch-target inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-3.5 text-[13px] font-bold text-[#1d1611] hover:bg-[#e7c98a]"
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-2.5 text-xs font-bold text-[#1d1611] hover:bg-[#e7c98a]"
           >
-            <DownloadIcon className="size-4" />
-            다운로드
+            <DownloadIcon className="size-3.5" />
+            받기
           </button>
           <button
             type="button"
             onClick={closeStrip}
             aria-label="앱 다운로드 안내 닫기"
-            className="touch-target inline-flex size-9 shrink-0 items-center justify-center rounded-full text-[#d1c7b5] hover:bg-white/10"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[#d1c7b5] hover:bg-white/10"
           >
-            <XIcon className="size-4" />
+            <XIcon className="size-3.5" />
           </button>
         </div>
       ) : variant === "header" ? (

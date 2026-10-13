@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
+import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 
 export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
   const fill = pickFill(unit, "cta", true);
@@ -31,6 +32,6 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
     );
   }
 
-  // 제휴 배너가 비어 있으면 비워 둡니다. "POKA 무료 홍보 이벤트"는 메인 포스터 칸 · 게시판 아래 배너에 한 번씩만(같은 홍보 반복 X).
-  return null;
+  // 비어 있으면 '광고 문의' 작은 칸 하나(이 자리를 살 수 있다는 안내). 큰 무료 홍보 포스터는 반복하지 않습니다.
+  return <PromoApplyCta />;
 }
