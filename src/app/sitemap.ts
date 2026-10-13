@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { JOB_REGIONS } from "@/lib/job-status";
+import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { sitemapEntries } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 
@@ -41,5 +42,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...sitemapEntries(), ...regions, ...jobPosts];
+  // 공지·자유·핸드리뷰·TDA 등 누구나 읽는 글(비밀글·익명 후기 제외)
+  let posts: { id: string; updatedAt: Date; boardType: string }[] = [];
+  try {
+    posts = await prisma.post.findMany({
+      where: {
+        boardType: { in: ["NOTICE", "FREE", "HAND_REVIEW", "TDA", "SCHEDULE", "OFFICIAL_POSTER", "SKETCH", "RULE_QA"] },
+        hidden: false,
+        isPrivate: false,
+        isAttendanceThread: false,
+        createdAt: { gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+      select: { id: true, updatedAt: true, boardType: true },
+    });
+  } catch {
+    posts = [];
+  }
+  const boardPosts: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${base}/posts/${post.id}`,
+    lastModified: post.updatedAt,
+    changeFrequency: "weekly",
+    priority: post.boardType === "NOTICE" || post.boardType === "TDA" ? 0.6 : 0.5,
+  }));
+  const guides: MetadataRoute.Sitemap = GUIDE_ARTICLES.map((row) => ({
+    url: `${base}/info/guide/${row.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...sitemapEntries(), ...guides, ...regions, ...jobPosts, ...boardPosts];
 }

@@ -1,26 +1,44 @@
 import Link from "next/link";
-import { LockIcon } from "lucide-react";
+import { CheckIcon, LockIcon } from "lucide-react";
 import { DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
+import { toolIntro } from "@/lib/tool-seo";
 
-/** 딜러 툴 안내: 공개 중이면 로그인 안내, 비공개면 제작 중 안내 */
+/** 로그인 전 툴 소개: 무엇을 하는 툴인지 보여 주고 로그인으로 안내(검색엔진도 이 소개를 읽습니다) */
 export function ToolsLocked({ next = "/tools" }: { next?: string }) {
+  const intro = toolIntro(next);
+  if (!DEALER_TOOLS_OPEN) {
+    return (
+      <section className="ink-panel mx-auto grid max-w-lg justify-items-center gap-3 rounded-2xl px-5 py-10 text-center">
+        <span className="grid size-14 place-items-center rounded-full bg-[#2a2017] text-[#e7c98a]">
+          <LockIcon className="size-7" />
+        </span>
+        <h1 className="text-xl font-black text-white">제작중</h1>
+        <p className="text-sm leading-6 text-[#D1D5DB]">새 기능을 만들고 있습니다. 완성되면 공지로 알려 드릴게요.</p>
+      </section>
+    );
+  }
   return (
-    <section className="ink-panel mx-auto grid max-w-lg justify-items-center gap-3 rounded-2xl px-5 py-10 text-center">
-      <span className="grid size-14 place-items-center rounded-full bg-[#2a2017] text-[#e7c98a]">
-        <LockIcon className="size-7" />
-      </span>
-      <h1 className="text-xl font-black text-white">{DEALER_TOOLS_OPEN ? "로그인하면 쓸 수 있어요" : "제작중"}</h1>
-      <p className="text-sm leading-6 text-[#D1D5DB]">
-        {DEALER_TOOLS_OPEN
-          ? "딜러 로테이션 · 싯드로우 · 딜러 연습장 · 급여 계산기는 POKA 회원이면 무료로 쓸 수 있습니다."
-          : "새 기능을 만들고 있습니다. 완성되면 공지로 알려 드릴게요."}
-      </p>
+    <section data-tool-intro className="ink-panel mx-auto grid w-full max-w-2xl gap-4 rounded-2xl px-5 py-7 sm:px-7">
+      <div className="grid gap-1.5">
+        <p className="text-xs font-black tracking-wide text-[#c9a25c]">POKA 매장 관리 · 회원 무료</p>
+        <h1 className="text-2xl font-black text-white">{intro.heading}</h1>
+        <p className="text-[15px] leading-7 text-[#D1D5DB]">{intro.description}</p>
+      </div>
+      <ul className="grid gap-2">
+        {intro.points.map((point) => (
+          <li key={point} className="flex gap-2 text-[15px] leading-7 text-[#ece4d6]">
+            <CheckIcon className="mt-1.5 size-4 shrink-0 text-[#e7c98a]" />
+            <span>{point}</span>
+          </li>
+        ))}
+      </ul>
       <Link
-        href={DEALER_TOOLS_OPEN ? `/login?tab=login&next=${encodeURIComponent(next)}` : "/"}
-        className="inline-flex min-h-11 items-center rounded-xl bg-[#8b2222] px-5 text-sm font-bold text-white hover:bg-[#a12a2a]"
+        href={`/login?tab=login&next=${encodeURIComponent(next)}`}
+        className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#8b2222] px-5 text-base font-black text-white hover:bg-[#a12a2a]"
       >
-        {DEALER_TOOLS_OPEN ? "로그인 / 회원가입" : "홈으로"}
+        로그인하고 무료로 쓰기
       </Link>
+      <p className="text-center text-xs text-[#9CA3AF]">회원가입은 1분이면 끝나요. 내 기록은 내 계정에만 저장됩니다.</p>
     </section>
   );
 }

@@ -78,6 +78,7 @@ export async function generateMetadata({
         isPrivate: true,
         jobKind: true,
         jobLocation: true,
+        content: true,
       },
     })
     .catch(() => null);
@@ -92,10 +93,23 @@ export async function generateMetadata({
       description: `${titleRegion(post.jobLocation)} 홀덤펍 ${kindLabel} 공고입니다. 근무 조건과 연락처는 POKA 로그인 후 확인할 수 있습니다.`,
     };
   }
+  if (post.isPrivate) {
+    return { alternates: { canonical: `/posts/${id}` }, title: `비밀글 · ${board}`, robots: { index: false } };
+  }
+  // 검색 결과 설명: 본문 앞부분(태그·줄바꿈 정리)
+  const summary = (post.content ?? "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/[━─=]{3,}/g, " ")
+    .replace(/s+/g, " ")
+    .trim();
+  const description = summary ? (summary.length > 150 ? `${summary.slice(0, 148)}…` : summary) : `POKA ${board} 글입니다.`;
+  const title = `${post.title} · ${board}`;
   return {
     alternates: { canonical: `/posts/${id}` },
-    title: post.isPrivate ? `비밀글 · ${board}` : `${post.title} · ${board}`,
-    robots: post.isPrivate ? { index: false } : undefined,
+    title,
+    description,
+    openGraph: { type: "article", title, description, url: `/posts/${id}` },
   };
 }
 

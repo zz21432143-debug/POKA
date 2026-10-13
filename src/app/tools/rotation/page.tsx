@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-seo";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
@@ -6,7 +7,7 @@ import { ToolsLocked } from "@/components/tools/tools-locked";
 import { RotationBoard } from "@/components/tools/rotation-board";
 import { loadRotation } from "@/lib/rotation-server";
 
-export const metadata: Metadata = { title: "딜러 로테이션", robots: { index: false } };
+export const metadata: Metadata = toolMetadata("/tools/rotation");
 export const dynamic = "force-dynamic";
 
 export default async function RotationPage({ searchParams }: { searchParams: Promise<{ g?: string }> }) {

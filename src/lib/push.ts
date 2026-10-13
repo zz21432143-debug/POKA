@@ -46,27 +46,47 @@ export async function notifyAdmins(payload: PushPayload) {
   return sendAll(subs, payload);
 }
 
+/** 이 회원이 알림을 켠 기기(관리자 테스트 알림용) */
+export async function notifyUser(userId: string, payload: PushPayload) {
+  if (!configure()) return { sent: 0, total: 0 };
+  const subs = await prisma.pushSubscription.findMany({ where: { userId }, take: 20 });
+  return { ...(await sendAll(subs, payload)), total: subs.length };
+}
+
+/** 관리자 공지 알림: region이 없으면 급구 알림을 켠 모든 기기, 있으면 그 지역 + 전국 */
+export async function notifyBroadcast(region: string | null, payload: PushPayload) {
+  if (!configure()) return { sent: 0, total: 0 };
+  const subs = await prisma.pushSubscription.findMany({
+    where: region ? { region: { in: [region, "전국"] } } : { region: { not: "" } },
+    take: 20000,
+  });
+  return { ...(await sendAll(subs, payload)), total: subs.length };
+}
+
 type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
 
 /** 만료된 구독(404/410)은 지웁니다. */
 async function sendAll(subs: Sub[], payload: PushPayload) {
   let sent = 0;
   const gone: string[] = [];
-  await Promise.allSettled(
-    subs.map(async (sub) => {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          JSON.stringify(payload),
-          { TTL: 60 * 60 * 6 },
-        );
-        sent += 1;
-      } catch (error) {
-        const status = (error as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) gone.push(sub.id);
-      }
-    }),
-  );
+  // 한 번에 너무 많이 열지 않게 200개씩 나눠 보냅니다.
+  for (let i = 0; i < subs.length; i += 200) {
+    await Promise.allSettled(
+      subs.slice(i, i + 200).map(async (sub) => {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify(payload),
+            { TTL: 60 * 60 * 6 },
+          );
+          sent += 1;
+        } catch (error) {
+          const status = (error as { statusCode?: number }).statusCode;
+          if (status === 404 || status === 410) gone.push(sub.id);
+        }
+      }),
+    );
+  }
   if (gone.length) await prisma.pushSubscription.deleteMany({ where: { id: { in: gone } } });
   return { sent };
 }

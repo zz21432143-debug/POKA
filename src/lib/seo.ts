@@ -84,6 +84,13 @@ export const SITEMAP_PATHS = [
   { path: "/about", changeFrequency: "yearly" as const, priority: 0.4 },
   { path: "/operator", changeFrequency: "yearly" as const, priority: 0.3 },
   { path: "/contact", changeFrequency: "yearly" as const, priority: 0.4 },
+  { path: "/tools", changeFrequency: "monthly" as const, priority: 0.7 },
+  { path: "/tools/board", changeFrequency: "monthly" as const, priority: 0.8 },
+  { path: "/tools/rotation", changeFrequency: "monthly" as const, priority: 0.8 },
+  { path: "/tools/seat-draw", changeFrequency: "monthly" as const, priority: 0.6 },
+  { path: "/tools/pay", changeFrequency: "monthly" as const, priority: 0.7 },
+  { path: "/tools/practice", changeFrequency: "weekly" as const, priority: 0.7 },
+  { path: "/info/guide", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/advertise", changeFrequency: "monthly" as const, priority: 0.4 },
 ] as const;
 

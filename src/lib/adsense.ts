@@ -103,7 +103,7 @@ export const GOOGLE_REMNANT_MOCKS: Record<
   },
   sidebar: {
     kicker: "금융",
-    title: "카드 캐시백 비교",
+    title: "생활 할인 모아보기",
     line: "구글 디스플레이 · 사이드바 하단",
     tone: "from-violet-100 to-white",
   },
@@ -121,7 +121,7 @@ export const GOOGLE_REMNANT_MOCKS: Record<
   },
   a3: {
     kicker: "금융",
-    title: "카드 캐시백 비교",
+    title: "생활 할인 모아보기",
     line: "관련 추천",
     tone: "from-violet-100 to-white",
   },

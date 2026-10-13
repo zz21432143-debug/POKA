@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-seo";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools, DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
-export const metadata: Metadata = { title: "매장 관리", robots: { index: false } };
+export const metadata: Metadata = toolMetadata("/tools");
 export const dynamic = "force-dynamic";
 
 const TOOLS = [

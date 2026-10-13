@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-seo";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { SeatDraw } from "@/components/tools/seat-draw";
 
-export const metadata: Metadata = { title: "싯드로우", robots: { index: false } };
+export const metadata: Metadata = toolMetadata("/tools/seat-draw");
 export const dynamic = "force-dynamic";
 
 export default async function SeatDrawPage() {

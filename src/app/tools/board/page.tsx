@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-seo";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
@@ -7,7 +8,7 @@ import { ToolsLocked } from "@/components/tools/tools-locked";
 import { GameBoardPanel } from "@/components/tools/game-board-panel";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
-export const metadata: Metadata = { title: "게임 현황판", robots: { index: false } };
+export const metadata: Metadata = toolMetadata("/tools/board");
 export const dynamic = "force-dynamic";
 
 export default async function GameBoardPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {

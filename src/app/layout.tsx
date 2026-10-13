@@ -16,6 +16,35 @@ import { siteUrl } from "@/lib/site";
 import { APP_STRIP_BOOT_SCRIPT, PWA_INSTALL_BOOT_SCRIPT } from "@/lib/app-strip";
 import "./globals.css";
 
+/** 검색엔진용 사이트 정보(사이트 이름 · 검색창 · 운영 주체) */
+function siteJsonLd() {
+  const base = siteUrl();
+  return JSON.stringify([
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      alternateName: ["포카", "POKA 홀덤 딜러 커뮤니티"],
+      url: base,
+      description: SITE_DESCRIPTION,
+      inLanguage: "ko-KR",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${base}/search?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: base,
+      logo: `${base}/icon.png`,
+      sameAs: ["https://open.kakao.com/o/gewUD9jc"],
+    },
+  ]).replace(/</g, "\\u003c");
+}
+
 const sans = Noto_Sans_KR({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -110,6 +139,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         ) : null}
       </head>
       <body className="flex min-h-full flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteJsonLd() }} />
         <GoogleAnalytics />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>

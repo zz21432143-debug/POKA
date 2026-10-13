@@ -39,7 +39,7 @@ export default function OperatorPage() {
       </InfoSection>
       <InfoSection title="운영 원칙">
         <ul className="list-disc space-y-1.5 pl-5">
-          <li>딜러 일자리와 대회 정보만 다루며, 현금 게임·불법 도박 홍보는 받지 않습니다.</li>
+          <li>딜러 일자리·대회 정보·매장 운영과 관계없는 홍보 글은 받지 않습니다.</li>
           <li>허위 공고·임금 체불 신고가 들어오면 확인 후 숨김·이용 제한합니다.</li>
           <li>개인정보는 서비스에 필요한 만큼만 받고, 탈퇴하면 지웁니다.</li>
           <li>만 19세 미만은 이용할 수 없습니다.</li>

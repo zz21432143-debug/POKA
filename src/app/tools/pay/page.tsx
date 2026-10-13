@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/tool-seo";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
@@ -6,7 +7,7 @@ import { Oni } from "@/components/brand/oni";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { PayCalculator } from "@/components/tools/pay-calculator";
 
-export const metadata: Metadata = { title: "급여 계산기", robots: { index: false } };
+export const metadata: Metadata = toolMetadata("/tools/pay");
 export const dynamic = "force-dynamic";
 
 export default async function PayPage() {
