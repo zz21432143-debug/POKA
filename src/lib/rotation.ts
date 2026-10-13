@@ -19,7 +19,18 @@ export const STATUS_LABEL: Record<DealerStatus, string> = {
   LEFT: "퇴근",
 };
 
-export type TableState = { button?: number | null; closedAt?: number | null };
+export type TableState = {
+  button?: number | null;
+  /** 컨바인(닫은) 시각(분) */
+  closedAt?: number | null;
+  /** 게임 중 추가로 연 시각(분). 이보다 앞 칸은 "오픈 전" */
+  openedAt?: number | null;
+};
+
+/** 시간표 테이블 순서대로 추가 오픈 시각(없으면 null) */
+export function openedFromOf(labels: number[], tableState: Record<string, TableState>) {
+  return labels.map((label) => tableState[String(label)]?.openedAt ?? null);
+}
 
 /** 시간표 테이블 순서대로 컨바인 시각(없으면 null) */
 export function closedFromOf(labels: number[], tableState: Record<string, TableState>) {
@@ -74,7 +85,17 @@ export type RotationAction =
   | { type: "removeDealer"; id: string }
   | { type: "checkIn"; id: string }
   | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
-  | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number; maxStreakMinutes?: number }
+  | {
+      type: "setSettings";
+      tableLabels?: string;
+      /** 테이블을 추가로 열 때, 새 테이블이 열리는 시각(분). 이보다 앞 칸은 "오픈 전" */
+      openedAt?: number;
+      interval?: number;
+      planStart?: string;
+      planEnd?: string;
+      setupMinutes?: number;
+      maxStreakMinutes?: number;
+    }
   | { type: "clearPlan" }
   | { type: "setShare"; on: boolean }
   | { type: "savePlan"; plan: RotationPlan | null }

@@ -207,6 +207,28 @@ export function buildPlan(options: {
   return { start, end, interval, tables, slots, setup, ...(maxStreak ? { maxStreak } : {}) };
 }
 
+/**
+ * 테이블 번호가 바뀌었을 때 시간표 옮겨 담기(게임 중 테이블 추가 오픈 등).
+ * - 겹치는 번호가 있으면: 번호 기준으로 그대로 옮기고, 새 테이블은 빈칸, 빠진 테이블의 딜러는 휴식으로.
+ * - 겹치는 번호가 없고 개수가 같으면: 번호만 바꾼 것으로 보고 순서대로 그대로.
+ * - 그 밖에는 옮길 수 없어 null(다시 짜야 함).
+ */
+export function remapPlanTables(plan: RotationPlan, oldLabels: number[], newLabels: number[]): RotationPlan | null {
+  const overlap = newLabels.some((label) => oldLabels.includes(label));
+  if (!overlap) return oldLabels.length === newLabels.length ? { ...plan, tables: newLabels.length } : null;
+  const slots = plan.slots.map((slot) => {
+    const seats = newLabels.map((label) => {
+      const old = oldLabels.indexOf(label);
+      return old >= 0 ? (slot.seats[old] ?? null) : null;
+    });
+    const dropped = oldLabels
+      .map((label, i) => (newLabels.includes(label) ? null : slot.seats[i]))
+      .filter((id): id is string => Boolean(id) && !slot.rest.includes(id as string));
+    return { ...slot, seats, rest: [...slot.rest, ...dropped] };
+  });
+  return { ...plan, tables: newLabels.length, slots };
+}
+
 /** 지금(분) 기준 현재 칸·다음 칸 */
 export function slotIndexAt(plan: RotationPlan, now: number) {
   let current = -1;

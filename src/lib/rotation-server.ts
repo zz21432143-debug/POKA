@@ -15,7 +15,7 @@ import {
   type RotationStateView,
   type TableState,
 } from "@/lib/rotation";
-import type { RotationPlan } from "@/lib/rotation-plan";
+import { remapPlanTables, type RotationPlan } from "@/lib/rotation-plan";
 
 /** 게임 목록에 보여 줄 개수 */
 const GAME_LIST = 40;
@@ -252,10 +252,27 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           if (!t) throw new RotationError("끝 시각을 확인하세요.");
           data.planEnd = t;
         }
-        // 테이블 수가 바뀌면 짜 둔 시간표는 맞지 않으므로 비웁니다(다시 짜기).
-        const current = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
-        const tablesChanged = data.tableCount !== undefined && data.tableCount !== current?.tableCount;
-        await tx.rotationMeta.update({ where: { id: META_ID }, data: { ...data, ...(tablesChanged ? { planJson: null } : {}) } });
+        // 테이블 번호가 바뀌면(게임 중 추가 오픈 등) 짜 둔 시간표를 번호 기준으로 옮겨 담습니다. 옮길 수 없으면 비웁니다.
+        const current = await tx.rotationMeta.findUniqueOrThrow({ where: { id: META_ID } });
+        const extra: { planJson?: string | null; tableStateJson?: string } = {};
+        if (data.tableLabels !== undefined) {
+          const oldLabels = tableLabelsOf({ tableCount: current.tableCount, tableLabels: current.tableLabels ? parseTableLabels(current.tableLabels).labels : null });
+          const newLabels = data.tableLabels.split(",").map(Number);
+          const plan = parsePlan(current.planJson);
+          if (plan && oldLabels.join(",") !== newLabels.join(",")) {
+            const moved = remapPlanTables(plan, oldLabels, newLabels);
+            extra.planJson = moved ? JSON.stringify(moved) : null;
+          }
+          // 새로 연 테이블: 오픈 시각 기록(컨바인 기록은 지움)
+          const added = newLabels.filter((label) => !oldLabels.includes(label));
+          if (added.length) {
+            const all = parseTableState(current.tableStateJson);
+            const openedAt = action.openedAt !== undefined && Number.isFinite(Number(action.openedAt)) ? Math.floor(Number(action.openedAt)) : null;
+            for (const label of added) all[String(label)] = { ...(all[String(label)] ?? {}), closedAt: null, openedAt };
+            extra.tableStateJson = JSON.stringify(all);
+          }
+        }
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { ...data, ...extra } });
         break;
       }
       case "savePlan": {

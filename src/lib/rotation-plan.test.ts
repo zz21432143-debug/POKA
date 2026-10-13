@@ -216,3 +216,32 @@ describe("max consecutive deal", async () => {
     assert.ok(plan.slots.every((slot) => slot.seats.every(Boolean)));
   });
 });
+
+describe("open more tables mid-game", async () => {
+  const { remapPlanTables, autoArrange } = await import("./rotation-plan");
+  it("keeps assignments by table number, adds empty new tables, and Auto fills them", () => {
+    // T9~T12 운영 중, 딜러 7명(3명 휴식) → T7, T8 추가 오픈
+    const list = dealers(7);
+    const plan = buildPlan({ dealers: list, tables: 4, start: 600, end: 720, interval: 20 });
+    const before = plan.slots[2];
+    const moved = remapPlanTables(plan, [9, 10, 11, 12], [7, 8, 9, 10, 11, 12])!;
+    assert.equal(moved.tables, 6);
+    assert.deepEqual(moved.slots[2].seats.slice(2), before.seats, "T9~T12 배정 그대로");
+    assert.deepEqual(moved.slots[2].seats.slice(0, 2), [null, null], "T7·T8은 빈칸");
+    const after = autoArrange({ plan: moved, dealers: list, current: 2, tables: 6, start: 600, interval: 20, now: 645 });
+    assert.deepEqual(after.slots[2].seats.slice(2), before.seats, "Auto 뒤에도 기존 테이블 그대로");
+    assert.ok(after.slots[2].seats.slice(0, 2).every(Boolean), "Auto가 쉬던 딜러로 T7·T8 채움");
+    assert.ok(after.slots.slice(3).every((s) => s.seats.filter(Boolean).length === 6), "다음 칸부터 6테이블");
+  });
+  it("renames when no number overlaps and the count is the same, otherwise asks to rebuild", () => {
+    const plan = buildPlan({ dealers: dealers(5), tables: 4, start: 600, end: 680, interval: 20 });
+    assert.deepEqual(remapPlanTables(plan, [5, 6, 7, 8], [1, 2, 3, 4])!.slots, plan.slots);
+    assert.equal(remapPlanTables(plan, [5, 6, 7, 8], [1, 2]), null);
+  });
+  it("moves dealers of removed tables to rest", () => {
+    const plan = buildPlan({ dealers: dealers(5), tables: 4, start: 600, end: 680, interval: 20 });
+    const moved = remapPlanTables(plan, [1, 2, 3, 4], [1, 2, 3])!;
+    const gone = plan.slots[0].seats[3]!;
+    assert.ok(moved.slots[0].rest.includes(gone));
+  });
+});

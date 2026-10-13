@@ -9,6 +9,7 @@ import {
   MAX_TABLES,
   STATUS_LABEL,
   closedFromOf,
+  openedFromOf,
   formatTableLabels,
   formatWorkDate,
   kstClock,
@@ -117,6 +118,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [regOpen, setRegOpen] = useState(initial.dealers.length === 0);
   // 공유 링크 QR코드(이미지 주소)
   const [qr, setQr] = useState<string | null>(null);
+  // 게임 중 테이블 추가 오픈
+  const [addText, setAddText] = useState("");
+  const [openNotice, setOpenNotice] = useState<string | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
   const gameRef = useRef(initial.game.id);
@@ -233,6 +237,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   // 버튼 자리: 한 번 정하면 모든 테이블이 같습니다(테이블 상태 "0"에 저장)
   const button = state.tableState["0"]?.button ?? null;
   const isClosedAt = (t: number, at: number) => closedFrom[t] != null && at >= (closedFrom[t] as number);
+  // 게임 중 추가로 연 테이블: 연 시각 앞 칸은 "오픈 전"
+  const openedFrom = useMemo(() => openedFromOf(labels, state.tableState), [labels, state.tableState]);
+  const isBeforeOpen = (t: number, at: number) => openedFrom[t] != null && at < (openedFrom[t] as number);
   // 운영 현황(지금 칸 기준, 시작 전이면 첫 칸)
   const nowSlot = plan ? plan.slots[Math.max(0, current)] : null;
   // 이미 컨바인된(지금 칸부터 닫힌) 테이블은 시간표 줄에서 빼서 자리를 아낍니다. 다음 교대에 닫히는 테이블은 빨간색으로 남겨 둡니다.
@@ -294,6 +301,34 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const leftInPlan = state.dealers.filter((d) =>
     plan ? plan.slots.some((slot, index) => index > current && (slot.seats.includes(d.id) || slot.rest.includes(d.id)) && isGone(d.id, index)) : false,
   );
+
+  /**
+   * 게임 중 테이블 추가 오픈(예: 9~21 운영 중 7, 8 추가). 시간표는 그대로 두고 새 테이블만 빈칸으로 넣습니다.
+   * 지금 칸부터 열리고, Auto를 누르면 쉬던 딜러가 들어갑니다.
+   */
+  async function openTables() {
+    const { labels: wanted, errors } = parseTableLabels(addText);
+    const added = wanted.filter((label) => !labels.includes(label));
+    if (errors.length || !added.length) {
+      setError(
+        errors.length
+          ? `테이블 번호를 확인하세요: ${errors.join(", ")}`
+          : "이미 있는 테이블입니다. 컨바인했던 테이블은 시간표 아래 \"다시 열기\"로 여세요.",
+      );
+      return;
+    }
+    if (labels.length + added.length > MAX_TABLES) {
+      setError(`테이블은 최대 ${MAX_TABLES}개입니다.`);
+      return;
+    }
+    // 다시 연 테이블(컨바인했던 번호)은 "다시 열기"로
+    const next = [...labels, ...added].sort((a, b) => a - b);
+    const openedAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? undefined) : undefined;
+    if (await send({ type: "setSettings", tableLabels: formatTableLabels(next), openedAt })) {
+      setAddText("");
+      setOpenNotice(`${added.map((l) => `T${l}`).join(", ")} 오픈했습니다. Auto를 누르면 쉬던 딜러가 들어갑니다.`);
+    }
+  }
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
   function runAuto() {
@@ -552,6 +587,43 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </>
           ) : null}
         </p>
+        {/* 게임 중 테이블 추가 오픈 */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <input
+            aria-label="추가로 열 테이블"
+            value={addText}
+            placeholder="추가로 열 테이블 (예: 7, 8)"
+            onChange={(e) => setAddText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && addText.trim()) void openTables();
+            }}
+            className="h-10 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+          />
+          <button
+            type="button"
+            disabled={busy || !addText.trim()}
+            onClick={() => void openTables()}
+            className="min-h-10 rounded-lg bg-emerald-500 px-3 text-sm font-black text-black disabled:opacity-40"
+          >
+            + 테이블 추가 오픈
+          </button>
+        </div>
+        {openNotice ? (
+          <p data-open-notice className="flex flex-wrap items-center gap-2 rounded-lg bg-emerald-950 px-2 py-1.5 text-sm font-bold text-emerald-200">
+            {openNotice}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                runAuto();
+                setOpenNotice(null);
+              }}
+              className="ml-auto min-h-9 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
+            >
+              Auto
+            </button>
+          </p>
+        ) : null}
       </section>
 
       </>
@@ -655,8 +727,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 type="button"
                 disabled={busy || labelsText === formatTableLabels(labels) || parsedLabels.labels.length === 0}
                 onClick={() => {
-                  if (parsedLabels.labels.length !== state.tableCount && plan && !window.confirm("테이블 수가 바뀌면 시간표를 다시 짜야 합니다. 바꿀까요?")) return;
-                  void send({ type: "setSettings", tableLabels: labelsText });
+                  const nextLabels = parsedLabels.labels;
+                  const overlap = nextLabels.some((l) => labels.includes(l));
+                  if (plan && !overlap && nextLabels.length !== labels.length && !window.confirm("겹치는 테이블 번호가 없어 시간표를 다시 짜야 합니다. 바꿀까요?")) return;
+                  const openedAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? undefined) : undefined;
+                  void send({ type: "setSettings", tableLabels: labelsText, openedAt });
                 }}
                 className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold disabled:opacity-40"
               >
@@ -869,10 +944,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         </button>
                       </span>
                       {closedFrom[t] != null ? <span className="block text-[10px] font-black text-rose-300">{formatClock(closedFrom[t] as number)} 컨바인</span> : null}
+                      {closedFrom[t] == null && openedFrom[t] != null ? (
+                        <span className="block text-[10px] font-black text-emerald-300">{formatClock(openedFrom[t] as number)} 오픈</span>
+                      ) : null}
                     </th>
                     {rows.map(({ slot, index }) => {
                       const id = slot.seats[t];
                       const time = formatClock(slot.at);
+                      if (isBeforeOpen(t, slot.at)) {
+                        return (
+                          <td key={slot.at} className={cn("px-1 py-1", index < current && "opacity-50")}>
+                            <span data-before-open className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border border-dashed border-white/15 bg-zinc-900 text-xs font-bold text-zinc-500">
+                              오픈 전
+                            </span>
+                          </td>
+                        );
+                      }
                       if (isClosedAt(t, slot.at)) {
                         return (
                           <td key={slot.at} className={cn("px-1 py-1", index < current && "opacity-50")}>
