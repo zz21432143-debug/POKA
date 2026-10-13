@@ -10,6 +10,11 @@ import { PushAdminActions } from "@/components/admin/push-admin-actions";
 export const metadata: Metadata = { title: "알림 관리", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
+/** 지금부터 며칠 전 시각 */
+function daysAgo(days: number) {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+}
+
 function n(value: number) {
   return value.toLocaleString("ko-KR");
 }
@@ -18,7 +23,7 @@ function n(value: number) {
 export default async function AdminPushPage() {
   const user = await getCurrentUser();
   if (!user?.isMaster) notFound();
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgo = daysAgo(7);
   const [byRegion, recent, members, mine, admins] = await Promise.all([
     prisma.pushSubscription.groupBy({ by: ["region"], _count: { _all: true } }),
     prisma.pushSubscription.count({ where: { region: { not: "" }, createdAt: { gte: weekAgo } } }),
