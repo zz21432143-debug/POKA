@@ -66,6 +66,7 @@ export const BOARD_STICKER: Record<string, OniStickerName> = {
   dealers: "cool",
   guide: "study",
   tools: "work",
+  board: "holdem",
   search: "curious",
 };
 

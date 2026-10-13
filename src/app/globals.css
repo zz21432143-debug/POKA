@@ -2031,3 +2031,13 @@ select {
   background-size: 340px 260px;
   opacity: 0.1;
 }
+
+/* 게임 현황판 아래 공지(오른쪽 → 왼쪽으로 흐름) */
+@keyframes poka-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}

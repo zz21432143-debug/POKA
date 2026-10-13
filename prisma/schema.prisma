@@ -614,3 +614,20 @@ model RotationMeta {
   @@index([workDate, createdAt])
   @@index([ownerId, workDate])
 }
+
+/// 게임 현황판(토너먼트 시계). 계정마다 따로(비공개), 주인이 켜면 보기 전용 TV 링크(/g/값)
+model GameBoard {
+  id         String   @id @default(cuid())
+  /// 만든 계정(User.id). 다른 계정에는 보이지 않습니다.
+  ownerId    String
+  name       String   @default("메인 토너먼트")
+  /// 보기 전용 TV 링크 값. 없으면 공유 꺼짐
+  shareToken String?  @unique
+  /// 구조 · 인원 · 상금 · 공지 · 시계(JSON, src/lib/game-board.ts)
+  dataJson   String
+  version    Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([ownerId, createdAt])
+}
