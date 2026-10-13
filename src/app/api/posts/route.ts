@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { pingIndexNow, shouldPingIndexNow } from "@/lib/indexnow";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { grantRewards } from "@/lib/exp";
@@ -299,6 +300,9 @@ export async function POST(request: Request) {
         data: { mode: "MANUAL", postId: post.id, enabled: true },
       });
     }
+
+    // 검색엔진에 새 글 알림(응답을 보낸 뒤 처리)
+    if (shouldPingIndexNow(post)) after(() => pingIndexNow([`/posts/${post.id}`]));
 
     return NextResponse.json({
       id: post.id,

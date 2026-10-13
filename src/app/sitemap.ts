@@ -11,7 +11,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const regions: MetadataRoute.Sitemap = JOB_REGIONS.map((region) => ({
-    url: `${base}/boards/jobs?region=${encodeURIComponent(region)}`,
+    url: `${base}/jobs/${encodeURIComponent(region)}`,
     changeFrequency: "daily",
     priority: 0.7,
   }));

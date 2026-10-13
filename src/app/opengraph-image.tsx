@@ -31,7 +31,7 @@ export default async function OpenGraphImage() {
           <div style={{ fontSize: 28, letterSpacing: 6, color: "#e7c98a" }}>POKERWIKI.CO.KR</div>
           <div style={{ marginTop: 18, fontSize: 96, fontWeight: 800, lineHeight: 1.05 }}>POKA</div>
           <div style={{ marginTop: 16, fontSize: 42, color: "#f3dcc4" }}>홀덤·딜러 커뮤니티</div>
-          <div style={{ marginTop: 28, fontSize: 28, color: "#c9a98a" }}>포커를 더 즐겁게 / 함께하는 공간</div>
+          <div style={{ marginTop: 28, fontSize: 28, color: "#c9a98a" }}>딜러 구인부터 매장 운영까지, POKA 하나로</div>
         </div>
       </div>
     ),

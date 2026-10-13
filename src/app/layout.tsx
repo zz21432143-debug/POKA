@@ -78,6 +78,7 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   // canonical은 페이지마다 따로 둡니다. 여기서 "/"를 주면 모든 페이지가 홈으로 합쳐집니다.
+  alternates: { types: { "application/rss+xml": [{ url: "/rss.xml", title: "POKA 새 글" }] } },
   verification: searchEngineVerificationMeta(),
   other: {
     "google-adsense-account": DEFAULT_ADSENSE_CLIENT,

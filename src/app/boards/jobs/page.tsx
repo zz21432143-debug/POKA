@@ -8,7 +8,7 @@ import { RegionUrgentAlert } from "@/components/jobs/region-urgent-alert";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { PAGE_SIZE } from "@/lib/feed";
-import { openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
+import { JOB_REGIONS, openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
 import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
@@ -24,13 +24,16 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const region = parseJobRegion((await searchParams).region);
   if (region) {
     return {
-      title: `${region} 홀덤펍 딜러 구인구직`,
+      title: `${region} 홀덤 딜러 구인 · 급구 대타`,
       description: `${region} 지역 홀덤펍 지원 딜러 구인, 급구 대타, 고정·팀 구인 공고를 모아 봅니다.`,
+      // 같은 목록의 대표 주소는 /jobs/서울
+      alternates: { canonical: `/jobs/${region}` },
     };
   }
   return {
-    title: "홀덤펍 딜러 구인구직",
-    description: "홀덤펍 지원 딜러 구인과 급구 대타, 고정·팀 구인을 한곳에서. 지역별로 골라 볼 수 있습니다.",
+    title: "홀덤 딜러 구인구직 · 급구 대타",
+    description: "홀덤펍 지원 딜러 구인과 급구 대타, 대회 딜러, 고정·팀 구인을 한곳에서. 지역별로 골라 보고 급구 알림도 받아요.",
+    alternates: { canonical: "/boards/jobs" },
   };
 }
 
@@ -128,6 +131,15 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           emptyAction={{ href: "/boards/jobs/write", label: "첫 공고 올리기" }}
         />
       </section>
+      {/* 지역별 구인 바로가기(검색엔진이 지역 페이지를 찾을 수 있게) */}
+      <nav aria-label="지역별 홀덤 딜러 구인" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#9CA3AF]">
+        <span className="font-semibold text-[#d1c7b5]">지역별 홀덤 딜러 구인</span>
+        {JOB_REGIONS.map((name) => (
+          <Link key={name} href={`/jobs/${name}`} aria-current={name === region ? "page" : undefined} className="inline-flex min-h-9 items-center hover:text-white">
+            {name}
+          </Link>
+        ))}
+      </nav>
       <BoardBottomAd />
     </div>
   );

@@ -47,6 +47,10 @@ import { jobExpiresOn, jobStatus } from "@/lib/job-status";
 import { titleRegion } from "@/lib/jobs";
 import { isStaff } from "@/lib/roles";
 import { loginHref } from "@/lib/login-path";
+import { eventJsonLd, jobPostingJsonLd, jsonLdString } from "@/lib/job-jsonld";
+import { siteUrl } from "@/lib/site";
+import { ShareButton } from "@/components/posts/share-button";
+import { openJobWhere, regionWhere, parseJobRegion } from "@/lib/job-status";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +82,10 @@ export async function generateMetadata({
         isPrivate: true,
         jobKind: true,
         jobLocation: true,
+        jobPayType: true,
+        jobPayAmount: true,
+        jobWorkDate: true,
+        jobWorkHours: true,
         content: true,
       },
     })
@@ -89,8 +97,16 @@ export async function generateMetadata({
     return {
       alternates: { canonical: `/posts/${id}` },
       title: `${post.title} · ${kindLabel}`,
-      // 비회원에게는 제목까지만 공개하므로 설명에도 지역·분류만 넣고 조건은 넣지 않습니다.
-      description: `${titleRegion(post.jobLocation)} 홀덤펍 ${kindLabel} 공고입니다. 근무 조건과 연락처는 POKA 로그인 후 확인할 수 있습니다.`,
+      // 근무 조건은 공개, 연락처는 로그인 후
+      description: [
+        `${titleRegion(post.jobLocation)} 홀덤 딜러 ${kindLabel}`,
+        post.jobPayType && post.jobPayAmount ? `${post.jobPayType} ${post.jobPayAmount}` : null,
+        post.jobWorkDate ? `근무일 ${post.jobWorkDate}` : null,
+        post.jobWorkHours ? `${post.jobWorkHours}` : null,
+        "연락처는 POKA 로그인 후 확인",
+      ]
+        .filter(Boolean)
+        .join(" · "),
     };
   }
   if (post.isPrivate) {
@@ -101,7 +117,7 @@ export async function generateMetadata({
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/[━─=]{3,}/g, " ")
-    .replace(/s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
   const description = summary ? (summary.length > 150 ? `${summary.slice(0, 148)}…` : summary) : `POKA ${board} 글입니다.`;
   const title = `${post.title} · ${board}`;
@@ -111,6 +127,18 @@ export async function generateMetadata({
     description,
     openGraph: { type: "article", title, description, url: `/posts/${id}` },
   };
+}
+
+/** 비회원 미리보기: 본문 앞 200자(태그 정리) */
+function guestPreview(content: string | null) {
+  const text = (content ?? "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (!text) return null;
+  return text.length > 200 ? `${text.slice(0, 200)}…` : text;
 }
 
 export default async function PostDetailPage({
@@ -139,10 +167,12 @@ export default async function PostDetailPage({
   if (!post) notFound();
   // 개인 구직은 운영 종료. 본명이 담긴 예전 구직 글은 작성자와 관리자만 봅니다.
   if (post.jobKind === "SEEKING" && viewer?.id !== post.authorId && !viewer?.isAdmin) notFound();
-  // 비회원은 모든 글에서 제목(게시판·작성자·작성일)까지만 봅니다. 본문·조건·연락처·사진·댓글은 로그인 후.
+  // 비회원(검색엔진 포함): 공식 글(공지·TDA·대회 일정)은 전부, 구인은 근무 조건까지(연락처·상세는 로그인 후),
+  // 그 밖의 글은 앞부분 미리보기만 봅니다.
   const guest = !viewer;
   // 공지사항·TDA 룰은 종이 문서(A4) 모양으로 보여 줍니다.
   const docBoard = post.boardType === "NOTICE" || post.boardType === "TDA";
+  const officialOpen = docBoard || post.boardType === "SCHEDULE";
   if (post.boardType === "ANONYMOUS_REVIEW") {
     return (
       <article className="ink-panel mx-auto w-full max-w-lg rounded-2xl p-5">
@@ -168,7 +198,7 @@ export default async function PostDetailPage({
     isAdmin: Boolean(viewer?.isAdmin),
     unlocked,
   });
-  const canRead = canReveal && !guest;
+  const canRead = canReveal && (!guest || officialOpen);
   const status = post.boardType === "JOBS" ? jobStatus(post) : null;
   const expiresOn = status === "open" ? jobExpiresOn(post) : null;
   const staff = Boolean(viewer && isStaff(viewer));
@@ -225,14 +255,37 @@ export default async function PostDetailPage({
 
   const listHref = boardListHref(post.boardType, post.jobKind);
 
+  // 아래 「다른 글」: 구인은 같은 지역 모집 중 공고, 그 밖은 같은 게시판 최신 글
+  const related = await prisma.post
+    .findMany({
+      where: isJobPost
+        ? { AND: [{ boardType: "JOBS", hidden: false, isAttendanceThread: false, id: { not: post.id }, jobKind: { not: "SEEKING" } }, regionWhere(parseJobRegion(titleRegion(post.jobLocation))), openJobWhere()] }
+        : { boardType: post.boardType, hidden: false, isPrivate: false, isAttendanceThread: false, id: { not: post.id } },
+      orderBy: isJobPost ? { bumpedAt: "desc" } : { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true },
+    })
+    .catch(() => [] as { id: string; title: string }[]);
+
+  // 검색엔진용: 모집 중인 공고는 구글 채용 검색(JobPosting), 대회 일정은 Event
+  const base = siteUrl();
+  const structured =
+    isJobPost && status === "open" && !post.isPrivate
+      ? jobPostingJsonLd(post, base, expiresOn)
+      : post.boardType === "SCHEDULE"
+        ? eventJsonLd(post, base)
+        : null;
+
   return (
     <article className="flex flex-col gap-4">
+      {structured ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(structured) }} /> : null}
       {/* 급구를 막 올렸으면: 알림을 몇 명에게 보냈는지 */}
       <Suspense fallback={null}>
         <PushSentNotice />
       </Suspense>
       <div className="flex items-center justify-between gap-2">
         <BackToList href={listHref} />
+        {post.isPrivate ? null : <ShareButton path={`/posts/${post.id}`} title={post.title} />}
       </div>
       <div className="article-sheet ink-panel">
       <header className="article-head">
@@ -271,12 +324,23 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
-      {guest ? (
+      {guest && !officialOpen ? (
         <div className="article-body">
+          {isJobPost ? (
+            <>
+              {/* 근무 조건(지역·시급·날짜·인원)은 공개, 지원 방법·연락처는 로그인 후 */}
+              <JobFacts job={{ ...post, jobApplyMethod: null }} />
+              <JobEventList job={post} />
+            </>
+          ) : !post.isPrivate && guestPreview(post.content) ? (
+            <p data-guest-preview className="article-copy whitespace-pre-line text-[#ece4d6]">
+              {guestPreview(post.content)}
+            </p>
+          ) : null}
           <div className="flex flex-col items-center gap-3 rounded-xl border border-[#3a332c] bg-[#141110] px-4 py-8 text-center">
             <LockIcon className="size-6 text-[#e7c98a]" aria-hidden />
             <p className="text-[15px] font-semibold text-white">
-              {isJobPost ? "근무 조건·연락처와 상세 내용은" : "글 내용은"} 로그인한 회원만 볼 수 있습니다.
+              {isJobPost ? "연락처·지원 방법과 상세 내용은" : "글 전체와 댓글은"} 로그인한 회원만 볼 수 있습니다.
             </p>
             <p className="text-sm text-[#9CA3AF]">카카오 또는 구글로 10초 만에 가입할 수 있어요.</p>
             <Link
@@ -522,6 +586,21 @@ export default async function PostDetailPage({
       </section>
       ) : null}
       </div>
+
+      {related.length ? (
+        <section aria-label={isJobPost ? "이 지역 다른 공고" : "이 게시판 다른 글"} className="ink-panel grid gap-1 rounded-2xl p-4">
+          <h2 className="text-base font-black text-[#f3d9a4]">{isJobPost ? `${titleRegion(post.jobLocation)} 다른 공고` : `${BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시판"} 다른 글`}</h2>
+          <ul className="grid">
+            {related.map((row) => (
+              <li key={row.id}>
+                <Link href={`/posts/${row.id}`} className="flex min-h-11 items-center border-b border-white/5 text-[15px] text-[#E5E7EB] last:border-0 hover:text-[#e7c98a]">
+                  <span className="truncate">{row.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="flex justify-center">
         <BackToList href={listHref} className="w-full justify-center sm:w-auto sm:min-w-48" />

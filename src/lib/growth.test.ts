@@ -55,12 +55,13 @@ describe("weekly hub and kakao lines", () => {
 });
 
 describe("evergreen guides and verified dealers", () => {
-  it("has ten indexed holdem guides", () => {
-    assert.equal(GUIDE_ARTICLES.length, 10);
+  it("has eighteen indexed holdem guides with unique slugs", () => {
+    assert.equal(GUIDE_ARTICLES.length, 18);
+    assert.equal(new Set(GUIDE_ARTICLES.map((row) => row.slug)).size, GUIDE_ARTICLES.length);
     assert.ok(getGuideArticle("hand-rankings"));
     assert.equal(getGuideArticle("missing"), null);
     for (const row of GUIDE_ARTICLES) {
-      assert.equal(/바카라/.test(row.body), false, row.slug);
+      assert.equal(/바카라|캐시|현금/.test(row.body + row.title + row.summary), false, row.slug);
     }
   });
 

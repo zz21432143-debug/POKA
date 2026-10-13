@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckIcon, LockIcon } from "lucide-react";
 import { DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
 import { toolIntro } from "@/lib/tool-seo";
+import { GameBoardDemo } from "@/components/tools/game-board-demo";
 
 /** 로그인 전 툴 소개: 무엇을 하는 툴인지 보여 주고 로그인으로 안내(검색엔진도 이 소개를 읽습니다) */
 export function ToolsLocked({ next = "/tools" }: { next?: string }) {
@@ -24,6 +25,7 @@ export function ToolsLocked({ next = "/tools" }: { next?: string }) {
         <h1 className="text-2xl font-black text-white">{intro.heading}</h1>
         <p className="text-[15px] leading-7 text-[#D1D5DB]">{intro.description}</p>
       </div>
+      {next === "/tools/board" ? <GameBoardDemo /> : null}
       <ul className="grid gap-2">
         {intro.points.map((point) => (
           <li key={point} className="flex gap-2 text-[15px] leading-7 text-[#ece4d6]">
