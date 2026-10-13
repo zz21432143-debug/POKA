@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpenIcon, CalendarDaysIcon, MegaphoneIcon } from "lucide-react";
+import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
-export const metadata: Metadata = { title: "정보센터" };
+export const metadata: Metadata = { title: "대회 · 정보" };
 
 const CARDS = [
   { href: "/boards/schedule", title: "홀덤 대회 캘린더", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
-  { href: "/boards/official", title: "공식 홍보", body: "제휴 · 협찬 포스터.", icon: MegaphoneIcon },
   { href: "/boards/tda", title: "TDA 룰", body: "토너먼트 공식 홀덤 룰 정리.", icon: BookOpenIcon },
+  { href: "/info/guide", title: "딜러 가이드", body: "테이블에서 바로 쓰는 기본 룰.", icon: GraduationCapIcon },
 ] as const;
 
 export default function InfoHubPage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="board-intro">
-        <BoardTitle sticker={BOARD_STICKER.info}>정보센터</BoardTitle>
-        <p className="mt-2">대회 일정, 공식 홍보, TDA 룰.</p>
+        <BoardTitle sticker={BOARD_STICKER.info}>대회 · 정보</BoardTitle>
+        <p className="mt-2">대회 일정, TDA 룰, 딜러 가이드.</p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((card) => (

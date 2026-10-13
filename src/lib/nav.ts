@@ -18,8 +18,8 @@ export const TOP_NAV = [
   { href: "/", label: "홈" },
   { href: "/boards/jobs", label: "구인구직" },
   { href: "/community", label: "커뮤니티" },
-  { href: "/info", label: "정보센터" },
-  { href: "/boards/rules", label: "질문" },
+  { href: "/info", label: "대회 · 정보" },
+  { href: "/tools", label: "딜러 툴" },
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [
@@ -38,8 +38,10 @@ export type SidebarItem = NavItem & { icon: SidebarIcon };
 export type SidebarGroup = {
   title: string | null;
   items: SidebarItem[];
-  /** 사이드바에서 접어 둘 수 있는 그룹. 처음에는 펼친 상태로 보입니다. */
+  /** 사이드바에서 접어 둘 수 있는 그룹 */
   collapsible?: boolean;
+  /** 처음엔 접어 둠(지금 보는 페이지가 이 그룹 안이면 펼침) */
+  closed?: boolean;
 };
 
 /** 홈 사이드바(시안). 피드 검증용 BOARD_NAV와 분리 */
@@ -60,44 +62,50 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     ],
   },
   {
+    // 회원끼리 이야기하는 곳
     title: "커뮤니티",
     items: [
-      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
+      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },
   {
-    title: "정보센터",
+    // 읽는 곳: 대회 일정 · 룰 · 가이드
+    title: "대회 · 정보",
     collapsible: true,
+    closed: true,
     items: [
       { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
-      { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "fan" },
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
+      { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
     ],
   },
   {
-    // 로그인한 회원 누구나 씁니다(로테이션은 계정마다 따로).
+    // 로그인한 회원 누구나 씁니다(로테이션 · 현황판은 계정마다 따로).
     title: "딜러 툴",
     collapsible: true,
+    closed: true,
     items: [
+      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
       { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
       { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
-      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
-      { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
       { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟", icon: "omamori" },
+      { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
     ],
   },
   {
-    title: "기타",
+    // POKA 운영: 공지 · 홍보 · 포인트 · 문의 (운영 정책은 맨 아래 바닥글에)
+    title: "POKA",
     collapsible: true,
+    closed: true,
     items: [
+      { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
+      { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "fan" },
       { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
       { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },
-      { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "brush" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "gourd" },
-      { href: "/terms", label: "운영 정책", hint: "약관", icon: "seal" },
     ],
   },
 ];

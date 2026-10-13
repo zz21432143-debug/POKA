@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { FreePromoBanner } from "@/components/ads/free-promo-banner";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 
 export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
@@ -32,10 +31,6 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
     );
   }
 
-  // 제휴 배너가 비어 있으면 "POKA 무료 홍보 이벤트"로 채웁니다.
-  return (
-    <section aria-label="POKA 무료 홍보 이벤트" className="mx-auto w-full max-w-[300px]">
-      <FreePromoBanner variant="card" />
-    </section>
-  );
+  // 제휴 배너가 비어 있으면 비워 둡니다. "POKA 무료 홍보 이벤트"는 메인 포스터 칸 · 게시판 아래 배너에 한 번씩만(같은 홍보 반복 X).
+  return null;
 }

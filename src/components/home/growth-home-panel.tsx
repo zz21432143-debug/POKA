@@ -21,8 +21,11 @@ export function GrowthHomePanel({
   const handSpot = hand?.title.split("|").map((part) => part.trim()).at(-1) || hand?.title;
   const weekLabel = hub?.title.match(/\(([^)]+)\)/)?.[1] ?? hub?.title ?? "이번 주 일정";
 
+  // 핸드 · 주간 허브가 없으면 빈 안내 칸을 두지 않습니다(메인을 단순하게)
+  if (!hand && !hub) return null;
   return (
-    <section className="grid gap-3 sm:grid-cols-2">
+    <section className={hand && hub ? "grid gap-3 sm:grid-cols-2" : "grid gap-3"}>
+      {hand ? (
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-[#f6efe2]">
@@ -49,6 +52,8 @@ export function GrowthHomePanel({
           {hand ? "투표하러 가기" : "오늘 핸드 올리기"}
         </Link>
       </article>
+      ) : null}
+      {hub ? (
 
       <article className="lounge-card flex min-h-[7.5rem] min-w-0 flex-col rounded-[1.35rem] p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
@@ -73,6 +78,7 @@ export function GrowthHomePanel({
           달력 보기
         </Link>
       </article>
+      ) : null}
     </section>
   );
 }
