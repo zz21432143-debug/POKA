@@ -13,6 +13,7 @@ import { getPremiumBanners } from "@/lib/premium-banners";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { FreePromoBanner } from "@/components/ads/free-promo-banner";
 import { HomeHero } from "@/components/home/home-hero";
+import { FREE_PROMO } from "@/lib/free-promo";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -20,12 +21,14 @@ function HomePanelFallback({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-2xl bg-white/[0.06] ${className}`} />;
 }
 
-/** 홍보 포스터: 실제 홍보물이 있을 때만 줄로 보여 주고, 없으면 "무료 홍보 이벤트" 배너 하나만 */
+/** 홍보 포스터 6구좌: 늘 6장이 돌아갑니다. 비어 있는 구좌는 "POKA 무료 홍보 이벤트" 포스터로 채워 '맡길 자리'가 보이게 합니다. */
 async function HomePosters() {
   const banners = await getPremiumBanners().catch(() => []);
-  const posters: HomePoster[] = banners
-    .filter((banner) => !(banner.vacant || !banner.image || banner.image.startsWith("/banners/slot-")))
-    .map((banner) => ({ key: `slot-${banner.id}`, slot: banner.id, href: banner.href, title: banner.title, image: banner.image, mark: banner.mark }));
+  const posters: HomePoster[] = banners.map((banner) =>
+    banner.vacant || !banner.image || banner.image.startsWith("/banners/slot-")
+      ? { key: `slot-${banner.id}`, slot: banner.id, href: FREE_PROMO.href, title: FREE_PROMO.title, image: FREE_PROMO.image, mark: FREE_PROMO.mark, plain: true }
+      : { key: `slot-${banner.id}`, slot: banner.id, href: banner.href, title: banner.title, image: banner.image, mark: banner.mark },
+  );
   if (posters.length === 0) return <FreePromoBanner variant="wide" />;
   return <HomePosterCarousel posters={posters} />;
 }

@@ -230,20 +230,18 @@ export function clockView(data: GameBoardData, now: number): ClockView {
   let regCloseMs: number | null = null;
   let regClosed = false;
   if (data.regLevel > 0) {
-    // 지금까지 센 레벨 번호(휴식이면 직전 레벨 번호)
-    const cur = levels.slice(0, i + 1).filter((l) => !l.isBreak).length;
-    if (finished || (levels[i].isBreak ? cur >= data.regLevel : cur > data.regLevel)) regClosed = true;
-    else {
-      let acc = remainingMs;
-      let n = cur;
-      if (levels[i].isBreak || n < data.regLevel) {
-        for (let j = i + 1; j < levels.length; j++) {
-          acc += levelMs(levels[j]);
-          if (!levels[j].isBreak && ++n === data.regLevel) break;
-        }
+    // 마감 칸: regLevel번째 레벨(휴식 빼고 센 번호). 그 바로 뒤 휴식까지는 등록 가능(휴식이 끝날 때 마감)
+    let endIdx = levels.length - 1;
+    let n = 0;
+    for (let j = 0; j < levels.length; j++) {
+      if (!levels[j].isBreak && ++n === data.regLevel) {
+        endIdx = j;
+        while (endIdx + 1 < levels.length && levels[endIdx + 1].isBreak) endIdx++;
+        break;
       }
-      regCloseMs = acc;
     }
+    if (finished || i > endIdx) regClosed = true;
+    else regCloseMs = remainingMs + levels.slice(i + 1, endIdx + 1).reduce((sum, l) => sum + levelMs(l), 0);
   }
   return {
     index: i,

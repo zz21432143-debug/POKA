@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { POKA_PROMO_EN } from "@/lib/brand-copy";
 import { blindUpSound, breakSound, countdownTick } from "@/lib/board-sound";
-import { PRIZE_COLORS, boardStats, chipText, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
+import { PRIZE_COLORS, boardStats, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
 const won = (n: number) => Math.round(n).toLocaleString("en-US");
 const blindText = (l: BoardLevel) => `SB ${won(l.sb)} / BB ${won(l.bb)}`;
@@ -128,8 +128,8 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           </span>
         </section>
 
-        {/* 왼쪽: 플레이 중 / 바인 · 리바인 · 얼리 · 애드온(따로) · 스택 · 러닝 타임 · 휴식 · 레지 마감 */}
-        <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.5)] @[560px]:order-1 @[560px]:grid-cols-1">
+        {/* 왼쪽(가운데 정렬): 플레이어 · 리바인 · 얼리 · 애드온 · 평균 스택 · 총 칩(숫자 그대로) · 러닝 타임 · 브레이크 · 레지 마감 */}
+        <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.4)] text-center @[560px]:order-1 @[560px]:grid-cols-1">
           <div data-players className={CARD}>
             <span className={LABEL}>PLAYERS</span>
             <span className="text-[clamp(18px,calc(var(--u)*2.5),52px)] leading-tight font-black text-white tabular-nums">
@@ -142,29 +142,34 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
             <Mini data-earlies label="EARLY" value={won(data.earlies)} />
             {data.addonOn ? <Mini data-addons label="ADD-ON" value={won(data.addons)} /> : null}
           </div>
-          <div className={cn(CARD, "grid-cols-2 gap-x-[calc(var(--u)*1)]")}>
-            <span className="grid">
-              <span className={LABEL}>AVG STACK</span>
-              <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">{avgStack ? won(avgStack) : "-"}</span>
-              {avgStack && bb ? <span className="text-[clamp(10px,calc(var(--u)*1.2),24px)] font-bold text-amber-200 tabular-nums">{(avgStack / bb).toFixed(1)} BB</span> : null}
-            </span>
-            <span className="grid content-start">
-              <span className={LABEL}>TOTAL CHIPS</span>
-              <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">{totalChips ? chipText(totalChips) : "-"}</span>
+          <div data-avg className={CARD}>
+            <span className={LABEL}>AVG STACK</span>
+            <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">
+              {avgStack ? won(avgStack) : "-"}
+              {avgStack && bb ? <span className="ml-[calc(var(--u)*0.5)] text-[0.62em] font-bold text-amber-200">{(avgStack / bb).toFixed(1)} BB</span> : null}
             </span>
           </div>
-          <div className={cn(CARD, "gap-[calc(var(--u)*0.3)]")}>
-            <TimeRow data-running label="RUNNING TIME" value={clockText(view.runningMs)} />
-            <TimeRow data-break label="BREAK" at={view.nextBreakMs != null ? kstTime(now + view.nextBreakMs) : undefined} value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : view.level.isBreak ? "ON BREAK" : "-"} />
-            {data.regLevel > 0 ? (
-              <TimeRow
-                data-reg
-                label="REG CLOSE"
-                at={view.regClosed || view.regCloseMs == null ? undefined : kstTime(now + view.regCloseMs)}
-                value={view.regClosed ? "CLOSED" : clockText(view.regCloseMs ?? 0)}
-                tone={view.regClosed ? "closed" : (view.regCloseMs ?? 0) <= 10 * 60_000 ? "warn" : undefined}
-              />
-            ) : null}
+          <div data-total className={CARD}>
+            <span className={LABEL}>TOTAL CHIPS</span>
+            <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">{totalChips ? won(totalChips) : "-"}</span>
+          </div>
+          <div className={cn(CARD, "gap-[calc(var(--u)*0.35)]")}>
+            <div data-running className="grid">
+              <span className={LABEL}>RUNNING TIME</span>
+              <span className="text-[clamp(13px,calc(var(--u)*1.7),36px)] leading-tight font-black text-white tabular-nums">{clockText(view.runningMs)}</span>
+            </div>
+            <div className={cn("grid gap-[calc(var(--u)*0.4)] border-t border-white/10 pt-[calc(var(--u)*0.35)]", data.regLevel > 0 && "grid-cols-2")}>
+              <TimeCell data-break label="BREAK" tone="text-sky-300" at={view.nextBreakMs != null ? kstTime(now + view.nextBreakMs) : undefined} value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : view.level.isBreak ? "ON BREAK" : "-"} />
+              {data.regLevel > 0 ? (
+                <TimeCell
+                  data-reg
+                  label="REG CLOSE"
+                  tone={view.regClosed ? "text-rose-400" : (view.regCloseMs ?? 0) <= 10 * 60_000 ? "text-amber-300" : "text-emerald-300"}
+                  at={view.regClosed || view.regCloseMs == null ? undefined : kstTime(now + view.regCloseMs)}
+                  value={view.regClosed ? "CLOSED" : clockText(view.regCloseMs ?? 0)}
+                />
+              ) : null}
+            </div>
           </div>
         </section>
 
@@ -201,7 +206,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 const SITE = "pokerwiki.co.kr";
 const PROMO = POKA_PROMO_EN;
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
-const CARD = "grid gap-[calc(var(--u)*0.1)] rounded-[calc(var(--u)*1)] border border-white/15 bg-black/55 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.45)]";
+const CARD = "grid justify-items-center gap-[calc(var(--u)*0.1)] rounded-[calc(var(--u)*1)] border border-white/15 bg-black/55 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.32)] text-center";
 const LABEL = "text-[clamp(10px,calc(var(--u)*1.1),24px)] font-black tracking-wide text-zinc-400";
 
 /** 한국 시각 "21:40" */
@@ -209,13 +214,13 @@ function kstTime(ms: number) {
   return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(ms));
 }
 
-/** 시간 줄: 이름 · (실제 시각) · 남은 시간 */
-function TimeRow({ label, value, at, tone, ...rest }: { label: string; value: string; at?: string; tone?: "warn" | "closed" } & Record<`data-${string}`, unknown>) {
+/** 시간 칸: 이름 · 남은 시간(색) · 실제 시각 — 가운데 정렬 */
+function TimeCell({ label, value, at, tone, ...rest }: { label: string; value: string; at?: string; tone: string } & Record<`data-${string}`, unknown>) {
   return (
-    <div {...rest} className="flex items-baseline gap-[calc(var(--u)*0.6)]">
-      <span className={cn(LABEL, "mr-auto whitespace-nowrap")}>{label}</span>
-      {at ? <span className="text-[clamp(11px,calc(var(--u)*1.3),28px)] font-black text-amber-200 tabular-nums">{at}</span> : null}
-      <span className={cn("text-[clamp(13px,calc(var(--u)*1.6),34px)] font-black tabular-nums", tone === "closed" ? "text-rose-300" : tone === "warn" ? "text-amber-300" : "text-white")}>{value}</span>
+    <div {...rest} className="grid justify-items-center">
+      <span className={cn(LABEL, "whitespace-nowrap")}>{label}</span>
+      <span className={cn("text-[clamp(13px,calc(var(--u)*1.6),34px)] leading-tight font-black tabular-nums", tone)}>{value}</span>
+      {at ? <span className="text-[clamp(9px,calc(var(--u)*1),22px)] font-bold text-zinc-400 tabular-nums [@container(max-height:380px)]:hidden">at {at}</span> : null}
     </div>
   );
 }

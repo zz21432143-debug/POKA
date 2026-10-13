@@ -87,11 +87,12 @@ describe("game board data", () => {
     assert.equal(clockView(d, 5 * MIN).regCloseMs, 65 * MIN);
     assert.equal(clockView(d, 45 * MIN).regCloseMs, 25 * MIN, "휴식 중에도 레벨3 끝까지");
     assert.ok(clockView(d, 69 * MIN).regCloseMs! <= MIN);
-    // 레벨 2까지 등록: 휴식에 들어가면 마감
+    // 레벨 2까지 등록: 바로 뒤 휴식까지 등록 가능(휴식이 끝날 때 마감)
     const d2 = { ...board(), regLevel: 2 };
     d2.clock.runningSince = 0;
-    assert.equal(clockView(d2, 30 * MIN).regCloseMs, 10 * MIN);
-    assert.deepEqual([clockView(d2, 45 * MIN).regCloseMs, clockView(d2, 45 * MIN).regClosed], [null, true]);
+    assert.equal(clockView(d2, 30 * MIN).regCloseMs, 20 * MIN);
+    assert.deepEqual([clockView(d2, 45 * MIN).regCloseMs, clockView(d2, 45 * MIN).regClosed], [5 * MIN, false]);
+    assert.deepEqual([clockView(d2, 55 * MIN).regCloseMs, clockView(d2, 55 * MIN).regClosed], [null, true]);
     // 러닝 타임: 레벨 1부터 흐른 시간(휴식 포함)
     assert.equal(clockView(d, 45 * MIN).runningMs, 45 * MIN);
     assert.equal(clockView(d, 0).runningMs, 0);

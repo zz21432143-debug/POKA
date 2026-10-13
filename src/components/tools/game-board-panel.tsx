@@ -481,12 +481,12 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
         </div>
         <p className="text-xs text-zinc-500">칩(바인 · 리바인 · 얼리 · 애드온)은 진행 탭에서 바로 적을 수 있어요.</p>
         <label className={label}>
-          등록 마감(이 레벨이 끝날 때까지 등록 가능)
+          등록 마감(이 레벨 + 바로 뒤 휴식까지 등록 가능)
           <select value={data.regLevel} onChange={(e) => onEdit({ regLevel: Number(e.target.value) })} className={field}>
             <option value={0}>표시 안 함</option>
             {Array.from({ length: data.levels.filter((l) => !l.isBreak).length }, (_, i) => (
               <option key={i + 1} value={i + 1}>
-                레벨 {i + 1} 끝날 때까지
+                레벨 {i + 1}까지(뒤 휴식 포함)
               </option>
             ))}
           </select>

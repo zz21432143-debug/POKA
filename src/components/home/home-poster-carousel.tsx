@@ -31,6 +31,8 @@ export type HomePoster = {
  */
 export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
   const [deck, setDeck] = useState(posters);
+  // 비어 있는 구좌 수(무료 홍보 포스터로 채운 칸) — 광고 맡길 자리 안내
+  const empty = posters.filter((p) => p.plain).length;
   const [start, setStart] = useState(0);
   const [hidden, setHidden] = useState(false);
 
@@ -70,7 +72,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           홍보 포스터
         </h2>
         <Link href="/advertise" className="more-link">
-          포스터 홍보 문의
+          포스터 홍보 문의{empty ? ` · 빈 자리 ${empty}` : ""}
         </Link>
       </div>
       <ul className="grid grid-cols-3 gap-2">
