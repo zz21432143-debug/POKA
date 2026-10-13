@@ -61,3 +61,18 @@ describe("adsense publisher", () => {
     else process.env.NEXT_PUBLIC_ADSENSE_CLIENT = previous;
   });
 });
+
+describe("splitForMidAd (긴 글 가운데 광고)", () => {
+  it("splits long text at the paragraph nearest the middle, leaves short text alone", async () => {
+    const { splitForMidAd } = await import("./adsense");
+    assert.equal(splitForMidAd("짧은 글"), null);
+    const para = (n: number) => "가".repeat(n);
+    const text = [para(400), para(400), para(400), para(400)].join("\n\n");
+    const halves = splitForMidAd(text);
+    assert.ok(halves);
+    assert.equal(halves[0], [para(400), para(400)].join("\n\n"));
+    assert.equal(halves[1], [para(400), para(400)].join("\n\n"));
+    // 문단 구분이 없으면 나누지 않음
+    assert.equal(splitForMidAd(para(3000)), null);
+  });
+});

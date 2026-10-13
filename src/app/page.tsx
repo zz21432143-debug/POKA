@@ -14,6 +14,7 @@ import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { FreePromoBanner } from "@/components/ads/free-promo-banner";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { HomeHero } from "@/components/home/home-hero";
+import { UrgentAlertPrompt } from "@/components/jobs/urgent-alert-prompt";
 import { FREE_PROMO } from "@/lib/free-promo";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -70,6 +71,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-3.5">
       <HomeHero />
+      {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
+      <UrgentAlertPrompt />
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
       </Suspense>

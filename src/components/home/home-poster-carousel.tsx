@@ -29,6 +29,9 @@ export type HomePoster = {
  * 옆으로 미끄러지면 어지럽다는 의견이 있어, 제자리에서 왼쪽부터 차례로 부드럽게 바뀝니다(살짝 흐려졌다 나타남).
  * 들어올 때마다 순서를 섞고, PC에서 마우스가 올라가 있어도 계속 돕니다.
  */
+/** 빈 구좌마다 다른 문구 */
+const VACANT_LINES = ["매장 홍보 환영", "대회 · 이벤트 홍보", "딜러팀 모집 홍보", "브랜드 · 유튜버 홍보", "오픈 · 리뉴얼 홍보", "시즌 대회 홍보"];
+
 export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
   const [deck, setDeck] = useState(posters);
   // 비어 있는 구좌 수(무료 홍보 포스터로 채운 칸) — 광고 맡길 자리 안내
@@ -133,7 +136,18 @@ function PosterCard({ poster, focusable }: { poster: HomePoster; focusable: bool
         loading="lazy"
         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       />
-      {poster.plain ? null : (
+      {poster.plain ? (
+        // 빈 구좌: 자리 번호 · 구좌마다 다른 문구(같은 포스터 반복처럼 안 보이게)
+        <>
+          <span className="absolute inset-x-0 top-0 bg-black/75 px-2 py-1 text-center text-[11px] font-black tracking-wide text-[#f3d9a4] sm:text-xs">
+            {poster.slot}번 구좌 · 비어 있음
+          </span>
+          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pt-6 pb-2 text-center text-[11px] leading-tight font-bold text-white sm:text-xs">
+            {VACANT_LINES[(poster.slot - 1) % VACANT_LINES.length]}
+            <span className="mt-0.5 block text-[#f3d9a4]">홍보 신청 →</span>
+          </span>
+        </>
+      ) : (
         <>
           <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/30">
             {poster.mark}

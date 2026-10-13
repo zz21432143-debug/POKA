@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
-import { parseJobRegion } from "@/lib/job-status";
+import { parseAlertRegion } from "@/lib/job-status";
 import { pushEnabled } from "@/lib/push";
 
 type Body = {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "알림 기능이 아직 준비되지 않았습니다." }, { status: 503 });
   }
   const body = (await request.json().catch(() => ({}))) as Body;
-  const region = parseJobRegion(body.region);
+  const region = parseAlertRegion(body.region);
   const endpoint = body.subscription?.endpoint?.trim();
   const p256dh = body.subscription?.keys?.p256dh?.trim();
   const auth = body.subscription?.keys?.auth?.trim();

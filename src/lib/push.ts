@@ -29,10 +29,10 @@ export function pushEnabled() {
 
 export type PushPayload = { title: string; body: string; url: string };
 
-/** 지역 구독자에게 새 급구를 알립니다. */
+/** 그 지역 구독자 + "전국" 구독자에게 새 급구를 알립니다. */
 export async function notifyRegion(region: string, payload: PushPayload) {
   if (!configure()) return { sent: 0 };
-  const subs = await prisma.pushSubscription.findMany({ where: { region }, take: 2000 });
+  const subs = await prisma.pushSubscription.findMany({ where: { region: { in: [region, "전국"] } }, take: 5000 });
   return sendAll(subs, payload);
 }
 

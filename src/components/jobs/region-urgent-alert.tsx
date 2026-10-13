@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BellRingIcon } from "lucide-react";
-import { JOB_REGIONS } from "@/lib/job-status";
+import { ALL_REGIONS, JOB_REGIONS } from "@/lib/job-status";
 import { ensurePushSubscription, pushSupported } from "@/lib/push-client";
 
 const REGION_KEY = "poka-alert-region";
@@ -145,6 +145,7 @@ export function RegionUrgentAlert() {
         onChange={(event) => choose(event.target.value)}
       >
         <option value="">지역 선택</option>
+        <option value={ALL_REGIONS}>전국(모든 지역)</option>
         {JOB_REGIONS.map((name) => (
           <option key={name} value={name}>
             {name}
@@ -153,7 +154,7 @@ export function RegionUrgentAlert() {
       </select>
       {region ? (
         <Link
-          href={`/boards/jobs/urgent?region=${encodeURIComponent(region)}&open=1`}
+          href={region === ALL_REGIONS ? "/boards/jobs/urgent?open=1" : `/boards/jobs/urgent?region=${encodeURIComponent(region)}&open=1`}
           onClick={markSeen}
           className="touch-target ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 font-semibold text-[#f3eadb] hover:bg-white/10"
         >

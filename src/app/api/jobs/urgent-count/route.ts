@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
+import { ALL_REGIONS, openJobWhere, parseAlertRegion, regionWhere } from "@/lib/job-status";
 
 export const dynamic = "force-dynamic";
 
 /** 내 지역에 since 이후 올라온 모집중 급구 수. 알림 배지용입니다. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const region = parseJobRegion(url.searchParams.get("region"));
+  const region = parseAlertRegion(url.searchParams.get("region"));
   if (!region) {
     return NextResponse.json({ error: "지역을 확인하세요." }, { status: 400 });
   }
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       where: {
         AND: [
           { boardType: "JOBS", jobKind: "URGENT", hidden: false, isAttendanceThread: false },
-          regionWhere(region),
+          region === ALL_REGIONS ? {} : regionWhere(region),
           openJobWhere(),
           { createdAt: { gt: since } },
         ],

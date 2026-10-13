@@ -33,6 +33,14 @@ export const JOB_REGIONS = [
 
 export type JobRegion = (typeof JOB_REGIONS)[number];
 
+/** 급구 알림에서 모든 지역을 받는 값 */
+export const ALL_REGIONS = "전국";
+
+/** 알림 지역: 시·도 또는 "전국" */
+export function parseAlertRegion(raw: string | null | undefined): JobRegion | typeof ALL_REGIONS | null {
+  return raw?.trim() === ALL_REGIONS ? ALL_REGIONS : parseJobRegion(raw);
+}
+
 export function parseJobRegion(raw: string | null | undefined): JobRegion | null {
   const value = raw?.trim();
   if (!value) return null;

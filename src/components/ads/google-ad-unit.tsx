@@ -16,6 +16,7 @@ const SIZE: Record<AdSensePlacement, string> = {
   "board-bottom": "min-h-[100px] w-full",
   "home-bottom": "min-h-[100px] w-full",
   "home-mid": "min-h-[100px] w-full",
+  "post-mid": "min-h-[100px] w-full",
   infeed: "min-h-[90px] w-full",
   sidebar: "mx-auto min-h-[250px] w-full max-w-[300px]",
   a1: "aspect-[2/1] w-full",

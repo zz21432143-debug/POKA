@@ -26,6 +26,30 @@ function isIosSafari() {
   return ios && webkit;
 }
 
+/** 카카오톡 · 네이버 · 인스타그램 · 페이스북 · 라인 같은 앱 안 브라우저(여기서는 홈 화면 설치가 안 됨) */
+function inAppBrowser(): "kakao" | "other" | null {
+  if (typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent;
+  if (/KAKAOTALK/i.test(ua)) return "kakao";
+  if (/NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|BAND\/|SamsungBrowser\/[\d.]+ CrossApp/i.test(ua)) return "other";
+  return null;
+}
+
+/** 앱 안 브라우저에서 바깥 브라우저(사파리 · 크롬)로 지금 페이지 열기 */
+function openOutside(kind: "kakao" | "other") {
+  const url = window.location.href;
+  if (kind === "kakao") {
+    window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(url)}`;
+    return true;
+  }
+  if (/Android/i.test(navigator.userAgent)) {
+    const u = new URL(url);
+    window.location.href = `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=com.android.chrome;end`;
+    return true;
+  }
+  return false;
+}
+
 function isStandalone() {
   if (typeof window === "undefined") return false;
   return (
@@ -51,6 +75,7 @@ export function InstallPwaButton({
   const [iosOpen, setIosOpen] = useState(false);
   const [androidOpen, setAndroidOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
+  const [inAppOpen, setInAppOpen] = useState(false);
   const [installed, setInstalled] = useState(false);
   const [stripClosed, setStripClosed] = useState(false);
 
@@ -97,6 +122,13 @@ export function InstallPwaButton({
   }
 
   async function install() {
+    // 카톡 등 앱 안 브라우저: 설치 메뉴가 없어서 바깥 브라우저로 열고, 거기서 다시 받기
+    const inApp = inAppBrowser();
+    if (inApp) {
+      openOutside(inApp);
+      setInAppOpen(true);
+      return;
+    }
     if (deferred) {
       await deferred.prompt();
       const choice = await deferred.userChoice;
@@ -207,6 +239,39 @@ export function InstallPwaButton({
                 <ShareIcon className="inline size-4 align-text-bottom" /> → <strong>홈 화면에 추가</strong>입니다.
               </p>
             </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inAppOpen} onOpenChange={setInAppOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>브라우저에서 POKA 앱 받기</DialogTitle>
+            <DialogDescription>
+              카카오톡 · 네이버 · 인스타그램 안에서는 앱을 설치할 수 없어요. <strong>사파리 · 크롬</strong>으로 열어서 다시 <strong>받기</strong>를 눌러 주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal space-y-2 pl-5 text-sm leading-6">
+            <li>
+              아래 <strong>브라우저로 열기</strong>를 누르거나, 오른쪽 위(또는 아래) <strong>⋮ · 공유</strong> 메뉴에서 <strong>다른 브라우저로 열기 · Safari로 열기</strong>를 고릅니다.
+            </li>
+            <li>열린 브라우저에서 위쪽 <strong>POKA 앱 · 받기</strong>를 누릅니다.</li>
+          </ol>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => openOutside(inAppBrowser() ?? "other")}
+              className="min-h-11 rounded-xl bg-[#c9a25c] text-sm font-bold text-[#1d1611]"
+            >
+              브라우저로 열기
+            </button>
+            <button
+              type="button"
+              onClick={() => void navigator.clipboard?.writeText(window.location.href)}
+              className="min-h-11 rounded-xl border border-white/20 text-sm font-bold"
+            >
+              주소 복사
+            </button>
           </div>
         </DialogContent>
       </Dialog>

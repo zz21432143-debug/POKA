@@ -42,8 +42,8 @@ export const PLACEMENT_META: Record<
     needImage: true,
   },
   SIDEBAR: {
-    name: "오른쪽 사이드 배너 (S)",
-    hint: "PC는 오른쪽 내 프로필 아래, 휴대폰은 맨 아래 가로 배너 밑. 비워 두면 '광고 문의' 안내가 나옵니다.",
+    name: "왼쪽 사이드 배너 (S)",
+    hint: "PC는 왼쪽 메뉴 아래, 휴대폰은 맨 아래 가로 배너 밑. 비워 두면 '광고 문의' 안내가 나옵니다.",
     size: "사이드 배너 600×500px (6:5)",
     empty: "cta",
     needImage: true,

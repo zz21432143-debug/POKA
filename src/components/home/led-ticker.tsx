@@ -50,15 +50,15 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
       <div className="flex shrink-0 items-center pr-2 pl-2">
         <span className="live-glow rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">LIVE</span>
       </div>
-      <div className="relative h-12 min-w-0 flex-1 overflow-hidden md:h-10">
+      <div className="relative h-9 min-w-0 flex-1 overflow-hidden md:h-10">
         {/* 나가는 소식(위로 올라가며 사라짐) */}
         {previous ? (
           <span
             key={`out-${index}`}
             aria-hidden
-            className="led-roll-out absolute inset-0 flex items-center text-[13px] font-medium leading-snug text-[#f4eadf] md:text-sm md:tracking-wide"
+            className="led-roll-out absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] md:text-sm md:tracking-wide"
           >
-            <span className="line-clamp-2 md:line-clamp-1">{previous.message}</span>
+            <span className="line-clamp-1">{previous.message}</span>
           </span>
         ) : null}
         {/* 들어오는 소식(아래에서 올라옴) */}
@@ -66,9 +66,9 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
           key={`in-${index}`}
           href={current.href}
           aria-live="polite"
-          className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-[13px] font-medium leading-snug text-[#f4eadf] hover:text-white md:text-sm md:tracking-wide`}
+          className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] hover:text-white md:text-sm md:tracking-wide`}
         >
-          <span className="line-clamp-2 md:line-clamp-1">{current.message}</span>
+          <span className="line-clamp-1">{current.message}</span>
         </Link>
       </div>
       {source.length > 1 ? (

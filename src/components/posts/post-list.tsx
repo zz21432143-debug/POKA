@@ -99,7 +99,7 @@ export function PostList({
                   href={`/posts/${post.id}`}
                   className={
                     compact
-                      ? "touch-target block truncate py-0.5 text-[13px] font-semibold leading-snug text-[#E5E7EB] after:absolute after:inset-0 after:content-[''] hover:text-white"
+                      ? "touch-target block truncate py-0.5 text-[14px] font-semibold leading-snug text-[#E5E7EB] after:absolute after:inset-0 after:content-[''] hover:text-white"
                       : "touch-target relative z-10 block break-words py-0.5 text-[17px] font-bold leading-snug text-[#E5E7EB] hover:text-white sm:text-lg"
                   }
                 >

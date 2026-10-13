@@ -26,6 +26,7 @@ import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
 import { TdaViewer } from "@/components/tda/tda-viewer";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
+import { adsenseSlotId, splitForMidAd } from "@/lib/adsense";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -422,9 +423,25 @@ export default async function PostDetailPage({
           </div>
         </section>
       ) : post.content ? (
-        <div className="article-copy">
-          <LinkifiedText text={post.content} />
-        </div>
+        (() => {
+          // 긴 글은 가운데 문단 사이에 광고 하나(구글 · 단위가 없으면 그냥 한 덩어리)
+          const halves = adsenseSlotId("post-mid") ? splitForMidAd(post.content) : null;
+          return halves ? (
+            <>
+              <div className="article-copy">
+                <LinkifiedText text={halves[0]} />
+              </div>
+              <GoogleAdUnit placement="post-mid" className="my-3" />
+              <div className="article-copy">
+                <LinkifiedText text={halves[1]} />
+              </div>
+            </>
+          ) : (
+            <div className="article-copy">
+              <LinkifiedText text={post.content} />
+            </div>
+          );
+        })()
       ) : null}
       {/* 글 사진(회원 게시판). 구인 글에는 사진이 없습니다. */}
       {post.jobKind ? null : <PostPhotos urls={post.imageUrls} title={post.title} />}
