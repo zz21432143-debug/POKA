@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { PotTitleBadge, usePotTitleInfo } from "@/components/honor/crowned-frame";
+import { TitleChip } from "@/components/honor/crowned-frame";
 import { PERIOD_LABEL } from "@/lib/pot-title-config";
 import { computePots, explainPots, payouts, potName, type PotPlayer } from "@/lib/side-pot";
 import {
@@ -27,21 +28,31 @@ const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
 const SETTINGS_KEY = "poka-practice-settings-v2";
 
-type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean };
+type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean; title?: 1 | 2 | 3 };
 type Board = Record<string, { top: Row[]; best: Row | null }>;
+/** 서버가 보내는 칭호 정보: 설정 + 랭킹 줄마다 칭호 순위 */
+type Titles = { enabled: boolean; names: Record<1 | 2 | 3, string>; difficulty: Difficulty; period: "all" | "month" };
+type BoardPayload = { board?: Board; titles?: Titles; error?: string };
 
 /** 딜러 연습장: 팟 계산(연습 + 바로 아래 랭킹) · 사이드팟 계산기(실전) */
 export function DealerPractice() {
   const [tab, setTab] = useState<"drill" | "calc">("drill");
   const [board, setBoard] = useState<Board | null>(null);
+  const [titles, setTitles] = useState<Titles | null>(null);
   const [settings, setSettings] = useSettings();
+  const onBoard = (data: BoardPayload) => {
+    if (data.board) setBoard(data.board);
+    if (data.titles) setTitles(data.titles);
+  };
 
   useEffect(() => {
     let alive = true;
     fetch("/api/tools/practice", { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: { board?: Board }) => {
-        if (alive && data.board) setBoard(data.board);
+      .then((data: BoardPayload) => {
+        if (!alive) return;
+        if (data.board) setBoard(data.board);
+        if (data.titles) setTitles(data.titles);
       })
       .catch(() => undefined);
     return () => {
@@ -72,8 +83,8 @@ export function DealerPractice() {
       </nav>
       {tab === "drill" ? (
         <>
-          <PotDrill settings={settings} onSettings={setSettings} best={board?.[kindOf(settings.difficulty)]?.best ?? null} onSaved={setBoard} />
-          <Ranking board={board} difficulty={settings.difficulty} />
+          <PotDrill settings={settings} onSettings={setSettings} best={board?.[kindOf(settings.difficulty)]?.best ?? null} onSaved={onBoard} />
+          <Ranking board={board} titles={titles} difficulty={settings.difficulty} />
         </>
       ) : null}
       {tab === "calc" ? <SidePotCalculator /> : null}
@@ -216,7 +227,7 @@ function place(m: readonly [number, number], d: readonly [number, number]) {
 }
 const PLACED = "left-[var(--mx)] top-[var(--my)] sm:left-[var(--dx)] sm:top-[var(--dy)]";
 
-function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
+function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step: number; fit?: boolean }) {
   const { seats, actions, blinds, button } = problem;
   const done = step >= actions.length;
   const view = useMemo(() => {
@@ -235,7 +246,14 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
   }, [actions, step, blinds]);
 
   return (
-    <div data-table className="relative mx-auto aspect-[3/4] w-full max-w-4xl sm:aspect-[16/9]">
+    <div
+      data-table
+      className={cn(
+        "relative mx-auto aspect-[3/4] w-full max-w-4xl sm:aspect-[16/9]",
+        // 가로 화면 크게 보기: 화면 높이에 맞춰(위 줄 빼고) 테이블이 한눈에
+        fit && "landscape:aspect-[16/9] landscape:h-[calc(100dvh-4.5rem)] landscape:w-auto landscape:max-w-full",
+      )}
+    >
       {/* 레일 + 펠트(레이스트랙 모양) */}
       <div className="absolute inset-[11%_17%] rounded-[999px] bg-[#3b2414] p-[2.2%] shadow-[0_10px_30px_rgba(0,0,0,.7)] sm:inset-[15%_13%]">
         <div className="relative h-full w-full rounded-[999px] border-2 border-[#c9a25c]/40 bg-[radial-gradient(ellipse_at_center,#1f8a52_0%,#136b3d_55%,#0b4a29_100%)] shadow-[inset_0_0_40px_rgba(0,0,0,.55)]">
@@ -309,7 +327,7 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
           </div>
         );
       })}
-      {/* 앤티 칩(따로): BB가 낸 앤티는 누구 몫도 아닌 돈이라 메인 팟에 */}
+      {/* 앤티 칩(따로): 펠트 위쪽 가운데(DEALER 아래) — 어느 화면에서도 비어 있는 자리 */}
       {view.anteShown ? (
         <span
           data-ante
@@ -317,7 +335,7 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
             "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-amber-300/80 bg-amber-950/90 px-2 py-0.5 text-[10px] font-black whitespace-nowrap text-amber-100 shadow-[0_0_10px_rgba(251,191,36,.35)] sm:text-xs",
             PLACED,
           )}
-          style={place([50, 64], [71, 50])}
+          style={place([50, 18], [50, 21])}
         >
           <span className="inline-block size-3 rounded-full border-2 border-white/80 bg-amber-400" />
           앤티 {won(blinds.ante)}
@@ -338,7 +356,7 @@ function PotDrill({
   settings: Settings;
   onSettings: (s: Settings) => void;
   best: Row | null;
-  onSaved: (board: Board) => void;
+  onSaved: (data: BoardPayload) => void;
 }) {
   const [phase, setPhase] = useState<"ready" | "play" | "done">("ready");
   const [index, setIndex] = useState(0);
@@ -350,17 +368,29 @@ function PotDrill({
   const [correct, setCorrect] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [saved, setSaved] = useState<string | null>(null);
-  const startRef = useRef(0);
+  // 시간: 액션 재생이 끝나 답할 수 있을 때부터 확인·포기할 때까지만 잽니다(재생 시간은 빼고 합산).
+  const accRef = useRef(0);
+  const segRef = useRef<number | null>(null);
   const firstInput = useRef<HTMLInputElement>(null);
+  const [full, setFull] = useState(false);
+  const inBrowser = useInBrowser();
   const playing = Boolean(question && step < question.actions.length);
   const conf = DIFFICULTY[settings.difficulty];
+  const running = phase === "play" && !playing && checked === null;
 
-  // 시간
   useEffect(() => {
-    if (phase !== "play") return;
-    const t = window.setInterval(() => setElapsed(nowMs() - startRef.current), 100);
-    return () => window.clearInterval(t);
-  }, [phase]);
+    if (!running) return;
+    segRef.current = nowMs();
+    const t = window.setInterval(() => setElapsed(accRef.current + nowMs() - (segRef.current ?? nowMs())), 100);
+    return () => {
+      window.clearInterval(t);
+      if (segRef.current != null) {
+        accRef.current += nowMs() - segRef.current;
+        segRef.current = null;
+      }
+      setElapsed(accRef.current);
+    };
+  }, [running]);
   // 액션 재생: 한 명씩
   useEffect(() => {
     if (phase !== "play" || !question || step >= question.actions.length) return;
@@ -390,8 +420,29 @@ function PotDrill({
     setCorrect(0);
     setSaved(null);
     load();
-    startRef.current = nowMs();
+    accRef.current = 0;
+    segRef.current = null;
     setElapsed(0);
+  }
+
+  /** 크게 보기: 화면을 꽉 채우고(휴대폰은 가로로 돌리면 테이블 왼쪽 · 답 칸 오른쪽) */
+  async function enterFull() {
+    setFull(true);
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+      await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape");
+    } catch {
+      /* 전체 화면·가로 고정을 못 해도 크게 보기는 그대로 */
+    }
+  }
+  async function exitFull() {
+    setFull(false);
+    try {
+      (screen.orientation as ScreenOrientation & { unlock?: () => void }).unlock?.();
+      if (document.fullscreenElement) await document.exitFullscreen();
+    } catch {
+      /* 무시 */
+    }
   }
 
   /** 포기: 틀린 것으로 치고 정답과 풀이를 바로 보여 줌 */
@@ -408,17 +459,18 @@ function PotDrill({
 
   async function next() {
     if (index + 1 >= ROUND_SIZE) {
-      const durationMs = nowMs() - startRef.current;
+      const durationMs = accRef.current;
       setElapsed(durationMs);
       setPhase("done");
+      void exitFull();
       try {
         const res = await fetch("/api/tools/practice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ kind: kindOf(settings.difficulty), correct, durationMs }),
         });
-        const data = (await res.json()) as { board?: Board; error?: string };
-        if (data.board) onSaved(data.board);
+        const data = (await res.json()) as BoardPayload;
+        onSaved(data);
         setSaved(res.ok ? "기록을 저장했습니다. 아래 랭킹을 확인하세요." : (data.error ?? "기록을 저장하지 못했습니다."));
       } catch {
         setSaved("기록을 저장하지 못했습니다.");
@@ -475,19 +527,39 @@ function PotDrill({
     );
   }
 
-  return (
-    <section data-drill className="poka-watermark grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3 sm:p-4">
-      <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+  const content = (
+    <section
+      data-drill
+      data-full={full ? "1" : undefined}
+      className={cn(
+        "poka-watermark grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3 sm:p-4",
+        full && "min-h-full content-start rounded-none border-0 landscape:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] landscape:items-start",
+      )}
+    >
+      <div className="col-span-full flex flex-wrap items-center gap-2 text-sm font-bold">
         <span className="rounded-full bg-amber-400 px-3 py-1 font-black text-black">
           {index + 1} / {ROUND_SIZE}
         </span>
         <span className="rounded-full border border-white/20 px-2 py-0.5 text-xs">{conf.label}</span>
         <span className="text-emerald-300">맞힘 {correct}</span>
-        <span className="ml-auto tabular-nums text-zinc-300">{secText(elapsed)}</span>
+        <span className={cn("ml-auto flex items-center gap-1 tabular-nums", running ? "text-amber-300" : "text-zinc-500")} title="액션이 끝난 뒤 답하는 시간만 잽니다">
+          ⏱ {secText(elapsed)}
+          <span className="text-[10px] font-bold">{running ? "답하는 중" : playing ? "재생 중(멈춤)" : ""}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => void (full ? exitFull() : enterFull())}
+          className="min-h-9 rounded-lg border border-white/25 px-2.5 text-xs font-black"
+        >
+          {full ? "✕ 작게" : "⛶ 크게 보기"}
+        </button>
       </div>
 
-      {question ? <HoldemTable problem={question} step={step} /> : null}
+      <div className={cn("min-w-0", full && "landscape:sticky landscape:top-0")}>
+        {question ? <HoldemTable problem={question} step={step} fit={full} /> : null}
+      </div>
 
+      <div className="grid min-w-0 gap-3">
       <div className="flex flex-wrap items-center justify-center gap-2">
         {playing ? (
           <button type="button" onClick={() => question && setStep(question.actions.length)} className="min-h-10 rounded-lg border border-white/25 px-4 text-sm font-bold">
@@ -572,15 +644,26 @@ function PotDrill({
           </div>
         </form>
       ) : null}
+      </div>
     </section>
+  );
+  // 크게 보기: 사이트 메뉴 위로(페이지 맨 바깥에) 화면 전체
+  return full && inBrowser ? createPortal(<div className="fixed inset-0 z-[9999] overflow-auto bg-zinc-950">{content}</div>, document.body) : content;
+}
+
+const noop = () => () => {};
+function useInBrowser() {
+  return useSyncExternalStore(
+    noop,
+    () => true,
+    () => false,
   );
 }
 
 /* ───────────── 랭킹(팟 계산 바로 아래, 난이도별 10명) ───────────── */
 
-function Ranking({ board, difficulty }: { board: Board | null; difficulty: Difficulty }) {
+function Ranking({ board, titles, difficulty }: { board: Board | null; titles: Titles | null; difficulty: Difficulty }) {
   const [view, setView] = useState<Difficulty>(difficulty);
-  const titleInfo = usePotTitleInfo();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 난이도를 바꾸면 그 난이도 랭킹을 보여 줍니다.
     setView(difficulty);
@@ -590,9 +673,15 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
     <section data-rank={view} aria-label="팟 계산 랭킹" className="grid gap-2 rounded-2xl border-2 border-amber-400/50 bg-zinc-950 p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-black">🏆 팟 계산 랭킹</h2>
-        <span className="text-[11px] text-zinc-400">
-          {PERIOD_LABEL[titleInfo.period]} 기준{titleInfo.enabled ? ` · ${DIFFICULTY[titleInfo.difficulty].label} 1~3위 칭호: ${titleInfo.names[1]} · ${titleInfo.names[2]} · ${titleInfo.names[3]}` : ""}
-        </span>
+        {titles?.enabled ? (
+          <span data-title-legend className="flex flex-wrap items-center gap-1 text-[11px] text-zinc-400">
+            {DIFFICULTY[titles.difficulty].label} 1~3위 칭호
+            {([1, 2, 3] as const).map((rank) => (
+              <TitleChip key={rank} rank={rank} name={titles.names[rank]} />
+            ))}
+          </span>
+        ) : null}
+        {titles ? <span className="text-[11px] text-zinc-500">({PERIOD_LABEL[titles.period]} 기준)</span> : null}
         <div className="ml-auto flex rounded-full border border-white/20 p-0.5">
           {DIFFICULTIES.map((d) => (
             <button
@@ -626,7 +715,7 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
               </span>
               <span className={cn("flex min-w-0 flex-1 items-center gap-1 font-bold", !row && "text-zinc-600")}>
                 <span className="truncate">{row ? row.nickname : "—"}</span>
-                {row ? <PotTitleBadge nickname={row.nickname} /> : null}
+                {row?.title && titles?.enabled ? <TitleChip rank={row.title} name={titles.names[row.title]} /> : null}
               </span>
               {row ? (
                 <>

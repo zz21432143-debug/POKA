@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { DIFFICULTIES, ROUND_SIZE, kindOf } from "@/lib/practice";
-import { clearPotTitleCache, loadTitleConfig, rankingRows } from "@/lib/pot-titles";
+import { clearPotTitleCache, getPotTitleInfo, loadTitleConfig, rankingRows } from "@/lib/pot-titles";
 import { monthStartKst } from "@/lib/pot-title-config";
 
 export const dynamic = "force-dynamic";
@@ -12,11 +12,13 @@ export const dynamic = "force-dynamic";
 const KINDS = DIFFICULTIES.map(kindOf);
 const TOP = 10;
 
-type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean };
+type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean; title?: 1 | 2 | 3 };
 
 /** 난이도별: 사람마다 최고 기록 상위 10명 + 내 최고 기록(기간은 칭호 설정: 전체 / 이번 달) */
 async function board(userId: string) {
   const config = await loadTitleConfig();
+  // 칭호 받는 사람(제외 회원 빼고 1~3위) → 랭킹 줄 옆에 칭호
+  const info = await getPotTitleInfo();
   const since = config.period === "month" ? { createdAt: { gte: monthStartKst() } } : {};
   const result: Record<string, { top: Row[]; best: Row | null }> = {};
   for (const d of DIFFICULTIES) {
@@ -27,11 +29,22 @@ async function board(userId: string) {
       select: { correct: true, durationMs: true, createdAt: true },
     });
     result[kindOf(d)] = {
-      top: rows.map((r) => ({ nickname: r.nickname, correct: r.correct, durationMs: r.durationMs, at: r.at, mine: r.userId === userId })),
+      top: rows.map((r) => ({
+        nickname: r.nickname,
+        correct: r.correct,
+        durationMs: r.durationMs,
+        at: r.at,
+        mine: r.userId === userId,
+        ...(info.enabled && info.holders[r.nickname] ? { title: info.holders[r.nickname] } : {}),
+      })),
       best: mine ? { nickname: "", correct: mine.correct, durationMs: mine.durationMs, at: mine.createdAt.toISOString(), mine: true } : null,
     };
   }
-  return { board: result, period: config.period };
+  return {
+    board: result,
+    period: config.period,
+    titles: { enabled: info.enabled, names: info.names, difficulty: info.difficulty, period: info.period },
+  };
 }
 
 export async function GET() {

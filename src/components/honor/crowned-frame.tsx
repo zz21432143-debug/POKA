@@ -61,6 +61,15 @@ const TITLE_TONE: Record<1 | 2 | 3, string> = {
 };
 const TITLE_ICON: Record<1 | 2 | 3, string> = { 1: "👹", 2: "🪙", 3: "🏮" };
 
+/** 칭호 배지(순위·이름으로) — 랭킹·안내에서 */
+export function TitleChip({ rank, name, className }: { rank: 1 | 2 | 3; name: string; className?: string }) {
+  return (
+    <span data-pot-title={rank} className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[10px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}>
+      {TITLE_ICON[rank]} {name}
+    </span>
+  );
+}
+
 /** 닉네임 옆 팟 계산 칭호(설정한 난이도 랭킹 1~3위). 관리자가 끄면 안 보임 */
 export function PotTitleBadge({ nickname, className }: { nickname: string; className?: string }) {
   const info = useContext(PotTitleContext);
