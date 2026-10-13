@@ -1,14 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { computePots, payouts } from "./side-pot";
+import { computePots, explainPots, payouts, potName } from "./side-pot";
 
 const p = (name: string, amount: number, folded = false) => ({ name, amount, folded });
+const simple = (r: ReturnType<typeof computePots>) => r.pots.map((x) => ({ amount: x.amount, eligible: x.eligible }));
 
 describe("side pot calculator", () => {
   it("splits main and side pots by all-in levels", () => {
     // A 1,000 올인 · B 3,000 올인 · C·D 5,000 콜
     const r = computePots([p("A", 1000), p("B", 3000), p("C", 5000), p("D", 5000)]);
-    assert.deepEqual(r.pots, [
+    assert.deepEqual(simple(r), [
       { amount: 4000, eligible: [0, 1, 2, 3] },
       { amount: 6000, eligible: [1, 2, 3] },
       { amount: 4000, eligible: [2, 3] },
@@ -21,63 +22,79 @@ describe("side pot calculator", () => {
     // E는 2,000 내고 폴드, D는 7,000 베팅했지만 C가 5,000까지만 콜 → D에게 2,000 돌려줌
     const r = computePots([p("A", 1000), p("B", 3000), p("C", 5000), p("D", 7000), p("E", 2000, true)]);
     assert.deepEqual(r.refund, { player: 3, amount: 2000 });
-    assert.deepEqual(r.pots, [
+    assert.deepEqual(simple(r), [
       { amount: 5000, eligible: [0, 1, 2, 3] },
       { amount: 7000, eligible: [1, 2, 3] },
       { amount: 4000, eligible: [2, 3] },
     ]);
-    assert.equal(r.pots.reduce((s, x) => s + x.amount, 0) + 2000, r.total);
   });
 
-  it("merges pots with the same players and keeps folded excess in the last pot", () => {
-    // B 2,000 올인 · C 3,000 베팅 후 A가 5,000으로 올리자 C 폴드
-    // → A에게 2,000 돌려줌, 메인 6,000(A·B), 사이드 2,000(C가 더 낸 1,000 포함, A만)
+  it("keeps folded excess in the last pot and merges same-player pots", () => {
+    // B 2,000 올인 · C 3,000 베팅 후 A가 5,000으로 올리자 C 폴드 → A에게 2,000 돌려줌
     const r = computePots([p("A", 5000), p("B", 2000), p("C", 3000, true)]);
     assert.deepEqual(r.refund, { player: 0, amount: 2000 });
-    assert.deepEqual(r.pots, [
+    assert.deepEqual(simple(r), [
       { amount: 6000, eligible: [0, 1] },
       { amount: 2000, eligible: [0] },
     ]);
-    // 같은 사람끼리인 팟은 하나로
     const merged = computePots([p("A", 3000), p("B", 3000), p("C", 1000, true)]);
-    assert.deepEqual(merged.pots, [{ amount: 7000, eligible: [0, 1] }]);
+    assert.deepEqual(simple(merged), [{ amount: 7000, eligible: [0, 1] }]);
+  });
+
+  it("adds ante to the main pot and explains each pot", () => {
+    const players = [p("SB", 500, true), p("BB", 4000), p("UTG", 10000), p("CO", 10000)];
+    const r = computePots(players, { deadMain: 1000 });
+    assert.deepEqual(simple(r), [
+      { amount: 13500, eligible: [1, 2, 3] },
+      { amount: 12000, eligible: [2, 3] },
+    ]);
+    assert.equal(r.total, 25500);
+    const lines = explainPots(players, r);
+    assert.match(lines[0], /^메인 팟 13,500 = SB\(폴드\) 500 \+ BB 4,000 \+ UTG 4,000 \+ CO 4,000 \+ 앤티 1,000/);
+    assert.match(lines[1], /^세컨 팟 12,000 = UTG 6,000 \+ CO 6,000/);
+    assert.deepEqual([0, 1, 2, 3, 4].map(potName), ["메인 팟", "세컨 팟", "서드 팟", "포스 팟", "피프스 팟"]);
   });
 
   it("pays winners and splits ties with odd chips", () => {
     const players = [p("A", 1000), p("B", 3000), p("C", 5000), p("D", 5000)];
     const r = computePots(players);
-    // 메인: A 승 · 사이드1: B·C 나눔 · 사이드2: D 승
     const { pay } = payouts(players, r, [[0], [1, 2], [3]]);
     assert.deepEqual(pay, [4000, 3000, 3000, 4000]);
-    const odd = computePots([p("A", 1001), p("B", 1001), p("C", 1001)]);
-    const res = payouts([p("A", 1001), p("B", 1001), p("C", 1001)], odd, [[0, 1]]);
+    const three = [p("A", 1001), p("B", 1001), p("C", 1001)];
+    const res = payouts(three, computePots(three), [[0, 1]]);
     assert.deepEqual(res.pay, [1502, 1501, 0]);
     assert.equal(res.oddChips.length, 1);
   });
 });
 
-describe("practice problems", async () => {
-  const { sidePotProblem, chipsProblem } = await import("./practice");
-  // 같은 결과가 나오는 난수
+describe("pot practice problems", async () => {
+  const { potProblem, positionNames, validBlinds } = await import("./practice");
   const seeded = (seed: number) => () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
-  it("side pot problems always have 2~4 real pots that add up", () => {
-    const rand = seeded(7);
-    for (let i = 0; i < 300; i += 1) {
-      const { players, answer } = sidePotProblem(rand);
-      assert.ok(answer.pots.length >= 2 && answer.pots.length <= 4);
-      const sum = answer.pots.reduce((s, x) => s + x.amount, 0) + (answer.refund?.amount ?? 0);
-      assert.equal(sum, players.reduce((s, p) => s + p.amount, 0));
-    }
+  it("names positions from the button", () => {
+    assert.deepEqual(positionNames(6), ["BTN", "SB", "BB", "UTG", "HJ", "CO"]);
+    assert.deepEqual(positionNames(9), ["BTN", "SB", "BB", "UTG", "UTG+1", "MP", "LJ", "HJ", "CO"]);
   });
-  it("chip problems add up", () => {
-    const rand = seeded(11);
-    for (let i = 0; i < 100; i += 1) {
-      const q = chipsProblem(rand);
-      assert.ok(q.stacks.length >= 3 && q.stacks.length <= 4);
-      assert.equal(q.answer, q.stacks.reduce((s, x) => s + x.value * x.count, 0));
+  it("makes 2~5 pots (main to fifth) that add up, with user blinds and ante", () => {
+    const rand = seeded(7);
+    const counts = new Set<number>();
+    for (let i = 0; i < 400; i += 1) {
+      const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 2000 } : { sb: 500, bb: 1000, ante: 0 };
+      const q = potProblem(blinds, rand);
+      counts.add(q.answer.pots.length);
+      assert.ok(q.answer.pots.length >= 2 && q.answer.pots.length <= 5);
+      assert.ok(q.answer.pots.every((pot) => pot.eligible.length >= 2));
+      const sum = q.answer.pots.reduce((s, x) => s + x.amount, 0) + (q.answer.refund?.amount ?? 0);
+      assert.equal(sum, q.seats.reduce((s, x) => s + x.amount, 0) + blinds.ante);
+      const sb = q.seats.find((s) => s.position === "SB")!;
+      if (sb.action === "fold" && !sb.note) assert.equal(sb.amount, blinds.sb);
     }
+    assert.deepEqual([...counts].sort(), [2, 3, 4, 5]);
+  });
+  it("rejects bad blinds", () => {
+    assert.equal(validBlinds({ sb: 1000, bb: 500, ante: 0 }), false);
+    assert.equal(validBlinds({ sb: 500, bb: 1000, ante: 1000 }), true);
   });
 });

@@ -18,7 +18,7 @@ export default async function PracticePage() {
           ← 딜러 툴
         </Link>
         <h1 className="text-2xl font-black text-white">딜러 연습장</h1>
-        <p className="text-xs text-zinc-400">현장에서 바로 쓰는 사이드팟 계산기와, 사이드팟·칩 세기 연습 문제(10문제 기록·랭킹)입니다.</p>
+        <p className="text-xs text-zinc-400">테이블에서 포지션별 올인·베팅을 보고 메인·세컨·서드·포스·피프스 팟을 계산하는 연습(풀이·기록·랭킹)과, 현장에서 바로 쓰는 사이드팟 계산기입니다.</p>
       </header>
       <DealerPractice />
     </div>

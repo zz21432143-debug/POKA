@@ -5,7 +5,7 @@ import { BrandIcon } from "@/components/brand/brand-icon";
 const TOOLS = [
   { href: "/tools/rotation", icon: "chips" as const, title: "딜러 로테이션", body: "교대 시간표 자동 · 단톡방 이미지 · TV 화면" },
   { href: "/tools/seat-draw", icon: "cards" as const, title: "싯드로우", body: "칩 균형 맞춰 좌석 배정 · 이미지 · 인쇄" },
-  { href: "/tools/practice", icon: "omamori" as const, title: "딜러 연습장", body: "사이드팟 계산기 · 칩 세기 연습 · 랭킹" },
+  { href: "/tools/practice", icon: "omamori" as const, title: "딜러 연습장", body: "팟 계산 연습 · 사이드팟 계산기 · 랭킹" },
   { href: "/tools/pay", icon: "coin" as const, title: "급여 계산기", body: "근무 시간 → 3.3% · 4대보험 · 실수령" },
 ];
 

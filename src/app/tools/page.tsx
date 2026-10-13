@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 const TOOLS = [
   { href: "/tools/rotation", title: "딜러 로테이션", body: "게임마다 테이블 최대 100개 · 딜러 150명. 간격(예: 20분)마다 누가 몇 번 테이블로 들어가고 쉬는지 시간표로 미리 짭니다." },
   { href: "/tools/seat-draw", title: "싯드로우", body: "진출자 칩을 테이블마다 고르게 나누고 좌석은 무작위로 배정합니다." },
-  { href: "/tools/practice", title: "딜러 연습장", body: "현장용 사이드팟 계산기(메인·사이드팟·나눠 갖기)와 사이드팟·칩 세기 연습 10문제, 기록·랭킹." },
+  { href: "/tools/practice", title: "딜러 연습장", body: "포지션 테이블로 메인·세컨·서드·포스·피프스 팟 계산 연습(풀이·랭킹)과 현장용 사이드팟 계산기." },
   { href: "/tools/pay", title: "급여 계산기", body: "일한 날짜·출근·퇴근을 넣으면 세전 금액, 3.3% 공제, 4대보험 공제, 실수령액을 계산합니다." },
 ];
 
