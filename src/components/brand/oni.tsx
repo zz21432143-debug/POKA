@@ -39,6 +39,12 @@ const STICKERS = {
   ok: [195, 144],
   cool: [177, 144],
   think: [181, 144],
+  basic: [160, 144],
+  coffee: [177, 144],
+  thanks: [157, 144],
+  love: [181, 144],
+  cheers: [175, 144],
+  like: [163, 144],
 } as const;
 
 export type OniStickerName = keyof typeof STICKERS;
@@ -66,7 +72,7 @@ export const BOARD_STICKER: Record<string, OniStickerName> = {
   dealers: "cool",
   guide: "study",
   tools: "work",
-  board: "holdem",
+  board: "cool",
   search: "curious",
 };
 
@@ -77,6 +83,33 @@ export function OniSticker({ name, className }: { name: OniStickerName; classNam
     <img data-oni-sticker={name} src={`/brand/oni/stickers/${name}.webp`} width={width} height={height} alt="" aria-hidden draggable={false} className={cn("pointer-events-none w-auto shrink-0 select-none", className)} />
   );
 }
+
+/** 왼쪽 메뉴 칸마다 오니 이모티콘(겹치지 않게) */
+export const NAV_STICKER: Record<string, OniStickerName> = {
+  "/": "basic",
+  "/boards/jobs/apply": "letsgo",
+  "/boards/jobs/tournament": "confident",
+  "/boards/jobs/urgent": "surprise",
+  "/boards/jobs/fixed": "work",
+  "/boards/jobs/team": "clap",
+  "/boards/free": "hehe",
+  "/boards/hand-review": "holdem",
+  "/tools/practice": "think",
+  "/attendance": "hello",
+  "/boards/schedule": "win",
+  "/boards/tda": "study",
+  "/info/guide": "idea",
+  "/tools/board": "cool",
+  "/tools/rotation": "coffee",
+  "/tools/seat-draw": "good",
+  "/tools/pay": "thanks",
+  "/notices": "ok",
+  "/boards/official": "wow",
+  "/shop": "love",
+  "/ranking": "cheers",
+  "/boards/suggestions": "curious",
+  "/advertise": "like",
+};
 
 /** 게시판 제목: 왼쪽에 이모티콘(급여 계산기 실수령액처럼) */
 export function BoardTitle({ sticker, children, className }: { sticker?: OniStickerName; children: React.ReactNode; className?: string }) {

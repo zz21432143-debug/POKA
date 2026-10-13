@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { BUILD_ID } from "@/lib/build-id";
+import { unlockBoardSound } from "@/lib/board-sound";
 import type { SharedBoard } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 
@@ -51,6 +52,7 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
 
   /** 한 번 눌러야 브라우저가 소리 · 전체 화면을 허락합니다 */
   async function start() {
+    unlockBoardSound();
     setSound(true);
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();

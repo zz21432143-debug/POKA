@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type PrizeColor, type PrizeRow } from "@/lib/game-board";
+import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type PrizeColor, type PrizeRow } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 import { shrinkPhoto } from "@/lib/poster-fit";
+import { blindUpSound, countdownTick, unlockBoardSound } from "@/lib/board-sound";
 
 const POLL_MS = 3000;
 const SAVE_DELAY = 600;
@@ -191,6 +192,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   });
 
   async function openTv() {
+    unlockBoardSound();
     setTv(true);
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
@@ -358,10 +360,9 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
       <section className="ink-panel grid gap-3 rounded-2xl p-3 sm:p-4">
         <h2 className="flex items-baseline justify-between text-base font-black text-white">
           시계
-          <span className="text-sm font-bold text-zinc-400 tabular-nums">
-            {view.level.isBreak ? "휴식" : `레벨 ${view.number}`} · {clockText(view.remainingMs)}
-          </span>
+          <span className="text-sm font-bold text-zinc-400">{view.level.isBreak ? "휴식" : `레벨 ${view.number}`}</span>
         </h2>
+        <ClockSetter remainingMs={view.remainingMs} onSet={(ms) => onClock({ op: "set", ms })} />
         <button type="button" onClick={() => onClock({ op: running ? "pause" : "start" })} className={cn("min-h-16 rounded-2xl text-2xl font-black", running ? "bg-rose-600 text-white" : "bg-emerald-500 text-black")}>
           {running ? "⏸ 멈춤" : view.finished ? "끝(처음부터 다시)" : "▶ 시작"}
         </button>
@@ -635,7 +636,7 @@ function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<
         {rows.map((row, i) => (
           <li key={i} data-prize-edit={i} className="grid gap-2 rounded-xl border border-white/10 bg-black/50 p-2">
             <div className="grid grid-cols-[minmax(0,5rem)_minmax(0,1fr)_auto] gap-2">
-              <input aria-label={`${i + 1}번째 순위`} value={row.place} maxLength={BOARD_LIMITS.prizeText} onChange={(e) => change(i, { place: e.target.value })} placeholder={`${i + 1}위`} style={{ color: PRIZE_COLORS[row.color].hex }} className={field} />
+              <input aria-label={`${i + 1}번째 순위`} value={row.place} maxLength={BOARD_LIMITS.prizeText} onChange={(e) => change(i, { place: e.target.value })} placeholder={ordinal(i + 1)} style={{ color: PRIZE_COLORS[row.color].hex }} className={field} />
               <input aria-label={`${i + 1}번째 금액`} value={row.amount} maxLength={BOARD_LIMITS.prizeText} onChange={(e) => change(i, { amount: e.target.value })} placeholder="300만" style={{ color: PRIZE_COLORS[row.color].hex }} className={cn(field, "tabular-nums")} />
               <div className="flex gap-1">
                 <button type="button" aria-label="위로" onClick={() => up(i)} disabled={i === 0} className="size-11 rounded-lg border border-white/15 text-sm disabled:opacity-30">
@@ -668,7 +669,7 @@ function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<
         <button
           type="button"
           disabled={rows.length >= BOARD_LIMITS.prizes}
-          onClick={() => set([...rows, { place: `${rows.length + 1}위`, amount: "", color: defaultPrizeColor(rows.length) }])}
+          onClick={() => set([...rows, { place: ordinal(rows.length + 1), amount: "", color: defaultPrizeColor(rows.length) }])}
           className="min-h-11 rounded-xl bg-amber-400 px-4 text-sm font-black text-black disabled:opacity-40"
         >
           + 순위 추가
@@ -765,5 +766,82 @@ function BackgroundForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Par
       ) : null}
       {note ? <p className="text-sm font-bold text-rose-300">{note}</p> : null}
     </section>
+  );
+}
+
+/** 1ST · 2ND · 3RD · 4TH … */
+function ordinal(n: number) {
+  const tail = n % 100 >= 11 && n % 100 <= 13 ? "TH" : ({ 1: "ST", 2: "ND", 3: "RD" } as Record<number, string>)[n % 10] ?? "TH";
+  return `${n}${tail}`;
+}
+
+/* ───────────── 시계: 큰 시간 — 눌러서 원하는 시간 입력 · 소리 확인 ───────────── */
+
+function ClockSetter({ remainingMs, onSet }: { remainingMs: number; onSet: (ms: number) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState("");
+  const [bad, setBad] = useState(false);
+  function apply() {
+    const ms = parseClockInput(text);
+    if (ms == null) return setBad(true);
+    onSet(ms);
+    setEditing(false);
+  }
+  if (!editing) {
+    return (
+      <div className="grid gap-1">
+        <button
+          type="button"
+          data-clock-edit
+          onClick={() => {
+            setText(clockText(remainingMs));
+            setBad(false);
+            setEditing(true);
+          }}
+          title="눌러서 남은 시간 바꾸기"
+          className="rounded-2xl border-2 border-dashed border-white/20 bg-black py-2 text-center text-5xl font-black text-white tabular-nums hover:border-amber-400"
+        >
+          {clockText(remainingMs)}
+        </button>
+        <div className="flex items-center justify-between text-xs text-zinc-500">
+          <span>시간을 누르면 남은 시간을 직접 바꿀 수 있어요</span>
+          <button
+            type="button"
+            onClick={() => {
+              unlockBoardSound();
+              countdownTick(3);
+              window.setTimeout(() => countdownTick(1), 600);
+              window.setTimeout(() => blindUpSound(2, 200, 400), 1400);
+            }}
+            className="min-h-9 rounded-lg border border-white/15 px-2.5 font-bold text-zinc-300"
+          >
+            🔊 소리 확인
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        apply();
+      }}
+      className="grid gap-2 rounded-2xl border-2 border-amber-400 bg-black p-2"
+    >
+      <label className="grid gap-1 text-xs font-bold text-zinc-300">
+        남은 시간(예: 12:30 · 15 = 15분 · 1:05:00)
+        <input autoFocus aria-label="남은 시간" inputMode="numeric" value={text} onChange={(e) => (setText(e.target.value), setBad(false))} className="h-14 rounded-xl border border-white/20 bg-zinc-950 px-3 text-center text-3xl font-black text-white tabular-nums" />
+      </label>
+      {bad ? <p className="text-xs font-bold text-rose-300">12:30처럼 분:초로 적어 주세요.</p> : null}
+      <div className="grid grid-cols-2 gap-2">
+        <button type="submit" className="min-h-11 rounded-xl bg-amber-400 text-base font-black text-black">
+          이 시간으로
+        </button>
+        <button type="button" onClick={() => setEditing(false)} className="min-h-11 rounded-xl border border-white/20 text-base font-bold text-zinc-200">
+          취소
+        </button>
+      </div>
+    </form>
   );
 }

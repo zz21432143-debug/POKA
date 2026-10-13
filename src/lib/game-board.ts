@@ -260,7 +260,7 @@ export function clockView(data: GameBoardData, now: number): ClockView {
   };
 }
 
-export type ClockOp = { op: "start" } | { op: "pause" } | { op: "next" } | { op: "prev" } | { op: "reset" } | { op: "add"; ms: number } | { op: "jump"; index: number };
+export type ClockOp = { op: "start" } | { op: "pause" } | { op: "next" } | { op: "prev" } | { op: "reset" } | { op: "add"; ms: number } | { op: "set"; ms: number } | { op: "jump"; index: number };
 
 /** 시계 조작(서버 시각 now 기준). 지금 상태로 정리한 뒤 바꿉니다. */
 export function applyClock(data: GameBoardData, op: ClockOp, now: number): BoardClock {
@@ -283,6 +283,12 @@ export function applyClock(data: GameBoardData, op: ClockOp, now: number): Board
       return at(0, 0, false);
     case "jump":
       return at(Math.min(last, Math.max(0, Math.floor(op.index))), 0, running);
+    case "set": {
+      // 남은 시간을 직접 정함(1초 ~ 레벨 3배)
+      const dur = levelMs(view.level);
+      const remain = Math.min(dur * 3, Math.max(1_000, Math.round(op.ms)));
+      return at(view.index, dur - remain, running);
+    }
     case "add": {
       // 남은 시간 더하기/빼기(이번 레벨 안에서만: 남은 시간은 1초~레벨 3배)
       const dur = levelMs(view.level);
@@ -297,6 +303,16 @@ export function boardStats(data: GameBoardData) {
   const totalChips = data.entries * data.startStack + data.rebuys * data.rebuyStack + data.earlies * data.earlyStack + (data.addonOn ? data.addons * data.addonStack : 0);
   const avgStack = data.remaining > 0 ? Math.round(totalChips / data.remaining) : 0;
   return { totalChips, avgStack };
+}
+
+/** 시간 글 읽기: "12:30" · "1:02:00" · "15"(분) → ms. 못 읽으면 null */
+export function parseClockInput(text: string): number | null {
+  const t = text.trim();
+  if (!t) return null;
+  if (/^\d{1,3}$/.test(t)) return Number(t) * 60_000;
+  const m = /^(?:(\d{1,2}):)?(\d{1,3}):(\d{1,2})$/.exec(t);
+  if (!m || Number(m[3]) > 59) return null;
+  return ((Number(m[1] ?? 0) * 60 + Number(m[2])) * 60 + Number(m[3])) * 1000;
 }
 
 /** 남은 시간 "12:05" / 한 시간 넘으면 "1:02:05" */

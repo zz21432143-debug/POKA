@@ -2,33 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
+import { blindUpSound, breakSound, countdownTick } from "@/lib/board-sound";
 import { PRIZE_COLORS, boardStats, chipText, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
-const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
+const won = (n: number) => Math.round(n).toLocaleString("en-US");
 const blindText = (l: BoardLevel) => `SB ${won(l.sb)} / BB ${won(l.bb)}`;
-
-/** 레벨이 바뀔 때 짧은 알림음(브라우저가 소리를 허락한 뒤에만) */
-function beep(times = 3) {
-  try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    for (let i = 0; i < times; i++) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.35);
-      gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + i * 0.35 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.35 + 0.25);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + i * 0.35);
-      osc.stop(ctx.currentTime + i * 0.35 + 0.3);
-    }
-    window.setTimeout(() => void ctx.close(), times * 400 + 200);
-  } catch {
-    /* 소리 못 내도 화면은 그대로 */
-  }
-}
 
 /** 서버 시각에 맞춘 지금(ms): offset = 서버 시각 − 내 시각 */
 export function useServerNow(initialNow: number, offset: number) {
@@ -55,14 +33,23 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   const dur = view.level.minutes * 60_000;
   const progress = dur ? Math.min(1, Math.max(0, 1 - view.remainingMs / dur)) : 0;
 
-  // 레벨이 바뀌면 알림음
+  // 소리: 레벨 끝 5초 전부터 매초 "띡", 레벨이 바뀌면 블라인드 업(팡파르 + 음성) · 휴식 소리
+  const secondsLeft = Math.ceil(view.remainingMs / 1000);
+  const lastTick = useRef(0);
+  useEffect(() => {
+    if (!sound || !view.running || secondsLeft > 5 || secondsLeft < 1 || lastTick.current === secondsLeft) return;
+    lastTick.current = secondsLeft;
+    countdownTick(secondsLeft);
+  }, [sound, view.running, secondsLeft]);
   const lastIndex = useRef(view.index);
   useEffect(() => {
-    if (lastIndex.current !== view.index) {
-      if (sound && view.running) beep(view.level.isBreak ? 2 : 3);
-      lastIndex.current = view.index;
-    }
-  }, [view.index, view.running, view.level.isBreak, sound]);
+    if (lastIndex.current === view.index) return;
+    lastIndex.current = view.index;
+    lastTick.current = 0;
+    if (!sound || !view.running) return;
+    if (view.level.isBreak) breakSound(view.level.minutes);
+    else blindUpSound(view.number, view.level.sb, view.level.bb);
+  }, [view.index, view.running, view.level, view.number, sound]);
 
   const nowLabel = kstTime(now);
   const ticker = data.notice.trim();
@@ -107,11 +94,11 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           {/* 레벨 · (멈춤) 한 줄 — 시계 칸을 넓게 */}
           <span className="flex flex-wrap items-center justify-center gap-[calc(var(--u)*0.8)]">
             <span data-level className={cn("rounded-full px-[calc(var(--u)*2)] py-[calc(var(--u)*0.3)] text-[clamp(13px,calc(var(--u)*2),40px)] font-black tracking-wider", view.level.isBreak ? "bg-sky-500/25 text-sky-200" : "bg-amber-400/15 text-amber-300")}>
-              {view.level.isBreak ? "BREAK · 휴식" : `LEVEL ${view.number}`}
+              {view.level.isBreak ? "BREAK" : `LEVEL ${view.number}`}
             </span>
             {!view.running ? (
               <span data-paused className="animate-pulse rounded-full bg-rose-600/85 px-[calc(var(--u)*1.5)] py-[calc(var(--u)*0.3)] text-[clamp(13px,calc(var(--u)*2),40px)] font-black">
-                {view.finished ? "마지막 레벨 끝" : "일시 정지"}
+                {view.finished ? "FINISHED" : "PAUSED"}
               </span>
             ) : null}
           </span>
@@ -122,7 +109,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
             <div className={cn("h-full rounded-full", view.level.isBreak ? "bg-sky-400" : "bg-amber-400")} style={{ width: `${progress * 100}%` }} />
           </div>
           {view.level.isBreak ? (
-            <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">잠시 쉬어 갑니다</span>
+            <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">TAKE A BREAK</span>
           ) : (
             <>
               <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(22px,calc(var(--u)*4.2),92px)] leading-tight font-black text-amber-200 tabular-nums">
@@ -132,11 +119,11 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
                 <small className={BLIND_TAG}>BB</small>
                 {won(view.level.bb)}
               </span>
-              {view.level.ante ? <span className="text-[clamp(13px,calc(var(--u)*2),42px)] font-black text-amber-100/90 tabular-nums">BB 앤티 {won(view.level.ante)}</span> : null}
+              {view.level.ante ? <span className="text-[clamp(13px,calc(var(--u)*2),42px)] font-black text-amber-100/90 tabular-nums">BB ANTE {won(view.level.ante)}</span> : null}
             </>
           )}
           <span data-next className="text-[clamp(12px,calc(var(--u)*1.7),34px)] font-bold text-zinc-300 tabular-nums">
-            {view.next ? (view.next.isBreak ? `다음: 휴식 ${view.next.minutes}분` : `다음: ${blindText(view.next)}${view.next.ante ? ` · 앤티 ${won(view.next.ante)}` : ""}`) : "마지막 레벨"}
+            {view.next ? (view.next.isBreak ? `NEXT: BREAK ${view.next.minutes} MIN` : `NEXT: ${blindText(view.next)}${view.next.ante ? ` · ANTE ${won(view.next.ante)}` : ""}`) : "LAST LEVEL"}
           </span>
         </section>
 
@@ -211,7 +198,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 
 /** 현황판에 늘 나오는 POKA 홍보 */
 const SITE = "pokerwiki.co.kr";
-const PROMO = "홀덤 커뮤니티 · 딜러 구인구직 · 대회 캘린더 · 매장 관리 툴 무료";
+const PROMO = "HOLDEM COMMUNITY · DEALER JOBS · TOURNAMENT CALENDAR · FREE STORE TOOLS";
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
 const CARD = "grid gap-[calc(var(--u)*0.1)] rounded-[calc(var(--u)*1)] border border-white/15 bg-black/55 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.45)]";
 const LABEL = "text-[clamp(10px,calc(var(--u)*1.1),24px)] font-black tracking-wide text-zinc-400";

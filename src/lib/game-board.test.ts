@@ -129,3 +129,21 @@ describe("game board data", () => {
     assert.equal(clockText(62 * MIN), "1:02:00");
   });
 });
+
+describe("set the clock by typing", () => {
+  it("reads typed times and sets the remaining time", async () => {
+    const { parseClockInput } = await import("./game-board");
+    assert.equal(parseClockInput("12:30"), 750_000);
+    assert.equal(parseClockInput("15"), 900_000);
+    assert.equal(parseClockInput("1:02:05"), 3_725_000);
+    assert.equal(parseClockInput("12:75"), null);
+    assert.equal(parseClockInput("abc"), null);
+    const d = board();
+    d.clock = applyClock(d, { op: "start" }, 0);
+    d.clock = applyClock(d, { op: "set", ms: 5 * MIN }, 2 * MIN);
+    assert.equal(clockView(d, 2 * MIN).remainingMs, 5 * MIN);
+    assert.ok(d.clock.runningSince != null, "돌던 시계는 계속 돔");
+    d.clock = applyClock(d, { op: "set", ms: 0 }, 2 * MIN);
+    assert.equal(clockView(d, 2 * MIN).remainingMs, 1_000);
+  });
+});

@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ changed: true, board, build: BUILD_ID }, { headers: NO_STORE });
 }
 
-const CLOCK_OPS = new Set(["start", "pause", "next", "prev", "reset", "add", "jump"]);
+const CLOCK_OPS = new Set(["start", "pause", "next", "prev", "reset", "add", "set", "jump"]);
 
 /** { action: "create" | "save" | "clock" | "share" | "delete", ... } */
 export async function POST(request: Request) {
