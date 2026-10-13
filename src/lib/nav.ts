@@ -83,6 +83,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
       { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
+      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
       { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
       { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟", icon: "omamori" },
     ],
