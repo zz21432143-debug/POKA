@@ -15,6 +15,9 @@ import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restr
 import { clientIp } from "@/lib/request";
 import { prisma } from "@/lib/db";
 
+/** 같은 IP에서 하루에 새로 가입할 수 있는 수 */
+const SIGNUPS_PER_IP_PER_DAY = 15;
+
 function sendTo(url: URL) {
   return NextResponse.redirect(url, 303);
 }
@@ -72,6 +75,14 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       return sendTo(new URL("/login?tab=signup&error=consent", request.url));
     }
     jar.delete(CONSENT_COOKIE);
+    // 새 가입은 같은 IP에서 하루 15명까지(스팸 계정 막기, 통신사 공용 IP 고려). 이미 가입한 계정 로그인은 상관없음.
+    const known = await findSocialUser(profile);
+    if (!known && ip) {
+      const today = await prisma.user.count({ where: { signupIp: ip, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } });
+      if (today >= SIGNUPS_PER_IP_PER_DAY) {
+        return restrictionRedirect(request, "같은 곳에서 오늘 가입이 너무 많습니다. 내일 다시 시도하거나 카톡 POKA1로 문의해 주세요.");
+      }
+    }
     const created = await upsertSocialUser(profile, { signupIp: ip }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : "가입할 수 없습니다.";
       const url = new URL("/login", request.url);

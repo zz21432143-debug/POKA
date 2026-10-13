@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { clientIp } from "@/lib/request";
-import { CoolDownError, REPORT_COOLDOWN_MS, writeAudit } from "@/lib/security";
+import { CoolDownError, REPORT_COOLDOWN_MS, assertAttemptLimit, writeAudit } from "@/lib/security";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { notifyAdmins } from "@/lib/push";
@@ -27,6 +27,8 @@ export async function POST(request: Request) {
     }
 
     const ip = clientIp(request);
+    // 같은 IP에서 하루 5건까지(도배 막기)
+    await assertAttemptLimit({ kind: "AD_INQUIRY", ip, max: 5, windowMs: 24 * 60 * 60 * 1000, message: "오늘 문의를 너무 많이 보냈습니다. 내일 다시 보내 주세요." });
     const key = `ad:user:${user.id}`;
     const last = await prisma.writeThrottle.findUnique({ where: { key } });
     if (last && Date.now() - last.lastAt.getTime() < REPORT_COOLDOWN_MS) {
