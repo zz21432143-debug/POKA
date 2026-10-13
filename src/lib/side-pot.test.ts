@@ -68,7 +68,7 @@ describe("side pot calculator", () => {
 });
 
 describe("pot practice problems", async () => {
-  const { potProblem, positionNames, validBlinds } = await import("./practice");
+  const { potProblem, positionNames, validBlinds, DIFFICULTY, DIFFICULTIES } = await import("./practice");
   const seeded = (seed: number) => () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
@@ -77,22 +77,31 @@ describe("pot practice problems", async () => {
     assert.deepEqual(positionNames(6), ["BTN", "SB", "BB", "UTG", "HJ", "CO"]);
     assert.deepEqual(positionNames(9), ["BTN", "SB", "BB", "UTG", "UTG+1", "MP", "LJ", "HJ", "CO"]);
   });
-  it("makes 2~5 pots (main to fifth) that add up, with user blinds and ante", () => {
-    const rand = seeded(7);
-    const counts = new Set<number>();
-    for (let i = 0; i < 400; i += 1) {
-      const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 2000 } : { sb: 500, bb: 1000, ante: 0 };
-      const q = potProblem(blinds, rand);
-      counts.add(q.answer.pots.length);
-      assert.ok(q.answer.pots.length >= 2 && q.answer.pots.length <= 5);
-      assert.ok(q.answer.pots.every((pot) => pot.eligible.length >= 2));
-      const sum = q.answer.pots.reduce((s, x) => s + x.amount, 0) + (q.answer.refund?.amount ?? 0);
-      assert.equal(sum, q.seats.reduce((s, x) => s + x.amount, 0) + blinds.ante);
-      const sb = q.seats.find((s) => s.position === "SB")!;
-      if (sb.action === "fold" && !sb.note) assert.equal(sb.amount, blinds.sb);
-    }
-    assert.deepEqual([...counts].sort(), [2, 3, 4, 5]);
-  });
+  for (const d of DIFFICULTIES) {
+    it(`plays a real preflop round on 9 seats (${d})`, () => {
+      const rand = seeded(d.length * 31 + 7);
+      for (let i = 0; i < 60; i += 1) {
+        const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 2000 } : { sb: 500, bb: 1000, ante: 0 };
+        const q = potProblem(d, blinds, rand);
+        const [lo, hi] = DIFFICULTY[d].pots;
+        assert.equal(q.seats.length, 9);
+        assert.equal(q.seats[q.button].position, "BTN");
+        assert.ok(q.answer.pots.length >= lo && q.answer.pots.length <= hi, `${d}: 팟 ${q.answer.pots.length}개`);
+        assert.ok(q.answer.pots.every((pot) => pot.eligible.length >= 2));
+        // 액션을 다시 돌리면 좌석마다 낸 금액과 같고, 금액은 줄지 않음
+        const last = Array(9).fill(0);
+        for (const a of q.actions) {
+          if (a.type !== "ante") assert.ok(a.to >= last[a.seat]);
+          last[a.seat] = a.to;
+        }
+        assert.deepEqual(last, q.seats.map((s) => s.amount));
+        for (const s of q.seats) if (s.action === "fold") assert.ok(q.actions.some((a) => a.seat === s.seat && a.type === "fold"));
+        const sum = q.answer.pots.reduce((t, x) => t + x.amount, 0) + (q.answer.refund?.amount ?? 0);
+        assert.equal(sum, q.seats.reduce((t, x) => t + x.amount, 0) + blinds.ante);
+        if (d === "easy") assert.ok(!q.answer.refund && !q.seats.some((s) => s.note));
+      }
+    });
+  }
   it("rejects bad blinds", () => {
     assert.equal(validBlinds({ sb: 1000, bb: 500, ante: 0 }), false);
     assert.equal(validBlinds({ sb: 500, bb: 1000, ante: 1000 }), true);

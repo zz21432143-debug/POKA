@@ -1,23 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { computePots, explainPots, payouts, potName, type PotPlayer } from "@/lib/side-pot";
-import { DEFAULT_BLINDS, PRACTICE_KINDS, ROUND_SIZE, potProblem, readNumber, validBlinds, type Blinds, type PotProblem, type Seat } from "@/lib/practice";
+import {
+  DEFAULT_BLINDS,
+  DIFFICULTIES,
+  DIFFICULTY,
+  ROUND_SIZE,
+  actionText,
+  kindOf,
+  potProblem,
+  readNumber,
+  validBlinds,
+  type Blinds,
+  type Difficulty,
+  type PotProblem,
+} from "@/lib/practice";
 
 /** 지금 시각(ms) — 화면 그리기와 상관없는 기록용 */
 const nowMs = () => Date.now();
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
-const BLINDS_KEY = "poka-practice-blinds-v1";
+const SETTINGS_KEY = "poka-practice-settings-v2";
 
 type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean };
 type Board = Record<string, { top: Row[]; best: Row | null }>;
 
-/** 딜러 연습장: 팟 계산(연습) · 사이드팟 계산기(실전) · 기록·랭킹 */
+/** 딜러 연습장: 팟 계산(연습 + 바로 아래 랭킹) · 사이드팟 계산기(실전) */
 export function DealerPractice() {
-  const [tab, setTab] = useState<"drill" | "calc" | "board">("drill");
+  const [tab, setTab] = useState<"drill" | "calc">("drill");
   const [board, setBoard] = useState<Board | null>(null);
+  const [settings, setSettings] = useSettings();
 
   useEffect(() => {
     let alive = true;
@@ -34,12 +48,11 @@ export function DealerPractice() {
 
   return (
     <div className="grid gap-3 text-white">
-      <nav role="tablist" aria-label="딜러 연습장" className="grid grid-cols-3 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
+      <nav role="tablist" aria-label="딜러 연습장" className="grid grid-cols-2 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
         {(
           [
             ["drill", "팟 계산"],
             ["calc", "사이드팟 계산기"],
-            ["board", "기록 · 랭킹"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -54,44 +67,72 @@ export function DealerPractice() {
           </button>
         ))}
       </nav>
-      {tab === "drill" ? <PotDrill best={board?.sidepot?.best ?? null} onSaved={setBoard} /> : null}
+      {tab === "drill" ? (
+        <>
+          <PotDrill settings={settings} onSettings={setSettings} best={board?.[kindOf(settings.difficulty)]?.best ?? null} onSaved={setBoard} />
+          <Ranking board={board} difficulty={settings.difficulty} />
+        </>
+      ) : null}
       {tab === "calc" ? <SidePotCalculator /> : null}
-      {tab === "board" ? <Ranking board={board} /> : null}
     </div>
   );
 }
 
-/* ───────────── 블라인드 설정 ───────────── */
+/* ───────────── 설정(난이도 · 블라인드) ───────────── */
 
-function useBlinds() {
-  const [blinds, setBlinds] = useState<Blinds>(DEFAULT_BLINDS);
+type Settings = { difficulty: Difficulty; blinds: Blinds };
+
+function useSettings() {
+  const [settings, setSettings] = useState<Settings>({ difficulty: "normal", blinds: DEFAULT_BLINDS });
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(BLINDS_KEY);
+      const raw = window.localStorage.getItem(SETTINGS_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as Blinds;
+        const saved = JSON.parse(raw) as Settings;
         // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 값은 화면이 뜬 뒤에만 읽을 수 있습니다.
-        if (validBlinds(saved)) setBlinds(saved);
+        if (DIFFICULTIES.includes(saved.difficulty) && validBlinds(saved.blinds)) setSettings(saved);
       }
     } catch {
       /* 기본값 */
     }
   }, []);
-  const save = (next: Blinds) => {
-    setBlinds(next);
+  const save = (next: Settings) => {
+    setSettings(next);
     try {
-      if (validBlinds(next)) window.localStorage.setItem(BLINDS_KEY, JSON.stringify(next));
+      if (validBlinds(next.blinds)) window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
     } catch {
       /* 무시 */
     }
   };
-  return [blinds, save] as const;
+  return [settings, save] as const;
 }
 
-function BlindInputs({ blinds, onChange }: { blinds: Blinds; onChange: (b: Blinds) => void }) {
+function SettingsForm({ settings, onChange }: { settings: Settings; onChange: (s: Settings) => void }) {
+  const { blinds } = settings;
   const ok = validBlinds(blinds);
   return (
-    <div className="grid gap-1">
+    <div className="grid gap-3">
+      <div className="grid gap-1.5">
+        <span className="text-xs font-bold text-zinc-300">난이도</span>
+        <div role="radiogroup" aria-label="난이도" className="grid gap-1.5 sm:grid-cols-3">
+          {DIFFICULTIES.map((d) => (
+            <button
+              key={d}
+              type="button"
+              role="radio"
+              aria-checked={settings.difficulty === d}
+              onClick={() => onChange({ ...settings, difficulty: d })}
+              className={cn(
+                "grid gap-0.5 rounded-xl border-2 px-3 py-2 text-left",
+                settings.difficulty === d ? "border-amber-400 bg-amber-950/40" : "border-white/15 bg-black hover:border-white/30",
+              )}
+            >
+              <span className={cn("text-base font-black", settings.difficulty === d ? "text-amber-300" : "text-white")}>{DIFFICULTY[d].label}</span>
+              <span className="text-[11px] text-zinc-400">{DIFFICULTY[d].desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-2">
         {(
           [
@@ -106,7 +147,7 @@ function BlindInputs({ blinds, onChange }: { blinds: Blinds; onChange: (b: Blind
               aria-label={label}
               inputMode="numeric"
               value={blinds[key] ? won(blinds[key]) : key === "ante" ? "0" : ""}
-              onChange={(e) => onChange({ ...blinds, [key]: readNumber(e.target.value) })}
+              onChange={(e) => onChange({ ...settings, blinds: { ...blinds, [key]: readNumber(e.target.value) } })}
               className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base font-black tabular-nums"
             />
           </label>
@@ -117,59 +158,146 @@ function BlindInputs({ blinds, onChange }: { blinds: Blinds; onChange: (b: Blind
   );
 }
 
-/* ───────────── 타원형 테이블 ───────────── */
+/* ───────────── 9인 홀덤 테이블(액션 재생) ───────────── */
 
-const ACTION: Record<Seat["action"], { label: string; tone: string }> = {
+const FINAL: Record<string, { label: string; tone: string }> = {
   allin: { label: "올인", tone: "bg-rose-600 text-white" },
-  bet: { label: "베팅", tone: "bg-emerald-500 text-black" },
+  bet: { label: "레이즈", tone: "bg-emerald-500 text-black" },
   call: { label: "콜", tone: "bg-sky-500 text-black" },
   fold: { label: "폴드", tone: "bg-zinc-600 text-zinc-100" },
 };
+const LIVE_TONE: Record<string, string> = {
+  sb: "bg-zinc-200 text-black",
+  bb: "bg-zinc-200 text-black",
+  ante: "bg-amber-200 text-black",
+  fold: "bg-zinc-600 text-zinc-100",
+  check: "bg-zinc-300 text-black",
+  call: "bg-sky-500 text-black",
+  raise: "bg-emerald-500 text-black",
+  allin: "bg-rose-600 text-white",
+};
 
-function PokerTable({ seats, blinds }: { seats: Seat[]; blinds: Blinds }) {
-  const n = seats.length;
+/**
+ * 실제 9인 테이블 자리(시계 방향, 맨 위 가운데는 딜러): 위 2 · 오른쪽 2 · 아래 3 · 왼쪽 2.
+ * PC는 가로 테이블, 휴대폰은 세로 테이블 좌표를 따로 씁니다(%).
+ */
+const SEATS_PC = [
+  [71, 11],
+  [91, 31],
+  [91, 69],
+  [71, 89],
+  [50, 91],
+  [29, 89],
+  [9, 69],
+  [9, 31],
+  [29, 11],
+] as const;
+const SEATS_MOBILE = [
+  [74, 9],
+  [87, 32],
+  [87, 64],
+  [76, 89],
+  [50, 94],
+  [24, 89],
+  [13, 64],
+  [13, 32],
+  [26, 9],
+] as const;
+/** 칩(베팅 금액) 자리: 좌석에서 가운데 쪽으로 */
+const toward = (v: number, f = 0.52) => 50 + (v - 50) * f;
+/** 휴대폰 · PC 좌표를 CSS 변수로(작은 화면 먼저, sm부터 PC) */
+function place(m: readonly [number, number], d: readonly [number, number]) {
+  return { "--mx": `${m[0]}%`, "--my": `${m[1]}%`, "--dx": `${d[0]}%`, "--dy": `${d[1]}%` } as React.CSSProperties;
+}
+const PLACED = "left-[var(--mx)] top-[var(--my)] sm:left-[var(--dx)] sm:top-[var(--dy)]";
+
+function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
+  const { seats, actions, blinds, button } = problem;
+  const done = step >= actions.length;
+  const view = useMemo(() => {
+    const contrib = Array(9).fill(0);
+    const folded = Array(9).fill(false);
+    const last: (string | null)[] = Array(9).fill(null);
+    const lastType: (string | null)[] = Array(9).fill(null);
+    for (const a of actions.slice(0, step)) {
+      if (a.type !== "ante") contrib[a.seat] = a.to;
+      if (a.type === "fold") folded[a.seat] = true;
+      last[a.seat] = actionText(a, blinds);
+      lastType[a.seat] = a.type;
+    }
+    return { contrib, folded, last, lastType, actor: step > 0 ? actions[step - 1].seat : -1 };
+  }, [actions, step, blinds]);
+
   return (
-    <div data-table className="relative mx-auto aspect-[4/5] w-full max-w-3xl sm:aspect-[16/10]">
-      {/* 테이블(펠트) */}
-      <div className="absolute inset-[13%_9%] rounded-[50%] border-[10px] border-[#5b3a1f] bg-[radial-gradient(ellipse_at_center,#1f7a4a_0%,#0f4d2d_70%,#0b3a22_100%)] shadow-[inset_0_0_30px_rgba(0,0,0,.6),0_8px_24px_rgba(0,0,0,.6)]" />
-      <div className="absolute inset-0 grid place-items-center text-center">
-        <div className="grid gap-0.5 rounded-xl bg-black/40 px-3 py-1.5">
-          <span className="text-[11px] font-bold text-emerald-200">프리플랍 올인</span>
-          <span className="text-sm font-black text-white sm:text-base">
-            SB {won(blinds.sb)} · BB {won(blinds.bb)}
-          </span>
-          {blinds.ante ? <span className="text-[11px] font-bold text-amber-200">BB 앤티 {won(blinds.ante)} (메인 팟에)</span> : null}
+    <div data-table className="relative mx-auto aspect-[3/4] w-full max-w-4xl sm:aspect-[16/9]">
+      {/* 레일 + 펠트(레이스트랙 모양) */}
+      <div className="absolute inset-[11%_17%] rounded-[999px] bg-[#3b2414] p-[2.2%] shadow-[0_10px_30px_rgba(0,0,0,.7)] sm:inset-[15%_13%]">
+        <div className="relative h-full w-full rounded-[999px] border-2 border-[#c9a25c]/40 bg-[radial-gradient(ellipse_at_center,#1f8a52_0%,#136b3d_55%,#0b4a29_100%)] shadow-[inset_0_0_40px_rgba(0,0,0,.55)]">
+          <div className="absolute inset-[16%_12%] rounded-[999px] border border-white/15" />
         </div>
       </div>
-      {seats.map((seat, i) => {
-        // 버튼(BTN)을 맨 아래에 두고 시계 방향으로
-        const angle = ((90 + (i * 360) / n) * Math.PI) / 180;
-        const x = 50 + 43 * Math.cos(angle);
-        const y = 50 + 44 * Math.sin(angle);
-        const bx = 50 + 27 * Math.cos(angle);
-        const by = 50 + 27 * Math.sin(angle);
-        const act = ACTION[seat.action];
+      {/* 딜러 자리 */}
+      <div className={cn("absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/80 px-2 py-0.5 text-[10px] font-black tracking-widest text-amber-200", PLACED)} style={place([50, 7], [50, 9])}>
+        DEALER
+      </div>
+      {/* 가운데: 블라인드 · 진행 */}
+      <div className="absolute inset-0 grid place-items-center text-center">
+        <div className="grid gap-0.5 rounded-xl bg-black/45 px-3 py-1.5">
+          {/* eslint-disable-next-line @next/next/no-img-element -- 작은 마크 */}
+          <img src="/brand/poka-oni-mark.png" alt="" className="mx-auto h-auto w-8 opacity-80" />
+          <span className="text-xs font-black text-white sm:text-sm">
+            SB {won(blinds.sb)} · BB {won(blinds.bb)}
+          </span>
+          {blinds.ante ? <span className="text-[10px] font-bold text-amber-200">BB 앤티 {won(blinds.ante)} → 메인 팟</span> : null}
+          <span className={cn("text-[11px] font-black", done ? "text-emerald-200" : "text-amber-200")}>
+            {done ? "액션 끝 — 팟을 계산하세요" : `프리플랍 진행 중 ${step}/${actions.length}`}
+          </span>
+        </div>
+      </div>
+      {seats.map((seat) => {
+        const m = SEATS_MOBILE[seat.seat];
+        const d = SEATS_PC[seat.seat];
+        const folded = view.folded[seat.seat];
+        const contrib = view.contrib[seat.seat];
+        const isActor = view.actor === seat.seat && !done;
+        const label = done ? (seat.note ?? FINAL[seat.action].label) : view.last[seat.seat];
+        const tone = done ? FINAL[seat.action].tone : view.lastType[seat.seat] ? LIVE_TONE[view.lastType[seat.seat] as string] : "";
         return (
-          <div key={seat.position}>
+          <div key={seat.seat}>
             <div
               data-seat={seat.position}
               className={cn(
-                "absolute grid w-[23%] max-w-[8.5rem] min-w-[4.6rem] -translate-x-1/2 -translate-y-1/2 justify-items-center gap-0.5 rounded-xl border px-1 py-1 text-center shadow-lg",
-                seat.action === "fold" ? "border-white/10 bg-zinc-900/90 opacity-75" : "border-amber-300/60 bg-black/90",
+                "absolute grid w-[21%] max-w-[8rem] min-w-[4.3rem] -translate-x-1/2 -translate-y-1/2 justify-items-center gap-0.5 rounded-xl border px-1 py-1 text-center shadow-lg transition-all duration-300 sm:w-[12.5%]",
+                PLACED,
+                folded ? "border-white/10 bg-zinc-900/90 opacity-60" : "border-amber-300/50 bg-black/90",
+                isActor && "z-10 scale-110 border-amber-300 ring-2 ring-amber-300",
               )}
-              style={{ left: `${x}%`, top: `${y}%` }}
+              style={place(m, d)}
             >
-              <span className="text-sm font-black text-amber-300 sm:text-base">{seat.position}</span>
-              <span className={cn("rounded px-1.5 text-[11px] font-black", act.tone)}>{seat.note ?? act.label}</span>
-              {seat.amount ? <span className="text-xs font-black tabular-nums text-white sm:text-sm">{won(seat.amount)}</span> : <span className="text-[11px] text-zinc-500">—</span>}
+              <span className="flex items-center gap-1 text-xs font-black text-amber-300 sm:text-sm">
+                {/* 카드 두 장(폴드하면 사라짐) */}
+                <span className={cn("flex gap-px transition-opacity duration-500", folded ? "opacity-0" : "opacity-100")} aria-hidden>
+                  <span className="block h-3.5 w-2.5 rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
+                  <span className="block h-3.5 w-2.5 rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
+                </span>
+                {seat.position}
+                {seat.seat === button ? <span className="grid size-4 place-items-center rounded-full bg-white text-[9px] text-black">D</span> : null}
+              </span>
+              <span className="text-[10px] tabular-nums text-zinc-400">스택 {won(Math.max(0, seat.stack - contrib))}</span>
+              {label ? <span data-act className={cn("rounded px-1 text-[10px] font-black whitespace-nowrap sm:text-[11px]", tone)}>{label}</span> : <span className="h-[15px]" />}
             </div>
-            {seat.amount ? (
+            {contrib ? (
               <span
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-amber-100 sm:text-xs"
-                style={{ left: `${bx}%`, top: `${by}%` }}
+                data-bet={seat.position}
+                className={cn(
+                  "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-amber-100 transition-all duration-500 sm:text-xs",
+                  PLACED,
+                  folded && "opacity-60",
+                )}
+                style={place([toward(m[0], 0.5), toward(m[1], 0.56)], [toward(d[0], 0.6), toward(d[1], 0.5)])}
               >
                 <span className="inline-block size-2.5 rounded-full border border-white/70 bg-rose-600" />
-                {won(seat.amount)}
+                {won(contrib)}
               </span>
             ) : null}
           </div>
@@ -181,11 +309,21 @@ function PokerTable({ seats, blinds }: { seats: Seat[]; blinds: Blinds }) {
 
 /* ───────────── 팟 계산 연습(10문제) ───────────── */
 
-function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board) => void }) {
-  const [blinds, setBlinds] = useBlinds();
+function PotDrill({
+  settings,
+  onSettings,
+  best,
+  onSaved,
+}: {
+  settings: Settings;
+  onSettings: (s: Settings) => void;
+  best: Row | null;
+  onSaved: (board: Board) => void;
+}) {
   const [phase, setPhase] = useState<"ready" | "play" | "done">("ready");
   const [index, setIndex] = useState(0);
   const [question, setQuestion] = useState<PotProblem | null>(null);
+  const [step, setStep] = useState(0);
   const [inputs, setInputs] = useState<string[]>([]);
   const [checked, setChecked] = useState<boolean | null>(null);
   const [correct, setCorrect] = useState(0);
@@ -193,29 +331,43 @@ function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board)
   const [saved, setSaved] = useState<string | null>(null);
   const startRef = useRef(0);
   const firstInput = useRef<HTMLInputElement>(null);
+  const playing = Boolean(question && step < question.actions.length);
+  const conf = DIFFICULTY[settings.difficulty];
 
+  // 시간
   useEffect(() => {
     if (phase !== "play") return;
     const t = window.setInterval(() => setElapsed(nowMs() - startRef.current), 100);
     return () => window.clearInterval(t);
   }, [phase]);
+  // 액션 재생: 한 명씩
   useEffect(() => {
-    if (phase === "play" && checked === null) firstInput.current?.focus();
-  }, [phase, checked, index]);
+    if (phase !== "play" || !question || step >= question.actions.length) return;
+    const t = window.setTimeout(() => setStep((s) => s + 1), step === 0 ? 400 : conf.speed);
+    return () => window.clearTimeout(t);
+  }, [phase, question, step, conf.speed]);
+  useEffect(() => {
+    if (phase === "play" && !playing && checked === null) firstInput.current?.focus();
+  }, [phase, playing, checked, index]);
 
   const answer = question?.answer;
   const fields = answer ? [...answer.pots.map((_, i) => potName(i)), ...(answer.refund ? ["돌려줄 금액"] : [])] : [];
   const answers = answer ? [...answer.pots.map((p) => p.amount), ...(answer.refund ? [answer.refund.amount] : [])] : [];
 
+  function load() {
+    setQuestion(potProblem(settings.difficulty, validBlinds(settings.blinds) ? settings.blinds : DEFAULT_BLINDS));
+    setStep(0);
+    setInputs([]);
+    setChecked(null);
+  }
+
   function start() {
-    if (!validBlinds(blinds)) return;
+    if (!validBlinds(settings.blinds)) return;
     setPhase("play");
     setIndex(0);
     setCorrect(0);
     setSaved(null);
-    setQuestion(potProblem(blinds));
-    setInputs([]);
-    setChecked(null);
+    load();
     startRef.current = nowMs();
     setElapsed(0);
   }
@@ -235,43 +387,41 @@ function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board)
         const res = await fetch("/api/tools/practice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ kind: "sidepot", correct, durationMs }),
+          body: JSON.stringify({ kind: kindOf(settings.difficulty), correct, durationMs }),
         });
         const data = (await res.json()) as { board?: Board; error?: string };
         if (data.board) onSaved(data.board);
-        setSaved(res.ok ? "기록을 저장했습니다." : (data.error ?? "기록을 저장하지 못했습니다."));
+        setSaved(res.ok ? "기록을 저장했습니다. 아래 랭킹을 확인하세요." : (data.error ?? "기록을 저장하지 못했습니다."));
       } catch {
         setSaved("기록을 저장하지 못했습니다.");
       }
       return;
     }
     setIndex(index + 1);
-    setQuestion(potProblem(validBlinds(blinds) ? blinds : DEFAULT_BLINDS));
-    setInputs([]);
-    setChecked(null);
+    load();
   }
 
   if (phase === "ready") {
     return (
       <section className="grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-4">
-        <h2 className="text-lg font-black">{PRACTICE_KINDS.sidepot} 연습</h2>
+        <h2 className="text-lg font-black">팟 계산 연습</h2>
         <p className="text-sm text-zinc-300">
-          테이블에서 누가 어느 포지션에서 얼마 올인·베팅·콜했는지 보고 <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 · 피프스 팟</b> 금액(그리고 돌려줄 금액)을 계산해 넣으세요.
-          틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다.
+          9인 테이블에서 블라인드부터 한 명씩 <b className="text-white">폴드 · 체크 · 콜 · 레이즈 · 올인</b>이 진행됩니다. 액션이 끝나면{" "}
+          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 · 피프스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다.
         </p>
-        <BlindInputs blinds={blinds} onChange={setBlinds} />
+        <SettingsForm settings={settings} onChange={onSettings} />
         {best ? (
           <p className="text-sm font-bold text-amber-300">
-            내 최고 기록: {best.correct}/{ROUND_SIZE} · {secText(best.durationMs)}
+            {conf.label} 내 최고 기록: {best.correct}/{ROUND_SIZE} · {secText(best.durationMs)}
           </p>
         ) : null}
         <button
           type="button"
           onClick={start}
-          disabled={!validBlinds(blinds)}
+          disabled={!validBlinds(settings.blinds)}
           className="min-h-12 justify-self-start rounded-xl bg-amber-400 px-8 text-lg font-black text-black disabled:opacity-40"
         >
-          시작
+          {conf.label} 시작
         </button>
       </section>
     );
@@ -280,7 +430,7 @@ function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board)
   if (phase === "done") {
     return (
       <section data-drill-done className="grid gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 p-4">
-        <h2 className="text-lg font-black">{PRACTICE_KINDS.sidepot} 끝!</h2>
+        <h2 className="text-lg font-black">팟 계산 · {conf.label} 끝!</h2>
         <p className="text-3xl font-black">
           {correct}/{ROUND_SIZE} <span className="text-lg text-zinc-300">· {secText(elapsed)}</span>
         </p>
@@ -290,7 +440,7 @@ function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board)
             다시 하기
           </button>
           <button type="button" onClick={() => setPhase("ready")} className="min-h-11 rounded-xl border border-white/25 px-4 text-sm font-bold">
-            블라인드 바꾸기
+            난이도 · 블라인드 바꾸기
           </button>
         </div>
       </section>
@@ -303,66 +453,142 @@ function PotDrill({ best, onSaved }: { best: Row | null; onSaved: (board: Board)
         <span className="rounded-full bg-amber-400 px-3 py-1 font-black text-black">
           {index + 1} / {ROUND_SIZE}
         </span>
+        <span className="rounded-full border border-white/20 px-2 py-0.5 text-xs">{conf.label}</span>
         <span className="text-emerald-300">맞힘 {correct}</span>
         <span className="ml-auto tabular-nums text-zinc-300">{secText(elapsed)}</span>
       </div>
 
-      {question ? <PokerTable seats={question.seats} blinds={question.blinds} /> : null}
-      {answer ? (
-        <p className="text-center text-xs font-bold text-zinc-400">
-          팟 {answer.pots.length}개({answer.pots.map((_, i) => potName(i)).join(" · ")}){answer.refund ? " + 돌려줄 금액 있음" : ""}
-        </p>
-      ) : null}
+      {question ? <HoldemTable problem={question} step={step} /> : null}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (checked === null) check();
-          else void next();
-        }}
-        className="grid gap-2"
-      >
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-2">
-          {fields.map((label, i) => (
-            <label key={label} className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
-              {label}
-              <input
-                ref={i === 0 ? firstInput : undefined}
-                aria-label={label}
-                inputMode="numeric"
-                value={inputs[i] ?? ""}
-                disabled={checked !== null}
-                onChange={(e) => {
-                  const next = [...inputs];
-                  next[i] = e.target.value.replace(/[^\d,]/g, "");
-                  setInputs(next);
-                }}
-                className={cn(
-                  "h-12 w-full min-w-0 rounded-lg border-2 bg-black px-2 text-xl font-black tabular-nums",
-                  checked === null ? "border-white/20" : readNumber(inputs[i] ?? "") === answers[i] ? "border-emerald-500" : "border-rose-500",
-                )}
-              />
-              {checked !== null && readNumber(inputs[i] ?? "") !== answers[i] ? <span className="text-rose-300">정답 {won(answers[i])}</span> : null}
-            </label>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {playing ? (
+          <button type="button" onClick={() => question && setStep(question.actions.length)} className="min-h-10 rounded-lg border border-white/25 px-4 text-sm font-bold">
+            건너뛰기 ▶▶
+          </button>
+        ) : (
+          <button type="button" onClick={() => setStep(0)} className="min-h-10 rounded-lg border border-white/25 px-4 text-sm font-bold">
+            액션 다시 보기 ↺
+          </button>
+        )}
+        {!playing && answer ? (
+          <span className="text-xs font-bold text-zinc-400">
+            팟 {answer.pots.length}개({answer.pots.map((_, i) => potName(i)).join(" · ")}){answer.refund ? " + 돌려줄 금액 있음" : ""}
+          </span>
+        ) : null}
+      </div>
+
+      {!playing && question ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (checked === null) check();
+            else void next();
+          }}
+          className="grid gap-2"
+        >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-2">
+            {fields.map((label, i) => (
+              <label key={label} className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
+                {label}
+                <input
+                  ref={i === 0 ? firstInput : undefined}
+                  aria-label={label}
+                  inputMode="numeric"
+                  value={inputs[i] ?? ""}
+                  disabled={checked !== null}
+                  onChange={(e) => {
+                    const next = [...inputs];
+                    next[i] = e.target.value.replace(/[^\d,]/g, "");
+                    setInputs(next);
+                  }}
+                  className={cn(
+                    "h-12 w-full min-w-0 rounded-lg border-2 bg-black px-2 text-xl font-black tabular-nums",
+                    checked === null ? "border-white/20" : readNumber(inputs[i] ?? "") === answers[i] ? "border-emerald-500" : "border-rose-500",
+                  )}
+                />
+                {checked !== null && readNumber(inputs[i] ?? "") !== answers[i] ? <span className="text-rose-300">정답 {won(answers[i])}</span> : null}
+              </label>
+            ))}
+          </div>
+          {checked !== null && answer ? (
+            <div data-feedback className={cn("grid gap-1.5 rounded-xl px-3 py-2", checked ? "bg-emerald-950" : "bg-rose-950")}>
+              <p className={cn("text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>{checked ? "정답!" : "틀렸습니다"}</p>
+              <p className="text-xs font-bold text-zinc-300">풀이</p>
+              <ol data-explain className="grid gap-1 text-sm text-zinc-100">
+                {explainPots(question.players, answer).map((line) => (
+                  <li key={line} className="rounded-lg bg-black/40 px-2 py-1 tabular-nums">
+                    {line}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+          <button type="submit" className="min-h-12 rounded-xl bg-amber-400 text-lg font-black text-black">
+            {checked === null ? "확인" : index + 1 >= ROUND_SIZE ? "결과 보기" : "다음 문제"}
+          </button>
+        </form>
+      ) : null}
+    </section>
+  );
+}
+
+/* ───────────── 랭킹(팟 계산 바로 아래, 난이도별 10명) ───────────── */
+
+function Ranking({ board, difficulty }: { board: Board | null; difficulty: Difficulty }) {
+  const [view, setView] = useState<Difficulty>(difficulty);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 난이도를 바꾸면 그 난이도 랭킹을 보여 줍니다.
+    setView(difficulty);
+  }, [difficulty]);
+  const data = board?.[kindOf(view)] ?? { top: [], best: null };
+  return (
+    <section data-rank={view} aria-label="팟 계산 랭킹" className="grid gap-2 rounded-2xl border-2 border-amber-400/50 bg-zinc-950 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-lg font-black">🏆 팟 계산 랭킹</h2>
+        <div className="ml-auto flex rounded-full border border-white/20 p-0.5">
+          {DIFFICULTIES.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setView(d)}
+              className={cn("min-h-9 rounded-full px-3 text-xs font-black", view === d ? "bg-amber-400 text-black" : "text-zinc-300")}
+            >
+              {DIFFICULTY[d].label}
+            </button>
           ))}
         </div>
-        {checked !== null && question && answer ? (
-          <div data-feedback className={cn("grid gap-1.5 rounded-xl px-3 py-2", checked ? "bg-emerald-950" : "bg-rose-950")}>
-            <p className={cn("text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>{checked ? "정답!" : "틀렸습니다"}</p>
-            <p className="text-xs font-bold text-zinc-300">풀이</p>
-            <ol data-explain className="grid gap-1 text-sm text-zinc-100">
-              {explainPots(question.players, answer).map((line) => (
-                <li key={line} className="rounded-lg bg-black/40 px-2 py-1 tabular-nums">
-                  {line}
-                </li>
-              ))}
-            </ol>
-          </div>
-        ) : null}
-        <button type="submit" className="min-h-12 rounded-xl bg-amber-400 text-lg font-black text-black">
-          {checked === null ? "확인" : index + 1 >= ROUND_SIZE ? "결과 보기" : "다음 문제"}
-        </button>
-      </form>
+      </div>
+      {!board ? <p className="text-sm text-zinc-400">불러오는 중…</p> : null}
+      {board ? (
+        data.best ? (
+          <p className="text-sm font-bold text-amber-300">
+            내 최고: {data.best.correct}/{ROUND_SIZE} · {secText(data.best.durationMs)}
+          </p>
+        ) : (
+          <p className="text-sm text-zinc-400">아직 내 기록이 없습니다.</p>
+        )
+      ) : null}
+      <ol className="grid gap-1">
+        {Array.from({ length: 10 }, (_, i) => {
+          const row = data.top[i];
+          return (
+            <li key={i} className={cn("flex min-h-9 items-center gap-2 rounded-lg px-2 py-1.5 text-sm", row?.mine ? "bg-amber-950 ring-1 ring-amber-400" : "bg-black")}>
+              <span className={cn("w-7 text-center font-black", i === 0 ? "text-amber-300" : i === 1 ? "text-zinc-200" : i === 2 ? "text-orange-300" : "text-zinc-500")}>
+                {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+              </span>
+              <span className={cn("min-w-0 flex-1 truncate font-bold", !row && "text-zinc-600")}>{row ? row.nickname : "—"}</span>
+              {row ? (
+                <>
+                  <span className="font-black tabular-nums">
+                    {row.correct}/{ROUND_SIZE}
+                  </span>
+                  <span className="w-20 text-right text-xs tabular-nums text-zinc-400">{secText(row.durationMs)}</span>
+                </>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }
@@ -535,41 +761,6 @@ function SidePotCalculator() {
       ) : (
         <p className="text-sm text-zinc-400">두 사람 이상 금액을 넣으면 메인 · 세컨 · 서드 팟…이 바로 나옵니다.</p>
       )}
-    </section>
-  );
-}
-
-/* ───────────── 기록 · 랭킹 ───────────── */
-
-function Ranking({ board }: { board: Board | null }) {
-  if (!board) return <p className="text-sm text-zinc-400">불러오는 중…</p>;
-  const data = board.sidepot ?? { top: [], best: null };
-  return (
-    <section data-rank="sidepot" className="grid gap-2 rounded-2xl border border-white/15 bg-zinc-950 p-3">
-      <h2 className="text-base font-black">{PRACTICE_KINDS.sidepot} 랭킹</h2>
-      {data.best ? (
-        <p className="text-sm font-bold text-amber-300">
-          내 최고: {data.best.correct}/{ROUND_SIZE} · {secText(data.best.durationMs)}
-        </p>
-      ) : (
-        <p className="text-sm text-zinc-400">아직 내 기록이 없습니다.</p>
-      )}
-      <ol className="grid gap-1">
-        {data.top.length ? (
-          data.top.map((row, i) => (
-            <li key={i} className={cn("flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm", row.mine ? "bg-amber-950 ring-1 ring-amber-400" : "bg-black")}>
-              <span className={cn("w-6 text-center font-black", i < 3 ? "text-amber-300" : "text-zinc-400")}>{i + 1}</span>
-              <span className="min-w-0 flex-1 truncate font-bold">{row.nickname}</span>
-              <span className="font-black tabular-nums">
-                {row.correct}/{ROUND_SIZE}
-              </span>
-              <span className="w-20 text-right text-xs tabular-nums text-zinc-400">{secText(row.durationMs)}</span>
-            </li>
-          ))
-        ) : (
-          <li className="text-sm text-zinc-500">첫 기록의 주인공이 되어 보세요.</li>
-        )}
-      </ol>
     </section>
   );
 }

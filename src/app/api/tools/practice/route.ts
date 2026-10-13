@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
-import { PRACTICE_KINDS, ROUND_SIZE, type PracticeKind } from "@/lib/practice";
+import { PRACTICE_KINDS, ROUND_SIZE } from "@/lib/practice";
 
 export const dynamic = "force-dynamic";
 
-const KINDS = Object.keys(PRACTICE_KINDS) as PracticeKind[];
+/** 난이도별 기록(sidepot-easy · sidepot-normal · sidepot-hard) */
+const KINDS = Object.keys(PRACTICE_KINDS);
 const TOP = 10;
 
 type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean };
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
   const user = await getCurrentUser().catch(() => null);
   if (!user || !canUseDealerTools(user)) return NextResponse.json({ error: "로그인하면 쓸 수 있습니다." }, { status: 403 });
   const body = (await request.json().catch(() => ({}))) as { kind?: string; correct?: number; durationMs?: number };
-  const kind = String(body.kind) as PracticeKind;
+  const kind = String(body.kind);
   const correct = Math.floor(Number(body.correct));
   const durationMs = Math.floor(Number(body.durationMs));
   // 말이 안 되는 기록은 받지 않습니다(10문제를 3초 안에 다 맞히는 등)
