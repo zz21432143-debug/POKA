@@ -65,7 +65,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   }, [view.index, view.running, view.level.isBreak, sound]);
 
   const nowLabel = kstTime(now);
-  const ticker = `${data.notice ? `${data.notice}      ✦      ` : ""}${PROMO}`;
+  const ticker = data.notice.trim();
 
   return (
     <div data-game-screen className={cn("@container-[size] relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,#2a0d0d_0%,#0b0706_60%,#050303_100%)] text-white", className)}>
@@ -89,18 +89,17 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           </span>
           {data.subtitle ? <span className="truncate text-[clamp(11px,calc(var(--u)*1.6),30px)] font-bold text-zinc-300">{data.subtitle}</span> : null}
         </div>
-        <span className="ml-auto grid shrink-0 justify-items-end">
-          <span className="text-[clamp(16px,calc(var(--u)*2.8),52px)] leading-none font-black text-zinc-200 tabular-nums">{nowLabel}</span>
-          <span data-site className="text-[clamp(10px,calc(var(--u)*1.3),26px)] font-black tracking-wide text-[#e2bd72]">{SITE}</span>
-        </span>
+        <span className="ml-auto shrink-0 text-[clamp(16px,calc(var(--u)*2.8),52px)] leading-none font-black text-zinc-200 tabular-nums">{nowLabel}</span>
       </header>
 
-      {/* 흐르는 공지(위쪽) — 공지 뒤에 POKA 홍보가 늘 붙음 */}
-      <div data-notice className="overflow-hidden border-b border-[#c9a25c]/40 bg-[#3a0d0d]/80 py-[calc(var(--u)*0.4)]">
-        <p className="inline-block animate-[poka-ticker_linear_infinite] pl-[100%] text-[clamp(13px,calc(var(--u)*1.9),38px)] font-bold whitespace-nowrap text-amber-100" style={{ animationDuration: `${Math.max(20, Math.round(ticker.length * 0.32))}s` }}>
-          {ticker}
-        </p>
-      </div>
+      {/* 흐르는 공지(위쪽): 적었을 때만 */}
+      {ticker ? (
+        <div data-notice className="overflow-hidden border-b border-[#c9a25c]/40 bg-[#3a0d0d]/80 py-[calc(var(--u)*0.4)]">
+          <p className="inline-block animate-[poka-ticker_linear_infinite] pl-[100%] text-[clamp(13px,calc(var(--u)*1.9),38px)] font-bold whitespace-nowrap text-amber-100" style={{ animationDuration: `${Math.max(16, Math.round(ticker.length * 0.4))}s` }}>
+            {ticker}
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.8)] @[560px]:grid-cols-[1fr_2.1fr_1fr]">
         {/* 가운데: 레벨 · 시계 · 블라인드(세로 화면은 맨 위) */}
@@ -195,6 +194,13 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         </section>
       </div>
 
+      {/* 맨 아래 한 줄: POKA 주소 · 홍보(움직이지 않음) */}
+      <footer data-promo className="flex items-center justify-center gap-[calc(var(--u)*0.8)] border-t border-[#c9a25c]/30 bg-black/60 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.45)] text-[clamp(10px,calc(var(--u)*1.35),26px)] font-bold whitespace-nowrap text-zinc-300">
+        <b className="font-black text-amber-300">POKA</b>
+        <span className="truncate">{PROMO}</span>
+        <b className="font-black tracking-wide text-[#e2bd72]">{SITE}</b>
+      </footer>
+
       </div>
     </div>
   );
@@ -202,7 +208,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 
 /** 현황판에 늘 나오는 POKA 홍보 */
 const SITE = "pokerwiki.co.kr";
-const PROMO = `POKA 홀덤 커뮤니티 · ${SITE} · 딜러 구인구직 · 대회 캘린더 · 딜러 툴 무료`;
+const PROMO = "홀덤 커뮤니티 · 딜러 구인구직 · 대회 캘린더 · 딜러 툴 무료";
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
 const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/20 bg-black/55 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
 const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-black tracking-wide text-zinc-300";

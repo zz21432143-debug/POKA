@@ -491,7 +491,7 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
           </select>
         </label>
         <label className={label}>
-          흐르는 공지(화면 위쪽 · 뒤에 POKA 홍보가 함께 흘러요)
+          흐르는 공지(화면 위쪽 · 비워 두면 안 나와요)
           <input value={data.notice} maxLength={BOARD_LIMITS.notice} onChange={(e) => onEdit({ notice: e.target.value })} placeholder="레지 마감은 레벨 8 종료까지 · 휴식 10분" className={field} />
         </label>
       </section>
