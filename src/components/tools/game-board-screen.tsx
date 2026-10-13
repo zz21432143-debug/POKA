@@ -5,7 +5,7 @@ import { cn } from "cn";
 import { PRIZE_COLORS, boardStats, chipText, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
-const blindText = (l: BoardLevel) => `${won(l.sb)} / ${won(l.bb)}`;
+const blindText = (l: BoardLevel) => `SB ${won(l.sb)} / BB ${won(l.bb)}`;
 
 /** 레벨이 바뀔 때 짧은 알림음(브라우저가 소리를 허락한 뒤에만) */
 function beep(times = 3) {
@@ -104,52 +104,55 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
             <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">잠시 쉬어 갑니다</span>
           ) : (
             <>
-              <span className="text-[clamp(12px,calc(var(--u)*1.6),32px)] leading-none font-black tracking-[0.3em] text-amber-300/80">SB / BB</span>
-              <span data-blinds className="text-[clamp(24px,calc(var(--u)*4.6),100px)] leading-tight font-black text-amber-200 tabular-nums">
-                {blindText(view.level)}
+              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(24px,calc(var(--u)*4.6),100px)] leading-tight font-black text-amber-200 tabular-nums">
+                <small className={BLIND_TAG}>SB</small>
+                {won(view.level.sb)}
+                <span className="text-amber-200/60">/</span>
+                <small className={BLIND_TAG}>BB</small>
+                {won(view.level.bb)}
               </span>
               {view.level.ante ? <span className="text-[clamp(15px,calc(var(--u)*2.3),48px)] font-black text-amber-100/90 tabular-nums">BB 앤티 {won(view.level.ante)}</span> : null}
             </>
           )}
           <span data-next className="text-[clamp(13px,calc(var(--u)*2),38px)] font-bold text-zinc-300 tabular-nums">
-            {view.next ? (view.next.isBreak ? `다음: 휴식 ${view.next.minutes}분` : `다음: SB / BB ${blindText(view.next)}${view.next.ante ? ` · 앤티 ${won(view.next.ante)}` : ""}`) : "마지막 레벨"}
+            {view.next ? (view.next.isBreak ? `다음: 휴식 ${view.next.minutes}분` : `다음: ${blindText(view.next)}${view.next.ante ? ` · 앤티 ${won(view.next.ante)}` : ""}`) : "마지막 레벨"}
           </span>
         </section>
 
         {/* 왼쪽: 플레이 중 / 바인 · 리바인 · 얼리 · 애드온(따로) · 스택 · 러닝 타임 · 휴식 · 레지 마감 */}
         <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.7)] @[560px]:order-1 @[560px]:grid-cols-1">
           <div data-players className={CARD}>
-            <span className={LABEL}>PLAYERS · 플레이 / 바인</span>
+            <span className={LABEL}>PLAYERS</span>
             <span className="text-[clamp(20px,calc(var(--u)*3),60px)] leading-tight font-black text-white tabular-nums">
               {won(data.remaining)}
               <span className="text-zinc-400"> / {won(data.entries)}</span>
             </span>
           </div>
           <div className={cn("grid gap-[calc(var(--u)*0.5)]", data.addonOn ? "grid-cols-3" : "grid-cols-2")}>
-            <Mini data-rebuys label="리바인" value={won(data.rebuys)} />
-            <Mini data-earlies label="얼리" value={won(data.earlies)} />
-            {data.addonOn ? <Mini data-addons label="애드온" value={won(data.addons)} /> : null}
+            <Mini data-rebuys label="REBUY" value={won(data.rebuys)} />
+            <Mini data-earlies label="EARLY" value={won(data.earlies)} />
+            {data.addonOn ? <Mini data-addons label="ADD-ON" value={won(data.addons)} /> : null}
           </div>
           <div className={cn(CARD, "grid-cols-2 gap-x-[calc(var(--u)*1)]")}>
             <span className="grid">
-              <span className={LABEL}>평균 스택</span>
+              <span className={LABEL}>AVG STACK</span>
               <span className="text-[clamp(16px,calc(var(--u)*2.3),48px)] leading-tight font-black text-white tabular-nums">{avgStack ? won(avgStack) : "-"}</span>
               {avgStack && bb ? <span className="text-[clamp(11px,calc(var(--u)*1.4),28px)] font-bold text-amber-200 tabular-nums">{(avgStack / bb).toFixed(1)} BB</span> : null}
             </span>
             <span className="grid content-start">
-              <span className={LABEL}>총 칩</span>
+              <span className={LABEL}>TOTAL CHIPS</span>
               <span className="text-[clamp(16px,calc(var(--u)*2.3),48px)] leading-tight font-black text-white tabular-nums">{totalChips ? chipText(totalChips) : "-"}</span>
             </span>
           </div>
           <div className={cn(CARD, "gap-[calc(var(--u)*0.3)]")}>
-            <TimeRow data-running label="러닝 타임" value={clockText(view.runningMs)} />
-            <TimeRow data-break label="브레이크" at={view.nextBreakMs != null ? kstTime(now + view.nextBreakMs) : undefined} value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : view.level.isBreak ? "휴식 중" : "-"} />
+            <TimeRow data-running label="RUNNING TIME" value={clockText(view.runningMs)} />
+            <TimeRow data-break label="BREAK" at={view.nextBreakMs != null ? kstTime(now + view.nextBreakMs) : undefined} value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : view.level.isBreak ? "ON BREAK" : "-"} />
             {data.regLevel > 0 ? (
               <TimeRow
                 data-reg
-                label="레지 마감"
+                label="REG CLOSE"
                 at={view.regClosed || view.regCloseMs == null ? undefined : kstTime(now + view.regCloseMs)}
-                value={view.regClosed ? "마감" : clockText(view.regCloseMs ?? 0)}
+                value={view.regClosed ? "CLOSED" : clockText(view.regCloseMs ?? 0)}
                 tone={view.regClosed ? "closed" : (view.regCloseMs ?? 0) <= 10 * 60_000 ? "warn" : undefined}
               />
             ) : null}
@@ -160,8 +163,8 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         <section data-prize className="flex min-h-0 flex-col justify-center @[560px]:order-3">
           {prizes.length || data.prizeTitle ? (
             <div className="flex max-h-[42cqh] min-h-0 flex-col gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.4)] @[560px]:max-h-full">
-              <span className="text-[clamp(13px,calc(var(--u)*1.9),36px)] font-black text-[#c9a25c]">PRIZE · 프라이즈</span>
-              {data.prizeTitle ? <span data-prize-title className="text-[clamp(16px,calc(var(--u)*2.4),48px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
+              <span className="text-center text-[clamp(15px,calc(var(--u)*2.4),46px)] font-black tracking-[0.25em] text-[#e2bd72]">PRIZE</span>
+              {data.prizeTitle ? <span data-prize-title className="text-center text-[clamp(16px,calc(var(--u)*2.4),48px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
               <PrizeList prizes={prizes} />
             </div>
           ) : (
@@ -176,7 +179,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
       {/* 아래: 공지 */}
       {data.notice ? (
         <footer data-notice className="overflow-hidden border-t border-[#c9a25c]/30 bg-black/60 py-[calc(var(--u)*0.8)]">
-          <p className="inline-block animate-[poka-ticker_22s_linear_infinite] pl-[100%] motion-reduce:animate-none motion-reduce:pl-[calc(var(--u)*2)] text-[clamp(14px,calc(var(--u)*2.2),42px)] font-bold whitespace-nowrap text-amber-100">{data.notice}</p>
+          <p className="inline-block animate-[poka-ticker_22s_linear_infinite] pl-[100%] text-[clamp(14px,calc(var(--u)*2.2),42px)] font-bold whitespace-nowrap text-amber-100">{data.notice}</p>
         </footer>
       ) : null}
       </div>
@@ -184,8 +187,9 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   );
 }
 
-const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/10 bg-black/45 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
-const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-bold text-zinc-400";
+const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
+const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/20 bg-black/55 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
+const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-black tracking-wide text-zinc-300";
 
 /** 한국 시각 "21:40" */
 function kstTime(ms: number) {
@@ -206,8 +210,8 @@ function TimeRow({ label, value, at, tone, ...rest }: { label: string; value: st
 /** 리바인 · 얼리 · 애드온 작은 칸 */
 function Mini({ label, value, ...rest }: { label: string; value: string } & Record<`data-${string}`, unknown>) {
   return (
-    <div {...rest} className="grid justify-items-center rounded-[calc(var(--u)*1)] border border-white/10 bg-black/45 px-[calc(var(--u)*0.6)] py-[calc(var(--u)*0.4)]">
-      <span className="text-[clamp(10px,calc(var(--u)*1.25),26px)] font-bold text-zinc-400">{label}</span>
+    <div {...rest} className="grid justify-items-center rounded-[calc(var(--u)*1)] border border-white/20 bg-black/55 px-[calc(var(--u)*0.6)] py-[calc(var(--u)*0.4)]">
+      <span className="text-[clamp(10px,calc(var(--u)*1.25),26px)] font-black tracking-wide text-zinc-300">{label}</span>
       <span className="text-[clamp(15px,calc(var(--u)*2.2),44px)] leading-tight font-black text-white tabular-nums">{value}</span>
     </div>
   );
@@ -229,14 +233,26 @@ function PrizeList({ prizes }: { prizes: GameBoardData["prizes"] }) {
     return () => ro.disconnect();
   }, [prizes.length]);
   const moving = shift > 4;
+  // 잠깐 멈춤 → 아래까지 내려감 → 잠깐 멈춤 → 위로(줄 수에 맞춰 속도 조절)
+  useEffect(() => {
+    const el = list.current;
+    if (!el || !moving || typeof el.animate !== "function") return;
+    const down = `translateY(-${shift}px)`;
+    const anim = el.animate(
+      [
+        { transform: "translateY(0)", offset: 0 },
+        { transform: "translateY(0)", offset: 0.15 },
+        { transform: down, offset: 0.5 },
+        { transform: down, offset: 0.65 },
+        { transform: "translateY(0)", offset: 1 },
+      ],
+      { duration: Math.max(10_000, Math.round((shift / 12) * 1000)), iterations: Infinity, easing: "ease-in-out" },
+    );
+    return () => anim.cancel();
+  }, [moving, shift]);
   return (
     <div ref={box} data-prize-box className="min-h-0 flex-1 overflow-hidden">
-      <ul
-        ref={list}
-        data-prize-scroll={moving ? "on" : undefined}
-        style={moving ? ({ "--prize-shift": `-${shift}px`, animationDuration: `${Math.max(10, Math.round(shift / 12))}s` } as React.CSSProperties) : undefined}
-        className={cn("grid gap-[calc(var(--u)*0.3)]", moving && "animate-[poka-prize-scroll_12s_ease-in-out_infinite] motion-reduce:animate-none")}
-      >
+      <ul ref={list} data-prize-scroll={moving ? "on" : undefined} className="grid gap-[calc(var(--u)*0.3)]">
         {prizes.map((p, i) => (
           <li key={i} data-prize-row style={{ color: PRIZE_COLORS[p.color].hex }} className="flex items-baseline justify-between gap-[calc(var(--u)*1)] border-b border-white/10 pb-[calc(var(--u)*0.2)] last:border-0">
             <span className="text-[clamp(13px,calc(var(--u)*1.9),36px)] font-black">{p.place}</span>

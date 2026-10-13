@@ -2042,17 +2042,3 @@ select {
   }
 }
 
-/* 게임 현황판 프라이즈가 칸보다 길면: 잠깐 멈춤 → 아래까지 내려감 → 잠깐 멈춤 → 다시 위로 */
-@keyframes poka-prize-scroll {
-  0%,
-  15% {
-    transform: translateY(0);
-  }
-  50%,
-  65% {
-    transform: translateY(var(--prize-shift, 0));
-  }
-  100% {
-    transform: translateY(0);
-  }
-}

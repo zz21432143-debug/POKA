@@ -195,7 +195,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
       <section className="ink-panel grid gap-2 rounded-2xl p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2">
           <label className="grid min-w-0 flex-1 gap-1 text-xs font-bold text-zinc-300">
-            내 현황판 <span className="font-normal text-zinc-500">(내 계정에만 보입니다)</span>
+            내 현황판 · 내 계정에만 보여요
             <select
               aria-label="현황판 고르기"
               value={board?.id ?? ""}
@@ -231,29 +231,39 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
         </section>
       ) : (
         <>
-          {/* 미리보기 + TV */}
-          <section className="grid gap-2">
-            <div data-board-preview className="aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[#c9a25c]/40 sm:aspect-video">
-              <GameBoardScreen data={draft} now={now} />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void openTv()} className="min-h-12 flex-1 rounded-xl bg-amber-400 px-5 text-base font-black text-black sm:flex-none">
-                📺 TV 화면으로 띄우기
+          {/* 탭: 크게 · 눈에 띄게 */}
+          <nav role="tablist" aria-label="현황판 메뉴" className="grid grid-cols-3 gap-1.5 rounded-2xl border-2 border-amber-400/50 bg-black p-1.5">
+            {(
+              [
+                ["play", "⏱", "진행", "시계 · 인원 · 칩"],
+                ["prize", "🏆", "프라이즈", "순위 · 금액 · 색"],
+                ["setup", "⚙️", "설정", "이름 · 블라인드 · 레지"],
+              ] as const
+            ).map(([key, icon, label, hint]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={tab === key}
+                aria-label={label}
+                onClick={() => setTab(key)}
+                className={cn("grid min-h-16 content-center justify-items-center gap-0.5 rounded-xl px-1 py-2 transition-colors", tab === key ? "bg-amber-400 text-black shadow-lg" : "bg-white/5 text-white hover:bg-white/10")}
+              >
+                <span className="flex items-center gap-1.5 text-base font-black sm:text-lg">
+                  <span aria-hidden>{icon}</span>
+                  {label}
+                </span>
+                <span className={cn("text-[11px] font-bold", tab === key ? "text-black/70" : "text-zinc-400")}>{hint}</span>
               </button>
-              <div className="flex rounded-xl border border-white/15 p-1" role="tablist" aria-label="보기">
-                {(
-                  [
-                    ["play", "진행"],
-                    ["prize", "프라이즈"],
-                    ["setup", "설정 · 블라인드"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={cn("min-h-10 rounded-lg px-4 text-sm font-black", tab === key ? "bg-white text-black" : "text-zinc-300")}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            ))}
+          </nav>
+
+          {/* 미리보기(TV 화면을 그대로 줄여서) + TV 버튼 */}
+          <section className="grid gap-2">
+            <ScaledPreview data={draft} now={now} />
+            <button type="button" onClick={() => void openTv()} className="min-h-14 rounded-2xl bg-amber-400 px-5 text-lg font-black text-black shadow-[0_6px_20px_rgba(251,191,36,.25)]">
+              📺 TV 화면으로 띄우기
+            </button>
           </section>
 
           {tab === "play" ? <PlayControls data={draft} now={now} onClock={clock} onEdit={edit} /> : tab === "prize" ? <PrizeForm data={draft} onEdit={edit} /> : <SetupForm data={draft} current={clockView(draft, now).index} onEdit={edit} onJump={(index) => void clock({ op: "jump", index })} />}
@@ -364,8 +374,8 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
           </span>
         </h2>
         <Counter label="플레이 중" hint="탈락하면 −1 · 숫자 칸을 눌러 바로 고칠 수 있어요" value={data.remaining} onChange={(v) => onEdit({ remaining: v })} />
-        <Counter label="바인" hint="바인 수만 올라가요(플레이 중은 따로 정리)" value={data.entries} onChange={(v) => onEdit({ entries: v })} />
-        <Counter label="리바인" hint="리바인 수만 올라가요" value={data.rebuys} onChange={(v) => onEdit({ rebuys: v })} />
+        <Counter label="바인" hint="+1 하면 플레이 중도 +1" value={data.entries} onChange={(v) => onEdit({ entries: v, remaining: Math.max(0, data.remaining + (v - data.entries)) })} />
+        <Counter label="리바인" hint="리바인 수만 올라가요(바인 · 플레이 중은 그대로)" value={data.rebuys} onChange={(v) => onEdit({ rebuys: v })} />
         <Counter label="얼리" hint="얼리칩 받은 수" value={data.earlies} onChange={(v) => onEdit({ earlies: v })} />
         <label className="flex min-h-11 items-center gap-2 rounded-xl bg-black/50 px-3 text-sm font-black text-white">
           <input type="checkbox" checked={data.addonOn} onChange={(e) => onEdit({ addonOn: e.target.checked })} className="size-5 accent-amber-400" />
@@ -645,5 +655,26 @@ function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<
         ) : null}
       </div>
     </section>
+  );
+}
+
+/* ───────────── 미리보기: TV 화면(1280×720)을 그대로 줄여 보여 줌 ───────────── */
+
+function ScaledPreview({ data, now }: { data: GameBoardData; now: number }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setScale(el.clientWidth / 1280));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={box} data-board-preview className="relative aspect-video w-full overflow-hidden rounded-2xl border-2 border-[#c9a25c]/50 bg-black">
+      <div style={{ width: 1280, height: 720, transform: `scale(${scale})`, transformOrigin: "top left" }} className={cn("absolute top-0 left-0", !scale && "invisible")}>
+        <GameBoardScreen data={data} now={now} />
+      </div>
+    </div>
   );
 }

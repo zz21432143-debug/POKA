@@ -24,7 +24,7 @@ export default async function GameBoardPage({ searchParams }: { searchParams: Pr
           ← 딜러 툴
         </Link>
         <BoardTitle sticker={BOARD_STICKER.board}>게임 현황판</BoardTitle>
-        <p className="mt-2">블라인드 레벨 · 남은 시간 · 인원 · 평균 스택 · 상금을 TV에 띄우는 토너먼트 시계입니다. 내 계정에만 보이고, 휴대폰으로 조작하면 TV에 바로 반영됩니다.</p>
+        <p className="mt-2">TV에 띄우는 토너먼트 시계. 휴대폰으로 조작하면 TV에 바로 반영돼요.</p>
       </header>
       <GameBoardPanel initialBoards={boards} initialBoard={board} />
     </div>
