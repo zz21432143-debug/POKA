@@ -23,6 +23,7 @@ import { sortTdaSections } from "@/lib/tda";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { escapeHtml } from "@/lib/doc-html";
 import { formatKstLabel } from "@/lib/dates";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 /** ISO 시각 → 한국 날짜 YYYY-MM-DD */
 function todayKstFrom(iso: string) {
@@ -103,7 +104,7 @@ export default async function BoardPage({
     <div className="flex flex-col gap-4">
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1>{FREE_TABS.some((tab) => tab.slug === canonical) ? "자유게시판" : board.title}</h1>
+          <BoardTitle sticker={BOARD_STICKER[canonical]}>{FREE_TABS.some((tab) => tab.slug === canonical) ? "자유게시판" : board.title}</BoardTitle>
           <p className="mt-2">{BOARD_DESCRIPTIONS[board.boardType]}</p>
           {canWrite || !("masterOnly" in board && board.masterOnly) ? (
             <p className="mt-1.5 text-xs text-[#9CA3AF]">글 작성 시 {postRewardLine(board.boardType)}</p>

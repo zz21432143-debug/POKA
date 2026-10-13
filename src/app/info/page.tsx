@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpenIcon, CalendarDaysIcon, MegaphoneIcon } from "lucide-react";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "정보센터" };
 
@@ -14,7 +15,7 @@ export default function InfoHubPage() {
   return (
     <div className="flex flex-col gap-5">
       <header className="board-intro">
-        <h1>정보센터</h1>
+        <BoardTitle sticker={BOARD_STICKER.info}>정보센터</BoardTitle>
         <p className="mt-2">대회 일정, 공식 홍보, TDA 룰.</p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">

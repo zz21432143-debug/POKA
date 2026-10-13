@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SIDEBAR_NAV } from "@/lib/nav";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "커뮤니티" };
 
@@ -10,7 +11,7 @@ export default function CommunityHubPage() {
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
-        <h1>커뮤니티</h1>
+        <BoardTitle sticker={BOARD_STICKER.community}>커뮤니티</BoardTitle>
         <p className="mt-2">
           자유 게시판부터 핸드리뷰까지, 같은 길을 걷는 사람들과 이야기하세요.
         </p>

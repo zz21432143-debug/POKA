@@ -7,6 +7,7 @@ import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { guestJobCard, toJobCard } from "@/lib/load-feed";
 import { cn } from "cn";
 import { getCurrentUser } from "@/lib/current-user";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "검색", robots: { index: false } };
 
@@ -86,7 +87,7 @@ export default async function SearchPage({
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
-        <h1>검색</h1>
+        <BoardTitle sticker={BOARD_STICKER.search}>검색</BoardTitle>
         <form action="/search" className="mt-3">
           <input
             type="search"

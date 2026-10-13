@@ -18,3 +18,71 @@ export function Oni({ pose, className }: { pose: OniPose; className?: string }) 
     <img data-oni={pose} src={src} width={width} height={height} alt="" aria-hidden draggable={false} className={cn("pointer-events-none w-auto select-none", className)} />
   );
 }
+
+/** 오니 이모티콘(흰 테두리 스티커) — 게시판 제목 옆 · 빈 게시판 */
+const STICKERS = {
+  hehe: [159, 144],
+  curious: [159, 144],
+  phone: [153, 144],
+  holdem: [182, 144],
+  wow: [187, 144],
+  win: [178, 144],
+  study: [149, 144],
+  idea: [171, 144],
+  letsgo: [153, 144],
+  confident: [167, 144],
+  surprise: [160, 144],
+  work: [170, 144],
+  clap: [177, 144],
+  good: [179, 144],
+  hello: [193, 144],
+  ok: [195, 144],
+  cool: [177, 144],
+  think: [181, 144],
+} as const;
+
+export type OniStickerName = keyof typeof STICKERS;
+
+/** 게시판(주소 조각)별 이모티콘 */
+export const BOARD_STICKER: Record<string, OniStickerName> = {
+  free: "hehe",
+  rules: "curious",
+  sketch: "phone",
+  "hand-review": "holdem",
+  official: "wow",
+  promo: "wow",
+  schedule: "win",
+  tda: "study",
+  suggestions: "idea",
+  jobs: "letsgo",
+  apply: "letsgo",
+  tournament: "confident",
+  urgent: "surprise",
+  fixed: "work",
+  team: "clap",
+  community: "good",
+  notices: "hello",
+  info: "ok",
+  dealers: "cool",
+  guide: "study",
+  tools: "work",
+  search: "curious",
+};
+
+export function OniSticker({ name, className }: { name: OniStickerName; className?: string }) {
+  const [width, height] = STICKERS[name];
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- 작은 장식 그림(투명 webp)
+    <img data-oni-sticker={name} src={`/brand/oni/stickers/${name}.webp`} width={width} height={height} alt="" aria-hidden draggable={false} className={cn("pointer-events-none w-auto shrink-0 select-none", className)} />
+  );
+}
+
+/** 게시판 제목: 왼쪽에 이모티콘(급여 계산기 실수령액처럼) */
+export function BoardTitle({ sticker, children, className }: { sticker?: OniStickerName; children: React.ReactNode; className?: string }) {
+  return (
+    <h1 className={cn("flex items-center gap-2.5", className)}>
+      {sticker ? <OniSticker name={sticker} className="h-12 sm:h-14" /> : null}
+      <span className="min-w-0">{children}</span>
+    </h1>
+  );
+}

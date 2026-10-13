@@ -9,6 +9,7 @@ import { PAGE_SIZE } from "@/lib/feed";
 import { cn } from "cn";
 import { OFFICIAL_NOTICES } from "@/lib/notices";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "공지사항" };
 
@@ -23,7 +24,7 @@ export default async function NoticesPage() {
     <div className="flex flex-col gap-4">
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1>공지사항</h1>
+          <BoardTitle sticker={BOARD_STICKER.notices}>공지사항</BoardTitle>
           <p className="mt-2">
             운영 공지입니다. 작성은 마스터 계정만 가능합니다.
           </p>

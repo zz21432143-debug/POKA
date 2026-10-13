@@ -12,6 +12,7 @@ import { resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function JobBoardPage({
     <div className="flex flex-col gap-4">
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1>{region ? `${region} ${job.title}` : job.title}</h1>
+          <BoardTitle sticker={BOARD_STICKER[kind] ?? BOARD_STICKER.jobs}>{region ? `${region} ${job.title}` : job.title}</BoardTitle>
           <p className="mt-2">
             {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
             {page.total ? ` · ${page.total}개` : ""}

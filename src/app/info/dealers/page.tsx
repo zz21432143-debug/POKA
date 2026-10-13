@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StarIcon } from "lucide-react";
 import { getVerifiedDealers } from "@/lib/growth-ops";
 import { MarkImage } from "@/components/layout/mark-image";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function DealersPage() {
           <StarIcon className="size-3.5 fill-[#C59B27] text-[#C59B27]" />
           VERIFIED
         </p>
-        <h1 className="mt-2">인증</h1>
+        <BoardTitle sticker={BOARD_STICKER.dealers} className="mt-2">인증</BoardTitle>
         <p className="mt-2 max-w-xl">
           마스터가 직접 단 골드 뱃지입니다. 닉네임 옆에 「인증」으로 표시됩니다.
         </p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PenSquareIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
+import { OniSticker } from "@/components/brand/oni";
 
 export type EmptyAction = { href: string; label: string };
 
@@ -22,6 +23,7 @@ export function EmptyBoard({
         framed && "ink-panel rounded-2xl",
       )}
     >
+      {framed ? <OniSticker name="think" className="h-16 opacity-90" /> : null}
       <p className={framed ? "text-base text-[#D1D5DB]" : "text-sm text-[#9CA3AF]"}>{text}</p>
       {action ? (
         <>

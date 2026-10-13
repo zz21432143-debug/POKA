@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = {
   title: "홀덤 딜러 가이드",
@@ -11,7 +12,7 @@ export default function GuideHubPage() {
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
-        <h1>홀덤 딜러 가이드</h1>
+        <BoardTitle sticker={BOARD_STICKER.guide}>홀덤 딜러 가이드</BoardTitle>
         <p className="mt-2">
           검색으로 들어오는 상설 글 {GUIDE_ARTICLES.length}편입니다. 하우스 룰이 있으면 플로어 판정이
           우선입니다.

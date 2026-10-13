@@ -14,6 +14,7 @@ import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
-        <h1>{region ? `${region} 구인구직` : "구인구직"}</h1>
+        <BoardTitle sticker={BOARD_STICKER.jobs}>{region ? `${region} 구인구직` : "구인구직"}</BoardTitle>
         <p className="mt-2">
           홀덤펍 지원 딜러·급구 대타·고정 딜러·팀 구인. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다.
           급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
