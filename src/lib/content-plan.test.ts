@@ -28,7 +28,7 @@ describe("weekly content plan", () => {
 
   it("only the posts that need real data keep placeholders", () => {
     const withPlaceholder = CONTENT_PLAN.filter((p) => `${p.title}${p.content}`.includes(PLACEHOLDER)).map((p) => p.id);
-    assert.deepEqual(withPlaceholder.sort(), ["sat-1", "sat-2", "sun-2"]);
+    assert.deepEqual(withPlaceholder.sort(), ["sat-1", "sat-2"]);
   });
 
   it("extra posts are ready to publish and do not reuse titles", () => {

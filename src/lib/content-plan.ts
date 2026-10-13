@@ -1,4 +1,5 @@
 import type { BoardType } from "@/generated/prisma/enums";
+import type { PollChoice as PollChoiceId } from "@/lib/poll";
 import type { HandReviewData } from "@/lib/hand-review";
 import { prizeToWon } from "@/lib/prize";
 
@@ -17,6 +18,8 @@ export type PlanItem = {
   title: string;
   /** 예전에 이 제목으로 올렸던 글(관리 화면에서 '새 내용으로 고치기'로 이어 줌) */
   oldTitles?: string[];
+  /** 본문의 {{투표:계획id}} 자리를 그 핸드리뷰 글의 실제 투표 결과로 채움 */
+  pollSummary?: { plan: string; choices: [PollChoiceId, string][] }[];
   content: string;
   hand?: HandReviewData;
   /** 대회 캘린더로 본문을 채우는 글 */
@@ -455,10 +458,15 @@ A. 아닙니다. A는 메인팟(60,000)만 가져가고, 사이드팟은 B·C �
     boardType: "FREE",
     boardLabel: "자유게시판",
     title: "이번 주 핸드 투표 결과 공개 + 해설",
+    pollSummary: [
+      { plan: "tue-2", choices: [["CALL", "콜"], ["FOLD", "폴드"]] },
+      { plan: "wed-2", choices: [["CALL", "콜"], ["FOLD", "폴드"]] },
+      { plan: "thu-2", choices: [["RAISE", "푸시"], ["FOLD", "폴드"]] },
+    ],
     content: `이번 주 핸드리뷰 투표 해설입니다. 참여해 주신 모든 분 감사합니다!
 
 ① 화요일 — BTN AJs 3벳팟, 리버 82bb 올인
-투표: 콜 〔○〕% / 폴드 〔○〕%
+{{투표:tue-2}}
 👉 해설: 콜 쪽이 낫습니다.
 • 82bb를 콜해서 약 200bb 팟을 노리므로, 약 41% 이상 이기면 콜이 이득입니다.
 • BB는 턴에서 체크했습니다. AK·AQ 같은 강한 A였다면 턴에서 계속 베팅하는 경우가 많습니다.
@@ -467,20 +475,17 @@ A. 아닙니다. A는 메인팟(60,000)만 가져가고, 사이드팟은 B·C �
 • 다만 아주 타이트한 상대라면 폴드도 충분히 말이 됩니다.
 
 ② 수요일 — 77 탑셋, 체크레이즈 올인
-투표: 콜 〔○〕% / 폴드 〔○〕%
+{{투표:wed-2}}
 👉 해설: 콜(받기)입니다.
 • 상대의 올인 범위에는 플러시 드로우, 콤보 드로우, 오버페어, 투페어가 많습니다.
 • 가장 무서운 9♥T♥ 같은 콤보 드로우를 상대로도 셋이 대략 55~60%로 앞섭니다.
 • 88 탑셋에 지는 경우는 조합이 적습니다. 그걸 무서워해서 셋을 접으면 장기적으로 손해입니다.
 
 ③ 목요일 — 버블 10bb A7o
-투표: 푸시 〔○〕% / 폴드 〔○〕%
+{{투표:thu-2}}
 👉 해설: 푸시가 기본입니다.
 • 10bb 버튼에서 A7o는 충분히 강한 올인 핸드입니다.
 • 버블에서 더 몸을 사려야 하는 쪽은 중간 스택입니다. 숏스택은 기다릴수록 블라인드에 깎여 더 불리해집니다.
-
-④ 토요일 — 〔대회명〕 명장면
-👉 실제 결과: 〔결과와 해설〕
 
 다음 주 투표도 화·수·목 저녁 9시에 올라옵니다!`,
   },
