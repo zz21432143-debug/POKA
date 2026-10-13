@@ -169,9 +169,9 @@ function SettingsForm({ settings, onChange }: { settings: Settings; onChange: (s
         ))}
       </div>
       <p className="text-xs text-zinc-400">
-        BB 앤티는 항상 <b className="text-amber-300">BB와 같은 금액({won(blinds.bb || 0)})</b>으로 나오고 메인 팟에 들어갑니다.
+        칩은 <b className="text-white">100 단위</b>로 나옵니다. BB 앤티는 항상 <b className="text-amber-300">BB와 같은 금액({won(blinds.bb || 0)})</b>으로 메인 팟에 들어갑니다.
       </p>
-      {!ok ? <p className="text-xs font-bold text-rose-300">SB는 BB보다 작거나 같아야 하고, 0보다 커야 합니다.</p> : null}
+      {!ok ? <p className="text-xs font-bold text-rose-300">SB · BB는 100 단위(100 이상)로 적고, SB는 BB보다 작거나 같아야 합니다.</p> : null}
     </div>
   );
 }
@@ -515,10 +515,31 @@ function PotDrill({
     return (
       <section className="grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-4">
         <h2 className="text-lg font-black">팟 계산 연습</h2>
-        <p className="text-sm text-zinc-300">
-          9인 테이블에서 블라인드부터 한 명씩 <b className="text-white">폴드 · 체크 · 콜 · 레이즈 · 올인</b>이 진행됩니다. 액션이 끝나면{" "}
-          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 · 피프스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. <b className="text-white">팟 칸을 하나만 남기고 다 적으면 남은 칸은 자동으로 채워집니다</b>(사이드팟부터 잡으면 남는 칩이 메인 팟). 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다(시간은 액션이 끝난 뒤부터).
-        </p>
+        <ol data-howto className="grid gap-2 sm:grid-cols-3">
+          {[
+            ["액션 보기", <>9인 테이블에서 한 명씩 폴드 · 콜 · 레이즈 · 올인이 진행됩니다.</>],
+            [
+              "팟 적기",
+              <>
+                <b className="text-amber-300">메인~피프스 팟</b>(+ 돌려줄 금액)을 적어요. <b className="text-white">한 칸만 남기면 자동</b>으로 채워집니다 — 사이드팟부터 잡으면 남는 칩이 메인 팟.
+              </>,
+            ],
+            [
+              "기록",
+              <>
+                한 판 {ROUND_SIZE}문제. <b className="text-white">많이 맞히고 빠를수록</b> 높은 기록이에요(시간은 액션이 끝난 뒤부터). 틀리면 풀이가 나와요.
+              </>,
+            ],
+          ].map(([title, body], i) => (
+            <li key={i} className="flex gap-2.5 rounded-xl border border-white/10 bg-black/60 p-3">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-amber-400 text-sm font-black text-black">{i + 1}</span>
+              <span className="grid gap-0.5 text-sm leading-snug text-zinc-300">
+                <b className="text-base text-white">{title}</b>
+                <span>{body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
         <SettingsForm settings={settings} onChange={onSettings} />
         {best ? (
           <p className="text-sm font-bold text-amber-300">

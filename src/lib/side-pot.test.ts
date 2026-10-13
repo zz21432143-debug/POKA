@@ -81,7 +81,8 @@ describe("pot practice problems", async () => {
     it(`plays a real preflop round on 9 seats (${d})`, () => {
       const rand = seeded(d.length * 31 + 7);
       for (let i = 0; i < 60; i += 1) {
-        const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 0 } : { sb: 500, bb: 1000, ante: 0 };
+        const BLINDS = [{ sb: 500, bb: 1000 }, { sb: 1000, bb: 2000 }, { sb: 100, bb: 200 }, { sb: 300, bb: 600 }, { sb: 200, bb: 400 }];
+        const blinds = { ...BLINDS[i % BLINDS.length], ante: 0 };
         const q = potProblem(d, blinds, rand);
         const [lo, hi] = DIFFICULTY[d].pots;
         assert.equal(q.seats.length, 9);
@@ -101,12 +102,19 @@ describe("pot practice problems", async () => {
         assert.equal(q.blinds.ante, blinds.bb);
         assert.equal(sum, q.seats.reduce((t, x) => t + x.amount, 0) + blinds.bb);
         if (d === "easy") assert.ok(!q.answer.refund && !q.seats.some((s) => s.note));
+        // 칩은 100 단위: 스택 · 액션 · 팟 · 돌려줄 금액 모두
+        const amounts = [...q.seats.map((s) => s.stack), ...q.actions.map((a) => a.to), ...q.answer.pots.map((x) => x.amount), q.answer.refund?.amount ?? 0];
+        assert.ok(amounts.every((n) => n % 100 === 0), `${d} ${blinds.sb}/${blinds.bb}: 100 단위 아닌 금액 ${amounts.filter((n) => n % 100)}`);
       }
     });
   }
   it("rejects bad blinds", () => {
     assert.equal(validBlinds({ sb: 1000, bb: 500, ante: 0 }), false);
     assert.equal(validBlinds({ sb: 500, bb: 1000 }), true);
+    // 100 단위만
+    assert.equal(validBlinds({ sb: 50, bb: 100 }), false);
+    assert.equal(validBlinds({ sb: 150, bb: 300 }), false);
+    assert.equal(validBlinds({ sb: 100, bb: 200 }), true);
   });
 });
 

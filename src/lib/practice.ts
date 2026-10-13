@@ -36,9 +36,12 @@ export type Blinds = { sb: number; bb: number; ante: number };
 export const withAnte = (b: { sb: number; bb: number }): Blinds => ({ sb: b.sb, bb: b.bb, ante: b.bb });
 export const DEFAULT_BLINDS: Blinds = withAnte({ sb: 500, bb: 1000 });
 
-/** 블라인드 입력 확인: 0 < SB ≤ BB */
+/** 가장 작은 칩 단위: 모든 금액(블라인드 · 스택 · 베팅)은 100 단위 */
+export const CHIP_UNIT = 100;
+
+/** 블라인드 입력 확인: 100 단위 · 100 ≤ SB ≤ BB */
 export function validBlinds(b: { sb: number; bb: number }) {
-  return Number.isFinite(b.sb) && Number.isFinite(b.bb) && b.sb > 0 && b.bb >= b.sb && b.bb <= 10_000_000;
+  return Number.isFinite(b.sb) && Number.isFinite(b.bb) && b.sb >= CHIP_UNIT && b.bb >= b.sb && b.bb <= 10_000_000 && b.sb % CHIP_UNIT === 0 && b.bb % CHIP_UNIT === 0;
 }
 
 /** 9인 테이블 포지션(버튼부터 시계 방향) */
@@ -91,8 +94,8 @@ function simulate(difficulty: Difficulty, blinds: Blinds, rand: Rand): PotProble
   const button = between(rand, 0, N - 1);
   const pos = (s: number) => POSITIONS_9[(s - button + N) % N];
   const seatOf = (offset: number) => (button + offset) % N;
-  // 금액 단위: 쉬움은 5BB 단위, 보통은 BB 단위, 어려움은 SB 단위(잔돈)
-  const unit = difficulty === "easy" ? bb * 5 : difficulty === "normal" ? bb : difficulty === "hard" ? sb : Math.max(1, Math.round(sb / 5));
+  // 금액 단위: 쉬움은 5BB 단위, 보통은 BB 단위, 어려움은 SB 단위, 지옥은 SB의 1/5쯤(잔돈) — 어느 난이도든 100 단위 아래로는 안 내려감
+  const unit = difficulty === "easy" ? bb * 5 : difficulty === "normal" ? bb : difficulty === "hard" ? sb : Math.max(CHIP_UNIT, Math.round(sb / 5 / CHIP_UNIT) * CHIP_UNIT);
   const roundUp = (x: number) => Math.ceil(x / unit) * unit;
 
   const activeCount = between(rand, conf.active[0], conf.active[1]);
@@ -151,7 +154,7 @@ function simulate(difficulty: Difficulty, blinds: Blinds, rand: Rand): PotProble
     if (!active.has(p)) {
       // 들어오지 않는 사람: 가끔 먼저 레이즈했다가 다음 레이즈에 폴드
       if (raiseFold.has(p) && !raised[p] && raises < 2) {
-        const to = Math.min(roundUp(cb + Math.max(minRaise, cb)), Math.floor(stacks[p] / 2));
+        const to = Math.min(roundUp(cb + Math.max(minRaise, cb)), Math.floor(stacks[p] / 2 / CHIP_UNIT) * CHIP_UNIT);
         if (to > cb) {
           raised[p] = true;
           put(p, to, "raise");

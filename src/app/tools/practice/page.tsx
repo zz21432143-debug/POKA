@@ -20,7 +20,7 @@ export default async function PracticePage() {
           ← 딜러 툴
         </Link>
         <h1 className="text-2xl font-black text-white">딜러 연습장</h1>
-        <p className="text-xs text-zinc-400">테이블에서 포지션별 올인·베팅을 보고 메인·세컨·서드·포스·피프스 팟을 계산하는 연습(풀이·기록·랭킹)과, 현장에서 바로 쓰는 사이드팟 계산기입니다.</p>
+        <p className="text-xs text-zinc-400">팟 계산 연습(풀이 · 기록 · 랭킹)과 현장에서 바로 쓰는 사이드팟 계산기.</p>
         </div>
         <Oni pose="front" className="h-20 shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,.6)] sm:h-24" />
       </header>
