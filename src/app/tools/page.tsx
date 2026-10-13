@@ -8,8 +8,8 @@ export const metadata: Metadata = { title: "제작중", robots: { index: false }
 export const dynamic = "force-dynamic";
 
 const TOOLS = [
-  { href: "/tools/rotation", title: "딜러 로테이션", body: "테이블 최대 40개 · 딜러 55명. 간격(예: 20분)마다 누가 몇 번 테이블로 들어가고 쉬는지 시간표로 미리 짭니다." },
-  { href: "/tools/seat-draw", title: "DAY2 싯드로우", body: "진출자 칩을 테이블마다 고르게 나누고 좌석은 무작위로 배정합니다." },
+  { href: "/tools/rotation", title: "딜러 로테이션", body: "게임마다 테이블 최대 100개 · 딜러 150명. 간격(예: 20분)마다 누가 몇 번 테이블로 들어가고 쉬는지 시간표로 미리 짭니다." },
+  { href: "/tools/seat-draw", title: "싯드로우", body: "진출자 칩을 테이블마다 고르게 나누고 좌석은 무작위로 배정합니다." },
 ];
 
 export default async function ToolsPage() {

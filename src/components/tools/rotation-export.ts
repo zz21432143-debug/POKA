@@ -73,12 +73,15 @@ export function swapInfo(
   if (next < 0 || !plan.slots[next]) return null;
   const before = current >= 0 ? plan.slots[current] : null;
   const after = plan.slots[next];
-  const rows = labels.map((label, t) => ({
-    label,
-    from: before?.seats[t] ?? null,
-    to: after.seats[t] ?? null,
-    closed: closedFrom[t] != null && after.at >= (closedFrom[t] as number),
-  }));
+  const rows = labels
+    .map((label, t) => ({
+      label,
+      from: before?.seats[t] ?? null,
+      to: after.seats[t] ?? null,
+      closed: closedFrom[t] != null && after.at >= (closedFrom[t] as number),
+    }))
+    // 이미 컨바인된 테이블(지금도 비어 있음)은 빼고, 이번 교대에 닫히는 테이블만 남깁니다.
+    .filter((row) => !(row.closed && !row.from));
   const toRest = after.rest.filter((id) => !before?.rest.includes(id));
   const stillRest = after.rest.filter((id) => before?.rest.includes(id));
   return { at: after.at, prevAt: before?.at ?? null, rows, toRest, stillRest };
@@ -113,13 +116,44 @@ function save(canvas: HTMLCanvasElement, filename: string) {
   }, "image/png");
 }
 
-/** 시간별(교대표) 이미지: 큰 교대 시간 + "T5 박딜러 → 김딜러" 줄 */
+/** 긴 글을 폭에 맞게 여러 줄로 나눕니다(이름 사이 ", " 기준) */
+function wrapNames(ctx: CanvasRenderingContext2D, label: string, names: string[], maxWidth: number) {
+  const lines: string[] = [];
+  let line = label;
+  for (const [index, item] of names.entries()) {
+    const piece = (index ? ", " : "") + item;
+    if (ctx.measureText(line + piece).width > maxWidth && line !== label) {
+      lines.push(line);
+      line = "   " + item;
+    } else {
+      line += piece;
+    }
+  }
+  lines.push(line);
+  return lines;
+}
+
+/** 줄 수에 맞춰 단(열) 수 정하기: 너무 길면 2~3단으로 */
+function columnsFor(count: number, two: number, three: number) {
+  return count > three ? 3 : count > two ? 2 : 1;
+}
+
+/** 시간별(교대표) 이미지: 큰 교대 시간 + "T5 박딜러 → 김딜러" 줄. 테이블이 많으면 2~3단 */
 export async function downloadSwapImage(info: SwapInfo, name: (id: string | null) => string, button: number | null) {
   const logo = await loadLogo();
-  const width = 640;
+  const cols = columnsFor(info.rows.length, 14, 40);
+  const colW = 640;
+  const width = colW * cols;
   const lineH = 46;
-  const restLines = (info.toRest.length ? 1 : 0) + (info.stillRest.length ? 1 : 0);
-  const height = 130 + info.rows.length * lineH + restLines * 36 + 30 + FOOTER_H;
+  const perCol = Math.ceil(info.rows.length / cols);
+  const measure = document.createElement("canvas").getContext("2d");
+  if (!measure) return;
+  measure.font = `800 20px ${FONT}`;
+  const restLines = [
+    ...(info.toRest.length ? wrapNames(measure, "휴식 들어감  ", info.toRest.map(name), width - 48).map((text) => ({ text, color: "#fbbf24" })) : []),
+    ...(info.stillRest.length ? wrapNames(measure, "계속 휴식  ", info.stillRest.map(name), width - 48).map((text) => ({ text, color: "#a1a1aa" })) : []),
+  ];
+  const height = 130 + perCol * lineH + restLines.length * 32 + 30 + FOOTER_H;
   const scale = 2;
   const canvas = document.createElement("canvas");
   canvas.width = width * scale;
@@ -142,48 +176,50 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
     ctx.textAlign = "left";
   }
   drawLogo(ctx, logo, width - 92, 8, 80);
-  info.rows.forEach((row, i) => {
+  info.rows.forEach((row, index) => {
+    const col = Math.floor(index / perCol);
+    const i = index % perCol;
+    const x = col * colW;
     const y = 130 + i * lineH;
     ctx.fillStyle = i % 2 ? "#141417" : "#1c1c20";
-    ctx.fillRect(12, y - 32, width - 24, lineH - 4);
-    ctx.fillStyle = row.closed ? "#71717a" : "#34d399";
+    ctx.fillRect(x + 12, y - 32, colW - 24, lineH - 4);
+    ctx.fillStyle = row.closed ? "#fb7185" : "#34d399";
     ctx.font = `900 28px ${FONT}`;
-    ctx.fillText(`T${row.label}`, 24, y);
+    ctx.fillText(`T${row.label}`, x + 24, y);
     ctx.font = `800 24px ${FONT}`;
     if (row.closed) {
-      ctx.fillStyle = "#71717a";
-      ctx.fillText("컨바인(종료)", 130, y);
+      ctx.fillStyle = "#a1a1aa";
+      const fromText = row.from ? `${name(row.from)} → ` : "";
+      ctx.fillText(fromText, x + 130, y);
+      ctx.fillStyle = "#fb7185";
+      ctx.fillText("컨바인(종료)", x + 130 + ctx.measureText(fromText).width, y);
     } else if (row.from && row.from === row.to) {
       ctx.fillStyle = "#ffffff";
-      ctx.fillText(`${name(row.to)}  (유지)`, 130, y);
+      ctx.fillText(`${name(row.to)}  (유지)`, x + 130, y);
     } else {
       ctx.fillStyle = "#a1a1aa";
       const fromText = row.from ? name(row.from) : "";
-      ctx.fillText(fromText, 130, y);
+      ctx.fillText(fromText, x + 130, y);
       const w = ctx.measureText(fromText).width;
       ctx.fillStyle = "#fbbf24";
-      ctx.fillText(" → ", 130 + w, y);
+      ctx.fillText(" → ", x + 130 + w, y);
       const aw = ctx.measureText(" → ").width;
       ctx.fillStyle = row.to ? "#ffffff" : "#fb7185";
-      ctx.fillText(row.to ? name(row.to) : "비어 있음", 130 + w + aw, y);
+      ctx.fillText(row.to ? name(row.to) : "비어 있음", x + 130 + w + aw, y);
     }
   });
-  let y = 130 + info.rows.length * lineH + 10;
+  let y = 130 + perCol * lineH + 6;
   ctx.font = `800 20px ${FONT}`;
-  if (info.toRest.length) {
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillText(`휴식 들어감  ${info.toRest.map(name).join(", ")}`, 24, y);
-    y += 36;
-  }
-  if (info.stillRest.length) {
-    ctx.fillStyle = "#a1a1aa";
-    ctx.fillText(`계속 휴식  ${info.stillRest.map(name).join(", ")}`, 24, y);
+  for (const line of restLines) {
+    ctx.fillStyle = line.color;
+    ctx.fillText(line.text, 24, y);
+    y += 32;
   }
   drawCredit(ctx, width, height);
   save(canvas, `교대_${formatClock(info.at).replace(":", "")}.png`);
 }
 
-/** 딜러별 이미지: 딜러마다 "지금 → 교대 후" */
+/** 딜러별 이미지: 딜러마다 "지금 → 교대 후". 딜러가 많으면 2~3단 */
 export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan, current: number, next: number, labels: number[], dealers: RotationDealerView[]) {
   const logo = await loadLogo();
   const before = current >= 0 ? plan.slots[current] : null;
@@ -195,9 +231,12 @@ export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan
     return slot.rest.includes(id) ? "휴식" : "—";
   };
   const list = dealers.filter((d) => where(before, d.id) !== "—" || where(after, d.id) !== "—");
-  const width = 600;
+  const cols = columnsFor(list.length, 20, 60);
+  const colW = 600;
+  const width = colW * cols;
   const lineH = 42;
-  const height = 120 + list.length * lineH + 20 + FOOTER_H;
+  const perCol = Math.max(1, Math.ceil(list.length / cols));
+  const height = 120 + perCol * lineH + 20 + FOOTER_H;
   const scale = 2;
   const canvas = document.createElement("canvas");
   canvas.width = width * scale;
@@ -214,22 +253,25 @@ export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan
   ctx.font = `700 15px ${FONT}`;
   ctx.fillText(`${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 24, 86);
   drawLogo(ctx, logo, width - 84, 10, 72);
-  list.forEach((dealer, i) => {
+  list.forEach((dealer, index) => {
+    const col = Math.floor(index / perCol);
+    const i = index % perCol;
+    const x = col * colW;
     const y = 128 + i * lineH;
     ctx.fillStyle = i % 2 ? "#141417" : "#1c1c20";
-    ctx.fillRect(12, y - 30, width - 24, lineH - 4);
+    ctx.fillRect(x + 12, y - 30, colW - 24, lineH - 4);
     ctx.fillStyle = "#ffffff";
     ctx.font = `900 22px ${FONT}`;
-    ctx.fillText(dealer.name.slice(0, 8), 24, y);
+    ctx.fillText(dealer.name.slice(0, 8), x + 24, y);
     const now = where(before, dealer.id);
     const then = where(after, dealer.id);
     ctx.fillStyle = "#a1a1aa";
     ctx.font = `800 22px ${FONT}`;
-    ctx.fillText(now, 230, y);
+    ctx.fillText(now, x + 230, y);
     ctx.fillStyle = "#fbbf24";
-    ctx.fillText("→", 320, y);
+    ctx.fillText("→", x + 320, y);
     ctx.fillStyle = then === "휴식" ? "#fbbf24" : now === then ? "#ffffff" : "#34d399";
-    ctx.fillText(`${then}${now === then ? " (유지)" : ""}`, 360, y);
+    ctx.fillText(`${then}${now === then ? " (유지)" : ""}`, x + 360, y);
   });
   drawCredit(ctx, width, height);
   save(canvas, `교대_딜러별_${formatClock(info.at).replace(":", "")}.png`);

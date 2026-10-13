@@ -134,7 +134,7 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         if (count + rows.length > MAX_DEALERS) throw new RotationError(`딜러는 최대 ${MAX_DEALERS}명까지 등록할 수 있습니다.`);
         const last = await tx.rotationDealer.aggregate({ where: { gameId: META_ID }, _max: { sort: true } });
         let sort = (last._max.sort ?? 0) + 1;
-        for (const row of rows) await tx.rotationDealer.create({ data: { ...row, gameId: META_ID, status: "WAIT", sort: sort++ } });
+        await tx.rotationDealer.createMany({ data: rows.map((row) => ({ ...row, gameId: META_ID, status: "WAIT", sort: sort++ })) });
         break;
       }
       case "updateDealer": {
@@ -268,9 +268,9 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         });
         if (action.copyDealers) {
           const dealers = await tx.rotationDealer.findMany({ where: { gameId: META_ID }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
-          for (const d of dealers) {
-            await tx.rotationDealer.create({ data: { gameId: id, name: d.name, startTime: d.startTime, endTime: d.endTime, status: "WAIT", sort: d.sort } });
-          }
+          await tx.rotationDealer.createMany({
+            data: dealers.map((d) => ({ gameId: id, name: d.name, startTime: d.startTime, endTime: d.endTime, status: "WAIT", sort: d.sort })),
+          });
         }
         target = id;
         break;

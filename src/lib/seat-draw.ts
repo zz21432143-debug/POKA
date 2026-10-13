@@ -1,5 +1,5 @@
 /**
- * DAY2 싯드로우: 진출자를 테이블에 나눌 때 테이블마다 칩 합계·평균이 최대한 비슷해지게 배정하고,
+ * 싯드로우: 진출자를 테이블에 나눌 때 테이블마다 칩 합계·평균이 최대한 비슷해지게 배정하고,
  * 테이블 안 좌석 번호는 완전 무작위로 정합니다.
  *
  * 1) 인원 균등: 테이블별 인원 차이는 최대 1명(어느 테이블이 1명 더 받는지는 무작위)
@@ -149,7 +149,7 @@ export function drawSeats(
 }
 
 /** 단톡방 공유용 텍스트 */
-export function drawResultText(result: DrawResult, title = "DAY2 싯드로우") {
+export function drawResultText(result: DrawResult, title = "싯드로우") {
   const lines = [`【 ${title} 】`, ""];
   for (const table of result.tables) {
     lines.push(`■ ${table.table}번 테이블 (${table.players.length}명 · 평균 ${Math.round(table.average).toLocaleString("ko-KR")})`);

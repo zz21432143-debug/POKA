@@ -54,8 +54,6 @@ function StatusChip({ status }: { status: DealerStatus }) {
   return <span className={cn("rounded px-1 py-0.5 text-[10px] font-black whitespace-nowrap", CHIP[status])}>{STATUS_LABEL[status]}</span>;
 }
 
-/** 딜러 목록 순서: 출근 → 출근 전 → 퇴근 → 휴무 */
-const STATUS_ORDER: Record<DealerStatus, number> = { IN: 0, WAIT: 1, LEFT: 2, OFF: 3 };
 
 /** "2026-10-13" 다음 날 */
 function nextDate(value: string) {
@@ -104,8 +102,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
-  // 퇴근 희망 받기: 딜러 id → 희망 퇴근 시간("02:00", 비우면 끝까지)
-  const [wish, setWish] = useState<Record<string, string> | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
   const gameRef = useRef(initial.game.id);
@@ -332,18 +328,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       closedFrom: nextClosed,
     });
     await send({ type: "savePlan", plan: built });
-  }
-
-  /** 퇴근 희망 저장: 바뀐 딜러만 예정 퇴근 시간을 바꿉니다. */
-  async function saveWish() {
-    if (!wish) return;
-    for (const dealer of state.dealers) {
-      if (!(dealer.id in wish) || dealer.status === "LEFT") continue;
-      const value = wish[dealer.id] ?? "";
-      if (value === (dealer.endTime ?? "")) continue;
-      if (!(await send({ type: "setTimes", id: dealer.id, end: value || null }))) return;
-    }
-    setWish(null);
   }
 
   /** 시간 바꾸기: 그 칸을 새 시간으로, 뒤 칸은 간격대로 */
@@ -667,7 +651,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </button>
             </div>
           </div>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5">
+          <ul className="grid max-h-[45dvh] grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5 overflow-y-auto pr-1">
             {swap.rows.map((row) => (
               <li key={row.label} data-swap={row.label} className={cn("flex items-center gap-2 rounded-lg px-2.5 py-1.5", row.closed ? "border border-rose-500 bg-rose-950" : "bg-black")}>
                 <span className="text-lg font-black text-emerald-300">T{row.label}</span>
@@ -909,14 +893,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ({state.dealers.length}/{MAX_DEALERS}명)
             </span>
           </h2>
-          <button
-            type="button"
-            disabled={busy || state.dealers.length === 0}
-            onClick={() => setWish(Object.fromEntries(state.dealers.filter((d) => d.status !== "LEFT").map((d) => [d.id, d.endTime ?? ""])))}
-            className="ml-auto min-h-10 rounded-lg bg-sky-500 px-3 text-sm font-black text-black disabled:opacity-40"
-          >
-            퇴근 희망 받기
-          </button>
         </div>
         <p className="text-xs text-zinc-400">
           <b className="text-zinc-200">이름 ✎</b>을 누르면 이름 수정·삭제, <b className="text-zinc-200">출근/퇴근 시간</b>을 누르면 시간을 바꿀 수 있습니다.
@@ -980,7 +956,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               출근 {dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? "—")}
                             </span>
                             <span className={dealer.status === "LEFT" ? "text-rose-300" : dealer.endTime ? "text-sky-300" : "text-zinc-400"}>
-                              퇴근 {dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ? `${dealer.endTime} 희망` : "—")}
+                              퇴근 {dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ? `${dealer.endTime} 예정` : "—")}
                             </span>
                           </button>
                           {dealer.status === "IN" ? (
@@ -1196,45 +1172,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </button>
               ) : null}
               <button type="button" onClick={() => setGameDialog(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* 퇴근 희망 받기 */}
-      {wish ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="퇴근 희망">
-          <div className="grid max-h-[90dvh] w-full max-w-md gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
-            <h3 className="text-lg font-black">퇴근 희망 받기</h3>
-            <p className="text-xs text-zinc-400">딜러마다 퇴근하고 싶은 시간을 넣으세요(비우면 끝까지). 저장한 뒤 시간표 옆 <b className="text-amber-300">Auto</b>를 누르면 그 시간 뒤로는 넣지 않습니다.</p>
-            <ul className="grid gap-1.5">
-              {state.dealers
-                .filter((d) => d.id in wish)
-                .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.sort - b.sort)
-                .map((dealer) => (
-                  <li key={dealer.id} data-wish={dealer.name} className="flex items-center gap-2 rounded-lg bg-black px-2 py-1.5">
-                    <span className="min-w-0 flex-1 truncate text-base font-black">{dealer.name}</span>
-                    <StatusChip status={dealer.status} />
-                    <input
-                      type="time"
-                      aria-label={`${dealer.name} 퇴근 희망 시간`}
-                      value={wish[dealer.id] ?? ""}
-                      onChange={(e) => setWish({ ...wish, [dealer.id]: e.target.value })}
-                      className="h-10 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base"
-                    />
-                    <button type="button" onClick={() => setWish({ ...wish, [dealer.id]: "" })} className="min-h-10 rounded px-2 text-xs font-bold text-zinc-400 hover:bg-white/10">
-                      지우기
-                    </button>
-                  </li>
-                ))}
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" disabled={busy} onClick={() => void saveWish()} className="min-h-11 rounded-lg bg-emerald-500 px-4 text-sm font-black text-black">
-                저장
-              </button>
-              <button type="button" onClick={() => setWish(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
                 닫기
               </button>
             </div>

@@ -65,14 +65,14 @@ function downloadImage(result: DrawResult, title: string) {
   }, "image/png");
 }
 
-/** DAY2 싯드로우: 칩 균형 + 좌석 무작위 배정 */
+/** 싯드로우: 칩 균형 + 좌석 무작위 배정 */
 export function SeatDraw() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [tableCount, setTableCount] = useState("5");
   const [seats, setSeats] = useState("9");
   const [firstTable, setFirstTable] = useState("1");
-  const [title, setTitle] = useState("DAY2 싯드로우");
+  const [title, setTitle] = useState("싯드로우");
   const [result, setResult] = useState<DrawResult | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -137,7 +137,7 @@ export function SeatDraw() {
   return (
     <div className="grid gap-4 text-white">
       <section className="grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3 sm:p-4">
-        <h2 className="text-lg font-black">1. DAY2 진출자 명단</h2>
+        <h2 className="text-lg font-black">1. 진출자 명단</h2>
         <p className="text-xs text-zinc-400">
           한 줄에 한 명: <b className="text-zinc-200">이름 칩수</b> (예: 홍길동 125,000). 엑셀에서 이름·칩 두 칸을 복사해 붙여넣거나 CSV 파일을 올려도 됩니다.
         </p>

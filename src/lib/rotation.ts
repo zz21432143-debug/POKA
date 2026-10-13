@@ -5,8 +5,8 @@
  */
 import { alignToStart, parseClock, type PlanDealer, type RotationPlan } from "@/lib/rotation-plan";
 
-export const MAX_TABLES = 40;
-export const MAX_DEALERS = 55;
+export const MAX_TABLES = 100;
+export const MAX_DEALERS = 150;
 export const INTERVAL_CHOICES = [10, 15, 20, 25, 30, 40, 45, 60] as const;
 
 export const DEALER_STATUSES = ["WAIT", "IN", "OFF", "LEFT"] as const;
