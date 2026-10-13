@@ -311,15 +311,22 @@ export function autoArrange(options: {
   });
   const seated = new Set(seats.filter(Boolean) as string[]);
   const order = new Map(options.dealers.map((d, i) => [d.id, i]));
+  // 지금까지 이어서 쉰 칸 수: 가장 오래 쉰 딜러가 먼저 나옵니다(휴게 시간 맞추기). 지금 시간표에 없던 딜러(새로 출근)는 다 쉰 것으로 봅니다.
+  const restRun = (id: string) => {
+    if (!cur.rest.includes(id)) return Number.POSITIVE_INFINITY;
+    let run = 1;
+    for (let i = before.length - 1; i >= 0 && before[i].rest.includes(id); i -= 1) run += 1;
+    return run;
+  };
   const candidates = [...available]
     .filter((id) => !seated.has(id))
     .sort((a, b) => {
+      const ra = restRun(a);
+      const rb = restRun(b);
+      if (ra !== rb) return rb - ra;
       const wa = work.get(a) ?? 0;
       const wb = work.get(b) ?? 0;
       if (wa !== wb) return wa - wb;
-      const ra = cur.rest.includes(a) ? 0 : 1;
-      const rb = cur.rest.includes(b) ? 0 : 1;
-      if (ra !== rb) return ra - rb;
       return (order.get(a) ?? 0) - (order.get(b) ?? 0);
     });
   for (let t = 0; t < options.tables; t += 1) {

@@ -40,7 +40,14 @@ export type RotationDealerView = {
   sort: number;
 };
 
+/** 게임(근무일·이벤트) 목록 한 줄 */
+export type RotationGame = { id: string; name: string; workDate: string | null };
+
 export type RotationStateView = {
+  /** 지금 보고 있는 게임 */
+  game: RotationGame;
+  /** 최근 게임(날짜 최신순) */
+  games: RotationGame[];
   version: number;
   tableCount: number;
   /** 테이블 번호(T5 등). 길이 = tableCount */
@@ -66,7 +73,32 @@ export type RotationAction =
   | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number }
   | { type: "savePlan"; plan: RotationPlan | null }
   | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
-  | { type: "newDay" };
+  | { type: "newDay" }
+  | { type: "createGame"; name: string; workDate: string; copyDealers?: boolean; copySettings?: boolean }
+  | { type: "setGame"; name?: string; workDate?: string }
+  | { type: "deleteGame" };
+
+/** 한국 날짜 "YYYY-MM-DD" */
+export function kstDate(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+/** "2026-10-13" → "10/13(화)" */
+export function formatWorkDate(value: string | null) {
+  if (!value || !normalizeWorkDate(value)) return "날짜 없음";
+  const [y, m, d] = value.split("-").map(Number);
+  const day = "일월화수목금토"[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${m}/${d}(${day})`;
+}
+
+/** 날짜 입력 확인 */
+export function normalizeWorkDate(value: string | null | undefined) {
+  const text = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+  const [y, m, d] = text.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d ? text : null;
+}
 
 /** 예전 값(근무중·휴식)은 출근으로 봅니다. */
 export function toDealerStatus(value: string): DealerStatus {
@@ -137,9 +169,19 @@ export function planDealers(dealers: RotationDealerView[], start: number): PlanD
     .map((d) => {
       const fromClock = d.checkedInAt ? parseClock(kstClock(d.checkedInAt)) : parseClock(d.startTime ?? "");
       const from = fromClock == null ? start : alignToStart(fromClock, start);
-      // 퇴근했으면 퇴근 시각, 아니면 예정 퇴근 시각까지
-      const leftClock = d.status === "LEFT" && d.leftAt ? parseClock(kstClock(d.leftAt)) : parseClock(d.endTime ?? "");
-      let to = leftClock == null ? null : alignToStart(leftClock, start);
+      if (d.status === "LEFT") {
+        // 퇴근: 출근 체크가 있으면 실제 일한 시간만큼(밤샘에도 안 틀림), 없으면 퇴근 시각. 출근보다 이르면 시간표에서 뺌
+        if (d.checkedInAt && d.leftAt) {
+          const worked = Math.max(0, Math.round((new Date(d.leftAt).getTime() - new Date(d.checkedInAt).getTime()) / 60_000));
+          return { id: d.id, from, to: from + worked };
+        }
+        const leftClock = d.leftAt ? parseClock(kstClock(d.leftAt)) : null;
+        const left = leftClock == null ? from : alignToStart(leftClock, start);
+        return { id: d.id, from, to: Math.max(from, left) };
+      }
+      // 예정 퇴근 시각까지(출근보다 이르면 다음 날 새벽)
+      const endClock = parseClock(d.endTime ?? "");
+      let to = endClock == null ? null : alignToStart(endClock, start);
       if (to != null && to <= from) to += 1440;
       return { id: d.id, from, to };
     });

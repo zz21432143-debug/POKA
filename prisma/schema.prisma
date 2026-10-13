@@ -558,6 +558,8 @@ model ContentPlanSkip {
 /// 딜러 로테이션: 딜러 (status: WAIT 출근 전 · IN 출근 · OFF 휴무 · LEFT 퇴근)
 model RotationDealer {
   id          String   @id @default(cuid())
+  /// 어느 게임(RotationMeta.id)의 딜러인지
+  gameId      String   @default("default")
   name        String
   startTime   String?
   /// 예정 퇴근 시각 "02:00"(이 시각부터 시간표에 넣지 않음)
@@ -571,6 +573,8 @@ model RotationDealer {
   leftAt      DateTime?
   sort        Int      @default(0)
   createdAt   DateTime @default(now())
+
+  @@index([gameId, sort])
 }
 
 /// 딜러 로테이션: 상태·테이블 변경 기록(근무·휴식 시간 집계와 타임라인용)
@@ -585,8 +589,14 @@ model RotationEvent {
 }
 
 /// 딜러 로테이션: 변경 번호(다른 기기 즉시 반영용)·테이블 수·근무일 시작 시각
+/// 게임 하나(근무일 또는 그날 이벤트). 게임마다 딜러·테이블·시간표가 따로입니다.
 model RotationMeta {
   id           String   @id
+  /// 게임 이름(메인 게임, 사이드 이벤트 등)
+  name         String   @default("메인 게임")
+  /// 근무일 YYYY-MM-DD
+  workDate     String?
+  createdAt    DateTime @default(now())
   version      Int      @default(0)
   tableCount   Int      @default(20)
   dayStartedAt DateTime @default(now())
@@ -602,4 +612,6 @@ model RotationMeta {
   setupMinutes Int      @default(30)
   /// 테이블별 버튼 자리·컨바인 시각 {"5":{"button":3,"closedAt":1410}}
   tableStateJson String?
+
+  @@index([workDate, createdAt])
 }

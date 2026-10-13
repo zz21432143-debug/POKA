@@ -5,10 +5,13 @@ import { cn } from "cn";
 import {
   INTERVAL_CHOICES,
   MAX_DEALERS,
+  MAX_TABLES,
   STATUS_LABEL,
   closedFromOf,
   formatTableLabels,
+  formatWorkDate,
   kstClock,
+  kstDate,
   nowMinutes,
   parseDealerLines,
   parseTableLabels,
@@ -51,6 +54,17 @@ function StatusChip({ status }: { status: DealerStatus }) {
   return <span className={cn("rounded px-1 py-0.5 text-[10px] font-black whitespace-nowrap", CHIP[status])}>{STATUS_LABEL[status]}</span>;
 }
 
+/** 딜러 목록 순서: 출근 → 출근 전 → 퇴근 → 휴무 */
+const STATUS_ORDER: Record<DealerStatus, number> = { IN: 0, WAIT: 1, LEFT: 2, OFF: 3 };
+
+/** "2026-10-13" 다음 날 */
+function nextDate(value: string) {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
+type GameDialog = { mode: "new" | "day" | "edit"; name: string; workDate: string; copyDealers: boolean; copySettings: boolean };
+
 function untilLabel(minutes: number) {
   if (minutes <= 0) return "지금";
   if (minutes < 60) return `${minutes}분 후`;
@@ -77,18 +91,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [view, setView] = useState<"table" | "dealer">("table");
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
   const versionRef = useRef(initial.version);
+  // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
+  const gameRef = useRef(initial.game.id);
 
   useEffect(() => {
     let alive = true;
     const poll = async () => {
       if (document.hidden) return;
       try {
-        const response = await fetch(`/api/tools/rotation?v=${versionRef.current}`, { cache: "no-store" });
+        const response = await fetch(`/api/tools/rotation?g=${encodeURIComponent(gameRef.current)}&v=${versionRef.current}`, { cache: "no-store" });
         const data = (await response.json()) as { changed?: boolean; state?: RotationStateView };
         if (!alive) return;
         setOnline(response.ok);
-        if (data.changed && data.state) {
+        // 게임을 바꾸는 사이 늦게 온 이전 게임 응답은 버립니다.
+        if (data.changed && data.state && data.state.game.id === gameRef.current) {
           versionRef.current = data.state.version;
           setState(data.state);
         }
@@ -107,6 +125,50 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     };
   }, []);
 
+  /** 받은 상태 보여 주기. 게임이 바뀌었으면(새 게임·삭제) 주소도 바꿉니다. */
+  const showState = useCallback((next: RotationStateView) => {
+    versionRef.current = next.version;
+    if (next.game.id !== gameRef.current) {
+      gameRef.current = next.game.id;
+      window.history.replaceState(null, "", `?g=${encodeURIComponent(next.game.id)}`);
+    }
+    setState(next);
+    setLabelsText(formatTableLabels(next.tableLabels));
+  }, []);
+
+  /** 다른 게임 보기 */
+  async function switchGame(id: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/tools/rotation?g=${encodeURIComponent(id)}`, { cache: "no-store" });
+      const data = (await response.json()) as { state?: RotationStateView; error?: string };
+      if (!response.ok || !data.state) throw new Error(data.error ?? "게임을 불러오지 못했습니다.");
+      setCell(null);
+      setTimes(null);
+      showState(data.state);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "게임을 불러오지 못했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveGame() {
+    if (!gameDialog) return;
+    const ok =
+      gameDialog.mode === "edit"
+        ? await send({ type: "setGame", name: gameDialog.name, workDate: gameDialog.workDate })
+        : await send({
+            type: "createGame",
+            name: gameDialog.name,
+            workDate: gameDialog.workDate,
+            copyDealers: gameDialog.copyDealers,
+            copySettings: gameDialog.copySettings,
+          });
+    if (ok) setGameDialog(null);
+  }
+
   const send = useCallback(async (action: RotationAction) => {
     setBusy(true);
     setError(null);
@@ -114,13 +176,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       const response = await fetch("/api/tools/rotation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ game: gameRef.current, action }),
       });
       const data = (await response.json()) as { state?: RotationStateView; error?: string };
       if (!response.ok || !data.state) throw new Error(data.error ?? "저장하지 못했습니다.");
-      versionRef.current = data.state.version;
-      setState(data.state);
-      setLabelsText(formatTableLabels(data.state.tableLabels));
+      showState(data.state);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장하지 못했습니다.");
@@ -128,7 +188,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [showState]);
 
   const start = parseClock(state.planStart) ?? 600;
   const now = nowMinutes(start, clock);
@@ -209,15 +269,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
   function runAuto() {
+    const nowMin = nowMinutes(start, new Date());
+    const leftIds = new Set(state.dealers.filter((d) => d.status === "LEFT").map((d) => d.id));
+    const dealers = planDealers(state.dealers, start).map((d) => (leftIds.has(d.id) ? { ...d, to: Math.min(d.to ?? nowMin, nowMin) } : d));
     const built = autoArrange({
       plan,
-      dealers: planDealers(state.dealers, start),
+      dealers,
       current,
       tables: state.tableCount,
       start,
       interval: plan?.interval ?? state.interval,
       setup: plan?.setup ?? state.setupMinutes,
-      now: nowMinutes(start, new Date()),
+      now: nowMin,
       closedFrom,
     });
     void send({ type: "savePlan", plan: built });
@@ -327,6 +390,59 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   return (
     <div className="grid gap-3 pb-10 text-white">
+      {/* 게임: 근무일 · 이름 · 바꾸기 */}
+      <section aria-label="게임" className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-sky-500/60 bg-sky-950/40 p-3">
+        <div className="grid min-w-0">
+          <span className="text-xs font-bold text-sky-300">근무일 · 게임</span>
+          <span className="truncate text-2xl font-black">
+            {formatWorkDate(state.game.workDate)} <span className="text-amber-300">{state.game.name}</span>
+          </span>
+        </div>
+        <select
+          aria-label="게임 고르기"
+          value={state.game.id}
+          disabled={busy}
+          onChange={(e) => void switchGame(e.target.value)}
+          className="h-11 max-w-full min-w-0 rounded-lg border border-white/25 bg-black px-2 text-sm font-bold"
+        >
+          {state.games.map((g) => (
+            <option key={g.id} value={g.id}>
+              {formatWorkDate(g.workDate)} · {g.name}
+            </option>
+          ))}
+        </select>
+        <div className="ml-auto flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              const today = kstDate();
+              const base = state.game.workDate && state.game.workDate >= today ? nextDate(state.game.workDate) : today;
+              setGameDialog({ mode: "day", name: state.game.name, workDate: base, copyDealers: false, copySettings: true });
+            }}
+            className="min-h-11 rounded-lg bg-sky-500 px-4 text-sm font-black text-black"
+          >
+            날짜 변경
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setGameDialog({ mode: "new", name: "", workDate: state.game.workDate ?? kstDate(), copyDealers: false, copySettings: true })}
+            className="min-h-11 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
+          >
+            + 새 게임
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setGameDialog({ mode: "edit", name: state.game.name, workDate: state.game.workDate ?? kstDate(), copyDealers: false, copySettings: false })}
+            className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold"
+          >
+            ✎ 이름·날짜
+          </button>
+        </div>
+      </section>
+
       {/* 운영 현황 */}
       <section aria-label="운영 현황" className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -419,7 +535,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </select>
           </label>
           <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-3">
-            테이블 번호 ({state.tableCount}개) · 예: 5-12, 15
+            테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 예: 5-12, 15
             <span className="flex gap-1.5">
               <input
                 value={labelsText}
@@ -461,13 +577,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             type="button"
             disabled={busy}
             onClick={() => {
-              if (window.confirm("새 근무일을 시작할까요? 출근 체크가 모두 지워지고 시간표도 비워집니다. 딜러 명단은 그대로 남습니다.")) {
+              if (window.confirm("이 게임의 출근 기록과 시간표를 지울까요? 딜러 명단은 그대로 남습니다. (다른 날짜는 위 '날짜 변경'으로 새로 만드세요)")) {
                 void send({ type: "newDay" });
               }
             }}
             className="ml-auto min-h-11 rounded-lg border border-white/25 px-3 text-sm font-bold hover:bg-white/10"
           >
-            새 근무일
+            출근 기록 초기화
           </button>
         </div>
         </div>
@@ -763,17 +879,41 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 딜러 · 출근 체크(작게) */}
       <section aria-label="딜러" className="grid gap-2">
-        <h2 className="text-base font-black text-zinc-200">딜러 · 출근 체크</h2>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <h2 className="text-lg font-black text-zinc-100">
+            딜러 · 출근 체크{" "}
+            <span className="text-sm text-zinc-400">
+              ({state.dealers.length}/{MAX_DEALERS}명)
+            </span>
+          </h2>
+          <span className="flex flex-wrap gap-1 text-xs font-bold">
+            {(["IN", "WAIT", "LEFT", "OFF"] as const).map((status) => (
+              <span key={status} className={cn("rounded px-1.5 py-0.5", CHIP[status])}>
+                {STATUS_LABEL[status]} {state.dealers.filter((d) => d.status === status).length}
+              </span>
+            ))}
+          </span>
+        </div>
         {state.dealers.length === 0 ? (
           <p className="rounded-xl border border-dashed border-white/25 p-3 text-sm text-zinc-400">아래에서 딜러를 등록하세요.</p>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19.5rem),1fr))] gap-1">
-            {state.dealers.map((dealer) => (
-              <div key={dealer.id} data-dealer={dealer.name} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-950 px-2 py-1">
+            {[...state.dealers]
+              .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.sort - b.sort)
+              .map((dealer) => (
+              <div
+                key={dealer.id}
+                data-dealer={dealer.name}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                  dealer.status === "IN" ? "border-emerald-500/40 bg-emerald-950/30" : "border-white/10 bg-zinc-950",
+                  (dealer.status === "LEFT" || dealer.status === "OFF") && "opacity-60",
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setEditing({ id: dealer.id, name: dealer.name, startTime: dealer.startTime ?? "" })}
-                  className="min-w-0 flex-1 truncate text-left text-sm font-black hover:underline"
+                  className="min-w-0 flex-1 truncate text-left text-base font-black hover:underline"
                 >
                   {dealer.name}
                 </button>
@@ -929,6 +1069,89 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 이 칸 비우기
               </button>
               <button type="button" onClick={() => setCell(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 새 게임 · 날짜 변경 · 이름/날짜 고치기 */}
+      {gameDialog ? (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="게임">
+          <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">
+              {gameDialog.mode === "day" ? "날짜 변경(새 근무일)" : gameDialog.mode === "new" ? "새 게임" : "이름·날짜 고치기"}
+            </h3>
+            <p className="text-xs text-zinc-400">
+              {gameDialog.mode === "edit"
+                ? "지금 게임의 이름과 날짜만 바꿉니다."
+                : "새 게임은 딜러·테이블·시간표가 따로입니다. 지금 게임은 그대로 남고, 위 목록에서 언제든 다시 볼 수 있습니다."}
+            </p>
+            <label className="grid gap-1 text-sm font-bold">
+              날짜
+              <input
+                type="date"
+                value={gameDialog.workDate}
+                onChange={(e) => setGameDialog({ ...gameDialog, workDate: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              게임 이름
+              <input
+                value={gameDialog.name}
+                placeholder="예: 메인 게임, 사이드 이벤트"
+                maxLength={30}
+                onChange={(e) => setGameDialog({ ...gameDialog, name: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+              />
+            </label>
+            {gameDialog.mode !== "edit" ? (
+              <>
+                <label className="flex items-center gap-2 text-sm font-bold">
+                  <input
+                    type="checkbox"
+                    checked={gameDialog.copyDealers}
+                    onChange={(e) => setGameDialog({ ...gameDialog, copyDealers: e.target.checked })}
+                    className="size-5"
+                  />
+                  지금 딜러 명단 가져오기 <span className="text-xs text-zinc-400">(출근 기록은 비움)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm font-bold">
+                  <input
+                    type="checkbox"
+                    checked={gameDialog.copySettings}
+                    onChange={(e) => setGameDialog({ ...gameDialog, copySettings: e.target.checked })}
+                    className="size-5"
+                  />
+                  설정 가져오기 <span className="text-xs text-zinc-400">(테이블 번호·간격·시작 시간)</span>
+                </label>
+              </>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy || !gameDialog.workDate}
+                onClick={() => void saveGame()}
+                className="min-h-11 rounded-lg bg-emerald-500 px-4 text-sm font-black text-black disabled:opacity-40"
+              >
+                {gameDialog.mode === "edit" ? "저장" : "만들기"}
+              </button>
+              {gameDialog.mode === "edit" && state.games.length > 1 ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={async () => {
+                    if (!window.confirm(`'${state.game.name}' 게임을 지울까요? 이 게임의 딜러와 시간표가 모두 지워집니다.`)) return;
+                    if (await send({ type: "deleteGame" })) setGameDialog(null);
+                  }}
+                  className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-black text-white"
+                >
+                  게임 삭제
+                </button>
+              ) : null}
+              <button type="button" onClick={() => setGameDialog(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
                 닫기
               </button>
             </div>

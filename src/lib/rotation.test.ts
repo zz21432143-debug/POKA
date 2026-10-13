@@ -81,3 +81,24 @@ describe("table numbers", async () => {
     assert.equal(kstDateAt("23:00", near).toISOString(), "2026-10-12T14:00:00.000Z");
   });
 });
+
+describe("leaving dealers", () => {
+  it("never puts a dealer who left back into the timetable (overnight or left before the shift)", () => {
+    const list = planDealers(
+      [
+        // 23:40 출근 → 02:10 퇴근(밤샘)
+        dealer({ id: "night", status: "LEFT", checkedInAt: "2026-10-12T14:40:00.000Z", leftAt: "2026-10-12T17:10:00.000Z" }),
+        // 예정 18:00인데 17:50에 퇴근 처리(안 옴)
+        dealer({ id: "early", status: "LEFT", startTime: "18:00", leftAt: "2026-10-12T08:50:00.000Z" }),
+        // 퇴근 시각 없이 퇴근 상태
+        dealer({ id: "none", status: "LEFT", startTime: "18:00" }),
+      ],
+      1380,
+    );
+    assert.deepEqual(list, [
+      { id: "night", from: 1420, to: 1570 },
+      { id: "early", from: 1080, to: 1080 },
+      { id: "none", from: 1080, to: 1080 },
+    ]);
+  });
+});

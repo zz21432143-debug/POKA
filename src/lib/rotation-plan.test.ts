@@ -161,3 +161,29 @@ describe("Auto arrange", async () => {
     assert.ok(after.slots.slice(1).every((s) => s.seats[2] === null));
   });
 });
+
+describe("Auto picks who comes out", async () => {
+  const { autoArrange } = await import("./rotation-plan");
+  it("fills a leaver's seat with the dealer who has rested the longest", () => {
+    // T1~T2, 딜러 4명: d3는 2칸째 쉬는 중, d4는 이번 칸부터 쉼
+    const plan = {
+      start: 600,
+      interval: 20,
+      tables: 2,
+      slots: [
+        { at: 600, seats: ["d1", "d4"], rest: ["d3", "d2"] },
+        { at: 620, seats: ["d1", "d2"], rest: ["d3", "d4"] },
+      ],
+    };
+    const list = [
+      { id: "d1", from: 600, to: 625 },
+      { id: "d2", from: 600, to: null },
+      { id: "d3", from: 600, to: null },
+      { id: "d4", from: 600, to: null },
+    ];
+    const after = autoArrange({ plan: plan as never, dealers: list, current: 1, tables: 2, start: 600, interval: 20, now: 626 });
+    assert.equal(after.slots[1].seats[0], "d3");
+    assert.equal(after.slots[1].seats[1], "d2");
+    assert.ok(after.slots.slice(1).every((s) => !s.seats.includes("d1") && !s.rest.includes("d1")));
+  });
+});

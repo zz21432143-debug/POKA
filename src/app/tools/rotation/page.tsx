@@ -9,10 +9,11 @@ import { loadRotation } from "@/lib/rotation-server";
 export const metadata: Metadata = { title: "제작중", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-export default async function RotationPage() {
+export default async function RotationPage({ searchParams }: { searchParams: Promise<{ g?: string }> }) {
   const user = await getCurrentUser().catch(() => null);
   if (!canUseDealerTools(user)) return <ToolsLocked />;
-  const initial = await loadRotation();
+  const { g } = await searchParams;
+  const initial = await loadRotation(g);
   return (
     <div className="flex flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">
