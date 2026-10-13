@@ -69,12 +69,14 @@ describe("game board data", () => {
     assert.deepEqual(s.slice(0, 3).map((l) => l.bb), [200, 300, 400]);
   });
 
-  it("averages the stack over live players (rebuy-ins are inside entries)", () => {
-    // 엔트리 40(리바인 10 포함) × 3만 + 얼리 20 × 5천 + 애드온 5 × 2만 = 140만 / 25명
-    const d = { ...defaultBoard(), entries: 40, remaining: 25, startStack: 30_000, rebuys: 10, earlies: 20, earlyStack: 5_000, addonOn: true, addons: 5, addonStack: 20_000 };
-    assert.deepEqual(boardStats(d), { totalChips: 1_400_000, avgStack: 56_000 });
+  it("averages the stack over live players (buy-ins and rebuys counted apart)", () => {
+    // 바인 40 × 3만 + 리바인 10 × 2만 + 얼리 20 × 5천 + 애드온 5 × 2만 = 160만 / 25명
+    const d = { ...defaultBoard(), entries: 40, remaining: 25, startStack: 30_000, rebuys: 10, rebuyStack: 20_000, earlies: 20, earlyStack: 5_000, addonOn: true, addons: 5, addonStack: 20_000 };
+    assert.deepEqual(boardStats(d), { totalChips: 1_600_000, avgStack: 64_000 });
     // 애드온을 화면에서 끄면 애드온 칩은 안 셈
-    assert.equal(boardStats({ ...d, addonOn: false }).totalChips, 1_300_000);
+    assert.equal(boardStats({ ...d, addonOn: false }).totalChips, 1_500_000);
+    // 예전 현황판(리바인 칩 없음)은 시작 스택과 같게
+    assert.equal(normalizeBoard({ startStack: 50_000 }).rebuyStack, 50_000);
     assert.equal(boardStats({ ...d, remaining: 0 }).avgStack, 0);
   });
 
@@ -90,6 +92,9 @@ describe("game board data", () => {
     d2.clock.runningSince = 0;
     assert.equal(clockView(d2, 30 * MIN).regCloseMs, 10 * MIN);
     assert.deepEqual([clockView(d2, 45 * MIN).regCloseMs, clockView(d2, 45 * MIN).regClosed], [null, true]);
+    // 러닝 타임: 레벨 1부터 흐른 시간(휴식 포함)
+    assert.equal(clockView(d, 45 * MIN).runningMs, 45 * MIN);
+    assert.equal(clockView(d, 0).runningMs, 0);
     // 안 정하면 표시 안 함
     assert.deepEqual([clockView(board(), 0).regCloseMs, clockView(board(), 0).regClosed], [null, false]);
   });

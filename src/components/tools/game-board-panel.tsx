@@ -363,24 +363,39 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
             화면: {won(data.remaining)} / {won(data.entries)}
           </span>
         </h2>
-        <Counter label="라이브 플레이어" hint="탈락하면 −1" value={data.remaining} onChange={(v) => onEdit({ remaining: v })} />
-        <Counter label="토탈 엔트리" hint="새 바이인 +1 → 플레이어도 +1" value={data.entries} onChange={(v) => onEdit({ entries: v, remaining: Math.max(0, data.remaining + (v - data.entries)) })} />
-        <Counter
-          label="리바인"
-          hint="+1 → 엔트리 · 플레이어도 +1"
-          value={data.rebuys}
-          onChange={(v) => {
-            const d = v - data.rebuys;
-            onEdit({ rebuys: v, entries: Math.max(0, data.entries + d), remaining: Math.max(0, data.remaining + d) });
-          }}
-        />
-        <Counter label="얼리" hint={`얼리칩 받은 수 · 1명 ${won(data.earlyStack)}칩`} value={data.earlies} onChange={(v) => onEdit({ earlies: v })} />
+        <Counter label="플레이 중" hint="탈락하면 −1 · 숫자 칸을 눌러 바로 고칠 수 있어요" value={data.remaining} onChange={(v) => onEdit({ remaining: v })} />
+        <Counter label="바인" hint="바인 수만 올라가요(플레이 중은 따로 정리)" value={data.entries} onChange={(v) => onEdit({ entries: v })} />
+        <Counter label="리바인" hint="리바인 수만 올라가요" value={data.rebuys} onChange={(v) => onEdit({ rebuys: v })} />
+        <Counter label="얼리" hint="얼리칩 받은 수" value={data.earlies} onChange={(v) => onEdit({ earlies: v })} />
         <label className="flex min-h-11 items-center gap-2 rounded-xl bg-black/50 px-3 text-sm font-black text-white">
           <input type="checkbox" checked={data.addonOn} onChange={(e) => onEdit({ addonOn: e.target.checked })} className="size-5 accent-amber-400" />
           애드온 화면에 보이기
           <span className="ml-auto text-xs font-bold text-zinc-500">끄면 화면 · 총 칩에서 빠짐</span>
         </label>
-        {data.addonOn ? <Counter label="애드온" hint={`1명 ${won(data.addonStack)}칩`} value={data.addons} onChange={(v) => onEdit({ addons: v })} /> : null}
+        {data.addonOn ? <Counter label="애드온" value={data.addons} onChange={(v) => onEdit({ addons: v })} /> : null}
+
+        <h3 className="mt-2 text-sm font-black text-white">칩(1명당) — 총 칩 · 평균 스택 계산</h3>
+        <div data-chip-inputs className="grid grid-cols-2 gap-2">
+          {(
+            [
+              ["startStack", "바인 칩(시작 스택)"],
+              ["rebuyStack", "리바인 칩"],
+              ["earlyStack", "얼리칩"],
+              ...(data.addonOn ? ([["addonStack", "애드온 칩"]] as const) : []),
+            ] as const
+          ).map(([key, text]) => (
+            <label key={key} className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
+              {text}
+              <input
+                aria-label={text}
+                inputMode="numeric"
+                value={won(data[key])}
+                onChange={(e) => onEdit({ [key]: Math.min(BOARD_LIMITS.chips, readNum(e.target.value)) })}
+                className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base font-black text-white tabular-nums"
+              />
+            </label>
+          ))}
+        </div>
       </section>
     </div>
   );
@@ -430,20 +445,7 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
             <input value={data.subtitle} maxLength={BOARD_LIMITS.subtitle} onChange={(e) => onEdit({ subtitle: e.target.value })} className={field} />
           </label>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              ["startStack", "시작 스택(리바인도 같음)"],
-              ["earlyStack", "얼리칩"],
-              ["addonStack", "애드온 칩"],
-            ] as const
-          ).map(([key, text]) => (
-            <label key={key} className={label}>
-              {text}
-              <input inputMode="numeric" value={won(data[key])} onChange={(e) => onEdit({ [key]: Math.min(BOARD_LIMITS.chips, readNum(e.target.value)) })} className={cn(field, "tabular-nums")} />
-            </label>
-          ))}
-        </div>
+        <p className="text-xs text-zinc-500">칩(바인 · 리바인 · 얼리 · 애드온)은 진행 탭에서 바로 적을 수 있어요.</p>
         <label className={label}>
           등록 마감(이 레벨이 끝날 때까지 등록 가능)
           <select value={data.regLevel} onChange={(e) => onEdit({ regLevel: Number(e.target.value) })} className={field}>

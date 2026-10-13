@@ -38,12 +38,13 @@ export type GameBoardData = {
   subtitle: string;
   levels: BoardLevel[];
   startStack: number;
-  /** 토탈 엔트리(처음 바이인 + 리바인 모두) */
+  /** 바인 수(처음 바이인) */
   entries: number;
-  /** 라이브 플레이어(지금 남은 사람) */
+  /** 플레이 중(라이브) — 직접 정리 */
   remaining: number;
-  /** 리바인 수(엔트리 안에 포함) */
+  /** 리바인 수(바인과 따로) · 리바인 칩 */
   rebuys: number;
+  rebuyStack: number;
   /** 얼리칩 받은 수 · 얼리칩 */
   earlies: number;
   earlyStack: number;
@@ -61,7 +62,7 @@ export type GameBoardData = {
   clock: BoardClock;
 };
 
-export const BOARD_LIMITS = { levels: 60, name: 30, subtitle: 40, prizes: 12, prizeText: 24, prizeTitle: 30, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
+export const BOARD_LIMITS = { levels: 60, name: 30, subtitle: 40, prizes: 30, prizeText: 24, prizeTitle: 30, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
 
 /** 블라인드 구조 만들기(BB 앤티 = BB): 시작 BB부터 레벨마다 올리고, every 레벨마다 휴식 */
 export function makeStructure({ startBb = 200, minutes = 20, count = 16, breakEvery = 4, breakMinutes = 10 } = {}): BoardLevel[] {
@@ -85,6 +86,7 @@ export function defaultBoard(): GameBoardData {
     entries: 0,
     remaining: 0,
     rebuys: 0,
+    rebuyStack: 30_000,
     earlies: 0,
     earlyStack: 5_000,
     addonOn: false,
@@ -152,6 +154,7 @@ export function normalizeBoard(raw: unknown): GameBoardData {
     entries: int(r.entries, 0, BOARD_LIMITS.players),
     remaining: int(r.remaining, 0, BOARD_LIMITS.players),
     rebuys: int(r.rebuys, 0, BOARD_LIMITS.players),
+    rebuyStack: int(r.rebuyStack, 0, BOARD_LIMITS.chips, int(r.startStack, 0, BOARD_LIMITS.chips, d.startStack)),
     earlies: int(r.earlies, 0, BOARD_LIMITS.players),
     earlyStack: int(r.earlyStack, 0, BOARD_LIMITS.chips, d.earlyStack),
     addonOn: Boolean(r.addonOn),
@@ -184,6 +187,8 @@ export type ClockView = {
   next: BoardLevel | null;
   /** 다음 휴식까지 남은 시간(ms). 지금이 휴식이거나 휴식이 없으면 null */
   nextBreakMs: number | null;
+  /** 러닝 타임: 레벨 1부터 지금까지 흐른 시간(휴식 포함, ms) */
+  runningMs: number;
   /** 등록 마감까지 남은 시간(ms). 마감 레벨을 안 정했으면 null */
   regCloseMs: number | null;
   /** 등록 마감 레벨이 이미 끝남 */
@@ -242,6 +247,7 @@ export function clockView(data: GameBoardData, now: number): ClockView {
     finished,
     next: levels[i + 1] ?? null,
     nextBreakMs,
+    runningMs: levels.slice(0, i).reduce((sum, l) => sum + levelMs(l), 0) + (levelMs(levels[i]) - remainingMs),
     regCloseMs,
     regClosed,
   };
@@ -279,9 +285,9 @@ export function applyClock(data: GameBoardData, op: ClockOp, now: number): Board
   }
 }
 
-/** 총 칩(엔트리 × 시작 스택 + 얼리 × 얼리칩 + 애드온 × 애드온 칩) · 평균 스택(라이브 플레이어 기준). 리바인은 엔트리에 들어 있음 */
+/** 총 칩(바인 × 시작 스택 + 리바인 × 리바인 칩 + 얼리 × 얼리칩 + 애드온 × 애드온 칩) · 평균 스택(플레이 중 기준) */
 export function boardStats(data: GameBoardData) {
-  const totalChips = data.entries * data.startStack + data.earlies * data.earlyStack + (data.addonOn ? data.addons * data.addonStack : 0);
+  const totalChips = data.entries * data.startStack + data.rebuys * data.rebuyStack + data.earlies * data.earlyStack + (data.addonOn ? data.addons * data.addonStack : 0);
   const avgStack = data.remaining > 0 ? Math.round(totalChips / data.remaining) : 0;
   return { totalChips, avgStack };
 }
