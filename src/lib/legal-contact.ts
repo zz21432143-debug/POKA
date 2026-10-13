@@ -1,4 +1,4 @@
-export const DEFAULT_OPERATOR_NAME = "POKA 관리자";
+export const DEFAULT_OPERATOR_NAME = "POKA";
 export const DEFAULT_CONTACT_EMAIL = "POKA4444444@gmail.com";
 export const LEGACY_CONTACT_EMAIL = "contact@pokerwiki.co.kr";
 
