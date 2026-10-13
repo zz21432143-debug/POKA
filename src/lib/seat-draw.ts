@@ -152,7 +152,7 @@ export function drawSeats(
 export function drawResultText(result: DrawResult, title = "싯드로우") {
   const lines = [`【 ${title} 】`, ""];
   for (const table of result.tables) {
-    lines.push(`■ ${table.table}번 테이블 (${table.players.length}명 · 평균 ${Math.round(table.average).toLocaleString("ko-KR")})`);
+    lines.push(`■ ${table.table}번 테이블 (${table.players.length}명)`);
     for (const player of table.players) {
       lines.push(`  ${String(player.seat).padStart(2, " ")}번 ${player.name} — ${player.chips.toLocaleString("ko-KR")}`);
     }

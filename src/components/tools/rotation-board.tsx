@@ -421,7 +421,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               aria-label="게임 이름"
               defaultValue={state.game.name}
               maxLength={30}
-              placeholder="예: WPL"
+              placeholder="예: POKA DAY-1"
               disabled={busy}
               onBlur={(e) => {
                 const value = e.target.value.trim();
@@ -1253,7 +1253,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               게임 이름
               <input
                 value={gameDialog.name}
-                placeholder="예: WPL, 메인 게임, 사이드 이벤트"
+                placeholder="예: POKA DAY-1"
                 maxLength={30}
                 onChange={(e) => setGameDialog({ ...gameDialog, name: e.target.value })}
                 className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"

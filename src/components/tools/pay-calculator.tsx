@@ -9,7 +9,7 @@ import { BRAND_FONT, FOOTER_H, drawCredit, drawLogo, loadLogo, saveCanvas } from
 /** 입력은 이 기기에만 저장(다른 사람·서버에는 안 보냄) */
 const STORE_KEY = "poka-pay-calc-v1";
 
-type Saved = { title: string; mode: PayOptions["mode"]; amount: string; night: boolean; deduct33: boolean; deductInsurance: boolean; rates: InsuranceRates; shifts: PayShift[] };
+type Saved = { title: string; mode: PayOptions["mode"]; amount: string; deduct33: boolean; deductInsurance: boolean; rates: InsuranceRates; shifts: PayShift[] };
 
 const emptyShift = (date = kstDate()): PayShift => ({ date, start: "18:00", end: "02:00", breakMinutes: 0 });
 
@@ -18,7 +18,6 @@ function defaults(): Saved {
     title: "급여 계산",
     mode: "hourly",
     amount: "",
-    night: false,
     deduct33: true,
     deductInsurance: false,
     rates: DEFAULT_RATES,
@@ -90,7 +89,6 @@ export function PayCalculator() {
       shifts: data.shifts,
       mode: data.mode,
       amount: Number(data.amount.replace(/[^\d]/g, "")) || 0,
-      night: data.night,
       deduct33: data.deduct33,
       deductInsurance: data.deductInsurance,
       rates: data.rates,
@@ -135,12 +133,6 @@ export function PayCalculator() {
             <input value={data.title} maxLength={30} onChange={(e) => set({ title: e.target.value })} className="h-11 w-52 rounded-lg border border-white/20 bg-black px-2 text-base font-bold" />
           </label>
         </div>
-        {data.mode === "hourly" ? (
-          <label className="flex items-center gap-2 text-sm font-bold">
-            <input type="checkbox" checked={data.night} onChange={(e) => set({ night: e.target.checked })} className="size-5" />
-            야간 가산(22:00~06:00 근무는 시급의 50% 더)
-          </label>
-        ) : null}
       </section>
 
       {/* 2. 근무 기록 */}
@@ -177,7 +169,6 @@ export function PayCalculator() {
                 </label>
                 <span className={cn("text-sm font-black tabular-nums", r?.valid ? "text-emerald-300" : "text-rose-300")}>
                   {r?.valid ? hoursText(r.minutes) : "시간 확인"}
-                  {r?.valid && data.night && data.mode === "hourly" && r.nightMinutes ? <span className="ml-1 text-xs text-sky-300">(야간 {hoursText(r.nightMinutes)})</span> : null}
                 </span>
                 <button
                   type="button"
@@ -274,9 +265,7 @@ export function PayCalculator() {
           </span>
         </div>
         <dl className="grid gap-1 text-base">
-          <Row label={data.mode === "daily" ? `일당 × ${result.workDays}일` : "기본급(시간 × 시급)"} value={won(result.basePay)} />
-          {result.nightPay ? <Row label={`야간 가산(${hoursText(result.nightMinutes)})`} value={won(result.nightPay)} /> : null}
-          <Row label="세전 합계" value={won(result.gross)} strong />
+          <Row label={data.mode === "daily" ? `세전 합계(일당 × ${result.workDays}일)` : `세전 합계(시급 × ${hoursText(result.totalMinutes)})`} value={won(result.gross)} strong />
           {data.deduct33 ? <Row label={`3.3% 공제 (소득세 ${won(result.tax.income)} · 지방세 ${won(result.tax.local)})`} value={`-${won(result.tax.total)}`} minus /> : null}
           {data.deductInsurance ? (
             <>

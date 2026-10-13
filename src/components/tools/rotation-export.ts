@@ -122,7 +122,7 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
   const sub = [info.prevAt != null ? `이전 ${formatClock(info.prevAt)} → ${formatClock(info.at)}` : "", button ? `버튼 ${button}번` : ""].filter(Boolean).join(" · ");
   ctx.textAlign = "right";
   if (title) {
-    // 게임 이름(예: WPL)
+    // 게임 이름(예: POKA DAY-1)
     ctx.font = `900 24px ${FONT}`;
     ctx.fillText(title, width - 104, 36);
   }

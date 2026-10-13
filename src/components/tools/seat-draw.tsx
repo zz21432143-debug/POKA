@@ -34,7 +34,7 @@ async function downloadImage(result: DrawResult, title: string) {
   drawLogo(ctx, logo, Math.max(width, 420) - 76, 8, 64);
   ctx.fillStyle = "#a1a1aa";
   ctx.font = `700 14px ${BRAND_FONT}`;
-  ctx.fillText(`테이블 평균 차이 ${won(result.averageSpread)} · 전체 평균 ${won(result.overallAverage)}`, pad, 66);
+  ctx.fillText(`${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`, pad, 66);
   result.tables.forEach((table, index) => {
     const x = pad + (index % cols) * (cardW + pad);
     const y = 90 + Math.floor(index / cols) * (cardH + pad);
@@ -45,7 +45,7 @@ async function downloadImage(result: DrawResult, title: string) {
     ctx.fillText(`${table.table}번 테이블`, x + 12, y + 30);
     ctx.fillStyle = "#d4d4d8";
     ctx.font = "13px sans-serif";
-    ctx.fillText(`${table.players.length}명 · 합계 ${won(table.total)} · 평균 ${won(table.average)}`, x + 12, y + 52);
+    ctx.fillText(`${table.players.length}명`, x + 12, y + 52);
     table.players.forEach((player, i) => {
       const py = y + 80 + i * 26;
       ctx.fillStyle = "#f5d76e";
@@ -71,7 +71,9 @@ export function SeatDraw() {
   const [tableCount, setTableCount] = useState("5");
   const [seats, setSeats] = useState("9");
   const [firstTable, setFirstTable] = useState("1");
-  const [title, setTitle] = useState("싯드로우");
+  const [gameName, setGameName] = useState("");
+  // 이미지·복사·인쇄 제목: "POKA DAY-1 싯드로우"
+  const title = gameName.trim() ? `${gameName.trim()} 싯드로우` : "싯드로우";
   const [result, setResult] = useState<DrawResult | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -118,7 +120,7 @@ export function SeatDraw() {
     if (!w) return;
     const cards = result.tables
       .map(
-        (t) => `<section><h2>${t.table}번 테이블</h2><p>${t.players.length}명 · 합계 ${won(t.total)} · 평균 ${won(t.average)}</p><table>${t.players
+        (t) => `<section><h2>${t.table}번 테이블</h2><p>${t.players.length}명</p><table>${t.players
           .map((p) => `<tr><td class="s">${p.seat}</td><td>${p.name.replace(/</g, "&lt;")}</td><td class="c">${won(p.chips)}</td></tr>`)
           .join("")}</table></section>`,
       )
@@ -127,7 +129,7 @@ export function SeatDraw() {
       body{font-family:sans-serif;margin:16px} h1{margin:0 0 4px} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
       section{border:1px solid #999;border-radius:8px;padding:8px;break-inside:avoid} h2{margin:0;font-size:18px} p{margin:2px 0 6px;font-size:12px;color:#444}
       table{width:100%;border-collapse:collapse;font-size:14px} td{border-top:1px solid #ddd;padding:3px} .s{width:28px;font-weight:bold} .c{text-align:right}
-    </style>${printHeader(title, `테이블 평균 차이 ${won(result.averageSpread)} · 전체 평균 ${won(result.overallAverage)}`)}<div class="grid">${cards}</div>${PRINT_FOOTER}${PRINT_ON_LOAD}`);
+    </style>${printHeader(title, `${result.tables.length}개 테이블 · ${result.tables.reduce((n, t) => n + t.players.length, 0)}명`)}<div class="grid">${cards}</div>${PRINT_FOOTER}${PRINT_ON_LOAD}`);
     w.document.close();
   }
 
@@ -175,8 +177,14 @@ export function SeatDraw() {
             </label>
           ))}
           <label className="col-span-2 grid gap-1 text-sm font-bold sm:col-span-1">
-            제목
-            <input value={title} onChange={(event) => setTitle(event.target.value)} className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base" />
+            게임 이름
+            <input
+              value={gameName}
+              maxLength={30}
+              placeholder="예: POKA DAY-1"
+              onChange={(event) => setGameName(event.target.value)}
+              className="h-11 rounded-lg border-2 border-amber-400/70 bg-black px-2 text-base font-black text-amber-300"
+            />
           </label>
         </div>
         <button type="button" onClick={run} className="min-h-12 rounded-xl bg-amber-400 text-base font-black text-black hover:bg-amber-300">
@@ -193,6 +201,9 @@ export function SeatDraw() {
 
       {result ? (
         <section className="grid gap-3">
+          <h2 data-seat-title className="text-2xl font-black text-amber-300">
+            {title}
+          </h2>
           <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-500/50 bg-emerald-950/40 p-3 text-sm">
             <span>
               전체 평균 <b>{won(result.overallAverage)}</b>
