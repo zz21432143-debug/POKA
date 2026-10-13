@@ -79,7 +79,6 @@ export type RotationAction =
   | { type: "setShare"; on: boolean }
   | { type: "savePlan"; plan: RotationPlan | null }
   | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
-  | { type: "newDay" }
   | { type: "createGame"; name: string; workDate: string; copyDealers?: boolean; copySettings?: boolean }
   | { type: "setGame"; name?: string; workDate?: string }
   | { type: "deleteGame" };
@@ -102,6 +101,17 @@ export type RotationShareView = {
 /** 한국 날짜 "YYYY-MM-DD" */
 export function kstDate(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+/**
+ * 보기 전용 링크가 끝났는지: 근무일 다음 날(밤샘 대회 고려)까지만 열립니다.
+ * 날짜가 없으면 끝나지 않은 것으로 봅니다.
+ */
+export function shareExpired(workDate: string | null, today = kstDate()) {
+  if (!workDate || !normalizeWorkDate(workDate)) return false;
+  const [y, m, d] = workDate.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  return today > lastDay;
 }
 
 /** "2026-10-13" → "10/13(화)" */

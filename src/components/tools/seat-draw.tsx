@@ -1,11 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { drawResultText, drawSeats, parsePlayers, type DrawResult } from "@/lib/seat-draw";
 import { BRAND_FONT, FOOTER_H, PRINT_FOOTER, PRINT_ON_LOAD, drawCredit, drawLogo, loadLogo, printHeader, saveCanvas } from "@/components/tools/brand-canvas";
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
+/** 입력·결과는 이 기기에만 저장(새로고침해도 결과가 바뀌지 않게) */
+const STORE_KEY = "poka-seat-draw-v1";
+const EXAMPLE = Array.from({ length: 18 }, (_, i) => `선수${String(i + 1).padStart(2, "0")} ${(((i * 37) % 18) + 3) * 10000}`).join("\n");
 
 /** 결과를 이미지(PNG)로 그려 내려받습니다. 오른쪽 위 POKA 로고, 맨 아래 출처 띠 */
 async function downloadImage(result: DrawResult, title: string) {
@@ -77,6 +80,36 @@ export function SeatDraw() {
   const [result, setResult] = useState<DrawResult | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // 저장해 둔 입력·결과 불러오기
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as { text?: string; tableCount?: string; seats?: string; firstTable?: string; gameName?: string; result?: DrawResult | null };
+        /* eslint-disable react-hooks/set-state-in-effect -- 저장된 값은 화면이 뜬 뒤에만 읽을 수 있습니다. */
+        setText(saved.text ?? "");
+        setTableCount(saved.tableCount ?? "5");
+        setSeats(saved.seats ?? "9");
+        setFirstTable(saved.firstTable ?? "1");
+        setGameName(saved.gameName ?? "");
+        setResult(saved.result ?? null);
+        /* eslint-enable react-hooks/set-state-in-effect */
+      }
+    } catch {
+      /* 저장소를 못 쓰면 새로 입력 */
+    }
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({ text, tableCount, seats, firstTable, gameName, result }));
+    } catch {
+      /* 무시 */
+    }
+  }, [loaded, text, tableCount, seats, firstTable, gameName, result]);
 
   const parsed = parsePlayers(text);
 
@@ -152,6 +185,25 @@ export function SeatDraw() {
           <button type="button" onClick={() => fileRef.current?.click()} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold hover:bg-white/10">
             CSV 파일 올리기
           </button>
+          {!text.trim() ? (
+            <button type="button" onClick={() => setText(EXAMPLE)} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold text-zinc-300 hover:bg-white/10">
+              예시로 채워 보기
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("명단과 배정 결과를 모두 지울까요?")) {
+                  setText("");
+                  setResult(null);
+                  setNotes([]);
+                }
+              }}
+              className="min-h-10 rounded-lg border border-white/25 px-3 font-bold text-zinc-300 hover:bg-white/10"
+            >
+              새로 시작
+            </button>
+          )}
           <span className="text-zinc-400">
             읽은 인원 <b className="text-white">{parsed.players.length}</b>명 · 칩 합계 <b className="text-white">{won(parsed.players.reduce((s, p) => s + p.chips, 0))}</b>
           </span>

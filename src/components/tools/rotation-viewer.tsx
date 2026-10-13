@@ -19,6 +19,9 @@ function useInBrowser() {
   );
 }
 
+/** 교대 몇 분 전에 알려 줄지 */
+const ALERT_BEFORE = 5;
+
 /** 시간표에서 보여 줄 칸 수(지금 칸부터) */
 const COLS = 8;
 
@@ -41,6 +44,9 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const versionRef = useRef(initial.version);
   const meKey = `poka-rotation-me-${token}`;
   const inBrowser = useInBrowser();
+  // 교대 알림: 켜 두면 내 자리가 바뀌는 교대 5분 전에 진동·알림(이 화면이 열려 있을 때)
+  const [alertOn, setAlertOn] = useState(false);
+  const alertedRef = useRef("");
 
   // 내 이름은 이 기기에만 기억(없어도 화면은 그대로)
   useEffect(() => {
@@ -104,6 +110,45 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
         return { at: slot.at, index, where: t >= 0 ? `T${labels[t]}` : slot.rest.includes(meId) ? "휴식" : "—" };
       })
     : [];
+
+  // 내 다음 교대: 지금 칸 → 다음 칸에서 내 자리가 바뀌면 안내
+  const whereAt = (index: number) => {
+    const slot = plan?.slots[index];
+    if (!slot || !meId) return "—";
+    const t = slot.seats.indexOf(meId);
+    return t >= 0 ? `T${labels[t]}` : slot.rest.includes(meId) ? "휴식" : "—";
+  };
+  const myNow = current >= 0 ? whereAt(current) : "—";
+  const myNext = next >= 0 ? whereAt(next) : "—";
+  const minutesLeft = plan && next >= 0 ? plan.slots[next].at - now : null;
+  const myChange = meId && minutesLeft != null && myNext !== "—" && myNext !== myNow ? { at: plan!.slots[next].at, from: myNow, to: myNext } : null;
+  const alertNow = Boolean(myChange && minutesLeft != null && minutesLeft > 0 && minutesLeft <= ALERT_BEFORE);
+  const alertText = myChange ? `${minutesLeft}분 후 ${formatClock(myChange.at)} 교대 · ${myChange.to === "휴식" ? "휴식입니다" : `${myChange.to} 들어갑니다`}` : "";
+
+  const changeAt = myChange?.at ?? null;
+  useEffect(() => {
+    if (!alertOn || !alertNow || changeAt == null) return;
+    const key = `${me}-${changeAt}`;
+    if (alertedRef.current === key) return;
+    alertedRef.current = key;
+    try {
+      navigator.vibrate?.([300, 150, 300]);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("POKA 교대 알림", { body: alertText, icon: "/brand/poka-holdem-logo.jpg", tag: key });
+      }
+    } catch {
+      /* 알림을 못 띄워도 화면 배너는 보입니다 */
+    }
+  }, [alertOn, alertNow, changeAt, me, alertText]);
+
+  async function turnOnAlert() {
+    try {
+      if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
+    } catch {
+      /* 권한을 못 받아도 화면 배너·진동은 됩니다 */
+    }
+    setAlertOn(true);
+  }
 
   function chooseMe(value: string) {
     setMe(value);
@@ -192,6 +237,13 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
         </section>
       ) : null}
 
+      {/* 교대 5분 전 알림 배너 */}
+      {alertNow ? (
+        <p role="alert" data-alert className={cn("animate-pulse rounded-2xl border-2 border-sky-400 bg-sky-950 px-3 py-2 font-black text-sky-100", tv ? "text-3xl" : "text-lg")}>
+          🔔 {me} · {alertText}
+        </p>
+      ) : null}
+
       {/* 내 일정 */}
       {plan && !tv ? (
         <section aria-label="내 일정" className="grid gap-2 rounded-2xl border border-sky-500/50 bg-sky-950/30 p-3">
@@ -205,7 +257,17 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
                 </option>
               ))}
             </select>
+            {me ? (
+              <button
+                type="button"
+                onClick={() => (alertOn ? setAlertOn(false) : void turnOnAlert())}
+                className={cn("min-h-11 rounded-lg px-3 text-sm font-black", alertOn ? "bg-sky-500 text-black" : "border border-sky-400/60 text-sky-200")}
+              >
+                {alertOn ? "🔔 교대 알림 켜짐" : "🔔 교대 5분 전 알림 켜기"}
+              </button>
+            ) : null}
           </label>
+          {me && alertOn ? <p className="text-xs text-zinc-400">이 화면을 열어 둔 동안 내 자리가 바뀌는 교대 5분 전에 진동·알림이 옵니다.</p> : null}
           {mySchedule.length ? (
             <ul className="flex flex-wrap gap-1.5">
               {mySchedule.map((row) => (

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "cn";
 import { DEFAULT_RATES, calcPay, hoursText, payText, won, type InsuranceRates, type PayOptions, type PayShift } from "@/lib/pay-calc";
 import { kstDate } from "@/lib/rotation";
+import { PayImport } from "@/components/tools/pay-import";
 import { BRAND_FONT, FOOTER_H, drawCredit, drawLogo, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
 
 /** 입력은 이 기기에만 저장(다른 사람·서버에는 안 보냄) */
@@ -63,6 +64,7 @@ export function PayCalculator() {
   const [data, setData] = useState<Saved>(defaults);
   const [loaded, setLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imported, setImported] = useState<string | null>(null);
 
   // 이 기기에 저장해 둔 입력 불러오기(없거나 못 읽어도 화면은 그대로)
   useEffect(() => {
@@ -182,6 +184,15 @@ export function PayCalculator() {
             );
           })}
         </ul>
+        <PayImport
+          onAdd={(shift, label) => {
+            // 처음 그대로인 한 줄은 바꾸고, 아니면 아래에 추가
+            const untouched = data.shifts.length === 1 && JSON.stringify(data.shifts[0]) === JSON.stringify(emptyShift(data.shifts[0].date));
+            set({ shifts: untouched ? [shift] : [...data.shifts, shift] });
+            setImported(label);
+          }}
+        />
+        {imported ? <p className="text-xs font-bold text-sky-300">불러왔습니다: {imported}</p> : null}
         <div className="flex flex-wrap gap-2">
           <button
             type="button"

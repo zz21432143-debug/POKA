@@ -111,6 +111,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     setOrigin(window.location.origin);
   }, []);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
+  // 화면 탭: 운영(시간표) · 딜러 · 공유 · 설정. 딜러가 없으면 딜러 탭부터
+  const [tab, setTab] = useState<"run" | "dealers" | "share" | "settings">(() => (initial.dealers.length ? "run" : "dealers"));
+  // 딜러 등록 칸: 등록한 뒤에도 접히지 않게(여러 번 나눠 등록)
+  const [regOpen, setRegOpen] = useState(initial.dealers.length === 0);
+  // 공유 링크 QR코드(이미지 주소)
+  const [qr, setQr] = useState<string | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
   const gameRef = useRef(initial.game.id);
@@ -244,6 +250,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   // 테이블이 많을 때 간격이 너무 짧으면 시간표가 커져 다른 기기 반영이 느려집니다.
   const intervalTooShort = labels.length > 40 && state.interval < 15;
   const shareUrl = state.shareToken && origin ? `${origin}/r/${state.shareToken}` : null;
+  useEffect(() => {
+    if (!shareUrl) return;
+    let alive = true;
+    void import("qrcode")
+      .then((QR) => QR.toDataURL(shareUrl, { width: 480, margin: 1, color: { dark: "#000000", light: "#ffffff" } }))
+      .then((url) => {
+        if (alive) setQr(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [shareUrl]);
 
   // 출근했는데 남은 시간표에 없는 딜러 / 퇴근·휴무인데 남은 시간표에 있는 딜러 → 다시 짜기 안내
   const future = plan ? plan.slots.slice(Math.max(0, current + 1)) : [];
@@ -275,23 +294,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const leftInPlan = state.dealers.filter((d) =>
     plan ? plan.slots.some((slot, index) => index > current && (slot.seats.includes(d.id) || slot.rest.includes(d.id)) && isGone(d.id, index)) : false,
   );
-
-  function makePlan(fromNow: boolean) {
-    const keep = fromNow && plan ? plan.slots.filter((_, index) => index <= current) : [];
-    // 끝 시간 없음: 지금(또는 게임 시작)부터 12시간치를 짜 두고, 남은 칸이 줄면 자동으로 이어 짭니다.
-    const built = buildPlan({
-      dealers: planDealers(state.dealers, start),
-      tables: state.tableCount,
-      start,
-      end: Math.max(now, start) + PLAN_HORIZON,
-      interval: state.interval,
-      setup: state.setupMinutes,
-      keep,
-      closedFrom,
-      maxStreak,
-    });
-    void send({ type: "savePlan", plan: built });
-  }
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
   function runAuto() {
@@ -481,6 +483,33 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </div>
       </section>
 
+      {/* 탭: 운영(시간표) · 딜러 · 공유 · 설정 */}
+      <nav aria-label="로테이션 메뉴" role="tablist" className="grid grid-cols-4 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
+        {(
+          [
+            ["run", "운영"],
+            ["dealers", `딜러 ${state.dealers.length}`],
+            ["share", state.shareToken ? "공유 ●" : "공유"],
+            ["settings", "설정"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={cn("min-h-11 rounded-xl text-sm font-black", tab === key ? "bg-amber-400 text-black" : "text-zinc-300 hover:bg-white/10")}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {error ? <p className="rounded-lg bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">{error}</p> : null}
+
+      {tab === "run" ? (
+      <>
       {/* 운영 현황 */}
       <section aria-label="운영 현황" className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -525,13 +554,17 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </p>
       </section>
 
-      {/* 설정(처음 한 번만 정하면 되므로 접어 둠) */}
-      <details className="group rounded-2xl border border-white/15 bg-black p-2" open={!plan}>
-        <FoldHead>
+      </>
+      ) : null}
+
+      {/* 설정 탭 */}
+      {tab === "settings" ? (
+      <section aria-label="설정" className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
+        <h2 className="text-base font-black">
           설정 · 게임 시작 {state.planStart} · {state.interval}분 간격 · 세팅 {state.setupMinutes ? `${state.setupMinutes}분` : "없음"} · 테이블 {formatTableLabels(labels)}
           {state.maxStreakMinutes ? ` · 연속 딜 최대 ${state.maxStreakMinutes}분` : ""}
           {button ? ` · 버튼 ${button}번` : ""}
-        </FoldHead>
+        </h2>
         <div className="mt-2 grid gap-2">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
@@ -633,39 +666,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {parsedLabels.errors.length ? <span className="text-rose-300">못 읽은 값: {parsedLabels.errors.join(", ")}</span> : null}
           </label>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy || state.dealers.length === 0}
-            onClick={() => {
-              if (!plan || window.confirm("시간표를 처음부터 새로 짤까요? 손으로 바꾼 칸도 다시 짜집니다.")) makePlan(false);
-            }}
-            className="min-h-11 rounded-lg bg-amber-400 px-5 text-base font-black text-black disabled:opacity-40"
-          >
-            로테이션 짜기
-          </button>
-          {plan ? (
-            <button type="button" disabled={busy} onClick={() => makePlan(true)} className="min-h-11 rounded-lg border-2 border-amber-400 px-4 text-sm font-black text-amber-300">
-              지금 이후 다시 짜기
-            </button>
-          ) : null}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              if (window.confirm("이 게임의 출근 기록과 시간표를 지울까요? 딜러 명단은 그대로 남습니다. (다른 날짜는 위 '날짜 변경'으로 새로 만드세요)")) {
-                void send({ type: "newDay" });
-              }
-            }}
-            className="ml-auto min-h-11 rounded-lg border border-white/25 px-3 text-sm font-bold hover:bg-white/10"
-          >
-            출근 기록 초기화
-          </button>
+        <p className="rounded-lg bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300">
+          설정을 바꾼 뒤 <b className="text-amber-300">운영</b> 탭에서 <b className="text-amber-300">Auto</b>를 누르면 지금 이후 시간표가 다시 정리됩니다. 처음부터 새로 짜려면 시간표 삭제 → Auto.
+        </p>
         </div>
-        </div>
-      </details>
+      </section>
+      ) : null}
 
-      {error ? <p className="rounded-lg bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">{error}</p> : null}
+      {tab === "run" ? (
+      <>
 
       {/* 딜러 수 경고: 테이블보다 적거나, 최대 연속 딜을 지키기에 모자람 */}
       {labels.length && state.dealers.length && shortBy > 0 ? (
@@ -807,7 +816,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         {!plan ? (
           <p className="rounded-xl border border-dashed border-white/25 p-4 text-sm text-zinc-300">
             {state.plan ? "테이블 수가 바뀌어 시간표를 다시 짜야 합니다. " : ""}
-            딜러를 등록하고 게임 시작, 간격, 테이블 번호를 정한 뒤 <b className="text-amber-300">로테이션 짜기</b>를 누르세요.
+            <b className="text-amber-300">딜러</b> 탭에서 딜러를 등록하고, <b className="text-amber-300">설정</b> 탭에서 게임 시작·테이블 번호를 정한 뒤 <b className="text-amber-300">Auto</b>를 누르세요.
           </p>
         ) : view === "table" ? (
           <div className="max-h-[78dvh] overflow-auto rounded-xl border border-white/15">
@@ -970,7 +979,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         ) : null}
       </section>
 
-      {/* 공유: 보기 전용 링크(로그인 없이) · TV 화면 */}
+      </>
+      ) : null}
+
+      {/* 공유 탭: 보기 전용 링크(로그인 없이) · QR코드 · TV 화면 */}
+      {tab === "share" ? (
       <section aria-label="공유" className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-base font-black">딜러에게 공유</h2>
@@ -993,6 +1006,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <a href={`${shareUrl}?tv=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black">
               TV 화면 열기
             </a>
+            {qr ? (
+              <a href={qr} download={`${state.game.name.replace(/[\\/:*?"<>|\s]+/g, "_")}_교대표_QR.png`} className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black">
+                QR 저장
+              </a>
+            ) : null}
             <button
               type="button"
               disabled={busy}
@@ -1004,7 +1022,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               공유 끄기
             </button>
           </div>
-        ) : (
+        ) : null}
+        {shareUrl && qr ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl bg-zinc-900 p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- 브라우저에서 만든 QR 이미지 */}
+            <img src={qr} alt="교대표 QR코드" data-qr className="size-36 rounded-lg bg-white p-1" />
+            <p className="min-w-0 flex-1 text-sm text-zinc-300">
+              대기실에 붙여 두면 딜러들이 폰 카메라로 찍기만 해도 교대표가 열립니다. <b className="text-white">QR 저장</b>으로 내려받아 인쇄하세요.
+              <br />
+              <span className="text-xs text-zinc-400">링크는 근무일 다음 날까지만 열리고 그 뒤에는 자동으로 닫힙니다.</span>
+            </p>
+          </div>
+        ) : null}
+        {shareUrl ? null : (
           <button
             type="button"
             disabled={busy}
@@ -1016,7 +1046,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         )}
       </section>
 
-      {/* 딜러 · 출근 체크(작게) */}
+      ) : null}
+
+      {/* 딜러 탭 */}
+      {tab === "dealers" ? (
       <section aria-label="딜러" className="grid gap-2">
         <div className="flex flex-wrap items-baseline gap-2">
           <h2 className="text-lg font-black text-zinc-100">
@@ -1122,7 +1155,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             )}
           </div>
         )}
-        <details className="group rounded-xl border border-white/15 bg-zinc-950 p-2" open={state.dealers.length === 0}>
+        <details className="group rounded-xl border border-white/15 bg-zinc-950 p-2" open={regOpen} onToggle={(e) => setRegOpen(e.currentTarget.open)}>
           <FoldHead>딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 또는 김딜러 18:00-02:00 · 최대 {MAX_DEALERS}명)</FoldHead>
           <div className="mt-2 grid gap-2">
             <textarea
@@ -1130,7 +1163,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               onChange={(event) => setBulk(event.target.value)}
               rows={4}
               className="rounded-lg border border-white/20 bg-black p-2 text-base"
-              placeholder={"김딜러 10:00\n이딜러 10:00\n박딜러 10:30"}
+              placeholder={"김딜러 10:00\n이딜러 10:00-18:00\n박딜러 18:00-02:00"}
             />
             <button
               type="button"
@@ -1143,9 +1176,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             >
               {parseDealerLines(bulk).length || ""}명 등록
             </button>
+            {!bulk.trim() ? (
+              <button
+                type="button"
+                onClick={() => setBulk(["김딜러", "이딜러", "박딜러", "최딜러", "정딜러", "강딜러"].map((n) => `${n} ${state.planStart}`).join("\n"))}
+                className="min-h-10 justify-self-start rounded-lg border border-white/25 px-3 text-sm font-bold text-zinc-300 hover:bg-white/10"
+              >
+                예시로 채워 보기
+              </button>
+            ) : null}
           </div>
         </details>
       </section>
+      ) : null}
 
       {/* 시간 바꾸기 */}
       {plan && timeEdit ? (

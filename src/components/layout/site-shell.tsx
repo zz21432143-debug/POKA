@@ -118,7 +118,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <ConnectedFeedAds />
           </Suspense>
         </main>
-        <aside className="relative sticky top-[7.25rem] hidden h-[calc(100dvh-7.5rem)] w-[18.5rem] shrink-0 overflow-y-auto xl:flex">
+        {/* 오른쪽 칸: 화면에 고정하면 아래 카드가 잘려 보여서, 페이지와 함께 내려가게 둡니다. */}
+        <aside className="hidden w-[18.5rem] shrink-0 self-start xl:flex">
           <div className="flex w-full flex-col gap-3 pb-6">
             <KakaoOpenChatCta />
             <Suspense fallback={<ProfileWidget profile={null} />}>

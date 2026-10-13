@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { kstDateAt, normalizeTime, parseDealerLines, planDealers, toDealerStatus, type RotationDealerView } from "./rotation";
+import { kstDateAt, normalizeTime, shareExpired, parseDealerLines, planDealers, toDealerStatus, type RotationDealerView } from "./rotation";
 
 const dealer = (over: Partial<RotationDealerView>): RotationDealerView => ({
   id: "x",
@@ -100,5 +100,15 @@ describe("leaving dealers", () => {
       { id: "early", from: 1080, to: 1080 },
       { id: "none", from: 1080, to: 1080 },
     ]);
+  });
+});
+
+describe("view-only link expiry", () => {
+  it("stays open on the work day and the next day, then closes", () => {
+    assert.equal(shareExpired("2026-10-13", "2026-10-13"), false);
+    assert.equal(shareExpired("2026-10-13", "2026-10-14"), false);
+    assert.equal(shareExpired("2026-10-13", "2026-10-15"), true);
+    assert.equal(shareExpired("2026-12-31", "2027-01-01"), false);
+    assert.equal(shareExpired(null, "2030-01-01"), false);
   });
 });

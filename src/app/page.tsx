@@ -6,6 +6,7 @@ import { HomeUrgentJobs } from "@/components/home/home-urgent-jobs";
 import { HomeJobs } from "@/components/home/home-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { HomeAttendanceCta } from "@/components/home/home-attendance-cta";
+import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
@@ -63,6 +64,7 @@ async function HomeFeedSections() {
       <HomeJobs jobs={feed.jobs} />
       <HomeUrgentJobs jobs={feed.urgent} />
       <HomeAttendanceCta />
+      <HomeDealerTools />
       <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>

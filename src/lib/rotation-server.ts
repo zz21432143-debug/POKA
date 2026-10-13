@@ -5,6 +5,7 @@ import {
   kstDate,
   kstDateAt,
   normalizeWorkDate,
+  shareExpired,
   normalizeTime,
   parseTableLabels,
   tableLabelsOf,
@@ -99,7 +100,7 @@ export async function rotationVersion(ownerId: string, gameId?: string | null) {
 export async function loadShared(token: string): Promise<RotationShareView | null> {
   if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
   const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token } });
-  if (!m) return null;
+  if (!m || shareExpired(m.workDate)) return null;
   const dealers = await prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
   return {
     game: { id: m.id, name: m.name, workDate: m.workDate },
@@ -115,8 +116,9 @@ export async function loadShared(token: string): Promise<RotationShareView | nul
 
 export async function sharedVersion(token: string) {
   if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return -1;
-  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token }, select: { version: true } });
-  return m?.version ?? -1;
+  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token }, select: { version: true, workDate: true } });
+  if (!m || shareExpired(m.workDate)) return -1;
+  return m.version;
 }
 
 export class RotationError extends Error {}
@@ -198,7 +200,6 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       }
       case "removeDealer": {
         await own(action.id);
-        await tx.rotationEvent.deleteMany({ where: { dealerId: action.id } });
         await tx.rotationDealer.delete({ where: { id: action.id } });
         break;
       }
@@ -280,14 +281,6 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         await tx.rotationMeta.update({ where: { id: META_ID }, data: { tableStateJson: JSON.stringify(all) } });
         break;
       }
-      case "newDay": {
-        // 이 게임을 처음 상태로: 출근 기록을 지우고 모두 '출근 전'으로, 시간표도 비웁니다.
-        const ids = (await tx.rotationDealer.findMany({ where: { gameId: META_ID }, select: { id: true } })).map((d) => d.id);
-        await tx.rotationDealer.updateMany({ where: { gameId: META_ID }, data: { status: "WAIT", tableNo: null, checkedInAt: null, leftAt: null, statusSince: now } });
-        await tx.rotationMeta.update({ where: { id: META_ID }, data: { dayStartedAt: now, planJson: null, tableStateJson: null } });
-        await tx.rotationEvent.deleteMany({ where: { dealerId: { in: ids } } });
-        break;
-      }
       case "clearPlan": {
         // 시간표 삭제: 짜 둔 칸을 모두 지우고 컨바인도 풉니다(버튼 자리·딜러 명단·출근 기록은 그대로).
         const m = await tx.rotationMeta.findUniqueOrThrow({ where: { id: META_ID } });
@@ -352,8 +345,6 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       }
       case "deleteGame": {
         if ((await tx.rotationMeta.count({ where: { ownerId } })) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
-        const ids = (await tx.rotationDealer.findMany({ where: { gameId: META_ID }, select: { id: true } })).map((d) => d.id);
-        await tx.rotationEvent.deleteMany({ where: { dealerId: { in: ids } } });
         await tx.rotationDealer.deleteMany({ where: { gameId: META_ID } });
         await tx.rotationMeta.delete({ where: { id: META_ID } });
         deleted = true;
