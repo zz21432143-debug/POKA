@@ -8,7 +8,7 @@ import { monthStartKst } from "@/lib/pot-title-config";
 
 export const dynamic = "force-dynamic";
 
-/** 난이도별 기록(sidepot-easy · sidepot-normal · sidepot-hard · sidepot-hell) */
+/** 난이도별 기록(pot5-easy · pot5-normal · pot5-hard · pot5-hell — 5문제 기준) */
 const KINDS = DIFFICULTIES.map(kindOf);
 const TOP = 10;
 
@@ -53,7 +53,7 @@ export async function GET() {
   return NextResponse.json(await board(user.id), { headers: { "Cache-Control": "no-store" } });
 }
 
-/** 한 판 기록 저장: { kind, correct, durationMs } (10문제 기준) */
+/** 한 판 기록 저장: { kind, correct, durationMs } (5문제 기준, 시간은 액션이 끝난 뒤 답한 시간 합계) */
 export async function POST(request: Request) {
   const user = await getCurrentUser().catch(() => null);
   if (!user || !canUseDealerTools(user)) return NextResponse.json({ error: "로그인하면 쓸 수 있습니다." }, { status: 403 });
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const kind = String(body.kind);
   const correct = Math.floor(Number(body.correct));
   const durationMs = Math.floor(Number(body.durationMs));
-  // 말이 안 되는 기록은 받지 않습니다(10문제를 3초 안에 다 맞히는 등)
+  // 말이 안 되는 기록은 받지 않습니다(5문제를 3초 안에 다 맞히는 등)
   if (!KINDS.includes(kind) || !(correct >= 0 && correct <= ROUND_SIZE) || !(durationMs >= 3000 && durationMs <= 60 * 60 * 1000)) {
     return NextResponse.json({ error: "기록을 확인하세요." }, { status: 400 });
   }

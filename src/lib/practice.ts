@@ -1,5 +1,5 @@
 /**
- * 딜러 연습장 — 팟 계산 문제 만들기(DB 없이 계산만). 한 판 = 10문제, 맞힌 수와 걸린 시간으로 기록합니다.
+ * 딜러 연습장 — 팟 계산 문제 만들기(DB 없이 계산만). 한 판 = 5문제, 맞힌 수와 걸린 시간으로 기록합니다.
  *
  * 9인 테이블에서 프리플랍 한 바퀴를 실제로 진행시켜 문제를 만듭니다.
  * 블라인드 → UTG부터 차례로 폴드 · 체크 · 콜 · 레이즈 · 올인(레이즈했다가 폴드도) → 액션이 끝나면
@@ -9,24 +9,26 @@
  */
 import { computePots, type PotPlayer, type PotResult } from "@/lib/side-pot";
 
-export const ROUND_SIZE = 10;
+/** 한 판 문제 수 */
+export const ROUND_SIZE = 5;
 
 export type Difficulty = "easy" | "normal" | "hard" | "hell";
 export const DIFFICULTY: Record<
   Difficulty,
   { label: string; desc: string; active: [number, number]; pots: [number, number]; raiseFold: number; speed: number }
 > = {
-  easy: { label: "쉬움", desc: "3명 참여 · 팟 2개 · 금액이 딱 떨어짐", active: [3, 3], pots: [2, 2], raiseFold: 0, speed: 1100 },
-  normal: { label: "보통", desc: "3~5명 · 팟 2~3개 · 가끔 레이즈 후 폴드·돌려줄 금액", active: [3, 5], pots: [2, 3], raiseFold: 0.12, speed: 850 },
-  hard: { label: "어려움", desc: "4~7명 · 팟 3~5개 · 잔돈 금액 · 레이즈 후 폴드 자주", active: [4, 7], pots: [3, 5], raiseFold: 0.3, speed: 650 },
-  hell: { label: "지옥", desc: "6~8명 · 팟 4~5개 · 100원 단위 잔돈 · 레이즈 후 폴드·돌려줄 금액 많음 · 빠른 진행", active: [6, 8], pots: [4, 5], raiseFold: 0.45, speed: 480 },
+  easy: { label: "쉬움", desc: "4명 참여 · 팟 3개(메인·세컨 계산) · 금액이 딱 떨어짐", active: [4, 4], pots: [3, 3], raiseFold: 0, speed: 1100 },
+  normal: { label: "보통", desc: "4~5명 · 팟 3~4개 · 가끔 레이즈 후 폴드·돌려줄 금액", active: [4, 5], pots: [3, 4], raiseFold: 0.12, speed: 850 },
+  hard: { label: "어려움", desc: "5~7명 · 팟 4~5개 · 잔돈 금액 · 레이즈 후 폴드 자주", active: [5, 7], pots: [4, 5], raiseFold: 0.3, speed: 650 },
+  hell: { label: "지옥", desc: "6~8명 · 팟 5개(메인~포스 계산) · 100원 단위 잔돈 · 레이즈 후 폴드·돌려줄 금액 많음 · 빠른 진행", active: [6, 8], pots: [5, 5], raiseFold: 0.45, speed: 480 },
 };
 /** 칭호는 가장 어려운 난이도(지옥) 랭킹 1~3위 */
 export const TITLE_DIFFICULTY: Difficulty = "hell";
 export const POT_TITLES: Record<1 | 2 | 3, string> = { 1: "팟의 오니(鬼)", 2: "칩 요괴", 3: "사이드팟 도깨비" };
 export const DIFFICULTIES = Object.keys(DIFFICULTY) as Difficulty[];
 /** 기록 종류(난이도별 랭킹) */
-export const kindOf = (d: Difficulty) => `sidepot-${d}`;
+/** 기록 종류(5문제 기준 · 난이도별). 예전 10문제 기록(sidepot-…)과 섞이지 않게 새 이름 */
+export const kindOf = (d: Difficulty) => `pot5-${d}`;
 export const PRACTICE_KINDS = Object.fromEntries(DIFFICULTIES.map((d) => [kindOf(d), `팟 계산 · ${DIFFICULTY[d].label}`])) as Record<string, string>;
 
 export type Blinds = { sb: number; bb: number; ante: number };
@@ -243,3 +245,11 @@ export function actionText(a: PlayAction, blinds: Blinds) {
 
 /** 숫자 입력 읽기("12,500" · "12500" 모두) */
 export const readNumber = (text: string) => Number(String(text).replace(/[^\d]/g, "")) || 0;
+
+/**
+ * 적는 팟: 마지막 팟은 낸 칩 전체에서 앞 팟들을 뺀 남은 금액이라 적지 않습니다(모든 난이도 공통).
+ * 예) 팟 5개면 메인 · 세컨 · 서드 · 포스만 적고 피프스는 자동.
+ */
+export function askedPotCount(answer: PotResult) {
+  return Math.max(1, answer.pots.length - 1);
+}

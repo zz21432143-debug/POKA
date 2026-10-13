@@ -12,6 +12,7 @@ import {
   DIFFICULTY,
   ROUND_SIZE,
   actionText,
+  askedPotCount,
   kindOf,
   potProblem,
   readNumber,
@@ -219,13 +220,35 @@ const SEATS_MOBILE = [
   [13, 32],
   [26, 9],
 ] as const;
-/** 칩(베팅 금액) 자리: 좌석에서 가운데 쪽으로 */
+/** 휴대폰(세로) 칩 자리: 좌석 · 가운데 글씨 · 옆 칩과 안 겹치게 자리마다 정해 둠(%) */
+const BETS_MOBILE = [
+  [64, 27],
+  [65, 36],
+  [66, 63],
+  [64, 75],
+  [50, 81],
+  [36, 75],
+  [34, 63],
+  [35, 36],
+  [36, 27],
+] as const;
+/** PC 칩(베팅 금액) 자리: 좌석에서 가운데 쪽으로(위·아래 줄은 옆 칩과 안 붙게 가로로 더 벌림) */
 const toward = (v: number, f = 0.52) => 50 + (v - 50) * f;
 /** 휴대폰 · PC 좌표를 CSS 변수로(작은 화면 먼저, sm부터 PC) */
 function place(m: readonly [number, number], d: readonly [number, number]) {
   return { "--mx": `${m[0]}%`, "--my": `${m[1]}%`, "--dx": `${d[0]}%`, "--dy": `${d[1]}%` } as React.CSSProperties;
 }
 const PLACED = "left-[var(--mx)] top-[var(--my)] sm:left-[var(--dx)] sm:top-[var(--dy)]";
+
+/** 테이블 안 글씨 크기: 테이블 폭(cqw)에 맞춰 — 크게 보기에서 테이블과 같이 커짐 */
+const TS = {
+  pos: "text-[clamp(12px,2.2cqw,28px)]",
+  small: "text-[clamp(10px,1.55cqw,19px)]",
+  label: "text-[clamp(10px,1.65cqw,21px)]",
+  chip: "text-[clamp(10px,1.75cqw,22px)]",
+  center: "text-[clamp(12px,2.1cqw,28px)]",
+  centerSmall: "text-[clamp(10px,1.5cqw,19px)]",
+};
 
 function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step: number; fit?: boolean }) {
   const { seats, actions, blinds, button } = problem;
@@ -249,7 +272,8 @@ function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step
     <div
       data-table
       className={cn(
-        "relative mx-auto aspect-[3/4] w-full max-w-4xl sm:aspect-[16/9]",
+        "@container relative mx-auto aspect-[3/4] w-full max-w-4xl sm:aspect-[16/9]",
+        fit && "max-w-none",
         // 가로 화면 크게 보기: 화면 높이에 맞춰(위 줄 빼고) 테이블이 한눈에
         fit && "landscape:aspect-[16/9] landscape:h-[calc(100dvh-4.5rem)] landscape:w-auto landscape:max-w-full",
       )}
@@ -261,19 +285,19 @@ function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step
         </div>
       </div>
       {/* 딜러 자리 */}
-      <div className={cn("absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/80 px-2 py-0.5 text-[10px] font-black tracking-widest text-amber-200", PLACED)} style={place([50, 7], [50, 9])}>
+      <div className={cn("absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/80 px-2 py-0.5 font-black tracking-widest text-amber-200", TS.small, PLACED)} style={place([50, 7], [50, 9])}>
         DEALER
       </div>
       {/* 가운데: 블라인드 · 진행 */}
       <div className="absolute inset-0 grid place-items-center text-center">
         <div className="grid gap-0.5 rounded-xl bg-black/45 px-3 py-1.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- 작은 마크 */}
-          <img src="/brand/poka-oni-mark.png" alt="" className="mx-auto h-auto w-8 opacity-80" />
-          <span className="text-xs font-black text-white sm:text-sm">
+          <img src="/brand/poka-oni-mark.png" alt="" className="mx-auto h-auto w-[clamp(28px,4.5cqw,64px)] opacity-80" />
+          <span className={cn("font-black text-white", TS.center)}>
             SB {won(blinds.sb)} · BB {won(blinds.bb)}
           </span>
-          <span className="text-[10px] font-bold text-amber-200">BB 앤티 {won(blinds.ante)} → 메인 팟</span>
-          <span className={cn("text-[11px] font-black", done ? "text-emerald-200" : "text-amber-200")}>
+          <span className={cn("font-bold text-amber-200", TS.centerSmall)}>BB 앤티 {won(blinds.ante)} → 메인 팟</span>
+          <span className={cn("font-black", TS.centerSmall, done ? "text-emerald-200" : "text-amber-200")}>
             {done ? "액션 끝 — 팟을 계산하세요" : `프리플랍 진행 중 ${step}/${actions.length}`}
           </span>
         </div>
@@ -291,36 +315,37 @@ function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step
             <div
               data-seat={seat.position}
               className={cn(
-                "absolute grid w-[21%] max-w-[8rem] min-w-[4.3rem] -translate-x-1/2 -translate-y-1/2 justify-items-center gap-0.5 rounded-xl border px-1 py-1 text-center shadow-lg transition-all duration-300 sm:w-[12.5%]",
+                "absolute grid w-[21%] min-w-[4.3rem] -translate-x-1/2 -translate-y-1/2 justify-items-center gap-0.5 rounded-xl border px-1 py-1 text-center shadow-lg transition-all duration-300 sm:w-[12.5%]",
                 PLACED,
                 folded ? "border-white/10 bg-zinc-900/90 opacity-60" : "border-amber-300/50 bg-black/90",
                 isActor && "z-10 scale-110 border-amber-300 ring-2 ring-amber-300",
               )}
               style={place(m, d)}
             >
-              <span className="flex items-center gap-1 text-xs font-black text-amber-300 sm:text-sm">
+              <span className={cn("flex items-center gap-1 font-black text-amber-300", TS.pos)}>
                 {/* 카드 두 장(폴드하면 사라짐) */}
                 <span className={cn("flex gap-px transition-opacity duration-500", folded ? "opacity-0" : "opacity-100")} aria-hidden>
-                  <span className="block h-3.5 w-2.5 rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
-                  <span className="block h-3.5 w-2.5 rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
+                  <span className="block h-[clamp(14px,2.2cqw,30px)] w-[clamp(10px,1.6cqw,22px)] rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
+                  <span className="block h-[clamp(14px,2.2cqw,30px)] w-[clamp(10px,1.6cqw,22px)] rounded-[2px] border border-white/60 bg-[repeating-linear-gradient(45deg,#7f1d1d_0_2px,#991b1b_2px_4px)]" />
                 </span>
                 {seat.position}
-                {seat.seat === button ? <span className="grid size-4 place-items-center rounded-full bg-white text-[9px] text-black">D</span> : null}
+                {seat.seat === button ? <span className="grid size-[clamp(16px,2.2cqw,28px)] place-items-center rounded-full bg-white text-[clamp(9px,1.3cqw,16px)] text-black">D</span> : null}
               </span>
-              <span className="text-[10px] tabular-nums text-zinc-400">스택 {won(Math.max(0, seat.stack - contrib))}</span>
-              {label ? <span data-act className={cn("rounded px-1 text-[10px] font-black whitespace-nowrap sm:text-[11px]", tone)}>{label}</span> : <span className="h-[15px]" />}
+              <span className={cn("tabular-nums text-zinc-400", TS.small)}>스택 {won(Math.max(0, seat.stack - contrib))}</span>
+              {label ? <span data-act className={cn("rounded px-1 font-black whitespace-nowrap", TS.label, tone)}>{label}</span> : <span className="h-[clamp(15px,2.3cqw,30px)]" />}
             </div>
             {contrib ? (
               <span
                 data-bet={seat.position}
                 className={cn(
-                  "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-black tabular-nums text-amber-100 transition-all duration-500 sm:text-xs",
+                  "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full bg-black/65 px-1.5 py-0.5 font-black tabular-nums text-amber-100 transition-all duration-500",
+                  TS.chip,
                   PLACED,
                   folded && "opacity-60",
                 )}
-                style={place([toward(m[0], 0.5), toward(m[1], 0.56)], [toward(d[0], 0.6), toward(d[1], 0.5)])}
+                style={place(BETS_MOBILE[seat.seat], [toward(d[0], Math.abs(d[1] - 50) > 30 ? 0.78 : 0.6), toward(d[1], 0.5)])}
               >
-                <span className="inline-block size-2.5 rounded-full border border-white/70 bg-rose-600" />
+                <span className="inline-block size-[clamp(10px,1.5cqw,20px)] rounded-full border border-white/70 bg-rose-600" />
                 {won(contrib)}
               </span>
             ) : null}
@@ -332,12 +357,13 @@ function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step
         <span
           data-ante
           className={cn(
-            "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-amber-300/80 bg-amber-950/90 px-2 py-0.5 text-[10px] font-black whitespace-nowrap text-amber-100 shadow-[0_0_10px_rgba(251,191,36,.35)] sm:text-xs",
+            "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-amber-300/80 bg-amber-950/90 px-2 py-0.5 font-black whitespace-nowrap text-amber-100 shadow-[0_0_10px_rgba(251,191,36,.35)]",
+            TS.chip,
             PLACED,
           )}
           style={place([50, 18], [50, 21])}
         >
-          <span className="inline-block size-3 rounded-full border-2 border-white/80 bg-amber-400" />
+          <span className="inline-block size-[clamp(12px,1.7cqw,22px)] rounded-full border-2 border-white/80 bg-amber-400" />
           앤티 {won(blinds.ante)}
         </span>
       ) : null}
@@ -345,7 +371,7 @@ function HoldemTable({ problem, step, fit = false }: { problem: PotProblem; step
   );
 }
 
-/* ───────────── 팟 계산 연습(10문제) ───────────── */
+/* ───────────── 팟 계산 연습(5문제) ───────────── */
 
 function PotDrill({
   settings,
@@ -402,8 +428,11 @@ function PotDrill({
   }, [phase, playing, checked, index]);
 
   const answer = question?.answer;
-  const fields = answer ? [...answer.pots.map((_, i) => potName(i)), ...(answer.refund ? ["돌려줄 금액"] : [])] : [];
-  const answers = answer ? [...answer.pots.map((p) => p.amount), ...(answer.refund ? [answer.refund.amount] : [])] : [];
+  // 마지막 팟은 낸 칩 전체에서 앞 팟을 뺀 남은 금액이라 적지 않음(자동)
+  const asked = answer ? askedPotCount(answer) : 0;
+  const lastPot = answer && answer.pots.length > asked ? { name: potName(answer.pots.length - 1), amount: answer.pots[answer.pots.length - 1].amount } : null;
+  const fields = answer ? [...answer.pots.slice(0, asked).map((_, i) => potName(i)), ...(answer.refund ? ["돌려줄 금액"] : [])] : [];
+  const answers = answer ? [...answer.pots.slice(0, asked).map((p) => p.amount), ...(answer.refund ? [answer.refund.amount] : [])] : [];
 
   function load() {
     setQuestion(potProblem(settings.difficulty, validBlinds(settings.blinds) ? settings.blinds : DEFAULT_BLINDS));
@@ -487,7 +516,7 @@ function PotDrill({
         <h2 className="text-lg font-black">팟 계산 연습</h2>
         <p className="text-sm text-zinc-300">
           9인 테이블에서 블라인드부터 한 명씩 <b className="text-white">폴드 · 체크 · 콜 · 레이즈 · 올인</b>이 진행됩니다. 액션이 끝나면{" "}
-          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 · 피프스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다.
+          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. <b className="text-white">마지막 팟은 남은 금액이라 적지 않습니다.</b> 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다(시간은 액션이 끝난 뒤부터).
         </p>
         <SettingsForm settings={settings} onChange={onSettings} />
         {best ? (
@@ -533,10 +562,10 @@ function PotDrill({
       data-full={full ? "1" : undefined}
       className={cn(
         "poka-watermark grid gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3 sm:p-4",
-        full && "min-h-full content-start rounded-none border-0 landscape:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] landscape:items-start",
+        full && "min-h-full content-start rounded-none border-0 text-base landscape:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] landscape:items-start",
       )}
     >
-      <div className="col-span-full flex flex-wrap items-center gap-2 text-sm font-bold">
+      <div className={cn("col-span-full flex flex-wrap items-center gap-2 font-bold", full ? "text-base lg:text-lg" : "text-sm")}>
         <span className="rounded-full bg-amber-400 px-3 py-1 font-black text-black">
           {index + 1} / {ROUND_SIZE}
         </span>
@@ -572,7 +601,9 @@ function PotDrill({
         )}
         {!playing && answer ? (
           <span className="text-xs font-bold text-zinc-400">
-            팟 {answer.pots.length}개({answer.pots.map((_, i) => potName(i)).join(" · ")}){answer.refund ? " + 돌려줄 금액 있음" : ""}
+            팟 {answer.pots.length}개 — {answer.pots.slice(0, asked).map((_, i) => potName(i)).join(" · ")}만 적기
+            {lastPot ? ` (${lastPot.name}은 남은 금액이라 자동)` : ""}
+            {answer.refund ? " + 돌려줄 금액" : ""}
           </span>
         ) : null}
       </div>
@@ -588,7 +619,7 @@ function PotDrill({
         >
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-2">
             {fields.map((label, i) => (
-              <label key={label} className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
+              <label key={label} className={cn("grid min-w-0 gap-1 font-bold text-zinc-300", full ? "text-sm lg:text-base" : "text-xs")}>
                 {label}
                 <input
                   ref={i === 0 ? firstInput : undefined}
@@ -602,7 +633,8 @@ function PotDrill({
                     setInputs(next);
                   }}
                   className={cn(
-                    "h-12 w-full min-w-0 rounded-lg border-2 bg-black px-2 text-xl font-black tabular-nums",
+                    "w-full min-w-0 rounded-lg border-2 bg-black px-2 font-black tabular-nums",
+                    full ? "h-14 text-2xl lg:h-16 lg:text-3xl" : "h-12 text-xl",
                     checked === null ? "border-white/20" : readNumber(inputs[i] ?? "") === answers[i] ? "border-emerald-500" : "border-rose-500",
                   )}
                 />
@@ -622,8 +654,13 @@ function PotDrill({
                   ))}
                 </p>
               ) : null}
+              {lastPot ? (
+                <p data-last-pot className="text-sm font-bold text-zinc-200">
+                  {lastPot.name}(남은 금액 · 자동) <span className="tabular-nums text-amber-300">{won(lastPot.amount)}</span>
+                </p>
+              ) : null}
               <p className="text-xs font-bold text-zinc-300">풀이</p>
-              <ol data-explain className="grid gap-1 text-sm text-zinc-100">
+              <ol data-explain className={cn("grid gap-1 text-zinc-100", full ? "text-base" : "text-sm")}>
                 {explainPots(question.players, answer).map((line) => (
                   <li key={line} className="rounded-lg bg-black/40 px-2 py-1 tabular-nums">
                     {line}
@@ -634,11 +671,15 @@ function PotDrill({
           ) : null}
           <div className="flex gap-2">
             {checked === null ? (
-              <button type="button" onClick={giveUp} className="min-h-12 shrink-0 rounded-xl border-2 border-rose-500/70 px-4 text-base font-black text-rose-200 hover:bg-rose-950">
+              <button
+                type="button"
+                onClick={giveUp}
+                className={cn("shrink-0 rounded-xl border-2 border-rose-500/70 px-4 font-black text-rose-200 hover:bg-rose-950", full ? "min-h-14 text-lg lg:min-h-16 lg:text-xl" : "min-h-12 text-base")}
+              >
                 포기
               </button>
             ) : null}
-            <button type="submit" className="min-h-12 flex-1 rounded-xl bg-amber-400 text-lg font-black text-black">
+            <button type="submit" className={cn("flex-1 rounded-xl bg-amber-400 font-black text-black", full ? "min-h-14 text-xl lg:min-h-16 lg:text-2xl" : "min-h-12 text-lg")}>
               {checked === null ? "확인" : index + 1 >= ROUND_SIZE ? "결과 보기" : "다음 문제"}
             </button>
           </div>
