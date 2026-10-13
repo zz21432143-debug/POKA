@@ -8,7 +8,7 @@ import {
   parseOauthIntent,
   safeNextPath,
 } from "@/lib/oauth-consent";
-import { setSessionNickname } from "@/lib/current-user";
+import { setSessionUser } from "@/lib/current-user";
 import { socialRejoinBlockMessage } from "@/lib/account-delete";
 import { findSocialUser, upsertSocialUser, type SocialProfile } from "@/lib/social-account";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
@@ -62,7 +62,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
   const master = await linkMasterKakao(profile);
   if (master) {
     jar.delete(CONSENT_COOKIE);
-    await setSessionNickname(master.nickname);
+    await setSessionUser(master);
     return sendTo(new URL(next, request.url));
   }
 
@@ -88,7 +88,7 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       if (error instanceof AccountRestrictedError) return restrictionRedirect(request, error.message);
       throw error;
     }
-    await setSessionNickname(user.nickname);
+    await setSessionUser(user);
     if (isNew) {
       const welcome = new URL("/welcome", request.url);
       if (next !== "/") welcome.searchParams.set("next", next);
@@ -114,6 +114,6 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
     where: { id: existing.id },
     data: { lastLoginAt: new Date() },
   });
-  await setSessionNickname(existing.nickname);
+  await setSessionUser(existing);
   return sendTo(new URL(next, request.url));
 }

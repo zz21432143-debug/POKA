@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { checkInAttendance } from "@/lib/attendance";
 import { clientIp } from "@/lib/request";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
     const result = await checkInAttendance(user.id, body.content ?? "", clientIp(request));
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "출석에 실패했습니다.";
+    const message = publicErrorMessage(error, "출석에 실패했습니다.");
     const status = message.includes("이미 출석") ? 409 : 400;
     return NextResponse.json({ error: message }, { status });
   }

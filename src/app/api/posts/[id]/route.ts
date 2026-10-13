@@ -9,6 +9,7 @@ import { fileIdFromUrl } from "@/lib/uploads";
 import type { JobKind } from "@/generated/prisma/enums";
 import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 import { needsTax } from "@/lib/job-tax";
+import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -46,6 +47,8 @@ export async function PATCH(
     if (!canManagePost(user, post)) {
       return NextResponse.json({ error: manageDeniedMessage(post.boardType) }, { status: 403 });
     }
+    // 정지 · 차단된 회원은 글을 고칠 수 없음(관리자가 고치는 경우는 관리자 상태로 판단)
+    await assertAccountActive(user);
     const body = (await request.json()) as Record<string, unknown>;
 
     if (post.boardType !== "JOBS") {
@@ -53,6 +56,10 @@ export async function PATCH(
       const content = text(body, "content", post.content) ?? "";
       if (post.boardType === "HAND_REVIEW") title = normalizeHandTitle(title);
       if (title.length < 2) return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
+      const maxContent = post.boardType === "TDA" || post.boardType === "NOTICE" ? 300_000 : 30_000;
+      if (title.length > 120 || content.length > maxContent) {
+        return NextResponse.json({ error: `제목은 120자, 본문은 ${maxContent.toLocaleString()}자까지 쓸 수 있습니다.` }, { status: 400 });
+      }
 
       const data: Record<string, unknown> = { title, content };
       if (post.boardType === "TDA") {
@@ -159,8 +166,11 @@ export async function PATCH(
     if (error instanceof ForbiddenWordError || error instanceof HoldemOnlyError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    const message = error instanceof Error ? error.message : "수정에 실패했습니다.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (error instanceof AccountRestrictedError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    console.error("post patch", error);
+    return NextResponse.json({ error: "수정에 실패했습니다." }, { status: 500 });
   }
 }
 
@@ -183,6 +193,13 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   }
   if (!canManagePost(user, post)) {
     return NextResponse.json({ error: manageDeniedMessage(post.boardType) }, { status: 403 });
+  }
+  // 정지 · 차단된 회원은 글을 지울 수 없음(신고된 글 증거 보존)
+  try {
+    await assertAccountActive(user);
+  } catch (error) {
+    if (error instanceof AccountRestrictedError) return NextResponse.json({ error: error.message }, { status: 403 });
+    throw error;
   }
   await prisma.$transaction([
     prisma.post.update({ where: { id }, data: { hidden: true, bannerSlot: null } }),

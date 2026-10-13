@@ -19,7 +19,7 @@ export default async function RotationPage({ searchParams }: { searchParams: Pro
     <div className="flex flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <Link href="/tools" className="text-xs font-bold text-[#c9a25c]">
+          <Link href="/tools" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
             ← 매장 관리
           </Link>
           <h1 className="text-2xl font-black text-white">딜러 로테이션</h1>

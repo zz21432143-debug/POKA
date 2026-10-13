@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   _request: Request,
@@ -30,7 +31,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true, imageUrl: owned.mark.imageUrl });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "착용에 실패했습니다.";
+    const message = publicErrorMessage(error, "착용에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

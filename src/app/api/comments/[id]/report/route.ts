@@ -4,6 +4,7 @@ import { clientIp } from "@/lib/request";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { createContentReport } from "@/lib/reports";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   request: Request,
@@ -42,7 +43,7 @@ export async function POST(
         { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
       );
     }
-    const message = error instanceof Error ? error.message : "신고에 실패했습니다.";
+    const message = publicErrorMessage(error, "신고에 실패했습니다.");
     const status = message.includes("이미 신고") ? 409 : message.includes("찾을 수") ? 404 : 400;
     return NextResponse.json({ error: message }, { status });
   }

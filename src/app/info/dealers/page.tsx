@@ -46,7 +46,7 @@ export default async function DealersPage() {
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate text-base font-bold text-white">{dealer.nickname}</span>
-                        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/30 bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
+                        <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/30 bg-amber-950/40 px-1.5 py-0.5 text-[11px] font-semibold text-amber-200">
                           <StarIcon className="size-3 fill-amber-400 text-amber-400" />
                           인증
                         </span>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
+import { publicErrorMessage } from "@/lib/public-error";
 
 /** 구인구직 프리미엄(상단 고정) 켜기·끄기. 결제 연동 전까지 운영진이 직접 지정합니다. */
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -22,7 +23,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     await prisma.post.update({ where: { id }, data: { isPaid: body.isPaid } });
     return NextResponse.json({ ok: true, isPaid: body.isPaid });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "처리에 실패했습니다.";
+    const message = publicErrorMessage(error, "처리에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

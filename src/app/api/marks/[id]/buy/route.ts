@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { isLockedRewardSlug } from "@/lib/yokai-catalog";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   _request: Request,
@@ -48,7 +49,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true, spent: mark.pricePoints });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "구매에 실패했습니다.";
+    const message = publicErrorMessage(error, "구매에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -40,6 +40,7 @@ export async function GET(request: Request) {
   const me = (await meRes.json()) as {
     sub?: string;
     email?: string;
+    email_verified?: boolean;
     name?: string;
   };
   if (!me.sub) {
@@ -49,7 +50,8 @@ export async function GET(request: Request) {
   return finishSocialAuth(request, {
     provider: "google",
     providerId: me.sub,
-    email: me.email ?? null,
+    // 구글이 인증한 이메일만 씁니다.
+    email: me.email_verified ? (me.email ?? null) : null,
     nickname: me.name ?? "구글회원",
   });
 }

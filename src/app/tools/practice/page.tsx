@@ -17,7 +17,7 @@ export default async function PracticePage() {
     <div className="flex flex-col gap-3">
       <header className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-        <Link href="/community" className="text-xs font-bold text-[#c9a25c]">
+        <Link href="/community" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
           ← 커뮤니티
         </Link>
         <h1 className="text-2xl font-black text-white">딜러 연습장</h1>

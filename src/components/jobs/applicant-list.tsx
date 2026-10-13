@@ -31,11 +31,11 @@ export function ApplicantList({ applicants }: { applicants: Applicant[] }) {
                 >
                   {row.applicant.nickname}
                 </Link>
-                <span className="rounded bg-[#c59b27]/15 px-1 text-[10px] font-bold text-[#e7c98a]">
+                <span className="rounded bg-[#c59b27]/15 px-1 text-[11px] font-bold text-[#e7c98a]">
                   Lv.{row.applicant.level}
                 </span>
                 {row.applicant.isDealerVerified ? (
-                  <span className="rounded bg-amber-900/40 px-1.5 text-[10px] font-bold text-amber-200">인증 딜러</span>
+                  <span className="rounded bg-amber-900/40 px-1.5 text-[11px] font-bold text-amber-200">인증 딜러</span>
                 ) : null}
                 <span className="ml-auto text-xs text-[#9CA3AF]">{formatRelativeKst(row.createdAt)}</span>
               </div>

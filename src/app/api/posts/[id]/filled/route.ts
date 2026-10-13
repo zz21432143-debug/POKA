@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { JOB_KIND_LABEL } from "@/lib/nav";
 import { pushTicker } from "@/lib/ticker";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   _request: Request,
@@ -36,7 +37,7 @@ export async function POST(
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "처리에 실패했습니다.";
+    const message = publicErrorMessage(error, "처리에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

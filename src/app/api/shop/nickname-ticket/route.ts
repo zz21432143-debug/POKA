@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { NICKNAME_TICKET_NAME, NICKNAME_TICKET_PRICE } from "@/lib/nickname-change";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST() {
   try {
@@ -19,14 +20,16 @@ export async function POST() {
     if (fresh.points < NICKNAME_TICKET_PRICE) {
       return NextResponse.json({ error: "포인트가 부족합니다." }, { status: 400 });
     }
-    const updated = await prisma.user.update({
-      where: { id: user.id },
+    // 잔액이 충분할 때만 차감(동시에 눌러도 마이너스가 되지 않게)
+    const paid = await prisma.user.updateMany({
+      where: { id: user.id, points: { gte: NICKNAME_TICKET_PRICE } },
       data: {
         points: { decrement: NICKNAME_TICKET_PRICE },
         nicknameTickets: { increment: 1 },
       },
-      select: { points: true, nicknameTickets: true },
     });
+    if (paid.count === 0) return NextResponse.json({ error: "포인트가 부족합니다." }, { status: 400 });
+    const updated = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { points: true, nicknameTickets: true } });
     return NextResponse.json({
       ok: true,
       name: NICKNAME_TICKET_NAME,
@@ -37,7 +40,7 @@ export async function POST() {
     if (error instanceof AccountRestrictedError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
-    const message = error instanceof Error ? error.message : "구매에 실패했습니다.";
+    const message = publicErrorMessage(error, "구매에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

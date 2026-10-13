@@ -25,9 +25,19 @@ export function consentIsValid(raw: string | undefined | null) {
   return Date.now() - issued <= CONSENT_TTL_MS;
 }
 
+/** 사이트 안 경로인지(다른 사이트로 나가는 "//host", "/\host", 탭·줄바꿈 섞인 주소는 막음) */
+export function isInternalPath(raw: string | undefined | null): raw is string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("://")) return false;
+  if (/[\u0000-\u001f\u007f\\]/.test(raw)) return false;
+  try {
+    return new URL(raw, "https://pokerwiki.co.kr").origin === "https://pokerwiki.co.kr";
+  } catch {
+    return false;
+  }
+}
+
 export function safeNextPath(raw: string | undefined | null) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("://")) return "/";
-  return raw;
+  return isInternalPath(raw) ? raw : "/";
 }
 
 export const CONSENT_COOKIE_OPTS = {

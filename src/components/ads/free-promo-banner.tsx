@@ -56,7 +56,7 @@ export function FreePromoBanner({ variant, className }: { variant: "wide" | "car
           className,
         )}
       >
-        <span className="text-[10px] font-bold tracking-[0.4em] text-[#c9a36a]">FREE PROMOTION</span>
+        <span className="text-[11px] font-bold tracking-[0.4em] text-[#c9a36a]">FREE PROMOTION</span>
         <PokaMascot className="size-16" />
         <PokaBrush className="w-36" />
         <FreePromoTitle className="text-2xl" />

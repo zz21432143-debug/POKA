@@ -188,7 +188,7 @@ export function YokaiPointShop({
           <p className="text-[#f3eadb]">
             지금은 체험 모드입니다. 구매·착용은 미리보기만 되고 저장되지 않습니다.
           </p>
-          <Link href="/login?next=/shop" className={buttonVariants({ size: "sm" })}>
+          <Link href="/login?next=/shop" className={buttonVariants({ size: "touch" })}>
             로그인하고 내 포인트 쓰기
           </Link>
         </div>

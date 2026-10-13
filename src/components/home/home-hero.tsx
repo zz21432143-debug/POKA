@@ -28,7 +28,7 @@ export function HomeHero() {
         <ul className="flex max-w-md flex-wrap gap-1.5">
           {POKA_FEATURES.map((f) => (
             <li key={f.href}>
-              <Link href={f.href} className="touch-target inline-flex min-h-8 items-center rounded-full border border-[#c9a25c]/50 bg-black/60 px-2.5 text-xs sm:min-h-9 sm:px-3 sm:text-[13px] font-bold text-[#f3d9a4] hover:border-[#c9a25c] hover:text-white">
+              <Link href={f.href} className="touch-target inline-flex min-h-10 items-center rounded-full border border-[#c9a25c]/50 bg-black/60 px-3 text-xs sm:min-h-9 sm:px-3 sm:text-[13px] font-bold text-[#f3d9a4] hover:border-[#c9a25c] hover:text-white">
                 {f.label}
               </Link>
             </li>

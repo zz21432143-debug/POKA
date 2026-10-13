@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { POLL_CHOICES, type PollChoice } from "@/lib/poll";
+import { publicErrorMessage } from "@/lib/public-error";
 
 const IDS = POLL_CHOICES.map((choice) => choice.id);
 
@@ -57,7 +58,7 @@ export async function POST(
     });
     return NextResponse.json({ counts: await countsFor(id), myChoice: choice });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "투표에 실패했습니다.";
+    const message = publicErrorMessage(error, "투표에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

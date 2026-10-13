@@ -21,7 +21,7 @@ export default async function GameBoardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="flex flex-col gap-3">
       <header className="board-intro">
-        <Link href="/tools" className="text-xs font-bold text-[#c9a25c]">
+        <Link href="/tools" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
           ← 매장 관리
         </Link>
         <BoardTitle sticker={BOARD_STICKER.board}>게임 현황판</BoardTitle>

@@ -28,6 +28,10 @@ import {
   assertHoldemOnly,
   normalizeHandTitle,
 } from "@/lib/holdem-only";
+import { publicErrorMessage } from "@/lib/public-error";
+
+/** 일반 회원이 하루에 급구 알림을 보낼 수 있는 횟수 */
+const URGENT_PUSH_PER_DAY = 3;
 
 const BOARDS: BoardType[] = [
   "FREE",
@@ -90,6 +94,11 @@ export async function POST(request: Request) {
     let title = body.title?.trim() ?? "";
     if (boardType !== "JOBS" && title.length < 2) {
       return NextResponse.json({ error: "제목을 입력하세요." }, { status: 400 });
+    }
+    // 공식 문서(공지 · TDA 룰)는 길 수 있어 넉넉하게
+    const maxContent = boardType === "TDA" || boardType === "NOTICE" ? 300_000 : 30_000;
+    if (title.length > 120 || content.length > maxContent) {
+      return NextResponse.json({ error: `제목은 120자, 본문은 ${maxContent.toLocaleString()}자까지 쓸 수 있습니다.` }, { status: 400 });
     }
     if (boardType === "HAND_REVIEW") {
       title = normalizeHandTitle(title);
@@ -282,7 +291,13 @@ export async function POST(request: Request) {
     let pushSent: number | null = null;
     if (jobKind === "URGENT" && jobData?.jobLocation) {
       const region = parseJobRegion(titleRegion(jobData.jobLocation));
-      if (region) {
+      // 알림 남용 방지: 일반 회원은 급구 알림을 하루 3번까지(이번 글 포함). 넘으면 글만 올라가고 알림은 안 감.
+      const todayUrgent = isStaff(user)
+        ? 0
+        : await prisma.post.count({
+            where: { authorId: user.id, jobKind: "URGENT", createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+          });
+      if (region && todayUrgent <= URGENT_PUSH_PER_DAY) {
         pushSent = 0;
         const result = await notifyRegion(region, {
           title: `${region} 새 급구/대타`,
@@ -328,7 +343,7 @@ export async function POST(request: Request) {
     if (error instanceof HoldemOnlyError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    const message = error instanceof Error ? error.message : "저장에 실패했습니다.";
+    const message = publicErrorMessage(error, "저장에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

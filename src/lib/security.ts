@@ -81,3 +81,31 @@ export async function writeAudit(entry: {
     },
   });
 }
+
+/**
+ * 횟수 제한: 기록(AuditLog)에서 최근 windowMs 동안 같은 종류 기록이 max번 이상이면 막습니다.
+ * userId · ip · postId 중 준 것만 조건으로 씁니다(셋 다 비면 막지 않음).
+ */
+export async function assertAttemptLimit(options: {
+  kind: string;
+  userId?: string | null;
+  ip?: string | null;
+  postId?: string | null;
+  max: number;
+  windowMs: number;
+  message: string;
+}) {
+  if (!options.userId && !options.ip) return;
+  const since = new Date(Date.now() - options.windowMs);
+  const count = await prisma.auditLog.count({
+    where: {
+      kind: options.kind,
+      createdAt: { gte: since },
+      ...(options.userId ? { userId: options.userId } : { ip: options.ip ?? "" }),
+      ...(options.postId ? { postId: options.postId } : {}),
+    },
+  });
+  if (count >= options.max) {
+    throw new CoolDownError(Math.ceil(options.windowMs / 1000), options.message);
+  }
+}

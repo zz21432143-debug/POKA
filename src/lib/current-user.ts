@@ -8,7 +8,7 @@ import {
   OAUTH_INTENT_COOKIE,
   OAUTH_NEXT_COOKIE,
 } from "@/lib/oauth-consent";
-import { readSessionValue, signSessionValue } from "@/lib/session";
+import { makeSessionToken, parseSessionToken } from "@/lib/session";
 import { liftExpiredSuspension } from "@/lib/account-restriction";
 import { roleFromFlags } from "@/lib/roles";
 
@@ -33,9 +33,10 @@ const COOKIE_OPTS = {
   maxAge: 60 * 60 * 24 * 30,
 };
 
-export async function setSessionNickname(nickname: string) {
+/** 로그인 쿠키 발급(회원 id · 쿠키 버전) */
+export async function setSessionUser(user: { id: string; sessionVersion: number }) {
   const jar = await cookies();
-  jar.set(SESSION_COOKIE, signSessionValue(nickname), COOKIE_OPTS);
+  jar.set(SESSION_COOKIE, makeSessionToken(user.id, user.sessionVersion), COOKIE_OPTS);
 }
 
 export async function clearSession() {
@@ -51,9 +52,11 @@ export async function clearSession() {
 
 async function findUserBySession() {
   const jar = await cookies();
-  const nickname = readSessionValue(jar.get(SESSION_COOKIE)?.value);
-  if (!nickname) return null;
-  return prisma.user.findUnique({ where: { nickname } });
+  const session = parseSessionToken(jar.get(SESSION_COOKIE)?.value);
+  if (!session) return null;
+  const user = await prisma.user.findUnique({ where: { id: session.userId } });
+  // 모든 기기 로그아웃 · 탈퇴로 버전이 바뀌었으면 예전 쿠키는 무효
+  return user && user.sessionVersion === session.version ? user : null;
 }
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {

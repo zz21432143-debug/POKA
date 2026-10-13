@@ -19,7 +19,7 @@ function DirectCard({ creative }: { creative: DirectCreative }) {
         height={150}
         className="aspect-[2/1] w-full object-cover"
       />
-      <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
+      <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white">
         {creative.mark}
       </span>
     </Link>

@@ -24,7 +24,7 @@ export default async function ContactPage() {
         <KakaoInquiryLink href={settings?.kakaoChannelUrl} className="w-full sm:w-fit" />
       </InfoSection>
       <InfoSection title="이메일">
-        <a href={`mailto:${email}`} className="w-fit font-bold break-all text-[#f3d9a4] underline underline-offset-4">
+        <a href={`mailto:${email}`} className="inline-flex min-h-10 w-fit items-center font-bold break-all text-[#f3d9a4] underline underline-offset-4">
           {email}
         </a>
         <p className="text-sm text-[#b7ab97]">닉네임과 문의 내용을 함께 적어 주시면 빠르게 확인할 수 있어요.</p>

@@ -14,9 +14,11 @@ export async function GET(
     const { id } = await context.params;
     const post = await prisma.post.findUnique({
       where: { id },
-      select: { boardType: true, hidden: true, jobContact: true, jobApplyValue: true, jobApplyMethod: true },
+      select: { boardType: true, hidden: true, jobKind: true, authorId: true, jobContact: true, jobApplyValue: true, jobApplyMethod: true },
     });
-    if (!post || post.boardType !== "JOBS" || post.hidden) {
+    // 개인 구직(운영 종료) 글은 상세 화면처럼 본인 · 관리자만
+    const seekingHidden = post?.jobKind === "SEEKING" && post.authorId !== user.id && !user.isAdmin;
+    if (!post || post.boardType !== "JOBS" || post.hidden || seekingHidden) {
       return NextResponse.json({ error: "구인 글을 찾을 수 없습니다." }, { status: 404 });
     }
     const contact = post.jobContact || post.jobApplyValue;
@@ -25,7 +27,7 @@ export async function GET(
     }
     return NextResponse.json({ contact });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "연락처를 불러오지 못했습니다.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("contact", error);
+    return NextResponse.json({ error: "연락처를 불러오지 못했습니다." }, { status: 500 });
   }
 }

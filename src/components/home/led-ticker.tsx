@@ -48,7 +48,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
       onBlur={() => setPaused(false)}
     >
       <div className="flex shrink-0 items-center pr-2 pl-2">
-        <span className="live-glow rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">LIVE</span>
+        <span className="live-glow rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide text-white">LIVE</span>
       </div>
       <div className="relative h-9 min-w-0 flex-1 overflow-hidden md:h-10">
         {/* 나가는 소식(위로 올라가며 사라짐) */}

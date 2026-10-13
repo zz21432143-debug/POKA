@@ -52,6 +52,8 @@ export async function withdrawAccount(userId: string) {
     where: { id: userId },
     data: {
       withdrawnAt: new Date(),
+      // 남아 있는 로그인 쿠키를 모두 무효로
+      sessionVersion: { increment: 1 },
       nickname: nick,
       email: null,
       kakaoId: null,

@@ -3,6 +3,7 @@ import { AccountPrivacyPanel } from "@/components/account/account-privacy-panel"
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { replaceToLogin } from "@/lib/history-redirect";
+import { logoutAllAction } from "@/lib/logout-action";
 
 export const metadata: Metadata = { title: "내 정보", robots: { index: false } };
 
@@ -37,6 +38,15 @@ export default async function AccountPage() {
           <dt className="text-muted-foreground">구글</dt>
           <dd>{links?.googleId ? "연결됨" : "연결 안 됨"}</dd>
         </dl>
+      </section>
+      <section aria-label="로그인 보안" className="rounded-xl border border-white/10 bg-[#151213] p-4 text-sm">
+        <h2 className="font-semibold text-[#E5E7EB]">로그인 보안</h2>
+        <p className="mt-1 text-[#cfd2d6]">휴대폰을 잃어버렸거나 다른 사람 기기에서 로그인했다면, 이 기기를 포함한 모든 기기에서 로그아웃하세요.</p>
+        <form action={logoutAllAction} className="mt-3">
+          <button type="submit" data-logout-all className="touch-target inline-flex min-h-11 items-center rounded-xl border border-rose-500/60 px-4 text-sm font-bold text-rose-200 hover:bg-rose-500/10">
+            모든 기기에서 로그아웃
+          </button>
+        </form>
       </section>
     </article>
   );

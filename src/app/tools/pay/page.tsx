@@ -17,7 +17,7 @@ export default async function PayPage() {
     <div className="flex flex-col gap-3">
       <header className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-        <Link href="/tools" className="text-xs font-bold text-[#c9a25c]">
+        <Link href="/tools" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
           ← 매장 관리
         </Link>
         <h1 className="text-2xl font-black text-white">급여 계산기</h1>

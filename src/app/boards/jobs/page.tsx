@@ -68,17 +68,20 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
     <div className="flex flex-col gap-4">
       <header className="board-intro">
         <BoardTitle sticker={BOARD_STICKER.jobs}>{region ? `${region} 구인구직` : "구인구직"}</BoardTitle>
-        <p className="mt-2">
+        {/* 휴대폰은 한 줄 설명 + 버튼 두 개를 나란히(공고가 첫 화면에 빨리 보이게) */}
+        <p className="mt-2 sm:hidden">지원 딜러 · 급구 대타 · 고정 · 팀 구인. 연락처는 로그인 후.</p>
+        <p className="mt-2 hidden sm:block">
           홀덤펍 지원 딜러·급구 대타·고정 딜러·팀 구인. 지역으로 골라 보고, 연락처는 로그인 회원만 봅니다.
           급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.
         </p>
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:flex sm:items-center">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:flex sm:items-center">
           <Link
             href="/boards/jobs/apply/write"
             className={cn(buttonVariants({ size: "touch" }), "relative z-10 gap-1.5")}
           >
             <PenSquareIcon className="size-4" />
-            지원 딜러 구인 등록
+            <span className="sm:hidden">구인 등록</span>
+            <span className="hidden sm:inline">지원 딜러 구인 등록</span>
           </Link>
           <Link
             href="/boards/jobs/urgent/write"
@@ -89,7 +92,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           </Link>
           <Link
             href="/boards/jobs/write"
-            className="inline-flex min-h-10 items-center justify-center text-sm font-semibold text-[#e7c98a] underline-offset-4 hover:underline sm:ml-1"
+            className="col-span-2 inline-flex min-h-10 items-center justify-center text-sm font-semibold text-[#e7c98a] underline-offset-4 hover:underline sm:ml-1"
           >
             고정 · 팀 구인 등록
           </Link>
@@ -135,7 +138,7 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
       <nav aria-label="지역별 홀덤 딜러 구인" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#9CA3AF]">
         <span className="font-semibold text-[#d1c7b5]">지역별 홀덤 딜러 구인</span>
         {JOB_REGIONS.map((name) => (
-          <Link key={name} href={`/jobs/${name}`} aria-current={name === region ? "page" : undefined} className="inline-flex min-h-9 items-center hover:text-white">
+          <Link key={name} href={`/jobs/${name}`} aria-current={name === region ? "page" : undefined} className="inline-flex min-h-10 min-w-10 items-center justify-center px-1 hover:text-white">
             {name}
           </Link>
         ))}

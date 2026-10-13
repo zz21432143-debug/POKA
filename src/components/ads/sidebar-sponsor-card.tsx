@@ -22,7 +22,7 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
             height={250}
             className="aspect-[300/250] w-full object-cover"
           />
-          <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white">
+          <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white">
             {creative.mark}
           </span>
         </Link>

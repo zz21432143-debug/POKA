@@ -16,13 +16,19 @@ export async function buyCosmetic(userId: string, cosmeticId: string) {
     return { error: "포인트가 부족합니다.", status: 400 as const };
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: { points: { decrement: cosmetic.pricePoints } },
-    }),
-    prisma.userCosmetic.create({ data: { userId, cosmeticId } }),
-  ]);
+  // 잔액이 충분할 때만 차감(동시에 눌러도 마이너스가 되지 않게). 같은 상품 중복 구매는 고유키가 막음.
+  const bought = await prisma
+    .$transaction(async (tx) => {
+      const paid = await tx.user.updateMany({
+        where: { id: userId, points: { gte: cosmetic.pricePoints } },
+        data: { points: { decrement: cosmetic.pricePoints } },
+      });
+      if (paid.count === 0) return false;
+      await tx.userCosmetic.create({ data: { userId, cosmeticId } });
+      return true;
+    })
+    .catch(() => false);
+  if (!bought) return { error: "포인트가 부족하거나 이미 보유한 상품입니다.", status: 400 as const };
 
   const { pushTicker } = await import("@/lib/ticker");
   await pushTicker({

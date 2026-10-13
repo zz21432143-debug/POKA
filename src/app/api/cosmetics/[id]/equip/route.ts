@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { equipCosmetic } from "@/lib/shop-actions";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -15,7 +16,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     }
     return NextResponse.json({ ok: true, kind: result.kind });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "착용에 실패했습니다.";
+    const message = publicErrorMessage(error, "착용에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

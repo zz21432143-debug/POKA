@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { forgetTickerName } from "@/lib/ticker";
-import { getCurrentUser, setSessionNickname } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { nicknameChangeBlocked } from "@/lib/nickname-change";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
 import { nicknameAvailability } from "@/lib/nickname-lookup";
 import { loadDisabledBaseWords } from "@/lib/forbidden-words";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     const availability = await nicknameAvailability(nickname, user.id);
     return NextResponse.json(availability);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "확인할 수 없습니다.";
+    const message = publicErrorMessage(error, "확인할 수 없습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -62,14 +63,13 @@ export async function POST(request: Request) {
         ...(usedFree ? {} : { nicknameTickets: { decrement: 1 } }),
       },
     });
-    await setSessionNickname(next);
     await forgetTickerName(user.nickname);
     return NextResponse.json({ ok: true, nickname: next, usedFree });
   } catch (error) {
     if (error instanceof AccountRestrictedError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
-    const message = error instanceof Error ? error.message : "닉네임을 바꾸지 못했습니다.";
+    const message = publicErrorMessage(error, "닉네임을 바꾸지 못했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { grantRewards } from "@/lib/exp";
 import { UPVOTE_RECEIVED_EXP, UPVOTE_RECEIVED_POINTS } from "@/lib/rewards";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   request: Request,
@@ -62,7 +63,13 @@ export async function POST(
     ]);
 
     const newlyUpvoted = value === 1 && existing?.value !== 1;
-    if (newlyUpvoted && post.authorId) {
+    // 추천 보상은 한 사람이 한 글에 한 번만(추천을 껐다 켰다 반복해도 다시 주지 않음)
+    const rewardedBefore =
+      newlyUpvoted && post.authorId
+        ? await prisma.auditLog.count({ where: { kind: "upvote-reward", userId: user.id, postId: id } })
+        : 1;
+    if (newlyUpvoted && post.authorId && rewardedBefore === 0) {
+      await prisma.auditLog.create({ data: { kind: "upvote-reward", userId: user.id, postId: id, ip: "-" } });
       await grantRewards(post.authorId, UPVOTE_RECEIVED_EXP, UPVOTE_RECEIVED_POINTS);
       const { maybePopularPost } = await import("@/lib/ticker");
       await maybePopularPost(id);
@@ -70,7 +77,7 @@ export async function POST(
 
     return NextResponse.json({ upvoteCount, downvoteCount, myVote: value });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "추천에 실패했습니다.";
+    const message = publicErrorMessage(error, "추천에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

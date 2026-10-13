@@ -89,14 +89,14 @@ export default async function GuideArticlePage({
       </section>
       <nav className="flex flex-wrap justify-between gap-3 text-sm font-semibold">
         {prev ? (
-          <Link href={`/info/guide/${prev.slug}`} className="text-primary">
+          <Link href={`/info/guide/${prev.slug}`} className="inline-flex min-h-11 items-center text-primary">
             ← {prev.title}
           </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Link href={`/info/guide/${next.slug}`} className="ml-auto text-primary">
+          <Link href={`/info/guide/${next.slug}`} className="ml-auto inline-flex min-h-11 items-center text-right text-primary">
             {next.title} →
           </Link>
         ) : null}

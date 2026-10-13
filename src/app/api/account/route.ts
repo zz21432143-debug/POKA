@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { clearSession, getCurrentUser } from "@/lib/current-user";
 import { WithdrawError, withdrawAccount } from "@/lib/account-delete";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function GET() {
   const user = await getCurrentUser().catch(() => null);
@@ -34,7 +35,7 @@ export async function DELETE(request: Request) {
     if (error instanceof WithdrawError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    const message = error instanceof Error ? error.message : "탈퇴에 실패했습니다.";
+    const message = publicErrorMessage(error, "탈퇴에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

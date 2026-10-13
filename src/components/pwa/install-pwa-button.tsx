@@ -163,7 +163,7 @@ export function InstallPwaButton({
           <button
             type="button"
             onClick={() => void install()}
-            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-2.5 text-xs font-bold text-[#1d1611] hover:bg-[#e7c98a]"
+            className="relative inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-2.5 text-xs font-bold text-[#1d1611] before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] hover:bg-[#e7c98a]"
           >
             <DownloadIcon className="size-3.5" />
             받기
@@ -172,7 +172,7 @@ export function InstallPwaButton({
             type="button"
             onClick={closeStrip}
             aria-label="앱 다운로드 안내 닫기"
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[#d1c7b5] hover:bg-white/10"
+            className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[#d1c7b5] before:absolute before:-inset-1.5 before:content-[''] hover:bg-white/10"
           >
             <XIcon className="size-3.5" />
           </button>

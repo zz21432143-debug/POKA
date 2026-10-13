@@ -12,7 +12,7 @@ export function AdSlotMap({ className = "" }: { className?: string }) {
   return (
     <figure className={`mx-auto grid w-full max-w-md content-start gap-1.5 ${className}`}>
       <figcaption className="text-xs font-bold text-[#9CA3AF]">PC 화면에서의 위치</figcaption>
-      <div className="grid grid-cols-[1.2fr_4fr] content-start items-start gap-1 rounded-lg border border-white/10 bg-[#120b0b] p-1.5 text-[10px] text-[#9CA3AF]">
+      <div className="grid grid-cols-[1.2fr_4fr] content-start items-start gap-1 rounded-lg border border-white/10 bg-[#120b0b] p-1.5 text-[11px] text-[#9CA3AF]">
         <div className="col-span-2 rounded bg-white/10 px-1 py-0.5">상단 메뉴</div>
         <div className="grid content-start gap-1">
           <div className="rounded bg-white/5 py-6 text-center">왼쪽 메뉴</div>
@@ -31,7 +31,7 @@ export function AdSlotMap({ className = "" }: { className?: string }) {
             <span className="h-1.5 rounded bg-white/15" />
             <span className="h-1.5 rounded bg-white/15" />
             <span className="h-1.5 rounded bg-white/15" />
-            <AdSlotTag k="C" className="aspect-[3/1] text-[10px]" />
+            <AdSlotTag k="C" className="aspect-[3/1] text-[11px]" />
             <span className="h-1.5 rounded bg-white/15" />
             <span className="text-center">글 목록</span>
           </div>

@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { parseAlertRegion } from "@/lib/job-status";
-import { pushEnabled } from "@/lib/push";
+import { isPushEndpoint, pushEnabled } from "@/lib/push";
+import { clientIp } from "@/lib/request";
+import { CoolDownError, assertAttemptLimit, writeAudit } from "@/lib/security";
 
 type Body = {
   region?: string;
@@ -20,9 +22,18 @@ export async function POST(request: Request) {
   const endpoint = body.subscription?.endpoint?.trim();
   const p256dh = body.subscription?.keys?.p256dh?.trim();
   const auth = body.subscription?.keys?.auth?.trim();
-  if (!region || !endpoint || !p256dh || !auth || !endpoint.startsWith("https://")) {
+  if (!region || !endpoint || !p256dh || !auth || !isPushEndpoint(endpoint) || endpoint.length > 1000 || p256dh.length > 200 || auth.length > 100) {
     return NextResponse.json({ error: "구독 정보를 확인하세요." }, { status: 400 });
   }
+  // 한 IP에서 1시간에 30번까지(지역 바꾸기 포함)
+  const ip = clientIp(request);
+  try {
+    await assertAttemptLimit({ kind: "push-sub", ip, max: 30, windowMs: 60 * 60 * 1000, message: "잠시 뒤에 다시 시도해 주세요." });
+  } catch (error) {
+    if (error instanceof CoolDownError) return NextResponse.json({ error: error.message }, { status: 429 });
+    throw error;
+  }
+  await writeAudit({ kind: "push-sub", ip }).catch(() => undefined);
   const user = await getCurrentUser().catch(() => null);
   await prisma.pushSubscription.upsert({
     where: { endpoint },

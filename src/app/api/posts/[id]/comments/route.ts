@@ -11,6 +11,7 @@ import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restr
 import { canRevealPrivatePost } from "@/lib/private-post";
 import { cookies } from "next/headers";
 import { UNLOCK_COOKIE, hasUnlock } from "@/lib/unlock-cookie";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(
   request: Request,
@@ -28,6 +29,9 @@ export async function POST(
     const content = body.content?.trim() ?? "";
     if (content.length < 1) {
       return NextResponse.json({ error: "댓글 내용을 입력하세요." }, { status: 400 });
+    }
+    if (content.length > 2000) {
+      return NextResponse.json({ error: "댓글은 2,000자까지 쓸 수 있습니다." }, { status: 400 });
     }
     await assertNoForbiddenWords(content);
 
@@ -96,7 +100,7 @@ export async function POST(
         { status: 429, headers: { "Retry-After": String(error.retryAfterSec) } },
       );
     }
-    const message = error instanceof Error ? error.message : "댓글 작성에 실패했습니다.";
+    const message = publicErrorMessage(error, "댓글 작성에 실패했습니다.");
     const status = message.includes("이미 출석") ? 409 : 400;
     return NextResponse.json({ error: message }, { status });
   }

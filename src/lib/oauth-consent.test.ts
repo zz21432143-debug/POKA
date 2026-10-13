@@ -37,3 +37,13 @@ describe("oauth consent", () => {
     assert.equal(parseOauthIntent("other"), "login");
   });
 });
+
+describe("safe next path", () => {
+  it("keeps site paths and blocks outside redirects", async () => {
+    const { safeNextPath } = await import("./oauth-consent");
+    assert.equal(safeNextPath("/posts/abc?x=1"), "/posts/abc?x=1");
+    for (const bad of ["//evil.com", "/\t/evil.com", "/\n/evil.com", `/${String.fromCharCode(92)}evil.com`, "https://evil.com", null, ""]) {
+      assert.equal(safeNextPath(bad), "/", String(bad));
+    }
+  });
+});

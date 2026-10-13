@@ -29,6 +29,19 @@ export function pushEnabled() {
 
 export type PushPayload = { title: string; body: string; url: string };
 
+/** 브라우저 푸시 서비스 주소만 받습니다(아무 서버로나 요청이 가지 않게). */
+const PUSH_HOSTS = ["fcm.googleapis.com", "android.googleapis.com", "push.apple.com", "push.services.mozilla.com", "notify.windows.com"];
+
+export function isPushEndpoint(endpoint: string) {
+  try {
+    const url = new URL(endpoint);
+    const host = url.hostname.toLowerCase();
+    return url.protocol === "https:" && PUSH_HOSTS.some((base) => host === base || host.endsWith(`.${base}`));
+  } catch {
+    return false;
+  }
+}
+
 /** 그 지역 구독자 + "전국" 구독자에게 새 급구를 알립니다. */
 export async function notifyRegion(region: string, payload: PushPayload) {
   if (!configure()) return { sent: 0 };

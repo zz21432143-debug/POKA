@@ -150,7 +150,7 @@ function PosterCard({ poster, focusable }: { poster: HomePoster; focusable: bool
         </>
       ) : (
         <>
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/30">
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-black/65 px-1.5 py-0.5 text-[11px] font-bold text-white ring-1 ring-white/30">
             {poster.mark}
           </span>
           <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-1.5 text-[11px] font-semibold leading-tight text-white sm:text-xs">

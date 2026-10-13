@@ -87,7 +87,7 @@ export function PostList({
                 <Badge
                   variant="secondary"
                   className={cn(
-                    "h-5 shrink-0 rounded-full px-2 text-[10px] font-semibold",
+                    "h-5 shrink-0 rounded-full px-2 text-[11px] font-semibold",
                     boardBadgeClass(post.boardType),
                   )}
                 >
@@ -104,7 +104,7 @@ export function PostList({
                   }
                 >
                   {post.isPrivate ? (
-                    <span className="mr-1.5 align-middle rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
+                    <span className="mr-1.5 align-middle rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[11px] font-semibold text-amber-200">
                       비밀글
                     </span>
                   ) : null}
@@ -114,7 +114,7 @@ export function PostList({
                   <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#9CA3AF]">
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[10px] font-bold text-[#e7c98a]">
+                      <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[11px] font-bold text-[#e7c98a]">
                         Lv.{post.author.level}
                       </span>
                     ) : null}
@@ -198,7 +198,7 @@ function BoardSheet({
                     <Badge
                       variant="secondary"
                       className={cn(
-                        "h-5 shrink-0 rounded-full px-2 text-[10px] font-semibold",
+                        "h-5 shrink-0 rounded-full px-2 text-[11px] font-semibold",
                         boardBadgeClass(post.boardType),
                       )}
                     >
@@ -206,7 +206,7 @@ function BoardSheet({
                     </Badge>
                   ) : null}
                   {post.isPrivate ? (
-                    <span className="shrink-0 rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[10px] font-semibold text-amber-200">
+                    <span className="shrink-0 rounded-full bg-amber-900/40 px-1.5 py-0.5 text-[11px] font-semibold text-amber-200">
                       비밀글
                     </span>
                   ) : null}

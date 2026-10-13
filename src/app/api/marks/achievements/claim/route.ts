@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { grantLevelRewardMarks } from "@/lib/grant-reward-marks";
 import { achievementBySlug } from "@/lib/yokai-achievements";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
     const granted = await grantLevelRewardMarks(user.id, user.level);
     return NextResponse.json({ ok: true, granted });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "보상을 받지 못했습니다.";
+    const message = publicErrorMessage(error, "보상을 받지 못했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

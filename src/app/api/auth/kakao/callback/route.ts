@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   });
   const me = (await meRes.json()) as {
     id?: number | string;
-    kakao_account?: { email?: string; profile?: { nickname?: string } };
+    kakao_account?: { email?: string; is_email_valid?: boolean; is_email_verified?: boolean; profile?: { nickname?: string } };
     properties?: { nickname?: string };
   };
   if (me.id == null) {
@@ -50,7 +50,8 @@ export async function GET(request: Request) {
   return finishSocialAuth(request, {
     provider: "kakao",
     providerId: String(me.id),
-    email: me.kakao_account?.email ?? null,
+    // 카카오가 인증한 이메일만 씁니다(인증 안 된 이메일로 남의 계정에 이어지지 않게).
+    email: me.kakao_account?.is_email_valid && me.kakao_account.is_email_verified ? (me.kakao_account.email ?? null) : null,
     nickname: me.kakao_account?.profile?.nickname ?? me.properties?.nickname ?? "카카오회원",
   });
 }

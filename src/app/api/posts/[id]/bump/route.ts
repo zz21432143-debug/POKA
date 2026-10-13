@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { canBumpNow, nextBumpAt } from "@/lib/job-bump";
 import { jobStatus } from "@/lib/job-status";
 import { isStaff } from "@/lib/roles";
+import { publicErrorMessage } from "@/lib/public-error";
 
 /** 모집중인 구인 공고를 목록 맨 위(프리미엄 다음)로 끌어올립니다. 작성자는 하루 한 번. */
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
@@ -33,7 +34,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     const updated = await prisma.post.update({ where: { id }, data: { bumpedAt: new Date() } });
     return NextResponse.json({ ok: true, bumpedAt: updated.bumpedAt.toISOString() });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "처리에 실패했습니다.";
+    const message = publicErrorMessage(error, "처리에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

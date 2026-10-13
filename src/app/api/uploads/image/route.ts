@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { canWriteBoard } from "@/lib/permissions";
@@ -12,6 +13,10 @@ import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, imageUrl } from "@/lib/uploads";
  * 구인·구직 글은 글 저장 단계에서 사진을 받지 않습니다. 회원은 1시간에 40장(MEMBER_UPLOADS_PER_HOUR)까지 올릴 수 있습니다.
  * 브라우저에서 미리 줄인 JPEG/PNG/WebP를 multipart(file)로 받아 DB에 저장합니다.
  */
+/** 실제 그림 크기 한도(압축 폭탄 · 너무 큰 사진 막기) */
+const MAX_SIDE = 8192;
+const MAX_PIXELS = 40_000_000;
+
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "로그인된 회원이 없습니다." }, { status: 401 });
@@ -40,8 +45,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "이미지가 너무 큽니다(최대 3MB)." }, { status: 413 });
   }
   const data = new Uint8Array(await file.arrayBuffer());
+  // 실제 파일 내용으로 형식 · 크기 확인(이름만 바꾼 파일, 너무 큰 그림 막기)
+  const meta = await sharp(data, { limitInputPixels: MAX_PIXELS }).metadata().catch(() => null);
+  const realMime = meta?.format === "jpeg" ? "image/jpeg" : meta?.format === "png" ? "image/png" : meta?.format === "webp" ? "image/webp" : null;
+  if (!meta || !realMime || !meta.width || !meta.height) {
+    return NextResponse.json({ error: "JPG, PNG, WebP 이미지만 올릴 수 있습니다." }, { status: 400 });
+  }
+  if (meta.width > MAX_SIDE || meta.height > MAX_SIDE) {
+    return NextResponse.json({ error: `사진이 너무 큽니다(가로·세로 ${MAX_SIDE}px 이하).` }, { status: 413 });
+  }
   const saved = await prisma.uploadedImage.create({
-    data: { mime: file.type, data, size: data.byteLength, uploaderId: user.id },
+    data: { mime: realMime, data, size: data.byteLength, uploaderId: user.id },
     select: { id: true },
   });
   return NextResponse.json({ id: saved.id, url: imageUrl(saved.id) });

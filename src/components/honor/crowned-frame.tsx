@@ -64,7 +64,7 @@ const TITLE_ICON: Record<1 | 2 | 3, string> = { 1: "👹", 2: "🪙", 3: "🏮" 
 /** 칭호 배지(순위·이름으로) — 랭킹·안내에서 */
 export function TitleChip({ rank, name, className }: { rank: 1 | 2 | 3; name: string; className?: string }) {
   return (
-    <span data-pot-title={rank} className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[10px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}>
+    <span data-pot-title={rank} className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}>
       {TITLE_ICON[rank]} {name}
     </span>
   );
@@ -79,7 +79,7 @@ export function PotTitleBadge({ nickname, className }: { nickname: string; class
     <span
       data-pot-title={rank}
       title={`팟 계산 ${DIFFICULTY[info.difficulty].label} 랭킹(${PERIOD_LABEL[info.period]}) ${rank}위`}
-      className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[10px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}
+      className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}
     >
       {TITLE_ICON[rank]} {info.names[rank]}
     </span>

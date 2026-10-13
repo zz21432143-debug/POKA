@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clearSession } from "@/lib/current-user";
+import { publicErrorMessage } from "@/lib/public-error";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "처리할 수 없습니다.";
+    const message = publicErrorMessage(error, "처리할 수 없습니다.");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

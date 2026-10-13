@@ -45,7 +45,7 @@ export default function AboutPage() {
           <li key={item.title}>
             <InfoSection title={item.title}>
               <p>{item.body}</p>
-              <Link href={item.href} className="w-fit font-bold text-[#f3d9a4] underline underline-offset-4">
+              <Link href={item.href} className="inline-flex min-h-10 w-fit items-center font-bold text-[#f3d9a4] underline underline-offset-4">
                 바로 가기
               </Link>
             </InfoSection>
