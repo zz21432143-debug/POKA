@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
+import { sizedImage } from "@/lib/image-url";
 
 export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
   const fill = pickFill(unit, "cta", true);
@@ -15,7 +16,7 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={creative.imageUrl ?? ""}
+            src={sizedImage(creative.imageUrl, 480)}
             alt={creative.title || creative.advertiser}
             width={300}
             height={250}

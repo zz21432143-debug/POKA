@@ -204,7 +204,7 @@ body {
 /* 호리병 대기실 배경. 흐림 없이 원본이 보이도록 위·아래만 살짝 어둡게 합니다. */
 .felt-bg::before {
   inset: 0;
-  background: url("/theme/yokai-gourd-bg.jpg") center top / cover no-repeat;
+  background: url("/theme/yokai-gourd-bg.webp") center top / cover no-repeat;
 }
 
 .felt-bg::after {

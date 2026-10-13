@@ -3,6 +3,7 @@ import { getFeedCreatives } from "@/lib/inventory";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
 import Link from "next/link";
+import { sizedImage } from "@/lib/image-url";
 
 function DirectCard({ creative }: { creative: DirectCreative }) {
   return (
@@ -12,7 +13,7 @@ function DirectCard({ creative }: { creative: DirectCreative }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={creative.imageUrl ?? ""}
+        src={sizedImage(creative.imageUrl, 720)}
         alt={creative.title || creative.advertiser}
         width={300}
         height={150}

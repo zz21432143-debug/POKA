@@ -16,7 +16,7 @@ export function HomeDealerTools() {
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-white">매장 관리</h2>
         <span className="rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">POKA 하나로 · 회원 무료</span>
-        <Link href="/tools" className="ml-auto inline-flex items-center text-xs font-bold text-[#e7c98a]">
+        <Link href="/tools" aria-label="매장 관리 툴 전체 보기" className="ml-auto inline-flex items-center text-xs font-bold text-[#e7c98a]">
           전체 보기
           <ChevronRightIcon className="size-4" />
         </Link>

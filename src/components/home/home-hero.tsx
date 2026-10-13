@@ -11,6 +11,9 @@ export function HomeHero() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/hero/poka-hero.webp"
+        // 휴대폰은 작은 그림(24KB), 넓은 화면은 원본
+        srcSet="/images/hero/poka-hero-720.webp 720w, /images/hero/poka-hero.webp 1254w"
+        sizes="(min-width: 640px) 62vw, 78vw"
         alt=""
         aria-hidden
         width={1254}

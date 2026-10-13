@@ -2,6 +2,7 @@ import Link from "next/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { adsenseSlotId } from "@/lib/adsense";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
+import { sizedImage } from "@/lib/image-url";
 
 /**
  * 글 목록 속 광고(C). 3번째 글 아래에 들어갑니다.
@@ -32,14 +33,14 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
           {/* 3:1이 아닌 예전 사진도 잘리지 않게: 같은 사진을 흐리게 깔고 가운데에 전체를 보여 줍니다. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={creative.imageUrl}
+            src={sizedImage(creative.imageUrl, 480)}
             alt=""
             aria-hidden
             className="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-xl"
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={creative.imageUrl}
+            src={sizedImage(creative.imageUrl, 480)}
             alt={label}
             width={1200}
             height={400}
