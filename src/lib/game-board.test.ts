@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { applyClock, boardStats, clockText, clockView, defaultBoard, makeStructure, normalizeBoard, prizeLines, type GameBoardData } from "./game-board";
+import { applyClock, boardStats, clockText, clockView, defaultBoard, makeStructure, normalizeBoard, type GameBoardData } from "./game-board";
 
 const MIN = 60_000;
 function board(levels = [20, 20, 10, 20].map((minutes, i) => (i === 2 ? { sb: 0, bb: 0, ante: 0, minutes, isBreak: true } : { sb: 100 * (i + 1), bb: 200 * (i + 1), ante: 200 * (i + 1), minutes }))): GameBoardData {
@@ -69,10 +69,29 @@ describe("game board data", () => {
     assert.deepEqual(s.slice(0, 3).map((l) => l.bb), [200, 300, 400]);
   });
 
-  it("averages the stack over remaining players", () => {
-    const d = { ...defaultBoard(), entries: 40, remaining: 25, startStack: 30_000, rebuys: 10, rebuyStack: 30_000, addons: 5, addonStack: 20_000 };
-    assert.deepEqual(boardStats(d), { totalChips: 1_600_000, avgStack: 64_000 });
+  it("averages the stack over live players (rebuy-ins are inside entries)", () => {
+    // 엔트리 40(리바인 10 포함) × 3만 + 얼리 20 × 5천 + 애드온 5 × 2만 = 140만 / 25명
+    const d = { ...defaultBoard(), entries: 40, remaining: 25, startStack: 30_000, rebuys: 10, earlies: 20, earlyStack: 5_000, addonOn: true, addons: 5, addonStack: 20_000 };
+    assert.deepEqual(boardStats(d), { totalChips: 1_400_000, avgStack: 56_000 });
+    // 애드온을 화면에서 끄면 애드온 칩은 안 셈
+    assert.equal(boardStats({ ...d, addonOn: false }).totalChips, 1_300_000);
     assert.equal(boardStats({ ...d, remaining: 0 }).avgStack, 0);
+  });
+
+  it("counts down to registration close (end of level N, breaks skipped in numbering)", () => {
+    // 레벨1 20분 · 레벨2 20분 · 휴식 10분 · 레벨3 20분
+    const d = { ...board(), regLevel: 3 };
+    d.clock.runningSince = 0;
+    assert.equal(clockView(d, 5 * MIN).regCloseMs, 65 * MIN);
+    assert.equal(clockView(d, 45 * MIN).regCloseMs, 25 * MIN, "휴식 중에도 레벨3 끝까지");
+    assert.ok(clockView(d, 69 * MIN).regCloseMs! <= MIN);
+    // 레벨 2까지 등록: 휴식에 들어가면 마감
+    const d2 = { ...board(), regLevel: 2 };
+    d2.clock.runningSince = 0;
+    assert.equal(clockView(d2, 30 * MIN).regCloseMs, 10 * MIN);
+    assert.deepEqual([clockView(d2, 45 * MIN).regCloseMs, clockView(d2, 45 * MIN).regClosed], [null, true]);
+    // 안 정하면 표시 안 함
+    assert.deepEqual([clockView(board(), 0).regCloseMs, clockView(board(), 0).regClosed], [null, false]);
   });
 
   it("cleans bad input", () => {
@@ -86,12 +105,15 @@ describe("game board data", () => {
     assert.ok(normalizeBoard(null).levels.length > 0);
   });
 
-  it("formats prize lines and clock", () => {
-    assert.deepEqual(prizeLines("1위 300만\n\n2위   150만\nGTD 1,000만"), [
-      { place: "1위", amount: "300만" },
-      { place: "2위", amount: "150만" },
-      { place: "GTD", amount: "1,000만" },
+  it("converts prizes and formats the clock", () => {
+    // 예전 글 상금은 순위 줄로(1·2·3위 금·은·동)
+    assert.deepEqual(normalizeBoard({ prize: "1위 300만\n\n2위   150만\nGTD 1,000만" }).prizes, [
+      { place: "1위", amount: "300만", color: "gold" },
+      { place: "2위", amount: "150만", color: "silver" },
+      { place: "GTD", amount: "1,000만", color: "bronze" },
     ]);
+    // 이상한 색은 순위 기본 색으로
+    assert.equal(normalizeBoard({ prizes: [{ place: "1위", amount: "1", color: "nope" }] }).prizes[0].color, "gold");
     assert.equal(clockText(20 * MIN), "20:00");
     assert.equal(clockText(61_500), "01:02");
     assert.equal(clockText(62 * MIN), "1:02:00");

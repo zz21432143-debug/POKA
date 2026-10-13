@@ -1,5 +1,5 @@
 /**
- * 게임 현황판(토너먼트 시계): 블라인드 구조 · 레벨 시계 · 인원 · 평균 스택 · 상금 · 공지.
+ * 게임 현황판(토너먼트 시계): 블라인드 구조 · 레벨 시계 · 플레이어 · 평균 스택 · 프라이즈 · 공지.
  * 계정마다 따로 저장(비공개)하고, 주인이 켜면 로그인 없이 보는 TV 링크(/g/값)를 줍니다.
  * 시계는 서버 시각 기준(runningSince)이라 조작하는 휴대폰과 TV가 같은 시간을 보여 줍니다.
  */
@@ -15,26 +15,53 @@ export type BoardClock = {
   runningSince: number | null;
 };
 
+/** 프라이즈 글씨 색(화면에서 고름) */
+export const PRIZE_COLORS = {
+  gold: { label: "금색", hex: "#fcd34d" },
+  silver: { label: "은색", hex: "#e5e7eb" },
+  bronze: { label: "동색", hex: "#f0a868" },
+  red: { label: "빨강", hex: "#f87171" },
+  pink: { label: "분홍", hex: "#f9a8d4" },
+  purple: { label: "보라", hex: "#c4b5fd" },
+  sky: { label: "하늘", hex: "#7dd3fc" },
+  green: { label: "초록", hex: "#86efac" },
+  white: { label: "흰색", hex: "#ffffff" },
+} as const;
+export type PrizeColor = keyof typeof PRIZE_COLORS;
+export type PrizeRow = { place: string; amount: string; color: PrizeColor };
+/** 순위별 기본 색: 1위 금 · 2위 은 · 3위 동 · 나머지 흰색 */
+export const defaultPrizeColor = (index: number): PrizeColor => (["gold", "silver", "bronze"] as const)[index] ?? "white";
+
 export type GameBoardData = {
   name: string;
   /** 이름 아래 작은 글씨(예: POKA DAY-1) */
   subtitle: string;
   levels: BoardLevel[];
   startStack: number;
+  /** 토탈 엔트리(처음 바이인 + 리바인 모두) */
   entries: number;
+  /** 라이브 플레이어(지금 남은 사람) */
   remaining: number;
+  /** 리바인 수(엔트리 안에 포함) */
   rebuys: number;
-  rebuyStack: number;
+  /** 얼리칩 받은 수 · 얼리칩 */
+  earlies: number;
+  earlyStack: number;
+  /** 애드온 화면에 보이기 · 수 · 칩 */
+  addonOn: boolean;
   addons: number;
   addonStack: number;
-  /** 상금(한 줄에 하나: "1위 300만") */
-  prize: string;
+  /** 등록 마감: 이 레벨(휴식 빼고 센 번호)이 끝날 때까지 등록 가능. 0이면 표시 안 함 */
+  regLevel: number;
+  /** 프라이즈 위 문구(예: GTD 1,000만) · 순위별 줄 */
+  prizeTitle: string;
+  prizes: PrizeRow[];
   /** 아래 흐르는 공지 */
   notice: string;
   clock: BoardClock;
 };
 
-export const BOARD_LIMITS = { levels: 60, name: 30, subtitle: 40, prize: 600, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
+export const BOARD_LIMITS = { levels: 60, name: 30, subtitle: 40, prizes: 12, prizeText: 24, prizeTitle: 30, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
 
 /** 블라인드 구조 만들기(BB 앤티 = BB): 시작 BB부터 레벨마다 올리고, every 레벨마다 휴식 */
 export function makeStructure({ startBb = 200, minutes = 20, count = 16, breakEvery = 4, breakMinutes = 10 } = {}): BoardLevel[] {
@@ -58,10 +85,14 @@ export function defaultBoard(): GameBoardData {
     entries: 0,
     remaining: 0,
     rebuys: 0,
-    rebuyStack: 30_000,
+    earlies: 0,
+    earlyStack: 5_000,
+    addonOn: false,
     addons: 0,
-    addonStack: 0,
-    prize: "",
+    addonStack: 20_000,
+    regLevel: 0,
+    prizeTitle: "",
+    prizes: [],
     notice: "",
     clock: { level: 0, elapsedMs: 0, runningSince: null },
   };
@@ -72,6 +103,27 @@ const int = (v: unknown, min: number, max: number, fallback = 0) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
 };
 const text = (v: unknown, max: number) => String(v ?? "").slice(0, max);
+
+/** 프라이즈 줄 정리. 예전 글 상금("1위 300만" 줄마다)도 줄로 바꿔 줌 */
+function normalizePrizes(rows: unknown, legacy: unknown): PrizeRow[] {
+  if (Array.isArray(rows)) {
+    return rows.slice(0, BOARD_LIMITS.prizes).map((x, i) => {
+      const row = (x ?? {}) as Partial<PrizeRow>;
+      const color = String(row.color) in PRIZE_COLORS ? (row.color as PrizeColor) : defaultPrizeColor(i);
+      return { place: text(row.place, BOARD_LIMITS.prizeText), amount: text(row.amount, BOARD_LIMITS.prizeText), color };
+    });
+  }
+  if (typeof legacy !== "string") return [];
+  return legacy
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, BOARD_LIMITS.prizes)
+    .map((line, i) => {
+      const m = /^(\S+)\s+(.+)$/.exec(line);
+      return { place: text(m ? m[1] : "", BOARD_LIMITS.prizeText), amount: text(m ? m[2] : line, BOARD_LIMITS.prizeText), color: defaultPrizeColor(i) };
+    });
+}
 
 /** 밖에서 받은 값 정리(이상한 값은 고치거나 버림) */
 export function normalizeBoard(raw: unknown): GameBoardData {
@@ -100,10 +152,14 @@ export function normalizeBoard(raw: unknown): GameBoardData {
     entries: int(r.entries, 0, BOARD_LIMITS.players),
     remaining: int(r.remaining, 0, BOARD_LIMITS.players),
     rebuys: int(r.rebuys, 0, BOARD_LIMITS.players),
-    rebuyStack: int(r.rebuyStack, 0, BOARD_LIMITS.chips, d.rebuyStack),
+    earlies: int(r.earlies, 0, BOARD_LIMITS.players),
+    earlyStack: int(r.earlyStack, 0, BOARD_LIMITS.chips, d.earlyStack),
+    addonOn: Boolean(r.addonOn),
     addons: int(r.addons, 0, BOARD_LIMITS.players),
-    addonStack: int(r.addonStack, 0, BOARD_LIMITS.chips),
-    prize: text(r.prize, BOARD_LIMITS.prize),
+    addonStack: int(r.addonStack, 0, BOARD_LIMITS.chips, d.addonStack),
+    regLevel: int(r.regLevel, 0, BOARD_LIMITS.levels),
+    prizeTitle: text(r.prizeTitle, BOARD_LIMITS.prizeTitle),
+    prizes: normalizePrizes(r.prizes, (r as { prize?: unknown }).prize),
     notice: text(r.notice, BOARD_LIMITS.notice),
     clock: {
       level: int(c.level, 0, Math.max(0, levels.length - 1)),
@@ -128,6 +184,10 @@ export type ClockView = {
   next: BoardLevel | null;
   /** 다음 휴식까지 남은 시간(ms). 지금이 휴식이거나 휴식이 없으면 null */
   nextBreakMs: number | null;
+  /** 등록 마감까지 남은 시간(ms). 마감 레벨을 안 정했으면 null */
+  regCloseMs: number | null;
+  /** 등록 마감 레벨이 이미 끝남 */
+  regClosed: boolean;
 };
 
 /** 시계 보기: 기준 레벨부터 흐른 시간만큼 레벨을 넘기며 지금 레벨 · 남은 시간 계산 */
@@ -153,15 +213,37 @@ export function clockView(data: GameBoardData, now: number): ClockView {
       acc += levelMs(levels[j]);
     }
   }
+  // 등록 마감: regLevel번째 레벨(휴식 빼고 센 번호)이 끝나는 시각까지
+  const number = Math.max(1, levels.slice(0, i + 1).filter((l) => !l.isBreak).length);
+  let regCloseMs: number | null = null;
+  let regClosed = false;
+  if (data.regLevel > 0) {
+    // 지금까지 센 레벨 번호(휴식이면 직전 레벨 번호)
+    const cur = levels.slice(0, i + 1).filter((l) => !l.isBreak).length;
+    if (finished || (levels[i].isBreak ? cur >= data.regLevel : cur > data.regLevel)) regClosed = true;
+    else {
+      let acc = remainingMs;
+      let n = cur;
+      if (levels[i].isBreak || n < data.regLevel) {
+        for (let j = i + 1; j < levels.length; j++) {
+          acc += levelMs(levels[j]);
+          if (!levels[j].isBreak && ++n === data.regLevel) break;
+        }
+      }
+      regCloseMs = acc;
+    }
+  }
   return {
     index: i,
     level: levels[i],
-    number: Math.max(1, levels.slice(0, i + 1).filter((l) => !l.isBreak).length),
+    number,
     remainingMs,
     running: running && !finished,
     finished,
     next: levels[i + 1] ?? null,
     nextBreakMs,
+    regCloseMs,
+    regClosed,
   };
 }
 
@@ -197,24 +279,11 @@ export function applyClock(data: GameBoardData, op: ClockOp, now: number): Board
   }
 }
 
-/** 총 칩 · 평균 스택(남은 인원 기준) */
+/** 총 칩(엔트리 × 시작 스택 + 얼리 × 얼리칩 + 애드온 × 애드온 칩) · 평균 스택(라이브 플레이어 기준). 리바인은 엔트리에 들어 있음 */
 export function boardStats(data: GameBoardData) {
-  const totalChips = data.entries * data.startStack + data.rebuys * data.rebuyStack + data.addons * data.addonStack;
+  const totalChips = data.entries * data.startStack + data.earlies * data.earlyStack + (data.addonOn ? data.addons * data.addonStack : 0);
   const avgStack = data.remaining > 0 ? Math.round(totalChips / data.remaining) : 0;
   return { totalChips, avgStack };
-}
-
-/** 상금 줄 나누기: "1위 300만" → ["1위", "300만"] */
-export function prizeLines(prize: string) {
-  return prize
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .slice(0, 12)
-    .map((line) => {
-      const m = /^(\S+)\s+(.+)$/.exec(line);
-      return m ? { place: m[1], amount: m[2] } : { place: "", amount: line };
-    });
 }
 
 /** 남은 시간 "12:05" / 한 시간 넘으면 "1:02:05" */

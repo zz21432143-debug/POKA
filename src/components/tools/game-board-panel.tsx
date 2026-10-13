@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { BOARD_LIMITS, clockText, clockView, makeStructure, type BoardLevel, type ClockOp, type GameBoardData } from "@/lib/game-board";
+import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type PrizeColor, type PrizeRow } from "@/lib/game-board";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 
@@ -30,7 +30,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
-  const [tab, setTab] = useState<"play" | "setup">("play");
+  const [tab, setTab] = useState<"play" | "prize" | "setup">("play");
   const dirty = useRef(false);
   const saveTimer = useRef<number | null>(null);
   const inBrowser = useInBrowser();
@@ -241,6 +241,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
                 {(
                   [
                     ["play", "진행"],
+                    ["prize", "프라이즈"],
                     ["setup", "설정 · 블라인드"],
                   ] as const
                 ).map(([key, label]) => (
@@ -252,7 +253,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
             </div>
           </section>
 
-          {tab === "play" ? <PlayControls data={draft} now={now} onClock={clock} onEdit={edit} /> : <SetupForm data={draft} current={clockView(draft, now).index} onEdit={edit} onJump={(index) => void clock({ op: "jump", index })} />}
+          {tab === "play" ? <PlayControls data={draft} now={now} onClock={clock} onEdit={edit} /> : tab === "prize" ? <PrizeForm data={draft} onEdit={edit} /> : <SetupForm data={draft} current={clockView(draft, now).index} onEdit={edit} onJump={(index) => void clock({ op: "jump", index })} />}
 
           {/* 보기 전용 링크 */}
           <section className="ink-panel grid gap-2 rounded-2xl p-3 sm:p-4">
@@ -353,11 +354,30 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
       </section>
 
       <section className="ink-panel grid content-start gap-2 rounded-2xl p-3 sm:p-4">
-        <h2 className="text-base font-black text-white">인원</h2>
-        <Counter label="남은 인원" hint="탈락하면 −1" value={data.remaining} onChange={(v) => onEdit({ remaining: v })} />
-        <Counter label="엔트리" hint="+1 하면 남은 인원도 +1" value={data.entries} onChange={(v) => onEdit({ entries: v, remaining: Math.max(0, data.remaining + (v - data.entries)) })} />
-        <Counter label="리바이 · 리엔트리" hint="칩만 더해짐" value={data.rebuys} onChange={(v) => onEdit({ rebuys: v })} />
-        <Counter label="애드온" value={data.addons} onChange={(v) => onEdit({ addons: v })} />
+        <h2 className="flex items-baseline justify-between text-base font-black text-white">
+          플레이어
+          <span className="text-sm font-bold text-zinc-400 tabular-nums">
+            화면: {won(data.remaining)} / {won(data.entries)}
+          </span>
+        </h2>
+        <Counter label="라이브 플레이어" hint="탈락하면 −1" value={data.remaining} onChange={(v) => onEdit({ remaining: v })} />
+        <Counter label="토탈 엔트리" hint="새 바이인 +1 → 플레이어도 +1" value={data.entries} onChange={(v) => onEdit({ entries: v, remaining: Math.max(0, data.remaining + (v - data.entries)) })} />
+        <Counter
+          label="리바인"
+          hint="+1 → 엔트리 · 플레이어도 +1"
+          value={data.rebuys}
+          onChange={(v) => {
+            const d = v - data.rebuys;
+            onEdit({ rebuys: v, entries: Math.max(0, data.entries + d), remaining: Math.max(0, data.remaining + d) });
+          }}
+        />
+        <Counter label="얼리" hint={`얼리칩 받은 수 · 1명 ${won(data.earlyStack)}칩`} value={data.earlies} onChange={(v) => onEdit({ earlies: v })} />
+        <label className="flex min-h-11 items-center gap-2 rounded-xl bg-black/50 px-3 text-sm font-black text-white">
+          <input type="checkbox" checked={data.addonOn} onChange={(e) => onEdit({ addonOn: e.target.checked })} className="size-5 accent-amber-400" />
+          애드온 화면에 보이기
+          <span className="ml-auto text-xs font-bold text-zinc-500">끄면 화면 · 총 칩에서 빠짐</span>
+        </label>
+        {data.addonOn ? <Counter label="애드온" hint={`1명 ${won(data.addonStack)}칩`} value={data.addons} onChange={(v) => onEdit({ addons: v })} /> : null}
       </section>
     </div>
   );
@@ -410,8 +430,8 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
         <div className="grid grid-cols-3 gap-2">
           {(
             [
-              ["startStack", "시작 스택"],
-              ["rebuyStack", "리바이 칩"],
+              ["startStack", "시작 스택(리바인도 같음)"],
+              ["earlyStack", "얼리칩"],
               ["addonStack", "애드온 칩"],
             ] as const
           ).map(([key, text]) => (
@@ -422,8 +442,15 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
           ))}
         </div>
         <label className={label}>
-          상금(한 줄에 하나 · 예: 1위 300만)
-          <textarea value={data.prize} maxLength={BOARD_LIMITS.prize} rows={4} onChange={(e) => onEdit({ prize: e.target.value })} placeholder={"1위 300만\n2위 150만\n3위 80만"} className="w-full min-w-0 rounded-lg border border-white/20 bg-black p-2 text-base font-bold text-white" />
+          등록 마감(이 레벨이 끝날 때까지 등록 가능)
+          <select value={data.regLevel} onChange={(e) => onEdit({ regLevel: Number(e.target.value) })} className={field}>
+            <option value={0}>표시 안 함</option>
+            {Array.from({ length: data.levels.filter((l) => !l.isBreak).length }, (_, i) => (
+              <option key={i + 1} value={i + 1}>
+                레벨 {i + 1} 끝날 때까지
+              </option>
+            ))}
+          </select>
         </label>
         <label className={label}>
           아래 흐르는 공지
@@ -543,3 +570,75 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
   );
 }
 
+/* ───────────── 프라이즈: 순위 · 금액 · 색 ───────────── */
+
+function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<GameBoardData>) => void }) {
+  const rows = data.prizes;
+  const set = (next: PrizeRow[]) => onEdit({ prizes: next });
+  const change = (i: number, c: Partial<PrizeRow>) => set(rows.map((r, j) => (j === i ? { ...r, ...c } : r)));
+  const up = (i: number) => {
+    if (i <= 0) return;
+    const next = [...rows];
+    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+    set(next);
+  };
+  const field = "h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base font-black";
+  return (
+    <section data-prize-form className="ink-panel grid gap-3 rounded-2xl p-3 sm:p-4">
+      <h2 className="text-base font-black text-white">프라이즈</h2>
+      <p className="text-sm text-[#D1D5DB]">TV 화면 오른쪽에 나옵니다. 순위마다 글씨 색을 고를 수 있어요(1위 금 · 2위 은 · 3위 동이 기본).</p>
+      <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
+        위 문구(예: GTD 1,000만 · 총 상금 1,200만)
+        <input value={data.prizeTitle} maxLength={BOARD_LIMITS.prizeTitle} onChange={(e) => onEdit({ prizeTitle: e.target.value })} className={cn(field, "text-amber-200")} />
+      </label>
+      <ol className="grid gap-2">
+        {rows.map((row, i) => (
+          <li key={i} data-prize-edit={i} className="grid gap-2 rounded-xl border border-white/10 bg-black/50 p-2">
+            <div className="grid grid-cols-[minmax(0,5rem)_minmax(0,1fr)_auto] gap-2">
+              <input aria-label={`${i + 1}번째 순위`} value={row.place} maxLength={BOARD_LIMITS.prizeText} onChange={(e) => change(i, { place: e.target.value })} placeholder={`${i + 1}위`} style={{ color: PRIZE_COLORS[row.color].hex }} className={field} />
+              <input aria-label={`${i + 1}번째 금액`} value={row.amount} maxLength={BOARD_LIMITS.prizeText} onChange={(e) => change(i, { amount: e.target.value })} placeholder="300만" style={{ color: PRIZE_COLORS[row.color].hex }} className={cn(field, "tabular-nums")} />
+              <div className="flex gap-1">
+                <button type="button" aria-label="위로" onClick={() => up(i)} disabled={i === 0} className="size-11 rounded-lg border border-white/15 text-sm disabled:opacity-30">
+                  ▲
+                </button>
+                <button type="button" aria-label="줄 지우기" onClick={() => set(rows.filter((_, j) => j !== i))} className="size-11 rounded-lg border border-rose-400/40 text-sm text-rose-200">
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label={`${i + 1}번째 색`} className="flex flex-wrap gap-1.5">
+              {(Object.keys(PRIZE_COLORS) as PrizeColor[]).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={row.color === key}
+                  aria-label={PRIZE_COLORS[key].label}
+                  title={PRIZE_COLORS[key].label}
+                  onClick={() => change(i, { color: key })}
+                  style={{ background: PRIZE_COLORS[key].hex }}
+                  className={cn("size-8 rounded-full border-2", row.color === key ? "border-white ring-2 ring-amber-400" : "border-black/40")}
+                />
+              ))}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={rows.length >= BOARD_LIMITS.prizes}
+          onClick={() => set([...rows, { place: `${rows.length + 1}위`, amount: "", color: defaultPrizeColor(rows.length) }])}
+          className="min-h-11 rounded-xl bg-amber-400 px-4 text-sm font-black text-black disabled:opacity-40"
+        >
+          + 순위 추가
+        </button>
+        {rows.length ? (
+          <button type="button" onClick={() => window.confirm("프라이즈를 모두 지울까요?") && set([])} className="min-h-11 rounded-xl border border-white/15 px-4 text-sm font-bold text-zinc-300">
+            모두 지우기
+          </button>
+        ) : null}
+      </div>
+    </section>
+  );
+}

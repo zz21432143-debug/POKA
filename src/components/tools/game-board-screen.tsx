@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
-import { boardStats, chipText, clockText, clockView, prizeLines, type BoardLevel, type GameBoardData } from "@/lib/game-board";
+import { PRIZE_COLORS, boardStats, chipText, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 const blindText = (l: BoardLevel) => `${won(l.sb)} / ${won(l.bb)}`;
@@ -49,7 +49,8 @@ export function useServerNow(initialNow: number, offset: number) {
 export function GameBoardScreen({ data, now, sound = false, className }: { data: GameBoardData; now: number; sound?: boolean; className?: string }) {
   const view = clockView(data, now);
   const { totalChips, avgStack } = boardStats(data);
-  const prizes = prizeLines(data.prize);
+  const prizes = data.prizes.filter((p) => p.place.trim() || p.amount.trim());
+  const many = prizes.length > 6;
   const bb = view.level.isBreak ? (data.levels.slice(0, view.index).reverse().find((l) => !l.isBreak)?.bb ?? 0) : view.level.bb;
   const warn = !view.level.isBreak && view.running && view.remainingMs <= 60_000;
   const dur = view.level.minutes * 60_000;
@@ -115,24 +116,56 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           </span>
         </section>
 
-        {/* 왼쪽: 인원 · 스택 */}
+        {/* 왼쪽: 플레이어(라이브 / 토탈 엔트리) · 리바인 · 얼리 · 애드온 · 스택 · 휴식 · 등록 마감 */}
         <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.7)] @[560px]:order-1 @[560px]:grid-cols-1">
-          <Stat label="남은 인원" value={data.entries ? `${won(data.remaining)} / ${won(data.entries)}` : won(data.remaining)} big />
-          <Stat label="평균 스택" value={avgStack ? won(avgStack) : "-"} sub={avgStack && bb ? `${(avgStack / bb).toFixed(1)} BB` : undefined} big />
-          <Stat label="총 칩" value={totalChips ? chipText(totalChips) : "-"} />
-          <Stat label={view.nextBreakMs != null ? "다음 휴식까지" : "리바이 · 애드온"} value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : `${won(data.rebuys)} · ${won(data.addons)}`} />
+          <div data-players className={CARD}>
+            <span className={LABEL}>PLAYERS · 플레이어</span>
+            <span className="text-[clamp(20px,calc(var(--u)*3),60px)] leading-tight font-black text-white tabular-nums">
+              {won(data.remaining)}
+              <span className="text-zinc-400"> / {won(data.entries)}</span>
+            </span>
+            <span className="flex flex-wrap gap-x-[calc(var(--u)*1)] text-[clamp(11px,calc(var(--u)*1.45),28px)] font-bold text-zinc-300 tabular-nums">
+              <span data-rebuys>
+                리바인 <b className="text-white">{won(data.rebuys)}</b>
+              </span>
+              <span data-earlies>
+                얼리 <b className="text-white">{won(data.earlies)}</b>
+              </span>
+              {data.addonOn ? (
+                <span data-addons>
+                  애드온 <b className="text-white">{won(data.addons)}</b>
+                </span>
+              ) : null}
+            </span>
+          </div>
+          <div className={CARD}>
+            <span className={LABEL}>평균 스택</span>
+            <span className="text-[clamp(18px,calc(var(--u)*2.6),54px)] leading-tight font-black text-white tabular-nums">{avgStack ? won(avgStack) : "-"}</span>
+            {avgStack && bb ? <span className="text-[clamp(11px,calc(var(--u)*1.5),30px)] font-bold text-amber-200 tabular-nums">{(avgStack / bb).toFixed(1)} BB</span> : null}
+          </div>
+          <div className={CARD}>
+            <span className={LABEL}>총 칩</span>
+            <span className="text-[clamp(16px,calc(var(--u)*2.1),42px)] leading-tight font-black text-white tabular-nums">{totalChips ? chipText(totalChips) : "-"}</span>
+          </div>
+          <div className={cn(CARD, "gap-[calc(var(--u)*0.4)]")}>
+            <TimeRow label="다음 휴식" value={view.nextBreakMs != null ? clockText(view.nextBreakMs) : view.level.isBreak ? "휴식 중" : "-"} />
+            {data.regLevel > 0 ? (
+              <TimeRow data-reg label={`등록 마감 · 레벨 ${data.regLevel}`} value={view.regClosed ? "마감" : clockText(view.regCloseMs ?? 0)} tone={view.regClosed ? "closed" : (view.regCloseMs ?? 0) <= 10 * 60_000 ? "warn" : undefined} />
+            ) : null}
+          </div>
         </section>
 
-        {/* 오른쪽: 상금 */}
+        {/* 오른쪽: 프라이즈(줄마다 색) */}
         <section data-prize className="grid content-center gap-[calc(var(--u)*0.6)] @[560px]:order-3">
-          {prizes.length ? (
+          {prizes.length || data.prizeTitle ? (
             <div className="grid gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.4)]">
-              <span className="text-[clamp(13px,calc(var(--u)*1.9),36px)] font-black text-[#c9a25c]">PRIZE · 상금</span>
-              <ul className="grid gap-[calc(var(--u)*0.3)]">
+              <span className="text-[clamp(13px,calc(var(--u)*1.9),36px)] font-black text-[#c9a25c]">PRIZE · 프라이즈</span>
+              {data.prizeTitle ? <span data-prize-title className="text-[clamp(16px,calc(var(--u)*2.4),48px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
+              <ul className={cn("grid", many ? "gap-0" : "gap-[calc(var(--u)*0.3)]")}>
                 {prizes.map((p, i) => (
-                  <li key={i} className="flex items-baseline justify-between gap-[calc(var(--u)*1)] border-b border-white/10 pb-[calc(var(--u)*0.2)] last:border-0">
-                    <span className={cn("font-black", i === 0 ? "text-amber-300" : "text-zinc-200", "text-[clamp(13px,calc(var(--u)*1.9),36px)]")}>{p.place}</span>
-                    <span className={cn("font-black tabular-nums", i === 0 ? "text-amber-200" : "text-white", "text-[clamp(14px,calc(var(--u)*2.1),40px)]")}>{p.amount}</span>
+                  <li key={i} data-prize-row style={{ color: PRIZE_COLORS[p.color].hex }} className="flex items-baseline justify-between gap-[calc(var(--u)*1)] border-b border-white/10 pb-[calc(var(--u)*0.2)] last:border-0">
+                    <span className={cn("font-black", many ? "text-[clamp(12px,calc(var(--u)*1.5),30px)]" : "text-[clamp(13px,calc(var(--u)*1.9),36px)]")}>{p.place}</span>
+                    <span className={cn("font-black tabular-nums", many ? "text-[clamp(13px,calc(var(--u)*1.7),34px)]" : "text-[clamp(14px,calc(var(--u)*2.1),40px)]")}>{p.amount}</span>
                   </li>
                 ))}
               </ul>
@@ -157,12 +190,14 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   );
 }
 
-function Stat({ label, value, sub, big = false }: { label: string; value: string; sub?: string; big?: boolean }) {
+const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/10 bg-black/45 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
+const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-bold text-zinc-400";
+
+function TimeRow({ label, value, tone, ...rest }: { label: string; value: string; tone?: "warn" | "closed" } & Record<`data-${string}`, unknown>) {
   return (
-    <div className="grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/10 bg-black/45 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]">
-      <span className="text-[clamp(11px,calc(var(--u)*1.35),28px)] font-bold text-zinc-400">{label}</span>
-      <span className={cn("leading-tight font-black text-white tabular-nums", big ? "text-[clamp(18px,calc(var(--u)*2.6),54px)]" : "text-[clamp(16px,calc(var(--u)*2.1),42px)]")}>{value}</span>
-      {sub ? <span className="text-[clamp(11px,calc(var(--u)*1.6),30px)] font-bold text-amber-200 tabular-nums">{sub}</span> : null}
+    <div {...rest} className="flex items-baseline justify-between gap-[calc(var(--u)*0.8)]">
+      <span className={LABEL}>{label}</span>
+      <span className={cn("text-[clamp(15px,calc(var(--u)*2),40px)] font-black tabular-nums", tone === "closed" ? "text-rose-300" : tone === "warn" ? "text-amber-300" : "text-white")}>{value}</span>
     </div>
   );
 }
