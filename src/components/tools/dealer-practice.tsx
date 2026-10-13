@@ -12,7 +12,7 @@ import {
   DIFFICULTY,
   ROUND_SIZE,
   actionText,
-  askedPotCount,
+  autoFillPot,
   kindOf,
   potProblem,
   readNumber,
@@ -428,11 +428,11 @@ function PotDrill({
   }, [phase, playing, checked, index]);
 
   const answer = question?.answer;
-  // 마지막 팟은 낸 칩 전체에서 앞 팟을 뺀 남은 금액이라 적지 않음(자동)
-  const asked = answer ? askedPotCount(answer) : 0;
-  const lastPot = answer && answer.pots.length > asked ? { name: potName(answer.pots.length - 1), amount: answer.pots[answer.pots.length - 1].amount } : null;
-  const fields = answer ? [...answer.pots.slice(0, asked).map((_, i) => potName(i)), ...(answer.refund ? ["돌려줄 금액"] : [])] : [];
-  const answers = answer ? [...answer.pots.slice(0, asked).map((p) => p.amount), ...(answer.refund ? [answer.refund.amount] : [])] : [];
+  const fields = answer ? [...answer.pots.map((_, i) => potName(i)), ...(answer.refund ? ["돌려줄 금액"] : [])] : [];
+  const answers = answer ? [...answer.pots.map((p) => p.amount), ...(answer.refund ? [answer.refund.amount] : [])] : [];
+  // 팟 칸이 하나만 비면 그 칸은 남은 금액으로 자동(사이드팟부터 잡으면 메인 팟이 자동)
+  const auto = answer ? autoFillPot(inputs, answer) : null;
+  const valueAt = (i: number) => (auto?.index === i ? won(auto.value) : (inputs[i] ?? ""));
 
   function load() {
     setQuestion(potProblem(settings.difficulty, validBlinds(settings.blinds) ? settings.blinds : DEFAULT_BLINDS));
@@ -481,7 +481,7 @@ function PotDrill({
   }
 
   function check() {
-    const ok = answers.every((a, i) => readNumber(inputs[i] ?? "") === a);
+    const ok = answers.every((a, i) => readNumber(valueAt(i)) === a);
     setChecked(ok);
     if (ok) setCorrect((c) => c + 1);
   }
@@ -516,7 +516,7 @@ function PotDrill({
         <h2 className="text-lg font-black">팟 계산 연습</h2>
         <p className="text-sm text-zinc-300">
           9인 테이블에서 블라인드부터 한 명씩 <b className="text-white">폴드 · 체크 · 콜 · 레이즈 · 올인</b>이 진행됩니다. 액션이 끝나면{" "}
-          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. <b className="text-white">마지막 팟은 남은 금액이라 적지 않습니다.</b> 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다(시간은 액션이 끝난 뒤부터).
+          <b className="text-amber-300">메인 · 세컨 · 서드 · 포스 · 피프스 팟</b>(그리고 돌려줄 금액)을 계산해 넣으세요. <b className="text-white">팟 칸을 하나만 남기고 다 적으면 남은 칸은 자동으로 채워집니다</b>(사이드팟부터 잡으면 남는 칩이 메인 팟). 틀리면 풀이가 나옵니다. {ROUND_SIZE}문제, 맞힌 수가 많고 빠를수록 높은 기록입니다(시간은 액션이 끝난 뒤부터).
         </p>
         <SettingsForm settings={settings} onChange={onSettings} />
         {best ? (
@@ -601,9 +601,8 @@ function PotDrill({
         )}
         {!playing && answer ? (
           <span className="text-xs font-bold text-zinc-400">
-            팟 {answer.pots.length}개 — {answer.pots.slice(0, asked).map((_, i) => potName(i)).join(" · ")}만 적기
-            {lastPot ? ` (${lastPot.name}은 남은 금액이라 자동)` : ""}
-            {answer.refund ? " + 돌려줄 금액" : ""}
+            팟 {answer.pots.length}개{answer.refund ? " + 돌려줄 금액" : ""}
+            {answer.pots.length > 1 ? ` — 팟 ${answer.pots.length - 1}칸을 적으면 남은 1칸은 자동` : ""}
           </span>
         ) : null}
       </div>
@@ -620,12 +619,19 @@ function PotDrill({
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-2">
             {fields.map((label, i) => (
               <label key={label} className={cn("grid min-w-0 gap-1 font-bold text-zinc-300", full ? "text-sm lg:text-base" : "text-xs")}>
-                {label}
+                <span className="flex items-center gap-1.5">
+                  {label}
+                  {auto?.index === i ? (
+                    <span data-auto className="rounded bg-sky-500/20 px-1.5 text-[0.85em] font-black text-sky-200">
+                      자동(남은 금액)
+                    </span>
+                  ) : null}
+                </span>
                 <input
                   ref={i === 0 ? firstInput : undefined}
                   aria-label={label}
                   inputMode="numeric"
-                  value={inputs[i] ?? ""}
+                  value={valueAt(i)}
                   disabled={checked !== null}
                   onChange={(e) => {
                     const next = [...inputs];
@@ -635,10 +641,10 @@ function PotDrill({
                   className={cn(
                     "w-full min-w-0 rounded-lg border-2 bg-black px-2 font-black tabular-nums",
                     full ? "h-14 text-2xl lg:h-16 lg:text-3xl" : "h-12 text-xl",
-                    checked === null ? "border-white/20" : readNumber(inputs[i] ?? "") === answers[i] ? "border-emerald-500" : "border-rose-500",
+                    checked === null ? (auto?.index === i ? "border-sky-400/70 text-sky-100" : "border-white/20") : readNumber(valueAt(i)) === answers[i] ? "border-emerald-500" : "border-rose-500",
                   )}
                 />
-                {checked !== null && readNumber(inputs[i] ?? "") !== answers[i] ? <span className="text-rose-300">정답 {won(answers[i])}</span> : null}
+                {checked !== null && readNumber(valueAt(i)) !== answers[i] ? <span className="text-rose-300">정답 {won(answers[i])}</span> : null}
               </label>
             ))}
           </div>
@@ -652,11 +658,6 @@ function PotDrill({
                       {label} <span className="text-amber-300">{won(answers[i])}</span>
                     </span>
                   ))}
-                </p>
-              ) : null}
-              {lastPot ? (
-                <p data-last-pot className="text-sm font-bold text-zinc-200">
-                  {lastPot.name}(남은 금액 · 자동) <span className="tabular-nums text-amber-300">{won(lastPot.amount)}</span>
                 </p>
               ) : null}
               <p className="text-xs font-bold text-zinc-300">풀이</p>

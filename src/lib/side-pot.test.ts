@@ -109,3 +109,26 @@ describe("pot practice problems", async () => {
     assert.equal(validBlinds({ sb: 500, bb: 1000 }), true);
   });
 });
+
+describe("autoFillPot (팟 칸 하나만 비면 남은 금액 자동)", () => {
+  it("fills whichever single pot is empty with the remainder", async () => {
+    const { autoFillPot } = await import("./practice");
+    const answer = computePots([
+      { id: "a", amount: 1000 },
+      { id: "b", amount: 3000 },
+      { id: "c", amount: 6000 },
+      { id: "d", amount: 6000 },
+    ]);
+    const amounts = answer.pots.map((p) => p.amount);
+    assert.deepEqual(amounts, [4000, 6000, 6000]);
+    // 사이드팟부터 잡으면 메인 팟이 자동
+    assert.deepEqual(autoFillPot(["", "6,000", "6000"], answer), { index: 0, value: 4000 });
+    // 메인부터 잡으면 마지막 팟이 자동
+    assert.deepEqual(autoFillPot(["4000", "6000", ""], answer), { index: 2, value: 6000 });
+    // 두 칸 이상 비었거나 다 찼으면 자동 없음
+    assert.equal(autoFillPot(["4000", "", ""], answer), null);
+    assert.equal(autoFillPot(["4000", "6000", "6000"], answer), null);
+    // 너무 많이 적으면 0(틀린 답으로 처리)
+    assert.deepEqual(autoFillPot(["", "9000", "9000"], answer), { index: 0, value: 0 });
+  });
+});

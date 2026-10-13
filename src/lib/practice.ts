@@ -17,10 +17,10 @@ export const DIFFICULTY: Record<
   Difficulty,
   { label: string; desc: string; active: [number, number]; pots: [number, number]; raiseFold: number; speed: number }
 > = {
-  easy: { label: "쉬움", desc: "4명 참여 · 팟 3개(메인·세컨 계산) · 금액이 딱 떨어짐", active: [4, 4], pots: [3, 3], raiseFold: 0, speed: 1100 },
+  easy: { label: "쉬움", desc: "4명 참여 · 팟 3개(2칸 적으면 1칸 자동) · 금액이 딱 떨어짐", active: [4, 4], pots: [3, 3], raiseFold: 0, speed: 1100 },
   normal: { label: "보통", desc: "4~5명 · 팟 3~4개 · 가끔 레이즈 후 폴드·돌려줄 금액", active: [4, 5], pots: [3, 4], raiseFold: 0.12, speed: 850 },
   hard: { label: "어려움", desc: "5~7명 · 팟 4~5개 · 잔돈 금액 · 레이즈 후 폴드 자주", active: [5, 7], pots: [4, 5], raiseFold: 0.3, speed: 650 },
-  hell: { label: "지옥", desc: "6~8명 · 팟 5개(메인~포스 계산) · 100원 단위 잔돈 · 레이즈 후 폴드·돌려줄 금액 많음 · 빠른 진행", active: [6, 8], pots: [5, 5], raiseFold: 0.45, speed: 480 },
+  hell: { label: "지옥", desc: "6~8명 · 팟 5개(메인~피프스, 4칸 적으면 1칸 자동) · 100원 단위 잔돈 · 레이즈 후 폴드·돌려줄 금액 많음 · 빠른 진행", active: [6, 8], pots: [5, 5], raiseFold: 0.45, speed: 480 },
 };
 /** 칭호는 가장 어려운 난이도(지옥) 랭킹 1~3위 */
 export const TITLE_DIFFICULTY: Difficulty = "hell";
@@ -247,9 +247,16 @@ export function actionText(a: PlayAction, blinds: Blinds) {
 export const readNumber = (text: string) => Number(String(text).replace(/[^\d]/g, "")) || 0;
 
 /**
- * 적는 팟: 마지막 팟은 낸 칩 전체에서 앞 팟들을 뺀 남은 금액이라 적지 않습니다(모든 난이도 공통).
- * 예) 팟 5개면 메인 · 세컨 · 서드 · 포스만 적고 피프스는 자동.
+ * 팟 칸 자동 완성(모든 난이도 공통): 팟 칸 중 하나만 비어 있으면 그 칸 = 팟 합계 − 적은 칸들.
+ * 사이드팟부터 잡으면 남는 칩이 메인 팟으로, 메인부터 잡으면 마지막 팟이 자동으로 채워집니다.
+ * (돌려줄 금액 칸은 따로 — 팟 합계에 들어가지 않음)
  */
-export function askedPotCount(answer: PotResult) {
-  return Math.max(1, answer.pots.length - 1);
+export function autoFillPot(inputs: readonly (string | undefined)[], answer: PotResult): { index: number; value: number } | null {
+  const count = answer.pots.length;
+  if (count < 2) return null;
+  const empty = Array.from({ length: count }, (_, i) => i).filter((i) => !(inputs[i] ?? "").replace(/[^\d]/g, ""));
+  if (empty.length !== 1) return null;
+  const total = answer.pots.reduce((sum, pot) => sum + pot.amount, 0);
+  const written = Array.from({ length: count }, (_, i) => (i === empty[0] ? 0 : readNumber(inputs[i] ?? ""))).reduce((a, b) => a + b, 0);
+  return { index: empty[0], value: Math.max(0, total - written) };
 }
