@@ -592,6 +592,12 @@ model RotationEvent {
 /// 게임 하나(근무일 또는 그날 이벤트). 게임마다 딜러·테이블·시간표가 따로입니다.
 model RotationMeta {
   id           String   @id
+  /// 게임을 만든 계정(User.id). 다른 계정에는 보이지 않습니다.
+  ownerId      String?
+  /// 보기 전용 공유 링크 값(/r/값). 없으면 공유 꺼짐
+  shareToken   String?  @unique
+  /// 최대 연속 딜(분). 0이면 제한 없음
+  maxStreakMinutes Int  @default(0)
   /// 게임 이름(메인 게임, 사이드 이벤트 등)
   name         String   @default("메인 게임")
   /// 근무일 YYYY-MM-DD
@@ -614,4 +620,5 @@ model RotationMeta {
   tableStateJson String?
 
   @@index([workDate, createdAt])
+  @@index([ownerId, workDate])
 }

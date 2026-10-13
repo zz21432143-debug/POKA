@@ -46,6 +46,10 @@ export type RotationGame = { id: string; name: string; workDate: string | null }
 export type RotationStateView = {
   /** 지금 보고 있는 게임 */
   game: RotationGame;
+  /** 보기 전용 공유 링크 값(없으면 공유 꺼짐) */
+  shareToken: string | null;
+  /** 최대 연속 딜(분). 0이면 제한 없음 */
+  maxStreakMinutes: number;
   /** 최근 게임(날짜 최신순) */
   games: RotationGame[];
   version: number;
@@ -70,13 +74,30 @@ export type RotationAction =
   | { type: "removeDealer"; id: string }
   | { type: "checkIn"; id: string }
   | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
-  | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number }
+  | { type: "setSettings"; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number; maxStreakMinutes?: number }
+  | { type: "clearPlan" }
+  | { type: "setShare"; on: boolean }
   | { type: "savePlan"; plan: RotationPlan | null }
   | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
   | { type: "newDay" }
   | { type: "createGame"; name: string; workDate: string; copyDealers?: boolean; copySettings?: boolean }
   | { type: "setGame"; name?: string; workDate?: string }
   | { type: "deleteGame" };
+
+/** 최대 연속 딜 선택지(분). 0 = 제한 없음 */
+export const MAX_STREAK_CHOICES = [0, 40, 60, 80, 100, 120] as const;
+
+/** 보기 전용 화면에 보내는 상태(이름·배정만, 출근 기록 시각 등은 빼고) */
+export type RotationShareView = {
+  game: RotationGame;
+  version: number;
+  tableLabels: number[];
+  tableState: Record<string, TableState>;
+  interval: number;
+  planStart: string;
+  plan: RotationPlan | null;
+  dealers: { id: string; name: string; status: DealerStatus }[];
+};
 
 /** 한국 날짜 "YYYY-MM-DD" */
 export function kstDate(now = new Date()) {

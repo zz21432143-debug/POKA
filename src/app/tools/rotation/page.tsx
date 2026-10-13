@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 
 export default async function RotationPage({ searchParams }: { searchParams: Promise<{ g?: string }> }) {
   const user = await getCurrentUser().catch(() => null);
-  if (!canUseDealerTools(user)) return <ToolsLocked />;
+  if (!user || !canUseDealerTools(user)) return <ToolsLocked />;
   const { g } = await searchParams;
-  const initial = await loadRotation(g);
+  const initial = await loadRotation(user.id, g);
   return (
     <div className="flex flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">

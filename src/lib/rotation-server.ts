@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import {
   MAX_DEALERS,
@@ -10,24 +10,26 @@ import {
   tableLabelsOf,
   toDealerStatus,
   type RotationAction,
+  type RotationShareView,
   type RotationStateView,
   type TableState,
 } from "@/lib/rotation";
 import type { RotationPlan } from "@/lib/rotation-plan";
 
-/** 예전(게임 나누기 전) 한 개뿐이던 로테이션 = 첫 게임 */
-const DEFAULT_GAME = "default";
 /** 게임 목록에 보여 줄 개수 */
 const GAME_LIST = 40;
 const GAME_ORDER = [{ workDate: { sort: "desc" as const, nulls: "last" as const } }, { createdAt: "desc" as const }];
 /** 시간표 칸 수 상한(5분 간격 24시간 = 288칸) */
 const MAX_SLOTS = 300;
 
-/** 게임 찾기: 주어진 게임 → 없으면 가장 최근 날짜 게임 → 하나도 없으면 오늘 날짜로 만듭니다. */
-async function resolveGame(gameId?: string | null) {
-  let game = gameId ? await prisma.rotationMeta.findUnique({ where: { id: gameId } }) : null;
-  game ??= await prisma.rotationMeta.findFirst({ orderBy: GAME_ORDER });
-  game ??= await prisma.rotationMeta.create({ data: { id: DEFAULT_GAME, workDate: kstDate() } });
+/**
+ * 게임 찾기(계정마다 따로): 주어진 게임(이 계정 것만) → 없으면 이 계정의 가장 최근 날짜 게임
+ * → 하나도 없으면 오늘 날짜로 새로 만듭니다. 다른 계정의 게임은 절대 돌려주지 않습니다.
+ */
+async function resolveGame(ownerId: string, gameId?: string | null) {
+  let game = gameId ? await prisma.rotationMeta.findFirst({ where: { id: gameId, ownerId } }) : null;
+  game ??= await prisma.rotationMeta.findFirst({ where: { ownerId }, orderBy: GAME_ORDER });
+  game ??= await prisma.rotationMeta.create({ data: { id: randomUUID(), ownerId, workDate: kstDate() } });
   if (!game.workDate) game = await prisma.rotationMeta.update({ where: { id: game.id }, data: { workDate: kstDate(game.createdAt) } });
   return game;
 }
@@ -51,16 +53,18 @@ function parsePlan(json: string | null): RotationPlan | null {
   }
 }
 
-/** 게임 하나의 로테이션 상태 전체(게임을 안 주면 가장 최근 게임) */
-export async function loadRotation(gameId?: string | null): Promise<RotationStateView> {
-  const m = await resolveGame(gameId);
+/** 이 계정의 게임 하나 상태 전체(게임을 안 주면 가장 최근 게임) */
+export async function loadRotation(ownerId: string, gameId?: string | null): Promise<RotationStateView> {
+  const m = await resolveGame(ownerId, gameId);
   const [dealers, games] = await Promise.all([
     prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] }),
-    prisma.rotationMeta.findMany({ orderBy: GAME_ORDER, take: GAME_LIST, select: { id: true, name: true, workDate: true } }),
+    prisma.rotationMeta.findMany({ where: { ownerId }, orderBy: GAME_ORDER, take: GAME_LIST, select: { id: true, name: true, workDate: true } }),
   ]);
   return {
     game: { id: m.id, name: m.name, workDate: m.workDate },
     games,
+    shareToken: m.shareToken,
+    maxStreakMinutes: m.maxStreakMinutes,
     version: m.version,
     tableCount: m.tableCount,
     tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
@@ -83,10 +87,34 @@ export async function loadRotation(gameId?: string | null): Promise<RotationStat
   };
 }
 
-export async function rotationVersion(gameId?: string | null) {
-  if (!gameId) return (await resolveGame()).version;
-  const game = await prisma.rotationMeta.findUnique({ where: { id: gameId }, select: { version: true } });
+export async function rotationVersion(ownerId: string, gameId?: string | null) {
+  if (!gameId) return (await resolveGame(ownerId)).version;
+  const game = await prisma.rotationMeta.findFirst({ where: { id: gameId, ownerId }, select: { version: true } });
   return game?.version ?? -1;
+}
+
+/** 보기 전용 공유: 링크 값으로 찾은 게임(공유를 끄면 null). 로그인 없이 봅니다. */
+export async function loadShared(token: string): Promise<RotationShareView | null> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token } });
+  if (!m) return null;
+  const dealers = await prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
+  return {
+    game: { id: m.id, name: m.name, workDate: m.workDate },
+    version: m.version,
+    tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
+    tableState: parseTableState(m.tableStateJson),
+    interval: m.interval,
+    planStart: m.planStart,
+    plan: parsePlan(m.planJson),
+    dealers: dealers.map((d) => ({ id: d.id, name: d.name, status: toDealerStatus(d.status) })),
+  };
+}
+
+export async function sharedVersion(token: string) {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return -1;
+  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token }, select: { version: true } });
+  return m?.version ?? -1;
 }
 
 export class RotationError extends Error {}
@@ -113,9 +141,9 @@ function validPlan(plan: RotationPlan, tableCount: number) {
  * 게임 하나의 상태를 바꿉니다. 다른 기기는 version이 바뀐 걸 보고 새로 받습니다.
  * 바꾼 뒤 보여 줄 게임 id를 돌려줍니다(새 게임을 만들면 그 게임).
  */
-export async function applyRotation(gameId: string | null | undefined, action: RotationAction): Promise<string> {
+export async function applyRotation(ownerId: string, gameId: string | null | undefined, action: RotationAction): Promise<string> {
   const now = new Date();
-  const META_ID = (await resolveGame(gameId)).id;
+  const META_ID = (await resolveGame(ownerId, gameId)).id;
   let target = META_ID;
   let deleted = false;
   await prisma.$transaction(async (tx) => {
@@ -193,7 +221,16 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         break;
       }
       case "setSettings": {
-        const data: { tableCount?: number; tableLabels?: string; interval?: number; planStart?: string; planEnd?: string; setupMinutes?: number } = {};
+        const data: {
+          tableCount?: number;
+          tableLabels?: string;
+          interval?: number;
+          planStart?: string;
+          planEnd?: string;
+          setupMinutes?: number;
+          maxStreakMinutes?: number;
+        } = {};
+        if (action.maxStreakMinutes !== undefined) data.maxStreakMinutes = Math.max(0, Math.min(600, Math.floor(Number(action.maxStreakMinutes) || 0)));
         if (action.tableLabels !== undefined) {
           const { labels, errors } = parseTableLabels(String(action.tableLabels));
           if (labels.length === 0 || errors.length) throw new RotationError(`테이블 번호를 확인하세요${errors.length ? `: ${errors.join(", ")}` : ""}`);
@@ -249,6 +286,19 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         await tx.rotationEvent.deleteMany({ where: { dealerId: { in: ids } } });
         break;
       }
+      case "clearPlan": {
+        // 시간표 삭제: 짜 둔 칸을 모두 지우고 컨바인도 풉니다(버튼 자리·딜러 명단·출근 기록은 그대로).
+        const m = await tx.rotationMeta.findUniqueOrThrow({ where: { id: META_ID } });
+        const all = parseTableState(m.tableStateJson);
+        for (const key of Object.keys(all)) all[key] = { ...all[key], closedAt: null };
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { planJson: null, tableStateJson: JSON.stringify(all) } });
+        break;
+      }
+      case "setShare": {
+        // 보기 전용 링크 켜기(새 값)·끄기. 다시 켜면 예전 링크는 더 이상 열리지 않습니다.
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { shareToken: action.on ? randomBytes(18).toString("base64url") : null } });
+        break;
+      }
       case "createGame": {
         // 새 게임(다른 날짜 또는 같은 날 다른 이벤트). 설정·딜러 명단은 골라서 가져옵니다.
         const workDate = normalizeWorkDate(action.workDate);
@@ -259,10 +309,19 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         await tx.rotationMeta.create({
           data: {
             id,
+            ownerId,
             name,
             workDate,
             ...(action.copySettings
-              ? { tableCount: from.tableCount, tableLabels: from.tableLabels, interval: from.interval, planStart: from.planStart, planEnd: from.planEnd, setupMinutes: from.setupMinutes }
+              ? {
+                  tableCount: from.tableCount,
+                  tableLabels: from.tableLabels,
+                  interval: from.interval,
+                  planStart: from.planStart,
+                  planEnd: from.planEnd,
+                  setupMinutes: from.setupMinutes,
+                  maxStreakMinutes: from.maxStreakMinutes,
+                }
               : {}),
           },
         });
@@ -287,7 +346,7 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         break;
       }
       case "deleteGame": {
-        if ((await tx.rotationMeta.count()) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
+        if ((await tx.rotationMeta.count({ where: { ownerId } })) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
         const ids = (await tx.rotationDealer.findMany({ where: { gameId: META_ID }, select: { id: true } })).map((d) => d.id);
         await tx.rotationEvent.deleteMany({ where: { dealerId: { in: ids } } });
         await tx.rotationDealer.deleteMany({ where: { gameId: META_ID } });
@@ -298,5 +357,5 @@ export async function applyRotation(gameId: string | null | undefined, action: R
     }
     if (!deleted) await tx.rotationMeta.update({ where: { id: META_ID }, data: { version: { increment: 1 } } });
   });
-  return deleted ? (await resolveGame()).id : target;
+  return deleted ? (await resolveGame(ownerId)).id : target;
 }

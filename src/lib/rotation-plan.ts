@@ -36,7 +36,19 @@ export type RotationPlan = {
   slots: PlanSlot[];
   /** 세팅 칸 길이(분). 0이면 없음 */
   setup?: number;
+  /** 최대 연속 딜 칸 수(0·없음 = 제한 없음). 이어 짤 때도 같은 규칙을 씁니다. */
+  maxStreak?: number;
 };
+
+/**
+ * 최대 연속 딜 칸 수(K)를 지키려면 필요한 딜러 수: K칸 딜 + 1칸 휴식이 돌려면
+ * 러닝 테이블 × (K+1) ÷ K 명(올림). K가 0이면 제한 없음(테이블 수만큼).
+ */
+export function dealersNeeded(openTables: number, maxStreak: number) {
+  if (openTables <= 0) return 0;
+  if (!maxStreak || maxStreak <= 0) return openTables;
+  return Math.ceil((openTables * (maxStreak + 1)) / maxStreak);
+}
 
 export const MINUTES_PER_DAY = 1440;
 
@@ -81,7 +93,10 @@ export function buildPlan(options: {
   setup?: number;
   /** 테이블별 컨바인(닫은) 시각(분). 이 시각부터 그 테이블은 비워 둡니다. null이면 러닝 중 */
   closedFrom?: (number | null)[];
+  /** 최대 연속 딜 칸 수(0 = 제한 없음). 사람이 모자라면 지킬 수 없어 화면에서 경고합니다. */
+  maxStreak?: number;
 }): RotationPlan {
+  const maxStreak = Math.max(0, Math.floor(options.maxStreak ?? 0));
   const tables = Math.max(1, Math.floor(options.tables));
   const interval = Math.max(5, Math.floor(options.interval));
   const start = options.start;
@@ -145,7 +160,9 @@ export function buildPlan(options: {
     // 러닝 중인 테이블(컨바인한 테이블 제외)
     const open = [...Array(tables).keys()].filter((t) => isOpen(t, at));
     const breaks = Math.max(0, available.length - open.length);
-    const cap = breaks > 0 ? Math.max(1, Math.round(open.length / breaks)) : Number.POSITIVE_INFINITY;
+    const fairCap = breaks > 0 ? Math.max(1, Math.round(open.length / breaks)) : Number.POSITIVE_INFINITY;
+    // 최대 연속 딜을 정했으면 그보다 길게 잇지 않습니다(쉴 사람이 있을 때).
+    const cap = maxStreak > 0 ? Math.min(fairCap, maxStreak) : fairCap;
 
     // 근무 우선순위: 0 이어서 일하기(cap 전) · 1 쉬던 사람(오래 쉰 순) · 2 cap 채운 사람(쉬어야 함)
     const ranked = [...available].sort((a, b) => {
@@ -187,7 +204,7 @@ export function buildPlan(options: {
     });
   }
 
-  return { start, end, interval, tables, slots, setup };
+  return { start, end, interval, tables, slots, setup, ...(maxStreak ? { maxStreak } : {}) };
 }
 
 /** 지금(분) 기준 현재 칸·다음 칸 */
@@ -260,6 +277,7 @@ export function extendPlan(
     setup: plan.setup,
     keep: plan.slots,
     closedFrom,
+    maxStreak: plan.maxStreak,
   });
   const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
   return { ...built, slots: built.slots.slice(trimFrom) };
@@ -283,11 +301,21 @@ export function autoArrange(options: {
   now: number;
   closedFrom?: (number | null)[];
   horizon?: number;
+  maxStreak?: number;
 }): RotationPlan {
   const horizon = options.horizon ?? PLAN_HORIZON;
   const closedFrom = options.closedFrom ?? [];
   const end = Math.max(options.now, options.start) + horizon;
-  const base = { dealers: options.dealers, tables: options.tables, start: options.start, end, interval: options.interval, setup: options.setup, closedFrom };
+  const base = {
+    dealers: options.dealers,
+    tables: options.tables,
+    start: options.start,
+    end,
+    interval: options.interval,
+    setup: options.setup,
+    closedFrom,
+    maxStreak: options.maxStreak,
+  };
   const plan = options.plan;
   if (!plan || options.current < 0 || !plan.slots[options.current]) return buildPlan(base);
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import {
   INTERVAL_CHOICES,
+  MAX_STREAK_CHOICES,
   MAX_DEALERS,
   MAX_TABLES,
   STATUS_LABEL,
@@ -27,6 +28,7 @@ import {
   autoArrange,
   buildPlan,
   dealerSchedule,
+  dealersNeeded,
   extendPlan,
   formatClock,
   parseClock,
@@ -101,6 +103,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [view, setView] = useState<"table" | "dealer">("table");
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  // 공유 링크 앞부분(사이트 주소). 화면이 뜬 뒤에 읽습니다.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 주소는 브라우저에서만 알 수 있습니다.
+    setOrigin(window.location.origin);
+  }, []);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
@@ -227,6 +236,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const dealing = nowSlot ? nowSlot.seats.filter(Boolean).length : 0;
   const resting = nowSlot ? nowSlot.rest.length : 0;
   const onDuty = state.dealers.filter((d) => d.status !== "OFF" && d.status !== "LEFT").length;
+  // 최대 연속 딜: 분 → 칸 수(간격으로 나눔). 0이면 제한 없음
+  const intervalNow = plan?.interval ?? state.interval;
+  const maxStreak = state.maxStreakMinutes > 0 ? Math.max(1, Math.floor(state.maxStreakMinutes / intervalNow)) : 0;
+  const needed = dealersNeeded(runningLabels.length, maxStreak);
+  const shortBy = Math.max(0, needed - onDuty);
+  // 테이블이 많을 때 간격이 너무 짧으면 시간표가 커져 다른 기기 반영이 느려집니다.
+  const intervalTooShort = labels.length > 40 && state.interval < 15;
+  const shareUrl = state.shareToken && origin ? `${origin}/r/${state.shareToken}` : null;
 
   // 출근했는데 남은 시간표에 없는 딜러 / 퇴근·휴무인데 남은 시간표에 있는 딜러 → 다시 짜기 안내
   const future = plan ? plan.slots.slice(Math.max(0, current + 1)) : [];
@@ -271,6 +288,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       setup: state.setupMinutes,
       keep,
       closedFrom,
+      maxStreak,
     });
     void send({ type: "savePlan", plan: built });
   }
@@ -290,6 +308,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       setup: plan?.setup ?? state.setupMinutes,
       now: nowMin,
       closedFrom,
+      maxStreak,
     });
     void send({ type: "savePlan", plan: built });
   }
@@ -326,6 +345,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       setup: plan.setup,
       keep,
       closedFrom: nextClosed,
+      maxStreak,
     });
     await send({ type: "savePlan", plan: built });
   }
@@ -491,6 +511,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       <details className="group rounded-2xl border border-white/15 bg-black p-2" open={!plan}>
         <FoldHead>
           설정 · 게임 시작 {state.planStart} · {state.interval}분 간격 · 세팅 {state.setupMinutes ? `${state.setupMinutes}분` : "없음"} · 테이블 {formatTableLabels(labels)}
+          {state.maxStreakMinutes ? ` · 연속 딜 최대 ${state.maxStreakMinutes}분` : ""}
           {button ? ` · 버튼 ${button}번` : ""}
         </FoldHead>
         <div className="mt-2 grid gap-2">
@@ -551,6 +572,26 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ))}
             </select>
           </label>
+          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+            최대 연속 딜(이만큼 딜하면 쉬기)
+            <select
+              value={state.maxStreakMinutes}
+              disabled={busy}
+              onChange={(e) => void send({ type: "setSettings", maxStreakMinutes: Number(e.target.value) })}
+              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+            >
+              {MAX_STREAK_CHOICES.map((n) => (
+                <option key={n} value={n}>
+                  {n ? `${n}분` : "제한 없음(공평하게)"}
+                </option>
+              ))}
+            </select>
+          </label>
+          {intervalTooShort ? (
+            <p className="col-span-2 rounded-lg bg-amber-950 px-2 py-1.5 text-xs font-bold text-amber-200 sm:col-span-3">
+              테이블이 {labels.length}개로 많습니다. 로테이션 간격은 15~20분을 권장합니다(짧으면 시간표가 커져 다른 기기 반영이 느려질 수 있어요).
+            </p>
+          ) : null}
           <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-3">
             테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 예: 5-12, 15
             <span className="flex gap-1.5">
@@ -607,6 +648,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       </details>
 
       {error ? <p className="rounded-lg bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">{error}</p> : null}
+
+      {/* 딜러 수 경고: 테이블보다 적거나, 최대 연속 딜을 지키기에 모자람 */}
+      {labels.length && state.dealers.length && shortBy > 0 ? (
+        <section aria-label="딜러 부족" className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-950/50 p-3 text-sm font-bold text-amber-100">
+          <span className="text-lg">⚠</span>
+          <span className="min-w-0 flex-1">
+            {onDuty < runningLabels.length
+              ? `러닝 테이블 ${runningLabels.length}개보다 딜러가 적습니다(${onDuty}명). 빈 테이블이 생깁니다.`
+              : `최대 연속 딜 ${state.maxStreakMinutes}분을 지키려면 딜러가 ${shortBy}명 더 필요합니다(지금 ${onDuty}명 · 필요 ${needed}명).`}{" "}
+            <span className="text-amber-300">{onDuty < runningLabels.length ? "테이블을 컨바인하거나 딜러를 더 넣어 주세요." : "그전까지는 일부 딜러가 더 길게 이어서 딜합니다."}</span>
+          </span>
+        </section>
+      ) : null}
 
       {/* 다시 짜기 안내 */}
       {missing.length || leftInPlan.length ? (
@@ -706,13 +760,27 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </label>
             </>
           ) : null}
+          {plan ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm("시간표를 삭제할까요? 짜 둔 칸과 컨바인이 모두 지워집니다(딜러 명단·출근 기록은 그대로). 다시 짜려면 Auto를 누르세요.")) {
+                  void send({ type: "clearPlan" });
+                }
+              }}
+              className="ml-auto min-h-10 rounded-lg border border-rose-500/70 px-3 text-sm font-black text-rose-300 hover:bg-rose-950"
+            >
+              시간표 삭제
+            </button>
+          ) : null}
           {/* Auto: 시간표 바로 옆(오른쪽) */}
           <button
             type="button"
             disabled={busy || state.dealers.length === 0}
             onClick={runAuto}
             title="지금 칸 빈자리(퇴근·컨바인)를 채우고, 다음 칸부터 딜·휴식 시간을 맞춰 자동으로 다시 짭니다"
-            className="ml-auto min-h-12 rounded-xl bg-amber-400 px-8 text-xl font-black text-black shadow-[0_0_0_3px_rgba(251,191,36,0.25)] disabled:opacity-40"
+            className={cn("min-h-12 rounded-xl bg-amber-400 px-8 text-xl font-black text-black shadow-[0_0_0_3px_rgba(251,191,36,0.25)] disabled:opacity-40", !plan && "ml-auto")}
           >
             Auto
           </button>
@@ -882,6 +950,52 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             ))}
           </p>
         ) : null}
+      </section>
+
+      {/* 공유: 보기 전용 링크(로그인 없이) · TV 화면 */}
+      <section aria-label="공유" className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-black">딜러에게 공유</h2>
+          <span className="text-xs text-zinc-400">링크를 받은 사람은 보기만 할 수 있습니다(고치기 불가). 이 게임만 보이고, 다른 게임·계정은 안 보입니다.</span>
+        </div>
+        {shareUrl ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <input readOnly value={shareUrl} aria-label="공유 링크" className="h-10 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-sm" />
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(shareUrl).catch(() => undefined);
+                setLinkCopied(true);
+                window.setTimeout(() => setLinkCopied(false), 1500);
+              }}
+              className="min-h-10 rounded-lg bg-[#FEE500] px-3 text-sm font-black text-black"
+            >
+              {linkCopied ? "복사됨 ✓" : "링크 복사"}
+            </button>
+            <a href={`${shareUrl}?tv=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black">
+              TV 화면 열기
+            </a>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm("공유를 끌까요? 이 링크로는 더 이상 볼 수 없습니다.")) void send({ type: "setShare", on: false });
+              }}
+              className="min-h-10 rounded-lg border border-rose-500/70 px-3 text-sm font-black text-rose-300"
+            >
+              공유 끄기
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void send({ type: "setShare", on: true })}
+            className="min-h-11 justify-self-start rounded-lg bg-sky-500 px-4 text-sm font-black text-black"
+          >
+            보기 전용 링크 만들기
+          </button>
+        )}
       </section>
 
       {/* 딜러 · 출근 체크(작게) */}

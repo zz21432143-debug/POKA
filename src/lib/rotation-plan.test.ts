@@ -187,3 +187,32 @@ describe("Auto picks who comes out", async () => {
     assert.ok(after.slots.slice(1).every((s) => !s.seats.includes("d1") && !s.rest.includes("d1")));
   });
 });
+
+describe("max consecutive deal", async () => {
+  const { dealersNeeded } = await import("./rotation-plan");
+  const longest = (plan: ReturnType<typeof buildPlan>, ids: string[]) => {
+    let max = 0;
+    for (const id of ids) {
+      let run = 0;
+      for (const slot of plan.slots) {
+        run = slot.seats.includes(id) ? run + 1 : 0;
+        max = Math.max(max, run);
+      }
+    }
+    return max;
+  };
+  it("keeps every dealer within the limit when there are enough dealers", () => {
+    // 20테이블, 4칸(80분) 제한 → 25명 필요
+    assert.equal(dealersNeeded(20, 4), 25);
+    const list = dealers(25);
+    const plan = buildPlan({ dealers: list, tables: 20, start: 600, end: 600 + 720, interval: 20, maxStreak: 4 });
+    assert.ok(longest(plan, list.map((d) => d.id)) <= 4, `최장 ${longest(plan, list.map((d) => d.id))}칸`);
+    assert.ok(plan.slots.every((slot) => slot.seats.every(Boolean)));
+    assert.equal(plan.maxStreak, 4);
+  });
+  it("still fills every table when short of dealers (limit can't be kept)", () => {
+    const list = dealers(23);
+    const plan = buildPlan({ dealers: list, tables: 20, start: 600, end: 600 + 720, interval: 20, maxStreak: 4 });
+    assert.ok(plan.slots.every((slot) => slot.seats.every(Boolean)));
+  });
+});
