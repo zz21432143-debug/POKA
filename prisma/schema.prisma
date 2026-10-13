@@ -509,6 +509,8 @@ model SiteSetting {
   kakaoChannelUrl  String?
   /// 관리자가 광고 문의 목록을 마지막으로 연 시각(이후 문의가 "새 문의")
   inquirySeenAt    DateTime?
+  /// 팟 계산 칭호 설정 JSON(켜기/끄기 · 이름 · 기준 난이도 · 기간 · 제외 회원)
+  potTitleJson     String?
   updatedAt        DateTime @updatedAt
 }
 

@@ -2,50 +2,42 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
-import { PRACTICE_KINDS, ROUND_SIZE } from "@/lib/practice";
-import { clearPotTitleCache } from "@/lib/pot-titles";
+import { DIFFICULTIES, ROUND_SIZE, kindOf } from "@/lib/practice";
+import { clearPotTitleCache, loadTitleConfig, rankingRows } from "@/lib/pot-titles";
+import { monthStartKst } from "@/lib/pot-title-config";
 
 export const dynamic = "force-dynamic";
 
-/** 난이도별 기록(sidepot-easy · sidepot-normal · sidepot-hard) */
-const KINDS = Object.keys(PRACTICE_KINDS);
+/** 난이도별 기록(sidepot-easy · sidepot-normal · sidepot-hard · sidepot-hell) */
+const KINDS = DIFFICULTIES.map(kindOf);
 const TOP = 10;
 
 type Row = { nickname: string; correct: number; durationMs: number; at: string; mine: boolean };
 
-/** 종류별: 사람마다 최고 기록(맞힌 수 많은 순 → 빠른 순) 상위 10명 + 내 최고 기록 */
+/** 난이도별: 사람마다 최고 기록 상위 10명 + 내 최고 기록(기간은 칭호 설정: 전체 / 이번 달) */
 async function board(userId: string) {
+  const config = await loadTitleConfig();
+  const since = config.period === "month" ? { createdAt: { gte: monthStartKst() } } : {};
   const result: Record<string, { top: Row[]; best: Row | null }> = {};
-  for (const kind of KINDS) {
-    const runs = await prisma.dealerDrillRun.findMany({
-      where: { kind },
-      orderBy: [{ correct: "desc" }, { durationMs: "asc" }, { createdAt: "asc" }],
-      take: 400,
-      select: { userId: true, correct: true, durationMs: true, createdAt: true, user: { select: { nickname: true } } },
-    });
-    const seen = new Set<string>();
-    const top: Row[] = [];
-    for (const run of runs) {
-      if (seen.has(run.userId)) continue;
-      seen.add(run.userId);
-      if (top.length < TOP) {
-        top.push({ nickname: run.user.nickname, correct: run.correct, durationMs: run.durationMs, at: run.createdAt.toISOString(), mine: run.userId === userId });
-      }
-    }
+  for (const d of DIFFICULTIES) {
+    const rows = await rankingRows(d, config.period, TOP);
     const mine = await prisma.dealerDrillRun.findFirst({
-      where: { kind, userId },
+      where: { kind: kindOf(d), userId, ...since },
       orderBy: [{ correct: "desc" }, { durationMs: "asc" }],
       select: { correct: true, durationMs: true, createdAt: true },
     });
-    result[kind] = { top, best: mine ? { nickname: "", correct: mine.correct, durationMs: mine.durationMs, at: mine.createdAt.toISOString(), mine: true } : null };
+    result[kindOf(d)] = {
+      top: rows.map((r) => ({ nickname: r.nickname, correct: r.correct, durationMs: r.durationMs, at: r.at, mine: r.userId === userId })),
+      best: mine ? { nickname: "", correct: mine.correct, durationMs: mine.durationMs, at: mine.createdAt.toISOString(), mine: true } : null,
+    };
   }
-  return result;
+  return { board: result, period: config.period };
 }
 
 export async function GET() {
   const user = await getCurrentUser().catch(() => null);
   if (!user || !canUseDealerTools(user)) return NextResponse.json({ error: "로그인하면 쓸 수 있습니다." }, { status: 403 });
-  return NextResponse.json({ board: await board(user.id) }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(await board(user.id), { headers: { "Cache-Control": "no-store" } });
 }
 
 /** 한 판 기록 저장: { kind, correct, durationMs } (10문제 기준) */
@@ -62,5 +54,5 @@ export async function POST(request: Request) {
   }
   await prisma.dealerDrillRun.create({ data: { userId: user.id, kind, correct, total: ROUND_SIZE, durationMs } });
   clearPotTitleCache();
-  return NextResponse.json({ ok: true, board: await board(user.id) });
+  return NextResponse.json({ ok: true, ...(await board(user.id)) });
 }

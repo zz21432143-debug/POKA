@@ -15,6 +15,7 @@ export function AdminNav({
     { href: "/admin/banners", label: "배너" },
     { href: "/admin/stats", label: "통계" },
     { href: "/admin/inquiries", label: "광고 문의" },
+    { href: "/admin/titles", label: "칭호 관리" },
     ...(isMaster ? [{ href: "/admin/content", label: "콘텐츠 발행" }] : []),
     ...(isMaster ? [{ href: "/admin/launch", label: "오픈 준비" }] : []),
   ];

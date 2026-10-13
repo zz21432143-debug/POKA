@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
-import { PotTitleBadge } from "@/components/honor/crowned-frame";
+import { PotTitleBadge, usePotTitleInfo } from "@/components/honor/crowned-frame";
+import { PERIOD_LABEL } from "@/lib/pot-title-config";
 import { computePots, explainPots, payouts, potName, type PotPlayer } from "@/lib/side-pot";
 import {
   DEFAULT_BLINDS,
@@ -12,8 +13,6 @@ import {
   actionText,
   kindOf,
   potProblem,
-  POT_TITLES,
-  TITLE_DIFFICULTY,
   readNumber,
   validBlinds,
   withAnte,
@@ -581,6 +580,7 @@ function PotDrill({
 
 function Ranking({ board, difficulty }: { board: Board | null; difficulty: Difficulty }) {
   const [view, setView] = useState<Difficulty>(difficulty);
+  const titleInfo = usePotTitleInfo();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 난이도를 바꾸면 그 난이도 랭킹을 보여 줍니다.
     setView(difficulty);
@@ -591,7 +591,7 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-black">🏆 팟 계산 랭킹</h2>
         <span className="text-[11px] text-zinc-400">
-          {DIFFICULTY[TITLE_DIFFICULTY].label} 1~3위 칭호: {POT_TITLES[1]} · {POT_TITLES[2]} · {POT_TITLES[3]}
+          {PERIOD_LABEL[titleInfo.period]} 기준{titleInfo.enabled ? ` · ${DIFFICULTY[titleInfo.difficulty].label} 1~3위 칭호: ${titleInfo.names[1]} · ${titleInfo.names[2]} · ${titleInfo.names[3]}` : ""}
         </span>
         <div className="ml-auto flex rounded-full border border-white/20 p-0.5">
           {DIFFICULTIES.map((d) => (
@@ -626,7 +626,7 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
               </span>
               <span className={cn("flex min-w-0 flex-1 items-center gap-1 font-bold", !row && "text-zinc-600")}>
                 <span className="truncate">{row ? row.nickname : "—"}</span>
-                {row && view === TITLE_DIFFICULTY && i < 3 ? <PotTitleBadge nickname={row.nickname} rank={(i + 1) as 1 | 2 | 3} /> : null}
+                {row ? <PotTitleBadge nickname={row.nickname} /> : null}
               </span>
               {row ? (
                 <>
