@@ -82,6 +82,8 @@ export const SITEMAP_PATHS = [
   { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.4 },
   { path: "/youth", changeFrequency: "yearly" as const, priority: 0.3 },
   { path: "/about", changeFrequency: "yearly" as const, priority: 0.4 },
+  { path: "/operator", changeFrequency: "yearly" as const, priority: 0.3 },
+  { path: "/contact", changeFrequency: "yearly" as const, priority: 0.4 },
   { path: "/advertise", changeFrequency: "monthly" as const, priority: 0.4 },
 ] as const;
 

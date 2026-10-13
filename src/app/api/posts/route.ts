@@ -278,14 +278,17 @@ export async function POST(request: Request) {
     });
 
     // 새 급구는 그 지역 알림 구독자에게 휴대폰 푸시를 보냅니다. 실패해도 글 등록은 그대로 성공입니다.
+    let pushSent: number | null = null;
     if (jobKind === "URGENT" && jobData?.jobLocation) {
       const region = parseJobRegion(titleRegion(jobData.jobLocation));
       if (region) {
-        await notifyRegion(region, {
+        pushSent = 0;
+        const result = await notifyRegion(region, {
           title: `${region} 새 급구/대타`,
           body: title,
           url: `/posts/${post.id}`,
-        }).catch(() => undefined);
+        }).catch(() => ({ sent: 0 }));
+        pushSent = result.sent;
       }
     }
 
@@ -302,6 +305,8 @@ export async function POST(request: Request) {
       exp: reward.grantedExp,
       points: reward.grantedPoints,
       anonymous: false,
+      // 급구면 알림을 보낸 기기 수(글 위에 "N명에게 보냈어요")
+      ...(pushSent == null ? {} : { pushSent }),
     });
   } catch (error) {
     if (error instanceof CoolDownError) {

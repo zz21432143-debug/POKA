@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { replaceTo } from "@/lib/history-redirect";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { PostManageBar } from "@/components/posts/post-manage-bar";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
 import { TdaViewer } from "@/components/tda/tda-viewer";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
+import { PushSentNotice } from "@/components/jobs/urgent-reach";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { adsenseSlotId, splitForMidAd } from "@/lib/adsense";
 import { commentRewardLine } from "@/lib/rewards";
@@ -211,6 +213,10 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
+      {/* 급구를 막 올렸으면: 알림을 몇 명에게 보냈는지 */}
+      <Suspense fallback={null}>
+        <PushSentNotice />
+      </Suspense>
       <div className="flex items-center justify-between gap-2">
         <BackToList href={listHref} />
       </div>
@@ -235,8 +241,8 @@ export default async function PostDetailPage({
           {post.bannerSlot ? <Badge>배너 {post.bannerSlot}구좌</Badge> : null}
           {post.isPrivate ? <Badge variant="outline">비밀글</Badge> : null}
         </div>
-        {/* 공지·TDA 룰은 아래 종이 문서에 제목이 크게 들어가므로 여기 제목은 화면에서 숨깁니다. */}
-        <h1 className={docBoard ? "sr-only" : "article-title"}>{post.title}</h1>
+        {/* TDA 룰은 아래 종이 문서에 제목이 크게 들어가므로 여기 제목은 화면에서 숨깁니다(공지는 보통 글처럼 보여 줌). */}
+        <h1 className={docBoard && post.boardType !== "NOTICE" ? "sr-only" : "article-title"}>{post.title}</h1>
       </header>
       <div className="article-meta">
         <AuthorChip author={post.author} anonymous={false} size="md" />
@@ -407,6 +413,9 @@ export default async function PostDetailPage({
           loggedIn
           canManage={false}
         />
+      ) : post.content && post.boardType === "NOTICE" ? (
+        // 공지: A4 종이 대신 화면에 맞는 큰 글씨(긴 공지도 넘치지 않음)
+        <section data-notice-body className="notice-body rounded-2xl border-2 border-[#c9a25c]/55 bg-[#1d1611] px-4 py-5 sm:px-7 sm:py-7" dangerouslySetInnerHTML={{ __html: contentToDocHtml(post.content) }} />
       ) : post.content && docBoard ? (
         <DocDesk className="-mx-2 sm:mx-0">
           <DocSheet

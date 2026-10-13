@@ -17,6 +17,7 @@ import { addDays, eventsDateLabel, type JobEvent } from "@/lib/job-events";
 import { DateField, JobEventsEditor } from "@/components/jobs/date-picker";
 import { ChevronDownIcon, ClipboardPasteIcon, SparklesIcon } from "lucide-react";
 import { TAX_OPTIONS, needsTax } from "@/lib/job-tax";
+import { UrgentReach } from "@/components/jobs/urgent-reach";
 import { cn } from "cn";
 
 export type JobFormValues = {
@@ -383,9 +384,11 @@ export function JobWriteForm({
           jobLocation: location,
         }),
       });
-      const payload = (await response.json()) as { id?: string; error?: string };
+      const payload = (await response.json()) as { id?: string; error?: string; pushSent?: number };
       if (!response.ok || !payload.id) throw new Error(payload.error ?? "저장에 실패했습니다.");
-      router.replace(`/posts/${payload.id}`);
+      // 급구면 "알림 N명에게 보냈어요"를 글 위에 띄웁니다.
+      const pushed = payload.pushSent == null ? "" : `?pushed=${payload.pushSent}`;
+      router.replace(`/posts/${payload.id}${pushed}`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "저장에 실패했습니다.");
@@ -763,6 +766,7 @@ export function JobWriteForm({
               <Field label="근무 시간" value={form.jobWorkHours} onChange={(v) => set("jobWorkHours", v)} placeholder="22:00–06:00" />
               <Field label="경력 요구조건" value={form.jobExperience} onChange={(v) => set("jobExperience", v)} placeholder="대타 경험" />
               {travelPayField}
+              {postId ? null : <UrgentReach region={region} />}
             </>
           ) : null}
 

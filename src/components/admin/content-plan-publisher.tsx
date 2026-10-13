@@ -24,6 +24,8 @@ export type PublishItem = {
   manualHand: boolean;
   note: string | null;
   publishedId: string | null;
+  /** 이미 올린 글이 지금 계획 글(제목·본문)과 다름 */
+  stale: boolean;
   /** 올리지 않기로 뺀 글 */
   skipped: boolean;
 };
@@ -35,6 +37,7 @@ type State = {
   busy: boolean;
   error: string | null;
   doneId: string | null;
+  stale: boolean;
   skipped: boolean;
 };
 
@@ -59,6 +62,7 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
           busy: false,
           error: null,
           doneId: item.publishedId,
+          stale: item.stale,
           skipped: item.skipped,
         },
       ]),
@@ -103,6 +107,25 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
     } catch (err) {
       patch(item.id, { busy: false, error: err instanceof Error ? err.message : "올리지 못했습니다." });
       return false;
+    }
+  }
+
+  /** 이미 올린 글을 지금 계획의 제목·본문으로 고칩니다(같은 글 주소·댓글은 그대로). */
+  async function updatePublished(item: PublishItem) {
+    const s = state[item.id];
+    if (!s.doneId) return;
+    patch(item.id, { busy: true, error: null });
+    try {
+      const response = await fetch(`/api/posts/${s.doneId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: item.title, content: item.content }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "고치지 못했습니다.");
+      patch(item.id, { busy: false, stale: false, title: item.title });
+    } catch (err) {
+      patch(item.id, { busy: false, error: err instanceof Error ? err.message : "고치지 못했습니다." });
     }
   }
 
@@ -178,7 +201,25 @@ export function ContentPlanPublisher({ items }: { items: PublishItem[] }) {
               </div>
 
               {s.doneId ? (
-                <p className="mt-2 font-semibold">{s.title}</p>
+                <div className="mt-2 grid gap-2">
+                  <p className="font-semibold">{s.title}</p>
+                  {s.stale ? (
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#c9a25c]/60 bg-[#2a2017] p-2.5">
+                      <span className="min-w-0 flex-1 text-sm text-[#f3d9a4]">올린 글이 예전 내용이에요. 새 제목·본문으로 고칠까요? (글 주소·댓글은 그대로)</span>
+                      <button
+                        type="button"
+                        data-update-published
+                        disabled={s.busy}
+                        onClick={() => void updatePublished(item)}
+                        className="touch-target inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#c9a25c] px-4 text-sm font-bold text-[#1d1611] hover:bg-[#e7c98a] disabled:opacity-50"
+                      >
+                        {s.busy ? <Loader2Icon className="size-4 animate-spin" /> : <RotateCcwIcon className="size-4" />}
+                        새 내용으로 고치기
+                      </button>
+                    </div>
+                  ) : null}
+                  {s.error ? <p className="text-sm font-semibold text-destructive">{s.error}</p> : null}
+                </div>
               ) : (
                 <div className="mt-3 grid gap-2">
                   <Input value={s.title} onChange={(event) => patch(item.id, { title: event.target.value })} className="h-11 font-semibold" />

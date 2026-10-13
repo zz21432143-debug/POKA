@@ -1704,6 +1704,9 @@ select {
   width: 100%;
   max-width: 800px;
   aspect-ratio: 210 / 297;
+  /* 글이 A4보다 길면 종이가 늘어남(넘쳐서 화면을 뚫고 나가지 않게) */
+  height: auto;
+  min-height: fit-content;
   border-radius: 6px;
   background: #ffffff;
   color: #111111;
@@ -2042,3 +2045,81 @@ select {
   }
 }
 
+
+/* 공지 글: A4 종이 대신 어두운 바탕 · 큰 글씨 · 금색 제목 · 빨간 강조 */
+.notice-body {
+  color: #f5efe6;
+  font-size: 17px;
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.notice-body :where(*) {
+  color: inherit;
+}
+.notice-body > :first-child {
+  margin-top: 0;
+}
+.notice-body h1,
+.notice-body h2 {
+  margin: 1.4em 0 0.6em;
+  color: #f3d9a4;
+  font-size: 1.3em;
+  font-weight: 900;
+  line-height: 1.4;
+}
+.notice-body h3,
+.notice-body h4,
+.notice-body .doc-sub {
+  margin: 1.2em 0 0.4em;
+  color: #e7c98a;
+  font-size: 1.08em;
+  font-weight: 800;
+}
+.notice-body p {
+  margin: 0 0 0.9em;
+}
+.notice-body strong,
+.notice-body b {
+  color: #ffffff;
+  font-weight: 800;
+}
+.notice-body .red,
+.notice-body .doc-red,
+.notice-body .emph {
+  color: #ff8a8a;
+  font-weight: 800;
+}
+.notice-body .center {
+  text-align: center;
+}
+.notice-body ul,
+.notice-body ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.3em;
+}
+.notice-body ul {
+  list-style: disc;
+}
+.notice-body ol {
+  list-style: decimal;
+}
+.notice-body a {
+  color: #f3d9a4;
+  text-decoration: underline;
+}
+.notice-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+.notice-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+@media (min-width: 640px) {
+  .notice-body {
+    font-size: 18px;
+  }
+}

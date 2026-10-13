@@ -1,32 +1,19 @@
-"use client";
+import Link from "next/link";
+import { INFO_PAGES } from "@/components/legal/info-page";
 
-import { LegalDetailDialog } from "@/components/legal/legal-detail-dialog";
-import { PRIVACY_POLICY_SECTIONS, TERMS_SECTIONS, YOUTH_PROTECTION_SECTIONS } from "@/lib/legal";
-
-const triggerClassName =
-  "inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground";
-
+/** 바닥글 안내 링크: 검색·광고 심사에서 읽을 수 있게 팝업 대신 실제 페이지로 연결합니다. */
 export function FooterLegalLinks() {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <LegalDetailDialog
-        label="이용약관"
-        heading="POKA 이용약관"
-        sections={TERMS_SECTIONS}
-        triggerClassName={triggerClassName}
-      />
-      <LegalDetailDialog
-        label="개인정보 처리방침"
-        heading="개인정보처리방침"
-        sections={PRIVACY_POLICY_SECTIONS}
-        triggerClassName={triggerClassName}
-      />
-      <LegalDetailDialog
-        label="청소년 보호정책"
-        heading="청소년 보호정책"
-        sections={YOUTH_PROTECTION_SECTIONS}
-        triggerClassName={triggerClassName}
-      />
-    </div>
+    <nav aria-label="POKA 안내" className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:justify-end">
+      {INFO_PAGES.map((page) => (
+        <Link
+          key={page.href}
+          href={page.href}
+          className={`inline-flex min-h-10 items-center text-sm hover:text-foreground ${page.href === "/privacy" ? "font-bold text-[#e7c98a]" : "text-muted-foreground"}`}
+        >
+          {page.label}
+        </Link>
+      ))}
+    </nav>
   );
 }

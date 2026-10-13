@@ -1,28 +1,66 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { InfoPage, InfoSection } from "@/components/legal/info-page";
+import { POKA_TAGLINE } from "@/lib/brand-copy";
 
 export const metadata: Metadata = {
-  title: "POKA 소개",
-  description: "POKA는 홀덤 딜러 지원·급구 대타 구인구직을 중심으로 한 홀덤 딜러·플레이어 커뮤니티입니다.",
+  title: "사이트 소개",
+  description: "POKA는 홀덤 딜러 구인·급구 알림부터 게임 현황판, 딜러 로테이션, 매장 관리까지 한곳에서 하는 홀덤 딜러·매장 커뮤니티입니다.",
   alternates: { canonical: "/about" },
 };
 
+const FEATURES = [
+  {
+    title: "딜러 구인구직 · 급구 알림",
+    href: "/boards/jobs",
+    body: "지역·상호·시급이 제목에 붙는 구인 공고를 보고 사이트 안에서 바로 지원합니다. 앱을 설치하고 급구 알림을 켜 두면 내 지역(또는 전국) 급구가 올라오는 즉시 휴대폰으로 알려 드립니다.",
+  },
+  {
+    title: "게임 현황판",
+    href: "/tools/board",
+    body: "대회 블라인드 타이머, 플레이어 수, 평균 스택, 레지 마감·브레이크까지 남은 시간, 프라이즈를 매장 TV에 크게 띄웁니다.",
+  },
+  {
+    title: "딜러 로테이션 · 싯드로우",
+    href: "/tools/rotation",
+    body: "딜러 교대 시간표를 자동으로 짜고, 딜러들은 링크·QR로 자기 다음 테이블을 확인합니다. 싯드로우는 칩이 고르게 나뉘도록 좌석을 배정합니다.",
+  },
+  {
+    title: "급여 계산기 · 딜러 연습장",
+    href: "/tools/pay",
+    body: "시급·일당과 근무 시간으로 3.3%·4대보험 공제 후 실수령액을 계산하고, 사이드팟 계산을 연습하며 랭킹에 도전합니다.",
+  },
+  {
+    title: "커뮤니티 · 대회 정보",
+    href: "/community",
+    body: "자유게시판, 핸드리뷰, 현장 스케치, 전국 홀덤 대회 캘린더, TDA 룰을 한곳에서 봅니다.",
+  },
+] as const;
+
 export default function AboutPage() {
   return (
-    <article className="prose-legal mx-auto max-w-2xl">
-      <h1 className="text-2xl font-semibold">사이트 소개</h1>
-      <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
-        POKA(pokerwiki.co.kr)는 홀덤 딜러와 홀덤펍을 잇는 구인구직 커뮤니티입니다. 지원 딜러 구인과 급구·대타를
-        중심으로 대회 일정, 핸드리뷰, 자유게시판을 한곳에 모읍니다.
-      </p>
-      <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-7">
-        <li>지원 딜러 구인 — 지역·상호·시급이 제목에 붙고, 사이트 안에서 바로 지원할 수 있습니다.</li>
-        <li>급구 / 대타 — 내 지역을 정해 두면 새 급구를 알려 드립니다.</li>
-        <li>공고는 급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동 마감됩니다.</li>
-        <li>대회 캘린더 — 전국 홀덤 대회를 달력으로 봅니다.</li>
-        <li>인증 — 운영진이 확인한 딜러는 닉네임 옆에 골드 뱃지가 붙습니다.</li>
-        <li>만 19세 이상만 이용할 수 있습니다.</li>
-        <li>공식 오픈채팅은 상단과 우측의 노란 카카오 버튼으로 들어갑니다.</li>
+    <InfoPage title="사이트 소개" lead={`${POKA_TAGLINE}. POKA(pokerwiki.co.kr)는 홀덤 딜러와 매장을 잇는 커뮤니티입니다.`} current="/about">
+      <ul className="grid gap-3">
+        {FEATURES.map((item) => (
+          <li key={item.title}>
+            <InfoSection title={item.title}>
+              <p>{item.body}</p>
+              <Link href={item.href} className="w-fit font-bold text-[#f3d9a4] underline underline-offset-4">
+                바로 가기
+              </Link>
+            </InfoSection>
+          </li>
+        ))}
       </ul>
-    </article>
+      <InfoSection title="이용 안내">
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>회원 가입 후 모든 기능을 무료로 쓸 수 있습니다.</li>
+          <li>급구는 근무일이 지나면, 일반 공고는 30일이 지나면 자동으로 마감됩니다.</li>
+          <li>운영진이 확인한 딜러는 닉네임 옆에 골드 뱃지가 붙습니다.</li>
+          <li>POKA는 현금 게임·도박을 중개하지 않으며, 홀덤 딜러 일자리와 대회 정보만 다룹니다.</li>
+          <li>만 19세 이상만 이용할 수 있습니다.</li>
+        </ul>
+      </InfoSection>
+    </InfoPage>
   );
 }

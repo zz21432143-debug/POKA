@@ -36,14 +36,14 @@ export default async function AdminContentPage() {
       take: 200,
     }),
     prisma.post.findMany({
-      where: { authorId: user.id, hidden: false, title: { in: titles } },
-      select: { id: true, title: true },
+      where: { authorId: user.id, hidden: false, title: { in: [...titles, ...PLAN.flatMap((item) => item.oldTitles ?? [])] } },
+      select: { id: true, title: true, content: true },
       orderBy: { createdAt: "desc" },
     }),
     prisma.contentPlanSkip.findMany({ select: { planId: true } }),
   ]);
   const skipped = new Set(skips.map((row) => row.planId));
-  const doneByTitle = new Map(published.map((row) => [row.title, row.id]));
+  const doneByTitle = new Map(published.map((row) => [row.title, row]));
 
   const items: PublishItem[] = PLAN.map((item, index) => {
     let content = item.content;
@@ -58,6 +58,8 @@ export default async function AdminContentPage() {
         ? `대회 캘린더의 ${item.schedule === "week" ? "이번 주" : "이번 주말"} 일정 ${rows.length}개로 채웠습니다.`
         : `대회 캘린더에 ${item.schedule === "week" ? "이번 주" : "이번 주말"} 일정이 없습니다. 먼저 대회 캘린더에 일정을 올려 주세요.`;
     }
+    // 새 제목으로 올린 글이 없으면 예전 제목으로 올린 글을 찾습니다(→ '새 내용으로 고치기').
+    const done = doneByTitle.get(titles[index]) ?? (item.oldTitles ?? []).map((t) => doneByTitle.get(t)).find(Boolean);
     return {
       id: item.id,
       order: index + 1,
@@ -72,7 +74,9 @@ export default async function AdminContentPage() {
       photos: Boolean(item.photos),
       manualHand: Boolean(item.manualHand),
       note,
-      publishedId: doneByTitle.get(titles[index]) ?? null,
+      publishedId: done?.id ?? null,
+      // 올린 글이 지금 계획 글과 다르면(제목·본문을 고친 경우) 고치기 버튼을 보여 줍니다. 대회 일정 요약 글은 매주 바뀌므로 빼요.
+      stale: Boolean(done && !item.schedule && (done.title !== titles[index] || done.content !== content)),
       skipped: skipped.has(item.id),
     };
   });
