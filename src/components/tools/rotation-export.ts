@@ -2,53 +2,14 @@
 
 import type { RotationDealerView } from "@/lib/rotation";
 import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
+import { BRAND_FONT, CREDIT, FOOTER_H, drawCredit, drawLogo, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
 
 /**
  * 로테이션 공유(단톡방·캡처)는 "지금 교대" 한 번만 보여 줍니다.
  * 테이블마다 "T5 박딜러 → 김딜러"처럼 나가는 딜러 → 들어가는 딜러를 한 줄에 적어, 시간·테이블·사람을 헷갈리지 않게 합니다.
  */
 
-const FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
-/** 이미지에 넣는 POKA 로고 */
-const LOGO_SRC = "/brand/poka-holdem-logo.jpg";
-/** 이미지 맨 아래 출처 표시 */
-const CREDIT = "POKA 홀덤 커뮤니티 · pokerwiki.co.kr";
-const FOOTER_H = 46;
-
-let logoPromise: Promise<HTMLImageElement | null> | null = null;
-function loadLogo() {
-  logoPromise ??= new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = LOGO_SRC;
-  });
-  return logoPromise;
-}
-
-/** 오른쪽 위 로고(검은 둥근 칸 안) */
-function drawLogo(ctx: CanvasRenderingContext2D, logo: HTMLImageElement | null, x: number, y: number, size: number) {
-  if (!logo) return;
-  ctx.save();
-  ctx.fillStyle = "#0b0b0d";
-  ctx.beginPath();
-  ctx.roundRect(x, y, size, size, 12);
-  ctx.fill();
-  ctx.clip();
-  ctx.drawImage(logo, x, y, size, size);
-  ctx.restore();
-}
-
-/** 맨 아래 "POKA에서 만든 표" 띠 */
-function drawCredit(ctx: CanvasRenderingContext2D, width: number, height: number) {
-  ctx.fillStyle = "#7f1d1d";
-  ctx.fillRect(0, height - FOOTER_H, width, FOOTER_H);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `800 16px ${FONT}`;
-  ctx.textAlign = "center";
-  ctx.fillText(`ⓒ ${CREDIT}`, width / 2, height - FOOTER_H / 2 + 6);
-  ctx.textAlign = "left";
-}
+const FONT = BRAND_FONT;
 
 export type SwapRow = { label: number; from: string | null; to: string | null; closed: boolean };
 
@@ -95,8 +56,8 @@ function rowText(row: SwapRow, name: (id: string | null) => string) {
 }
 
 /** 단톡방 텍스트 */
-export function swapText(info: SwapInfo, name: (id: string | null) => string, button: number | null) {
-  const lines = [`【 ${formatClock(info.at)} 교대 】${button ? ` 버튼 ${button}번` : ""}`];
+export function swapText(info: SwapInfo, name: (id: string | null) => string, button: number | null, title = "") {
+  const lines = [`【 ${title ? `${title} · ` : ""}${formatClock(info.at)} 교대 】${button ? ` 버튼 ${button}번` : ""}`];
   for (const row of info.rows) lines.push(`T${row.label}  ${rowText(row, name)}`);
   if (info.toRest.length) lines.push(`휴식 들어감: ${info.toRest.map(name).join(", ")}`);
   if (info.stillRest.length) lines.push(`계속 휴식: ${info.stillRest.map(name).join(", ")}`);
@@ -104,17 +65,7 @@ export function swapText(info: SwapInfo, name: (id: string | null) => string, bu
   return lines.join("\n");
 }
 
-function save(canvas: HTMLCanvasElement, filename: string) {
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, "image/png");
-}
+const save = saveCanvas;
 
 /** 긴 글을 폭에 맞게 여러 줄로 나눕니다(이름 사이 ", " 기준) */
 function wrapNames(ctx: CanvasRenderingContext2D, label: string, names: string[], maxWidth: number) {
@@ -139,7 +90,7 @@ function columnsFor(count: number, two: number, three: number) {
 }
 
 /** 시간별(교대표) 이미지: 큰 교대 시간 + "T5 박딜러 → 김딜러" 줄. 테이블이 많으면 2~3단 */
-export async function downloadSwapImage(info: SwapInfo, name: (id: string | null) => string, button: number | null) {
+export async function downloadSwapImage(info: SwapInfo, name: (id: string | null) => string, button: number | null, title = "") {
   const logo = await loadLogo();
   const cols = columnsFor(info.rows.length, 14, 40);
   const colW = 640;
@@ -169,12 +120,17 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
   ctx.font = `900 54px ${FONT}`;
   ctx.fillText(`${formatClock(info.at)} 교대`, 24, 68);
   const sub = [info.prevAt != null ? `이전 ${formatClock(info.prevAt)} → ${formatClock(info.at)}` : "", button ? `버튼 ${button}번` : ""].filter(Boolean).join(" · ");
+  ctx.textAlign = "right";
+  if (title) {
+    // 게임 이름(예: WPL)
+    ctx.font = `900 24px ${FONT}`;
+    ctx.fillText(title, width - 104, 36);
+  }
   if (sub) {
     ctx.font = `800 16px ${FONT}`;
-    ctx.textAlign = "right";
-    ctx.fillText(sub, width - 104, 62);
-    ctx.textAlign = "left";
+    ctx.fillText(sub, width - 104, 66);
   }
+  ctx.textAlign = "left";
   drawLogo(ctx, logo, width - 92, 8, 80);
   info.rows.forEach((row, index) => {
     const col = Math.floor(index / perCol);
@@ -216,11 +172,19 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
     y += 32;
   }
   drawCredit(ctx, width, height);
-  save(canvas, `교대_${formatClock(info.at).replace(":", "")}.png`);
+  save(canvas, `${title ? `${title.replace(/[\\/:*?"<>|\s]+/g, "_")}_` : ""}교대_${formatClock(info.at).replace(":", "")}.png`);
 }
 
 /** 딜러별 이미지: 딜러마다 "지금 → 교대 후". 딜러가 많으면 2~3단 */
-export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan, current: number, next: number, labels: number[], dealers: RotationDealerView[]) {
+export async function downloadDealerSwapImage(
+  info: SwapInfo,
+  plan: RotationPlan,
+  current: number,
+  next: number,
+  labels: number[],
+  dealers: RotationDealerView[],
+  title = "",
+) {
   const logo = await loadLogo();
   const before = current >= 0 ? plan.slots[current] : null;
   const after = plan.slots[next];
@@ -251,7 +215,7 @@ export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan
   ctx.fillText(`${formatClock(info.at)} 교대 · 딜러별`, 24, 56);
   ctx.fillStyle = "#a1a1aa";
   ctx.font = `700 15px ${FONT}`;
-  ctx.fillText(`${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 24, 86);
+  ctx.fillText(`${title ? `${title} · ` : ""}${info.prevAt != null ? `지금(${formatClock(info.prevAt)})` : "지금"} → ${formatClock(info.at)}`, 24, 86);
   drawLogo(ctx, logo, width - 84, 10, 72);
   list.forEach((dealer, index) => {
     const col = Math.floor(index / perCol);
@@ -274,5 +238,5 @@ export async function downloadDealerSwapImage(info: SwapInfo, plan: RotationPlan
     ctx.fillText(`${then}${now === then ? " (유지)" : ""}`, x + 360, y);
   });
   drawCredit(ctx, width, height);
-  save(canvas, `교대_딜러별_${formatClock(info.at).replace(":", "")}.png`);
+  save(canvas, `${title ? `${title.replace(/[\\/:*?"<>|\s]+/g, "_")}_` : ""}교대_딜러별_${formatClock(info.at).replace(":", "")}.png`);
 }

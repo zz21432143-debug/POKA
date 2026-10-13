@@ -412,10 +412,28 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     <div className="grid gap-3 pb-10 text-white">
       {/* 게임: 근무일 · 이름 · 바꾸기 */}
       <section aria-label="게임" className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-sky-500/60 bg-sky-950/40 p-3">
-        <div className="grid min-w-0">
-          <span className="text-xs font-bold text-sky-300">근무일 · 게임</span>
-          <span className="truncate text-2xl font-black">
-            {formatWorkDate(state.game.workDate)} <span className="text-amber-300">{state.game.name}</span>
+        <div className="grid min-w-0 gap-1">
+          <span className="text-xs font-bold text-sky-300">근무일 · 게임 이름(교대표·TV에 나옵니다)</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-2xl font-black">{formatWorkDate(state.game.workDate)}</span>
+            <input
+              key={`${state.game.id}-${state.game.name}`}
+              aria-label="게임 이름"
+              defaultValue={state.game.name}
+              maxLength={30}
+              placeholder="예: WPL"
+              disabled={busy}
+              onBlur={(e) => {
+                const value = e.target.value.trim();
+                if (value && value !== state.game.name) void send({ type: "setGame", name: value });
+                else e.target.value = state.game.name;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              className="h-11 w-48 max-w-full rounded-lg border-2 border-amber-400/70 bg-black px-2 text-xl font-black text-amber-300"
+            />
+            <span className="text-xs text-zinc-400">✎ 눌러서 바로 바꾸기</span>
           </span>
         </div>
         <select
@@ -458,7 +476,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             onClick={() => setGameDialog({ mode: "edit", name: state.game.name, workDate: state.game.workDate ?? kstDate(), copyDealers: false, copySettings: false })}
             className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold"
           >
-            ✎ 이름·날짜
+            ✎ 날짜·삭제
           </button>
         </div>
       </section>
@@ -682,12 +700,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <span className="text-2xl font-black text-amber-300">다음 교대 {formatClock(swap.at)}</span>
             <span className="text-sm font-bold text-amber-100">{untilLabel(swap.at - now)}</span>
             <div className="ml-auto flex flex-wrap gap-1.5">
-              <button type="button" onClick={() => void downloadSwapImage(swap, name, button)} className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black">
+              <button type="button" onClick={() => void downloadSwapImage(swap, name, button, state.game.name)} className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black">
                 교대표 이미지
               </button>
               <button
                 type="button"
-                onClick={() => void downloadDealerSwapImage(swap, plan, current, next, labels, state.dealers)}
+                onClick={() => void downloadDealerSwapImage(swap, plan, current, next, labels, state.dealers, state.game.name)}
                 className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black"
               >
                 딜러별 이미지
@@ -695,7 +713,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               <button
                 type="button"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(swapText(swap, name, button)).catch(() => undefined);
+                  await navigator.clipboard.writeText(swapText(swap, name, button, state.game.name)).catch(() => undefined);
                   setCopied(true);
                   window.setTimeout(() => setCopied(false), 1500);
                 }}
@@ -1235,7 +1253,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               게임 이름
               <input
                 value={gameDialog.name}
-                placeholder="예: 메인 게임, 사이드 이벤트"
+                placeholder="예: WPL, 메인 게임, 사이드 이벤트"
                 maxLength={30}
                 onChange={(e) => setGameDialog({ ...gameDialog, name: e.target.value })}
                 className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"

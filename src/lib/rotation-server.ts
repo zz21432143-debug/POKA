@@ -18,6 +18,8 @@ import type { RotationPlan } from "@/lib/rotation-plan";
 
 /** 게임 목록에 보여 줄 개수 */
 const GAME_LIST = 40;
+/** 계정당 게임 수 상한 */
+const MAX_GAMES = 100;
 const GAME_ORDER = [{ workDate: { sort: "desc" as const, nulls: "last" as const } }, { createdAt: "desc" as const }];
 /** 시간표 칸 수 상한(5분 간격 24시간 = 288칸) */
 const MAX_SLOTS = 300;
@@ -303,6 +305,9 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         // 새 게임(다른 날짜 또는 같은 날 다른 이벤트). 설정·딜러 명단은 골라서 가져옵니다.
         const workDate = normalizeWorkDate(action.workDate);
         if (!workDate) throw new RotationError("날짜를 확인하세요.");
+        if ((await tx.rotationMeta.count({ where: { ownerId } })) >= MAX_GAMES) {
+          throw new RotationError(`게임은 ${MAX_GAMES}개까지 만들 수 있습니다. 지난 게임을 지워 주세요(✎ 날짜·삭제).`);
+        }
         const name = String(action.name ?? "").trim().slice(0, 30) || "새 게임";
         const from = await tx.rotationMeta.findUniqueOrThrow({ where: { id: META_ID } });
         const id = randomUUID();

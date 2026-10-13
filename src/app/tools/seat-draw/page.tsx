@@ -5,12 +5,12 @@ import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { SeatDraw } from "@/components/tools/seat-draw";
 
-export const metadata: Metadata = { title: "제작중", robots: { index: false } };
+export const metadata: Metadata = { title: "싯드로우", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function SeatDrawPage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!canUseDealerTools(user)) return <ToolsLocked />;
+  if (!canUseDealerTools(user)) return <ToolsLocked next="/tools/seat-draw" />;
   return (
     <div className="flex flex-col gap-3">
       <header>

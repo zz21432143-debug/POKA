@@ -3,11 +3,13 @@
 import { useRef, useState } from "react";
 import { cn } from "cn";
 import { drawResultText, drawSeats, parsePlayers, type DrawResult } from "@/lib/seat-draw";
+import { BRAND_FONT, FOOTER_H, PRINT_FOOTER, PRINT_ON_LOAD, drawCredit, drawLogo, loadLogo, printHeader, saveCanvas } from "@/components/tools/brand-canvas";
 
 const won = (n: number) => Math.round(n).toLocaleString("ko-KR");
 
-/** 결과를 이미지(PNG)로 그려 내려받습니다. */
-function downloadImage(result: DrawResult, title: string) {
+/** 결과를 이미지(PNG)로 그려 내려받습니다. 오른쪽 위 POKA 로고, 맨 아래 출처 띠 */
+async function downloadImage(result: DrawResult, title: string) {
+  const logo = await loadLogo();
   const cols = Math.min(4, result.tables.length);
   const rowsMax = Math.max(...result.tables.map((t) => t.players.length));
   const cardW = 300;
@@ -17,17 +19,21 @@ function downloadImage(result: DrawResult, title: string) {
   const canvas = document.createElement("canvas");
   const scale = 2;
   canvas.width = (pad + cols * (cardW + pad)) * scale;
-  canvas.height = (90 + rows * (cardH + pad)) * scale;
+  const width = pad + cols * (cardW + pad);
+  const height = 90 + rows * (cardH + pad) + FOOTER_H;
+  canvas.width = Math.max(width, 420) * scale;
+  canvas.height = height * scale;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.scale(scale, scale);
   ctx.fillStyle = "#0b0b0d";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#f5d76e";
-  ctx.font = "bold 26px sans-serif";
+  ctx.font = `900 26px ${BRAND_FONT}`;
   ctx.fillText(title, pad, 42);
+  drawLogo(ctx, logo, Math.max(width, 420) - 76, 8, 64);
   ctx.fillStyle = "#a1a1aa";
-  ctx.font = "14px sans-serif";
+  ctx.font = `700 14px ${BRAND_FONT}`;
   ctx.fillText(`테이블 평균 차이 ${won(result.averageSpread)} · 전체 평균 ${won(result.overallAverage)}`, pad, 66);
   result.tables.forEach((table, index) => {
     const x = pad + (index % cols) * (cardW + pad);
@@ -54,15 +60,8 @@ function downloadImage(result: DrawResult, title: string) {
       ctx.textAlign = "left";
     });
   });
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title.replace(/\s+/g, "_")}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, "image/png");
+  drawCredit(ctx, Math.max(width, 420), height);
+  saveCanvas(canvas, `${title.replace(/\s+/g, "_")}.png`);
 }
 
 /** 싯드로우: 칩 균형 + 좌석 무작위 배정 */
@@ -124,14 +123,12 @@ export function SeatDraw() {
           .join("")}</table></section>`,
       )
       .join("");
-    w.document.write(`<!doctype html><meta charset="utf-8"><title>${title}</title><style>
+    w.document.write(`<!doctype html><meta charset="utf-8"><title>${title.replace(/</g, "&lt;")}</title><style>
       body{font-family:sans-serif;margin:16px} h1{margin:0 0 4px} .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
       section{border:1px solid #999;border-radius:8px;padding:8px;break-inside:avoid} h2{margin:0;font-size:18px} p{margin:2px 0 6px;font-size:12px;color:#444}
       table{width:100%;border-collapse:collapse;font-size:14px} td{border-top:1px solid #ddd;padding:3px} .s{width:28px;font-weight:bold} .c{text-align:right}
-    </style><h1>${title}</h1><p>테이블 평균 차이 ${won(result.averageSpread)} · 전체 평균 ${won(result.overallAverage)}</p><div class="grid">${cards}</div>`);
+    </style>${printHeader(title, `테이블 평균 차이 ${won(result.averageSpread)} · 전체 평균 ${won(result.overallAverage)}`)}<div class="grid">${cards}</div>${PRINT_FOOTER}${PRINT_ON_LOAD}`);
     w.document.close();
-    w.focus();
-    w.print();
   }
 
   return (
@@ -217,7 +214,7 @@ export function SeatDraw() {
               >
                 {copied ? "복사됨 ✓" : "단톡방용 복사"}
               </button>
-              <button type="button" onClick={() => downloadImage(result, title)} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold">
+              <button type="button" onClick={() => void downloadImage(result, title)} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold">
                 이미지 저장
               </button>
               <button type="button" onClick={print} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold">

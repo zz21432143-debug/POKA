@@ -158,5 +158,6 @@ export function drawResultText(result: DrawResult, title = "싯드로우") {
     }
     lines.push("");
   }
+  lines.push("- POKA 홀덤 커뮤니티 · pokerwiki.co.kr");
   return lines.join("\n").trim();
 }

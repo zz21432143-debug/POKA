@@ -1,8 +1,8 @@
 /**
- * 딜러 툴(로테이션·싯드로우) 공개 여부.
- * 완성 전까지는 POKA 마스터 계정만 들어갈 수 있습니다. 공개할 때 true로 바꾸면 로그인 회원 모두 씁니다.
+ * 딜러 툴(로테이션·싯드로우·급여 계산기) 공개 여부.
+ * true면 로그인한 회원 누구나 씁니다(로테이션은 계정마다 따로라 서로 안 보입니다). false면 마스터 계정만.
  */
-export const DEALER_TOOLS_OPEN = false;
+export const DEALER_TOOLS_OPEN = true;
 
 export function canUseDealerTools(user: { isMaster?: boolean } | null | undefined) {
   if (!user) return false;

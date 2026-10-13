@@ -132,9 +132,8 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
         <img src="/brand/poka-holdem-logo.jpg" alt="POKA" className={cn("rounded-lg", tv ? "size-20" : "size-12")} />
         <div className="grid min-w-0">
           <span className="text-xs font-bold text-zinc-400">교대표 · 보기 전용</span>
-          <span className={cn("truncate font-black", tv ? "text-4xl" : "text-xl")}>
-            {formatWorkDate(state.game.workDate)} <span className="text-amber-300">{state.game.name}</span>
-          </span>
+          <span className={cn("truncate font-black text-amber-300", tv ? "text-5xl" : "text-2xl")}>{state.game.name}</span>
+          <span className={cn("font-bold text-zinc-300", tv ? "text-xl" : "text-sm")}>{formatWorkDate(state.game.workDate)}</span>
         </div>
         <span className={cn("ml-auto font-black text-amber-300 tabular-nums", tv ? "text-5xl" : "text-2xl")}>{kstClock(clock)}</span>
         <button type="button" onClick={() => void toggleTv()} className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-black">
