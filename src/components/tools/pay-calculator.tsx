@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "cn";
+import { Oni } from "@/components/brand/oni";
 import { DEFAULT_RATES, calcPay, hoursText, payText, won, type InsuranceRates, type PayOptions, type PayShift } from "@/lib/pay-calc";
 import { kstDate } from "@/lib/rotation";
 import { PayImport } from "@/components/tools/pay-import";
@@ -288,8 +289,11 @@ export function PayCalculator() {
               <Row label="4대보험 합계" value={`-${won(result.insurance.total)}`} minus />
             </>
           ) : null}
-          <div className="mt-1 flex items-baseline justify-between rounded-xl bg-black px-3 py-2">
-            <dt className="text-lg font-black">실수령액</dt>
+          <div className="mt-1 flex items-center justify-between rounded-xl bg-black px-3 py-2">
+            <dt className="flex items-center gap-2 text-lg font-black">
+              <Oni pose={result.net > 0 ? "happy" : "think"} className="size-10 shrink-0" />
+              실수령액
+            </dt>
             <dd data-net className="text-3xl font-black text-emerald-300 tabular-nums">
               {won(result.net)}
             </dd>

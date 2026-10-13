@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
+import { Oni } from "@/components/brand/oni";
 import { TitleChip } from "@/components/honor/crowned-frame";
 import { PERIOD_LABEL } from "@/lib/pot-title-config";
 import { computePots, explainPots, payouts, potName, type PotPlayer } from "@/lib/side-pot";
@@ -538,7 +539,8 @@ function PotDrill({
 
   if (phase === "done") {
     return (
-      <section data-drill-done className="grid gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 p-4">
+      <section data-drill-done className="relative grid gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 p-4">
+        <Oni pose={correct >= ROUND_SIZE - 1 ? "love" : correct >= 2 ? "happy" : "think"} className="absolute top-3 right-3 h-16 w-16 sm:h-20 sm:w-20" />
         <h2 className="text-lg font-black">팟 계산 · {conf.label} 끝!</h2>
         <p className="text-3xl font-black">
           {correct}/{ROUND_SIZE} <span className="text-lg text-zinc-300">· {secText(elapsed)}</span>
@@ -650,7 +652,10 @@ function PotDrill({
           </div>
           {checked !== null && answer ? (
             <div data-feedback className={cn("grid gap-1.5 rounded-xl px-3 py-2", checked ? "bg-emerald-950" : "bg-rose-950")}>
-              <p className={cn("text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>{checked ? "정답!" : gaveUp ? "포기 — 정답과 풀이" : "틀렸습니다"}</p>
+              <p className={cn("flex items-center gap-2 text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>
+                <Oni pose={checked ? "love" : "think"} className="size-10 shrink-0 sm:size-12" />
+                {checked ? "정답!" : gaveUp ? "포기 — 정답과 풀이" : "틀렸습니다"}
+              </p>
               {gaveUp ? (
                 <p data-answer-sheet className="flex flex-wrap gap-1.5 text-sm font-black">
                   {fields.map((label, i) => (
