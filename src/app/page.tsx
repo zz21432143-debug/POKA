@@ -12,6 +12,7 @@ import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { FreePromoBanner } from "@/components/ads/free-promo-banner";
+import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { HomeHero } from "@/components/home/home-hero";
 import { FREE_PROMO } from "@/lib/free-promo";
 
@@ -54,6 +55,7 @@ async function HomeFeedSections() {
       <Suspense fallback={<HomePanelFallback className="h-24" />}>
         <HomePosters />
       </Suspense>
+      <GoogleAdUnit placement="home-mid" />
       <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>

@@ -445,6 +445,9 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
+      {/* 본문 바로 아래 광고(가장 많이 보는 자리) */}
+      {canRead ? <GoogleAdUnit placement="post-top" /> : null}
+
       {canRead ? (
       <section className="article-comments">
         <h2 className="text-lg font-bold text-white">댓글 {post.comments.length}</h2>
@@ -486,7 +489,6 @@ export default async function PostDetailPage({
 
       {canRead ? (
         <>
-          <GoogleAdUnit placement="post-top" />
           <GoogleAdUnit placement="post-bottom" />
         </>
       ) : null}

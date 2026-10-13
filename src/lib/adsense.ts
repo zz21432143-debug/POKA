@@ -4,6 +4,8 @@ export type AdSensePlacement =
   | "post-bottom"
   | "board-bottom"
   | "home-bottom"
+  | "home-mid"
+  | "infeed"
   | "sidebar"
   | "a1"
   | "a2"
@@ -25,6 +27,8 @@ export function adsenseSlotId(placement: AdSensePlacement): string {
     "post-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_BOTTOM,
     "board-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOARD_BOTTOM,
     "home-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME_BOTTOM,
+    "home-mid": process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME_MID,
+    infeed: process.env.NEXT_PUBLIC_ADSENSE_SLOT_INFEED,
     sidebar: process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR,
     a1: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A1,
     a2: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A2,
@@ -61,6 +65,18 @@ export const GOOGLE_REMNANT_MOCKS: Record<
     title: "오늘의 추천 상품",
     line: "구글 디스플레이 · 메인 하단",
     tone: "from-rose-100 to-white",
+  },
+  "home-mid": {
+    kicker: "쇼핑",
+    title: "오늘의 추천 상품",
+    line: "구글 디스플레이 · 메인 가운데",
+    tone: "from-rose-100 to-white",
+  },
+  infeed: {
+    kicker: "추천",
+    title: "관련 추천",
+    line: "구글 디스플레이 · 글 목록 사이",
+    tone: "from-amber-100 to-white",
   },
   sidebar: {
     kicker: "금융",

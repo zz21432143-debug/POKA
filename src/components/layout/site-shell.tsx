@@ -6,6 +6,7 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
+import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { getCurrentUser } from "@/lib/current-user";
@@ -89,6 +90,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <Suspense fallback={null}>
             <ConnectedSidebarSponsor />
           </Suspense>
+          {/* 구글 사이드 광고: 스크롤해도 화면에 남음(단위가 안 정해졌으면 안 보임) */}
+          <div className="sticky top-24">
+            <GoogleAdUnit placement="sidebar" media="(min-width: 1024px)" />
+          </div>
         </aside>
         <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
           {children}
