@@ -19,7 +19,7 @@ export const TOP_NAV = [
   { href: "/boards/jobs", label: "구인구직" },
   { href: "/community", label: "커뮤니티" },
   { href: "/info", label: "대회 · 정보" },
-  { href: "/tools", label: "딜러 툴" },
+  { href: "/tools", label: "매장 관리" },
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [
@@ -67,6 +67,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
+      { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },
@@ -82,15 +83,14 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     ],
   },
   {
-    // 로그인한 회원 누구나 씁니다(로테이션 · 현황판은 계정마다 따로).
-    title: "딜러 툴",
+    // 매장 · 대회 운영 도구. 로그인한 회원 누구나(로테이션 · 현황판은 계정마다 따로).
+    title: "매장 관리",
     collapsible: true,
     closed: true,
     items: [
       { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
       { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
       { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
-      { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟", icon: "omamori" },
       { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
     ],
   },

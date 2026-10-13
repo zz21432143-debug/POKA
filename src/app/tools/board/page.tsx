@@ -21,7 +21,7 @@ export default async function GameBoardPage({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-3">
       <header className="board-intro">
         <Link href="/tools" className="text-xs font-bold text-[#c9a25c]">
-          ← 딜러 툴
+          ← 매장 관리
         </Link>
         <BoardTitle sticker={BOARD_STICKER.board}>게임 현황판</BoardTitle>
         <p className="mt-2">TV에 띄우는 토너먼트 시계. 휴대폰으로 조작하면 TV에 바로 반영돼요.</p>

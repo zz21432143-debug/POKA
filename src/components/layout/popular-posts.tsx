@@ -7,6 +7,8 @@ import { BrandIcon } from "@/components/brand/brand-icon";
 
 export async function PopularPosts() {
   const posts = await getPopularPosts(5).catch(() => []);
+  // 아직 집계된 글이 없으면 빈 칸을 두지 않습니다
+  if (posts.length === 0) return null;
   return (
     <section className="lounge-card rounded-[1.5rem] p-4">
       <p className="flex items-center gap-1.5 text-sm font-semibold">

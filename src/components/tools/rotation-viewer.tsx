@@ -171,7 +171,8 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   }
 
   const content = (
-    <div className={cn("poka-watermark grid gap-3 text-white", tv ? "fixed inset-0 z-[9999] content-start overflow-auto bg-black p-4" : "pb-10")}>
+    // TV: 화면 전체를 덮음. 워터마크 스타일(position: relative)이 fixed를 덮어써 TV 화면이 페이지 맨 아래로 밀려 사라지던 문제 — 직접 고정
+    <div className={cn("poka-watermark grid gap-3 text-white", tv ? "inset-0 z-[9999] content-start overflow-auto bg-black p-4" : "pb-10")} style={tv ? { position: "fixed" } : undefined}>
       <header className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3">
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 로고 한 장 */}
         <img src="/brand/poka-oni-mark.png" alt="POKA" className={cn("h-auto shrink-0", tv ? "w-20" : "w-12")} />

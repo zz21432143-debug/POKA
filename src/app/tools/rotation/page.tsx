@@ -19,7 +19,7 @@ export default async function RotationPage({ searchParams }: { searchParams: Pro
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <Link href="/tools" className="text-xs font-bold text-[#c9a25c]">
-            ← 딜러 툴
+            ← 매장 관리
           </Link>
           <h1 className="text-2xl font-black text-white">딜러 로테이션</h1>
           <p className="text-xs text-zinc-400">딜러 탭에서 딜러를 등록하고, 설정 탭에서 시작 시간·테이블을 정한 뒤 운영 탭의 Auto를 누르면 교대 시간표가 짜집니다. 공유 탭에서 링크·QR로 딜러들에게 보여 줄 수 있습니다.</p>

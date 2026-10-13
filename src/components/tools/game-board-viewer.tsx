@@ -75,8 +75,8 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
         <>
           <GameBoardScreen data={board.data} now={now} sound={sound} />
           {!sound ? (
-            <button type="button" onClick={() => void start()} className="absolute right-3 bottom-3 rounded-xl bg-amber-400 px-4 py-2 text-sm font-black text-black shadow-lg">
-              🔊 전체 화면 + 레벨 알림음 켜기
+            <button type="button" onClick={() => void start()} className="absolute right-2 bottom-2 rounded-lg bg-amber-400/90 px-2.5 py-1 text-[11px] font-black text-black shadow-lg sm:right-3 sm:bottom-3 sm:px-4 sm:py-2 sm:text-sm">
+              🔊 전체 화면 · 알림음
             </button>
           ) : null}
         </>

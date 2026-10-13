@@ -101,20 +101,23 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.8)] @[560px]:grid-cols-[1fr_2.1fr_1fr]">
+      <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.8)] @[560px]:grid-cols-[0.82fr_2.6fr_0.86fr] @[560px]:grid-rows-[minmax(0,1fr)]">
         {/* 가운데: 레벨 · 시계 · 블라인드(세로 화면은 맨 위) */}
         <section className="grid content-center justify-items-center gap-[calc(var(--u)*0.5)] text-center @[560px]:order-2">
-          <span data-level className={cn("rounded-full px-[calc(var(--u)*2)] py-[calc(var(--u)*0.3)] text-[clamp(15px,calc(var(--u)*2.3),46px)] font-black tracking-wider", view.level.isBreak ? "bg-sky-500/25 text-sky-200" : "bg-amber-400/15 text-amber-300")}>
-            {view.level.isBreak ? "BREAK · 휴식" : `LEVEL ${view.number}`}
+          {/* 레벨 · (멈춤) 한 줄 — 시계 칸을 넓게 */}
+          <span className="flex flex-wrap items-center justify-center gap-[calc(var(--u)*0.8)]">
+            <span data-level className={cn("rounded-full px-[calc(var(--u)*2)] py-[calc(var(--u)*0.3)] text-[clamp(13px,calc(var(--u)*2),40px)] font-black tracking-wider", view.level.isBreak ? "bg-sky-500/25 text-sky-200" : "bg-amber-400/15 text-amber-300")}>
+              {view.level.isBreak ? "BREAK · 휴식" : `LEVEL ${view.number}`}
+            </span>
+            {!view.running ? (
+              <span data-paused className="animate-pulse rounded-full bg-rose-600/85 px-[calc(var(--u)*1.5)] py-[calc(var(--u)*0.3)] text-[clamp(13px,calc(var(--u)*2),40px)] font-black">
+                {view.finished ? "마지막 레벨 끝" : "일시 정지"}
+              </span>
+            ) : null}
           </span>
-          <span data-timer className={cn("leading-none font-black tabular-nums", warn ? "text-rose-400" : "text-white", "text-[clamp(50px,calc(var(--u)*11),250px)]")}>
+          <span data-timer className={cn("leading-[0.95] font-black tabular-nums", warn ? "text-rose-400" : !view.running ? "text-white/70" : "text-white", "text-[clamp(56px,calc(var(--u)*13.5),300px)]")}>
             {clockText(view.remainingMs)}
           </span>
-          {!view.running ? (
-            <span data-paused className="animate-pulse rounded-lg bg-rose-600/80 px-[calc(var(--u)*1.5)] text-[clamp(14px,calc(var(--u)*2),40px)] font-black">
-              {view.finished ? "마지막 레벨 끝" : "일시 정지"}
-            </span>
-          ) : null}
           <div className="h-[clamp(6px,calc(var(--u)*0.7),14px)] w-full max-w-[90%] overflow-hidden rounded-full bg-white/10">
             <div className={cn("h-full rounded-full", view.level.isBreak ? "bg-sky-400" : "bg-amber-400")} style={{ width: `${progress * 100}%` }} />
           </div>
@@ -122,26 +125,26 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
             <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">잠시 쉬어 갑니다</span>
           ) : (
             <>
-              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(24px,calc(var(--u)*4.6),100px)] leading-tight font-black text-amber-200 tabular-nums">
+              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(22px,calc(var(--u)*4.2),92px)] leading-tight font-black text-amber-200 tabular-nums">
                 <small className={BLIND_TAG}>SB</small>
                 {won(view.level.sb)}
                 <span className="text-amber-200/60">/</span>
                 <small className={BLIND_TAG}>BB</small>
                 {won(view.level.bb)}
               </span>
-              {view.level.ante ? <span className="text-[clamp(15px,calc(var(--u)*2.3),48px)] font-black text-amber-100/90 tabular-nums">BB 앤티 {won(view.level.ante)}</span> : null}
+              {view.level.ante ? <span className="text-[clamp(13px,calc(var(--u)*2),42px)] font-black text-amber-100/90 tabular-nums">BB 앤티 {won(view.level.ante)}</span> : null}
             </>
           )}
-          <span data-next className="text-[clamp(13px,calc(var(--u)*2),38px)] font-bold text-zinc-300 tabular-nums">
+          <span data-next className="text-[clamp(12px,calc(var(--u)*1.7),34px)] font-bold text-zinc-300 tabular-nums">
             {view.next ? (view.next.isBreak ? `다음: 휴식 ${view.next.minutes}분` : `다음: ${blindText(view.next)}${view.next.ante ? ` · 앤티 ${won(view.next.ante)}` : ""}`) : "마지막 레벨"}
           </span>
         </section>
 
         {/* 왼쪽: 플레이 중 / 바인 · 리바인 · 얼리 · 애드온(따로) · 스택 · 러닝 타임 · 휴식 · 레지 마감 */}
-        <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.7)] @[560px]:order-1 @[560px]:grid-cols-1">
+        <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.5)] @[560px]:order-1 @[560px]:grid-cols-1">
           <div data-players className={CARD}>
             <span className={LABEL}>PLAYERS</span>
-            <span className="text-[clamp(20px,calc(var(--u)*3),60px)] leading-tight font-black text-white tabular-nums">
+            <span className="text-[clamp(18px,calc(var(--u)*2.5),52px)] leading-tight font-black text-white tabular-nums">
               {won(data.remaining)}
               <span className="text-zinc-400"> / {won(data.entries)}</span>
             </span>
@@ -154,12 +157,12 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           <div className={cn(CARD, "grid-cols-2 gap-x-[calc(var(--u)*1)]")}>
             <span className="grid">
               <span className={LABEL}>AVG STACK</span>
-              <span className="text-[clamp(16px,calc(var(--u)*2.3),48px)] leading-tight font-black text-white tabular-nums">{avgStack ? won(avgStack) : "-"}</span>
-              {avgStack && bb ? <span className="text-[clamp(11px,calc(var(--u)*1.4),28px)] font-bold text-amber-200 tabular-nums">{(avgStack / bb).toFixed(1)} BB</span> : null}
+              <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">{avgStack ? won(avgStack) : "-"}</span>
+              {avgStack && bb ? <span className="text-[clamp(10px,calc(var(--u)*1.2),24px)] font-bold text-amber-200 tabular-nums">{(avgStack / bb).toFixed(1)} BB</span> : null}
             </span>
             <span className="grid content-start">
               <span className={LABEL}>TOTAL CHIPS</span>
-              <span className="text-[clamp(16px,calc(var(--u)*2.3),48px)] leading-tight font-black text-white tabular-nums">{totalChips ? chipText(totalChips) : "-"}</span>
+              <span className="text-[clamp(14px,calc(var(--u)*1.9),40px)] leading-tight font-black text-white tabular-nums">{totalChips ? chipText(totalChips) : "-"}</span>
             </span>
           </div>
           <div className={cn(CARD, "gap-[calc(var(--u)*0.3)]")}>
@@ -180,9 +183,9 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         {/* 오른쪽: 프라이즈(줄마다 색) */}
         <section data-prize className="flex min-h-0 flex-col justify-center @[560px]:order-3">
           {prizes.length || data.prizeTitle ? (
-            <div className="flex max-h-[42cqh] min-h-0 flex-col gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.4)] @[560px]:max-h-full">
-              <span className="text-center text-[clamp(15px,calc(var(--u)*2.4),46px)] font-black tracking-[0.25em] text-[#e2bd72]">PRIZE</span>
-              {data.prizeTitle ? <span data-prize-title className="text-center text-[clamp(16px,calc(var(--u)*2.4),48px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
+            <div className="flex max-h-[42cqh] min-h-0 flex-col gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.1)] @[560px]:max-h-full">
+              <span className="text-center text-[clamp(13px,calc(var(--u)*1.9),38px)] font-black tracking-[0.25em] text-[#e2bd72]">PRIZE</span>
+              {data.prizeTitle ? <span data-prize-title className="text-center text-[clamp(14px,calc(var(--u)*2),42px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
               <PrizeList prizes={prizes} />
             </div>
           ) : (
@@ -208,10 +211,10 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 
 /** 현황판에 늘 나오는 POKA 홍보 */
 const SITE = "pokerwiki.co.kr";
-const PROMO = "홀덤 커뮤니티 · 딜러 구인구직 · 대회 캘린더 · 딜러 툴 무료";
+const PROMO = "홀덤 커뮤니티 · 딜러 구인구직 · 대회 캘린더 · 매장 관리 툴 무료";
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
-const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/20 bg-black/55 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
-const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-black tracking-wide text-zinc-300";
+const CARD = "grid gap-[calc(var(--u)*0.1)] rounded-[calc(var(--u)*1)] border border-white/15 bg-black/55 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.45)]";
+const LABEL = "text-[clamp(10px,calc(var(--u)*1.1),24px)] font-black tracking-wide text-zinc-400";
 
 /** 한국 시각 "21:40" */
 function kstTime(ms: number) {
@@ -223,8 +226,8 @@ function TimeRow({ label, value, at, tone, ...rest }: { label: string; value: st
   return (
     <div {...rest} className="flex items-baseline gap-[calc(var(--u)*0.6)]">
       <span className={cn(LABEL, "mr-auto whitespace-nowrap")}>{label}</span>
-      {at ? <span className="text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black text-amber-200 tabular-nums">{at}</span> : null}
-      <span className={cn("text-[clamp(14px,calc(var(--u)*1.9),38px)] font-black tabular-nums", tone === "closed" ? "text-rose-300" : tone === "warn" ? "text-amber-300" : "text-white")}>{value}</span>
+      {at ? <span className="text-[clamp(11px,calc(var(--u)*1.3),28px)] font-black text-amber-200 tabular-nums">{at}</span> : null}
+      <span className={cn("text-[clamp(13px,calc(var(--u)*1.6),34px)] font-black tabular-nums", tone === "closed" ? "text-rose-300" : tone === "warn" ? "text-amber-300" : "text-white")}>{value}</span>
     </div>
   );
 }
@@ -232,9 +235,9 @@ function TimeRow({ label, value, at, tone, ...rest }: { label: string; value: st
 /** 리바인 · 얼리 · 애드온 작은 칸 */
 function Mini({ label, value, ...rest }: { label: string; value: string } & Record<`data-${string}`, unknown>) {
   return (
-    <div {...rest} className="grid justify-items-center rounded-[calc(var(--u)*1)] border border-white/20 bg-black/55 px-[calc(var(--u)*0.6)] py-[calc(var(--u)*0.4)]">
-      <span className="text-[clamp(10px,calc(var(--u)*1.25),26px)] font-black tracking-wide text-zinc-300">{label}</span>
-      <span className="text-[clamp(15px,calc(var(--u)*2.2),44px)] leading-tight font-black text-white tabular-nums">{value}</span>
+    <div {...rest} className="grid justify-items-center rounded-[calc(var(--u)*0.9)] border border-white/15 bg-black/55 px-[calc(var(--u)*0.5)] py-[calc(var(--u)*0.3)]">
+      <span className="text-[clamp(9px,calc(var(--u)*1.05),22px)] font-black tracking-wide text-zinc-400">{label}</span>
+      <span className="text-[clamp(14px,calc(var(--u)*1.8),38px)] leading-tight font-black text-white tabular-nums">{value}</span>
     </div>
   );
 }
@@ -282,8 +285,8 @@ function PrizeList({ prizes }: { prizes: GameBoardData["prizes"] }) {
       <ul ref={list} data-prize-scroll={moving ? "on" : undefined} className="grid gap-[calc(var(--u)*0.3)]">
         {prizes.map((p, i) => (
           <li key={i} data-prize-row style={{ color: PRIZE_COLORS[p.color].hex }} className="flex items-baseline justify-between gap-[calc(var(--u)*1)] border-b border-white/10 pb-[calc(var(--u)*0.2)] last:border-0">
-            <span className="text-[clamp(13px,calc(var(--u)*1.9),36px)] font-black">{p.place}</span>
-            <span className="text-[clamp(14px,calc(var(--u)*2.1),40px)] font-black tabular-nums">{p.amount}</span>
+            <span className="text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black">{p.place}</span>
+            <span className="text-[clamp(13px,calc(var(--u)*1.8),36px)] font-black tabular-nums">{p.amount}</span>
           </li>
         ))}
       </ul>

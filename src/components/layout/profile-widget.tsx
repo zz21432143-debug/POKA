@@ -154,14 +154,20 @@ export function ProfileWidget({
         {profile.isAdmin ? <InquiryBadge /> : null}
         {profile.isAdmin ? <ProfileAction href="/admin">관리자 페이지</ProfileAction> : null}
         {profile.isMaster ? <ProfileAction href="/admin/members">인증 달기</ProfileAction> : null}
-        <ProfileAction href="/shop" tone="green">
-          마크 상점
+        <ProfileAction href="/account" tone="green">
+          내 정보
         </ProfileAction>
-        <ProfileAction href={meHref} tone="green">
-          내 프로필 보기 →
-        </ProfileAction>
-        <ProfileAction href="/account">내 정보</ProfileAction>
-        <LogoutButton variant="raised" />
+        <div className="flex items-center justify-center gap-1 text-[#4b4540]">
+          <Link href={meHref} className="touch-target inline-flex min-h-10 items-center px-1 text-[13px] font-semibold text-[#9CA3AF] hover:text-white">
+            내 프로필
+          </Link>
+          ·
+          <Link href="/shop" className="touch-target inline-flex min-h-10 items-center px-1 text-[13px] font-semibold text-[#9CA3AF] hover:text-white">
+            마크 상점
+          </Link>
+          ·
+          <LogoutButton variant="text" />
+        </div>
       </div>
     </section>
   );
