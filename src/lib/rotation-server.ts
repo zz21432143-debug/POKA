@@ -227,7 +227,7 @@ export async function applyRotation(gameId: string | null | undefined, action: R
         break;
       }
       case "setTable": {
-        // 버튼 자리(1~10)·컨바인 시각. 값을 안 주면 그대로, null이면 지움
+        // 버튼 자리(1~10)·컨바인 시각. 값을 안 주면 그대로, null이면 지움. label 0 = 모든 테이블 공통 버튼 자리
         const m = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
         const all = parseTableState(m?.tableStateJson ?? null);
         const key = String(Math.floor(Number(action.label)));

@@ -65,6 +65,18 @@ function nextDate(value: string) {
 
 type GameDialog = { mode: "new" | "day" | "edit"; name: string; workDate: string; copyDealers: boolean; copySettings: boolean };
 
+/** 접었다 펴는 칸의 머리: 화살표 + "눌러서 펼치기/접기" */
+function FoldHead({ children }: { children: React.ReactNode }) {
+  return (
+    <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl text-sm font-bold text-zinc-100 hover:bg-white/5 [&::-webkit-details-marker]:hidden">
+      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-amber-400 text-xs font-black text-black transition-transform group-open:rotate-90">▶</span>
+      <span className="min-w-0 flex-1">{children}</span>
+      <span className="shrink-0 rounded-full border border-amber-400/60 px-2 py-0.5 text-[11px] font-black text-amber-300 group-open:hidden">눌러서 펼치기</span>
+      <span className="hidden shrink-0 rounded-full border border-white/25 px-2 py-0.5 text-[11px] font-black text-zinc-300 group-open:inline">접기</span>
+    </summary>
+  );
+}
+
 function untilLabel(minutes: number) {
   if (minutes <= 0) return "지금";
   if (minutes < 60) return `${minutes}분 후`;
@@ -92,6 +104,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
+  // 퇴근 희망 받기: 딜러 id → 희망 퇴근 시간("02:00", 비우면 끝까지)
+  const [wish, setWish] = useState<Record<string, string> | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
   const gameRef = useRef(initial.game.id);
@@ -205,10 +219,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   // 컨바인(닫은) 테이블: 그 시각부터 비워 둠
   const closedFrom = useMemo(() => closedFromOf(labels, state.tableState), [labels, state.tableState]);
-  const buttons = useMemo(
-    () => Object.fromEntries(labels.map((label) => [label, state.tableState[String(label)]?.button ?? null])) as Record<number, number | null>,
-    [labels, state.tableState],
-  );
+  // 버튼 자리: 한 번 정하면 모든 테이블이 같습니다(테이블 상태 "0"에 저장)
+  const button = state.tableState["0"]?.button ?? null;
   const isClosedAt = (t: number, at: number) => closedFrom[t] != null && at >= (closedFrom[t] as number);
   // 운영 현황(지금 칸 기준, 시작 전이면 첫 칸)
   const nowSlot = plan ? plan.slots[Math.max(0, current)] : null;
@@ -322,12 +334,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     await send({ type: "savePlan", plan: built });
   }
 
-  function editButton(t: number) {
-    const label = labels[t];
-    const value = window.prompt(`T${label} 버튼 자리(1~10, 지우려면 비우기)`, buttons[label] ? String(buttons[label]) : "");
-    if (value === null) return;
-    const n = Number(value.trim());
-    void send({ type: "setTable", label, button: value.trim() === "" || !Number.isFinite(n) ? null : n });
+  /** 퇴근 희망 저장: 바뀐 딜러만 예정 퇴근 시간을 바꿉니다. */
+  async function saveWish() {
+    if (!wish) return;
+    for (const dealer of state.dealers) {
+      if (!(dealer.id in wish) || dealer.status === "LEFT") continue;
+      const value = wish[dealer.id] ?? "";
+      if (value === (dealer.endTime ?? "")) continue;
+      if (!(await send({ type: "setTimes", id: dealer.id, end: value || null }))) return;
+    }
+    setWish(null);
   }
 
   /** 시간 바꾸기: 그 칸을 새 시간으로, 뒤 칸은 간격대로 */
@@ -488,10 +504,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       </section>
 
       {/* 설정(처음 한 번만 정하면 되므로 접어 둠) */}
-      <details className="rounded-2xl border border-white/15 bg-black p-3" open={!plan}>
-        <summary className="min-h-9 cursor-pointer text-sm font-bold text-zinc-200">
+      <details className="group rounded-2xl border border-white/15 bg-black p-2" open={!plan}>
+        <FoldHead>
           설정 · 게임 시작 {state.planStart} · {state.interval}분 간격 · 세팅 {state.setupMinutes ? `${state.setupMinutes}분` : "없음"} · 테이블 {formatTableLabels(labels)}
-        </summary>
+          {button ? ` · 버튼 ${button}번` : ""}
+        </FoldHead>
         <div className="mt-2 grid gap-2">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <label className="grid gap-1 text-xs font-bold text-zinc-300">
@@ -530,6 +547,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               {SETUP_CHOICES.map((n) => (
                 <option key={n} value={n}>
                   {n ? `${n}분 전부터` : "없음"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+            버튼 자리(모든 테이블 같음)
+            <select
+              value={button ?? 0}
+              disabled={busy}
+              onChange={(e) => void send({ type: "setTable", label: 0, button: Number(e.target.value) || null })}
+              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+            >
+              <option value={0}>정하지 않음</option>
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n}번
                 </option>
               ))}
             </select>
@@ -611,12 +644,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <span className="text-2xl font-black text-amber-300">다음 교대 {formatClock(swap.at)}</span>
             <span className="text-sm font-bold text-amber-100">{untilLabel(swap.at - now)}</span>
             <div className="ml-auto flex flex-wrap gap-1.5">
-              <button type="button" onClick={() => downloadSwapImage(swap, name, buttons)} className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black">
+              <button type="button" onClick={() => void downloadSwapImage(swap, name, button)} className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black">
                 교대표 이미지
               </button>
               <button
                 type="button"
-                onClick={() => downloadDealerSwapImage(swap, plan, current, next, labels, state.dealers)}
+                onClick={() => void downloadDealerSwapImage(swap, plan, current, next, labels, state.dealers)}
                 className="min-h-9 rounded-lg bg-white px-3 text-xs font-black text-black"
               >
                 딜러별 이미지
@@ -624,7 +657,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               <button
                 type="button"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(swapText(swap, name, buttons)).catch(() => undefined);
+                  await navigator.clipboard.writeText(swapText(swap, name, button)).catch(() => undefined);
                   setCopied(true);
                   window.setTimeout(() => setCopied(false), 1500);
                 }}
@@ -744,29 +777,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               <tbody>
                 {labels.map((label, t) => hiddenTable(t) ? null : (
                   <tr key={label} className="border-t-2 border-white/10">
-                    <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left whitespace-nowrap">
-                      <span className={cn("block text-xl font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>
-                        T{label}
-                        {closedFrom[t] != null ? <span className="ml-1 rounded bg-rose-600 px-1 align-middle text-[10px] text-white">컨바인 {formatClock(closedFrom[t] as number)}</span> : null}
-                      </span>
-                      <span className="mt-0.5 flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => editButton(t)}
-                          title="버튼 자리"
-                          className={cn("min-h-7 rounded px-1.5 text-[11px] font-black", buttons[label] ? "bg-white text-black" : "border border-white/25 text-zinc-400")}
-                        >
-                          {buttons[label] ? `BTN ${buttons[label]}` : "BTN ?"}
-                        </button>
+                    <th className="sticky left-0 z-10 bg-zinc-900 px-1.5 py-1 text-left whitespace-nowrap">
+                      <span className="flex items-center gap-1">
+                        <span className={cn("text-lg font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>T{label}</span>
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => void toggleCombine(t)}
-                          className={cn("min-h-7 rounded px-1.5 text-[11px] font-black", closedFrom[t] != null ? "bg-emerald-700 text-white" : "border border-rose-500/60 text-rose-300")}
+                          className={cn("min-h-7 rounded px-1 text-[10px] font-black", closedFrom[t] != null ? "bg-emerald-700 text-white" : "border border-rose-500/60 text-rose-300")}
                         >
                           {closedFrom[t] != null ? "다시 열기" : "컨바인"}
                         </button>
                       </span>
+                      {closedFrom[t] != null ? <span className="block text-[10px] font-black text-rose-300">{formatClock(closedFrom[t] as number)} 컨바인</span> : null}
                     </th>
                     {rows.map(({ slot, index }) => {
                       const id = slot.seats[t];
@@ -886,92 +909,113 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ({state.dealers.length}/{MAX_DEALERS}명)
             </span>
           </h2>
-          <span className="flex flex-wrap gap-1 text-xs font-bold">
-            {(["IN", "WAIT", "LEFT", "OFF"] as const).map((status) => (
-              <span key={status} className={cn("rounded px-1.5 py-0.5", CHIP[status])}>
-                {STATUS_LABEL[status]} {state.dealers.filter((d) => d.status === status).length}
-              </span>
-            ))}
-          </span>
+          <button
+            type="button"
+            disabled={busy || state.dealers.length === 0}
+            onClick={() => setWish(Object.fromEntries(state.dealers.filter((d) => d.status !== "LEFT").map((d) => [d.id, d.endTime ?? ""])))}
+            className="ml-auto min-h-10 rounded-lg bg-sky-500 px-3 text-sm font-black text-black disabled:opacity-40"
+          >
+            퇴근 희망 받기
+          </button>
         </div>
+        <p className="text-xs text-zinc-400">
+          <b className="text-zinc-200">이름 ✎</b>을 누르면 이름 수정·삭제, <b className="text-zinc-200">출근/퇴근 시간</b>을 누르면 시간을 바꿀 수 있습니다.
+        </p>
         {state.dealers.length === 0 ? (
           <p className="rounded-xl border border-dashed border-white/25 p-3 text-sm text-zinc-400">아래에서 딜러를 등록하세요.</p>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19.5rem),1fr))] gap-1">
-            {[...state.dealers]
-              .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.sort - b.sort)
-              .map((dealer) => (
-              <div
-                key={dealer.id}
-                data-dealer={dealer.name}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
-                  dealer.status === "IN" ? "border-emerald-500/40 bg-emerald-950/30" : "border-white/10 bg-zinc-950",
-                  (dealer.status === "LEFT" || dealer.status === "OFF") && "opacity-60",
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => setEditing({ id: dealer.id, name: dealer.name, startTime: dealer.startTime ?? "" })}
-                  className="min-w-0 flex-1 truncate text-left text-base font-black hover:underline"
-                >
-                  {dealer.name}
-                </button>
-                {/* 출근·퇴근 시간(누르면 바꾸기). 실제 체크한 시간은 색으로, 예정 시간은 회색 */}
-                <button
-                  type="button"
-                  data-times={dealer.name}
-                  onClick={() =>
-                    setTimes({
-                      id: dealer.id,
-                      name: dealer.name,
-                      start: dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? ""),
-                      end: dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ?? ""),
-                      startReal: Boolean(dealer.checkedInAt),
-                      endReal: dealer.status === "LEFT" && Boolean(dealer.leftAt),
-                    })
-                  }
-                  title="출근·퇴근 시간 바꾸기"
-                  className="grid shrink-0 rounded px-1 text-left text-[10px] leading-tight font-bold tabular-nums hover:bg-white/10"
-                >
-                  <span className={dealer.checkedInAt ? "text-emerald-300" : "text-zinc-400"}>
-                    출근 {dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? "—")}
-                  </span>
-                  <span className={dealer.status === "LEFT" ? "text-rose-300" : "text-zinc-400"}>
-                    퇴근 {dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ?? "—")}
-                  </span>
-                </button>
-                <StatusChip status={dealer.status} />
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send({ type: "checkIn", id: dealer.id })}
-                  className={cn("min-h-8 rounded px-2 text-xs font-black", dealer.status === "IN" ? "bg-emerald-900 text-emerald-300" : "bg-emerald-500 text-black")}
-                >
-                  출근
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send({ type: "setStatus", id: dealer.id, status: dealer.status === "OFF" ? "WAIT" : "OFF" })}
-                  className="min-h-8 rounded bg-rose-600 px-2 text-xs font-black text-white"
-                >
-                  {dealer.status === "OFF" ? "취소" : "휴무"}
-                </button>
-                <button
-                  type="button"
-                  disabled={busy || dealer.status === "LEFT"}
-                  onClick={() => void send({ type: "setStatus", id: dealer.id, status: "LEFT" })}
-                  className="min-h-8 rounded bg-slate-500 px-2 text-xs font-black text-white disabled:opacity-40"
-                >
-                  퇴근
-                </button>
-              </div>
-            ))}
+          <div className="grid gap-2">
+            {(
+              [
+                { key: "in", title: "출근 중", tone: "text-emerald-300", list: state.dealers.filter((d) => d.status === "IN") },
+                { key: "wait", title: "출근 전", tone: "text-zinc-200", list: state.dealers.filter((d) => d.status === "WAIT" || d.status === "OFF") },
+                { key: "left", title: "퇴근", tone: "text-slate-300", list: state.dealers.filter((d) => d.status === "LEFT") },
+              ] as const
+            ).map((group) =>
+              group.list.length ? (
+                <div key={group.key} data-group={group.key} className="grid gap-1">
+                  <h3 className={cn("text-sm font-black", group.tone)}>
+                    {group.title} {group.list.length}명
+                  </h3>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,19.5rem),1fr))] gap-1">
+                    {[...group.list]
+                      .sort((a, b) => a.sort - b.sort)
+                      .map((dealer) => (
+                        <div
+                          key={dealer.id}
+                          data-dealer={dealer.name}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                            dealer.status === "IN" ? "border-emerald-500/40 bg-emerald-950/30" : "border-white/10 bg-zinc-950",
+                            dealer.status === "LEFT" && "opacity-60",
+                          )}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setEditing({ id: dealer.id, name: dealer.name, startTime: dealer.startTime ?? "" })}
+                            title="이름 수정·삭제"
+                            className="flex min-w-0 flex-1 items-center gap-1 text-left text-base font-black hover:underline"
+                          >
+                            <span className="truncate">{dealer.name}</span>
+                            <span className="shrink-0 text-xs text-zinc-400">✎</span>
+                          </button>
+                          {/* 출근·퇴근 시간(누르면 바꾸기). 실제 체크한 시간은 색으로, 예정 시간은 회색 */}
+                          <button
+                            type="button"
+                            data-times={dealer.name}
+                            onClick={() =>
+                              setTimes({
+                                id: dealer.id,
+                                name: dealer.name,
+                                start: dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? ""),
+                                end: dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ?? ""),
+                                startReal: Boolean(dealer.checkedInAt),
+                                endReal: dealer.status === "LEFT" && Boolean(dealer.leftAt),
+                              })
+                            }
+                            title="출근·퇴근 시간 바꾸기"
+                            className="grid shrink-0 rounded px-1 text-left text-[11px] leading-tight font-bold tabular-nums hover:bg-white/10"
+                          >
+                            <span className={dealer.checkedInAt ? "text-emerald-300" : "text-zinc-400"}>
+                              출근 {dealer.checkedInAt ? kstClock(dealer.checkedInAt) : (dealer.startTime ?? "—")}
+                            </span>
+                            <span className={dealer.status === "LEFT" ? "text-rose-300" : dealer.endTime ? "text-sky-300" : "text-zinc-400"}>
+                              퇴근 {dealer.status === "LEFT" && dealer.leftAt ? kstClock(dealer.leftAt) : (dealer.endTime ? `${dealer.endTime} 희망` : "—")}
+                            </span>
+                          </button>
+                          {dealer.status === "IN" ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => {
+                                if (window.confirm(`${dealer.name} 딜러를 퇴근 처리할까요? 그다음 Auto를 누르면 쉬던 딜러가 자리를 채웁니다.`)) {
+                                  void send({ type: "setStatus", id: dealer.id, status: "LEFT" });
+                                }
+                              }}
+                              className="min-h-9 rounded bg-slate-500 px-3 text-xs font-black text-white"
+                            >
+                              퇴근
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void send({ type: "checkIn", id: dealer.id })}
+                              className="min-h-9 rounded bg-emerald-500 px-3 text-xs font-black text-black"
+                            >
+                              {dealer.status === "LEFT" ? "다시 출근" : "출근"}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ) : null,
+            )}
           </div>
         )}
-        <details className="rounded-xl border border-white/15 bg-zinc-950 p-2" open={state.dealers.length === 0}>
-          <summary className="min-h-9 cursor-pointer text-sm font-bold text-zinc-200">딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 또는 김딜러 18:00-02:00 · 최대 {MAX_DEALERS}명)</summary>
+        <details className="group rounded-xl border border-white/15 bg-zinc-950 p-2" open={state.dealers.length === 0}>
+          <FoldHead>딜러 등록 (한 줄에 한 명 · 예: 김딜러 10:00 또는 김딜러 18:00-02:00 · 최대 {MAX_DEALERS}명)</FoldHead>
           <div className="mt-2 grid gap-2">
             <textarea
               value={bulk}
@@ -1152,6 +1196,45 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </button>
               ) : null}
               <button type="button" onClick={() => setGameDialog(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* 퇴근 희망 받기 */}
+      {wish ? (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="퇴근 희망">
+          <div className="grid max-h-[90dvh] w-full max-w-md gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">퇴근 희망 받기</h3>
+            <p className="text-xs text-zinc-400">딜러마다 퇴근하고 싶은 시간을 넣으세요(비우면 끝까지). 저장한 뒤 시간표 옆 <b className="text-amber-300">Auto</b>를 누르면 그 시간 뒤로는 넣지 않습니다.</p>
+            <ul className="grid gap-1.5">
+              {state.dealers
+                .filter((d) => d.id in wish)
+                .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.sort - b.sort)
+                .map((dealer) => (
+                  <li key={dealer.id} data-wish={dealer.name} className="flex items-center gap-2 rounded-lg bg-black px-2 py-1.5">
+                    <span className="min-w-0 flex-1 truncate text-base font-black">{dealer.name}</span>
+                    <StatusChip status={dealer.status} />
+                    <input
+                      type="time"
+                      aria-label={`${dealer.name} 퇴근 희망 시간`}
+                      value={wish[dealer.id] ?? ""}
+                      onChange={(e) => setWish({ ...wish, [dealer.id]: e.target.value })}
+                      className="h-10 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base"
+                    />
+                    <button type="button" onClick={() => setWish({ ...wish, [dealer.id]: "" })} className="min-h-10 rounded px-2 text-xs font-bold text-zinc-400 hover:bg-white/10">
+                      지우기
+                    </button>
+                  </li>
+                ))}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={busy} onClick={() => void saveWish()} className="min-h-11 rounded-lg bg-emerald-500 px-4 text-sm font-black text-black">
+                저장
+              </button>
+              <button type="button" onClick={() => setWish(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
                 닫기
               </button>
             </div>
