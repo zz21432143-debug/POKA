@@ -108,6 +108,11 @@ describe("game board data", () => {
     assert.equal(d.clock.level, 1);
     assert.equal(d.clock.runningSince, null, "이상한 값이면 멈춘 것으로");
     assert.ok(normalizeBoard(null).levels.length > 0);
+    // 배경 사진은 올린 이미지 주소만 · 어둡기 0~90
+    assert.equal(normalizeBoard({ bgUrl: "/api/images/abc_123" }).bgUrl, "/api/images/abc_123");
+    assert.equal(normalizeBoard({ bgUrl: "https://evil.example/x.png" }).bgUrl, "");
+    assert.equal(normalizeBoard({ bgUrl: "javascript:alert(1)" }).bgUrl, "");
+    assert.equal(normalizeBoard({ bgDim: 150 }).bgDim, 90);
   });
 
   it("converts prizes and formats the clock", () => {

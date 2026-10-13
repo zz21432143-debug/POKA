@@ -7,6 +7,7 @@ import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, ma
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
+import { shrinkPhoto } from "@/lib/poster-fit";
 
 const POLL_MS = 3000;
 const SAVE_DELAY = 600;
@@ -34,14 +35,26 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   const [tab, setTab] = useState<"play" | "prize" | "setup">("play");
   const dirty = useRef(false);
   const saveTimer = useRef<number | null>(null);
+  // 화면에 보이는 최신 입력(빠르게 연달아 바꿔도 늘 이걸 바탕으로) · 몇 번째 입력인지
+  const draftRef = useRef<GameBoardData | null>(initialBoard?.data ?? null);
+  const editSeq = useRef(0);
+  const showDraft = useCallback((d: GameBoardData | null) => {
+    draftRef.current = d;
+    setDraft(d);
+  }, []);
   const inBrowser = useInBrowser();
   const now = useServerNow(initialBoard?.serverNow ?? 0, offset);
 
-  const take = useCallback((next: BoardState) => {
-    setBoard(next);
-    setOffset(next.serverNow - Date.now());
-    if (!dirty.current) setDraft(next.data);
-  }, []);
+  /** 서버에서 받은 현황판 반영. 저장 안 된 입력이 있으면 입력은 그대로 두고 시계만 맞춤 */
+  const take = useCallback(
+    (next: BoardState) => {
+      setBoard(next);
+      setOffset(next.serverNow - Date.now());
+      if (!dirty.current) showDraft(next.data);
+      else if (draftRef.current) showDraft({ ...draftRef.current, clock: next.data.clock });
+    },
+    [showDraft],
+  );
 
   // 다른 기기(휴대폰으로 조작 · 노트북 TV)와 맞추기: 바뀐 게 있을 때만 받아 옴
   const version = board?.version ?? -1;
@@ -76,20 +89,24 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
 
   /** 설정 · 인원 바꾸기: 화면에 바로 보이고 잠깐 뒤 저장 */
   function edit(change: Partial<GameBoardData>) {
-    if (!draft || !board) return;
-    const next = { ...draft, ...change };
-    setDraft(next);
+    const base = draftRef.current;
+    if (!base || !board) return;
+    const next = { ...base, ...change };
+    showDraft(next);
     dirty.current = true;
+    const seq = ++editSeq.current;
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     const id = board.id;
     saveTimer.current = window.setTimeout(async () => {
       try {
         const json = await call({ action: "save", id, data: next });
+        // 저장하는 동안 또 입력했으면(더 새 입력) 이 답은 화면에 덮어쓰지 않음 — 되돌아가던 문제
+        if (seq !== editSeq.current) return;
         dirty.current = false;
         if (json.board) take(json.board);
         setError(null);
       } catch (e) {
-        dirty.current = false;
+        if (seq === editSeq.current) dirty.current = false;
         setError((e as Error).message);
       }
     }, SAVE_DELAY);
@@ -110,8 +127,10 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     const res = await fetch(`${API}?id=${encodeURIComponent(id)}`, { cache: "no-store" });
     const json = (await res.json().catch(() => ({}))) as { board?: BoardState };
     if (json.board) {
+      // 다른 현황판으로 바꾸면, 앞 현황판의 저장 답이 이 화면을 덮지 않게
+      editSeq.current++;
       dirty.current = false;
-      setDraft(json.board.data);
+      showDraft(json.board.data);
       take(json.board);
       window.history.replaceState(null, "", `/tools/board?id=${encodeURIComponent(id)}`);
     }
@@ -124,8 +143,10 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
       const json = await call({ action: "create", name });
       if (json.boards) setBoards(json.boards);
       if (json.board) {
+        // 다른 현황판으로 바꾸면, 앞 현황판의 저장 답이 이 화면을 덮지 않게
+        editSeq.current++;
         dirty.current = false;
-        setDraft(json.board.data);
+        showDraft(json.board.data);
         take(json.board);
         setTab("setup");
         window.history.replaceState(null, "", `/tools/board?id=${encodeURIComponent(json.board.id)}`);
@@ -141,7 +162,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     if (!json) return;
     setBoards(json.boards ?? []);
     setBoard(null);
-    setDraft(null);
+    showDraft(null);
     window.history.replaceState(null, "", "/tools/board");
     const first = json.boards?.[0];
     if (first) void open(first.id);
@@ -173,6 +194,8 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     setTv(true);
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+      // 휴대폰이면 가로로 돌려 크게(안 되는 기기는 그대로)
+      await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape").catch(() => undefined);
     } catch {
       /* 전체 화면을 못 해도 TV 화면은 그대로 */
     }
@@ -468,10 +491,12 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
           </select>
         </label>
         <label className={label}>
-          아래 흐르는 공지
+          흐르는 공지(화면 위쪽 · 뒤에 POKA 홍보가 함께 흘러요)
           <input value={data.notice} maxLength={BOARD_LIMITS.notice} onChange={(e) => onEdit({ notice: e.target.value })} placeholder="레지 마감은 레벨 8 종료까지 · 휴식 10분" className={field} />
         </label>
       </section>
+
+      <BackgroundForm data={data} onEdit={onEdit} />
 
       <section className="ink-panel grid gap-3 rounded-2xl p-3 sm:p-4">
         <h2 className="text-base font-black text-white">블라인드 구조</h2>
@@ -676,5 +701,69 @@ function ScaledPreview({ data, now }: { data: GameBoardData; now: number }) {
         <GameBoardScreen data={data} now={now} />
       </div>
     </div>
+  );
+}
+
+/* ───────────── 배경 사진: 올리기 · 어둡기 · 지우기 ───────────── */
+
+function BackgroundForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<GameBoardData>) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      if (!file.type.startsWith("image/")) throw new Error("사진 파일을 골라 주세요.");
+      const form = new FormData();
+      form.append("file", await shrinkPhoto(file, 1920));
+      const res = await fetch("/api/uploads/image", { method: "POST", body: form });
+      const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!res.ok || !json.url) throw new Error(json.error ?? "사진을 올리지 못했습니다.");
+      onEdit({ bgUrl: json.url });
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+  return (
+    <section data-bg-form className="ink-panel grid gap-3 rounded-2xl p-3 sm:p-4">
+      <h2 className="text-base font-black text-white">배경 사진</h2>
+      <p className="text-sm text-[#D1D5DB]">매장 사진 · 대회 포스터를 올리면 TV 화면 뒤에 깔려요. 글씨가 잘 보이게 어둡게 덮을 수 있어요.</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative aspect-video w-40 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black">
+          {data.bgUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- 올린 배경 미리보기 */}
+              <img src={data.bgUrl} alt="배경 사진" className="absolute inset-0 size-full object-cover" />
+              <div className="absolute inset-0 bg-black" style={{ opacity: data.bgDim / 100 }} />
+            </>
+          ) : (
+            <span className="absolute inset-0 grid place-items-center text-xs font-bold text-zinc-500">기본 배경</span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="배경 사진 파일" className="hidden" onChange={(e) => void pick(e.target.files?.[0])} />
+          <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className="min-h-11 rounded-xl bg-amber-400 px-4 text-sm font-black text-black disabled:opacity-50">
+            {busy ? "올리는 중…" : data.bgUrl ? "사진 바꾸기" : "사진 올리기"}
+          </button>
+          {data.bgUrl ? (
+            <button type="button" onClick={() => onEdit({ bgUrl: "" })} className="min-h-11 rounded-xl border border-white/20 px-4 text-sm font-bold text-zinc-200">
+              기본 배경으로
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {data.bgUrl ? (
+        <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          어둡게 {data.bgDim}%
+          <input type="range" min={0} max={90} step={5} value={data.bgDim} aria-label="배경 어둡게" onChange={(e) => onEdit({ bgDim: Number(e.target.value) })} className="accent-amber-400" />
+        </label>
+      ) : null}
+      {note ? <p className="text-sm font-bold text-rose-300">{note}</p> : null}
+    </section>
   );
 }

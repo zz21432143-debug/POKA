@@ -54,6 +54,8 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
     setSound(true);
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+      // 휴대폰이면 가로로 돌려 크게(안 되는 기기는 그대로)
+      await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape").catch(() => undefined);
     } catch {
       /* 무시 */
     }

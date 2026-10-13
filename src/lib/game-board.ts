@@ -59,6 +59,9 @@ export type GameBoardData = {
   prizes: PrizeRow[];
   /** 아래 흐르는 공지 */
   notice: string;
+  /** 배경 사진(올린 이미지 주소 /api/images/…) · 글씨가 잘 보이게 어둡게 덮는 정도(0~90%) */
+  bgUrl: string;
+  bgDim: number;
   clock: BoardClock;
 };
 
@@ -96,6 +99,8 @@ export function defaultBoard(): GameBoardData {
     prizeTitle: "",
     prizes: [],
     notice: "",
+    bgUrl: "",
+    bgDim: 60,
     clock: { level: 0, elapsedMs: 0, runningSince: null },
   };
 }
@@ -164,6 +169,8 @@ export function normalizeBoard(raw: unknown): GameBoardData {
     prizeTitle: text(r.prizeTitle, BOARD_LIMITS.prizeTitle),
     prizes: normalizePrizes(r.prizes, (r as { prize?: unknown }).prize),
     notice: text(r.notice, BOARD_LIMITS.notice),
+    bgUrl: typeof r.bgUrl === "string" && /^\/api\/images\/[\w-]{1,64}$/.test(r.bgUrl) ? r.bgUrl : "",
+    bgDim: int(r.bgDim, 0, 90, 60),
     clock: {
       level: int(c.level, 0, Math.max(0, levels.length - 1)),
       elapsedMs: int(c.elapsedMs, -BOARD_LIMITS.minutes * 60_000, BOARD_LIMITS.minutes * 60_000 * BOARD_LIMITS.levels),

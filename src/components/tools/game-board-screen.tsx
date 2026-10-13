@@ -65,31 +65,50 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   }, [view.index, view.running, view.level.isBreak, sound]);
 
   const nowLabel = kstTime(now);
+  const ticker = `${data.notice ? `${data.notice}      ✦      ` : ""}${PROMO}`;
 
   return (
     <div data-game-screen className={cn("@container-[size] relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,#2a0d0d_0%,#0b0706_60%,#050303_100%)] text-white", className)}>
+      {/* 배경 사진(올렸으면) + 글씨가 잘 보이게 어둡게 */}
+      {data.bgUrl ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- 올린 배경 사진 */}
+          <img data-board-bg src={data.bgUrl} alt="" aria-hidden className="absolute inset-0 size-full object-cover" />
+          <div className="absolute inset-0 bg-black" style={{ opacity: data.bgDim / 100 }} />
+        </>
+      ) : null}
       {/* 글씨 단위 --u: 16:9면 폭 기준, 가로로 긴(낮은) 화면이면 높이 기준 */}
-      <div className="flex h-full flex-col [--u:min(1cqw,1.7cqh)]">
+      <div className={cn("relative flex h-full flex-col [--u:min(1cqw,1.7cqh)]", data.bgUrl && "[text-shadow:0_2px_6px_rgba(0,0,0,.9)]")}>
       {/* 위 줄: 마크 · 이름 · 시각 */}
       <header className="flex items-center gap-[calc(var(--u)*1.5)] border-b border-[#c9a25c]/30 px-[calc(var(--u)*2.5)] py-[calc(var(--u)*0.9)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- 브랜드 마크 */}
-        <img src="/brand/poka-oni-mark.png" alt="POKA" className="h-auto w-[clamp(36px,calc(var(--u)*6),110px)] shrink-0" />
+        <img src="/brand/poka-oni-mark.png" alt="POKA" className="h-auto w-[clamp(40px,calc(var(--u)*7),130px)] shrink-0" />
         <div className="grid min-w-0">
-          <span data-board-name className="truncate text-[clamp(18px,calc(var(--u)*3.4),64px)] leading-tight font-black text-amber-300">
+          <span data-board-name className="truncate text-[clamp(22px,calc(var(--u)*4.6),92px)] leading-tight font-black text-amber-300">
             {data.name}
           </span>
           {data.subtitle ? <span className="truncate text-[clamp(11px,calc(var(--u)*1.6),30px)] font-bold text-zinc-300">{data.subtitle}</span> : null}
         </div>
-        <span className="ml-auto shrink-0 text-[clamp(16px,calc(var(--u)*2.8),52px)] font-black text-zinc-200 tabular-nums">{nowLabel}</span>
+        <span className="ml-auto grid shrink-0 justify-items-end">
+          <span className="text-[clamp(16px,calc(var(--u)*2.8),52px)] leading-none font-black text-zinc-200 tabular-nums">{nowLabel}</span>
+          <span data-site className="text-[clamp(10px,calc(var(--u)*1.3),26px)] font-black tracking-wide text-[#e2bd72]">{SITE}</span>
+        </span>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] p-[calc(var(--u)*1.4)] @[560px]:grid-cols-[1fr_2.1fr_1fr]">
+      {/* 흐르는 공지(위쪽) — 공지 뒤에 POKA 홍보가 늘 붙음 */}
+      <div data-notice className="overflow-hidden border-b border-[#c9a25c]/40 bg-[#3a0d0d]/80 py-[calc(var(--u)*0.4)]">
+        <p className="inline-block animate-[poka-ticker_linear_infinite] pl-[100%] text-[clamp(13px,calc(var(--u)*1.9),38px)] font-bold whitespace-nowrap text-amber-100" style={{ animationDuration: `${Math.max(20, Math.round(ticker.length * 0.32))}s` }}>
+          {ticker}
+        </p>
+      </div>
+
+      <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.8)] @[560px]:grid-cols-[1fr_2.1fr_1fr]">
         {/* 가운데: 레벨 · 시계 · 블라인드(세로 화면은 맨 위) */}
         <section className="grid content-center justify-items-center gap-[calc(var(--u)*0.5)] text-center @[560px]:order-2">
           <span data-level className={cn("rounded-full px-[calc(var(--u)*2)] py-[calc(var(--u)*0.3)] text-[clamp(15px,calc(var(--u)*2.3),46px)] font-black tracking-wider", view.level.isBreak ? "bg-sky-500/25 text-sky-200" : "bg-amber-400/15 text-amber-300")}>
             {view.level.isBreak ? "BREAK · 휴식" : `LEVEL ${view.number}`}
           </span>
-          <span data-timer className={cn("leading-none font-black tabular-nums", warn ? "text-rose-400" : "text-white", "text-[clamp(52px,calc(var(--u)*11.5),260px)]")}>
+          <span data-timer className={cn("leading-none font-black tabular-nums", warn ? "text-rose-400" : "text-white", "text-[clamp(50px,calc(var(--u)*11),250px)]")}>
             {clockText(view.remainingMs)}
           </span>
           {!view.running ? (
@@ -176,17 +195,14 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         </section>
       </div>
 
-      {/* 아래: 공지 */}
-      {data.notice ? (
-        <footer data-notice className="overflow-hidden border-t border-[#c9a25c]/30 bg-black/60 py-[calc(var(--u)*0.8)]">
-          <p className="inline-block animate-[poka-ticker_22s_linear_infinite] pl-[100%] text-[clamp(14px,calc(var(--u)*2.2),42px)] font-bold whitespace-nowrap text-amber-100">{data.notice}</p>
-        </footer>
-      ) : null}
       </div>
     </div>
   );
 }
 
+/** 현황판에 늘 나오는 POKA 홍보 */
+const SITE = "pokerwiki.co.kr";
+const PROMO = `POKA 홀덤 커뮤니티 · ${SITE} · 딜러 구인구직 · 대회 캘린더 · 딜러 툴 무료`;
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
 const CARD = "grid gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border border-white/20 bg-black/55 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.5)]";
 const LABEL = "text-[clamp(11px,calc(var(--u)*1.35),28px)] font-black tracking-wide text-zinc-300";
@@ -238,15 +254,20 @@ function PrizeList({ prizes }: { prizes: GameBoardData["prizes"] }) {
     const el = list.current;
     if (!el || !moving || typeof el.animate !== "function") return;
     const down = `translateY(-${shift}px)`;
+    // 위에서 2.5초 멈춤 → 1초에 45px씩 내려감 → 아래에서 2.5초 멈춤 → 다시 올라감
+    const hold = 2500;
+    const travel = Math.max(2000, Math.round((shift / 45) * 1000));
+    const total = hold * 2 + travel * 2;
+    const at = (ms: number) => ms / total;
     const anim = el.animate(
       [
         { transform: "translateY(0)", offset: 0 },
-        { transform: "translateY(0)", offset: 0.15 },
-        { transform: down, offset: 0.5 },
-        { transform: down, offset: 0.65 },
+        { transform: "translateY(0)", offset: at(hold), easing: "ease-in-out" },
+        { transform: down, offset: at(hold + travel) },
+        { transform: down, offset: at(hold * 2 + travel), easing: "ease-in-out" },
         { transform: "translateY(0)", offset: 1 },
       ],
-      { duration: Math.max(10_000, Math.round((shift / 12) * 1000)), iterations: Infinity, easing: "ease-in-out" },
+      { duration: total, iterations: Infinity },
     );
     return () => anim.cancel();
   }, [moving, shift]);
