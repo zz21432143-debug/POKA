@@ -70,7 +70,7 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
           action={{ href: "/boards/jobs/apply/write", label: "지원 딜러 구인 올리기" }}
         />
       ) : (
-        <ul className="grid gap-2 p-3 sm:grid-cols-2">
+        <ul className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
           {jobs.map((job) => {
             const pay = formatWon(job.jobPayAmount);
             const travel = job.jobTravelPay ? formatWon(job.jobTravelPayAmount) || "지원" : null;

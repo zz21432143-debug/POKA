@@ -1,22 +1,16 @@
 import { Suspense, type ReactNode } from "react";
 import { BoardNav } from "@/components/layout/board-nav";
-import { ProfileWidget } from "@/components/layout/profile-widget";
 import { SiteFooter, SiteFooterFallback } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
-import { PopularPosts } from "@/components/layout/popular-posts";
-import { NoticeWidget } from "@/components/layout/notice-widget";
-import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
-import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { getCurrentUser } from "@/lib/current-user";
 import { getCachedTickerEvents } from "@/lib/home-data";
 import { getSponsorCreative } from "@/lib/inventory";
-import { OFFICIAL_NOTICES, formatNoticeDate, getLatestNotices } from "@/lib/notices";
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
@@ -45,25 +39,6 @@ async function ConnectedNotice() {
   return <SiteNoticeBanner text={settings?.noticeBanner} />;
 }
 
-/** 사이드바 공지. 공지 게시판에 글이 있으면 최신 3개, 없으면 기본 안내를 보여줍니다. */
-async function ConnectedNoticeList() {
-  const rows = await getLatestNotices().catch(() => []);
-  const items = rows.length
-    ? rows.map((row) => ({
-        id: row.id,
-        title: row.title,
-        date: formatNoticeDate(row.createdAt),
-        href: `/posts/${row.id}`,
-      }))
-    : OFFICIAL_NOTICES;
-  return <NoticeWidget items={items} />;
-}
-
-async function ConnectedProfile() {
-  const profile = await getCurrentUser().catch(() => null);
-  return <ProfileWidget profile={profile} />;
-}
-
 async function ConnectedSidebarSponsor() {
   const sidebarSponsor = await getSponsorCreative("SIDEBAR").catch(() => null);
   return <SidebarSponsorCard unit={sidebarSponsor} />;
@@ -80,7 +55,7 @@ async function ConnectedFeedAds() {
   return (
     <>
       <FeedAdRow />
-      <div className="mt-5 xl:hidden">
+      <div className="mt-5">
         <ConnectedSidebarSponsor />
       </div>
     </>
@@ -117,25 +92,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <ConnectedFeedAds />
           </Suspense>
         </main>
-        {/* 오른쪽 칸: 화면에 고정하면 아래 카드가 잘려 보여서, 페이지와 함께 내려가게 둡니다. */}
-        <aside className="hidden w-[18.5rem] shrink-0 self-start xl:flex">
-          <div className="flex w-full flex-col gap-3 pb-6">
-            <Suspense fallback={<ProfileWidget profile={null} />}>
-              <ConnectedProfile />
-            </Suspense>
-            <Suspense fallback={null}>
-              <ConnectedSidebarSponsor />
-            </Suspense>
-            <PromoApplyCta />
-            <Suspense fallback={<NoticeWidget items={OFFICIAL_NOTICES} />}>
-              <ConnectedNoticeList />
-            </Suspense>
-            <Suspense fallback={null}>
-              <PopularPosts />
-            </Suspense>
-            <GoogleAdUnit placement="sidebar" />
-          </div>
-        </aside>
       </div>
       <Suspense fallback={<SiteFooterFallback />}>
         <SiteFooter />

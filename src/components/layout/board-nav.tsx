@@ -6,12 +6,64 @@ import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive } from "@/lib/nav";
 import { BrandIcon } from "@/components/brand/brand-icon";
-import { NAV_STICKER, OniSticker } from "@/components/brand/oni";
+import {
+  AwardIcon,
+  BellIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  Building2Icon,
+  CalendarCheckIcon,
+  CalendarDaysIcon,
+  CalculatorIcon,
+  GraduationCapIcon,
+  HandshakeIcon,
+  HomeIcon,
+  LightbulbIcon,
+  MegaphoneIcon,
+  MessagesSquareIcon,
+  MonitorPlayIcon,
+  RefreshCwIcon,
+  ShoppingBagIcon,
+  ShuffleIcon,
+  SpadeIcon,
+  TargetIcon,
+  TrophyIcon,
+  UsersIcon,
+  WalletIcon,
+  ZapIcon,
+  type LucideIcon,
+} from "lucide-react";
 
-/** 메뉴 아이콘: 오니 이모티콘(없으면 예전 아이콘) */
+/** 메뉴 아이콘: 한 가지 굵기 · 한 가지 색의 선 아이콘(칸마다 뜻에 맞게) */
+const NAV_ICON: Record<string, LucideIcon> = {
+  "/": HomeIcon,
+  "/boards/jobs/apply": BriefcaseIcon,
+  "/boards/jobs/tournament": TrophyIcon,
+  "/boards/jobs/urgent": ZapIcon,
+  "/boards/jobs/fixed": Building2Icon,
+  "/boards/jobs/team": UsersIcon,
+  "/boards/free": MessagesSquareIcon,
+  "/boards/hand-review": SpadeIcon,
+  "/tools/practice": TargetIcon,
+  "/attendance": CalendarCheckIcon,
+  "/boards/schedule": CalendarDaysIcon,
+  "/boards/tda": BookOpenIcon,
+  "/info/guide": GraduationCapIcon,
+  "/tools/board": MonitorPlayIcon,
+  "/tools/rotation": RefreshCwIcon,
+  "/tools/seat-draw": ShuffleIcon,
+  "/tools/pay": WalletIcon,
+  "/notices": BellIcon,
+  "/boards/official": MegaphoneIcon,
+  "/shop": ShoppingBagIcon,
+  "/ranking": AwardIcon,
+  "/boards/suggestions": LightbulbIcon,
+  "/advertise": HandshakeIcon,
+};
+
 function NavIcon({ href, icon, active }: { href: string; icon: Parameters<typeof BrandIcon>[0]["name"]; active: boolean }) {
-  const sticker = NAV_STICKER[href];
-  return sticker ? <OniSticker name={sticker} className="h-8 shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,.6)]" /> : <BrandIcon name={icon} active={active} />;
+  const Icon = NAV_ICON[href] ?? (href === "/tools" ? CalculatorIcon : null);
+  return Icon ? <Icon aria-hidden className={cn("size-[18px] shrink-0", active ? "text-[#f6efe2]" : "text-[#c9a25c]")} strokeWidth={2} /> : <BrandIcon name={icon} active={active} />;
 }
 
 

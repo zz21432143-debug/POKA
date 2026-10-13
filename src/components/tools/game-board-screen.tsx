@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
+import { POKA_PROMO_EN } from "@/lib/brand-copy";
 import { blindUpSound, breakSound, countdownTick } from "@/lib/board-sound";
 import { PRIZE_COLORS, boardStats, chipText, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
@@ -198,7 +199,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 
 /** 현황판에 늘 나오는 POKA 홍보 */
 const SITE = "pokerwiki.co.kr";
-const PROMO = "HOLDEM COMMUNITY · DEALER JOBS · TOURNAMENT CALENDAR · FREE STORE TOOLS";
+const PROMO = POKA_PROMO_EN;
 const BLIND_TAG = "text-[0.42em] font-black tracking-wider text-amber-300/80";
 const CARD = "grid gap-[calc(var(--u)*0.1)] rounded-[calc(var(--u)*1)] border border-white/15 bg-black/55 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.45)]";
 const LABEL = "text-[clamp(10px,calc(var(--u)*1.1),24px)] font-black tracking-wide text-zinc-400";

@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { PokaLogo } from "@/components/brand/poka-logo";
+import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
+import { POKA_PROMO_LINE } from "@/lib/brand-copy";
 import { FooterLegalLinks } from "@/components/layout/footer-legal-links";
 import { KakaoInquiryLink } from "@/components/layout/kakao-inquiry-link";
 import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
@@ -19,6 +22,7 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
               <PokaLogo compact onDark />
               <p className="font-semibold text-foreground">서비스명: {LEGAL_SERVICE_NAME}</p>
             </div>
+            <p className="font-bold text-[#e7c98a]">{POKA_PROMO_LINE}</p>
             <p>홀덤·딜러 커뮤니티 · 만 19세 이상</p>
             <a href={`mailto:${email}`} className="inline-flex min-h-11 items-center break-all hover:text-foreground">
               문의 이메일: {email}
@@ -32,6 +36,14 @@ function FooterFrame({ settings }: { settings: PublicSiteSettings }) {
             <p className="text-xs leading-5 text-muted-foreground sm:text-right">
               버튼이 앱을 열지 않으면 카카오톡에서 {KAKAO_INQUIRY_ID}를 검색해 친구 추가하세요.
             </p>
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <Link href="/advertise" className="touch-target inline-flex min-h-10 items-center rounded-full border border-[#c9a25c]/50 px-3.5 text-sm font-bold text-[#f3d9a4] hover:border-[#c9a25c]">
+                매장 · 대회 광고 문의
+              </Link>
+              <div className="w-auto">
+                <InstallPwaButton variant="header" />
+              </div>
+            </div>
             <FooterLegalLinks />
           </div>
         </div>

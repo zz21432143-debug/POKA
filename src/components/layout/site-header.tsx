@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { SearchIcon, UserRoundIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { TopNav } from "@/components/layout/top-nav";
 import { KakaoOpenChatCta } from "@/components/layout/kakao-open-chat-cta";
+import { HeaderProfileMenu } from "@/components/layout/header-profile-menu";
+import { ProfileWidget } from "@/components/layout/profile-widget";
 import type { ViewerProfile } from "@/lib/profile";
 
 export function SiteHeader({
@@ -12,7 +14,6 @@ export function SiteHeader({
 }: {
   profile: ViewerProfile | null;
 }) {
-  const meHref = profile ? "/account" : "/login";
   return (
     <header className="bg-[#120d0a] pt-[env(safe-area-inset-top)] text-[#f3eadb]">
       <div className="mx-auto grid h-14 max-w-[1320px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1 px-2 sm:h-16 sm:gap-2 sm:px-5 lg:flex lg:h-[4.5rem] lg:gap-3">
@@ -39,7 +40,6 @@ export function SiteHeader({
           </label>
         </form>
         <div className="relative z-30 flex items-center justify-end gap-0.5 lg:ml-2 lg:gap-1.5">
-          <InstallPwaButton variant="header" />
           <KakaoOpenChatCta compact />
           <Link
             href="/search"
@@ -49,14 +49,12 @@ export function SiteHeader({
             <SearchIcon className="size-5" />
           </Link>
           {profile ? (
-            <Link
-              href={meHref}
-              aria-label="내 정보"
-              className="btn-3d inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold text-[#1c1914] sm:px-3"
-            >
-              <UserRoundIcon className="size-4" />
-              <span className="hidden sm:inline">내정보</span>
-            </Link>
+            <HeaderProfileMenu>
+              <ProfileWidget profile={profile} />
+              <div className="px-1 pb-1">
+                <InstallPwaButton />
+              </div>
+            </HeaderProfileMenu>
           ) : (
             <div className="flex items-center gap-1">
               <Link
