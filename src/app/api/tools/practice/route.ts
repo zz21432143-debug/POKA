@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { PRACTICE_KINDS, ROUND_SIZE } from "@/lib/practice";
+import { clearPotTitleCache } from "@/lib/pot-titles";
 
 export const dynamic = "force-dynamic";
 
@@ -60,5 +61,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "기록을 확인하세요." }, { status: 400 });
   }
   await prisma.dealerDrillRun.create({ data: { userId: user.id, kind, correct, total: ROUND_SIZE, durationMs } });
+  clearPotTitleCache();
   return NextResponse.json({ ok: true, board: await board(user.id) });
 }

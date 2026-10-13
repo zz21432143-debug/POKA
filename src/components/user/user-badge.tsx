@@ -2,7 +2,7 @@ import { cn } from "cn";
 import { MarkImage } from "@/components/layout/mark-image";
 import { StarIcon, MessageCircleHeartIcon } from "lucide-react";
 import { displayMarkSrc, OPERATOR_MARK_SRC } from "@/lib/mark-assets";
-import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { levelTitle, memberRankTitle } from "@/lib/levels";
 
@@ -133,7 +133,10 @@ export function UserBadge({
             </span>
             {showNickname ? (
               <span className="min-w-0">
-                <span className={cn("block truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
+                <span className="flex min-w-0 items-center gap-1">
+                  <span className={cn("truncate font-bold text-foreground", spec.nick)}>{user.nickname}</span>
+                  <PotTitleBadge nickname={user.nickname} />
+                </span>
                 {title ? <span className="mt-0.5 block text-xs font-semibold text-[#C59B27]">{title}</span> : null}
               </span>
             ) : title ? (
@@ -163,8 +166,9 @@ export function UserBadge({
       </span>
       {showNickname ? (
         <span className="min-w-0">
-          <span className={cn("block truncate font-semibold leading-tight text-foreground", spec.nick)}>
-            {user.nickname}
+          <span className="flex min-w-0 items-center gap-1">
+            <span className={cn("truncate font-semibold leading-tight text-foreground", spec.nick)}>{user.nickname}</span>
+            <PotTitleBadge nickname={user.nickname} />
           </span>
           {title ? (
             <span className="block text-[11px] font-semibold leading-tight text-[#C59B27]">{title}</span>

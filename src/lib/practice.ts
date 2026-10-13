@@ -5,13 +5,13 @@
  * 블라인드 → UTG부터 차례로 폴드 · 체크 · 콜 · 레이즈 · 올인(레이즈했다가 폴드도) → 액션이 끝나면
  * 각자 낸 칩으로 메인 · 세컨 · 서드 · 포스 · 피프스 팟을 계산합니다.
  * 난이도(쉬움·보통·어려움)에 따라 참여 인원, 팟 개수, 금액 단위, 레이즈 후 폴드가 달라집니다.
- * 블라인드(SB · BB)와 BB 앤티는 사용자가 정합니다. 앤티는 메인 팟에 들어갑니다.
+ * 블라인드(SB · BB)는 사용자가 정하고, BB 앤티는 항상 BB와 같은 금액으로 나옵니다(메인 팟에 들어감).
  */
 import { computePots, type PotPlayer, type PotResult } from "@/lib/side-pot";
 
 export const ROUND_SIZE = 10;
 
-export type Difficulty = "easy" | "normal" | "hard";
+export type Difficulty = "easy" | "normal" | "hard" | "hell";
 export const DIFFICULTY: Record<
   Difficulty,
   { label: string; desc: string; active: [number, number]; pots: [number, number]; raiseFold: number; speed: number }
@@ -19,18 +19,24 @@ export const DIFFICULTY: Record<
   easy: { label: "쉬움", desc: "3명 참여 · 팟 2개 · 금액이 딱 떨어짐", active: [3, 3], pots: [2, 2], raiseFold: 0, speed: 1100 },
   normal: { label: "보통", desc: "3~5명 · 팟 2~3개 · 가끔 레이즈 후 폴드·돌려줄 금액", active: [3, 5], pots: [2, 3], raiseFold: 0.12, speed: 850 },
   hard: { label: "어려움", desc: "4~7명 · 팟 3~5개 · 잔돈 금액 · 레이즈 후 폴드 자주", active: [4, 7], pots: [3, 5], raiseFold: 0.3, speed: 650 },
+  hell: { label: "지옥", desc: "6~8명 · 팟 4~5개 · 100원 단위 잔돈 · 레이즈 후 폴드·돌려줄 금액 많음 · 빠른 진행", active: [6, 8], pots: [4, 5], raiseFold: 0.45, speed: 480 },
 };
+/** 칭호는 가장 어려운 난이도(지옥) 랭킹 1~3위 */
+export const TITLE_DIFFICULTY: Difficulty = "hell";
+export const POT_TITLES: Record<1 | 2 | 3, string> = { 1: "팟의 오니(鬼)", 2: "칩 요괴", 3: "사이드팟 도깨비" };
 export const DIFFICULTIES = Object.keys(DIFFICULTY) as Difficulty[];
 /** 기록 종류(난이도별 랭킹) */
 export const kindOf = (d: Difficulty) => `sidepot-${d}`;
 export const PRACTICE_KINDS = Object.fromEntries(DIFFICULTIES.map((d) => [kindOf(d), `팟 계산 · ${DIFFICULTY[d].label}`])) as Record<string, string>;
 
 export type Blinds = { sb: number; bb: number; ante: number };
-export const DEFAULT_BLINDS: Blinds = { sb: 500, bb: 1000, ante: 0 };
+/** BB 앤티는 항상 BB와 같은 금액 */
+export const withAnte = (b: { sb: number; bb: number }): Blinds => ({ sb: b.sb, bb: b.bb, ante: b.bb });
+export const DEFAULT_BLINDS: Blinds = withAnte({ sb: 500, bb: 1000 });
 
-/** 블라인드 입력 확인: SB ≤ BB, 0보다 큼, 앤티는 0 이상 */
-export function validBlinds(b: Blinds) {
-  return Number.isFinite(b.sb) && Number.isFinite(b.bb) && b.sb > 0 && b.bb >= b.sb && b.bb <= 10_000_000 && b.ante >= 0 && b.ante <= b.bb * 10;
+/** 블라인드 입력 확인: 0 < SB ≤ BB */
+export function validBlinds(b: { sb: number; bb: number }) {
+  return Number.isFinite(b.sb) && Number.isFinite(b.bb) && b.sb > 0 && b.bb >= b.sb && b.bb <= 10_000_000;
 }
 
 /** 9인 테이블 포지션(버튼부터 시계 방향) */
@@ -84,7 +90,7 @@ function simulate(difficulty: Difficulty, blinds: Blinds, rand: Rand): PotProble
   const pos = (s: number) => POSITIONS_9[(s - button + N) % N];
   const seatOf = (offset: number) => (button + offset) % N;
   // 금액 단위: 쉬움은 5BB 단위, 보통은 BB 단위, 어려움은 SB 단위(잔돈)
-  const unit = difficulty === "easy" ? bb * 5 : difficulty === "normal" ? bb : sb;
+  const unit = difficulty === "easy" ? bb * 5 : difficulty === "normal" ? bb : difficulty === "hard" ? sb : Math.max(1, Math.round(sb / 5));
   const roundUp = (x: number) => Math.ceil(x / unit) * unit;
 
   const activeCount = between(rand, conf.active[0], conf.active[1]);
@@ -92,7 +98,12 @@ function simulate(difficulty: Difficulty, blinds: Blinds, rand: Rand): PotProble
   const raiseFold = new Set([...Array(N).keys()].filter((s) => !active.has(s) && rand() < conf.raiseFold));
   // 스택: 참여자는 서로 다르게(짧은 스택이 올인해 사이드팟이 생기게)
   const stacks = [...Array(N).keys()].map((s) => {
-    if (active.has(s)) return roundUp(between(rand, difficulty === "easy" ? 2 : 4, difficulty === "hard" ? 160 : 120) * (difficulty === "easy" ? bb * 5 : bb) + (difficulty === "hard" ? between(rand, 0, 9) * sb : 0));
+    if (active.has(s)) {
+      if (difficulty === "easy") return between(rand, 2, 120) * bb * 5;
+      if (difficulty === "normal") return between(rand, 4, 120) * bb;
+      if (difficulty === "hard") return between(rand, 4, 160) * bb + between(rand, 0, 9) * sb;
+      return between(rand, 4, 200) * bb + between(rand, 0, 49) * unit;
+    }
     return between(rand, 30, 200) * bb;
   });
 
@@ -188,8 +199,8 @@ function simulate(difficulty: Difficulty, blinds: Blinds, rand: Rand): PotProble
 }
 
 /** 팟 계산 문제: 난이도에 맞는 팟 개수(메인~피프스)가 나올 때까지 진행 */
-export function potProblem(difficulty: Difficulty = "normal", blinds: Blinds = DEFAULT_BLINDS, rand: Rand = Math.random): PotProblem {
-  const b = validBlinds(blinds) ? blinds : DEFAULT_BLINDS;
+export function potProblem(difficulty: Difficulty = "normal", blinds: { sb: number; bb: number } = DEFAULT_BLINDS, rand: Rand = Math.random): PotProblem {
+  const b = withAnte(validBlinds(blinds) ? blinds : DEFAULT_BLINDS);
   const conf = DIFFICULTY[difficulty];
   let fallback: PotProblem | null = null;
   for (let attempt = 0; attempt < 3000; attempt += 1) {

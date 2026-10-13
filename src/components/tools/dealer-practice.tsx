@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
+import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { computePots, explainPots, payouts, potName, type PotPlayer } from "@/lib/side-pot";
 import {
   DEFAULT_BLINDS,
@@ -11,8 +12,11 @@ import {
   actionText,
   kindOf,
   potProblem,
+  POT_TITLES,
+  TITLE_DIFFICULTY,
   readNumber,
   validBlinds,
+  withAnte,
   type Blinds,
   type Difficulty,
   type PotProblem,
@@ -114,7 +118,7 @@ function SettingsForm({ settings, onChange }: { settings: Settings; onChange: (s
     <div className="grid gap-3">
       <div className="grid gap-1.5">
         <span className="text-xs font-bold text-zinc-300">난이도</span>
-        <div role="radiogroup" aria-label="난이도" className="grid gap-1.5 sm:grid-cols-3">
+        <div role="radiogroup" aria-label="난이도" className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           {DIFFICULTIES.map((d) => (
             <button
               key={d}
@@ -133,12 +137,11 @@ function SettingsForm({ settings, onChange }: { settings: Settings; onChange: (s
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {(
           [
             ["sb", "SB(스몰 블라인드)"],
             ["bb", "BB(빅 블라인드)"],
-            ["ante", "BB 앤티(없으면 0)"],
           ] as const
         ).map(([key, label]) => (
           <label key={key} className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
@@ -146,13 +149,16 @@ function SettingsForm({ settings, onChange }: { settings: Settings; onChange: (s
             <input
               aria-label={label}
               inputMode="numeric"
-              value={blinds[key] ? won(blinds[key]) : key === "ante" ? "0" : ""}
-              onChange={(e) => onChange({ ...settings, blinds: { ...blinds, [key]: readNumber(e.target.value) } })}
+              value={blinds[key] ? won(blinds[key]) : ""}
+              onChange={(e) => onChange({ ...settings, blinds: withAnte({ ...blinds, [key]: readNumber(e.target.value) }) })}
               className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base font-black tabular-nums"
             />
           </label>
         ))}
       </div>
+      <p className="text-xs text-zinc-400">
+        BB 앤티는 항상 <b className="text-amber-300">BB와 같은 금액({won(blinds.bb || 0)})</b>으로 나오고 메인 팟에 들어갑니다.
+      </p>
       {!ok ? <p className="text-xs font-bold text-rose-300">SB는 BB보다 작거나 같아야 하고, 0보다 커야 합니다.</p> : null}
     </div>
   );
@@ -225,7 +231,8 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
       last[a.seat] = actionText(a, blinds);
       lastType[a.seat] = a.type;
     }
-    return { contrib, folded, last, lastType, actor: step > 0 ? actions[step - 1].seat : -1 };
+    const anteShown = actions.slice(0, step).some((a) => a.type === "ante");
+    return { contrib, folded, last, lastType, anteShown, actor: step > 0 ? actions[step - 1].seat : -1 };
   }, [actions, step, blinds]);
 
   return (
@@ -248,7 +255,7 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
           <span className="text-xs font-black text-white sm:text-sm">
             SB {won(blinds.sb)} · BB {won(blinds.bb)}
           </span>
-          {blinds.ante ? <span className="text-[10px] font-bold text-amber-200">BB 앤티 {won(blinds.ante)} → 메인 팟</span> : null}
+          <span className="text-[10px] font-bold text-amber-200">BB 앤티 {won(blinds.ante)} → 메인 팟</span>
           <span className={cn("text-[11px] font-black", done ? "text-emerald-200" : "text-amber-200")}>
             {done ? "액션 끝 — 팟을 계산하세요" : `프리플랍 진행 중 ${step}/${actions.length}`}
           </span>
@@ -303,6 +310,20 @@ function HoldemTable({ problem, step }: { problem: PotProblem; step: number }) {
           </div>
         );
       })}
+      {/* 앤티 칩(따로): BB가 낸 앤티는 누구 몫도 아닌 돈이라 메인 팟에 */}
+      {view.anteShown ? (
+        <span
+          data-ante
+          className={cn(
+            "absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-amber-300/80 bg-amber-950/90 px-2 py-0.5 text-[10px] font-black whitespace-nowrap text-amber-100 shadow-[0_0_10px_rgba(251,191,36,.35)] sm:text-xs",
+            PLACED,
+          )}
+          style={place([50, 64], [71, 50])}
+        >
+          <span className="inline-block size-3 rounded-full border-2 border-white/80 bg-amber-400" />
+          앤티 {won(blinds.ante)}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -326,6 +347,7 @@ function PotDrill({
   const [step, setStep] = useState(0);
   const [inputs, setInputs] = useState<string[]>([]);
   const [checked, setChecked] = useState<boolean | null>(null);
+  const [gaveUp, setGaveUp] = useState(false);
   const [correct, setCorrect] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [saved, setSaved] = useState<string | null>(null);
@@ -359,6 +381,7 @@ function PotDrill({
     setStep(0);
     setInputs([]);
     setChecked(null);
+    setGaveUp(false);
   }
 
   function start() {
@@ -370,6 +393,12 @@ function PotDrill({
     load();
     startRef.current = nowMs();
     setElapsed(0);
+  }
+
+  /** 포기: 틀린 것으로 치고 정답과 풀이를 바로 보여 줌 */
+  function giveUp() {
+    setGaveUp(true);
+    setChecked(false);
   }
 
   function check() {
@@ -512,7 +541,16 @@ function PotDrill({
           </div>
           {checked !== null && answer ? (
             <div data-feedback className={cn("grid gap-1.5 rounded-xl px-3 py-2", checked ? "bg-emerald-950" : "bg-rose-950")}>
-              <p className={cn("text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>{checked ? "정답!" : "틀렸습니다"}</p>
+              <p className={cn("text-lg font-black", checked ? "text-emerald-200" : "text-rose-200")}>{checked ? "정답!" : gaveUp ? "포기 — 정답과 풀이" : "틀렸습니다"}</p>
+              {gaveUp ? (
+                <p data-answer-sheet className="flex flex-wrap gap-1.5 text-sm font-black">
+                  {fields.map((label, i) => (
+                    <span key={label} className="rounded-lg bg-black/50 px-2 py-1 tabular-nums">
+                      {label} <span className="text-amber-300">{won(answers[i])}</span>
+                    </span>
+                  ))}
+                </p>
+              ) : null}
               <p className="text-xs font-bold text-zinc-300">풀이</p>
               <ol data-explain className="grid gap-1 text-sm text-zinc-100">
                 {explainPots(question.players, answer).map((line) => (
@@ -523,9 +561,16 @@ function PotDrill({
               </ol>
             </div>
           ) : null}
-          <button type="submit" className="min-h-12 rounded-xl bg-amber-400 text-lg font-black text-black">
-            {checked === null ? "확인" : index + 1 >= ROUND_SIZE ? "결과 보기" : "다음 문제"}
-          </button>
+          <div className="flex gap-2">
+            {checked === null ? (
+              <button type="button" onClick={giveUp} className="min-h-12 shrink-0 rounded-xl border-2 border-rose-500/70 px-4 text-base font-black text-rose-200 hover:bg-rose-950">
+                포기
+              </button>
+            ) : null}
+            <button type="submit" className="min-h-12 flex-1 rounded-xl bg-amber-400 text-lg font-black text-black">
+              {checked === null ? "확인" : index + 1 >= ROUND_SIZE ? "결과 보기" : "다음 문제"}
+            </button>
+          </div>
         </form>
       ) : null}
     </section>
@@ -545,6 +590,9 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
     <section data-rank={view} aria-label="팟 계산 랭킹" className="grid gap-2 rounded-2xl border-2 border-amber-400/50 bg-zinc-950 p-3">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-black">🏆 팟 계산 랭킹</h2>
+        <span className="text-[11px] text-zinc-400">
+          {DIFFICULTY[TITLE_DIFFICULTY].label} 1~3위 칭호: {POT_TITLES[1]} · {POT_TITLES[2]} · {POT_TITLES[3]}
+        </span>
         <div className="ml-auto flex rounded-full border border-white/20 p-0.5">
           {DIFFICULTIES.map((d) => (
             <button
@@ -576,7 +624,10 @@ function Ranking({ board, difficulty }: { board: Board | null; difficulty: Diffi
               <span className={cn("w-7 text-center font-black", i === 0 ? "text-amber-300" : i === 1 ? "text-zinc-200" : i === 2 ? "text-orange-300" : "text-zinc-500")}>
                 {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
               </span>
-              <span className={cn("min-w-0 flex-1 truncate font-bold", !row && "text-zinc-600")}>{row ? row.nickname : "—"}</span>
+              <span className={cn("flex min-w-0 flex-1 items-center gap-1 font-bold", !row && "text-zinc-600")}>
+                <span className="truncate">{row ? row.nickname : "—"}</span>
+                {row && view === TITLE_DIFFICULTY && i < 3 ? <PotTitleBadge nickname={row.nickname} rank={(i + 1) as 1 | 2 | 3} /> : null}
+              </span>
               {row ? (
                 <>
                   <span className="font-black tabular-nums">

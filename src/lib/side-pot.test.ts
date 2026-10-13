@@ -81,7 +81,7 @@ describe("pot practice problems", async () => {
     it(`plays a real preflop round on 9 seats (${d})`, () => {
       const rand = seeded(d.length * 31 + 7);
       for (let i = 0; i < 60; i += 1) {
-        const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 2000 } : { sb: 500, bb: 1000, ante: 0 };
+        const blinds = i % 2 ? { sb: 1000, bb: 2000, ante: 0 } : { sb: 500, bb: 1000, ante: 0 };
         const q = potProblem(d, blinds, rand);
         const [lo, hi] = DIFFICULTY[d].pots;
         assert.equal(q.seats.length, 9);
@@ -97,13 +97,15 @@ describe("pot practice problems", async () => {
         assert.deepEqual(last, q.seats.map((s) => s.amount));
         for (const s of q.seats) if (s.action === "fold") assert.ok(q.actions.some((a) => a.seat === s.seat && a.type === "fold"));
         const sum = q.answer.pots.reduce((t, x) => t + x.amount, 0) + (q.answer.refund?.amount ?? 0);
-        assert.equal(sum, q.seats.reduce((t, x) => t + x.amount, 0) + blinds.ante);
+        // 앤티는 항상 BB 금액
+        assert.equal(q.blinds.ante, blinds.bb);
+        assert.equal(sum, q.seats.reduce((t, x) => t + x.amount, 0) + blinds.bb);
         if (d === "easy") assert.ok(!q.answer.refund && !q.seats.some((s) => s.note));
       }
     });
   }
   it("rejects bad blinds", () => {
     assert.equal(validBlinds({ sb: 1000, bb: 500, ante: 0 }), false);
-    assert.equal(validBlinds({ sb: 500, bb: 1000, ante: 1000 }), true);
+    assert.equal(validBlinds({ sb: 500, bb: 1000 }), true);
   });
 });
