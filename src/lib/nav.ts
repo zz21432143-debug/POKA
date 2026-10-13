@@ -84,6 +84,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
       { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
       { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
+      { href: "/tools/practice", label: "딜러 연습장", hint: "사이드팟 · 칩 세기", icon: "omamori" },
     ],
   },
   {

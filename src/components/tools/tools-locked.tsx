@@ -12,7 +12,7 @@ export function ToolsLocked({ next = "/tools" }: { next?: string }) {
       <h1 className="text-xl font-black text-white">{DEALER_TOOLS_OPEN ? "로그인하면 쓸 수 있어요" : "제작중"}</h1>
       <p className="text-sm leading-6 text-[#D1D5DB]">
         {DEALER_TOOLS_OPEN
-          ? "딜러 로테이션 · 싯드로우 · 급여 계산기는 POKA 회원이면 무료로 쓸 수 있습니다."
+          ? "딜러 로테이션 · 싯드로우 · 딜러 연습장 · 급여 계산기는 POKA 회원이면 무료로 쓸 수 있습니다."
           : "새 기능을 만들고 있습니다. 완성되면 공지로 알려 드릴게요."}
       </p>
       <Link
