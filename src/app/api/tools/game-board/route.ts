@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import type { ClockOp } from "@/lib/game-board";
+import { BUILD_ID } from "@/lib/build-id";
 import { GameBoardError, boardVersion, createBoard, deleteBoard, listBoards, loadBoard, setBoardShare, updateBoard } from "@/lib/game-board-server";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +24,11 @@ export async function GET(request: Request) {
   if (!id) return NextResponse.json({ boards: await listBoards(access.ownerId) }, { headers: NO_STORE });
   const known = Number(url.searchParams.get("v"));
   if (Number.isFinite(known) && known >= 0 && known === (await boardVersion(access.ownerId, id))) {
-    return NextResponse.json({ changed: false, serverNow: Date.now() }, { headers: NO_STORE });
+    return NextResponse.json({ changed: false, serverNow: Date.now(), build: BUILD_ID }, { headers: NO_STORE });
   }
   const board = await loadBoard(access.ownerId, id);
   if (!board) return NextResponse.json({ error: "현황판을 찾을 수 없습니다." }, { status: 404 });
-  return NextResponse.json({ changed: true, board }, { headers: NO_STORE });
+  return NextResponse.json({ changed: true, board, build: BUILD_ID }, { headers: NO_STORE });
 }
 
 const CLOCK_OPS = new Set(["start", "pause", "next", "prev", "reset", "add", "jump"]);

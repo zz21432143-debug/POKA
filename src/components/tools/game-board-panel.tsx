@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type PrizeColor, type PrizeRow } from "@/lib/game-board";
+import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 
@@ -51,8 +52,10 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     const poll = async () => {
       if (dirty.current || document.hidden) return;
       const res = await fetch(`${API}?id=${encodeURIComponent(boardId)}&v=${version}`, { cache: "no-store" }).catch(() => null);
-      const json = res?.ok ? ((await res.json().catch(() => null)) as { changed: boolean; board?: BoardState; serverNow?: number } | null) : null;
+      const json = res?.ok ? ((await res.json().catch(() => null)) as { changed: boolean; board?: BoardState; serverNow?: number; build?: string } | null) : null;
       if (stop || !json) return;
+      // 새로 배포됐으면 새 화면으로(저장 안 된 입력이 있으면 위에서 이미 건너뜀)
+      if (json.build && json.build !== BUILD_ID) return window.location.reload();
       if (json.changed && json.board) take(json.board);
       else if (json.serverNow) setOffset(json.serverNow - Date.now());
     };

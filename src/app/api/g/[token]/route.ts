@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BUILD_ID } from "@/lib/build-id";
 import { loadSharedBoard } from "@/lib/game-board-server";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const shared = await loadSharedBoard(token).catch(() => null);
   if (!shared) return NextResponse.json({ error: "공유가 꺼졌거나 잘못된 링크입니다." }, { status: 404 });
   const known = Number(new URL(request.url).searchParams.get("v"));
-  if (Number.isFinite(known) && known === shared.version) return NextResponse.json({ changed: false, serverNow: shared.serverNow }, { headers: { "Cache-Control": "no-store" } });
-  return NextResponse.json({ changed: true, board: shared }, { headers: { "Cache-Control": "no-store" } });
+  if (Number.isFinite(known) && known === shared.version) return NextResponse.json({ changed: false, serverNow: shared.serverNow, build: BUILD_ID }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ changed: true, board: shared, build: BUILD_ID }, { headers: { "Cache-Control": "no-store" } });
 }

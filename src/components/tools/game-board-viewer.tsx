@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { BUILD_ID } from "@/lib/build-id";
 import type { SharedBoard } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 
@@ -30,8 +31,10 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
       const res = await fetch(`/api/g/${encodeURIComponent(token)}?v=${version}`, { cache: "no-store" }).catch(() => null);
       if (stop || !res) return;
       if (res.status === 404) return setGone(true);
-      const json = (await res.json().catch(() => null)) as { changed: boolean; board?: SharedBoard; serverNow?: number } | null;
+      const json = (await res.json().catch(() => null)) as { changed: boolean; board?: SharedBoard; serverNow?: number; build?: string } | null;
       if (!json) return;
+      // 새로 배포됐으면 새 화면으로(오래 켜 둔 TV도 바뀐 내용이 보이게)
+      if (json.build && json.build !== BUILD_ID) return window.location.reload();
       if (json.changed && json.board) {
         setBoard(json.board);
         setOffset(json.board.serverNow - Date.now());

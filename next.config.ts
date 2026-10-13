@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // 배포 번호: 오래 켜 둔 화면(현황판 TV 등)이 새 배포를 알아채고 새로고침하는 데 씁니다.
+  env: { NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA || "dev" },
   compress: true,
   productionBrowserSourceMaps: false,
   allowedDevOrigins: ["127.0.0.1", "pokerwiki.co.kr", "www.pokerwiki.co.kr"],
