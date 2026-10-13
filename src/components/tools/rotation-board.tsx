@@ -534,23 +534,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </FoldHead>
         <div className="mt-2 grid gap-2">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             게임 시작
             <input
               type="time"
               defaultValue={state.planStart}
               key={`s-${state.planStart}`}
               onBlur={(e) => e.target.value && e.target.value !== state.planStart && void send({ type: "setSettings", planStart: e.target.value })}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold text-white"
+              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold text-white"
             />
           </label>
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             로테이션 간격
             <select
               value={state.interval}
               disabled={busy}
               onChange={(e) => void changeInterval(Number(e.target.value))}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
               {INTERVAL_CHOICES.map((n) => (
                 <option key={n} value={n}>
@@ -559,13 +559,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             시작 전 세팅 칸
             <select
               value={state.setupMinutes}
               disabled={busy}
               onChange={(e) => void send({ type: "setSettings", setupMinutes: Number(e.target.value) })}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
               {SETUP_CHOICES.map((n) => (
                 <option key={n} value={n}>
@@ -574,13 +574,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             버튼 자리(모든 테이블 같음)
             <select
               value={button ?? 0}
               disabled={busy}
               onChange={(e) => void send({ type: "setTable", label: 0, button: Number(e.target.value) || null })}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
               <option value={0}>정하지 않음</option>
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
@@ -590,13 +590,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             최대 연속 딜(이만큼 딜하면 쉬기)
             <select
               value={state.maxStreakMinutes}
               disabled={busy}
               onChange={(e) => void send({ type: "setSettings", maxStreakMinutes: Number(e.target.value) })}
-              className="h-11 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
             >
               {MAX_STREAK_CHOICES.map((n) => (
                 <option key={n} value={n}>

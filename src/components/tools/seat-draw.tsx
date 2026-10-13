@@ -166,24 +166,24 @@ export function SeatDraw() {
             ["테이블당 좌석", seats, setSeats],
             ["시작 테이블 번호", firstTable, setFirstTable],
           ].map(([label, value, set]) => (
-            <label key={label as string} className="grid gap-1 text-sm font-bold">
+            <label key={label as string} className="grid min-w-0 gap-1 text-sm font-bold">
               {label as string}
               <input
                 inputMode="numeric"
                 value={value as string}
                 onChange={(event) => (set as (v: string) => void)(event.target.value.replace(/[^\d]/g, ""))}
-                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+                className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base"
               />
             </label>
           ))}
-          <label className="col-span-2 grid gap-1 text-sm font-bold sm:col-span-1">
+          <label className="col-span-2 grid min-w-0 gap-1 text-sm font-bold sm:col-span-1">
             게임 이름
             <input
               value={gameName}
               maxLength={30}
               placeholder="예: POKA DAY-1"
               onChange={(event) => setGameName(event.target.value)}
-              className="h-11 rounded-lg border-2 border-amber-400/70 bg-black px-2 text-base font-black text-amber-300"
+              className="h-11 w-full min-w-0 rounded-lg border-2 border-amber-400/70 bg-black px-2 text-base font-black text-amber-300"
             />
           </label>
         </div>
