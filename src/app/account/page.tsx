@@ -41,7 +41,7 @@ export default async function AccountPage() {
               </a>
             </div>
             <MyRankList ranks={ranks} />
-            <p className="text-[11px] text-zinc-500">회원 전체에서의 정확한 순위예요(20위 밖도). 기록이 없으면 「기록 없음」.</p>
+            <p className="text-[11px] text-zinc-500">회원 전체에서의 정확한 순위예요(20위 밖도). ▲▼는 이번 주 시작 때보다 오르내린 계단 수예요.</p>
           </section>
         ) : null}
       </div>

@@ -68,6 +68,8 @@ export default function IcmPage() {
       </header>
 
       <IcmCalculator />
+      {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
+      <BoardBottomAd />
 
       <section aria-label="ICM 사용법" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">이렇게 쓰세요</h2>
@@ -105,8 +107,6 @@ export default function IcmPage() {
           </Link>
         ))}
       </nav>
-      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
-      <BoardBottomAd />
     </article>
   );
 }

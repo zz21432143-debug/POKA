@@ -283,8 +283,8 @@ export default async function PostDetailPage({
   const [prevPost, nextPost] = isJobPost
     ? [null, null]
     : await Promise.all([
-        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { lt: post.createdAt } }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }).catch(() => null),
-        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { gt: post.createdAt } }, orderBy: { createdAt: "asc" }, select: { id: true, title: true } }).catch(() => null),
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { lt: post.createdAt } }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, boardType: true } }).catch(() => null),
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { gt: post.createdAt } }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, boardType: true } }).catch(() => null),
       ]);
   const relatedPosts: PostSummary[] = isJobPost
     ? []
@@ -650,6 +650,12 @@ export default async function PostDetailPage({
             row ? (
               <Link key={label} href={`/posts/${row.id}`} className="flex min-h-12 items-center gap-3 border-b border-white/5 px-4 last:border-0 hover:bg-white/5">
                 <span className="shrink-0 text-xs font-black text-[#c9a25c]">{label}</span>
+                {/* 말머리: 자유게시판은 질문 · 현장 스케치가 섞여서 구분 */}
+                {freeFamily ? (
+                  <span data-neighbor-board className="shrink-0 rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">
+                    {BOARD_LABELS[row.boardType as BoardTypeKey] ?? "자유게시판"}
+                  </span>
+                ) : null}
                 <span className="min-w-0 truncate text-[15px] font-semibold text-[#E5E7EB]">{row.title}</span>
               </Link>
             ) : (

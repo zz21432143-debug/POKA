@@ -26,6 +26,8 @@ export default function HandRangesPage() {
         <p className="mt-2">169개 시작 패를 강한 순서로 줄 세웠어요. 상대 수를 바꾸면 순위가 달라지고, 「상위 X%」를 고르면 그 범위에 드는 패가 표에 표시돼요.</p>
       </header>
       <HandRangeRanking />
+      {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
+      <BoardBottomAd />
       <section aria-label="어떻게 정했나요" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">순위는 어떻게 정했나요</h2>
         <ul className="list-disc space-y-1 pl-5">
@@ -46,8 +48,6 @@ export default function HandRangesPage() {
           </Link>
         ))}
       </nav>
-      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
-      <BoardBottomAd />
     </article>
   );
 }

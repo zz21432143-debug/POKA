@@ -110,6 +110,8 @@ export default function HandRankingsPage() {
         ))}
       </ol>
 
+      {/* 구글 광고: 족보 카드 바로 아래(가장 오래 보는 자리) */}
+      <BoardBottomAd />
       <section aria-label="헷갈리는 상황" className="grid gap-3">
         <h2 className="text-lg font-black text-[#f3d9a4]">헷갈리는 상황 4가지</h2>
         {TRICKY.map((row) => (
@@ -155,8 +157,6 @@ export default function HandRankingsPage() {
           </Link>
         ))}
       </nav>
-      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
-      <BoardBottomAd />
     </article>
   );
 }

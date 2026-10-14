@@ -162,16 +162,21 @@ export async function getRanking(tab: RankTab, period: RankPeriod): Promise<Rank
   return toRows(raw, excluded);
 }
 
-/** 내 정확한 순위(회원만, 20위 밖도): 점수 순으로 줄 세워 내 자리. 점수가 없으면 null */
-export async function exactRank(tab: RankTab, period: RankPeriod, userId: string): Promise<{ rank: number; score: number } | null> {
+/** 전체 순위표(회원만): 점수 순 회원 id · 점수 */
+export async function rankOrder(tab: RankTab, period: RankPeriod): Promise<{ userId: string; score: number }[]> {
   const ALL = 100_000;
   const [raw, excluded] = await Promise.all([
     tab === "marks" ? markRows(period, ALL) : tab === "attendance" ? attendanceRows(period, ALL) : levelRows(period, ALL),
     rankExcludedIds(),
   ]);
-  const rows = raw.filter((row) => Number(row.score) > 0 && !excluded.has(row.userId));
+  return raw.filter((row) => Number(row.score) > 0 && !excluded.has(row.userId)).map((row) => ({ userId: row.userId, score: Number(row.score) }));
+}
+
+/** 내 정확한 순위(회원만, 20위 밖도): 점수 순으로 줄 세워 내 자리. 점수가 없으면 null */
+export async function exactRank(tab: RankTab, period: RankPeriod, userId: string): Promise<{ rank: number; score: number } | null> {
+  const rows = await rankOrder(tab, period);
   const i = rows.findIndex((row) => row.userId === userId);
-  return i >= 0 ? { rank: i + 1, score: Number(rows[i].score) } : null;
+  return i >= 0 ? { rank: i + 1, score: rows[i].score } : null;
 }
 
 let excludedCache: { at: number; ids: ReadonlySet<string> } | null = null;

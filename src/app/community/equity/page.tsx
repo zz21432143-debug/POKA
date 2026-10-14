@@ -26,6 +26,8 @@ export default function EquityPage() {
         <p className="mt-2">내 패 · 상대 패 · 보드를 고르면 스트리트마다 승률이 나와요. 「맞춰 보기」를 켜면 내 예상을 먼저 적고 정답과 비교할 수 있어요.</p>
       </header>
       <EquityCalculator />
+      {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
+      <BoardBottomAd />
       <section aria-label="계산 방법" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">어떻게 계산하나요</h2>
         <ul className="list-disc space-y-1 pl-5">
@@ -47,8 +49,6 @@ export default function EquityPage() {
           </Link>
         ))}
       </nav>
-      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
-      <BoardBottomAd />
     </article>
   );
 }
