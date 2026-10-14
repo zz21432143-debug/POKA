@@ -1,0 +1,110 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { PushFoldChart } from "@/components/tools/push-fold-chart";
+import { jsonLdString } from "@/lib/job-jsonld";
+import { siteUrl } from "@/lib/site";
+
+const TITLE = "푸시 폴드 차트 — 헤즈업 내시(GTO) 올인 · 콜 범위 계산기";
+const DESCRIPTION =
+  "유효 스택(1~25bb)과 앤티를 고르면 SB 올인 범위와 BB 콜 범위를 내시 균형(숏스택 GTO)으로 보여 줍니다. 169개 패 승률을 직접 계산해 0.1bb 단위로 구한 무료 푸시폴드 차트.";
+
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/info/push-fold" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/info/push-fold" },
+};
+
+const FAQ = [
+  {
+    q: "푸시 폴드 차트가 뭔가요?",
+    a: "스택이 짧을 때(대략 15bb 이하) 레이즈 대신 올인(푸시)하거나 폴드만 하는 전략표입니다. 이 차트는 헤즈업(SB 대 BB)에서 서로 최선을 다할 때의 균형, 즉 내시 균형을 보여 줍니다.",
+  },
+  {
+    q: "내시 균형 = GTO인가요?",
+    a: "푸시/폴드처럼 선택지가 올인과 폴드뿐인 상황에서는 내시 균형이 곧 GTO(게임 이론상 최적) 전략입니다. 상대가 어떻게 하든 크게 손해 보지 않는 기준선이에요. 상대가 너무 타이트하거나 루즈하면 거기에 맞춰 더 넓히거나 좁히는 게 더 이득일 수 있습니다.",
+  },
+  {
+    q: "숫자표의 숫자는 뭔가요?",
+    a: "그 패로 올인(또는 콜)해도 되는 가장 큰 유효 스택(bb)입니다. 예를 들어 SB 표에서 K2o가 11.5라면, 유효 스택 11.5bb 이하에서는 K2o를 올인하는 게 내시 전략입니다.",
+  },
+  {
+    q: "토너먼트 버블에서도 그대로 쓰면 되나요?",
+    a: "이 차트는 칩 기준(chip EV)입니다. 버블 · 파이널 테이블처럼 상금 압박(ICM)이 큰 구간에서는 콜 범위를 더 좁히는 게 맞고, 올인 범위도 조금 좁아집니다. 상금 가치는 ICM 계산기로 따로 확인하세요.",
+  },
+];
+
+export default function PushFoldPage() {
+  const base = siteUrl();
+  const ld = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "POKA 푸시 폴드 차트",
+      url: `${base}/info/push-fold`,
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Web",
+      inLanguage: "ko-KR",
+      description: DESCRIPTION,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((row) => ({ "@type": "Question", name: row.q, acceptedAnswer: { "@type": "Answer", text: row.a } })),
+    },
+  ];
+  return (
+    <article className="flex flex-col gap-4">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
+      <header className="board-intro">
+        <Link href="/info" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 대회 · 정보
+        </Link>
+        <h1>푸시 폴드 차트 (헤즈업 내시)</h1>
+        <p className="mt-2">유효 스택과 앤티를 고르면 SB가 올인할 패, BB가 콜할 패가 바로 보여요. 칸을 누르면 그 패를 몇 bb까지 올인 · 콜하는지 알려 줘요.</p>
+      </header>
+
+      <PushFoldChart />
+
+      <section aria-label="어떻게 계산했나요" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
+        <h2 className="text-lg font-black text-[#f3d9a4]">어떻게 계산했나요 (정확도)</h2>
+        <ol className="list-decimal space-y-1 pl-5">
+          <li>169개 시작 패끼리 올인했을 때의 승률을 모든 조합(1만 4천여 쌍)마다 30만 판씩 직접 돌려 계산했습니다. 오차는 약 ±0.1%포인트입니다.</li>
+          <li>카드가 겹치는 경우(예: AK를 들면 상대가 AA일 조합이 줄어듦)까지 반영했습니다.</li>
+          <li>그 승률로 SB 올인 · BB 콜의 내시 균형을 0.1bb 간격(1~25bb)으로 풀었습니다. 균형에서 한쪽만 전략을 바꿔 얻을 수 있는 이득이 0.001bb 아래인 것까지 확인했습니다.</li>
+        </ol>
+        <h3 className="mt-1 font-black text-white">이 차트의 조건</h3>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>헤즈업(SB 대 BB) · SB가 먼저 올인 또는 폴드, BB는 콜 또는 폴드.</li>
+          <li>「BB 앤티」는 BB가 1bb를 앤티로 따로 내는 방식(죽은 돈)입니다.</li>
+          <li>칩 기준(chip EV)입니다. 버블 · 파이널처럼 상금 압박이 클 때는 더 타이트하게 플레이하세요.</li>
+          <li>멀티웨이(3명 이상) 포지션별 차트는 계산 방식이 달라 정확도를 확인한 뒤 따로 열 예정입니다.</li>
+        </ul>
+      </section>
+
+      <section aria-label="자주 묻는 질문" className="ink-panel grid gap-3 rounded-2xl p-4">
+        <h2 className="text-lg font-black text-[#f3d9a4]">자주 묻는 질문</h2>
+        {FAQ.map((row) => (
+          <div key={row.q} className="grid gap-1">
+            <h3 className="font-bold text-white">{row.q}</h3>
+            <p className="text-[15px] leading-7 text-[#d1c7b5]">{row.a}</p>
+          </div>
+        ))}
+      </section>
+
+      <nav aria-label="함께 쓰면 좋은 도구" className="flex flex-wrap gap-2">
+        {[
+          { href: "/info/icm", label: "ICM 계산기" },
+          { href: "/tools/practice", label: "딜러 연습장(팟 계산)" },
+          { href: "/boards/hand-review", label: "핸드리뷰 투표" },
+          { href: "/info/guide/tournament-terms", label: "토너먼트 용어 정리" },
+        ].map((link) => (
+          <Link key={link.href} href={link.href} className="inline-flex min-h-10 items-center rounded-full border border-white/15 px-3.5 text-sm font-bold text-[#d1c7b5] hover:border-[#c9a25c] hover:text-white">
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+    </article>
+  );
+}
