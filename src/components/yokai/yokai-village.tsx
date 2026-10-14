@@ -15,6 +15,10 @@ const TONE: Record<string, string> = {
   dark: "bg-[#2a1a4a] text-[#cbb3ff]",
   nature: "bg-[#173d17] text-[#a8f0a0]",
   metal: "bg-[#33363d] text-[#d6dbe4]",
+  ice: "bg-[#1b3a52] text-[#c9ecff]",
+  seer: "bg-[#0f3d3a] text-[#8ff0e2]",
+  gold: "bg-[#4a3a10] text-[#ffe08a]",
+  blood: "bg-[#4a0f1a] text-[#ff9aa8]",
 };
 
 function ElementTag({ species }: { species: YokaiSpecies }) {

@@ -3,12 +3,25 @@
  * 서버 · 화면 공용(순수 함수만).
  */
 
-export type YokaiSpecies = "dokkaebi" | "ingeo" | "samdugumi" | "noejeongwi" | "nudeogi" | "eodukssini" | "samagwi" | "bulgasari";
+export type YokaiSpecies =
+  | "dokkaebi"
+  | "ingeo"
+  | "samdugumi"
+  | "noejeongwi"
+  | "nudeogi"
+  | "eodukssini"
+  | "samagwi"
+  | "bulgasari"
+  | "hwaryong"
+  | "bakjwigwi"
+  | "keunnuni"
+  | "seolnyeo"
+  | "tamrang";
 
 export type YokaiDef = {
   name: string;
   /** 속성 표시(색 · 글자) */
-  element: { label: string; tone: "fire" | "water" | "illusion" | "thunder" | "wind" | "dark" | "nature" | "metal" };
+  element: { label: string; tone: "fire" | "water" | "illusion" | "thunder" | "wind" | "dark" | "nature" | "metal" | "ice" | "seer" | "gold" | "blood" };
   /** 고를 때 한 줄 소개 */
   intro: string;
   /** 1~5단계 이름 */
@@ -78,6 +91,41 @@ export const YOKAI: Record<YokaiSpecies, YokaiDef> = {
     intro: "쇳조각과 칩을 삼키며 자라는 별 모양 요괴.",
     stages: ["쇳가루", "쇠뭉치", "철갑별", "강철포식자", "불멸의 불가사리"],
     how: "팟 계산 연습을 많이 하면 찾아와요",
+  },
+  hwaryong: {
+    name: "화룡",
+    element: { label: "불", tone: "fire" },
+    intro: "불을 먹고 자라는 용. 분노할수록 더 뜨거워져요.",
+    stages: ["불씨룡", "홍염룡", "작열룡", "폭염룡", "태양화룡"],
+    how: "결과 이미지를 공유하면 찾아와요",
+  },
+  bakjwigwi: {
+    name: "박쥐귀",
+    element: { label: "밤", tone: "blood" },
+    intro: "붉은 달이 뜨는 밤에 깨어나는 박쥐 요괴.",
+    stages: ["밤박쥐", "피빛박쥐", "야월귀", "혈월군주", "영원의 밤군주"],
+    how: "늦은 밤(0~5시)에 출석하면 찾아와요",
+  },
+  keunnuni: {
+    name: "큰눈이",
+    element: { label: "감지", tone: "seer" },
+    intro: "모든 것을 꿰뚫어 보는 커다란 외눈 요괴.",
+    stages: ["눈알콩", "외눈도깨비", "천리안귀", "만안귀왕", "진실을 보는 자"],
+    how: "오늘의 퀴즈를 7일 연속 맞히면 찾아와요",
+  },
+  seolnyeo: {
+    name: "설녀",
+    element: { label: "얼음", tone: "ice" },
+    intro: "차가운 눈 속에 따뜻한 마음을 품은 눈의 여인.",
+    stages: ["눈송이령", "설꽃이", "빙결무희", "설산귀후", "만년설의 여왕"],
+    how: "출석을 30일 채우면 찾아와요",
+  },
+  tamrang: {
+    name: "탐랑",
+    element: { label: "황금", tone: "gold" },
+    intro: "금화를 모으며 자라는 욕심 많은 황금 너구리.",
+    stages: ["금콩너구리", "동전너구리", "금화탐랑", "보물귀왕", "만복탐랑"],
+    how: "포인트를 많이 모으면 찾아와요",
   },
 };
 
