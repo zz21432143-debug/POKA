@@ -29,12 +29,14 @@ export default function EquityPage() {
         <ul className="list-disc space-y-1 pl-5">
           <li>상대 패를 정하면 남은 보드를 전부 따져 정확하게 계산해요(프리플랍 1,712,304가지 · 플랍 990가지 · 턴 44가지).</li>
           <li>상대 패를 모르면 상대 패와 보드를 무작위로 10만~15만 번 뽑아 계산해요(오차 약 ±0.3%).</li>
+          <li>「상위 범위」는 핸드 레인지 순위에서 강한 패부터 X%를 상대 범위로 잡아 계산해요(예: 상위 15% = 77+ · AJ+ · KQ 등).</li>
           <li>족보 판정은 모든 7장 조합 133,784,560가지를 세어 알려진 값과 같은지 확인한 평가기를 써요.</li>
         </ul>
       </section>
       <nav aria-label="함께 보면 좋은 것" className="flex flex-wrap gap-2">
         {[
           { href: "/community/hand-rankings", label: "족보 순위" },
+          { href: "/community/hand-ranges", label: "핸드 레인지 순위" },
           { href: "/info/push-fold", label: "GTO 푸시폴드 차트" },
           { href: "/boards/hand-review", label: "핸드리뷰 투표" },
         ].map((link) => (

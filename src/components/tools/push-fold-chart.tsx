@@ -5,11 +5,12 @@ import { Loader2Icon } from "lucide-react";
 import rawData from "@/lib/data/pushfold-hu.json";
 import { COMBOS, rowAt, thresholds, unpackSet, type PushFoldData } from "@/lib/pushfold";
 import { cn } from "cn";
+import { IcmPushFold } from "@/components/tools/icm-push-fold";
 
 const hu = rawData as PushFoldData;
 const NAMES = hu.names;
 type View = "range" | "numbers";
-type Tab = "hu" | "pos";
+type Tab = "hu" | "pos" | "icm";
 
 /** 포지션별 데이터(public/data/gto-positions.json) */
 type PosRow = { s: number; push: string; pushPct: number; calls: Record<string, { set: string; pct: number }> } | null;
@@ -37,6 +38,7 @@ function RangeGrid({
   view,
   picked,
   onPick,
+  compare,
 }: {
   title: string;
   sub: string;
@@ -47,6 +49,8 @@ function RangeGrid({
   view: View;
   picked: number | null;
   onPick: (k: number) => void;
+  /** 비교 범위(여기 들었지만 이 범위엔 없는 패는 점선) */
+  compare?: Set<number>;
 }) {
   const on = tone === "push" ? "bg-[#b42b2b] text-white" : "bg-[#1f6f4a] text-white";
   return (
@@ -72,6 +76,7 @@ function RangeGrid({
                 "flex aspect-square min-w-0 flex-col items-center justify-center rounded-[3px] leading-none",
                 view === "range" ? (inRange ? on : "bg-white/[0.06] text-[#8c8478]") : "text-[#fff6e6]",
                 picked === k && "ring-2 ring-white",
+                compare && view === "range" && !inRange && compare.has(k) && "outline-2 -outline-offset-2 outline-dashed outline-[#e7c98a]",
               )}
               style={view === "numbers" ? { background: heat(v, 25) } : undefined}
             >
@@ -85,6 +90,7 @@ function RangeGrid({
   );
 }
 
+const EMPTY_NUMS = new Array<number>(169).fill(0);
 const label = (v: number) => (v >= 25 ? "25bb 이상" : v > 0 ? `${v}bb까지` : "하지 않음");
 const tabCls = (active: boolean) => cn("inline-flex min-h-10 flex-1 items-center justify-center rounded-lg px-3 text-sm font-bold", active ? "bg-[#c9a25c] text-[#1d1611]" : "text-[#d1c7b5] hover:bg-white/10");
 const chipCls = (active: boolean) => cn("inline-flex min-h-10 items-center rounded-full border px-3 text-sm font-bold", active ? "border-[#c9a25c] bg-[#c9a25c]/25 text-white" : "border-white/15 text-[#d1c7b5] hover:border-[#c9a25c]/60");
@@ -292,10 +298,13 @@ export function PushFoldChart() {
             포지션별 (6인 · 9인)
           </button>
           <button type="button" role="tab" aria-selected={tab === "hu"} data-pf-tab="hu" onClick={() => setTab("hu")} className={tabCls(tab === "hu")}>
-            헤즈업 (SB vs BB)
+            헤즈업
+          </button>
+          <button type="button" role="tab" aria-selected={tab === "icm"} data-pf-tab="icm" onClick={() => setTab("icm")} className={tabCls(tab === "icm")}>
+            ICM(버블·파이널)
           </button>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className={cn("grid gap-2 sm:grid-cols-2", tab === "icm" && "hidden")}>
           <div role="tablist" aria-label="앤티" className="flex gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
             {Object.entries(hu.modes).map(([key, m]) => (
               <button key={key} type="button" role="tab" aria-selected={mode === key} data-pf-mode={key} onClick={() => setMode(key)} className={tabCls(mode === key)}>
@@ -313,7 +322,13 @@ export function PushFoldChart() {
           </div>
         </div>
       </section>
-      {tab === "hu" ? <HeadsUp mode={mode} view={view} /> : <Positions mode={mode} view={view} />}
+      {tab === "icm" ? (
+        <IcmPushFold renderGrid={(g) => <RangeGrid {...g} nums={EMPTY_NUMS} view="range" />} />
+      ) : tab === "hu" ? (
+        <HeadsUp mode={mode} view={view} />
+      ) : (
+        <Positions mode={mode} view={view} />
+      )}
     </div>
   );
 }
