@@ -162,15 +162,49 @@ export function EquityCalculator() {
             </div>
           </div>
           <div className="grid gap-1.5">
-            <span className="flex items-center justify-between text-sm font-black text-[#f3d9a4]">
-              상대 패
-              <label className="inline-flex min-h-9 items-center gap-1.5 text-xs font-bold text-[#d1c7b5]">
-                <input type="checkbox" checked={randomVillain} onChange={(e) => setRandomVillain(e.target.checked)} className="size-4" data-eq-random />
-                상대 패 모름(아무 패)
-              </label>
+            <span className="flex flex-wrap items-center justify-between gap-1 text-sm font-black text-[#f3d9a4]">
+              상대
+              <span role="tablist" aria-label="상대 패" className="flex gap-1 rounded-lg border border-white/10 bg-black/30 p-0.5">
+                {(
+                  [
+                    ["cards", "패 지정"],
+                    ["range", "상위 범위"],
+                    ["random", "모름"],
+                  ] as const
+                ).map(([k, l]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="tab"
+                    aria-selected={villainMode === k}
+                    data-eq-villain={k}
+                    onClick={() => setVillainMode(k)}
+                    className={cn("inline-flex min-h-9 items-center rounded-md px-2.5 text-xs font-bold", villainMode === k ? "bg-[#c9a25c] text-[#1d1611]" : "text-[#d1c7b5]")}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </span>
             </span>
-            {randomVillain ? (
+            {villainMode === "random" ? (
               <p className="flex h-16 items-center text-sm text-[#d1c7b5] sm:h-20">상대 패를 무작위로 수십만 번 뽑아 계산해요.</p>
+            ) : villainMode === "range" ? (
+              <div className="grid gap-1">
+                <span className="flex items-baseline justify-between text-xs font-bold text-[#d1c7b5]">
+                  강한 패부터 상위
+                  <b data-eq-range className="text-lg text-white">
+                    {rangePct}%{" "}
+                    <span className="text-xs text-[#9CA3AF]">
+                      ({rangeSet?.size}가지 · {rangeComboCount}조합)
+                    </span>
+                  </b>
+                </span>
+                <input aria-label="상대 범위 %" type="range" min={1} max={100} value={rangePct} onChange={(e) => setRangePct(Number(e.target.value))} className="h-9 w-full accent-[#c9a25c]" />
+                <p className="text-[11px] leading-4 text-[#9CA3AF]">
+                  예: {[...(rangeSet ?? [])].slice(0, 8).map((k) => HAND_NAMES[k]).join(" ")}
+                  {(rangeSet?.size ?? 0) > 8 ? " …" : ""} (핸드 레인지 순위 기준)
+                </p>
+              </div>
             ) : (
               <div className="flex gap-2">
                 {slotCard("v1", "상대 패 1", "상대")}
