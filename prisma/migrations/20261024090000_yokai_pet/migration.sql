@@ -1,0 +1,19 @@
+-- 요괴 마을: 회원마다 키우는 요괴(지금은 한 마리) · 하루 밥 횟수 · 도감
+CREATE TABLE IF NOT EXISTS "YokaiPet" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "species" TEXT NOT NULL,
+  "exp" INTEGER NOT NULL DEFAULT 0,
+  "stage" INTEGER NOT NULL DEFAULT 1,
+  "fullness" INTEGER NOT NULL DEFAULT 60,
+  "affection" INTEGER NOT NULL DEFAULT 0,
+  "fullnessAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "day" TEXT NOT NULL DEFAULT '',
+  "fedToday" INTEGER NOT NULL DEFAULT 0,
+  "pettedToday" INTEGER NOT NULL DEFAULT 0,
+  "dexJson" TEXT NOT NULL DEFAULT '[]',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "YokaiPet_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "YokaiPet_userId_key" ON "YokaiPet"("userId");

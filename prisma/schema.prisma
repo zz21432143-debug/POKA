@@ -681,3 +681,22 @@ model QuizAnswer {
   @@index([userId, createdAt])
   @@index([quizId])
 }
+
+/// 요괴 마을: 회원이 키우는 요괴(한 명당 한 마리). fullness는 fullnessAt 기준 값(시간이 지나면 줄어듦), day는 fedToday · pettedToday를 센 한국 날짜
+model YokaiPet {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  species     String
+  exp         Int      @default(0)
+  stage       Int      @default(1)
+  fullness    Int      @default(60)
+  affection   Int      @default(0)
+  fullnessAt  DateTime @default(now())
+  day         String   @default("")
+  fedToday    Int      @default(0)
+  pettedToday Int      @default(0)
+  /// 도감에 올라간 요괴 종류(JSON 배열)
+  dexJson     String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
