@@ -26,8 +26,9 @@ function summary(content: string | null) {
  */
 export async function GET() {
   const base = siteUrl();
-  const posts = await prisma.post
-    .findMany({
+  // DB에 못 붙어도(빌드 · 장애) 빈 목록으로 응답
+  const posts = await Promise.resolve()
+    .then(() => prisma.post.findMany({
       where: {
         hidden: false,
         isPrivate: false,
@@ -48,7 +49,7 @@ export async function GET() {
         jobPayAmount: true,
         createdAt: true,
       },
-    })
+    }))
     .catch(() => []);
 
   const items = posts

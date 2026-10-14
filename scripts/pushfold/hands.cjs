@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- node 스크립트 */
 // 169개 시작 패 묶음(13×13 표 순서). 표의 행·열 = A K Q … 2, 대각선 = 페어, 오른쪽 위 = 수딧(s), 왼쪽 아래 = 오프수딧(o).
 "use strict";
 

@@ -52,3 +52,39 @@ describe("heads-up push/fold Nash chart", () => {
     assert.ok(rowAt(data, "bbante", 10)!.callPct > rowAt(data, "none", 10)!.callPct);
   });
 });
+
+describe("position push/fold charts", async () => {
+  const fs = await import("node:fs");
+  const pos = JSON.parse(fs.readFileSync(new URL("../../public/data/gto-positions.json", import.meta.url), "utf8"));
+  const row = (mode: string, size: number, seat: string, s: number) => pos.modes[mode].tables[size][seat].find((r: { s: number } | null) => r && r.s === s);
+
+  it("SB vs BB in a full table matches the heads-up chart", () => {
+    for (const s of [5, 10, 15, 20]) {
+      const multi = row("none", 9, "SB", s);
+      const huRow = rowAt(data, "none", s)!;
+      // 거의 무차별(올인·폴드 EV가 같은)한 경계 패 1~2개는 반복 횟수에 따라 갈릴 수 있음
+      const diff = (x: string, y: string) => {
+        const A = unpackSet(x);
+        const B = unpackSet(y);
+        return [...A].filter((k) => !B.has(k)).length + [...B].filter((k) => !A.has(k)).length;
+      };
+      assert.ok(diff(multi.push, huRow.push) <= 2, `${s}bb push`);
+      assert.ok(diff(multi.calls.BB.set, huRow.call) <= 2, `${s}bb call`);
+      assert.ok(Math.abs(multi.pushPct - huRow.pushPct) <= 0.5);
+    }
+  });
+
+  it("earlier positions push tighter", () => {
+    for (const size of [6, 9]) {
+      const seats: string[] = pos.positions[size].slice(0, -1);
+      for (const s of [8, 12, 20]) {
+        const pcts = seats.map((seat) => row("none", size, seat, s).pushPct);
+        for (let i = 1; i < pcts.length; i++) assert.ok(pcts[i] >= pcts[i - 1] - 0.5, `${size}인 ${s}bb ${seats[i]} ${pcts.join("/")}`);
+      }
+    }
+  });
+
+  it("6-max and 9-max agree from the hijack on (same players behind)", () => {
+    for (const seat of ["HJ", "CO", "BTN"]) assert.equal(row("none", 6, seat, 10).push, row("none", 9, seat, 10).push, seat);
+  });
+});

@@ -629,7 +629,7 @@ function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<
       <h2 className="text-base font-black text-white">프라이즈</h2>
       <p className="text-sm text-[#D1D5DB]">TV 화면 오른쪽에 나옵니다. 순위마다 글씨 색을 고를 수 있어요(1위 금 · 2위 은 · 3위 동이 기본).</p>
       <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
-        위 문구(예: GTD 1,000만 · 총 상금 1,200만)
+        토탈 프라이즈(화면 오른쪽 아래에 크게 · 예: 1,200만 · GTD 1,000만)
         <input value={data.prizeTitle} maxLength={BOARD_LIMITS.prizeTitle} onChange={(e) => onEdit({ prizeTitle: e.target.value })} className={cn(field, "text-amber-200")} />
       </label>
       <ol className="grid gap-2">

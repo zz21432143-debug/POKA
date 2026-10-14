@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- node 스크립트 */
 // 7장 족보 평가기(빠른 비트 계산). 카드 0~51: 숫자 = c >> 2 (0=2 … 12=A), 무늬 = c & 3.
 // 반환값이 클수록 강한 패. 같은 값이면 무승부.
 "use strict";

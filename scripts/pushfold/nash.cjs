@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- node 스크립트 */
 // 헤즈업(SB vs BB) 푸시/폴드 내시 균형 계산 → 앱에서 쓰는 차트 JSON
 // 실행: node scripts/pushfold/nash.cjs <승률표.json> <출력.json>
 //

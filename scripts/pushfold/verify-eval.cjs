@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- node 스크립트 */
 // 검증: 빠른 평가기 vs 느리지만 단순한 "7장 중 5장 21가지 다 따지기" 평가기 — 승패 순서가 항상 같은지
 "use strict";
 const { eval7 } = require("./hand-eval.cjs");

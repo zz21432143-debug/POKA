@@ -173,14 +173,23 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           </div>
         </section>
 
-        {/* 오른쪽: 프라이즈(줄마다 색) */}
-        <section data-prize className="flex min-h-0 flex-col justify-center @[560px]:order-3">
+        {/* 오른쪽: 프라이즈(줄마다 색) · 맨 아래에 토탈 프라이즈를 크게 */}
+        <section data-prize className={cn("flex min-h-0 flex-col gap-[calc(var(--u)*0.8)] @[560px]:order-3", data.prizeTitle ? "justify-end" : "justify-center")}>
           {prizes.length || data.prizeTitle ? (
-            <div className="flex max-h-[42cqh] min-h-0 flex-col gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.1)] @[560px]:max-h-full">
-              <span className="text-center text-[clamp(13px,calc(var(--u)*1.9),38px)] font-black tracking-[0.25em] text-[#e2bd72]">PRIZE</span>
-              {data.prizeTitle ? <span data-prize-title className="text-center text-[clamp(14px,calc(var(--u)*2),42px)] leading-tight font-black text-amber-200">{data.prizeTitle}</span> : null}
-              <PrizeList prizes={prizes} />
-            </div>
+            <>
+              {prizes.length ? (
+                <div className="flex max-h-[42cqh] min-h-0 flex-1 flex-col gap-[calc(var(--u)*0.5)] rounded-[calc(var(--u)*1.2)] border border-[#c9a25c]/35 bg-black/45 p-[calc(var(--u)*1.1)] @[560px]:max-h-full">
+                  <span className="text-center text-[clamp(13px,calc(var(--u)*1.9),38px)] font-black tracking-[0.25em] text-[#e2bd72]">PRIZE</span>
+                  <PrizeList prizes={prizes} />
+                </div>
+              ) : null}
+              {data.prizeTitle ? (
+                <div data-total-prize className="grid shrink-0 justify-items-center gap-[calc(var(--u)*0.2)] rounded-[calc(var(--u)*1.2)] border-2 border-[#e2bd72]/70 bg-[linear-gradient(180deg,rgba(60,40,10,.85),rgba(20,12,4,.85))] px-[calc(var(--u)*1)] py-[calc(var(--u)*0.7)]">
+                  <span className="text-[clamp(11px,calc(var(--u)*1.4),30px)] font-black tracking-[0.25em] text-[#e2bd72]">TOTAL PRIZE</span>
+                  <span data-prize-title className="text-center text-[clamp(20px,calc(var(--u)*3.4),72px)] leading-none font-black text-amber-200 tabular-nums">{data.prizeTitle}</span>
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="grid justify-items-center gap-[calc(var(--u)*0.5)] opacity-80">
               {/* eslint-disable-next-line @next/next/no-img-element -- 장식 */}

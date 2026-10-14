@@ -68,6 +68,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
+      { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
+      { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 핸드 랭킹", icon: "cards" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },
@@ -81,7 +83,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
       { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
       { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
-      { href: "/info/push-fold", label: "푸시 폴드 차트", hint: "숏스택 올인 · 콜 범위", icon: "cards" },
+      { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위", icon: "cards" },
     ],
   },
   {

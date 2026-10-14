@@ -4,9 +4,9 @@ import { PushFoldChart } from "@/components/tools/push-fold-chart";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
 
-const TITLE = "푸시 폴드 차트 — 헤즈업 내시(GTO) 올인 · 콜 범위 계산기";
+const TITLE = "GTO 푸시폴드 차트 — 포지션별 · 헤즈업 올인 / 콜 범위 (6인 · 9인)";
 const DESCRIPTION =
-  "유효 스택(1~25bb)과 앤티를 고르면 SB 올인 범위와 BB 콜 범위를 내시 균형(숏스택 GTO)으로 보여 줍니다. 169개 패 승률을 직접 계산해 0.1bb 단위로 구한 무료 푸시폴드 차트.";
+  "UTG부터 SB까지 포지션별 올인 범위와 뒤 자리 콜 범위, 헤즈업 SB 올인 · BB 콜 범위를 GTO(내시 균형)로 보여 줍니다. 169개 패 승률을 직접 계산해 구한 무료 숏스택 GTO 차트.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "푸시 폴드 차트가 뭔가요?",
-    a: "스택이 짧을 때(대략 15bb 이하) 레이즈 대신 올인(푸시)하거나 폴드만 하는 전략표입니다. 이 차트는 헤즈업(SB 대 BB)에서 서로 최선을 다할 때의 균형, 즉 내시 균형을 보여 줍니다.",
+    a: "스택이 짧을 때(대략 15bb 이하) 레이즈 대신 올인(푸시)하거나 폴드만 하는 전략표입니다. 이 차트는 모두가 서로 최선을 다할 때의 균형, 즉 내시 균형(GTO)을 포지션별로 보여 줍니다.",
   },
   {
     q: "내시 균형 = GTO인가요?",
@@ -40,7 +40,7 @@ export default function PushFoldPage() {
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      name: "POKA 푸시 폴드 차트",
+      name: "POKA GTO 푸시폴드 차트",
       url: `${base}/info/push-fold`,
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Web",
@@ -61,8 +61,8 @@ export default function PushFoldPage() {
         <Link href="/info" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
           ← 대회 · 정보
         </Link>
-        <h1>푸시 폴드 차트 (헤즈업 내시)</h1>
-        <p className="mt-2">유효 스택과 앤티를 고르면 SB가 올인할 패, BB가 콜할 패가 바로 보여요. 칸을 누르면 그 패를 몇 bb까지 올인 · 콜하는지 알려 줘요.</p>
+        <h1>GTO 푸시폴드 차트</h1>
+        <p className="mt-2">포지션과 유효 스택을 고르면 올인할 패, 뒤 자리가 콜할 패가 바로 보여요. 칸을 누르면 그 패를 몇 bb까지 올인 · 콜하는지 알려 줘요.</p>
       </header>
 
       <PushFoldChart />
@@ -72,14 +72,15 @@ export default function PushFoldPage() {
         <ol className="list-decimal space-y-1 pl-5">
           <li>169개 시작 패끼리 올인했을 때의 승률을 모든 조합(1만 4천여 쌍)마다 30만 판씩 직접 돌려 계산했습니다. 오차는 약 ±0.1%포인트입니다.</li>
           <li>카드가 겹치는 경우(예: AK를 들면 상대가 AA일 조합이 줄어듦)까지 반영했습니다.</li>
-          <li>그 승률로 SB 올인 · BB 콜의 내시 균형을 0.1bb 간격(1~25bb)으로 풀었습니다. 균형에서 한쪽만 전략을 바꿔 얻을 수 있는 이득이 0.002bb 아래(사실상 0)인 것까지 확인했습니다.</li>
+          <li>헤즈업: 그 승률로 SB 올인 · BB 콜의 내시 균형을 0.1bb 간격(1~25bb)으로 풀었습니다. 균형에서 한쪽만 전략을 바꿔 얻을 수 있는 이득이 0.002bb 아래(사실상 0)인 것까지 확인했습니다.</li>
+          <li>포지션별: 6인 · 9인 테이블에서 먼저 올인하는 자리와 뒤 자리 전원의 전략을 함께 맞춰(2~25bb, 0.5bb 간격) 풀었습니다. 같은 SB 대 BB 상황은 헤즈업 차트와 똑같이 나오고, 차트 1,222칸 전부에서 한 사람만 바꿔 얻는 이득이 평균 0.001bb · 최대 0.02bb(스택의 0.1% 미만)인 것까지 확인했습니다.</li>
         </ol>
         <h3 className="mt-1 font-black text-white">이 차트의 조건</h3>
         <ul className="list-disc space-y-1 pl-5">
-          <li>헤즈업(SB 대 BB) · SB가 먼저 올인 또는 폴드, BB는 콜 또는 폴드.</li>
+          <li>올인 아니면 폴드만 하는 숏스택 상황입니다. 앞사람이 모두 폴드한 뒤 처음 올인하는 경우예요.</li>
+          <li>포지션별 차트는 모두 같은 스택으로 보고, 한 명이 콜하면 나머지는 폴드한다고 계산했습니다(오버콜은 아주 강한 패뿐이라 숏스택 차트에서 흔히 쓰는 근사).</li>
           <li>「BB 앤티」는 BB가 1bb를 앤티로 따로 내는 방식(죽은 돈)입니다.</li>
           <li>칩 기준(chip EV)입니다. 버블 · 파이널처럼 상금 압박이 클 때는 더 타이트하게 플레이하세요.</li>
-          <li>멀티웨이(3명 이상) 포지션별 차트는 계산 방식이 달라 정확도를 확인한 뒤 따로 열 예정입니다.</li>
         </ul>
       </section>
 

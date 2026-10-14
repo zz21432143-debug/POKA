@@ -10,7 +10,7 @@ const CARDS = [
   { href: "/boards/tda", title: "TDA 룰", body: "토너먼트 공식 홀덤 룰 정리.", icon: BookOpenIcon },
   { href: "/info/guide", title: "딜러 가이드", body: "테이블에서 바로 쓰는 기본 룰.", icon: GraduationCapIcon },
   { href: "/info/icm", title: "ICM 계산기", body: "파이널 테이블 딜 금액을 공정하게.", icon: PieChartIcon },
-  { href: "/info/push-fold", title: "푸시 폴드 차트", body: "숏스택 올인 · 콜 범위(헤즈업 내시).", icon: Grid3x3Icon },
+  { href: "/info/push-fold", title: "GTO 푸시폴드 차트", body: "포지션별 · 헤즈업 올인 · 콜 범위.", icon: Grid3x3Icon },
 ] as const;
 
 export default function InfoHubPage() {

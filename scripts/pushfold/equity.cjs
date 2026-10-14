@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- node 스크립트 */
 // 169×169 프리플랍 올인 승률표 만들기(몬테카를로, 묶음 쌍마다 SAMPLES판, CPU 코어마다 나눠 계산)
 // 실행: node scripts/pushfold/equity.cjs <출력.json> [SAMPLES]
 "use strict";
