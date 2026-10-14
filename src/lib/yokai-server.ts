@@ -85,7 +85,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
 
 /** 첫 요괴 고르기(이미 있으면 그대로 · 다시 고르기 없음) */
 export async function chooseStarter(userId: string, species: YokaiSpecies) {
-  if (!YOKAI[species].starter) return { ok: false as const, error: "처음에는 도깨비 · 잉어 · 삼두구미 중에서 고를 수 있어요." };
+  if (YOKAI[species].rarity !== "starter") return { ok: false as const, error: "처음에는 도깨비 · 잉어 · 삼두구미 중에서 고를 수 있어요." };
   await prisma.yokaiPet.createMany({ data: [{ userId, species, dexJson: JSON.stringify([species]), day: todayKstDate() }], skipDuplicates: true });
   return { ok: true as const };
 }

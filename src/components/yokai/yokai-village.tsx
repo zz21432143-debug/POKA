@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "cn";
-import { STARTERS, YOKAI, YOKAI_ORDER, yokaiImage, type YokaiSpecies } from "@/lib/yokai";
+import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_ORDER, yokaiImage, type YokaiRarity, type YokaiSpecies } from "@/lib/yokai";
 import type { YokaiView } from "@/lib/yokai-server";
 
 const TONE: Record<string, string> = {
@@ -19,6 +19,30 @@ const TONE: Record<string, string> = {
   seer: "bg-[#0f3d3a] text-[#8ff0e2]",
   gold: "bg-[#4a3a10] text-[#ffe08a]",
   blood: "bg-[#4a0f1a] text-[#ff9aa8]",
+  light: "bg-[#4a3410] text-[#ffd98a]",
+  seal: "bg-[#3d2a16] text-[#f0c890]",
+  earth: "bg-[#3a3326] text-[#e0d2b0]",
+  sky: "bg-[#1c1f2e] text-[#e6e9ff]",
+  justice: "bg-[#173f3a] text-[#a6f2dc]",
+  guard: "bg-[#2a2440] text-[#d8ccff]",
+  might: "bg-[#331a47] text-[#dcb8ff]",
+  underworld: "bg-[#1a1414] text-[#f2f2f2]",
+};
+
+/** 도감 칸 테두리: 영웅 = 은테, 전설 = 금테 + 반짝임 */
+const FRAME: Record<YokaiRarity, string> = {
+  starter: "border-[#c9a25c]/20",
+  common: "border-[#c9a25c]/20",
+  rare: "border-sky-300/30",
+  hero: "border-2 border-[#d9dde6]/70 shadow-[0_0_10px_rgba(217,221,230,.25)]",
+  legend: "yk-legend border-2 border-[#f5d76e] shadow-[0_0_14px_rgba(245,215,110,.45)]",
+};
+const RARITY_TEXT: Record<YokaiRarity, string> = {
+  starter: "text-zinc-400",
+  common: "text-zinc-400",
+  rare: "text-sky-300",
+  hero: "text-[#e6e9f2]",
+  legend: "text-[#f5d76e]",
 };
 
 function ElementTag({ species }: { species: YokaiSpecies }) {
@@ -48,6 +72,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
   const [note, setNote] = useState<string | null>(null);
   const [evolved, setEvolved] = useState<number | null>(null);
   const [bounce, setBounce] = useState(0);
+  const [dexPick, setDexPick] = useState<YokaiSpecies | null>(null);
 
   async function act(body: Record<string, unknown>) {
     setBusy(true);
@@ -68,7 +93,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
 
   return (
     <div className="flex flex-col gap-4" data-yokai-village>
-      <style>{`@keyframes yk-bob{50%{transform:translateY(-8px)}}@keyframes yk-hop{30%{transform:translateY(-22px) scale(1.04)}60%{transform:translateY(0) scale(.98)}}@keyframes yk-glow{0%{opacity:0;transform:scale(.6)}40%{opacity:1}100%{opacity:1;transform:scale(1)}}`}</style>
+      <style>{`@keyframes yk-bob{50%{transform:translateY(-8px)}}@keyframes yk-hop{30%{transform:translateY(-22px) scale(1.04)}60%{transform:translateY(0) scale(.98)}}@keyframes yk-glow{0%{opacity:0;transform:scale(.6)}40%{opacity:1}100%{opacity:1;transform:scale(1)}}@keyframes yk-shine{0%{transform:translateX(-120%) rotate(20deg)}60%,100%{transform:translateX(220%) rotate(20deg)}}.yk-legend::after{content:"";position:absolute;inset:-20% auto -20% 0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,236,170,.45),transparent);animation:yk-shine 3.2s ease-in-out infinite;pointer-events:none}@media (prefers-reduced-motion:reduce){.yk-legend::after{animation:none}}`}</style>
       <header className="board-intro">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-black text-[#f3d9a4]">🏮 요괴 마을</h1>
@@ -230,19 +255,42 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
             <h2 className="text-base font-black text-[#f3d9a4]">
               요괴 도감 <span className="text-sm text-zinc-400">{yokai.dex.length} / 108</span>
             </h2>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-9">
               {YOKAI_ORDER.map((s) => {
                 const have = yokai.dex.includes(s);
+                const def = YOKAI[s];
                 return (
-                  <div key={s} title={have ? YOKAI[s].intro : YOKAI[s].how} className="grid justify-items-center gap-1 rounded-xl border border-[#c9a25c]/20 bg-black/30 p-1.5 text-center text-[11px]">
+                  <button
+                    key={s}
+                    type="button"
+                    data-yokai-dex-item={s}
+                    data-rarity={def.rarity}
+                    onClick={() => setDexPick(dexPick === s ? null : s)}
+                    className={cn("relative grid justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]", FRAME[def.rarity], dexPick === s && "ring-2 ring-[#e7c98a]")}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element -- 못 만난 요괴는 실루엣 */}
                     <img src={yokaiImage(s, 1)} alt="" className={cn("aspect-square w-full object-contain", !have && "opacity-30 brightness-0")} />
-                    <span className={have ? "font-bold text-white" : "text-zinc-500"}>{have ? YOKAI[s].name : "???"}</span>
-                  </div>
+                    <span className={have ? "font-bold text-white" : "text-zinc-500"}>{have ? def.name : "???"}</span>
+                    <span className={cn("text-[10px] font-bold", RARITY_TEXT[def.rarity])}>{RARITY_LABEL[def.rarity]}</span>
+                  </button>
                 );
               })}
             </div>
-            <p className="text-[11px] text-zinc-500">다른 요괴는 사이트 활동에 따라 찾아오게 만들 예정이에요(다음 단계).</p>
+            {dexPick ? (
+              <div data-yokai-dex-detail className="grid grid-cols-[72px_1fr] items-center gap-3 rounded-xl border border-[#c9a25c]/30 bg-black/40 p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element -- 고른 요괴 */}
+                <img src={yokaiImage(dexPick, yokai.dex.includes(dexPick) ? 5 : 1)} alt="" className={cn("aspect-square w-full object-contain", !yokai.dex.includes(dexPick) && "opacity-40 brightness-0")} />
+                <div className="grid gap-1 text-sm">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <b className="text-white">{yokai.dex.includes(dexPick) ? YOKAI[dexPick].name : "???"}</b>
+                    <span className={cn("text-xs font-black", RARITY_TEXT[YOKAI[dexPick].rarity])}>{RARITY_LABEL[YOKAI[dexPick].rarity]}</span>
+                    {yokai.dex.includes(dexPick) ? <ElementTag species={dexPick} /> : null}
+                  </div>
+                  <p className="text-xs text-[#d1c7b5]">{yokai.dex.includes(dexPick) ? YOKAI[dexPick].intro : YOKAI[dexPick].how}</p>
+                </div>
+              </div>
+            ) : null}
+            <p className="text-[11px] text-zinc-500">칸을 누르면 얻는 방법이 보여요. 찾아오는 조건은 다음 단계에서 연결해요.</p>
           </section>
         </>
       )}
