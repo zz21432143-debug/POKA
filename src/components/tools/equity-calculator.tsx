@@ -301,7 +301,11 @@ export function EquityCalculator() {
           </button>
         ) : null}
         <p className="mt-2 text-xs leading-5 text-[#9CA3AF]">
-          {randomVillain ? "상대 패 모름: 무작위로 10만~15만 번 뽑아 계산(오차 약 ±0.3%)." : "상대 패를 정하면 남은 보드를 전부 따져 정확히 계산해요(프리플랍 171만 가지)."}
+          {villainMode === "range"
+            ? `상대 범위(상위 ${rangePct}%): 범위 안 조합과 보드를 무작위로 10만~15만 번 뽑아 계산(오차 약 ±0.3%).`
+            : randomVillain
+              ? "상대 패 모름: 무작위로 10만~15만 번 뽑아 계산(오차 약 ±0.3%)."
+              : "상대 패를 정하면 남은 보드를 전부 따져 정확히 계산해요(프리플랍 171만 가지)."}
           {busy ? ` 계산 중: ${STREETS.find((s) => s.key === busy)?.label}…` : ""}
         </p>
       </section>
