@@ -19,7 +19,16 @@ export type PublicProfile = {
 };
 
 /** sparkle: 오늘 칭호를 받은 날이면 마크가 반짝임 + 안내 */
-export function PublicProfileCard({ user, sparkle = false }: { user: PublicProfile; sparkle?: boolean }) {
+export function PublicProfileCard({
+  user,
+  sparkle = false,
+  riser = null,
+}: {
+  user: PublicProfile;
+  sparkle?: boolean;
+  /** 이번 주 급상승 회원이면(주간 한정 배지) */
+  riser?: { label: string; change: number } | null;
+}) {
   const rank = memberRankTitle(user);
   const { nextLevelExp, progressPercent } = progressFromExp(user.level, user.exp);
   const next = nextLevelExp ?? user.exp;
@@ -44,6 +53,11 @@ export function PublicProfileCard({ user, sparkle = false }: { user: PublicProfi
           {user.isMaster ? <p className="mt-0.5 text-xs font-bold text-amber-700">운영자</p> : null}
           {rank ? <p className="mt-0.5 text-xs font-semibold text-emerald-300">{rank}</p> : null}
           {sparkle ? <p className="mt-0.5 text-[11px] font-black text-[#f5d76e]">✨ 오늘 칭호를 받았어요!</p> : null}
+          {riser ? (
+            <p data-riser-badge className="mt-1 inline-flex rounded-full border border-orange-400/70 bg-orange-500/15 px-2 py-0.5 text-[11px] font-black text-orange-200">
+              🔥 이번 주 급상승 · {riser.label} ▲{riser.change}
+            </p>
+          ) : null}
           {!user.isMaster && !user.isAdmin && user.isDealerVerified ? (
             <p className="mt-0.5 text-[11px] font-semibold text-amber-200">★ 인증</p>
           ) : null}

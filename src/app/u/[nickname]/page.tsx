@@ -6,6 +6,7 @@ import { PublicProfileCard } from "@/components/user/public-profile-card";
 import { HonorShelf } from "@/components/user/honor-shelf";
 import { listHonorHistory } from "@/lib/pot-titles";
 import { todayKstDate } from "@/lib/dates";
+import { getWeeklyRiser } from "@/lib/home-rankings";
 
 const kstDateOf = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toISOString().slice(0, 10);
 import { getCurrentUser } from "@/lib/current-user";
@@ -40,6 +41,9 @@ export default async function MemberPage({
   // 오늘(한국 날짜) 칭호를 받았으면 마크 반짝임
   const today = todayKstDate();
   const sparkle = (await listHonorHistory(user.id, 5).catch(() => [])).some((h) => kstDateOf(h.at) === today);
+  // 이번 주 급상승 회원이면 배지(주간 한정)
+  const weekly = await getWeeklyRiser().catch(() => null);
+  const riser = weekly && weekly.nickname === user.nickname ? { label: weekly.label, change: weekly.change } : null;
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -51,6 +55,7 @@ export default async function MemberPage({
       </header>
       <PublicProfileCard
         sparkle={sparkle}
+        riser={riser}
         user={{
           nickname: user.nickname,
           profileMarkImageUrl: user.profileMarkImageUrl,

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { exactRank, rankExcludedIds, rankOrder, rankScoreLabel } from "@/lib/ranking";
-import { weekStartKst } from "@/lib/dates";
+import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { loadTitleConfig, rankingRows } from "@/lib/pot-titles";
 import { DIFFICULTY } from "@/lib/practice";
 
@@ -11,20 +11,23 @@ export type MyRanks = { excluded: false; rows: MyRankRow[] } | { excluded: true;
 
 /** 이번 주 시작 때 순위(레벨 · 마크 · 팟 계산, 상위 1,000명): 그 주에 처음 볼 때 한 번 저장해 오르내림 비교 */
 export type RankSnap = Record<"level" | "marks" | "pot", Record<string, number>>;
-let snapCache: { week: string; data: RankSnap } | null = null;
+/** 기준 기간: 이번 주(월요일) · 이번 달(1일) */
+export type SnapPeriod = "week" | "month";
+const snapCache: Partial<Record<SnapPeriod, { key: string; data: RankSnap }>> = {};
 
 /** 이번 주 시작 때 순위(랭킹 화면 · 홈 급상승에도 씀) */
-export async function getWeekSnapshot(): Promise<RankSnap | null> {
-  return weekSnapshot(async () => {
+export async function getWeekSnapshot(period: SnapPeriod = "week"): Promise<RankSnap | null> {
+  return weekSnapshot(period, async () => {
     const config = await loadTitleConfig();
     return rankingRows(config.difficulty, config.period, 100_000, 50_000);
   });
 }
 
-async function weekSnapshot(pot: () => Promise<{ userId: string }[]>): Promise<RankSnap | null> {
-  const week = weekStartKst();
-  if (snapCache?.week === week) return snapCache.data;
-  const id = `ranksnap_${week}`;
+async function weekSnapshot(period: SnapPeriod, pot: () => Promise<{ userId: string }[]>): Promise<RankSnap | null> {
+  // 이번 주: ranksnap_2026-10-12 · 이번 달: ranksnap_m_2026-10
+  const week = period === "week" ? weekStartKst() : todayKstDate().slice(0, 7);
+  if (snapCache[period]?.key === week) return snapCache[period]!.data;
+  const id = period === "week" ? `ranksnap_${week}` : `ranksnap_m_${week}`;
   const read = async () => {
     const row = await prisma.toolSaved.findUnique({ where: { id }, select: { dataJson: true } }).catch(() => null);
     return row ? (JSON.parse(row.dataJson) as RankSnap) : null;
@@ -40,7 +43,7 @@ async function weekSnapshot(pot: () => Promise<{ userId: string }[]>): Promise<R
       .catch(() => undefined);
     data = (await read()) ?? fresh;
   }
-  snapCache = { week, data };
+  snapCache[period] = { key: week, data };
   return data;
 }
 
@@ -73,7 +76,7 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
   ]);
   const potIndex = pot.findIndex((r) => r.userId === user.id);
   const potRow = potIndex >= 0 ? pot[potIndex] : null;
-  const snap = await weekSnapshot(async () => pot).catch(() => null);
+  const snap = await weekSnapshot("week", async () => pot).catch(() => null);
   const change = (key: keyof RankSnap, rank: number | null): MyRankRow["change"] => {
     if (!snap || rank == null) return null;
     const before = snap[key]?.[user.id];

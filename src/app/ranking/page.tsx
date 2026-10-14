@@ -58,19 +58,21 @@ const NOTES: Record<RankTab, Record<RankPeriod, string>> = {
 export default async function RankingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; period?: string }>;
+  searchParams: Promise<{ tab?: string; period?: string; chg?: string }>;
 }) {
   const query = await searchParams;
   const tab = parseRankTab(query.tab);
   const period = parseRankPeriod(query.period);
   // 오르내림(▲▼): 전체 레벨 · 마크 랭킹만(주간 · 월간은 매번 새로 시작)
   const showChange = period === "all" && (tab === "level" || tab === "marks");
+  // 오르내림 기준: 이번 주 시작(기본) · 이번 달 시작
+  const chg = query.chg === "month" ? ("month" as const) : ("week" as const);
   const [rows, viewer, honors, pot, snap] = await Promise.all([
     getRanking(tab, period).catch(() => []),
     getCurrentUser().catch(() => null),
     getHonorInfo().catch(() => null),
     getPotTitleInfo().catch(() => null),
-    showChange ? getWeekSnapshot().catch(() => null) : Promise.resolve(null),
+    showChange ? getWeekSnapshot(chg).catch(() => null) : Promise.resolve(null),
   ]);
   const changeOf = (userId: string, rank: number) => {
     if (!snap || (tab !== "level" && tab !== "marks")) return null;
@@ -152,6 +154,20 @@ export default async function RankingPage({
           </Link>
         ))}
       </div>
+      {showChange ? (
+        <div data-rank-change-base className="mb-2 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400">
+          ▲▼ 기준
+          {(["week", "month"] as const).map((k) => (
+            <Link
+              key={k}
+              href={`/ranking?tab=${tab}&period=all&chg=${k}`}
+              className={cn("rounded-full border px-2.5 py-1 font-bold", chg === k ? "border-[#c9a25c] bg-[#c9a25c]/20 text-white" : "border-white/15 text-zinc-400")}
+            >
+              {k === "week" ? "이번 주 시작보다" : "이번 달 시작보다"}
+            </Link>
+          ))}
+        </div>
+      ) : null}
       <p className="yokai-note">{NOTES[tab][period]}</p>
       {rows.length === 0 ? (
         <p className="rank-empty">아직 이 구간의 기록이 없습니다.</p>
