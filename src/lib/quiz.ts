@@ -6,7 +6,7 @@
  */
 import { unpackSet } from "@/lib/pushfold";
 
-export type QuizKind = "pushfold" | "equity" | "handrank" | "range" | "potodds" | "outs" | "custom";
+export type QuizKind = "pushfold" | "equity" | "handrank" | "range" | "potodds" | "outs" | "tda" | "custom";
 export type QuizDraft = { kind: QuizKind; question: string; choices: string[]; answer: number; explanation: string };
 
 export type QuizData = {
@@ -28,6 +28,7 @@ export const KIND_LABEL: Record<QuizKind, string> = {
   range: "레인지",
   potodds: "팟 오즈",
   outs: "아웃츠",
+  tda: "TDA 룰 OX",
   custom: "운영자 출제",
 };
 
@@ -45,7 +46,7 @@ const HAND_RANKS = [
   { ko: "하이카드", seven: 23294460 },
 ];
 const SEVEN_TOTAL = 133784560;
-const KINDS: QuizKind[] = ["pushfold", "equity", "handrank", "range", "potodds", "outs"];
+const KINDS: QuizKind[] = ["pushfold", "equity", "handrank", "range", "potodds", "outs", "tda"];
 
 /** 날짜 → 하루 번호(2026-01-01 = 0) */
 export function dayNumber(day: string) {
@@ -188,6 +189,47 @@ function rangeQuiz(rand: () => number, data: QuizData): QuizDraft {
   };
 }
 
+/**
+ * TDA 룰 OX: 해석이 갈리지 않는 표준 조항만(맞는 문장 · 틀린 문장 반반).
+ * 매장 하우스 룰과 다를 수 있어서 해설 끝에 안내를 붙임.
+ */
+export const TDA_OX: { q: string; o: boolean; why: string }[] = [
+  { q: "앞사람의 베팅이 있을 때, 아무 말 없이 큰 칩 한 장(오버칩)을 내밀면 콜로 본다.", o: true, why: "원 칩 룰: 레이즈를 선언하지 않고 칩 한 장만 내면 액면이 커도 콜이에요." },
+  { q: "앞사람의 베팅이 있을 때, 아무 말 없이 큰 칩 한 장(오버칩)을 내밀면 레이즈로 본다.", o: false, why: "원 칩 룰: 레이즈하려면 칩을 내기 전에 「레이즈」라고 선언해야 해요. 말이 없으면 콜이에요." },
+  { q: "풀 레이즈에 못 미치는 올인(언더 레이즈)은, 이미 액션을 마친 플레이어에게 다시 레이즈할 권리를 열어 주지 않는다.", o: true, why: "풀 레이즈 미만의 올인은 베팅을 다시 열지 않아요. 이미 액션한 사람은 콜이나 폴드만 할 수 있어요." },
+  { q: "풀 레이즈에 못 미치는 올인(언더 레이즈)이 나와도, 이미 액션한 플레이어는 다시 레이즈할 수 있다.", o: false, why: "풀 레이즈 미만의 올인은 베팅을 다시 열지 않아요. 이미 액션한 사람은 콜이나 폴드만 할 수 있어요." },
+  { q: "빅블라인드 100, 첫 레이즈가 300이었다면 다음 리레이즈는 최소 500이어야 한다.", o: true, why: "레이즈는 직전 베팅 · 레이즈 증가분 이상이어야 해요. 100 → 300은 200 증가이니 다음은 300 + 200 = 500 이상이에요." },
+  { q: "빅블라인드 100, 첫 레이즈가 300이었다면 다음 리레이즈는 400이면 충분하다.", o: false, why: "레이즈는 직전 증가분(200) 이상이어야 해서 최소 500이에요." },
+  { q: "자기 차례에 입으로 한 선언(콜 · 레이즈 금액 등)은 그대로 지켜야 한다.", o: true, why: "차례에 한 구두 선언은 구속력이 있어요. 말한 대로 해야 해요." },
+  { q: "자기 차례에 「레이즈」라고 말했어도 칩을 내기 전이라면 콜로 바꿀 수 있다.", o: false, why: "차례에 한 구두 선언은 구속력이 있어서 바꿀 수 없어요." },
+  { q: "칩을 여러 번 나눠 넣으면서 레이즈하는 「스트링 베팅」은 허용되지 않는다.", o: true, why: "레이즈는 먼저 선언하거나 칩을 한 번의 동작으로 내야 해요. 나눠 넣으면 스트링 베팅이에요." },
+  { q: "선언 없이 칩을 두세 번 나눠 넣어도 마지막에 놓은 금액만큼 레이즈로 인정된다.", o: false, why: "선언 없이 나눠 넣는 건 스트링 베팅이라 레이즈로 인정되지 않아요." },
+  { q: "자기 패를 받는 첫 배분의 마지막 카드가 돌 때 자리에 없으면 그 핸드는 데드가 된다.", o: true, why: "「앳 유어 시트」 규정: 첫 배분의 마지막 카드가 나갈 때 자리에 있어야 핸드가 살아 있어요." },
+  { q: "자리를 비웠어도 카드만 받았으면 그 핸드는 살아 있다.", o: false, why: "「앳 유어 시트」 규정: 첫 배분의 마지막 카드가 나갈 때 자리에 없으면 핸드는 데드예요." },
+  { q: "쇼다운에서는 「카드가 말한다」. 테이블에 펼친 카드의 실제 족보가 잘못 부른 족보보다 우선한다.", o: true, why: "카드 스피크: 말로 잘못 불러도 펼쳐진 카드 그대로 판정해요." },
+  { q: "쇼다운에서 플레이어가 부른 족보가 테이블에 펼친 실제 카드보다 우선한다.", o: false, why: "카드 스피크: 펼쳐진 카드의 실제 족보로 판정해요." },
+  { q: "마지막 베팅 라운드에 베팅이 있었다면, 마지막으로 공격적인 액션(베팅 · 레이즈)을 한 사람이 먼저 패를 보여 준다.", o: true, why: "쇼다운 순서: 마지막 라운드에 베팅이 있었으면 마지막 공격자가 먼저 보여 줘요." },
+  { q: "마지막 베팅 라운드에 베팅이 있었어도, 쇼다운은 항상 버튼 왼쪽 사람부터 패를 보여 준다.", o: false, why: "버튼 왼쪽부터는 마지막 라운드에 베팅이 없을 때예요. 베팅이 있었으면 마지막 공격자가 먼저예요." },
+  { q: "누군가 올인했고 남은 베팅이 모두 끝났다면, 남은 모든 패를 앞면으로 공개한다.", o: true, why: "올인 상황에서 베팅이 끝나면 모든 핸드를 앞면으로 펼쳐요(페이스 업 포 올인)." },
+  { q: "올인 상황에서 베팅이 다 끝나도, 콜한 사람은 리버까지 패를 덮어 둘 수 있다.", o: false, why: "올인이 나오고 베팅이 끝나면 모든 핸드를 바로 앞면으로 펼쳐야 해요." },
+  { q: "핸드가 끝난 뒤 남은 카드를 미리 보는 「래빗 헌팅」은 허용되지 않는다.", o: true, why: "TDA 룰에서 래빗 헌팅은 허용되지 않아요." },
+  { q: "핸드가 끝난 뒤 요청하면 딜러가 다음에 나올 카드를 보여 줄 수 있다(래빗 헌팅).", o: false, why: "TDA 룰에서 래빗 헌팅은 허용되지 않아요." },
+  { q: "칩 레이스(작은 칩 정리) 때문에 플레이어가 탈락하는 일은 없다.", o: true, why: "칩 레이스로는 누구도 탈락하지 않아요. 칩이 모자라도 남은 가장 작은 칩 한 개를 받아요." },
+  { q: "칩 레이스에서 작은 칩만 가지고 있던 플레이어는 칩을 모두 잃고 탈락할 수 있다.", o: false, why: "칩 레이스로는 누구도 탈락하지 않아요." },
+  { q: "노리밋 게임에서 가장 작은 베팅 금액은 빅블라인드 크기다.", o: true, why: "노리밋에서 최소 베팅은 빅블라인드예요." },
+  { q: "노리밋 게임에서 가장 작은 베팅 금액은 스몰블라인드 크기다.", o: false, why: "노리밋에서 최소 베팅은 빅블라인드예요." },
+];
+function tdaQuiz(rand: () => number): QuizDraft {
+  const item = TDA_OX[Math.floor(rand() * TDA_OX.length)];
+  return {
+    kind: "tda",
+    question: `[O / X] ${item.q}`,
+    choices: ["O (맞아요)", "X (틀려요)"],
+    answer: item.o ? 0 : 1,
+    explanation: `${item.o ? "O" : "X"} — ${item.why} (TDA 표준 룰 기준 · 매장 하우스 룰은 다를 수 있어요)`,
+  };
+}
+
 /** 숫자 보기: 정답 + 오답 후보에서 서로 다른 4개(작은 순) */
 function numberChoices(rand: () => number, answer: number, wrong: number[], fmt: (n: number) => string) {
   const picked = [answer];
@@ -262,5 +304,6 @@ export function generateQuiz(day: string, data: QuizData): QuizDraft {
   if (kind === "handrank") return handrankQuiz(rand);
   if (kind === "potodds") return potoddsQuiz(rand);
   if (kind === "outs") return outsQuiz(rand);
+  if (kind === "tda") return tdaQuiz(rand);
   return rangeQuiz(rand, data);
 }

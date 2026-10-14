@@ -104,7 +104,7 @@ export const YOKAI: Record<YokaiSpecies, YokaiDef> = {
     element: { label: "밤", tone: "blood" },
     intro: "붉은 달이 뜨는 밤에 깨어나는 박쥐 요괴.",
     stages: ["밤박쥐", "피빛박쥐", "야월귀", "혈월군주", "영원의 밤군주"],
-    how: "늦은 밤(0~5시)에 출석하면 찾아와요",
+    how: "새벽(0~5시)에 출석을 7번 하면 찾아와요",
   },
   keunnuni: {
     name: "큰눈이",

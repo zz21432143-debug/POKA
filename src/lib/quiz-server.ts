@@ -10,7 +10,8 @@ export const QUIZ_POINTS = 10;
 export const STREAK_DAYS = 7;
 export const STREAK_BONUS = 30;
 
-export type QuizPublic = { id: string; day: string; kind: QuizKind; question: string; choices: string[] };
+/** author: 회원이 낸 문제(채택)면 그 회원 닉네임 */
+export type QuizPublic = { id: string; day: string; kind: QuizKind; question: string; choices: string[]; author?: string | null };
 export type QuizFull = QuizPublic & { answer: number; explanation: string; source: string };
 export type QuizStats = { counts: number[]; total: number };
 export type QuizResult = {
@@ -39,6 +40,17 @@ function toFull(row: { id: string; day: string; kind: string; question: string; 
   return { id: row.id, day: row.day, kind: row.kind as QuizKind, question: row.question, choices: JSON.parse(row.choicesJson) as string[], answer: row.answer, explanation: row.explanation, source: row.source };
 }
 export const toPublic = (q: QuizFull): QuizPublic => ({ id: q.id, day: q.day, kind: q.kind, question: q.question, choices: q.choices });
+
+/** 채택된 회원 문제: source = "member:회원id" → 닉네임(탈퇴했으면 null) */
+export async function quizAuthor(source: string): Promise<string | null> {
+  if (!source.startsWith("member:")) return null;
+  const user = await prisma.user.findUnique({ where: { id: source.slice(7) }, select: { nickname: true, withdrawnAt: true } }).catch(() => null);
+  return user && !user.withdrawnAt ? user.nickname : null;
+}
+
+export async function toPublicWithAuthor(q: QuizFull): Promise<QuizPublic> {
+  return { ...toPublic(q), author: await quizAuthor(q.source) };
+}
 
 /** 그날 퀴즈(없으면 자동으로 만들어 저장 · 오늘 이후 날짜는 만들지 않음) */
 export async function getQuiz(day = todayKstDate()): Promise<QuizFull | null> {

@@ -20,6 +20,8 @@ export function QuizAdmin() {
   const [explanation, setExplanation] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // 채택한 회원 제안에서 채운 문제면 그 제안 id(저장하면 「○○님 출제」로 표시)
+  const [fromSuggestion, setFromSuggestion] = useState<{ id: string; nickname: string } | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export function QuizAdmin() {
       const res = await fetch(method === "DELETE" ? `/api/admin/quiz?day=${targetDay}` : "/api/admin/quiz", {
         method,
         headers: { "Content-Type": "application/json" },
-        body: method === "POST" ? JSON.stringify({ day: targetDay, question, choices: choices.map((c) => c.trim()).filter(Boolean), answer, explanation }) : undefined,
+        body: method === "POST" ? JSON.stringify({ day: targetDay, question, choices: choices.map((c) => c.trim()).filter(Boolean), answer, explanation, fromSuggestion: fromSuggestion?.id }) : undefined,
       });
       const json = (await res.json()) as { rows?: Row[]; error?: string };
       if (!res.ok) throw new Error(json.error ?? "저장하지 못했어요.");
@@ -58,6 +60,7 @@ export function QuizAdmin() {
         setChoices(["", "", "", ""]);
         setAnswer(0);
         setExplanation("");
+        setFromSuggestion(null);
       }
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "저장하지 못했어요." });
@@ -80,6 +83,7 @@ export function QuizAdmin() {
         setChoices([...s.choices, "", "", "", ""].slice(0, 4));
         setAnswer(s.answer);
         setExplanation(s.explanation);
+        setFromSuggestion({ id: s.id, nickname: s.nickname });
         setMsg({ ok: true, text: `${s.nickname}님 문제를 채택했어요(+50P). 날짜를 골라 저장하세요.` });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else setMsg({ ok: true, text: "제안을 거절했어요." });
@@ -96,6 +100,7 @@ export function QuizAdmin() {
     setChoices([...row.choices, "", "", "", ""].slice(0, 4));
     setAnswer(row.answer);
     setExplanation(row.explanation);
+    setFromSuggestion(null);
     setMsg(null);
   }
 
@@ -111,6 +116,14 @@ export function QuizAdmin() {
         }}
       >
         <h2 className="text-base font-bold">직접 문제 넣기</h2>
+        {fromSuggestion ? (
+          <p data-quiz-admin-from className="flex flex-wrap items-center gap-2 text-sm text-emerald-300">
+            ✍️ {fromSuggestion.nickname}님 문제 — 저장하면 「{fromSuggestion.nickname}님 출제」로 표시돼요.
+            <button type="button" onClick={() => setFromSuggestion(null)} className="min-h-8 rounded-lg border border-white/20 px-2 text-xs text-zinc-300">
+              표시 안 함
+            </button>
+          </p>
+        ) : null}
         <label className="grid gap-1 text-sm">
           날짜
           <input type="date" value={day} min={today} onChange={(e) => setDay(e.target.value)} className={cn(field, "max-w-48")} required />
@@ -185,7 +198,7 @@ export function QuizAdmin() {
                   <span className="font-bold tabular-nums">{r.day}</span>
                   {r.day === today ? <span className="rounded-full bg-[#7a1c22] px-2 text-[11px] font-bold">오늘</span> : r.day > today ? <span className="rounded-full bg-sky-900 px-2 text-[11px] font-bold">예약</span> : null}
                   <span className="rounded-full border border-white/20 px-2 text-[11px]">{KIND_LABEL[r.kind as QuizKind] ?? r.kind}</span>
-                  <span className="text-xs text-muted-foreground">{r.source === "admin" ? "직접 넣음" : "자동"} · {r.answers}명 답함</span>
+                  <span className="text-xs text-muted-foreground">{r.source === "admin" ? "직접 넣음" : r.source.startsWith("member:") ? "회원 출제" : "자동"} · {r.answers}명 답함</span>
                   {r.day >= today && r.answers === 0 ? (
                     <span className="ml-auto flex gap-1">
                       <button type="button" onClick={() => edit(r)} className="min-h-9 rounded-lg border border-white/20 px-3 text-xs">

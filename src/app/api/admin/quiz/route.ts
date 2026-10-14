@@ -51,7 +51,15 @@ export async function POST(request: Request) {
     const answered = await prisma.quizAnswer.count({ where: { quizId: existing.id } });
     if (answered > 0) return NextResponse.json({ error: `이미 ${answered}명이 답한 문제라 바꿀 수 없어요.` }, { status: 409 });
   }
-  const data = { kind: "custom", question, choicesJson: JSON.stringify(choices), answer, explanation, source: "admin" };
+  // 채택한 회원 제안에서 온 문제면 출제자 표시(source = member:회원id)
+  let source = "admin";
+  if (typeof body.fromSuggestion === "string") {
+    const sugg = await prisma.toolSaved.findFirst({ where: { id: body.fromSuggestion, kind: "quiz-suggest", name: "adopted" }, select: { ownerId: true } });
+    if (sugg) source = `member:${sugg.ownerId}`;
+  }
+  // 회원 문제를 고치기만 하면 출제자 표시는 그대로
+  if (source === "admin" && existing?.source.startsWith("member:")) source = existing.source;
+  const data = { kind: "custom", question, choicesJson: JSON.stringify(choices), answer, explanation, source };
   await prisma.dailyQuiz.upsert({ where: { day }, create: { day, ...data }, update: data });
   return NextResponse.json({ ok: true, rows: await list() });
 }

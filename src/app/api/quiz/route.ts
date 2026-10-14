@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
-import { answerQuiz, getQuiz, myAnswer, quizStats, quizStreak, toPublic } from "@/lib/quiz-server";
+import { answerQuiz, getQuiz, myAnswer, quizStats, quizStreak, toPublicWithAuthor } from "@/lib/quiz-server";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -13,11 +13,11 @@ export async function GET(request: Request) {
   if (!quiz) return NextResponse.json({ quiz: null }, { headers: NO_STORE });
   const user = await getCurrentUser().catch(() => null);
   const mine = user ? await myAnswer(quiz.id, user.id) : null;
-  if (!mine) return NextResponse.json({ quiz: toPublic(quiz), loggedIn: Boolean(user) }, { headers: NO_STORE });
+  if (!mine) return NextResponse.json({ quiz: await toPublicWithAuthor(quiz), loggedIn: Boolean(user) }, { headers: NO_STORE });
   const [stats, streak] = await Promise.all([quizStats(quiz.id, quiz.choices.length), quizStreak(user!.id)]);
   return NextResponse.json(
     {
-      quiz: toPublic(quiz),
+      quiz: await toPublicWithAuthor(quiz),
       loggedIn: true,
       result: { correct: mine.correct, choice: mine.choice, answer: quiz.answer, explanation: quiz.explanation, stats, gained: 0, streak, saved: false },
     },

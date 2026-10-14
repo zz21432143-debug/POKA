@@ -49,7 +49,12 @@ export function QuizCard({
     <section aria-label="오늘의 퀴즈" data-quiz-card={quiz.day} className="lounge-card grid gap-3 rounded-[1.35rem] p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">🧩 오늘의 퀴즈</span>
-        <span className="rounded-full border border-[#c9a25c]/50 px-2 py-0.5 text-[11px] font-bold text-[#e7c98a]">{KIND_LABEL[quiz.kind]}</span>
+        <span className="rounded-full border border-[#c9a25c]/50 px-2 py-0.5 text-[11px] font-bold text-[#e7c98a]">{quiz.author ? "회원 출제" : KIND_LABEL[quiz.kind]}</span>
+        {quiz.author ? (
+          <span data-quiz-author className="rounded-full bg-[#1f6f4a] px-2 py-0.5 text-[11px] font-black text-[#eafff3]">
+            ✍️ {quiz.author}님 출제
+          </span>
+        ) : null}
         <span className="text-xs text-zinc-400">{quiz.day.replace(/-/g, ".")}</span>
         {compact ? (
           <Link href="/quiz" className="ml-auto text-xs font-bold text-[#e7c98a]">
@@ -112,7 +117,7 @@ export function QuizCard({
             onShare={(format, byline) =>
               shareResultImage({
                 title: "오늘의 홀덤 퀴즈",
-                subtitle: `${quiz.day.replace(/-/g, ".")} · ${KIND_LABEL[quiz.kind]} · 정답은 QR로!`,
+                subtitle: `${quiz.day.replace(/-/g, ".")} · ${quiz.author ? `${quiz.author}님 출제` : KIND_LABEL[quiz.kind]} · 정답은 QR로!`,
                 note: quiz.question,
                 lines: [
                   ...quiz.choices.map((c, i) => ({ label: `보기 ${i + 1}`, value: c })),

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import fs from "node:fs";
-import { generateQuiz, handLabel, josa, type QuizData } from "./quiz";
+import { TDA_OX, generateQuiz, handLabel, josa, type QuizData } from "./quiz";
 
 const read = (p: string) => JSON.parse(fs.readFileSync(new URL(p, import.meta.url), "utf8"));
 const data: QuizData = {
@@ -13,8 +13,20 @@ const data: QuizData = {
 describe("오늘의 퀴즈 자동 생성", () => {
   it("같은 날짜 = 같은 문제, 날마다 종류가 돌아감", () => {
     assert.deepEqual(generateQuiz("2026-10-15", data), generateQuiz("2026-10-15", data));
-    const kinds = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17"].map((d) => generateQuiz(d, data).kind));
-    assert.equal(kinds.size, 6);
+    const kinds = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18"].map((d) => generateQuiz(d, data).kind));
+    assert.equal(kinds.size, 7);
+  });
+
+  it("TDA OX: 맞는 문장 · 틀린 문장 반반, 문제마다 해설 · 매장 룰 안내", () => {
+    assert.equal(TDA_OX.filter((t) => t.o).length, TDA_OX.filter((t) => !t.o).length);
+    assert.equal(new Set(TDA_OX.map((t) => t.q)).size, TDA_OX.length);
+    for (let i = 0; i < 120; i++) {
+      const day = new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10);
+      const q = generateQuiz(day, data);
+      if (q.kind !== "tda") continue;
+      assert.deepEqual(q.choices, ["O (맞아요)", "X (틀려요)"]);
+      assert.ok(q.explanation.startsWith(q.answer === 0 ? "O" : "X") && q.explanation.includes("하우스 룰"), day);
+    }
   });
 
   it("팟 오즈 · 아웃츠: 보기 4개 서로 다름 · 정답 계산이 맞음", () => {
