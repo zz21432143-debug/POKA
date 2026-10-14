@@ -9,13 +9,32 @@
 import { DIFFICULTIES, POT_TITLES, TITLE_DIFFICULTY, type Difficulty } from "@/lib/practice";
 
 export type TitlePeriod = "all" | "month";
+/**
+ * 랭킹 칭호(팟 계산 말고): 각 랭킹 1위에게 붙음. 관리자가 켜기/끄기 · 이름을 바꿉니다.
+ * tab · period는 /ranking 랭킹 종류와 기간.
+ */
+export const HONOR_KEYS = ["level", "weekExp", "monthExp", "marks", "attendance"] as const;
+export type HonorKey = (typeof HONOR_KEYS)[number];
+export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: string; tab: "level" | "marks" | "attendance"; period: "all" | "week" | "month" }> = {
+  level: { icon: "👑", name: "백귀의 왕", desc: "레벨 랭킹(전체) 1위", tab: "level", period: "all" },
+  weekExp: { icon: "🔥", name: "이번 주 사천왕", desc: "이번 주 경험치 1위", tab: "level", period: "week" },
+  monthExp: { icon: "🌙", name: "이달의 귀신", desc: "이번 달 경험치 1위", tab: "level", period: "month" },
+  marks: { icon: "🎴", name: "요괴 수집가", desc: "마크 수집 랭킹(전체) 1위", tab: "marks", period: "all" },
+  attendance: { icon: "📅", name: "개근 도깨비", desc: "이번 달 출석 1위", tab: "attendance", period: "month" },
+};
+export type HonorSetting = { enabled: boolean; name: string };
+
 export type TitleConfig = {
   enabled: boolean;
   names: Record<1 | 2 | 3, string>;
   difficulty: Difficulty;
   period: TitlePeriod;
   excluded: string[];
+  /** 랭킹 칭호 켜기/끄기 · 이름 */
+  honors: Record<HonorKey, HonorSetting>;
 };
+
+const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name }])) as Record<HonorKey, HonorSetting>;
 
 export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   enabled: true,
@@ -23,6 +42,7 @@ export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   difficulty: TITLE_DIFFICULTY,
   period: "all",
   excluded: [],
+  honors: DEFAULT_HONORS,
 };
 
 export const TITLE_NAME_MAX = 12;
@@ -38,9 +58,19 @@ const cleanName = (value: unknown, fallback: string) => {
 
 /** 저장된 JSON(또는 관리자 입력)을 안전한 설정으로 */
 export function normalizeTitleConfig(raw: unknown): TitleConfig {
-  const value = (raw && typeof raw === "object" ? raw : {}) as Omit<Partial<TitleConfig>, "names"> & { names?: Record<string, unknown> };
+  const value = (raw && typeof raw === "object" ? raw : {}) as Omit<Partial<TitleConfig>, "names" | "honors"> & {
+    names?: Record<string, unknown>;
+    honors?: Record<string, { enabled?: unknown; name?: unknown } | undefined>;
+  };
   const names: Record<string, unknown> = value.names ?? {};
+  const honors = Object.fromEntries(
+    HONOR_KEYS.map((k) => {
+      const h = value.honors?.[k] ?? {};
+      return [k, { enabled: typeof h.enabled === "boolean" ? h.enabled : true, name: cleanName(h.name, HONOR_DEFS[k].name) }];
+    }),
+  ) as Record<HonorKey, HonorSetting>;
   return {
+    honors,
     enabled: typeof value.enabled === "boolean" ? value.enabled : DEFAULT_TITLE_CONFIG.enabled,
     names: {
       1: cleanName(names[1], POT_TITLES[1]),

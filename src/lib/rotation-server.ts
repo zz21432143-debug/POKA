@@ -83,7 +83,8 @@ const MAX_SLOTS = 300;
 async function resolveGame(ownerId: string, gameId?: string | null) {
   let game = gameId ? await prisma.rotationMeta.findFirst({ where: { id: gameId, ownerId } }) : null;
   game ??= await prisma.rotationMeta.findFirst({ where: { ownerId }, orderBy: GAME_ORDER });
-  game ??= await prisma.rotationMeta.create({ data: { id: randomUUID(), ownerId, workDate: kstDate() } });
+  // 처음 만드는 게임도 새 게임과 같이 테이블 0개로 시작(DB 기본값 20개를 쓰지 않음)
+  game ??= await prisma.rotationMeta.create({ data: { id: randomUUID(), ownerId, workDate: kstDate(), tableCount: 0, tableLabels: "" } });
   if (!game.workDate) game = await prisma.rotationMeta.update({ where: { id: game.id }, data: { workDate: kstDate(game.createdAt) } });
   return game;
 }
@@ -306,7 +307,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         if (action.maxStreakMinutes !== undefined) data.maxStreakMinutes = Math.max(0, Math.min(600, Math.floor(Number(action.maxStreakMinutes) || 0)));
         if (action.tableLabels !== undefined) {
           const { labels, errors } = parseTableLabels(String(action.tableLabels));
-          if (labels.length === 0 || errors.length) throw new RotationError(`테이블 번호를 확인하세요${errors.length ? `: ${errors.join(", ")}` : ""}`);
+          if (labels.length === 0 || errors.length) throw new RotationError(`테이블 번호를 확인하세요${errors.length ? `: ${errors.join(", ")}` : ""} (예: 1~3, A~B)`);
           data.tableCount = labels.length;
           data.tableLabels = labels.map(labelText).join(",");
         }

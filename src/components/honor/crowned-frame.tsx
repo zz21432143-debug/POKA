@@ -12,17 +12,27 @@ const EMPTY_TITLES: PotTitleInfo = { ...DEFAULT_TITLE_CONFIG, holders: {} };
 const CrownContext = createContext<ReadonlySet<string>>(new Set());
 const PotTitleContext = createContext<PotTitleInfo>(EMPTY_TITLES);
 
+/** 랭킹 칭호(레벨 · 경험치 · 마크 · 출석 1위): 정의와 받는 사람 */
+export type HonorInfo = {
+  defs: { key: string; icon: string; name: string; desc: string }[];
+  holders: Record<string, string[]>;
+};
+const EMPTY_HONORS: HonorInfo = { defs: [], holders: {} };
+const HonorContext = createContext<HonorInfo>(EMPTY_HONORS);
+
 export function CrownProvider({ children }: { children: ReactNode }) {
   const [names, setNames] = useState<ReadonlySet<string>>(new Set());
   const [potTitle, setPotTitle] = useState<PotTitleInfo>(EMPTY_TITLES);
+  const [honors, setHonors] = useState<HonorInfo>(EMPTY_HONORS);
   useEffect(() => {
     let cancelled = false;
     fetch("/api/ranking/crowns")
       .then((response) => response.json())
-      .then((payload: { nicknames?: string[]; potTitle?: PotTitleInfo | null }) => {
+      .then((payload: { nicknames?: string[]; potTitle?: PotTitleInfo | null; honors?: HonorInfo | null }) => {
         if (cancelled) return;
         setNames(new Set(payload.nicknames ?? []));
         if (payload.potTitle) setPotTitle(payload.potTitle);
+        if (payload.honors) setHonors(payload.honors);
       })
       .catch(() => undefined);
     return () => {
@@ -31,7 +41,9 @@ export function CrownProvider({ children }: { children: ReactNode }) {
   }, []);
   return (
     <CrownContext.Provider value={names}>
-      <PotTitleContext.Provider value={potTitle}>{children}</PotTitleContext.Provider>
+      <PotTitleContext.Provider value={potTitle}>
+        <HonorContext.Provider value={honors}>{children}</HonorContext.Provider>
+      </PotTitleContext.Provider>
     </CrownContext.Provider>
   );
 }
@@ -84,11 +96,41 @@ export function TitleChip({ rank, name, className }: { rank: 1 | 2 | 3; name: st
   );
 }
 
-/** 닉네임 옆 팟 계산 칭호(설정한 난이도 랭킹 1~3위). 관리자가 끄면 안 보임 */
-export function PotTitleBadge({ nickname, className }: { nickname: string; className?: string }) {
-  const info = useContext(PotTitleContext);
+const HONOR_TONE = "border-sky-300/70 bg-gradient-to-r from-[#1e1b4b] to-[#3b0764] text-sky-100";
+
+/**
+ * 닉네임 옆 칭호들: 팟 계산 칭호(1~3위) + 랭킹 칭호(레벨 · 경험치 · 마크 · 출석 1위).
+ * 목록에서는 max개까지만(기본 2). 관리자가 끈 칭호는 안 보임.
+ */
+export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: string; className?: string; max?: number }) {
+  const honors = useContext(HonorContext);
+  const potInfo = useContext(PotTitleContext);
   const hydrated = useHydrated();
-  const rank = hydrated && info.enabled ? info.holders[nickname] : undefined;
+  if (!hydrated) return null;
+  const hasPot = Boolean(potInfo.enabled && potInfo.holders[nickname]);
+  const defs = new Map(honors.defs.map((d) => [d.key, d]));
+  const mine = (honors.holders[nickname] ?? []).map((k) => defs.get(k)).filter((d) => d != null);
+  return (
+    <>
+      <PotOnlyBadge nickname={nickname} className={className} />
+      {mine.slice(0, Math.max(0, max - (hasPot ? 1 : 0))).map((d) => (
+        <span
+          key={d.key}
+          data-honor={d.key}
+          title={d.desc}
+          className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", HONOR_TONE, className)}
+        >
+          {d.icon} {d.name}
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** 팟 계산 칭호만 */
+function PotOnlyBadge({ nickname, className }: { nickname: string; className?: string }) {
+  const info = useContext(PotTitleContext);
+  const rank = info.enabled ? info.holders[nickname] : undefined;
   if (!rank) return null;
   return (
     <span

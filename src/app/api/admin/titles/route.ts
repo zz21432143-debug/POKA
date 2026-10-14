@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin, requireMaster } from "@/lib/admin";
 import { clientIp } from "@/lib/request";
 import { DIFFICULTIES, DIFFICULTY, kindOf, type Difficulty } from "@/lib/practice";
-import { clearPotTitleCache, getPotTitleInfo, loadTitleConfig, rankingRows, saveTitleConfig } from "@/lib/pot-titles";
+import { clearPotTitleCache, getHonorInfo, getPotTitleInfo, loadTitleConfig, rankingRows, saveTitleConfig } from "@/lib/pot-titles";
 import { normalizeTitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +16,9 @@ async function snapshot(difficulty?: Difficulty, period?: TitlePeriod) {
   const config = await loadTitleConfig();
   const d = difficulty ?? config.difficulty;
   const p = period ?? config.period;
-  const [info, rows, excludedUsers] = await Promise.all([
+  const [info, honors, rows, excludedUsers] = await Promise.all([
     getPotTitleInfo(),
+    getHonorInfo().catch(() => null),
     rankingRows(d, p, 30),
     config.excluded.length ? prisma.user.findMany({ where: { id: { in: config.excluded } }, select: { id: true, nickname: true } }) : [],
   ]);
@@ -31,6 +32,7 @@ async function snapshot(difficulty?: Difficulty, period?: TitlePeriod) {
     view: { difficulty: d, period: p },
     rows: rows.map((r) => ({ ...r, runs: countOf.get(r.userId) ?? 0, excluded: config.excluded.includes(r.userId) })),
     excludedUsers,
+    honorOwners: honors?.owners ?? null,
   };
 }
 
@@ -50,7 +52,13 @@ export async function PATCH(request: Request) {
   if (error) return error;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const current = await loadTitleConfig();
-  const next = normalizeTitleConfig({ ...current, ...body, names: { ...current.names, ...((body.names as object) ?? {}) }, excluded: current.excluded });
+  const next = normalizeTitleConfig({
+    ...current,
+    ...body,
+    names: { ...current.names, ...((body.names as object) ?? {}) },
+    honors: { ...current.honors, ...((body.honors as object) ?? {}) },
+    excluded: current.excluded,
+  });
   await saveTitleConfig(next);
   return NextResponse.json({ ok: true, ...(await snapshot()) });
 }

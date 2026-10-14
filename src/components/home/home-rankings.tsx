@@ -45,7 +45,7 @@ export async function HomeRankings() {
                     </CrownedFrame>
                     <Link href={`/u/${encodeURIComponent(row.nickname)}`} className="flex min-w-0 flex-1 items-center gap-1">
                       <span className="truncate text-sm font-bold text-white">{row.nickname}</span>
-                      {board.key === "pot" ? <PotTitleBadge nickname={row.nickname} className="max-lg:hidden" /> : null}
+                      <PotTitleBadge nickname={row.nickname} max={1} className="max-lg:hidden" />
                     </Link>
                     <span className="shrink-0 text-xs font-black text-[#e7c98a] tabular-nums">{row.score}</span>
                   </li>

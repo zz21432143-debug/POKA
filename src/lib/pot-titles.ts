@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { kindOf, type Difficulty } from "@/lib/practice";
 import { SITE_SETTING_ID, ensureSiteSettingsRow } from "@/lib/site-settings";
-import { monthStartKst, parseTitleConfig, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
+import { HONOR_DEFS, HONOR_KEYS, monthStartKst, parseTitleConfig, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
+import { getRanking } from "@/lib/ranking";
 
 /**
  * 팟 계산 랭킹 · 칭호.
@@ -83,8 +84,52 @@ export async function getPotTitleInfo(): Promise<PotTitleInfo> {
   return info;
 }
 
+/** 랭킹 칭호(켜진 것만): 이름 · 아이콘 · 설명과 받는 사람(닉네임 → 칭호 목록) */
+export type HonorInfo = {
+  defs: { key: HonorKey; icon: string; name: string; desc: string }[];
+  holders: Record<string, HonorKey[]>;
+  /** 칭호 → 받는 사람(없으면 null) */
+  owners: Record<HonorKey, string | null>;
+};
+
+let honorCache: { at: number; info: HonorInfo } | null = null;
+
+/** 랭킹 칭호: 각 랭킹 1위(칭호 제외 회원은 건너뜀). 1분 캐시 */
+export async function getHonorInfo(): Promise<HonorInfo> {
+  const now = Date.now();
+  if (honorCache && now - honorCache.at < 60_000) return honorCache.info;
+  const config = await loadTitleConfig();
+  const keys = HONOR_KEYS.filter((k) => config.honors[k].enabled);
+  const excluded = config.excluded.length
+    ? new Set((await prisma.user.findMany({ where: { id: { in: config.excluded } }, select: { nickname: true } })).map((u) => u.nickname))
+    : new Set<string>();
+  const owners = Object.fromEntries(HONOR_KEYS.map((k) => [k, null])) as Record<HonorKey, string | null>;
+  const holders: Record<string, HonorKey[]> = {};
+  await Promise.all(
+    keys.map(async (key) => {
+      const rows = await getRanking(HONOR_DEFS[key].tab, HONOR_DEFS[key].period).catch(() => []);
+      const first = rows.find((r) => !excluded.has(r.nickname));
+      if (!first) return;
+      owners[key] = first.nickname;
+    }),
+  );
+  // 순서는 HONOR_KEYS 순(레벨 → 주간 → 월간 → 마크 → 출석)
+  for (const key of keys) {
+    const nick = owners[key];
+    if (nick) (holders[nick] ??= []).push(key);
+  }
+  const info: HonorInfo = {
+    defs: keys.map((k) => ({ key: k, icon: HONOR_DEFS[k].icon, name: config.honors[k].name, desc: HONOR_DEFS[k].desc })),
+    holders,
+    owners,
+  };
+  honorCache = { at: now, info };
+  return info;
+}
+
 /** 기록·설정이 바뀌면 바로 반영되게 */
 export function clearPotTitleCache() {
   titleCache = null;
   configCache = null;
+  honorCache = null;
 }

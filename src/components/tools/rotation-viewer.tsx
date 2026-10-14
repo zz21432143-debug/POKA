@@ -26,6 +26,13 @@ const ALERT_BEFORE = 5;
 const COLS = 8;
 const COLS_NARROW = 4;
 
+/** TV: 한 화면에 보일 테이블 수(넘으면 TV_PAGE_MS마다 쪽 넘김) · 이보다 많으면 좌우 두 칸으로 나눔 */
+const TV_PAGE = 30;
+const TV_SPLIT = 12;
+const TV_PAGE_MS = 10_000;
+/** 두 칸으로 나눌 때 칸마다 보일 시간 수 */
+const TV_SPLIT_COLS = 4;
+
 /** 화면이 좁은지(가로 640px 미만 또는 세로로 긴 화면) — 바뀌면 다시 그림 */
 const NARROW_QUERY = "(max-width: 639px), (orientation: portrait) and (max-width: 900px)";
 function useNarrow() {
@@ -60,6 +67,8 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const meKey = `poka-rotation-me-${token}`;
   const inBrowser = useInBrowser();
   const narrow = useNarrow();
+  /** TV 쪽 넘김(테이블이 30개 넘을 때) */
+  const [pageTick, setPageTick] = useState(0);
   // 교대 알림: 켜 두면 내 자리가 바뀌는 교대 5분 전에 진동·알림(이 화면이 열려 있을 때)
   const [alertOn, setAlertOn] = useState(false);
   const alertedRef = useRef("");
@@ -120,12 +129,25 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const openTables = labels.map((label, t) => ({ label, t })).filter(({ t }) => closedFrom[t] == null || (closedFrom[t] as number) > nowAt);
   const cols = plan ? plan.slots.map((slot, index) => ({ slot, index })).slice(Math.max(0, current), Math.max(0, current) + (narrow ? COLS_NARROW : COLS)) : [];
   const meId = state.dealers.find((d) => d.name === me)?.id ?? null;
+  // TV: 테이블이 많으면(12개 넘게) 좌우 두 칸, 30개 넘으면 쪽을 나눠 10초마다 넘김
+  const many = tv && openTables.length > TV_SPLIT;
+  const pages: (typeof openTables)[] = [];
+  for (let i = 0; i < openTables.length; i += tv ? TV_PAGE : openTables.length || 1) pages.push(openTables.slice(i, i + (tv ? TV_PAGE : openTables.length)));
+  if (pages.length === 0) pages.push([]);
+  const pageIndex = pageTick % pages.length;
+  const pageTables = pages[pageIndex];
+  const half = Math.ceil(pageTables.length / 2);
+  const blocks = many && !narrow ? [pageTables.slice(0, half), pageTables.slice(half)].filter((b) => b.length) : [pageTables];
+  const shownCols = many ? cols.slice(0, narrow ? COLS_NARROW : TV_SPLIT_COLS) : cols;
   // TV: 글씨를 화면 크기(가로 vw · 세로 dvh)에 맞춰 키움 — 테이블이 적으면 크게, 많으면 한 화면에 다 들어가게
-  const tvRows = openTables.length + 2;
+  const tvRows = Math.max(...blocks.map((b) => b.length), 1) + 2;
   const fit = (vw: number, dvh: number) => (tv ? { fontSize: `min(${vw.toFixed(2)}vw, ${dvh.toFixed(2)}dvh)` } : undefined);
-  const colCount = Math.max(cols.length, 1);
-  const cellFont = fit(24 / (colCount + 1), 28 / tvRows);
-  const headFont = fit(20 / (colCount + 1), 22 / tvRows);
+  const colCount = Math.max(shownCols.length, 1);
+  const share = blocks.length;
+  const cellFont = fit(24 / (colCount + 1) / share, (many ? 33 : 28) / tvRows);
+  const headFont = fit(20 / (colCount + 1) / share, (many ? 24 : 22) / tvRows);
+  // 다음 교대: 테이블이 많으면 바뀌는 자리만(유지는 빼고) 촘촘하게
+  const swapRows = swap ? (many ? swap.rows.filter((r) => r.closed || r.from !== r.to) : swap.rows) : [];
   const mySchedule = plan && meId
     ? cols.map(({ slot, index }) => {
         const t = slot.seats.indexOf(meId);
@@ -162,6 +184,13 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
       /* 알림을 못 띄워도 화면 배너는 보입니다 */
     }
   }, [alertOn, alertNow, changeAt, me, alertText]);
+
+  const pageCount = tv ? Math.ceil(openTables.length / TV_PAGE) : 1;
+  useEffect(() => {
+    if (pageCount <= 1) return;
+    const timer = window.setInterval(() => setPageTick((n) => n + 1), TV_PAGE_MS);
+    return () => window.clearInterval(timer);
+  }, [pageCount]);
 
   async function turnOnAlert() {
     try {
@@ -231,7 +260,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
       {plan && swap ? (
         <section aria-label="다음 교대" className={cn("grid gap-2 rounded-2xl border-2 border-amber-400 bg-amber-950/30", tv ? "shrink-0 px-[1.5vw] py-[1.2dvh]" : "p-3")}>
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className={cn("font-black text-amber-300", !tv && "text-2xl")} style={tv ? { fontSize: "min(3.4vw, 6dvh)" } : undefined}>
+            <span className={cn("font-black text-amber-300", !tv && "text-2xl")} style={tv ? { fontSize: many ? "min(2.4vw, 4dvh)" : "min(3.4vw, 6dvh)" } : undefined}>
               다음 교대 {formatClock(swap.at)}
             </span>
             <span className={cn("font-bold text-amber-100", !tv && "text-sm")} style={tv ? { fontSize: "min(1.8vw, 3.2dvh)" } : undefined}>
@@ -243,16 +272,29 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
               </span>
             ) : null}
           </div>
+          {many ? (
+            <p data-tv-swap-hint className="font-bold text-amber-100" style={{ fontSize: "min(1.3vw, 2.4dvh)" }}>
+              테이블이 많아 자리별 교대는 아래 표의 <b className="rounded bg-amber-500 px-1 text-black">주황 칸</b>(다음 교대)에서 보세요
+            </p>
+          ) : null}
           <ul
+            hidden={many}
             className={cn("grid gap-1.5", !tv && "grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]")}
-            style={tv ? { gridTemplateColumns: `repeat(${Math.min(swap.rows.length, 5) || 1}, minmax(0, 1fr))`, fontSize: "min(1.9vw, 3.6dvh)" } : undefined}
+            style={
+              tv
+                ? many
+                  ? { gridTemplateColumns: `repeat(${Math.min(swapRows.length, 6) || 1}, minmax(0, 1fr))`, fontSize: "min(1.25vw, 2.3dvh)" }
+                  : { gridTemplateColumns: `repeat(${Math.min(swapRows.length, 5) || 1}, minmax(0, 1fr))`, fontSize: "min(1.9vw, 3.6dvh)" }
+                : undefined
+            }
           >
-            {swap.rows.map((row) => (
+            {swapRows.map((row) => (
               <li
                 key={row.label}
                 data-swap={row.label}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-2.5 py-1.5",
+                  "flex items-center gap-2 rounded-lg px-2.5",
+                  many ? "py-0.5" : "py-1.5",
                   row.closed ? "border border-rose-500 bg-rose-950" : "bg-black",
                   meId && (row.from === meId || row.to === meId) && "ring-2 ring-sky-400",
                 )}
@@ -276,7 +318,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
             ))}
           </ul>
           {swap.toRest.length ? (
-            <p className={cn("font-bold text-amber-300", !tv && "text-sm")} style={tv ? { fontSize: "min(1.7vw, 3dvh)" } : undefined}>
+            <p className={cn("font-bold text-amber-300", !tv && "text-sm", many && "truncate")} style={tv ? { fontSize: many ? "min(1.2vw, 2.2dvh)" : "min(1.7vw, 3dvh)" } : undefined}>
               휴식 들어감 {swap.toRest.map(name).join(", ")}</p>
           ) : null}
         </section>
@@ -338,71 +380,94 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
 
       {/* 시간표 */}
       {plan ? (
-        <section aria-label="시간표" className={cn("overflow-auto rounded-xl border border-white/15", tv && "min-h-0 flex-1")}>
-          <table className={cn("w-full table-fixed border-collapse", tv && "h-full")}>
-            <colgroup>
-              <col className={tv ? "w-[8%]" : "w-14 sm:w-20"} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-2 text-left font-black whitespace-nowrap text-zinc-300", !tv && "text-xs sm:text-sm")} style={tv ? fit(10 / (colCount + 1), 16 / tvRows) : undefined}>
-                  테이블
-                </th>
-                {cols.map(({ slot, index }) => (
-                  <th
-                    key={slot.at}
-                    style={headFont}
-                    className={cn(
-                      "px-1 py-1.5 font-black tabular-nums",
-                      !tv && "text-sm sm:text-lg",
-                      index === current ? "bg-emerald-700" : index === next ? "bg-amber-500 text-black" : "bg-zinc-900",
-                    )}
-                  >
-                    {formatClock(slot.at)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {openTables.map(({ label, t }) => (
-                <tr key={label} className="border-t border-white/10">
-                  <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left font-black text-emerald-300", !tv && "text-base sm:text-lg")} style={cellFont}>
-                    {tableTag(label)}
-                  </th>
-                  {cols.map(({ slot, index }) => {
-                    const id = slot.seats[t];
-                    const shut = closedFrom[t] != null && slot.at >= (closedFrom[t] as number);
-                    return (
-                      <td key={slot.at} className={cn("px-0.5 py-0.5 sm:px-1 sm:py-1", tv && "h-px", index === current && "bg-emerald-950")}>
-                        <span
+        <section aria-label="시간표" data-tv-blocks={blocks.length} className={cn("grid gap-1", tv && "min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)]")}>
+          {/* 30개 넘으면 쪽 표시(10초마다 넘어감) */}
+          {pages.length > 1 ? (
+            <p data-tv-page className="text-right font-black text-amber-300" style={{ fontSize: "min(1.4vw, 2.4dvh)" }}>
+              테이블 {pageIndex + 1}/{pages.length}쪽 · {TV_PAGE_MS / 1000}초마다 넘어가요
+            </p>
+          ) : (
+            <span />
+          )}
+          <div className={cn("grid min-h-0 gap-[1vw]", blocks.length > 1 && "grid-cols-2")}>
+            {blocks.map((block, bi) => (
+              <div key={bi} className={cn("overflow-auto rounded-xl border border-white/15", tv && "min-h-0")}>
+                <table className={cn("w-full table-fixed border-collapse", tv && "h-full")}>
+                  <colgroup>
+                    <col className={tv ? (blocks.length > 1 ? "w-[14%]" : "w-[8%]") : "w-14 sm:w-20"} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th
+                        className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left font-black whitespace-nowrap text-zinc-300", !tv && "text-xs sm:text-sm")}
+                        style={tv ? fit(10 / (colCount + 1) / share, 16 / tvRows) : undefined}
+                      >
+                        테이블
+                      </th>
+                      {shownCols.map(({ slot, index }) => (
+                        <th
+                          key={slot.at}
+                          style={headFont}
                           className={cn(
-                            "grid place-items-center truncate rounded-lg px-1 font-black",
-                            tv ? "py-[0.4dvh]" : "py-1.5",
-                            tv ? "h-full" : "text-sm sm:text-base",
-                            shut ? "border border-rose-500 bg-rose-950 text-rose-300" : id && id === meId ? "bg-sky-500 text-black" : "bg-zinc-800",
+                            "px-1 py-1 font-black tabular-nums",
+                            !tv && "text-sm sm:text-lg",
+                            index === current ? "bg-emerald-700" : index === next ? "bg-amber-500 text-black" : "bg-zinc-900",
                           )}
-                          style={cellFont}
                         >
-                          {shut ? "컨바인" : name(id) || "—"}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              {/* 휴식 줄: 낮은 화면(휴대폰 가로) TV에서는 숨김 — 위 「휴식 들어감」에 보임 */}
-              <tr className={cn("border-t-2 border-amber-400/40", tv && "[@media(max-height:560px)]:hidden")}>
-                <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1.5 text-left font-black text-amber-300", !tv && "text-sm sm:text-base")} style={headFont}>
-                  휴식
-                </th>
-                {cols.map(({ slot }) => (
-                  <td key={slot.at} className={cn("px-1 py-1.5 align-top font-bold break-keep text-amber-200", !tv && "text-xs")} style={tv ? fit(14 / (colCount + 1), 18 / tvRows) : undefined}>
-                    {slot.rest.map(name).join(", ") || "—"}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+                          {formatClock(slot.at)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.map(({ label, t }) => (
+                      <tr key={label} data-tv-row={label} className="border-t border-white/10">
+                        <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-0.5 text-left font-black text-emerald-300", !tv && "text-base sm:text-lg")} style={cellFont}>
+                          {tableTag(label)}
+                        </th>
+                        {shownCols.map(({ slot, index }) => {
+                          const id = slot.seats[t];
+                          const shut = closedFrom[t] != null && slot.at >= (closedFrom[t] as number);
+                          return (
+                            <td key={slot.at} className={cn("px-0.5 py-0.5 sm:px-1", !tv && "sm:py-1", tv && "h-px", index === current && "bg-emerald-950")}>
+                              <span
+                                className={cn(
+                                  "grid place-items-center truncate rounded-lg px-1 font-black",
+                                  tv ? (many ? "py-[0.15dvh]" : "py-[0.4dvh]") : "py-1.5",
+                                  tv ? "h-full" : "text-sm sm:text-base",
+                                  shut ? "border border-rose-500 bg-rose-950 text-rose-300" : id && id === meId ? "bg-sky-500 text-black" : "bg-zinc-800",
+                                )}
+                                style={cellFont}
+                              >
+                                {shut ? "컨바인" : name(id) || "—"}
+                              </span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                    {/* 휴식 줄: 마지막 칸에만 · 낮은 화면(휴대폰 가로) TV에서는 숨김 — 위 「휴식 들어감」에 보임 */}
+                    {bi === blocks.length - 1 ? (
+                      <tr className={cn("border-t-2 border-amber-400/40", tv && "[@media(max-height:560px)]:hidden")}>
+                        <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left font-black text-amber-300", !tv && "text-sm sm:text-base")} style={headFont}>
+                          휴식
+                        </th>
+                        {shownCols.map(({ slot }) => (
+                          <td
+                            key={slot.at}
+                            className={cn("px-1 py-1 align-top font-bold break-keep text-amber-200", !tv && "text-xs")}
+                            style={tv ? fit(14 / (colCount + 1) / share, (many ? 15 : 18) / tvRows) : undefined}
+                          >
+                            {slot.rest.map(name).join(", ") || "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
         </section>
       ) : null}
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "cn";
 import { DIFFICULTIES, DIFFICULTY, ROUND_SIZE, type Difficulty } from "@/lib/practice";
-import { PERIOD_LABEL, TITLE_NAME_MAX, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
+import { HONOR_DEFS, HONOR_KEYS, PERIOD_LABEL, TITLE_NAME_MAX, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
 
 type Row = { userId: string; nickname: string; correct: number; durationMs: number; at: string; runs: number; excluded: boolean };
 type Snapshot = {
@@ -12,6 +12,8 @@ type Snapshot = {
   view: { difficulty: Difficulty; period: TitlePeriod };
   rows: Row[];
   excludedUsers: { id: string; nickname: string }[];
+  /** 랭킹 칭호 → 지금 받는 사람 */
+  honorOwners?: Record<HonorKey, string | null>;
 };
 
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
@@ -176,12 +178,40 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
             </div>
           </div>
         </div>
+        {/* 랭킹 칭호(각 랭킹 1위) */}
+        <div data-honor-settings className="grid gap-2 rounded-xl border border-border bg-background p-3">
+          <h3 className="text-sm font-semibold">랭킹 칭호 · 각 랭킹 1위에게 붙음(위 「칭호 제외」 회원은 건너뜀)</h3>
+          {HONOR_KEYS.map((key) => (
+            <div key={key} className="grid gap-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:gap-2">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  aria-label={`${HONOR_DEFS[key].desc} 칭호 켜기`}
+                  disabled={!canEdit}
+                  checked={draft.honors[key].enabled}
+                  onChange={(e) => setDraft({ ...draft, honors: { ...draft.honors, [key]: { ...draft.honors[key], enabled: e.target.checked } } })}
+                  className="size-5"
+                />
+                {HONOR_DEFS[key].icon} {HONOR_DEFS[key].desc}
+              </label>
+              <input
+                aria-label={`${HONOR_DEFS[key].desc} 칭호 이름`}
+                disabled={!canEdit}
+                maxLength={TITLE_NAME_MAX}
+                value={draft.honors[key].name}
+                onChange={(e) => setDraft({ ...draft, honors: { ...draft.honors, [key]: { ...draft.honors[key], name: e.target.value } } })}
+                className="h-10 rounded-lg border border-border bg-card px-2 text-base"
+              />
+              <span className="text-xs text-muted-foreground">지금: {data.honorOwners?.[key] ?? "없음"}</span>
+            </div>
+          ))}
+        </div>
         {canEdit ? (
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={busy || !dirty}
-              onClick={() => void send("PATCH", { enabled: draft.enabled, names: draft.names, difficulty: draft.difficulty, period: draft.period }, "칭호 설정을 저장했습니다.")}
+              onClick={() => void send("PATCH", { enabled: draft.enabled, names: draft.names, difficulty: draft.difficulty, period: draft.period, honors: draft.honors }, "칭호 설정을 저장했습니다.")}
               className="min-h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
               저장

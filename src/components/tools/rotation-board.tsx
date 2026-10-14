@@ -335,7 +335,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     if (errors.length || !added.length) {
       setError(
         errors.length
-          ? `테이블 번호를 확인하세요: ${errors.join(", ")}`
+          ? `테이블 번호를 확인하세요: ${errors.join(", ")} (예: 1~3, A~B)`
           : "이미 있는 테이블입니다. 컨바인했던 테이블은 시간표 아래 \"다시 열기\"로 여세요.",
       );
       return;
@@ -357,7 +357,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   function runAuto() {
     // 새 게임은 테이블 0개 · 딜러 0명으로 시작하므로 먼저 정하라고 안내
     if (state.tableCount === 0) {
-      setError("테이블이 0개예요. 설정 탭에서 테이블 번호(예: 1-8)를 먼저 정해 주세요.");
+      setError("테이블이 0개예요. 설정 탭에서 테이블 번호(예: 1~8 또는 A~D)를 먼저 정해 주세요.");
       return;
     }
     if (state.dealers.length === 0) {
@@ -558,7 +558,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {(
               [
                 { key: "dealers", no: "①", title: "딜러 등록", body: `딜러 탭 · 지금 ${state.dealers.length}명`, done: state.dealers.length > 0 },
-                { key: "settings", no: "②", title: "테이블 정하기", body: `설정 탭 · 지금 ${state.tableCount}개`, done: state.tableCount > 0 },
+                { key: "settings", no: "②", title: "테이블 정하기", body: state.tableCount ? `설정 탭 · 지금 ${state.tableCount}개` : "설정 탭 · 예: 1~8 또는 A~D", done: state.tableCount > 0 },
                 { key: "run", no: "③", title: "Auto 누르기", body: "시간표 자동 완성", done: !!plan },
               ] as const
             ).map((step, index, steps) => {
@@ -687,7 +687,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <input
             aria-label="추가로 열 테이블"
             value={addText}
-            placeholder="추가로 열 테이블 (예: 7, 8 또는 E)"
+            placeholder="추가로 열 테이블 (예: 1~3, A~B)"
             onChange={(e) => setAddText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && addText.trim()) void openTables();
@@ -702,6 +702,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           >
             + 테이블 추가 오픈
           </button>
+          <span data-table-hint className="basis-full text-xs text-zinc-400">
+            숫자 <b className="text-zinc-200">1~3</b> · 알파벳 <b className="text-zinc-200">A~B</b> 모두 가능 · 쉼표로 여러 개(예: 7, 9, C). 숫자는 T1, 알파벳은 A로 보여요
+          </span>
         </div>
         {openNotice ? (
           <p data-open-notice className="flex flex-wrap items-center gap-2 rounded-lg bg-emerald-950 px-2 py-1.5 text-sm font-bold text-emerald-200">
@@ -848,7 +851,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </p>
           ) : null}
           <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-3">
-            테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 예: 5-12, 15 또는 A-D(알파벳은 A 테이블처럼 보여요)
+            테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 숫자 1~8, 12 · 알파벳 A~D 모두 가능(숫자는 T1, 알파벳은 A로 보여요)
             <span className="flex gap-1.5">
               <input
                 value={labelsText}
