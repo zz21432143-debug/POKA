@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PushFoldChart } from "@/components/tools/push-fold-chart";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "GTO 푸시폴드 차트 — 포지션별 · 헤즈업 올인 / 콜 범위 (6인 · 9인)";
 const DESCRIPTION =
@@ -107,6 +108,8 @@ export default function PushFoldPage() {
           </Link>
         ))}
       </nav>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </article>
   );
 }

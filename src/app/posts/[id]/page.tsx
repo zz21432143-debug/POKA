@@ -272,6 +272,20 @@ export default async function PostDetailPage({
     .catch(() => [] as { id: string; title: string }[]);
   // 구인 말고는 실제 게시판 목록처럼(말머리 · 제목 · 작성자 · 칭호 · 날짜 · 댓글): 자유게시판은 질문 · 현장 스케치까지
   const freeFamily = (FREE_BOARD_TYPES as readonly string[]).includes(post.boardType);
+  // 이전 글(더 오래된) · 다음 글(더 최근): 같은 게시판(자유게시판은 질문 · 현장 스케치까지)
+  const neighborWhere = {
+    boardType: freeFamily ? { in: [...FREE_BOARD_TYPES] } : post.boardType,
+    hidden: false,
+    isPrivate: false,
+    isAttendanceThread: false,
+    id: { not: post.id },
+  };
+  const [prevPost, nextPost] = isJobPost
+    ? [null, null]
+    : await Promise.all([
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { lt: post.createdAt } }, orderBy: { createdAt: "desc" }, select: { id: true, title: true } }).catch(() => null),
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { gt: post.createdAt } }, orderBy: { createdAt: "asc" }, select: { id: true, title: true } }).catch(() => null),
+      ]);
   const relatedPosts: PostSummary[] = isJobPost
     ? []
     : await prisma.post
@@ -625,6 +639,28 @@ export default async function PostDetailPage({
       </section>
       ) : null}
       </div>
+
+      {/* 이전 글 · 다음 글 */}
+      {prevPost || nextPost ? (
+        <nav aria-label="이전 글 다음 글" data-post-neighbors className="ink-panel grid overflow-hidden rounded-2xl">
+          {[
+            { row: nextPost, label: "▲ 다음 글" },
+            { row: prevPost, label: "▼ 이전 글" },
+          ].map(({ row, label }) =>
+            row ? (
+              <Link key={label} href={`/posts/${row.id}`} className="flex min-h-12 items-center gap-3 border-b border-white/5 px-4 last:border-0 hover:bg-white/5">
+                <span className="shrink-0 text-xs font-black text-[#c9a25c]">{label}</span>
+                <span className="min-w-0 truncate text-[15px] font-semibold text-[#E5E7EB]">{row.title}</span>
+              </Link>
+            ) : (
+              <span key={label} className="flex min-h-12 items-center gap-3 border-b border-white/5 px-4 text-sm text-zinc-500 last:border-0">
+                <span className="shrink-0 text-xs font-black">{label}</span>
+                {label.includes("다음") ? "가장 최근 글이에요" : "첫 글이에요"}
+              </span>
+            ),
+          )}
+        </nav>
+      ) : null}
 
       {/* 이 게시판 다른 글: 게시판 목록과 같은 모양 */}
       {!isJobPost && relatedPosts.length ? (

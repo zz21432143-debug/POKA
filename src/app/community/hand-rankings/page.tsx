@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CardRow } from "@/components/cards/poker-card";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 족보 순위 — 카드로 보는 핸드 랭킹 10가지와 확률";
 const DESCRIPTION =
@@ -154,6 +155,8 @@ export default function HandRankingsPage() {
           </Link>
         ))}
       </nav>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </article>
   );
 }

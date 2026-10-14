@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { HandRangeRanking } from "@/components/tools/hand-range-ranking";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 핸드 레인지 순위 — 169개 시작 패 강한 순서 · 상위 X% 범위";
 const DESCRIPTION =
@@ -45,6 +46,8 @@ export default function HandRangesPage() {
           </Link>
         ))}
       </nav>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </article>
   );
 }

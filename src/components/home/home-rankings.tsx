@@ -5,6 +5,7 @@ import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { MarkImage } from "@/components/layout/mark-image";
 import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { getHomeRankings } from "@/lib/home-rankings";
+import { MyHomeRank } from "@/components/home/my-home-rank";
 
 const CROWN = ["text-[#f5d76e]", "text-[#d1d5db]", "text-[#e0a36a]"];
 
@@ -55,6 +56,8 @@ export async function HomeRankings() {
           </div>
         ))}
       </div>
+      {/* 로그인했으면 내 순위 한 줄 */}
+      <MyHomeRank />
     </section>
   );
 }

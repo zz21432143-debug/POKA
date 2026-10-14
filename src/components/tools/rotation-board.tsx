@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
 import { TvPreview } from "@/components/tools/tv-preview";
+import { rotationSwapSound, unlockBoardSound } from "@/lib/board-sound";
 import {
   INTERVAL_CHOICES,
   INTERVAL_MAX,
@@ -1339,6 +1340,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               className="min-h-10 rounded-lg border border-white/30 px-3 text-sm font-black"
             >
               {tvPreview ? "미리보기 닫기" : "TV 미리보기"}
+            </button>
+            <button
+              type="button"
+              data-sound-test
+              onClick={() => {
+                unlockBoardSound();
+                rotationSwapSound(2);
+              }}
+              title="TV에서 교대 시각에 나는 소리(크기 보통)"
+              className="min-h-10 rounded-lg border border-white/30 px-3 text-sm font-black"
+            >
+              🔔 교대 소리 들어 보기
             </button>
             {tvPreview && tvHref ? (
               <div className="grid basis-full gap-1">

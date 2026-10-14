@@ -1228,6 +1228,16 @@ select {
   z-index: 1;
 }
 
+/* 작성자 칸은 줄 링크 위에 두되 누르면 그대로 글로(pointer-events: none) — 칭호 배지만 눌러서 설명을 봄 */
+.board-row .board-author {
+  z-index: 2;
+}
+
+.board-row .board-author [data-honor],
+.board-row .board-author [data-pot-title] {
+  pointer-events: auto;
+}
+
 .board-row:focus-within {
   outline: 1px solid #c59b27;
   outline-offset: -1px;

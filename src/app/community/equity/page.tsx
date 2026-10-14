@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { EquityCalculator } from "@/components/tools/equity-calculator";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 승률 계산기 — 내 패 vs 상대 패 프리플랍 · 플랍 · 턴 · 리버";
 const DESCRIPTION =
@@ -46,6 +47,8 @@ export default function EquityPage() {
           </Link>
         ))}
       </nav>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </article>
   );
 }

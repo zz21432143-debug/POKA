@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BarChart3Icon, Grid3x3Icon, ListOrderedIcon, PercentIcon, PieChartIcon, GraduationCapIcon, TargetIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle, OniSticker } from "@/components/brand/oni";
 import { ToolCard } from "@/components/tools/tool-card";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
@@ -49,6 +50,8 @@ export default function StudyHubPage() {
           에 남겨 주세요.
         </p>
       </div>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </div>
   );
 }

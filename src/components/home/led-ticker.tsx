@@ -68,7 +68,8 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
         {/* 들어오는 소식(아래에서 올라옴) */}
         <Link
           key={`in-${index}`}
-          href={current.href}
+          // 칭호 소식은 프로필 카드(반짝이는 마크)로 바로
+          href={isHonorNews(current.message) && !current.href.includes("#") ? `${current.href}#profile` : current.href}
           aria-live="polite"
           data-ticker-honor={isHonorNews(current.message) ? "on" : undefined}
           className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] hover:text-white md:text-sm md:tracking-wide ${isHonorNews(current.message) ? HONOR_CLASS : ""}`}

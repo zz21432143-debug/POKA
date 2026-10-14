@@ -146,16 +146,15 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
   if (main && main !== "pot") mine.sort((a, b) => Number(b.key === main) - Number(a.key === main));
   const honorSlots = Math.max(0, max - (hasPot ? 1 : 0));
   const honorBadges = mine.slice(0, hasPot && !potFirst ? max - 1 : honorSlots).map((d) => (
-        <span
-          key={d.key}
-          data-honor={d.key}
-          data-honor-rank={d.rank}
-          title={d.rank > 1 ? `${d.desc.replace("1위", `${d.rank}위`)}` : d.desc}
-          className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", HONOR_TONE, className)}
-        >
-          {d.icon} {d.name}
-          {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
-        </span>
+    <TipBadge
+      key={d.key}
+      data={{ "data-honor": d.key, "data-honor-rank": d.rank }}
+      tip={`${d.rank > 1 ? d.desc.replace("1위", `${d.rank}위`) : d.desc}로 받은 칭호`}
+      className={cn(HONOR_TONE, className)}
+    >
+      {d.icon} {d.name}
+      {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
+    </TipBadge>
   ));
   return (
     <>
@@ -173,12 +172,54 @@ function PotOnlyBadge({ nickname, className }: { nickname: string; className?: s
   const rank = info.enabled ? info.holders[nickname] : undefined;
   if (!rank) return null;
   return (
-    <span
-      data-pot-title={rank}
-      title={`팟 계산 ${DIFFICULTY[info.difficulty].label} 랭킹(${PERIOD_LABEL[info.period]}) ${rank}위`}
-      className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", TITLE_TONE[rank], className)}
+    <TipBadge
+      data={{ "data-pot-title": rank }}
+      tip={`팟 계산 ${DIFFICULTY[info.difficulty].label} 랭킹(${PERIOD_LABEL[info.period]}) ${rank}위로 받은 칭호`}
+      className={cn(TITLE_TONE[rank], className)}
     >
       {TITLE_ICON[rank]} {info.names[rank]}
+    </TipBadge>
+  );
+}
+
+/**
+ * 칭호 배지: 누르면(휴대폰) · 마우스를 올리면(PC) 어떤 랭킹 몇 위로 받은 칭호인지 작은 안내.
+ * 목록 줄 링크 위에 있어도 누를 때 글로 넘어가지 않게 막음. 3초 뒤 저절로 닫힘.
+ */
+function TipBadge({ tip, className, data, children }: { tip: string; className?: string; data: Record<string, string | number>; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => setOpen(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+  return (
+    <span
+      {...data}
+      role="button"
+      tabIndex={0}
+      title={tip}
+      aria-expanded={open}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpen((v) => !v);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen((v) => !v);
+        }
+      }}
+      onBlur={() => setOpen(false)}
+      className={cn("relative z-20 inline-flex shrink-0 cursor-help items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", className)}
+    >
+      {children}
+      {open ? (
+        <span role="tooltip" data-title-tip className="absolute top-full left-0 z-50 mt-1 w-max max-w-[15rem] rounded-lg border border-[#c9a25c]/50 bg-[#120d0a] px-2 py-1 text-[11px] font-bold whitespace-normal text-white shadow-lg">
+          {tip}
+        </span>
+      ) : null}
     </span>
   );
 }

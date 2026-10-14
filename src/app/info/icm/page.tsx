@@ -4,6 +4,7 @@ import Link from "next/link";
 import { IcmCalculator } from "@/components/tools/icm-calculator";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "ICM 계산기 — 홀덤 토너먼트 파이널 딜 계산 (무료)";
 const DESCRIPTION =
@@ -104,6 +105,8 @@ export default function IcmPage() {
           </Link>
         ))}
       </nav>
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </article>
   );
 }

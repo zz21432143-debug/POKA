@@ -17,6 +17,7 @@ import {
   type RankTab,
 } from "@/lib/ranking";
 import { cn } from "cn";
+import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 
 export const metadata: Metadata = { title: "랭킹" };
 
@@ -172,6 +173,8 @@ export default async function RankingPage({
           ))}
         </ol>
       )}
+      {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
+      <BoardBottomAd />
     </section>
   );
 }
