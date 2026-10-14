@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CardRow } from "@/components/cards/poker-card";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 족보 순위 — 카드로 보는 핸드 랭킹 10가지와 확률";
 const DESCRIPTION =
@@ -111,7 +111,7 @@ export default function HandRankingsPage() {
       </ol>
 
       {/* 구글 광고: 족보 카드 바로 아래(가장 오래 보는 자리) */}
-      <BoardBottomAd />
+      <StudyAd />
       <section aria-label="헷갈리는 상황" className="grid gap-3">
         <h2 className="text-lg font-black text-[#f3d9a4]">헷갈리는 상황 4가지</h2>
         {TRICKY.map((row) => (

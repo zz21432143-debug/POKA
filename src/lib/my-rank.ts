@@ -10,8 +10,16 @@ export type MyRankRow = { key: string; label: string; short: string; rank: numbe
 export type MyRanks = { excluded: false; rows: MyRankRow[] } | { excluded: true; reason: "master" | "admin" };
 
 /** 이번 주 시작 때 순위(레벨 · 마크 · 팟 계산, 상위 1,000명): 그 주에 처음 볼 때 한 번 저장해 오르내림 비교 */
-type RankSnap = Record<"level" | "marks" | "pot", Record<string, number>>;
+export type RankSnap = Record<"level" | "marks" | "pot", Record<string, number>>;
 let snapCache: { week: string; data: RankSnap } | null = null;
+
+/** 이번 주 시작 때 순위(랭킹 화면 · 홈 급상승에도 씀) */
+export async function getWeekSnapshot(): Promise<RankSnap | null> {
+  return weekSnapshot(async () => {
+    const config = await loadTitleConfig();
+    return rankingRows(config.difficulty, config.period, 100_000, 50_000);
+  });
+}
 
 async function weekSnapshot(pot: () => Promise<{ userId: string }[]>): Promise<RankSnap | null> {
   const week = weekStartKst();

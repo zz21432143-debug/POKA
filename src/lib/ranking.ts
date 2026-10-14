@@ -13,6 +13,8 @@ export type RankTab = "level" | "marks" | "attendance";
 export type RankPeriod = "all" | "week" | "month";
 
 export type RankRow = {
+  /** 회원 id(오르내림 비교용) */
+  userId: string;
   rank: number;
   nickname: string;
   level: number;
@@ -62,6 +64,7 @@ function toRows(raw: RawRow[], excluded: ReadonlySet<string>): RankRow[] {
     .filter((row) => row.score > 0 && !excluded.has(row.userId))
     .slice(0, RANK_SHOW)
     .map((row, index) => ({
+      userId: row.userId,
       rank: index + 1,
       nickname: row.nickname,
       level: row.level,

@@ -16,3 +16,11 @@ export function BoardBottomAd({ placement = "board-bottom" }: { placement?: "boa
     />
   );
 }
+
+/**
+ * 홀덤 공부 도구 · 랭킹 광고 자리: 광고 단위 ID(NEXT_PUBLIC_ADSENSE_SLOT_BOARD_BOTTOM)가 있을 때만 광고,
+ * 없으면(애드센스 승인 전) 빈칸 — 도구마다 같은 무료 홍보 배너가 반복되지 않게.
+ */
+export function StudyAd() {
+  return <GoogleAdUnit placement="board-bottom" className="mt-2" fallback={null} />;
+}

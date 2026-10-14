@@ -4,7 +4,7 @@ import Link from "next/link";
 import { PushFoldChart } from "@/components/tools/push-fold-chart";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "GTO 푸시폴드 차트 — 포지션별 · 헤즈업 올인 / 콜 범위 (6인 · 9인)";
 const DESCRIPTION =
@@ -69,7 +69,7 @@ export default function PushFoldPage() {
 
       <PushFoldChart />
       {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
-      <BoardBottomAd />
+      <StudyAd />
 
       <section aria-label="어떻게 계산했나요" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">어떻게 계산했나요 (정확도)</h2>

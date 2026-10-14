@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { DIFFICULTY } from "@/lib/practice";
 import { displayMarkSrc } from "@/lib/mark-assets";
-import { getRanking, rankScoreLabel } from "@/lib/ranking";
+import { getRanking, rankOrder, rankScoreLabel } from "@/lib/ranking";
+import { getWeekSnapshot } from "@/lib/my-rank";
 import { loadTitleConfig, rankingRows } from "@/lib/pot-titles";
 import { PERIOD_LABEL } from "@/lib/pot-title-config";
 
@@ -75,4 +76,29 @@ async function potBoard(): Promise<HomeRankBoard> {
       };
     }),
   };
+}
+
+/** 이번 주 급상승: 레벨 · 마크 전체 랭킹에서 이번 주 시작보다 가장 많이 오른 회원(오른 회원이 없으면 null) */
+export type WeeklyRiser = { nickname: string; label: string; rank: number; change: number };
+let riserCache: { at: number; riser: WeeklyRiser | null } | null = null;
+
+export async function getWeeklyRiser(): Promise<WeeklyRiser | null> {
+  if (riserCache && Date.now() - riserCache.at < CACHE_MS) return riserCache.riser;
+  const snap = await getWeekSnapshot().catch(() => null);
+  let best: { userId: string; label: string; rank: number; change: number } | null = null;
+  if (snap) {
+    for (const [key, label] of [["level", "레벨"], ["marks", "마크"]] as const) {
+      const order = await rankOrder(key, "all").catch(() => []);
+      order.forEach((row, i) => {
+        const before = snap[key]?.[row.userId];
+        const change = before == null ? 0 : before - (i + 1);
+        if (change > 0 && (!best || change > best.change)) best = { userId: row.userId, label, rank: i + 1, change };
+      });
+    }
+  }
+  const pick = best as { userId: string; label: string; rank: number; change: number } | null;
+  const user = pick ? await prisma.user.findUnique({ where: { id: pick.userId }, select: { nickname: true } }).catch(() => null) : null;
+  const riser = pick && user ? { nickname: user.nickname, label: pick.label, rank: pick.rank, change: pick.change } : null;
+  riserCache = { at: Date.now(), riser };
+  return riser;
 }

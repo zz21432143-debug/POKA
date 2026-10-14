@@ -4,7 +4,7 @@ import Link from "next/link";
 import { IcmCalculator } from "@/components/tools/icm-calculator";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "ICM 계산기 — 홀덤 토너먼트 파이널 딜 계산 (무료)";
 const DESCRIPTION =
@@ -69,7 +69,7 @@ export default function IcmPage() {
 
       <IcmCalculator />
       {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
-      <BoardBottomAd />
+      <StudyAd />
 
       <section aria-label="ICM 사용법" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">이렇게 쓰세요</h2>

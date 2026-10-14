@@ -54,6 +54,16 @@ import { siteUrl } from "@/lib/site";
 import { ShareButton } from "@/components/posts/share-button";
 import { openJobWhere, regionWhere, parseJobRegion } from "@/lib/job-status";
 
+/** 이전/다음 글 미리보기: 태그 · 공백 정리한 첫 90자 */
+function previewOf(content: string | null | undefined) {
+  const text = String(content ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > 90 ? `${text.slice(0, 89)}…` : text;
+}
+
 export const dynamic = "force-dynamic";
 
 function formatPostDateTime(value: Date) {
@@ -283,8 +293,8 @@ export default async function PostDetailPage({
   const [prevPost, nextPost] = isJobPost
     ? [null, null]
     : await Promise.all([
-        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { lt: post.createdAt } }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, boardType: true } }).catch(() => null),
-        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { gt: post.createdAt } }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, boardType: true } }).catch(() => null),
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { lt: post.createdAt } }, orderBy: { createdAt: "desc" }, select: { id: true, title: true, boardType: true, content: true } }).catch(() => null),
+        prisma.post.findFirst({ where: { ...neighborWhere, createdAt: { gt: post.createdAt } }, orderBy: { createdAt: "asc" }, select: { id: true, title: true, boardType: true, content: true } }).catch(() => null),
       ]);
   const relatedPosts: PostSummary[] = isJobPost
     ? []
@@ -648,7 +658,7 @@ export default async function PostDetailPage({
             { row: prevPost, label: "▼ 이전 글" },
           ].map(({ row, label }) =>
             row ? (
-              <Link key={label} href={`/posts/${row.id}`} className="flex min-h-12 items-center gap-3 border-b border-white/5 px-4 last:border-0 hover:bg-white/5">
+              <Link key={label} href={`/posts/${row.id}`} className="group flex min-h-12 flex-wrap items-center gap-x-3 border-b border-white/5 px-4 py-1 last:border-0 hover:bg-white/5">
                 <span className="shrink-0 text-xs font-black text-[#c9a25c]">{label}</span>
                 {/* 말머리: 자유게시판은 질문 · 현장 스케치가 섞여서 구분 */}
                 {freeFamily ? (
@@ -656,7 +666,13 @@ export default async function PostDetailPage({
                     {BOARD_LABELS[row.boardType as BoardTypeKey] ?? "자유게시판"}
                   </span>
                 ) : null}
-                <span className="min-w-0 truncate text-[15px] font-semibold text-[#E5E7EB]">{row.title}</span>
+                <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-[#E5E7EB]">{row.title}</span>
+                {/* PC: 마우스를 올리면 첫 줄 미리보기 */}
+                {previewOf(row.content) ? (
+                  <span data-neighbor-preview className="hidden basis-full truncate pb-1 text-xs text-zinc-400 lg:group-hover:block">
+                    {previewOf(row.content)}
+                  </span>
+                ) : null}
               </Link>
             ) : (
               <span key={label} className="flex min-h-12 items-center gap-3 border-b border-white/5 px-4 text-sm text-zinc-500 last:border-0">

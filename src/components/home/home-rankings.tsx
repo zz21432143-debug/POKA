@@ -4,14 +4,14 @@ import { cn } from "cn";
 import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { MarkImage } from "@/components/layout/mark-image";
 import { auraClassForSrc } from "@/lib/yokai-achievements";
-import { getHomeRankings } from "@/lib/home-rankings";
+import { getHomeRankings, getWeeklyRiser } from "@/lib/home-rankings";
 import { MyHomeRank } from "@/components/home/my-home-rank";
 
 const CROWN = ["text-[#f5d76e]", "text-[#d1d5db]", "text-[#e0a36a]"];
 
 /** 홈: 레벨 · 마크 · 팟 계산 랭킹(PC 5위까지 · 휴대폰 3위까지) */
 export async function HomeRankings() {
-  const boards = await getHomeRankings().catch(() => []);
+  const [boards, riser] = await Promise.all([getHomeRankings().catch(() => []), getWeeklyRiser().catch(() => null)]);
   if (boards.length === 0) return null;
   return (
     <section aria-label="랭킹" data-home-rankings className="lounge-card grid gap-2 rounded-[1.35rem] p-3 sm:p-4">
@@ -56,6 +56,20 @@ export async function HomeRankings() {
           </div>
         ))}
       </div>
+      {/* 이번 주 가장 많이 오른 회원 */}
+      {riser ? (
+        <Link
+          href={`/u/${encodeURIComponent(riser.nickname)}`}
+          data-weekly-riser
+          className="flex min-h-10 flex-wrap items-center gap-x-2 rounded-xl border border-orange-500/40 bg-orange-500/10 px-3 py-1.5 text-sm"
+        >
+          <b className="text-orange-300">🔥 이번 주 급상승</b>
+          <span className="font-bold text-white">{riser.nickname}</span>
+          <span className="text-zinc-300">
+            {riser.label} {riser.rank}위 <b className="text-emerald-400">▲{riser.change}</b>
+          </span>
+        </Link>
+      ) : null}
       {/* 로그인했으면 내 순위 한 줄 */}
       <MyHomeRank />
     </section>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { HandRangeRanking } from "@/components/tools/hand-range-ranking";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 핸드 레인지 순위 — 169개 시작 패 강한 순서 · 상위 X% 범위";
 const DESCRIPTION =
@@ -27,7 +27,7 @@ export default function HandRangesPage() {
       </header>
       <HandRangeRanking />
       {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
-      <BoardBottomAd />
+      <StudyAd />
       <section aria-label="어떻게 정했나요" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">순위는 어떻게 정했나요</h2>
         <ul className="list-disc space-y-1 pl-5">

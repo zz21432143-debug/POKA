@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2Icon, RotateCcwIcon, ShuffleIcon } from "lucide-react";
 import { cardCode, cardIndex } from "@/lib/hand-eval";
+import { shareResultImage } from "@/lib/share-image";
 import { classCombos, exactEquity, madeHand, randomEquity, rangeEquity, requiredEquity, type EquityResult } from "@/lib/equity";
 import { HAND_NAMES, handCombos, topRange } from "@/lib/hand-ranking";
 import { cn } from "cn";
@@ -66,6 +67,7 @@ export function EquityCalculator() {
   const [guesses, setGuesses] = useState<Partial<Record<StreetKey, string>>>({});
   const [revealed, setRevealed] = useState(false);
   const [pot, setPot] = useState("");
+  const [shareNote, setShareNote] = useState<string | null>(null);
   const [bet, setBet] = useState("");
   const run = useRef(0);
 
@@ -371,6 +373,35 @@ export function EquityCalculator() {
         ) : null}
         <p className="text-xs text-[#9CA3AF]">승률은 무승부를 반으로 쳐서(내 승률 + 무승부 ÷ 2) 비교해요. 남은 베팅(임플라이드 오즈)은 넣지 않은 기본 계산이에요.</p>
       </section>
+      {/* 결과 이미지로 공유(카톡방 등) · 휴대폰은 공유 창, PC는 내려받기 */}
+      {lastStreet && (!guessMode || revealed) ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            data-share-result
+            onClick={async () => {
+              const cardText = (c: string | null) => (c ? `${c[0].replace("T", "10")}${({ h: "♥", d: "♦", c: "♣", s: "♠" } as Record<string, string>)[c[1]] ?? ""}` : "");
+              const board = (["f1", "f2", "f3", "t", "r"] as const).map((s) => cardText(cards[s])).filter(Boolean).join(" ");
+              const villain = villainMode === "cards" ? `${cardText(cards.v1)} ${cardText(cards.v2)}` : villainMode === "range" ? `상위 ${rangePct}% 패` : "모르는 패";
+              const done = await shareResultImage({
+                title: "홀덤 승률 계산",
+                subtitle: `${cardText(cards.h1)} ${cardText(cards.h2)}  vs  ${villain}${board ? `  ·  보드 ${board}` : ""}`,
+                lines: STREETS.filter((s) => results[s.key]).map((s) => {
+                  const r = results[s.key]!;
+                  return { label: s.label, value: `승 ${pct(r.win)} · 무 ${pct(r.tie)}`, strong: s.key === lastStreet.key };
+                }),
+                url: "pokerwiki.co.kr/community/equity",
+                fileName: "POKA_승률",
+              });
+              setShareNote(done === "shared" ? "공유했어요" : done === "downloaded" ? "이미지를 저장했어요" : "이미지를 만들지 못했어요");
+            }}
+            className="min-h-11 rounded-xl bg-[#FEE500] px-4 text-sm font-black text-black"
+          >
+            📤 결과 이미지로 공유
+          </button>
+          {shareNote ? <span className="text-xs text-[#d1c7b5]">{shareNote}</span> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

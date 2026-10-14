@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
+import { RankChange } from "@/components/user/my-rank-list";
+import { getWeekSnapshot } from "@/lib/my-rank";
 import { getHonorInfo, getPotTitleInfo } from "@/lib/pot-titles";
 import { DIFFICULTY } from "@/lib/practice";
 import { PERIOD_LABEL } from "@/lib/pot-title-config";
@@ -17,7 +19,7 @@ import {
   type RankTab,
 } from "@/lib/ranking";
 import { cn } from "cn";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 export const metadata: Metadata = { title: "랭킹" };
 
@@ -61,12 +63,20 @@ export default async function RankingPage({
   const query = await searchParams;
   const tab = parseRankTab(query.tab);
   const period = parseRankPeriod(query.period);
-  const [rows, viewer, honors, pot] = await Promise.all([
+  // 오르내림(▲▼): 전체 레벨 · 마크 랭킹만(주간 · 월간은 매번 새로 시작)
+  const showChange = period === "all" && (tab === "level" || tab === "marks");
+  const [rows, viewer, honors, pot, snap] = await Promise.all([
     getRanking(tab, period).catch(() => []),
     getCurrentUser().catch(() => null),
     getHonorInfo().catch(() => null),
     getPotTitleInfo().catch(() => null),
+    showChange ? getWeekSnapshot().catch(() => null) : Promise.resolve(null),
   ]);
+  const changeOf = (userId: string, rank: number) => {
+    if (!snap || (tab !== "level" && tab !== "marks")) return null;
+    const before = snap[tab]?.[userId];
+    return before == null ? ("new" as const) : before - rank;
+  };
   const potOwner = (rank: 1 | 2 | 3) => (pot ? (Object.entries(pot.holders).find(([, r]) => r === rank)?.[0] ?? null) : null);
   // 칭호 안내: 랭킹 칭호 + 팟 계산 칭호(1~3위)
   const titleRows = [
@@ -168,13 +178,16 @@ export default async function RankingPage({
                 </span>
                 <span className="rank-lv">Lv.{row.level}</span>
               </Link>
-              <strong className="rank-score">{rankScoreLabel(tab, row.score, period)}</strong>
+              <strong className="rank-score inline-flex items-center gap-1.5">
+                {rankScoreLabel(tab, row.score, period)}
+                {showChange ? <RankChange change={changeOf(row.userId, row.rank)} /> : null}
+              </strong>
             </li>
           ))}
         </ol>
       )}
       {/* 구글 광고(하단): 검색으로 많이 들어오는 공부 도구 · 랭킹 */}
-      <BoardBottomAd />
+      <StudyAd />
     </section>
   );
 }

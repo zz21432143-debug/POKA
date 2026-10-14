@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { EquityCalculator } from "@/components/tools/equity-calculator";
-import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 승률 계산기 — 내 패 vs 상대 패 프리플랍 · 플랍 · 턴 · 리버";
 const DESCRIPTION =
@@ -27,7 +27,7 @@ export default function EquityPage() {
       </header>
       <EquityCalculator />
       {/* 구글 광고: 계산 결과 바로 아래(가장 오래 보는 자리) */}
-      <BoardBottomAd />
+      <StudyAd />
       <section aria-label="계산 방법" className="ink-panel grid gap-2 rounded-2xl p-4 text-[15px] leading-7 text-[#ece4d6]">
         <h2 className="text-lg font-black text-[#f3d9a4]">어떻게 계산하나요</h2>
         <ul className="list-disc space-y-1 pl-5">
