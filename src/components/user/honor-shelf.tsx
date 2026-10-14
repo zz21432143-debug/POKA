@@ -32,7 +32,7 @@ export async function HonorShelf({ userId, nickname, mine }: { userId: string; n
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-[#e7c98a]">{mine ? "내 칭호" : "칭호"}</h2>
         <Link href="/ranking" className="ml-auto text-xs font-bold text-[#c9a25c]">
-          칭호 8종 보기 ›
+          칭호 모두 보기 ›
         </Link>
       </div>
       <div data-honor-now className="flex min-h-8 flex-wrap items-center gap-1.5">

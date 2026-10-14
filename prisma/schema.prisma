@@ -649,3 +649,33 @@ model ToolSaved {
 
   @@index([ownerId, kind, createdAt])
 }
+
+/// 오늘의 퀴즈: 하루 한 문제(day = 한국 날짜 YYYY-MM-DD). source: auto(자동) · admin(관리자가 넣음)
+model DailyQuiz {
+  id          String   @id @default(cuid())
+  day         String   @unique
+  /// pushfold · equity · handrank · range · custom
+  kind        String
+  question    String
+  /// 보기(JSON 문자열 배열)
+  choicesJson String
+  /// 정답 보기 번호(0부터)
+  answer      Int
+  explanation String   @default("")
+  source      String   @default("auto")
+  createdAt   DateTime @default(now())
+}
+
+/// 퀴즈 답: 회원마다 한 문제에 한 번
+model QuizAnswer {
+  id        String   @id @default(cuid())
+  quizId    String
+  userId    String
+  choice    Int
+  correct   Boolean
+  createdAt DateTime @default(now())
+
+  @@unique([quizId, userId])
+  @@index([userId, createdAt])
+  @@index([quizId])
+}

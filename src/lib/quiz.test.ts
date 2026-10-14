@@ -1,0 +1,51 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import fs from "node:fs";
+import { generateQuiz, handLabel, josa, type QuizData } from "./quiz";
+
+const read = (p: string) => JSON.parse(fs.readFileSync(new URL(p, import.meta.url), "utf8"));
+const data: QuizData = {
+  positions: read("../../public/data/gto-positions.json"),
+  eq: read("../../public/data/preflop-eq.json"),
+  ranking: read("./data/hand-ranking.json"),
+};
+
+describe("오늘의 퀴즈 자동 생성", () => {
+  it("같은 날짜 = 같은 문제, 날마다 종류가 돌아감", () => {
+    assert.deepEqual(generateQuiz("2026-10-15", data), generateQuiz("2026-10-15", data));
+    const kinds = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15"].map((d) => generateQuiz(d, data).kind));
+    assert.equal(kinds.size, 4);
+  });
+
+  it("두 달치 문제 모두 보기 2~4개 · 정답 번호가 보기 안 · 해설 있음", () => {
+    for (let i = 0; i < 60; i++) {
+      const day = new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10);
+      const q = generateQuiz(day, data);
+      assert.ok(q.choices.length >= 2 && q.choices.length <= 4, day);
+      assert.ok(q.answer >= 0 && q.answer < q.choices.length, day);
+      assert.ok(q.question.length > 10 && q.explanation.length > 10, day);
+    }
+  });
+
+  it("족보 문제는 높은 족보가 정답", () => {
+    for (let i = 0; i < 60; i++) {
+      const day = new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10);
+      const q = generateQuiz(day, data);
+      if (q.kind !== "handrank") continue;
+      const order = ["로열 플러시", "스트레이트 플러시", "포카드", "풀하우스", "플러시", "스트레이트", "트리플", "투페어", "원페어", "하이카드"];
+      const right = q.choices[q.answer];
+      const wrong = q.choices[1 - q.answer];
+      assert.ok(order.indexOf(right) < order.indexOf(wrong), `${day} ${q.question}`);
+    }
+  });
+
+  it("패 이름 풀어 쓰기", () => {
+    assert.equal(handLabel("K9o"), "K9 오프수트");
+    assert.equal(handLabel("ATs"), "A10 수티드");
+    assert.equal(handLabel("77"), "포켓 페어");
+    assert.equal(josa("플러시", "이가"), "플러시가");
+    assert.equal(josa("포카드", "은는"), "포카드는");
+    assert.equal(josa("스트레이트 플러시", "은는"), "스트레이트 플러시는");
+    assert.equal(josa("포켓 AA", "이가"), "포켓 AA이(가)");
+  });
+});

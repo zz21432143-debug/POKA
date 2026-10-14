@@ -9,7 +9,7 @@ import { SITE_SETTING_ID } from "@/lib/site-settings";
 import { parseTitleConfig } from "@/lib/pot-title-config";
 
 /** level: 레벨 높은 순(같은 레벨이면 경험치 많은 순). 예전 points 주소는 level로 엽니다. */
-export type RankTab = "level" | "marks" | "attendance";
+export type RankTab = "level" | "marks" | "attendance" | "quiz";
 export type RankPeriod = "all" | "week" | "month";
 
 export type RankRow = {
@@ -25,7 +25,7 @@ export type RankRow = {
 const YOKAI_SLUGS = SHOP_MARKS.map((mark) => mark.slug);
 
 export function parseRankTab(value: string | undefined): RankTab {
-  if (value === "marks" || value === "attendance") return value;
+  if (value === "marks" || value === "attendance" || value === "quiz") return value;
   return "level";
 }
 
@@ -132,6 +132,23 @@ async function markRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
   `;
 }
 
+/** 퀴즈: 맞힌 문제 수(기간은 퀴즈 날짜 기준) */
+async function quizRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
+  const start = periodDate(period) ?? "0000-00-00";
+  return prisma.$queryRaw<RawRow[]>`
+    SELECT u.id AS "userId", u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
+    FROM "QuizAnswer" a
+    JOIN "DailyQuiz" q ON q.id = a."quizId"
+    JOIN "User" u ON u.id = a."userId"
+    WHERE a.correct = true AND q.day >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
+      -- 그날(KST) 푼 것만: 지난 문제를 몰아 풀어서 랭킹을 올리지 못하게
+      AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day
+    GROUP BY u.id
+    ORDER BY score DESC, MIN(a."createdAt") ASC, u.nickname ASC
+    LIMIT ${limit}
+  `;
+}
+
 async function attendanceRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
   const start = periodDate(period);
   if (!start) {
@@ -159,7 +176,7 @@ async function attendanceRows(period: RankPeriod, limit = 30): Promise<RawRow[]>
 /** 랭킹(회원만): 탈퇴 회원 · 마스터(운영) 계정은 모든 랭킹 · 칭호 · 왕관에서 뺍니다 */
 export async function getRanking(tab: RankTab, period: RankPeriod): Promise<RankRow[]> {
   const [raw, excluded] = await Promise.all([
-    tab === "marks" ? markRows(period) : tab === "attendance" ? attendanceRows(period) : levelRows(period),
+    tab === "marks" ? markRows(period) : tab === "attendance" ? attendanceRows(period) : tab === "quiz" ? quizRows(period) : levelRows(period),
     rankExcludedIds(),
   ]);
   return toRows(raw, excluded);
@@ -169,7 +186,7 @@ export async function getRanking(tab: RankTab, period: RankPeriod): Promise<Rank
 export async function rankOrder(tab: RankTab, period: RankPeriod): Promise<{ userId: string; score: number }[]> {
   const ALL = 100_000;
   const [raw, excluded] = await Promise.all([
-    tab === "marks" ? markRows(period, ALL) : tab === "attendance" ? attendanceRows(period, ALL) : levelRows(period, ALL),
+    tab === "marks" ? markRows(period, ALL) : tab === "attendance" ? attendanceRows(period, ALL) : tab === "quiz" ? quizRows(period, ALL) : levelRows(period, ALL),
     rankExcludedIds(),
   ]);
   return raw.filter((row) => Number(row.score) > 0 && !excluded.has(row.userId)).map((row) => ({ userId: row.userId, score: Number(row.score) }));
@@ -226,6 +243,7 @@ export function rankScoreLabel(tab: RankTab, score: number, period: RankPeriod =
   if (tab === "level" && period !== "all") return `+${score.toLocaleString()} EXP`;
   if (tab === "marks") return `${score.toLocaleString()}종`;
   if (tab === "attendance") return `${score.toLocaleString()}일`;
+  if (tab === "quiz") return `${score.toLocaleString()}문제`;
   return `${score.toLocaleString()} EXP`;
 }
 

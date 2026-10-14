@@ -16,6 +16,7 @@ export function AdminNav({
     { href: "/admin/stats", label: "통계" },
     { href: "/admin/inquiries", label: "광고 문의" },
     { href: "/admin/titles", label: "칭호 관리" },
+    { href: "/admin/quiz", label: "퀴즈 관리" },
     { href: "/admin/adsense", label: "애드센스 점검" },
     ...(isMaster ? [{ href: "/admin/content", label: "콘텐츠 발행" }] : []),
     ...(isMaster ? [{ href: "/admin/push", label: "알림 관리" }] : []),

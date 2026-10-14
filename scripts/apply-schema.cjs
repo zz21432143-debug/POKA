@@ -42,6 +42,7 @@ const FILES = [
   "prisma/migrations/20261019090000_session_version/migration.sql",
   "prisma/migrations/20261020090000_tool_saved/migration.sql",
   "prisma/migrations/20261021090000_rotation_share_days/migration.sql",
+  "prisma/migrations/20261022090000_daily_quiz/migration.sql",
 ];
 
 function databaseUrl() {

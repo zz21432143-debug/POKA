@@ -29,6 +29,7 @@ const TABS: { id: RankTab; label: string }[] = [
   { id: "level", label: "레벨 랭킹" },
   { id: "marks", label: "마크 수집 랭킹" },
   { id: "attendance", label: "출석 랭킹" },
+  { id: "quiz", label: "퀴즈 랭킹" },
 ];
 
 const PERIODS: { id: RankPeriod; label: string }[] = [
@@ -52,6 +53,11 @@ const NOTES: Record<RankTab, Record<RankPeriod, string>> = {
     all: "누적 출석 일수입니다.",
     week: "이번 주 출석 일수입니다.",
     month: "이번 달 출석 일수입니다.",
+  },
+  quiz: {
+    all: "오늘의 퀴즈를 맞힌 문제 수입니다.",
+    week: "이번 주 오늘의 퀴즈를 맞힌 문제 수입니다.",
+    month: "이번 달 오늘의 퀴즈를 맞힌 문제 수입니다. 1위는 「퀴즈 요괴」 칭호를 받아요.",
   },
 };
 

@@ -7,6 +7,7 @@ import { HomeJobs } from "@/components/home/home-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { HomeStudyTools } from "@/components/home/home-study-tools";
+import { HomeQuiz } from "@/components/home/home-quiz";
 import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
 import { todayKstDate } from "@/lib/dates";
@@ -80,6 +81,10 @@ export default async function HomePage() {
       </Suspense>
       {/* 무료 홀덤 공부 도구(GTO · 승률 · ICM · 레인지 · 족보) */}
       <HomeStudyTools />
+      {/* 오늘의 퀴즈: 매일 한 문제 */}
+      <Suspense fallback={<HomePanelFallback className="h-40" />}>
+        <HomeQuiz />
+      </Suspense>
       <Suspense
         fallback={
           <div className="flex flex-col gap-3.5">
