@@ -40,6 +40,7 @@ const FILES = [
   "prisma/migrations/20261017090000_pot_title_settings/migration.sql",
   "prisma/migrations/20261018090000_game_board/migration.sql",
   "prisma/migrations/20261019090000_session_version/migration.sql",
+  "prisma/migrations/20261020090000_tool_saved/migration.sql",
 ];
 
 function databaseUrl() {

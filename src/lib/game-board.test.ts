@@ -169,3 +169,11 @@ it("새 현황판: 기본 · 빈 상태 · 지난 현황판 구조 가져오기"
   assert.equal(copy.remaining, 0);
   assert.deepEqual(copy.clock, { level: 0, elapsedMs: 0, runningSince: null });
 });
+
+it("저장한 구조로 시작: 구조는 그대로, 인원 · 시계는 0부터", () => {
+  const saved = { ...defaultBoard(), levels: makeStructure({ count: 3, breakEvery: 0 }), earlyStack: 9_000, entries: 7 };
+  const b = normalizeBoard(newBoardData("saved", "저장 판", saved));
+  assert.equal(b.levels.length, 3);
+  assert.equal(b.earlyStack, 9_000);
+  assert.equal(b.entries, 0);
+});

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { closedFromOf, formatWorkDate, kstClock, nowMinutes, type RotationShareView } from "@/lib/rotation";
+import { closedFromOf, formatWorkDate, kstClock, nowMinutes, tableTag, type RotationShareView } from "@/lib/rotation";
 import { formatClock, parseClock, slotIndexAt } from "@/lib/rotation-plan";
 import { swapInfo } from "@/components/tools/rotation-export";
 
@@ -22,8 +22,23 @@ function useInBrowser() {
 /** 교대 몇 분 전에 알려 줄지 */
 const ALERT_BEFORE = 5;
 
-/** 시간표에서 보여 줄 칸 수(지금 칸부터) */
+/** 시간표에서 보여 줄 칸 수(지금 칸부터). 좁은 화면(휴대폰 세로)은 4칸으로 줄여 가로 스크롤 없이 꽉 차게 */
 const COLS = 8;
+const COLS_NARROW = 4;
+
+/** 화면이 좁은지(가로 640px 미만 또는 세로로 긴 화면) — 바뀌면 다시 그림 */
+const NARROW_QUERY = "(max-width: 639px), (orientation: portrait) and (max-width: 900px)";
+function useNarrow() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(NARROW_QUERY);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(NARROW_QUERY).matches,
+    () => false,
+  );
+}
 
 function untilLabel(minutes: number) {
   if (minutes <= 0) return "지금";
@@ -44,6 +59,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const versionRef = useRef(initial.version);
   const meKey = `poka-rotation-me-${token}`;
   const inBrowser = useInBrowser();
+  const narrow = useNarrow();
   // 교대 알림: 켜 두면 내 자리가 바뀌는 교대 5분 전에 진동·알림(이 화면이 열려 있을 때)
   const [alertOn, setAlertOn] = useState(false);
   const alertedRef = useRef("");
@@ -102,12 +118,18 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const swap = plan ? swapInfo(plan, labels, current, next, closedFrom) : null;
   const nowAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? now) : now;
   const openTables = labels.map((label, t) => ({ label, t })).filter(({ t }) => closedFrom[t] == null || (closedFrom[t] as number) > nowAt);
-  const cols = plan ? plan.slots.map((slot, index) => ({ slot, index })).slice(Math.max(0, current), Math.max(0, current) + COLS) : [];
+  const cols = plan ? plan.slots.map((slot, index) => ({ slot, index })).slice(Math.max(0, current), Math.max(0, current) + (narrow ? COLS_NARROW : COLS)) : [];
   const meId = state.dealers.find((d) => d.name === me)?.id ?? null;
+  // TV: 글씨를 화면 크기(가로 vw · 세로 dvh)에 맞춰 키움 — 테이블이 적으면 크게, 많으면 한 화면에 다 들어가게
+  const tvRows = openTables.length + 2;
+  const fit = (vw: number, dvh: number) => (tv ? { fontSize: `min(${vw.toFixed(2)}vw, ${dvh.toFixed(2)}dvh)` } : undefined);
+  const colCount = Math.max(cols.length, 1);
+  const cellFont = fit(24 / (colCount + 1), 28 / tvRows);
+  const headFont = fit(20 / (colCount + 1), 22 / tvRows);
   const mySchedule = plan && meId
     ? cols.map(({ slot, index }) => {
         const t = slot.seats.indexOf(meId);
-        return { at: slot.at, index, where: t >= 0 ? `T${labels[t]}` : slot.rest.includes(meId) ? "휴식" : "—" };
+        return { at: slot.at, index, where: t >= 0 ? tableTag(labels[t]) : slot.rest.includes(meId) ? "휴식" : "—" };
       })
     : [];
 
@@ -116,7 +138,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
     const slot = plan?.slots[index];
     if (!slot || !meId) return "—";
     const t = slot.seats.indexOf(meId);
-    return t >= 0 ? `T${labels[t]}` : slot.rest.includes(meId) ? "휴식" : "—";
+    return t >= 0 ? tableTag(labels[t]) : slot.rest.includes(meId) ? "휴식" : "—";
   };
   const myNow = current >= 0 ? whereAt(current) : "—";
   const myNext = next >= 0 ? whereAt(next) : "—";
@@ -172,17 +194,27 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
 
   const content = (
     // TV: 화면 전체를 덮음. 워터마크 스타일(position: relative)이 fixed를 덮어써 TV 화면이 페이지 맨 아래로 밀려 사라지던 문제 — 직접 고정
-    <div className={cn("poka-watermark grid gap-3 text-white", tv ? "inset-0 z-[9999] content-start overflow-auto bg-black p-4" : "pb-10")} style={tv ? { position: "fixed" } : undefined}>
-      <header className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/15 bg-zinc-950 p-3">
+    <div
+      data-rotation-tv={tv ? "on" : undefined}
+      className={cn("poka-watermark text-white", tv ? "inset-0 z-[9999] flex flex-col gap-[1.2dvh] overflow-auto bg-black p-[1.2dvh]" : "grid gap-3 pb-10")}
+      style={tv ? { position: "fixed" } : undefined}
+    >
+      <header className={cn("flex flex-wrap items-center gap-3 rounded-2xl border border-white/15 bg-zinc-950", tv ? "shrink-0 px-[1.5vw] py-[1dvh]" : "p-3")}>
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 로고 한 장 */}
-        <img src="/brand/poka-oni-mark.png" alt="POKA" className={cn("h-auto shrink-0", tv ? "w-20" : "w-12")} />
+        <img src="/brand/poka-oni-mark.png" alt="POKA" className={cn("h-auto shrink-0", tv ? "w-[min(6vw,9dvh)]" : "w-12")} />
         <div className="grid min-w-0">
-          <span className="text-xs font-bold text-zinc-400">교대표 · 보기 전용</span>
-          <span className={cn("truncate font-black text-amber-300", tv ? "text-5xl" : "text-2xl")}>{state.game.name}</span>
-          <span className={cn("font-bold text-zinc-300", tv ? "text-xl" : "text-sm")}>{formatWorkDate(state.game.workDate)}</span>
+          <span className={cn("text-xs font-bold text-zinc-400", tv && "[@media(max-height:560px)]:hidden")}>교대표 · 보기 전용</span>
+          <span className={cn("truncate font-black leading-tight text-amber-300", !tv && "text-2xl")} style={tv ? { fontSize: "min(3.6vw, 6dvh)" } : undefined}>
+            {state.game.name}
+          </span>
+          <span className={cn("font-bold text-zinc-300", !tv && "text-sm")} style={tv ? { fontSize: "min(1.6vw, 2.8dvh)" } : undefined}>
+            {formatWorkDate(state.game.workDate)}
+          </span>
         </div>
-        <span className={cn("ml-auto font-black text-amber-300 tabular-nums", tv ? "text-5xl" : "text-2xl")}>{kstClock(clock)}</span>
-        <button type="button" onClick={() => void toggleTv()} className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-black">
+        <span className={cn("ml-auto font-black text-amber-300 tabular-nums", !tv && "text-2xl")} style={tv ? { fontSize: "min(4vw, 7dvh)" } : undefined}>
+          {kstClock(clock)}
+        </span>
+        <button type="button" onClick={() => void toggleTv()} className={cn("rounded-lg border border-white/30 font-black", tv ? "min-h-9 px-2 text-xs" : "min-h-11 px-3 text-sm")}>
           {tv ? "TV 화면 끄기" : "TV 화면"}
         </button>
       </header>
@@ -197,13 +229,24 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
 
       {/* 다음 교대 */}
       {plan && swap ? (
-        <section aria-label="다음 교대" className="grid gap-2 rounded-2xl border-2 border-amber-400 bg-amber-950/30 p-3">
+        <section aria-label="다음 교대" className={cn("grid gap-2 rounded-2xl border-2 border-amber-400 bg-amber-950/30", tv ? "shrink-0 px-[1.5vw] py-[1.2dvh]" : "p-3")}>
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className={cn("font-black text-amber-300", tv ? "text-5xl" : "text-2xl")}>다음 교대 {formatClock(swap.at)}</span>
-            <span className={cn("font-bold text-amber-100", tv ? "text-2xl" : "text-sm")}>{untilLabel(swap.at - now)}</span>
-            {button ? <span className={cn("ml-auto rounded bg-white px-2 font-black text-black", tv ? "text-2xl" : "text-sm")}>버튼 {button}번</span> : null}
+            <span className={cn("font-black text-amber-300", !tv && "text-2xl")} style={tv ? { fontSize: "min(3.4vw, 6dvh)" } : undefined}>
+              다음 교대 {formatClock(swap.at)}
+            </span>
+            <span className={cn("font-bold text-amber-100", !tv && "text-sm")} style={tv ? { fontSize: "min(1.8vw, 3.2dvh)" } : undefined}>
+              {untilLabel(swap.at - now)}
+            </span>
+            {button ? (
+              <span className={cn("ml-auto rounded bg-white px-2 font-black text-black", !tv && "text-sm")} style={tv ? { fontSize: "min(1.8vw, 3.2dvh)" } : undefined}>
+                버튼 {button}번
+              </span>
+            ) : null}
           </div>
-          <ul className={cn("grid gap-1.5", tv ? "grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]")}>
+          <ul
+            className={cn("grid gap-1.5", !tv && "grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))]")}
+            style={tv ? { gridTemplateColumns: `repeat(${Math.min(swap.rows.length, 5) || 1}, minmax(0, 1fr))`, fontSize: "min(1.9vw, 3.6dvh)" } : undefined}
+          >
             {swap.rows.map((row) => (
               <li
                 key={row.label}
@@ -214,8 +257,8 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
                   meId && (row.from === meId || row.to === meId) && "ring-2 ring-sky-400",
                 )}
               >
-                <span className={cn("font-black text-emerald-300", tv ? "text-3xl" : "text-lg")}>T{row.label}</span>
-                <span className={cn("font-black", tv ? "text-3xl" : "text-base")}>
+                <span className={cn("shrink-0 font-black text-emerald-300", !tv && "text-lg")}>{tableTag(row.label)}</span>
+                <span className={cn("min-w-0 truncate font-black", !tv && "text-base")}>
                   {row.closed ? (
                     <span className="text-rose-300">{row.from ? `${name(row.from)} → ` : ""}컨바인</span>
                   ) : row.from && row.from === row.to ? (
@@ -233,7 +276,8 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
             ))}
           </ul>
           {swap.toRest.length ? (
-            <p className={cn("font-bold text-amber-300", tv ? "text-2xl" : "text-sm")}>휴식 들어감 {swap.toRest.map(name).join(", ")}</p>
+            <p className={cn("font-bold text-amber-300", !tv && "text-sm")} style={tv ? { fontSize: "min(1.7vw, 3dvh)" } : undefined}>
+              휴식 들어감 {swap.toRest.map(name).join(", ")}</p>
           ) : null}
         </section>
       ) : null}
@@ -294,17 +338,23 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
 
       {/* 시간표 */}
       {plan ? (
-        <section aria-label="시간표" className="overflow-auto rounded-xl border border-white/15">
-          <table className="border-collapse">
+        <section aria-label="시간표" className={cn("overflow-auto rounded-xl border border-white/15", tv && "min-h-0 flex-1")}>
+          <table className={cn("w-full table-fixed border-collapse", tv && "h-full")}>
+            <colgroup>
+              <col className={tv ? "w-[8%]" : "w-14 sm:w-20"} />
+            </colgroup>
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">테이블</th>
+                <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-2 text-left font-black whitespace-nowrap text-zinc-300", !tv && "text-xs sm:text-sm")} style={tv ? fit(10 / (colCount + 1), 16 / tvRows) : undefined}>
+                  테이블
+                </th>
                 {cols.map(({ slot, index }) => (
                   <th
                     key={slot.at}
+                    style={headFont}
                     className={cn(
-                      "px-2 py-1.5 font-black",
-                      tv ? "text-3xl" : "text-lg",
+                      "px-1 py-1.5 font-black tabular-nums",
+                      !tv && "text-sm sm:text-lg",
                       index === current ? "bg-emerald-700" : index === next ? "bg-amber-500 text-black" : "bg-zinc-900",
                     )}
                   >
@@ -316,18 +366,22 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
             <tbody>
               {openTables.map(({ label, t }) => (
                 <tr key={label} className="border-t border-white/10">
-                  <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left font-black text-emerald-300", tv ? "text-3xl" : "text-lg")}>T{label}</th>
+                  <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1 text-left font-black text-emerald-300", !tv && "text-base sm:text-lg")} style={cellFont}>
+                    {tableTag(label)}
+                  </th>
                   {cols.map(({ slot, index }) => {
                     const id = slot.seats[t];
                     const shut = closedFrom[t] != null && slot.at >= (closedFrom[t] as number);
                     return (
-                      <td key={slot.at} className={cn("px-1 py-1", index === current && "bg-emerald-950")}>
+                      <td key={slot.at} className={cn("px-0.5 py-0.5 sm:px-1 sm:py-1", tv && "h-px", index === current && "bg-emerald-950")}>
                         <span
                           className={cn(
-                            "grid min-w-[5rem] place-items-center rounded-lg px-1.5 py-1.5 font-black",
-                            tv ? "text-2xl" : "text-base",
+                            "grid place-items-center truncate rounded-lg px-1 font-black",
+                            tv ? "py-[0.4dvh]" : "py-1.5",
+                            tv ? "h-full" : "text-sm sm:text-base",
                             shut ? "border border-rose-500 bg-rose-950 text-rose-300" : id && id === meId ? "bg-sky-500 text-black" : "bg-zinc-800",
                           )}
+                          style={cellFont}
                         >
                           {shut ? "컨바인" : name(id) || "—"}
                         </span>
@@ -336,10 +390,13 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
                   })}
                 </tr>
               ))}
-              <tr className="border-t-2 border-amber-400/40">
-                <th className="sticky left-0 z-10 bg-zinc-900 px-2 py-1.5 text-left text-base font-black text-amber-300">휴식</th>
+              {/* 휴식 줄: 낮은 화면(휴대폰 가로) TV에서는 숨김 — 위 「휴식 들어감」에 보임 */}
+              <tr className={cn("border-t-2 border-amber-400/40", tv && "[@media(max-height:560px)]:hidden")}>
+                <th className={cn("sticky left-0 z-10 bg-zinc-900 px-2 py-1.5 text-left font-black text-amber-300", !tv && "text-sm sm:text-base")} style={headFont}>
+                  휴식
+                </th>
                 {cols.map(({ slot }) => (
-                  <td key={slot.at} className={cn("max-w-[9rem] px-1.5 py-1.5 align-top font-bold text-amber-200", tv ? "text-lg" : "text-xs")}>
+                  <td key={slot.at} className={cn("px-1 py-1.5 align-top font-bold break-keep text-amber-200", !tv && "text-xs")} style={tv ? fit(14 / (colCount + 1), 18 / tvRows) : undefined}>
                     {slot.rest.map(name).join(", ") || "—"}
                   </td>
                 ))}
@@ -349,7 +406,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
         </section>
       ) : null}
 
-      <p className="text-center text-xs text-zinc-500">ⓒ POKA 홀덤 커뮤니티 · pokerwiki.co.kr · 15초마다 자동으로 새로 고칩니다</p>
+      <p className={cn("text-center text-xs text-zinc-500", tv && "shrink-0 [@media(max-height:560px)]:hidden")}>ⓒ POKA 홀덤 커뮤니티 · pokerwiki.co.kr · 15초마다 자동으로 새로 고칩니다</p>
     </div>
   );
   // TV 화면: 사이트 메뉴(위 고정 막대)보다 위에 오도록 페이지 맨 바깥(body)에 그립니다.

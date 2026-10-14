@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "cn";
 import { DIFFICULTY } from "@/lib/practice";
 import { DEFAULT_TITLE_CONFIG, PERIOD_LABEL, type TitleConfig } from "@/lib/pot-title-config";
@@ -36,6 +36,19 @@ export function CrownProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * 화면 연결(hydration)이 끝났는지. 늦게 도착하는 칸(Suspense)이 연결될 때 왕관 · 칭호를 이미 받아 둔 상태면
+ * 서버 HTML(왕관 · 칭호 없음)과 달라 React 418 오류가 나므로, 연결이 끝난 뒤에만 그립니다.
+ */
+const noopSubscribe = () => () => {};
+function useHydrated() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 /** 칭호 설정(이름 · 기준 난이도 · 기간)과 받는 사람 */
 export function usePotTitleInfo() {
   return useContext(PotTitleContext);
@@ -51,7 +64,8 @@ export function CrownedFrame({
   children: ReactNode;
 }) {
   const names = useContext(CrownContext);
-  return <span className={cn("honor-mark", aura, names.has(nickname) && "rank-crown")}>{children}</span>;
+  const hydrated = useHydrated();
+  return <span className={cn("honor-mark", aura, hydrated && names.has(nickname) && "rank-crown")}>{children}</span>;
 }
 
 const TITLE_TONE: Record<1 | 2 | 3, string> = {
@@ -73,7 +87,8 @@ export function TitleChip({ rank, name, className }: { rank: 1 | 2 | 3; name: st
 /** 닉네임 옆 팟 계산 칭호(설정한 난이도 랭킹 1~3위). 관리자가 끄면 안 보임 */
 export function PotTitleBadge({ nickname, className }: { nickname: string; className?: string }) {
   const info = useContext(PotTitleContext);
-  const rank = info.enabled ? info.holders[nickname] : undefined;
+  const hydrated = useHydrated();
+  const rank = hydrated && info.enabled ? info.holders[nickname] : undefined;
   if (!rank) return null;
   return (
     <span

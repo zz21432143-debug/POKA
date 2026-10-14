@@ -7,6 +7,7 @@ import { HomeJobs } from "@/components/home/home-jobs";
 import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { HomeStudyTools } from "@/components/home/home-study-tools";
+import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
@@ -65,7 +66,7 @@ async function HomeFeedSections() {
 }
 
 /**
- * 홈 순서: 대문(POKA 하나로) → 오늘 요약 → 홀덤 공부 도구 → 급구 → 구인 → 홍보 포스터 → 최신글 · 핸드/대회 → 매장 관리 바로가기.
+ * 홈 순서: 대문(POKA 하나로) → 오늘 요약 → 홀덤 공부 도구 → 급구 → 구인 → 홍보 포스터 → 최신글 · 핸드/대회 → 랭킹 → 매장 관리 바로가기.
  * 오른쪽 칸은 없애고(내 정보는 머리줄에서 펼침) 가운데를 넓게 씁니다.
  */
 export default async function HomePage() {
@@ -88,6 +89,10 @@ export default async function HomePage() {
         }
       >
         <HomeFeedSections />
+      </Suspense>
+      {/* 레벨 · 마크 · 팟 계산 랭킹 */}
+      <Suspense fallback={<HomePanelFallback className="h-48" />}>
+        <HomeRankings />
       </Suspense>
       <HomeDealerTools />
       <BoardBottomAd placement="home-bottom" />

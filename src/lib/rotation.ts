@@ -10,6 +10,9 @@ export const MAX_TABLES = 100;
 export const MAX_GAMES = 100;
 export const MAX_DEALERS = 150;
 export const INTERVAL_CHOICES = [10, 15, 20, 25, 30, 40, 45, 60] as const;
+/** 간격 직접 입력 범위(분) */
+export const INTERVAL_MIN = 5;
+export const INTERVAL_MAX = 120;
 
 export const DEALER_STATUSES = ["WAIT", "IN", "OFF", "LEFT"] as const;
 export type DealerStatus = (typeof DEALER_STATUSES)[number];
@@ -78,6 +81,10 @@ export type RotationStateView = {
   planEnd: string;
   dealers: RotationDealerView[];
   plan: RotationPlan | null;
+  /** 따로 저장한 딜러 명단 */
+  rosters: RotationRoster[];
+  /** 휴지통(지운 게임, 최근 것부터) */
+  trash: RotationTrash[];
 };
 
 export type RotationAction =
@@ -106,7 +113,21 @@ export type RotationAction =
   | { type: "setGame"; name?: string; workDate?: string }
   | { type: "deleteGame" }
   /** 지난 게임 여러 개 한꺼번에 지우기(지금 보는 게임은 남김) */
-  | { type: "deleteGames"; ids: string[] };
+  | { type: "deleteGames"; ids: string[] }
+  /** 휴지통(지운 지 7일 안)에서 게임 되살리기 */
+  | { type: "restoreGame"; trashId: string }
+  /** 딜러 명단 따로 저장(계정마다 · 게임과 상관없이 남음). id가 있으면 고치기 */
+  | { type: "saveRoster"; id?: string; name: string; text: string }
+  | { type: "deleteRoster"; id: string };
+
+/** 따로 저장한 딜러 명단(한 줄에 한 명: "김딜러 10:00" 형식) */
+export type RotationRoster = { id: string; name: string; text: string };
+/** 휴지통의 게임(지운 시각부터 TRASH_DAYS일 뒤 완전히 지움) */
+export type RotationTrash = { id: string; name: string; workDate: string | null; deletedAt: string };
+export const TRASH_DAYS = 7;
+export const MAX_ROSTERS = 10;
+/** 명단 한 개 글자 수 상한(150명 × 한 줄) */
+export const ROSTER_TEXT_MAX = 6000;
 
 /** 최대 연속 딜 선택지(분). 0 = 제한 없음 */
 export const MAX_STREAK_CHOICES = [0, 40, 60, 80, 100, 120] as const;
@@ -243,37 +264,71 @@ export function planDealers(dealers: RotationDealerView[], start: number): PlanD
     });
 }
 
-/** "5-12, 15, 18" → [5,6,…,12,15,18]. 중복은 빼고 최대 40개. 못 읽은 부분은 errors로 */
+/**
+ * 테이블 이름: 숫자(1~999) 또는 알파벳(A~Z). 알파벳은 안에서 1001(A)~1026(Z)으로 다룹니다
+ * (시간표 · 버튼 자리 기록이 숫자 기준이라 그대로 씀).
+ */
+export const LETTER_BASE = 1000;
+const isLetterLabel = (n: number) => n > LETTER_BASE && n <= LETTER_BASE + 26;
+const validLabel = (n: number) => (n >= 1 && n <= 999) || isLetterLabel(n);
+
+/** 1 → "1", 1001 → "A" (입력칸 · 저장용) */
+export function labelText(label: number) {
+  return isLetterLabel(label) ? String.fromCharCode(64 + label - LETTER_BASE) : String(label);
+}
+
+/**
+ * 화면에 보일 테이블 이름: 숫자는 "T1", 알파벳은 "A" 그대로(TA처럼 헷갈리지 않게).
+ * 문장 안에서는 tableWord(예: "T1 테이블", "A 테이블").
+ */
+export function tableTag(label: number) {
+  return isLetterLabel(label) ? labelText(label) : `T${label}`;
+}
+export const tableWord = (label: number) => `${tableTag(label)} 테이블`;
+
+function labelValue(token: string): number | null {
+  if (/^\d{1,3}$/.test(token)) return Number(token);
+  if (/^[A-Za-z]$/.test(token)) return LETTER_BASE + token.toUpperCase().charCodeAt(0) - 64;
+  return null;
+}
+
+/** "5-12, 15, A-D" → [5,…,12,15,1001,…,1004]. 중복은 빼고 최대 MAX_TABLES개. 못 읽은 부분은 errors로 */
 export function parseTableLabels(text: string): { labels: number[]; errors: string[] } {
   const labels: number[] = [];
   const errors: string[] = [];
   for (const raw of text.split(/[,\s/]+/).filter(Boolean)) {
-    const range = /^(\d{1,3})\s*[-~]\s*(\d{1,3})$/.exec(raw);
-    const single = /^(\d{1,3})$/.exec(raw);
+    const range = /^([0-9]{1,3}|[A-Za-z])\s*[-~]\s*([0-9]{1,3}|[A-Za-z])$/.exec(raw);
+    const single = labelValue(raw);
     if (range) {
-      const a = Number(range[1]);
-      const b = Number(range[2]);
+      const a = labelValue(range[1]);
+      const b = labelValue(range[2]);
+      // 숫자-숫자 · 알파벳-알파벳만(1-C 같은 섞인 범위는 못 읽음)
+      if (a == null || b == null || isLetterLabel(a) !== isLetterLabel(b)) {
+        errors.push(raw);
+        continue;
+      }
       const [lo, hi] = a <= b ? [a, b] : [b, a];
       for (let n = lo; n <= hi && labels.length < MAX_TABLES * 3; n += 1) labels.push(n);
-    } else if (single) {
-      labels.push(Number(single[1]));
+    } else if (single != null) {
+      labels.push(single);
     } else {
       errors.push(raw);
     }
   }
-  const unique = [...new Set(labels.filter((n) => n >= 1 && n <= 999))];
+  const unique = [...new Set(labels.filter(validLabel))];
   if (unique.length > MAX_TABLES) errors.push(`테이블은 최대 ${MAX_TABLES}개입니다`);
   return { labels: unique.slice(0, MAX_TABLES), errors };
 }
 
-/** [5,6,7,8,12] → "5-8, 12" */
+/** [5,6,7,8,12,1001,1002,1003] → "5-8, 12, A-C" */
 export function formatTableLabels(labels: number[]) {
   const sorted = [...labels];
   const parts: string[] = [];
   for (let i = 0; i < sorted.length; ) {
     let j = i;
     while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j += 1;
-    parts.push(j > i + 1 ? `${sorted[i]}-${sorted[j]}` : j === i + 1 ? `${sorted[i]}, ${sorted[j]}` : `${sorted[i]}`);
+    const [a, b] = [labelText(sorted[i]), labelText(sorted[j])];
+    parts.push(j > i + 1 ? `${a}-${b}` : j === i + 1 ? `${a}, ${b}` : a);
     i = j + 1;
   }
   return parts.join(", ");

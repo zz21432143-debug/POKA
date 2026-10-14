@@ -1,9 +1,15 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import {
+  INTERVAL_MAX,
+  INTERVAL_MIN,
   MAX_DEALERS,
   MAX_GAMES,
+  MAX_ROSTERS,
+  ROSTER_TEXT_MAX,
+  TRASH_DAYS,
   kstDate,
+  labelText,
   kstDateAt,
   normalizeWorkDate,
   shareExpired,
@@ -21,6 +27,52 @@ import { remapPlanTables, type RotationPlan } from "@/lib/rotation-plan";
 /** 게임 목록에 보여 줄 개수(정리 창에서 전부 골라 지울 수 있게 상한만큼) */
 const GAME_LIST = MAX_GAMES;
 const GAME_ORDER = [{ workDate: { sort: "desc" as const, nulls: "last" as const } }, { createdAt: "desc" as const }];
+/** ToolSaved 종류: 딜러 명단 · 지운 게임(휴지통) */
+const KIND_ROSTER = "roster";
+const KIND_TRASH = "rotation-trash";
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+type MetaRow = Awaited<ReturnType<typeof prisma.rotationMeta.findUniqueOrThrow>>;
+type DealerRow = Awaited<ReturnType<typeof prisma.rotationDealer.findFirstOrThrow>>;
+/** 휴지통에 담는 게임 통째(날짜는 글자로) */
+type TrashSnapshot = {
+  meta: Omit<MetaRow, "createdAt" | "dayStartedAt"> & { createdAt: string; dayStartedAt: string };
+  dealers: (Omit<DealerRow, "statusSince" | "checkedInAt" | "leftAt" | "createdAt"> & {
+    statusSince: string;
+    checkedInAt: string | null;
+    leftAt: string | null;
+    createdAt: string;
+  })[];
+};
+
+/** 게임 지우기 = 휴지통으로(TRASH_DAYS일 안에 되살릴 수 있음) */
+async function moveToTrash(tx: Tx, ownerId: string, ids: string[]) {
+  if (ids.length === 0) return;
+  const metas = await tx.rotationMeta.findMany({ where: { ownerId, id: { in: ids } } });
+  const dealers = await tx.rotationDealer.findMany({ where: { gameId: { in: metas.map((m) => m.id) } } });
+  await tx.toolSaved.createMany({
+    data: metas.map((m) => ({
+      ownerId,
+      kind: KIND_TRASH,
+      name: `${m.workDate ?? ""}|${m.name}`,
+      dataJson: JSON.stringify({
+        meta: { ...m, createdAt: m.createdAt.toISOString(), dayStartedAt: m.dayStartedAt.toISOString() },
+        dealers: dealers
+          .filter((d) => d.gameId === m.id)
+          .map((d) => ({
+            ...d,
+            statusSince: d.statusSince.toISOString(),
+            checkedInAt: d.checkedInAt?.toISOString() ?? null,
+            leftAt: d.leftAt?.toISOString() ?? null,
+            createdAt: d.createdAt.toISOString(),
+          })),
+      } satisfies TrashSnapshot),
+    })),
+  });
+  await tx.rotationDealer.deleteMany({ where: { gameId: { in: metas.map((m) => m.id) } } });
+  await tx.rotationMeta.deleteMany({ where: { ownerId, id: { in: metas.map((m) => m.id) } } });
+}
+
 /** 시간표 칸 수 상한(5분 간격 24시간 = 288칸) */
 const MAX_SLOTS = 300;
 
@@ -58,11 +110,30 @@ function parsePlan(json: string | null): RotationPlan | null {
 /** 이 계정의 게임 하나 상태 전체(게임을 안 주면 가장 최근 게임) */
 export async function loadRotation(ownerId: string, gameId?: string | null): Promise<RotationStateView> {
   const m = await resolveGame(ownerId, gameId);
-  const [dealers, games] = await Promise.all([
+  // 휴지통: TRASH_DAYS일 지난 게임은 완전히 지움
+  await prisma.toolSaved
+    .deleteMany({ where: { ownerId, kind: KIND_TRASH, createdAt: { lt: new Date(Date.now() - TRASH_DAYS * 86_400_000) } } })
+    .catch(() => undefined);
+  const [dealers, games, rosterRows, trashRows] = await Promise.all([
     prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] }),
     prisma.rotationMeta.findMany({ where: { ownerId }, orderBy: GAME_ORDER, take: GAME_LIST, select: { id: true, name: true, workDate: true } }),
+    // 명단은 내용까지, 휴지통은 이름만(내용은 되살릴 때 읽음)
+    prisma.toolSaved
+      .findMany({ where: { ownerId, kind: KIND_ROSTER }, orderBy: { createdAt: "asc" }, take: MAX_ROSTERS, select: { id: true, name: true, dataJson: true } })
+      .catch(() => []),
+    prisma.toolSaved
+      .findMany({ where: { ownerId, kind: KIND_TRASH }, orderBy: { createdAt: "desc" }, take: MAX_GAMES, select: { id: true, name: true, createdAt: true } })
+      .catch(() => []),
   ]);
+  const rosters = rosterRows.map((s) => ({ id: s.id, name: s.name, text: s.dataJson }));
+  const trash = trashRows
+    .map((s) => {
+      const [workDate, ...rest] = s.name.split("|");
+      return { id: s.id, name: rest.join("|") || "게임", workDate: workDate || null, deletedAt: s.createdAt.toISOString() };
+    });
   return {
+    rosters,
+    trash,
     game: { id: m.id, name: m.name, workDate: m.workDate },
     games,
     shareToken: m.shareToken,
@@ -237,10 +308,10 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           const { labels, errors } = parseTableLabels(String(action.tableLabels));
           if (labels.length === 0 || errors.length) throw new RotationError(`테이블 번호를 확인하세요${errors.length ? `: ${errors.join(", ")}` : ""}`);
           data.tableCount = labels.length;
-          data.tableLabels = labels.join(",");
+          data.tableLabels = labels.map(labelText).join(",");
         }
         if (action.setupMinutes !== undefined) data.setupMinutes = Math.max(0, Math.min(120, Math.floor(Number(action.setupMinutes) || 0)));
-        if (action.interval !== undefined) data.interval = Math.max(5, Math.min(120, Math.floor(Number(action.interval) || 20)));
+        if (action.interval !== undefined) data.interval = Math.max(INTERVAL_MIN, Math.min(INTERVAL_MAX, Math.floor(Number(action.interval) || 20)));
         if (action.planStart !== undefined) {
           const t = normalizeTime(action.planStart);
           if (!t) throw new RotationError("시작 시각을 확인하세요.");
@@ -256,7 +327,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         const extra: { planJson?: string | null; tableStateJson?: string } = {};
         if (data.tableLabels !== undefined) {
           const oldLabels = tableLabelsOf({ tableCount: current.tableCount, tableLabels: current.tableLabels ? parseTableLabels(current.tableLabels).labels : null });
-          const newLabels = data.tableLabels.split(",").map(Number);
+          const newLabels = parseTableLabels(data.tableLabels).labels;
           const plan = parsePlan(current.planJson);
           if (plan && oldLabels.join(",") !== newLabels.join(",")) {
             const moved = remapPlanTables(plan, oldLabels, newLabels);
@@ -366,15 +437,69 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         // 내 게임만, 지금 보는 게임은 빼고
         const mine = await tx.rotationMeta.findMany({ where: { ownerId, id: { in: ids } }, select: { id: true } });
         const targets = mine.map((m) => m.id);
-        await tx.rotationDealer.deleteMany({ where: { gameId: { in: targets } } });
-        await tx.rotationMeta.deleteMany({ where: { ownerId, id: { in: targets } } });
+        await moveToTrash(tx, ownerId, targets);
         break;
       }
       case "deleteGame": {
         if ((await tx.rotationMeta.count({ where: { ownerId } })) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
-        await tx.rotationDealer.deleteMany({ where: { gameId: META_ID } });
-        await tx.rotationMeta.delete({ where: { id: META_ID } });
+        await moveToTrash(tx, ownerId, [META_ID]);
         deleted = true;
+        break;
+      }
+      case "restoreGame": {
+        const row = await tx.toolSaved.findFirst({ where: { id: String(action.trashId ?? ""), ownerId, kind: KIND_TRASH } });
+        if (!row) throw new RotationError("휴지통에서 찾을 수 없습니다. 7일이 지나 완전히 지워졌을 수 있어요.");
+        if ((await tx.rotationMeta.count({ where: { ownerId } })) >= MAX_GAMES) {
+          throw new RotationError(`게임이 ${MAX_GAMES}개라 되살릴 수 없습니다. 다른 게임을 먼저 정리해 주세요.`);
+        }
+        const snap = JSON.parse(row.dataJson) as TrashSnapshot;
+        // 같은 id가 이미 있으면(드묾) 새 id로. 공유 링크는 꺼진 채로 되살림
+        const taken = await tx.rotationMeta.findUnique({ where: { id: snap.meta.id }, select: { id: true } });
+        const id = taken ? randomUUID() : snap.meta.id;
+        await tx.rotationMeta.create({
+          data: {
+            ...snap.meta,
+            id,
+            ownerId,
+            shareToken: null,
+            createdAt: new Date(snap.meta.createdAt),
+            dayStartedAt: new Date(snap.meta.dayStartedAt),
+          },
+        });
+        if (snap.dealers.length) {
+          await tx.rotationDealer.createMany({
+            data: snap.dealers.map((d) => ({
+              ...d,
+              gameId: id,
+              statusSince: new Date(d.statusSince),
+              checkedInAt: d.checkedInAt ? new Date(d.checkedInAt) : null,
+              leftAt: d.leftAt ? new Date(d.leftAt) : null,
+              createdAt: new Date(d.createdAt),
+            })),
+            skipDuplicates: true,
+          });
+        }
+        await tx.toolSaved.delete({ where: { id: row.id } });
+        break;
+      }
+      case "saveRoster": {
+        const name = String(action.name ?? "").trim().slice(0, 20) || "딜러 명단";
+        const text = String(action.text ?? "").replace(/\r/g, "").trim().slice(0, ROSTER_TEXT_MAX);
+        if (!text) throw new RotationError("명단이 비어 있어요. 한 줄에 한 명씩 적어 주세요.");
+        if (action.id) {
+          const mine = await tx.toolSaved.findFirst({ where: { id: action.id, ownerId, kind: KIND_ROSTER }, select: { id: true } });
+          if (!mine) throw new RotationError("명단을 찾을 수 없습니다. 새로고침해 주세요.");
+          await tx.toolSaved.update({ where: { id: mine.id }, data: { name, dataJson: text } });
+        } else {
+          if ((await tx.toolSaved.count({ where: { ownerId, kind: KIND_ROSTER } })) >= MAX_ROSTERS) {
+            throw new RotationError(`딜러 명단은 ${MAX_ROSTERS}개까지 저장할 수 있어요.`);
+          }
+          await tx.toolSaved.create({ data: { ownerId, kind: KIND_ROSTER, name, dataJson: text } });
+        }
+        break;
+      }
+      case "deleteRoster": {
+        await tx.toolSaved.deleteMany({ where: { id: String(action.id ?? ""), ownerId, kind: KIND_ROSTER } });
         break;
       }
     }

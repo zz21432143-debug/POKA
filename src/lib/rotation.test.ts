@@ -62,8 +62,23 @@ describe("table numbers", async () => {
   it("reads ranges and single numbers", () => {
     assert.deepEqual(parseTableLabels("5-8, 12 15").labels, [5, 6, 7, 8, 12, 15]);
     assert.deepEqual(parseTableLabels("3,3,1").labels, [3, 1]);
-    assert.deepEqual(parseTableLabels("1-3, x").errors, ["x"]);
+    assert.deepEqual(parseTableLabels("1-3, 가").errors, ["가"]);
     assert.equal(formatTableLabels([5, 6, 7, 8, 12, 13, 20]), "5-8, 12, 13, 20");
+  });
+
+  it("reads letter tables (A-D) and shows them without a T", async () => {
+    const { tableTag, tableWord, labelText } = await import("./rotation");
+    const { labels, errors } = parseTableLabels("a-d, F 1-2");
+    assert.deepEqual(errors, []);
+    assert.deepEqual(labels.map(labelText), ["A", "B", "C", "D", "F", "1", "2"]);
+    assert.equal(formatTableLabels(labels), "A-D, F, 1, 2");
+    // 저장(글자) → 다시 읽어도 같음
+    assert.deepEqual(parseTableLabels(labels.map(labelText).join(",")).labels, labels);
+    assert.equal(tableTag(labels[0]), "A");
+    assert.equal(tableTag(1), "T1");
+    assert.equal(tableWord(labels[4]), "F 테이블");
+    // 숫자-알파벳이 섞인 범위 · 두 글자는 못 읽음
+    assert.deepEqual(parseTableLabels("1-C, AB").errors, ["1-C", "AB"]);
   });
 
   it("stops planning at the planned leave time, across midnight too", () => {

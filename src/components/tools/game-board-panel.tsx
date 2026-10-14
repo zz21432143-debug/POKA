@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
-import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type BoardTemplate, type PrizeColor, type PrizeRow } from "@/lib/game-board";
+import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
@@ -21,14 +21,25 @@ const readNum = (s: string) => Number(String(s).replace(/[^\d]/g, "")) || 0;
 
 async function call(body: object) {
   const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const json = (await res.json().catch(() => ({}))) as { error?: string; board?: BoardState; boards?: BoardSummary[]; id?: string };
+  const json = (await res.json().catch(() => ({}))) as { error?: string; board?: BoardState; boards?: BoardSummary[]; presets?: BoardPreset[]; id?: string };
   if (!res.ok) throw new Error(json.error ?? "저장하지 못했습니다.");
   return json;
 }
 
 /** 게임 현황판 관리: 내 현황판 고르기 · 시계 조작 · 인원 · 설정 · 블라인드 구조 · TV 화면 · 보기 링크 */
-export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards: BoardSummary[]; initialBoard: BoardState | null }) {
+export function GameBoardPanel({
+  initialBoards,
+  initialBoard,
+  initialPresets = [],
+}: {
+  initialBoards: BoardSummary[];
+  initialBoard: BoardState | null;
+  initialPresets?: BoardPreset[];
+}) {
   const [boards, setBoards] = useState(initialBoards);
+  /** 따로 저장한 구조 · 저장 창(이름) */
+  const [presets, setPresets] = useState(initialPresets);
+  const [presetName, setPresetName] = useState<string | null>(null);
   const [board, setBoard] = useState<BoardState | null>(initialBoard);
   const [draft, setDraft] = useState<GameBoardData | null>(initialBoard?.data ?? null);
   const [offset, setOffset] = useState(0);
@@ -37,7 +48,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   const [tab, setTab] = useState<"play" | "prize" | "setup">("play");
   /** 새 현황판 창(이름 · 시작 방법 · 가져올 현황판) */
   const [creating, setCreating] = useState(false);
-  const [maker, setMaker] = useState<{ name: string; template: BoardTemplate; copyFrom: string } | null>(null);
+  const [maker, setMaker] = useState<{ name: string; template: BoardTemplate; copyFrom: string; savedId: string } | null>(null);
   const dirty = useRef(false);
   const saveTimer = useRef<number | null>(null);
   // 화면에 보이는 최신 입력(빠르게 연달아 바꿔도 늘 이걸 바탕으로) · 몇 번째 입력인지
@@ -144,7 +155,32 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   function startCreate() {
     // 지난 현황판이 있으면 지금 보는 것(없으면 최근 것) 구조를 기본으로 고름
     const from = board?.id ?? boards[0]?.id ?? "";
-    setMaker({ name: "", template: from ? "copy" : "basic", copyFrom: from });
+    setMaker({ name: "", template: from ? "copy" : "basic", copyFrom: from, savedId: presets[0]?.id ?? "" });
+  }
+
+  /** 지금 현황판 구조를 이름 붙여 따로 저장 */
+  async function savePresetNow() {
+    if (!draft || presetName == null) return;
+    try {
+      const json = await call({ action: "savePreset", name: presetName.trim() || draft.name, data: draft });
+      if (json.presets) setPresets(json.presets);
+      setPresetName(null);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function removePreset(id: string) {
+    const target = presets.find((p) => p.id === id);
+    if (!target || !window.confirm(`저장한 구조 '${target.name}'를 지울까요?`)) return;
+    try {
+      const json = await call({ action: "deletePreset", id });
+      if (json.presets) setPresets(json.presets);
+      if (maker) setMaker({ ...maker, savedId: json.presets?.[0]?.id ?? "", template: json.presets?.length ? maker.template : "basic" });
+    } catch (e) {
+      setError((e as Error).message);
+    }
   }
 
   async function create() {
@@ -152,7 +188,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     setCreating(true);
     setError(null);
     try {
-      const json = await call({ action: "create", name: maker.name.trim() || "메인 토너먼트", template: maker.template, copyFrom: maker.copyFrom });
+      const json = await call({ action: "create", name: maker.name.trim() || "메인 토너먼트", template: maker.template, copyFrom: maker.template === "saved" ? maker.savedId : maker.copyFrom });
       setMaker(null);
       if (json.boards) setBoards(json.boards);
       if (json.board) {
@@ -252,18 +288,65 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
           <button type="button" onClick={startCreate} className="min-h-11 self-end rounded-xl bg-amber-400 px-4 text-sm font-black text-black">
             + 새 현황판
           </button>
+          {board && draft ? (
+            <button
+              type="button"
+              data-save-preset
+              disabled={presets.length >= MAX_PRESETS}
+              title={`블라인드 · 칩 · 프라이즈 구조를 이름 붙여 따로 저장(최대 ${MAX_PRESETS}개). 새 현황판에서 불러와요.`}
+              onClick={() => setPresetName(draft.name)}
+              className="min-h-11 self-end rounded-xl border border-sky-400/60 px-3 text-sm font-bold text-sky-200 disabled:opacity-40"
+            >
+              💾 구조 저장
+            </button>
+          ) : null}
           {board ? (
             <button type="button" onClick={() => void remove()} className="min-h-11 self-end rounded-xl border border-rose-400/60 px-3 text-sm font-bold text-rose-200">
               삭제
             </button>
           ) : null}
         </div>
+        {/* 현황판 개수 한도에 가까우면 정리 안내 */}
+        {boards.length >= MAX_BOARDS - BOARD_WARN_LEFT ? (
+          <p data-board-limit className="rounded-lg bg-amber-950/60 px-3 py-2 text-xs font-bold text-amber-200">
+            현황판이 {boards.length}/{MAX_BOARDS}개예요. {boards.length >= MAX_BOARDS ? "더 만들려면" : "한도에 가까워요."} 끝난 게임 현황판은 💾 구조 저장으로 구조만 남기고 지워 주세요.
+          </p>
+        ) : null}
         {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
       </section>
 
+      {/* 구조 저장: 이름 정하기 */}
+      {presetName != null ? (
+        <ToolDialog label="구조 저장" onClose={() => setPresetName(null)}>
+          <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black text-white">💾 구조 저장</h3>
+            <p className="text-xs leading-5 text-zinc-400">블라인드 · 칩 · 등록 마감 · 프라이즈 · 공지 · 배경을 따로 남겨요(인원 · 시계는 빼고). 현황판을 지워도 남고, 새 현황판에서 「저장한 구조로 시작」으로 불러와요. ({presets.length}/{MAX_PRESETS})</p>
+            <label className="grid gap-1 text-sm font-bold text-zinc-200">
+              구조 이름
+              <input
+                value={presetName}
+                maxLength={20}
+                placeholder="예: 데일리 터보 20분"
+                onChange={(e) => setPresetName(e.target.value)}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base text-white"
+              />
+            </label>
+            {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => void savePresetNow()} className="min-h-11 rounded-lg bg-sky-500 px-5 text-sm font-black text-black">
+                저장
+              </button>
+              <button type="button" onClick={() => setPresetName(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold text-white">
+                닫기
+              </button>
+            </div>
+          </div>
+        </ToolDialog>
+      ) : null}
+
       {/* 새 현황판: 이름 + 시작 방법(기본 구조 · 빈 상태 · 지난 현황판 구조 가져오기) */}
       {maker ? (
-        <ToolDialog label="새 현황판">
+        <ToolDialog label="새 현황판" onClose={() => setMaker(null)}>
           <div className="grid max-h-[90dvh] w-full max-w-md gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black text-white">새 현황판</h3>
             <label className="grid gap-1 text-sm font-bold text-zinc-200">
@@ -281,11 +364,12 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
               {(
                 [
                   ["copy", "지난 현황판 구조 가져오기", "블라인드 · 칩 · 등록 마감 · 프라이즈 · 공지 · 배경을 그대로. 인원 · 시계는 0부터"],
+                  ["saved", "저장한 구조로 시작", "💾 구조 저장으로 따로 남겨 둔 구조(현황판을 지워도 남아요)"],
                   ["basic", "기본 구조로 시작", "BB 200부터 20분 16레벨(4레벨마다 휴식)"],
                   ["empty", "빈 상태로 시작", "블라인드 1레벨만 두고 직접 채우기"],
                 ] as const
               ).map(([key, title, body]) => {
-                const disabled = key === "copy" && boards.length === 0;
+                const disabled = (key === "copy" && boards.length === 0) || (key === "saved" && presets.length === 0);
                 return (
                   <label
                     key={key}
@@ -306,7 +390,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
                     />
                     <span className="grid min-w-0">
                       <span className="text-sm font-black text-white">{title}</span>
-                      <span className="text-xs leading-5 text-zinc-400">{disabled ? "아직 만든 현황판이 없어요" : body}</span>
+                      <span className="text-xs leading-5 text-zinc-400">{disabled ? (key === "saved" ? "아직 저장한 구조가 없어요(현황판 위 💾 구조 저장)" : "아직 만든 현황판이 없어요") : body}</span>
                     </span>
                   </label>
                 );
@@ -327,6 +411,28 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
                     </option>
                   ))}
                 </select>
+              </label>
+            ) : null}
+            {maker.template === "saved" && presets.length > 0 ? (
+              <label className="grid gap-1 text-sm font-bold text-zinc-200">
+                저장한 구조
+                <span className="flex gap-1.5">
+                  <select
+                    aria-label="저장한 구조"
+                    value={maker.savedId}
+                    onChange={(e) => setMaker({ ...maker, savedId: e.target.value })}
+                    className="h-11 w-full min-w-0 flex-1 rounded-lg border border-white/20 bg-black px-2 text-base font-bold text-white"
+                  >
+                    {presets.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} · {p.levels}레벨
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => void removePreset(maker.savedId)} className="min-h-11 shrink-0 rounded-lg border border-rose-400/60 px-3 text-sm font-bold text-rose-200">
+                    지우기
+                  </button>
+                </span>
               </label>
             ) : null}
             {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import type { RotationDealerView } from "@/lib/rotation";
+import { tableTag, type RotationDealerView } from "@/lib/rotation";
 import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
 import { BRAND_FONT, CREDIT, FOOTER_H, drawCredit, drawLogo, drawWatermark, loadLogo, saveCanvas } from "@/components/tools/brand-canvas";
 
@@ -58,7 +58,7 @@ function rowText(row: SwapRow, name: (id: string | null) => string) {
 /** 단톡방 텍스트 */
 export function swapText(info: SwapInfo, name: (id: string | null) => string, button: number | null, title = "") {
   const lines = [`【 ${title ? `${title} · ` : ""}${formatClock(info.at)} 교대 】${button ? ` 버튼 ${button}번` : ""}`];
-  for (const row of info.rows) lines.push(`T${row.label}  ${rowText(row, name)}`);
+  for (const row of info.rows) lines.push(`${tableTag(row.label)}  ${rowText(row, name)}`);
   if (info.toRest.length) lines.push(`휴식 들어감: ${info.toRest.map(name).join(", ")}`);
   if (info.stillRest.length) lines.push(`계속 휴식: ${info.stillRest.map(name).join(", ")}`);
   lines.push(`- ${CREDIT}`);
@@ -141,7 +141,7 @@ export async function downloadSwapImage(info: SwapInfo, name: (id: string | null
     ctx.fillRect(x + 12, y - 32, colW - 24, lineH - 4);
     ctx.fillStyle = row.closed ? "#fb7185" : "#34d399";
     ctx.font = `900 28px ${FONT}`;
-    ctx.fillText(`T${row.label}`, x + 24, y);
+    ctx.fillText(tableTag(row.label), x + 24, y);
     ctx.font = `800 24px ${FONT}`;
     if (row.closed) {
       ctx.fillStyle = "#a1a1aa";
@@ -192,7 +192,7 @@ export async function downloadDealerSwapImage(
   const where = (slot: typeof after | null, id: string) => {
     if (!slot) return "—";
     const t = slot.seats.indexOf(id);
-    if (t >= 0) return `T${labels[t]}`;
+    if (t >= 0) return tableTag(labels[t]);
     return slot.rest.includes(id) ? "휴식" : "—";
   };
   const list = dealers.filter((d) => where(before, d.id) !== "—" || where(after, d.id) !== "—");

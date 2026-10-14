@@ -1,9 +1,21 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
-import { applyClock, defaultBoard, newBoardData, normalizeBoard, type BoardTemplate, type ClockOp, type GameBoardData } from "@/lib/game-board";
+import {
+  MAX_BOARDS,
+  MAX_PRESETS,
+  applyClock,
+  defaultBoard,
+  newBoardData,
+  normalizeBoard,
+  type BoardPreset,
+  type BoardTemplate,
+  type ClockOp,
+  type GameBoardData,
+} from "@/lib/game-board";
 
-/** 계정 하나가 만들 수 있는 현황판 수 */
-export const MAX_BOARDS = 30;
+export { MAX_BOARDS };
+/** ToolSaved 종류: 현황판 구조 */
+const KIND_PRESET = "board-structure";
 
 export class GameBoardError extends Error {}
 
@@ -44,6 +56,10 @@ export async function createBoard(ownerId: string, name?: string, template: Boar
     const from = copyFrom ? await prisma.gameBoard.findFirst({ where: { id: copyFrom, ownerId }, select: { dataJson: true } }) : null;
     if (!from) throw new GameBoardError("가져올 현황판을 찾을 수 없습니다.");
     source = normalizeBoard(parse(from.dataJson));
+  } else if (template === "saved") {
+    const preset = copyFrom ? await prisma.toolSaved.findFirst({ where: { id: copyFrom, ownerId, kind: KIND_PRESET }, select: { dataJson: true } }) : null;
+    if (!preset) throw new GameBoardError("저장한 구조를 찾을 수 없습니다.");
+    source = parse(preset.dataJson);
   }
   const data = normalizeBoard(newBoardData(template, name ?? "", source));
   const row = await prisma.gameBoard.create({ data: { ownerId, name: data.name, dataJson: JSON.stringify(data) } });
@@ -71,6 +87,28 @@ export async function setBoardShare(ownerId: string, id: string, on: boolean) {
   const row = await prisma.gameBoard.findFirst({ where: { id, ownerId }, select: { id: true } });
   if (!row) throw new GameBoardError("현황판을 찾을 수 없습니다.");
   await prisma.gameBoard.update({ where: { id }, data: { shareToken: on ? randomBytes(18).toString("base64url") : null, version: { increment: 1 } } });
+}
+
+/** 따로 저장한 현황판 구조(오래된 것부터) */
+export async function listPresets(ownerId: string): Promise<BoardPreset[]> {
+  const rows = await prisma.toolSaved
+    .findMany({ where: { ownerId, kind: KIND_PRESET }, orderBy: { createdAt: "asc" }, take: MAX_PRESETS, select: { id: true, name: true, dataJson: true } })
+    .catch(() => []);
+  return rows.map((r) => ({ id: r.id, name: r.name, levels: parse(r.dataJson).levels.filter((l) => !l.isBreak).length }));
+}
+
+/** 지금 현황판 구조를 이름 붙여 저장(인원 · 시계는 빼고). 현황판을 지워도 남음 */
+export async function savePreset(ownerId: string, name: string, data: unknown) {
+  if ((await prisma.toolSaved.count({ where: { ownerId, kind: KIND_PRESET } })) >= MAX_PRESETS) {
+    throw new GameBoardError(`구조는 ${MAX_PRESETS}개까지 저장할 수 있습니다. 안 쓰는 구조를 지워 주세요.`);
+  }
+  const title = name.trim().slice(0, 20);
+  const clean = newBoardData("copy", title, normalizeBoard(data));
+  await prisma.toolSaved.create({ data: { ownerId, kind: KIND_PRESET, name: title || clean.name, dataJson: JSON.stringify(clean) } });
+}
+
+export async function deletePreset(ownerId: string, id: string) {
+  await prisma.toolSaved.deleteMany({ where: { id, ownerId, kind: KIND_PRESET } });
 }
 
 export async function deleteBoard(ownerId: string, id: string) {

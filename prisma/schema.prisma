@@ -633,3 +633,17 @@ model GameBoard {
 
   @@index([ownerId, createdAt])
 }
+
+/// 매장 도구에서 따로 저장해 두는 것(계정마다).
+/// kind: "roster" 딜러 명단 · "board-structure" 현황판 구조 · "rotation-trash" 지운 로테이션 게임(7일 뒤 완전히 지움)
+model ToolSaved {
+  id        String   @id @default(cuid())
+  ownerId   String
+  kind      String
+  name      String   @default("")
+  dataJson  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, kind, createdAt])
+}

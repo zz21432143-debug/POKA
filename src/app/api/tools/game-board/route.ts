@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import type { ClockOp } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
-import { GameBoardError, boardVersion, createBoard, deleteBoard, listBoards, loadBoard, setBoardShare, updateBoard } from "@/lib/game-board-server";
+import { GameBoardError, boardVersion, createBoard, deleteBoard, deletePreset, listBoards, listPresets, loadBoard, savePreset, setBoardShare, updateBoard } from "@/lib/game-board-server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   if ("denied" in access) return access.denied;
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
-  if (!id) return NextResponse.json({ boards: await listBoards(access.ownerId) }, { headers: NO_STORE });
+  if (!id) return NextResponse.json({ boards: await listBoards(access.ownerId), presets: await listPresets(access.ownerId) }, { headers: NO_STORE });
   const known = Number(url.searchParams.get("v"));
   if (Number.isFinite(known) && known >= 0 && known === (await boardVersion(access.ownerId, id))) {
     return NextResponse.json({ changed: false, serverNow: Date.now(), build: BUILD_ID }, { headers: NO_STORE });
@@ -41,9 +41,17 @@ export async function POST(request: Request) {
   const id = typeof body.id === "string" ? body.id : "";
   try {
     if (body.action === "create") {
-      const template = body.template === "empty" || body.template === "copy" ? body.template : "basic";
+      const template = body.template === "empty" || body.template === "copy" || body.template === "saved" ? body.template : "basic";
       const newId = await createBoard(access.ownerId, typeof body.name === "string" ? body.name.slice(0, 30) : undefined, template, typeof body.copyFrom === "string" ? body.copyFrom : undefined);
       return NextResponse.json({ ok: true, id: newId, boards: await listBoards(access.ownerId), board: await loadBoard(access.ownerId, newId) });
+    }
+    if (body.action === "savePreset") {
+      await savePreset(access.ownerId, typeof body.name === "string" ? body.name : "", body.data);
+      return NextResponse.json({ ok: true, presets: await listPresets(access.ownerId) });
+    }
+    if (body.action === "deletePreset") {
+      await deletePreset(access.ownerId, id);
+      return NextResponse.json({ ok: true, presets: await listPresets(access.ownerId) });
     }
     if (body.action === "delete") {
       await deleteBoard(access.ownerId, id);

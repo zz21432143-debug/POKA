@@ -5,11 +5,17 @@ import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
 import {
   INTERVAL_CHOICES,
+  INTERVAL_MAX,
+  INTERVAL_MIN,
   MAX_STREAK_CHOICES,
   MAX_DEALERS,
   MAX_GAMES,
+  MAX_ROSTERS,
+  TRASH_DAYS,
   MAX_TABLES,
   STATUS_LABEL,
+  tableTag,
+  tableWord,
   closedFromOf,
   openedFromOf,
   formatTableLabels,
@@ -66,7 +72,7 @@ function nextDate(value: string) {
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 }
 
-type GameDialog = { mode: "new" | "day" | "edit"; name: string; workDate: string; copyDealers: boolean; copySettings: boolean };
+type GameDialog = { mode: "new" | "day" | "edit"; name: string; workDate: string; copyDealers: boolean; copySettings: boolean; rosterId?: string };
 
 /** 접었다 펴는 칸의 머리: 화살표 + "눌러서 펼치기/접기" */
 function FoldHead({ children }: { children: React.ReactNode }) {
@@ -98,6 +104,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [online, setOnline] = useState(true);
   const [busy, setBusy] = useState(false);
   const [bulk, setBulk] = useState("");
+  /** 딜러 명단 저장 · 고치기 창 */
+  const [rosterEdit, setRosterEdit] = useState<{ id?: string; name: string; text: string } | null>(null);
   const [labelsText, setLabelsText] = useState(() => formatTableLabels(initial.tableLabels));
   const [editing, setEditing] = useState<{ id: string; name: string; startTime: string } | null>(null);
   const [times, setTimes] = useState<{ id: string; name: string; start: string; end: string; startReal: boolean; endReal: boolean } | null>(null);
@@ -124,6 +132,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [qr, setQr] = useState<string | null>(null);
   // 게임 중 테이블 추가 오픈
   const [addText, setAddText] = useState("");
+  /** 간격 직접 입력(목록에 없는 값이면 처음부터 입력칸) */
+  const [customInterval, setCustomInterval] = useState(() => !(INTERVAL_CHOICES as readonly number[]).includes(initial.interval));
+  const [intervalText, setIntervalText] = useState(() => String(initial.interval));
   const [openNotice, setOpenNotice] = useState<string | null>(null);
   const versionRef = useRef(initial.version);
   // 지금 보고 있는 게임(주소 ?g= 와 같이 움직임)
@@ -167,6 +178,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     }
     setState(next);
     setLabelsText(formatTableLabels(next.tableLabels));
+    setCustomInterval(!(INTERVAL_CHOICES as readonly number[]).includes(next.interval));
+    setIntervalText(String(next.interval));
   }, []);
 
   /** 다른 게임 보기 */
@@ -199,6 +212,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             copyDealers: gameDialog.mode === "day" && gameDialog.copyDealers,
             copySettings: gameDialog.copySettings,
           });
+    // 저장한 명단을 골랐으면 새 게임에 바로 등록(send가 새 게임으로 바뀐 뒤라 그 게임에 들어감)
+    const roster = gameDialog.mode !== "edit" && gameDialog.rosterId ? state.rosters.find((r) => r.id === gameDialog.rosterId) : null;
+    if (ok && roster) {
+      const dealers = parseDealerLines(roster.text);
+      if (dealers.length) await send({ type: "addDealers", dealers });
+    }
     if (ok) setGameDialog(null);
   }
 
@@ -330,7 +349,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     const openedAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? undefined) : undefined;
     if (await send({ type: "setSettings", tableLabels: formatTableLabels(next), openedAt })) {
       setAddText("");
-      setOpenNotice(`${added.map((l) => `T${l}`).join(", ")} 오픈했습니다. Auto를 누르면 쉬던 딜러가 들어갑니다.`);
+      setOpenNotice(`${added.map((l) => tableTag(l)).join(", ")} 오픈했습니다. Auto를 누르면 쉬던 딜러가 들어갑니다.`);
     }
   }
 
@@ -379,8 +398,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     const closing = closedFrom[t] == null;
     const at = closing ? (plan && next >= 0 ? plan.slots[next].at : now) : null;
     const message = closing
-      ? `T${label} 테이블을 컨바인할까요? ${formatClock(at as number)} 교대부터 비우고 남은 시간표를 다시 짭니다.`
-      : `T${label} 테이블을 다시 열까요? 남은 시간표를 다시 짭니다.`;
+      ? `${tableWord(label)}을 컨바인할까요? ${formatClock(at as number)} 교대부터 비우고 남은 시간표를 다시 짭니다.`
+      : `${tableWord(label)}을 다시 열까요? 남은 시간표를 다시 짭니다.`;
     if (!window.confirm(message)) return;
     if (!(await send({ type: "setTable", label, closedAt: at }))) return;
     if (!plan) return;
@@ -647,7 +666,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <span className="text-zinc-400">러닝 중</span>
           {runningLabels.map((label) => (
             <span key={label} className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-xs font-black text-white">
-              T{label}
+              {tableTag(label)}
             </span>
           ))}
           {labels.length !== runningLabels.length ? (
@@ -657,7 +676,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 .filter((label) => !runningLabels.includes(label))
                 .map((label) => (
                   <span key={label} className="rounded-md bg-rose-600 px-1.5 py-0.5 text-xs font-black text-white">
-                    T{label}
+                    {tableTag(label)}
                   </span>
                 ))}
             </>
@@ -668,7 +687,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <input
             aria-label="추가로 열 테이블"
             value={addText}
-            placeholder="추가로 열 테이블 (예: 7, 8)"
+            placeholder="추가로 열 테이블 (예: 7, 8 또는 E)"
             onChange={(e) => setAddText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && addText.trim()) void openTables();
@@ -727,18 +746,55 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </label>
           <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             로테이션 간격
-            <select
-              value={state.interval}
-              disabled={busy}
-              onChange={(e) => void changeInterval(Number(e.target.value))}
-              className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
-            >
-              {INTERVAL_CHOICES.map((n) => (
-                <option key={n} value={n}>
-                  {n}분
-                </option>
-              ))}
-            </select>
+            <span className="flex gap-1.5">
+              <select
+                aria-label="로테이션 간격 고르기"
+                value={customInterval ? "custom" : state.interval}
+                disabled={busy}
+                onChange={(e) => {
+                  if (e.target.value === "custom") {
+                    setIntervalText(String(state.interval));
+                    setCustomInterval(true);
+                    return;
+                  }
+                  setCustomInterval(false);
+                  void changeInterval(Number(e.target.value));
+                }}
+                className="h-11 w-full min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+              >
+                {INTERVAL_CHOICES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}분
+                  </option>
+                ))}
+                <option value="custom">직접 입력…</option>
+              </select>
+              {customInterval ? (
+                <input
+                  aria-label="로테이션 간격(분) 직접 입력"
+                  type="number"
+                  inputMode="numeric"
+                  min={INTERVAL_MIN}
+                  max={INTERVAL_MAX}
+                  value={intervalText}
+                  disabled={busy}
+                  onChange={(e) => setIntervalText(e.target.value)}
+                  onBlur={() => {
+                    const n = Math.round(Number(intervalText));
+                    if (!Number.isFinite(n) || n < INTERVAL_MIN || n > INTERVAL_MAX) {
+                      setError(`로테이션 간격은 ${INTERVAL_MIN}~${INTERVAL_MAX}분 사이로 적어 주세요.`);
+                      setIntervalText(String(state.interval));
+                      return;
+                    }
+                    if (n !== state.interval) void changeInterval(n);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.currentTarget.blur();
+                  }}
+                  className="h-11 w-20 shrink-0 rounded-lg border-2 border-amber-400/70 bg-black px-2 text-base font-black text-amber-300"
+                />
+              ) : null}
+            </span>
           </label>
           <label className="grid min-w-0 gap-1 text-xs font-bold text-zinc-300">
             시작 전 세팅 칸
@@ -792,7 +848,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </p>
           ) : null}
           <label className="col-span-2 grid gap-1 text-xs font-bold text-zinc-300 sm:col-span-3">
-            테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 예: 5-12, 15
+            테이블 번호 ({state.tableCount}개 · 최대 {MAX_TABLES}개) · 예: 5-12, 15 또는 A-D(알파벳은 A 테이블처럼 보여요)
             <span className="flex gap-1.5">
               <input
                 value={labelsText}
@@ -886,7 +942,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <ul className="grid max-h-[45dvh] grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5 overflow-y-auto pr-1">
             {swap.rows.map((row) => (
               <li key={row.label} data-swap={row.label} className={cn("flex items-center gap-2 rounded-lg px-2.5 py-1.5", row.closed ? "border border-rose-500 bg-rose-950" : "bg-black")}>
-                <span className="text-lg font-black text-emerald-300">T{row.label}</span>
+                <span className="text-lg font-black text-emerald-300">{tableTag(row.label)}</span>
                 {row.closed ? (
                   <span className="text-base font-black">
                     {row.from ? <span className="text-zinc-400">{name(row.from)} <span className="text-amber-300">→</span> </span> : null}
@@ -1009,7 +1065,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   <tr key={label} className="border-t-2 border-white/10">
                     <th className="sticky left-0 z-10 bg-zinc-900 px-1.5 py-1 text-left whitespace-nowrap">
                       <span className="flex items-center gap-1">
-                        <span className={cn("text-lg font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>T{label}</span>
+                        <span className={cn("text-lg font-black", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>{tableTag(label)}</span>
                         <button
                           type="button"
                           disabled={busy}
@@ -1040,7 +1096,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         return (
                           <td key={slot.at} className={cn("px-1 py-1", index < current && "opacity-50")}>
                             <span data-closed className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border-2 border-rose-500 bg-rose-950 text-xs font-black text-rose-300">
-                              T{label} 컨바인
+                              {tableTag(label)} 컨바인
                             </span>
                           </td>
                         );
@@ -1053,7 +1109,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         >
                           <button
                             type="button"
-                            data-cell={`${time}-T${label}`}
+                            data-cell={`${time}-${tableTag(label)}`}
                             onClick={() => setCell({ slot: index, table: t })}
                             className={cn(
                               "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
@@ -1062,7 +1118,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             )}
                           >
                             <span className={cn("text-[10px] font-black", goneHere ? "text-white" : "text-emerald-300")}>
-                              T{label} · {time}
+                              {tableTag(label)} · {time}
                               {goneHere ? ` · ${goneLabel(id as string)}` : ""}
                             </span>
                             <span className={cn("truncate text-base font-black", id ? "text-white" : "text-rose-300")}>{id ? name(id) : "비어 있음"}</span>
@@ -1114,7 +1170,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             row.index === current && "ring-2 ring-white",
                           )}
                         >
-                          {formatClock(row.at)} {row.table == null ? "—" : row.table === 0 ? "휴식" : `T${labels[row.table - 1]}`}
+                          {formatClock(row.at)} {row.table == null ? "—" : row.table === 0 ? "휴식" : tableTag(labels[row.table - 1])}
                         </li>
                       ))}
                     </ul>
@@ -1135,7 +1191,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 title="다시 열기"
                 className="min-h-8 rounded-md bg-rose-600 px-2 text-xs font-black text-white hover:bg-rose-500"
               >
-                T{label} · 다시 열기
+                {tableTag(label)} · 다시 열기
               </button>
             ))}
           </p>
@@ -1350,12 +1406,132 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             ) : null}
           </div>
         </details>
+
+        {/* 따로 적어 두는 딜러 명단(게임과 상관없이 남음 · 새 게임에서 불러오기) */}
+        <section data-rosters aria-label="저장한 딜러 명단" className="grid gap-2 rounded-xl border border-sky-500/40 bg-sky-950/20 p-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h3 className="text-sm font-black text-sky-200">📋 저장한 딜러 명단 ({state.rosters.length}/{MAX_ROSTERS})</h3>
+            <span className="text-xs text-zinc-400">게임을 지워도 남아요. 새 게임에서 한 번에 불러오기</span>
+          </div>
+          {state.rosters.length ? (
+            <ul className="grid gap-1.5 sm:grid-cols-2">
+              {state.rosters.map((r) => (
+                <li key={r.id} data-roster={r.name} className="grid gap-1.5 rounded-lg border border-white/15 bg-black/50 p-2">
+                  <span className="flex min-w-0 items-baseline gap-1.5">
+                    <b className="truncate text-sm text-white">{r.name}</b>
+                    <span className="shrink-0 text-xs text-zinc-400">{parseDealerLines(r.text).length}명</span>
+                  </span>
+                  <span className="line-clamp-2 text-xs text-zinc-400">{parseDealerLines(r.text).map((d) => d.name).join(", ")}</span>
+                  <span className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={async () => {
+                        const dealers = parseDealerLines(r.text);
+                        if (dealers.length && window.confirm(`'${r.name}' ${dealers.length}명을 이 게임에 등록할까요?`)) await send({ type: "addDealers", dealers });
+                      }}
+                      className="min-h-9 rounded-lg bg-emerald-500 px-3 text-xs font-black text-black"
+                    >
+                      이 게임에 등록
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBulk(r.text);
+                        setRegOpen(true);
+                      }}
+                      className="min-h-9 rounded-lg border border-white/25 px-2.5 text-xs font-bold"
+                    >
+                      등록칸에 넣기
+                    </button>
+                    <button type="button" onClick={() => setRosterEdit({ id: r.id, name: r.name, text: r.text })} className="min-h-9 rounded-lg border border-white/25 px-2.5 text-xs font-bold">
+                      고치기
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => window.confirm(`'${r.name}' 명단을 지울까요?`) && void send({ type: "deleteRoster", id: r.id })}
+                      className="min-h-9 rounded-lg border border-rose-500/60 px-2.5 text-xs font-bold text-rose-300"
+                    >
+                      삭제
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {state.rosters.length < MAX_ROSTERS ? (
+            <span className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                disabled={state.dealers.length === 0}
+                onClick={() =>
+                  setRosterEdit({
+                    name: state.game.name,
+                    text: state.dealers.map((d) => [d.name, d.startTime ? `${d.startTime}${d.endTime ? `-${d.endTime}` : ""}` : ""].filter(Boolean).join(" ")).join("\n"),
+                  })
+                }
+                className="min-h-10 rounded-lg bg-sky-500 px-3 text-sm font-black text-black disabled:opacity-40"
+              >
+                + 지금 딜러 {state.dealers.length}명을 명단으로 저장
+              </button>
+              <button type="button" onClick={() => setRosterEdit({ name: "", text: "" })} className="min-h-10 rounded-lg border border-sky-400/60 px-3 text-sm font-bold text-sky-200">
+                + 새 명단 적기
+              </button>
+            </span>
+          ) : null}
+        </section>
       </section>
+      ) : null}
+
+      {/* 딜러 명단 저장 · 고치기 */}
+      {rosterEdit ? (
+        <ToolDialog label="딜러 명단" onClose={() => setRosterEdit(null)}>
+          <div className="grid w-full max-w-md gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">{rosterEdit.id ? "딜러 명단 고치기" : "딜러 명단 저장"}</h3>
+            <label className="grid gap-1 text-sm font-bold">
+              명단 이름
+              <input
+                value={rosterEdit.name}
+                maxLength={20}
+                placeholder="예: 주간조, 야간조, 대회 지원"
+                onChange={(e) => setRosterEdit({ ...rosterEdit, name: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-bold">
+              딜러 (한 줄에 한 명 · 출근 시간은 빼도 돼요)
+              <textarea
+                value={rosterEdit.text}
+                rows={8}
+                placeholder={"김딜러 10:00\n이딜러 10:00-18:00\n박딜러"}
+                onChange={(e) => setRosterEdit({ ...rosterEdit, text: e.target.value })}
+                className="rounded-lg border border-white/20 bg-black p-2 text-base"
+              />
+            </label>
+            <p className="text-xs text-zinc-400">{parseDealerLines(rosterEdit.text).length}명</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy || !rosterEdit.text.trim()}
+                onClick={async () => {
+                  if (await send({ type: "saveRoster", id: rosterEdit.id, name: rosterEdit.name, text: rosterEdit.text })) setRosterEdit(null);
+                }}
+                className="min-h-11 rounded-lg bg-sky-500 px-4 text-sm font-black text-black disabled:opacity-40"
+              >
+                저장
+              </button>
+              <button type="button" onClick={() => setRosterEdit(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </ToolDialog>
       ) : null}
 
       {/* 시간 바꾸기 */}
       {plan && timeEdit ? (
-        <ToolDialog label="시간 바꾸기">
+        <ToolDialog label="시간 바꾸기" onClose={() => setTimeEdit(null)}>
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">교대 시간 바꾸기</h3>
             <p className="text-xs text-zinc-400">이 칸 시간을 바꾸면 뒤 칸은 로테이션 간격({plan.interval}분)대로 다시 맞춰집니다. 배정은 그대로입니다.</p>
@@ -1379,10 +1555,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 칸 바꾸기 */}
       {plan && cell && candidates ? (
-        <ToolDialog label="칸 바꾸기" className="place-items-end p-3 sm:place-items-center">
+        <ToolDialog label="칸 바꾸기" onClose={() => setCell(null)} className="place-items-end p-3 sm:place-items-center">
           <div className="grid max-h-[85dvh] w-full max-w-lg gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
-              {formatClock(candidates.slot.at)} · T{labels[cell.table]}{" "}
+              {formatClock(candidates.slot.at)} · {tableTag(labels[cell.table])}{" "}
               <span className="text-sm text-zinc-400">지금: {name(candidates.slot.seats[cell.table]) || "비어 있음"}</span>
             </h3>
             <p className="text-xs text-zinc-400">이 칸만 바뀝니다. 다른 테이블 딜러를 고르면 자리를 맞바꾸고, 지금 딜러는 휴식으로 갑니다.</p>
@@ -1416,7 +1592,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 <div className="grid grid-cols-2 gap-1.5">
                   {candidates.seated.map(({ id, t }) => (
                     <button key={id} type="button" onClick={() => changeCell(id)} className="min-h-11 rounded-lg bg-zinc-800 px-2 text-sm font-bold">
-                      {name(id)} <span className="text-[10px] text-zinc-400">T{labels[t]}</span>
+                      {name(id)} <span className="text-[10px] text-zinc-400">{tableTag(labels[t])}</span>
                     </button>
                   ))}
                 </div>
@@ -1436,7 +1612,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 새 게임 · 날짜 변경 · 이름/날짜 고치기 */}
       {gameDialog ? (
-        <ToolDialog label="게임">
+        <ToolDialog label="게임" onClose={() => setGameDialog(null)}>
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
               {gameDialog.mode === "day" ? "날짜 변경(새 근무일)" : gameDialog.mode === "new" ? "새 게임" : "이름·날짜 고치기"}
@@ -1487,6 +1663,24 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   />
                   시간 설정 가져오기 <span className="text-xs text-zinc-400">(교대 간격 · 시작/끝 시간 · 최대 연속 딜)</span>
                 </label>
+                {state.rosters.length ? (
+                  <label className="grid gap-1 text-sm font-bold">
+                    📋 저장한 딜러 명단 불러오기
+                    <select
+                      aria-label="저장한 딜러 명단"
+                      value={gameDialog.rosterId ?? ""}
+                      onChange={(e) => setGameDialog({ ...gameDialog, rosterId: e.target.value || undefined })}
+                      className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base"
+                    >
+                      <option value="">불러오지 않음(딜러 0명)</option>
+                      {state.rosters.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} · {parseDealerLines(r.text).length}명
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
               </>
             ) : null}
             <div className="flex flex-wrap gap-2">
@@ -1503,7 +1697,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   type="button"
                   disabled={busy}
                   onClick={async () => {
-                    if (!window.confirm(`'${state.game.name}' 게임을 지울까요? 이 게임의 딜러와 시간표가 모두 지워집니다.`)) return;
+                    if (!window.confirm(`'${state.game.name}' 게임을 지울까요? ${TRASH_DAYS}일 동안 휴지통에 남아 그 안에는 되살릴 수 있어요.`)) return;
                     if (await send({ type: "deleteGame" })) setGameDialog(null);
                   }}
                   className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-black text-white"
@@ -1511,7 +1705,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   게임 삭제
                 </button>
               ) : null}
-              {gameDialog.mode === "edit" && state.games.length > 1 ? (
+              {gameDialog.mode === "edit" && (state.games.length > 1 || state.trash.length > 0) ? (
                 <button
                   type="button"
                   disabled={busy}
@@ -1521,7 +1715,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   }}
                   className="min-h-11 rounded-lg border border-amber-400/70 px-3 text-sm font-black text-amber-300"
                 >
-                  지난 게임 정리
+                  지난 게임 정리{state.trash.length ? ` · 휴지통 ${state.trash.length}` : ""}
                 </button>
               ) : null}
               <button type="button" onClick={() => setGameDialog(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
@@ -1534,8 +1728,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 지난 게임 정리: 지금 보는 게임 말고 나머지를 오래된 순으로 골라 한꺼번에 지움 */}
       {cleanup ? (
-        <ToolDialog label="지난 게임 정리">
-          <div className="grid max-h-[90dvh] w-full max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+        <ToolDialog label="지난 게임 정리" onClose={() => setCleanup(null)}>
+          <div className="grid max-h-[90dvh] w-full max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">지난 게임 정리 · {state.games.length}/{MAX_GAMES}개</h3>
             {(() => {
               const others = state.games.filter((g) => g.id !== state.game.id);
@@ -1576,12 +1770,44 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   );
                 })}
             </ul>
+            {/* 휴지통: 지운 지 TRASH_DAYS일 안이면 되살리기 */}
+            <details data-trash className="group rounded-xl border border-white/15 bg-black/40 p-2" open={state.trash.length > 0 && state.games.length <= 1}>
+              <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-bold [&::-webkit-details-marker]:hidden">
+                🗑 휴지통 {state.trash.length}개
+                <span className="text-xs font-normal text-zinc-400">지운 지 {TRASH_DAYS}일 안이면 되살릴 수 있어요</span>
+                <span className="ml-auto text-xs text-amber-300 group-open:hidden">펼치기</span>
+              </summary>
+              {state.trash.length ? (
+                <ul className="mt-1 grid max-h-40 gap-1 overflow-y-auto overscroll-contain pr-1">
+                  {state.trash.map((g) => {
+                    const left = Math.max(0, TRASH_DAYS - Math.floor((clock.getTime() - Date.parse(g.deletedAt)) / 86_400_000));
+                    return (
+                      <li key={g.id} className="flex min-h-10 items-center gap-2 rounded-lg border border-white/10 px-2 text-sm">
+                        <span className="shrink-0 text-zinc-400">{formatWorkDate(g.workDate)}</span>
+                        <span className="min-w-0 flex-1 truncate font-bold">{g.name}</span>
+                        <span className="shrink-0 text-[11px] text-zinc-500">{left}일 남음</span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void send({ type: "restoreGame", trashId: g.id })}
+                          className="min-h-9 shrink-0 rounded-lg bg-emerald-500 px-3 text-xs font-black text-black"
+                        >
+                          되살리기
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="mt-1 text-xs text-zinc-400">비어 있어요.</p>
+              )}
+            </details>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={busy || cleanup.length === 0}
                 onClick={async () => {
-                  if (!window.confirm(`고른 게임 ${cleanup.length}개를 지울까요? 딜러 명단과 시간표도 함께 지워지고 되돌릴 수 없어요.`)) return;
+                  if (!window.confirm(`고른 게임 ${cleanup.length}개를 지울까요? ${TRASH_DAYS}일 동안 휴지통에 남아 그 안에는 되살릴 수 있어요.`)) return;
                   if (await send({ type: "deleteGames", ids: cleanup })) setCleanup(null);
                 }}
                 className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-black text-white disabled:opacity-40"
@@ -1598,7 +1824,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 출근·퇴근 시간 바꾸기 */}
       {times ? (
-        <ToolDialog label="출근·퇴근 시간">
+        <ToolDialog label="출근·퇴근 시간" onClose={() => setTimes(null)}>
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">{times.name} · 출근/퇴근 시간</h3>
             <label className="grid gap-1 text-sm font-bold">
@@ -1641,7 +1867,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 딜러 수정 */}
       {editing ? (
-        <ToolDialog label="딜러 수정">
+        <ToolDialog label="딜러 수정" onClose={() => setEditing(null)}>
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">딜러 수정</h3>
             <label className="grid gap-1 text-sm font-bold">

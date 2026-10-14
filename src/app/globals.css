@@ -1298,8 +1298,15 @@ select {
 }
 
 .board-author-rank {
-  color: #9ca3af;
+  color: #c59b27;
   font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* 팟 계산 칭호: 닉네임 아래(PC) · 옆(휴대폰) */
+.board-author-title {
+  margin: 0.1rem 0;
+  max-width: 100%;
 }
 
 .board-when,
@@ -1645,8 +1652,13 @@ select {
     font-size: 0.75rem;
   }
 
+  /* 휴대폰: 칭호도 닉네임 옆에 짧게(레벨 칭호 · Lv) */
   .board-author-rank {
-    display: none;
+    font-size: 0.68rem;
+  }
+
+  .board-author-title {
+    margin: 0;
   }
 
   .board-author {

@@ -9,7 +9,7 @@ import { isAnonymousBoard } from "@/lib/request";
 import { formatRelativeKst } from "@/lib/dates";
 import { memberRankTitle } from "@/lib/levels";
 import { displayMarkSrc } from "@/lib/mark-assets";
-import { CrownedFrame } from "@/components/honor/crowned-frame";
+import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { isWithdrawnRecord, withdrawnDisplayName } from "@/lib/account-privacy";
 import { Fragment } from "react";
@@ -114,9 +114,12 @@ export function PostList({
                   <p className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-[#9CA3AF]">
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
-                      <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[11px] font-bold text-[#e7c98a]">
-                        Lv.{post.author.level}
-                      </span>
+                      <>
+                        <PotTitleBadge nickname={post.author.nickname} />
+                        <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[11px] font-bold text-[#e7c98a]">
+                          {post.author.isMaster ? "운영자 · " : memberRankTitle(post.author) ? `${memberRankTitle(post.author)} · ` : ""}Lv.{post.author.level}
+                        </span>
+                      </>
                     ) : null}
                     <span className="shrink-0">{formatRelativeKst(post.createdAt)}</span>
                   </p>
@@ -252,7 +255,8 @@ function BoardAuthor({ post, anonymous }: { post: PostSummary; anonymous: boolea
       </span>
     );
   }
-  const rank = memberRankTitle(post.author);
+  // 칭호: 레벨 칭호(운영자는 "운영자") + 팟 계산 칭호(1~3위)
+  const rank = post.author.isMaster ? "운영자" : memberRankTitle(post.author);
   return (
     <span className="board-author">
       <CrownedFrame nickname={post.author.nickname} aura={auraClassForSrc(displayMarkSrc(post.author))}>
@@ -260,6 +264,7 @@ function BoardAuthor({ post, anonymous }: { post: PostSummary; anonymous: boolea
       </CrownedFrame>
       <span className="board-author-copy">
         <span className="board-author-name">{post.author.nickname}</span>
+        <PotTitleBadge nickname={post.author.nickname} className="board-author-title" />
         <span className="board-author-rank">{rank ? `${rank} · Lv.${post.author.level}` : `Lv.${post.author.level}`}</span>
       </span>
     </span>

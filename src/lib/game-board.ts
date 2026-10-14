@@ -106,7 +106,16 @@ export function defaultBoard(): GameBoardData {
 }
 
 /** 새 현황판 시작 방법: 기본 구조 · 빈 상태(1레벨) · 지난 현황판 구조 가져오기 */
-export type BoardTemplate = "basic" | "empty" | "copy";
+export type BoardTemplate = "basic" | "empty" | "copy" | "saved";
+
+/** 계정 하나가 만들 수 있는 현황판 수 · 따로 저장하는 구조 수 */
+export const MAX_BOARDS = 30;
+export const MAX_PRESETS = 30;
+/** 한도에 이만큼 가까워지면 정리 안내 */
+export const BOARD_WARN_LEFT = 5;
+
+/** 따로 저장한 현황판 구조(이름 · 레벨 수) */
+export type BoardPreset = { id: string; name: string; levels: number };
 
 /** 새 현황판 데이터. copy는 지난 현황판의 블라인드·칩·등록 마감·프라이즈·공지·배경만 가져오고 인원·시계는 0부터 */
 export function newBoardData(template: BoardTemplate, name: string, source?: GameBoardData | null): GameBoardData {
@@ -115,7 +124,7 @@ export function newBoardData(template: BoardTemplate, name: string, source?: Gam
   if (template === "empty") {
     return { ...base, name: title, levels: [{ sb: 100, bb: 200, ante: 200, minutes: 20 }] };
   }
-  if (template === "copy" && source) {
+  if ((template === "copy" || template === "saved") && source) {
     return {
       ...base,
       name: title,
