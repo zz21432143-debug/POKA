@@ -55,7 +55,10 @@ function CardFace({ code, empty, active, onClick, label }: { code: string | null
 /** 승률 계산기: 내 패 · 상대 패 · 보드를 고르면 프리플랍~리버 승률을 정확히 계산 */
 export function EquityCalculator() {
   const [cards, setCards] = useState<Record<Slot, string | null>>({ h1: "Ah", h2: "Kh", v1: "Qs", v2: "Qd", f1: null, f2: null, f3: null, t: null, r: null });
-  const [randomVillain, setRandomVillain] = useState(false);
+  // 상대: 패 지정 · 상위 범위 · 모름(아무 패)
+  const [villainMode, setVillainMode] = useState<"cards" | "range" | "random">("cards");
+  const [rangePct, setRangePct] = useState(15);
+  const randomVillain = villainMode !== "cards";
   const [active, setActive] = useState<Slot>("f1");
   const [results, setResults] = useState<Partial<Record<StreetKey, EquityResult>>>({});
   const [busy, setBusy] = useState<StreetKey | null>(null);
