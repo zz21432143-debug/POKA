@@ -1,14 +1,18 @@
 /**
- * 계산 결과 · 차트를 정사각형 이미지(1080×1080)로 그려 카톡 등으로 공유하거나 저장합니다(브라우저 전용).
+ * 계산 결과 · 차트를 이미지로 그려 카톡 등으로 공유하거나 저장합니다(브라우저 전용).
+ * 크기: 정사각형 1080×1080(카톡 · 단톡방) · 세로형 1080×1920(인스타 스토리).
  * 휴대폰은 공유 창(Web Share)으로, 안 되면 이미지 파일로 내려받습니다.
  * 아래에 사이트 주소 + QR(휴대폰 카메라로 찍으면 바로 그 도구)이 들어가 홍보도 됩니다.
  */
 export type ShareLine = { label: string; value: string; strong?: boolean };
+export type ShareFormat = "square" | "story";
 
-const SIZE = 1080;
+const W = 1080;
 const GOLD = "#e7c98a";
-const FOOT_TOP = 900;
+/** 아래 주소 · QR 칸 높이 */
+const FOOT_H = 190;
 
+const heightOf = (format: ShareFormat) => (format === "story" ? 1920 : 1080);
 const font = (size: number, weight = 800) => `${weight} ${size}px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif`;
 
 function loadImage(src: string) {
@@ -21,43 +25,46 @@ function loadImage(src: string) {
 }
 
 /** 바탕 · 테두리 · 로고 · 제목 */
-async function drawFrame(title: string, subtitle?: string) {
+async function drawFrame(title: string, subtitle: string | undefined, format: ShareFormat) {
+  const H = heightOf(format);
   const canvas = document.createElement("canvas");
-  canvas.width = SIZE;
-  canvas.height = SIZE;
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  const bg = ctx.createLinearGradient(0, 0, 0, SIZE);
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, "#1d1412");
   bg.addColorStop(1, "#0b0807");
   ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = "rgba(201,162,92,0.6)";
   ctx.lineWidth = 6;
-  ctx.strokeRect(36, 36, SIZE - 72, SIZE - 72);
+  ctx.strokeRect(36, 36, W - 72, H - 72);
+  // 세로형은 위를 넉넉하게
+  const top = format === "story" ? 120 : 0;
   const logo = await loadImage("/brand/poka-oni-mark.png");
-  if (logo) ctx.drawImage(logo, 80, 80, 120, 120);
+  if (logo) ctx.drawImage(logo, 80, 80 + top, 120, 120);
   ctx.fillStyle = GOLD;
   ctx.font = font(64, 900);
-  ctx.fillText(title, 230, 150);
+  ctx.fillText(title, 230, 150 + top);
   if (subtitle) {
     ctx.fillStyle = "#d1c7b5";
     let size = 34;
     ctx.font = font(size, 600);
-    while (ctx.measureText(subtitle).width > SIZE - 310 && size > 20) {
+    while (ctx.measureText(subtitle).width > W - 310 && size > 20) {
       size -= 2;
       ctx.font = font(size, 600);
     }
-    ctx.fillText(subtitle, 230, 200);
+    ctx.fillText(subtitle, 230, 200 + top);
   }
-  return { canvas, ctx };
+  return { canvas, ctx, H, contentTop: 260 + top, contentBottom: H - FOOT_H - (format === "story" ? 120 : 10) };
 }
 
 /** 아래: 사이트 주소 + QR(그 도구 주소) */
-async function drawFooter(ctx: CanvasRenderingContext2D, url: string) {
+async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string) {
   const qrSize = 130;
-  const qrX = SIZE - 80 - qrSize;
-  const qrY = SIZE - 70 - qrSize;
+  const qrX = W - 80 - qrSize;
+  const qrY = H - 70 - qrSize;
   try {
     const QR = await import("qrcode");
     const dataUrl = await QR.toDataURL(`https://${url}`, { width: qrSize * 2, margin: 1, color: { dark: "#000000", light: "#ffffff" } });
@@ -72,7 +79,7 @@ async function drawFooter(ctx: CanvasRenderingContext2D, url: string) {
   }
   ctx.fillStyle = "#d1c7b5";
   ctx.font = font(28, 700);
-  ctx.fillText("📱 카메라로 찍으면 바로 계산해 볼 수 있어요", 80, SIZE - 150);
+  ctx.fillText("📱 카메라로 찍으면 바로 계산해 볼 수 있어요", 80, H - 150);
   ctx.fillStyle = GOLD;
   let size = 36;
   ctx.font = font(size, 900);
@@ -81,7 +88,7 @@ async function drawFooter(ctx: CanvasRenderingContext2D, url: string) {
     size -= 2;
     ctx.font = font(size, 900);
   }
-  ctx.fillText(text, 80, SIZE - 95);
+  ctx.fillText(text, 80, H - 95);
 }
 
 function toBlob(canvas: HTMLCanvasElement) {
@@ -89,23 +96,35 @@ function toBlob(canvas: HTMLCanvasElement) {
 }
 
 /** 결과 카드(이름 · 값 줄) → PNG */
-export async function drawResultImage({ title, subtitle, lines, url }: { title: string; subtitle?: string; lines: ShareLine[]; url: string }): Promise<Blob | null> {
-  const frame = await drawFrame(title, subtitle);
+export async function drawResultImage({
+  title,
+  subtitle,
+  lines,
+  url,
+  format = "square",
+}: {
+  title: string;
+  subtitle?: string;
+  lines: ShareLine[];
+  url: string;
+  format?: ShareFormat;
+}): Promise<Blob | null> {
+  const frame = await drawFrame(title, subtitle, format);
   if (!frame) return null;
-  const { canvas, ctx } = frame;
+  const { canvas, ctx, H, contentTop, contentBottom } = frame;
   // 줄이 적으면 크게, 제목과 아래 사이 가운데로
-  const area = FOOT_TOP - 270;
+  const area = contentBottom - contentTop;
   const rowH = Math.min(150, Math.floor(area / Math.max(lines.length, 1)));
-  let y = 260 + (area - rowH * lines.length) / 2 + rowH * 0.62;
+  let y = contentTop + (area - rowH * lines.length) / 2 + rowH * 0.62;
   for (const line of lines) {
     ctx.fillStyle = "rgba(255,255,255,0.06)";
-    ctx.fillRect(80, y - rowH * 0.62, SIZE - 160, rowH * 0.86);
+    ctx.fillRect(80, y - rowH * 0.62, W - 160, rowH * 0.86);
     ctx.fillStyle = "#cfc6b8";
     ctx.font = font(Math.round(rowH * 0.36), 700);
     ctx.fillText(line.label, 110, y);
     // 값이 칸(이름 오른쪽)에 다 들어가게 글씨를 줄여 맞춤(잘리지 않게)
     const labelW = ctx.measureText(line.label).width;
-    const room = SIZE - 220 - labelW - 40;
+    const room = W - 220 - labelW - 40;
     ctx.fillStyle = line.strong ? GOLD : "#ffffff";
     let size = Math.round(rowH * (line.strong ? 0.46 : 0.4));
     ctx.font = font(size, 900);
@@ -113,44 +132,49 @@ export async function drawResultImage({ title, subtitle, lines, url }: { title: 
       size -= 2;
       ctx.font = font(size, 900);
     }
-    ctx.fillText(line.value, SIZE - 110 - ctx.measureText(line.value).width, y);
+    ctx.fillText(line.value, W - 110 - ctx.measureText(line.value).width, y);
     y += rowH;
   }
-  await drawFooter(ctx, url);
+  await drawFooter(ctx, H, url);
   return toBlob(canvas);
 }
 
-/** 범위 차트(13×13 패 표, 한두 개) → PNG. names: 169개 패 이름(가로줄 순서) */
+/** 범위 차트(13×13 패 표, 한두 개) → PNG. names: 169개 패 이름(가로줄 순서). 세로형은 표를 위아래로 */
 export async function drawRangeImage({
   title,
   subtitle,
   grids,
   names,
   url,
+  format = "square",
 }: {
   title: string;
   subtitle?: string;
   grids: { label: string; set: ReadonlySet<number>; color: string }[];
   names: string[];
   url: string;
+  format?: ShareFormat;
 }): Promise<Blob | null> {
-  const frame = await drawFrame(title, subtitle);
+  const frame = await drawFrame(title, subtitle, format);
   if (!frame) return null;
-  const { canvas, ctx } = frame;
+  const { canvas, ctx, H, contentTop, contentBottom } = frame;
   const gap = 30;
-  const top = 290;
-  const gridW = Math.min((SIZE - 160 - gap * (grids.length - 1)) / grids.length, FOOT_TOP - top - 40);
+  const labelH = 48;
+  const stacked = format === "story" && grids.length > 1;
+  const top = contentTop + labelH;
+  const gridW = stacked
+    ? Math.min(W - 160, (contentBottom - contentTop - grids.length * labelH - gap * (grids.length - 1)) / grids.length)
+    : Math.min((W - 160 - gap * (grids.length - 1)) / grids.length, contentBottom - top);
   const cell = gridW / 13;
   grids.forEach((g, gi) => {
-    const x0 = 80 + gi * (gridW + gap) + (grids.length === 1 ? (SIZE - 160 - gridW) / 2 : 0);
+    const x0 = stacked ? (W - gridW) / 2 : 80 + gi * (gridW + gap) + (grids.length === 1 ? (W - 160 - gridW) / 2 : 0);
+    const y0 = stacked ? top + gi * (gridW + gap + labelH) : top;
     ctx.fillStyle = "#ffffff";
     ctx.font = font(30, 900);
-    ctx.fillText(g.label, x0, top - 18);
+    ctx.fillText(g.label, x0, y0 - 18);
     names.forEach((name, k) => {
-      const r = Math.floor(k / 13);
-      const c = k % 13;
-      const x = x0 + c * cell;
-      const y = top + r * cell;
+      const x = x0 + (k % 13) * cell;
+      const y = y0 + Math.floor(k / 13) * cell;
       ctx.fillStyle = g.set.has(k) ? g.color : "rgba(255,255,255,0.07)";
       ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
       ctx.fillStyle = g.set.has(k) ? "#ffffff" : "#7c7468";
@@ -159,7 +183,7 @@ export async function drawRangeImage({
       ctx.fillText(name, x + (cell - w) / 2, y + cell * 0.62);
     });
   });
-  await drawFooter(ctx, url);
+  await drawFooter(ctx, H, url);
   return toBlob(canvas);
 }
 
@@ -185,6 +209,6 @@ export async function shareBlob(blob: Blob | null, opts: { title: string; url: s
 }
 
 /** 결과 카드 그려서 공유 · 저장. 결과: "shared" | "downloaded" | "failed" */
-export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string }) {
+export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string; format?: ShareFormat }) {
   return shareBlob(await drawResultImage(opts).catch(() => null), opts);
 }

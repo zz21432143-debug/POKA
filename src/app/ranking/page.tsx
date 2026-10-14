@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
-import { RankChange } from "@/components/user/my-rank-list";
+import { RankChange } from "@/components/user/rank-change";
 import { getWeekSnapshot } from "@/lib/my-rank";
 import { getHonorInfo, getPotTitleInfo } from "@/lib/pot-titles";
 import { DIFFICULTY } from "@/lib/practice";
@@ -196,7 +196,14 @@ export default async function RankingPage({
               </Link>
               <strong className="rank-score inline-flex items-center gap-1.5">
                 {rankScoreLabel(tab, row.score, period)}
-                {showChange ? <RankChange change={changeOf(row.userId, row.rank)} /> : null}
+                {showChange ? (
+                  <RankChange
+                    change={changeOf(row.userId, row.rank)}
+                    before={tab === "level" || tab === "marks" ? (snap?.[tab]?.[row.userId] ?? null) : null}
+                    now={row.rank}
+                    base={chg === "month" ? "이번 달 시작" : "이번 주 시작"}
+                  />
+                ) : null}
               </strong>
             </li>
           ))}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { MyRanks } from "@/lib/my-rank";
-import { RankChange } from "@/components/user/my-rank-list";
+import { RankChange } from "@/components/user/rank-change";
 
 /** 홈 랭킹 아래: 로그인한 회원의 내 순위 한 줄(보일 때만 불러옴 · 비로그인이면 안 보임) */
 export function MyHomeRank() {
@@ -40,7 +40,7 @@ export function MyHomeRank() {
           {rows.map((r) => (
             <span key={r.key} className="text-zinc-300">
               {r.short} <b className={r.rank != null && r.rank <= 3 ? "text-[#f5d76e]" : "text-white"}>{r.rank == null ? "기록 없음" : `${r.rank}위`}</b>{" "}
-              <RankChange change={r.change} />
+              <RankChange change={r.change} before={r.before} now={r.rank} />
             </span>
           ))}
           <span className="ml-auto text-xs font-bold text-[#c9a25c]">내 칭호 · 랭킹 ›</span>

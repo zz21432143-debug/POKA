@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CopyIcon, MinusIcon, PlusIcon, RotateCcwIcon } from "lucide-react";
 import { ICM_MAX_PLAYERS, chipChop, icmEquity, parseAmount } from "@/lib/icm";
 import { shareResultImage } from "@/lib/share-image";
+import { ShareButton } from "@/components/tools/share-button";
 import { cn } from "cn";
 
 type Player = { name: string; stack: string };
@@ -64,7 +65,6 @@ function load(): Saved | null {
 export function IcmCalculator() {
   const [state, setState] = useState<Saved>(SAMPLE);
   const [copied, setCopied] = useState(false);
-  const [shareNote, setShareNote] = useState<string | null>(null);
   const { players, mode, total, places, amounts, percents } = state;
   const patch = (next: Partial<Saved>) => setState((prev) => ({ ...prev, ...next }));
 
@@ -290,25 +290,20 @@ export function IcmCalculator() {
             </button>
           ) : null}
           {result ? (
-            <button
-              type="button"
-              data-share-result
-              onClick={async () => {
-                const done = await shareResultImage({
+            <ShareButton
+              label="이미지로 공유"
+              onShare={(format) =>
+                shareResultImage({
                   title: "ICM 딜 계산",
                   subtitle: `남은 상금 ${won(result.pool)} · ${result.rows.length}명`,
                   lines: result.rows.slice(0, 9).map((r, k) => ({ label: `${r.name} · 칩 ${won(r.stack)}`, value: won(r.equity), strong: k === 0 })),
                   url: "pokerwiki.co.kr/info/icm",
                   fileName: "POKA_ICM",
-                });
-                setShareNote(done === "shared" ? "공유했어요" : done === "downloaded" ? "이미지를 저장했어요" : "이미지를 만들지 못했어요");
-              }}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#FEE500] px-3.5 text-sm font-black text-black"
-            >
-              📤 이미지로 공유
-            </button>
+                  format,
+                })
+              }
+            />
           ) : null}
-          {shareNote ? <span className="text-xs text-[#d1c7b5]">{shareNote}</span> : null}
         </div>
         {result ? (
           <>

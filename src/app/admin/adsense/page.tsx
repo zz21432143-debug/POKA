@@ -43,6 +43,10 @@ function daysAgo(days: number) {
 
 /** 공개 글 수 기준(직접 쓴 글이 이만큼 있으면 심사에 유리) */
 const GOOD_POSTS = 30;
+/** 커뮤니티 게시판마다 최소 글 수 · 최근 30일 새 글 최소 */
+const COMMUNITY_BOARDS = ["FREE", "RULE_QA", "SKETCH", "HAND_REVIEW"] as const;
+const BOARD_MIN = 5;
+const RECENT_MIN = 10;
 
 function Mark({ ok, warn }: { ok: boolean; warn?: boolean }) {
   return <span className="text-lg">{ok ? "✅" : warn ? "⚠️" : "❌"}</span>;
@@ -66,6 +70,18 @@ export default async function AdminAdsensePage() {
   const slots = PLACEMENTS.map((p) => ({ ...p, set: Boolean(adsenseSlotId(p.key)) && Boolean(process.env[p.env]?.trim()) }));
   const slotCount = slots.filter((s) => s.set).length;
 
+  // 승인 전 할 일: 부족한 것부터 짚어 줌
+  const countOf = (type: string) => byBoard.find((b) => b.boardType === type)?._count._all ?? 0;
+  const todos: string[] = [];
+  if (total < GOOD_POSTS) todos.push(`공개 글을 ${GOOD_POSTS - total}개 더 올려 주세요(지금 ${total}개 · 권장 ${GOOD_POSTS}개 이상).`);
+  for (const type of COMMUNITY_BOARDS) {
+    const n = countOf(type);
+    if (n < BOARD_MIN) todos.push(`「${BOARD_LABELS[type as BoardTypeKey] ?? type}」에 글 ${BOARD_MIN - n}개 더(지금 ${n}개) — 질문 · 경험담처럼 직접 쓴 글이 좋아요.`);
+  }
+  if (recent < RECENT_MIN) todos.push(`최근 30일 새 글이 ${recent}개예요. 일주일에 3~4개씩 꾸준히 올리면 「살아 있는 사이트」로 보여요.`);
+  if (!adsTxtOk) todos.push("ads.txt에 게시자 ID를 넣어 주세요(public/ads.txt).");
+  if (slotCount === 0) todos.push("승인 메일을 받으면: 광고 단위 3개(게시판 하단 · 글 아래 · PC 사이드)를 만들고 Vercel에 ID를 넣어 주세요.");
+
   const card = "rounded-2xl border border-border bg-card p-3 sm:p-4";
   return (
     <div className="flex flex-col gap-4">
@@ -76,6 +92,17 @@ export default async function AdminAdsensePage() {
           <AdminNav current="/admin/adsense" isMaster={user.isMaster} />
         </div>
       </header>
+
+      <section aria-label="승인 전 할 일" data-adsense-todo className={`${card} border-amber-500/50`}>
+        <h2 className="text-lg font-semibold">{todos.length ? `📝 승인 전 할 일 ${todos.length}가지` : "🎉 준비 끝 — 애드센스에서 검토 요청을 해 보세요"}</h2>
+        {todos.length ? (
+          <ol className="mt-2 grid list-decimal gap-1.5 pl-5 text-sm">
+            {todos.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ol>
+        ) : null}
+      </section>
 
       <section aria-label="글 수" data-adsense-posts className={card}>
         <h2 className="flex items-center gap-2 text-lg font-semibold">

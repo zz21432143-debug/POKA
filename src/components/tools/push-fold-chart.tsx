@@ -7,6 +7,7 @@ import { COMBOS, rowAt, thresholds, unpackSet, type PushFoldData } from "@/lib/p
 import { cn } from "cn";
 import { IcmPushFold } from "@/components/tools/icm-push-fold";
 import { drawRangeImage, shareBlob } from "@/lib/share-image";
+import { ShareButton } from "@/components/tools/share-button";
 
 const hu = rawData as PushFoldData;
 const NAMES = hu.names;
@@ -176,6 +177,27 @@ function HeadsUp({ mode, view }: { mode: string; view: View }) {
         <RangeGrid title="SB 올인(푸시)" sub={view === "range" ? `${s}bb · ${row?.pushPct ?? 0}%` : "칸 숫자 = 이 스택(bb)까지"} ariaLabel="SB 올인 차트" tone="push" set={pushSet} nums={pushNums} view={view} picked={picked} onPick={setPicked} />
         <RangeGrid title="BB 콜" sub={view === "range" ? `${s}bb · ${row?.callPct ?? 0}%` : "칸 숫자 = 이 스택(bb)까지"} ariaLabel="BB 콜 차트" tone="call" set={callSet} nums={callNums} view={view} picked={picked} onPick={setPicked} />
       </div>
+      {view === "range" ? (
+        <ShareButton
+          label="이 차트 이미지로 공유"
+          onShare={async (format) =>
+            shareBlob(
+              await drawRangeImage({
+                title: "GTO 푸시폴드 · 헤즈업",
+                subtitle: `SB vs BB · ${s}bb`,
+                grids: [
+                  { label: `SB 올인 · ${row?.pushPct ?? 0}%`, set: pushSet, color: "#b42b2b" },
+                  { label: `BB 콜 · ${row?.callPct ?? 0}%`, set: callSet, color: "#1f6f4a" },
+                ],
+                names: NAMES,
+                url: "pokerwiki.co.kr/info/push-fold",
+                format,
+              }).catch(() => null),
+              { title: "GTO 푸시폴드 헤즈업", url: "pokerwiki.co.kr/info/push-fold", fileName: `POKA_헤즈업_${s}bb` },
+            )
+          }
+        />
+      ) : null}
     </>
   );
 }
@@ -189,7 +211,6 @@ function Positions({ mode, view }: { mode: string; view: View }) {
   const [caller, setCaller] = useState("BB");
   const [stack, setStack] = useState(10);
   const [picked, setPicked] = useState<number | null>(NAMES.indexOf("K9o"));
-  const [shareNote, setShareNote] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
     fetch("/data/gto-positions.json")
@@ -283,12 +304,11 @@ function Positions({ mode, view }: { mode: string; view: View }) {
         <RangeGrid title={`${callerName} 콜 (vs ${pusherName} 올인)`} sub={view === "range" ? `${s}bb · ${row?.calls[callerName]?.pct ?? 0}%` : "칸 숫자 = 이 스택(bb)까지"} ariaLabel="포지션 콜 차트" tone="call" set={callSet} nums={nums.call} view={view} picked={picked} onPick={setPicked} />
       </div>
       {view === "range" ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            data-share-range
-            onClick={async () => {
-              const blob = await drawRangeImage({
+        <ShareButton
+          label="이 차트 이미지로 공유"
+          onShare={async (format) =>
+            shareBlob(
+              await drawRangeImage({
                 title: "GTO 푸시폴드",
                 subtitle: `${size}인 · ${s}bb · ${pusherName} 올인 / ${callerName} 콜`,
                 grids: [
@@ -297,16 +317,12 @@ function Positions({ mode, view }: { mode: string; view: View }) {
                 ],
                 names: NAMES,
                 url: "pokerwiki.co.kr/info/push-fold",
-              }).catch(() => null);
-              const done = await shareBlob(blob, { title: "GTO 푸시폴드 차트", url: "pokerwiki.co.kr/info/push-fold", fileName: `POKA_푸시폴드_${pusherName}_${s}bb` });
-              setShareNote(done === "shared" ? "공유했어요" : done === "downloaded" ? "이미지를 저장했어요" : "이미지를 만들지 못했어요");
-            }}
-            className="min-h-11 rounded-xl bg-[#FEE500] px-4 text-sm font-black text-black"
-          >
-            📤 이 차트 이미지로 공유
-          </button>
-          {shareNote ? <span className="text-xs text-[#d1c7b5]">{shareNote}</span> : null}
-        </div>
+                format,
+              }).catch(() => null),
+              { title: "GTO 푸시폴드 차트", url: "pokerwiki.co.kr/info/push-fold", fileName: `POKA_푸시폴드_${pusherName}_${s}bb` },
+            )
+          }
+        />
       ) : null}
       <p className="text-xs leading-5 text-[#9CA3AF]">모두 같은 스택이라고 보고, 한 명이 콜하면 나머지는 폴드한다고 계산했어요(숏스택 차트에서 흔히 쓰는 근사). 0.5bb 간격이에요.</p>
     </>

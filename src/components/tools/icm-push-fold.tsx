@@ -5,6 +5,8 @@ import { Loader2Icon, MinusIcon, PlusIcon } from "lucide-react";
 import { parseAmount } from "@/lib/icm";
 import { seatNames, solveIcmPushFold, type EqTable, type IcmResult } from "@/lib/icm-pushfold";
 import { cn } from "cn";
+import { drawRangeImage, shareBlob } from "@/lib/share-image";
+import { ShareButton } from "@/components/tools/share-button";
 
 const ITERATIONS = 2000;
 const chipText = (raw: string) => {
@@ -227,6 +229,27 @@ export function IcmPushFold({
                 onPick: setPicked,
               })}
             </div>
+          ) : null}
+          {shown && table ? (
+            <ShareButton
+              label="이 차트 이미지로 공유"
+              onShare={async (format) =>
+                shareBlob(
+                  await drawRangeImage({
+                    title: "ICM 푸시폴드",
+                    subtitle: `${result.seats.length}명 · ${showChips ? "칩 기준" : "ICM 기준"} · ${result.seats[result.pusher]} 올인 / ${result.seats[callerSeat]} 콜`,
+                    grids: [
+                      { label: `${result.seats[result.pusher]} 올인 · ${shown.pushPct}%`, set: shown.push, color: "#b42b2b" },
+                      { label: `${result.seats[callerSeat]} 콜 · ${shownCall?.pct ?? 0}%`, set: shownCall?.set ?? new Set<number>(), color: "#1f6f4a" },
+                    ],
+                    names: table.names,
+                    url: "pokerwiki.co.kr/info/push-fold",
+                    format,
+                  }).catch(() => null),
+                  { title: "ICM 푸시폴드 차트", url: "pokerwiki.co.kr/info/push-fold", fileName: "POKA_ICM푸시폴드" },
+                )
+              }
+            />
           ) : null}
           <p className="text-xs leading-5 text-[#9CA3AF]">
             ICM 범위는 상금 가치로 손익을 따진 균형이에요. 한 명이 콜하면 나머지는 폴드하고, 폴드한 사람의 가치는 올인한 사람이 블라인드를 가져간 뒤로 근사했어요. 반복 {ITERATIONS}번으로 계산합니다.
