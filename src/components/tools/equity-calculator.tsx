@@ -98,8 +98,14 @@ export function EquityCalculator() {
         setBusy(street.key);
         const h = hero.map((c) => cardIndex(c!));
         const b = boardFor(street.board).map((c) => cardIndex(c!));
-        const r = randomVillain ? await randomEquity(h, b, street.board === 0 ? 150_000 : 100_000) : await exactEquity(h, villain.map((c) => cardIndex(c!)), b);
+        const r =
+          villainMode === "range"
+            ? await rangeEquity(h, b, rangeCombos, street.board === 0 ? 150_000 : 100_000)
+            : villainMode === "random"
+              ? await randomEquity(h, b, street.board === 0 ? 150_000 : 100_000)
+              : await exactEquity(h, villain.map((c) => cardIndex(c!)), b);
         if (id !== run.current) return;
+        if (!r) continue;
         setResults((prev) => ({ ...prev, [street.key]: r }));
       }
       if (id === run.current) setBusy(null);
