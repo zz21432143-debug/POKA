@@ -13,8 +13,22 @@ const data: QuizData = {
 describe("오늘의 퀴즈 자동 생성", () => {
   it("같은 날짜 = 같은 문제, 날마다 종류가 돌아감", () => {
     assert.deepEqual(generateQuiz("2026-10-15", data), generateQuiz("2026-10-15", data));
-    const kinds = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15"].map((d) => generateQuiz(d, data).kind));
-    assert.equal(kinds.size, 4);
+    const kinds = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17"].map((d) => generateQuiz(d, data).kind));
+    assert.equal(kinds.size, 6);
+  });
+
+  it("팟 오즈 · 아웃츠: 보기 4개 서로 다름 · 정답 계산이 맞음", () => {
+    for (let i = 0; i < 240; i++) {
+      const day = new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10);
+      const q = generateQuiz(day, data);
+      if (q.kind !== "potodds" && q.kind !== "outs") continue;
+      assert.equal(new Set(q.choices).size, q.choices.length, day);
+      assert.ok(q.choices.length >= 3, day);
+      if (q.kind === "potodds") {
+        const [, pot, bet] = q.question.match(/팟 ([\d,]+)에 상대가 ([\d,]+)/)!.map((s) => Number(s.replace(/,/g, "")));
+        assert.equal(q.choices[q.answer], `${Math.round((bet / (pot + 2 * bet)) * 100)}%`, day);
+      }
+    }
   });
 
   it("두 달치 문제 모두 보기 2~4개 · 정답 번호가 보기 안 · 해설 있음", () => {
@@ -46,6 +60,12 @@ describe("오늘의 퀴즈 자동 생성", () => {
     assert.equal(josa("플러시", "이가"), "플러시가");
     assert.equal(josa("포카드", "은는"), "포카드는");
     assert.equal(josa("스트레이트 플러시", "은는"), "스트레이트 플러시는");
-    assert.equal(josa("포켓 AA", "이가"), "포켓 AA이(가)");
+    assert.equal(josa("포켓 AA", "이가"), "포켓 AA가");
+    assert.equal(josa("55", "은는"), "55는");
+    assert.equal(josa("77", "은는"), "77은");
+    assert.equal(josa("Q8s", "은는"), "Q8s는");
+    assert.equal(josa("KTo", "은는"), "KTo는");
+    assert.equal(josa("AT", "은는"), "AT은");
+    assert.equal(josa("POKA!", "이가"), "POKA!이(가)");
   });
 });

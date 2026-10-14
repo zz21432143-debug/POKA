@@ -1,4 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "node scripts/apply-schema.cjs && prisma generate && next build"
+  "buildCommand": "node scripts/apply-schema.cjs && prisma generate && next build",
+  "crons": [{ "path": "/api/cron/quiz-push", "schedule": "0 0 * * *" }]
 }

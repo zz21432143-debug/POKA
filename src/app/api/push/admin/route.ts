@@ -48,8 +48,8 @@ export async function DELETE(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
   const endpoint = body.endpoint?.trim();
   if (!endpoint) return NextResponse.json({ error: "endpoint가 필요합니다." }, { status: 400 });
-  const row = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { region: true } });
-  if (row?.region) {
+  const row = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { region: true, quizAlerts: true } });
+  if (row?.region || row?.quizAlerts) {
     await prisma.pushSubscription.update({ where: { endpoint }, data: { adminAlerts: false } });
     return NextResponse.json({ ok: true, keep: true });
   }

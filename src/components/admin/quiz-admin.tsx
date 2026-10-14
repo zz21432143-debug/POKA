@@ -5,6 +5,7 @@ import { cn } from "cn";
 import { KIND_LABEL, type QuizKind } from "@/lib/quiz";
 
 type Row = { id: string; day: string; kind: string; question: string; choices: string[]; answer: number; explanation: string; source: string; answers: number };
+type Suggestion = { id: string; nickname: string; question: string; choices: string[]; answer: number; explanation: string; createdAt: string };
 
 const field = "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white";
 
@@ -19,17 +20,19 @@ export function QuizAdmin() {
   const [explanation, setExplanation] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
     let alive = true;
     fetch("/api/admin/quiz", { cache: "no-store" })
       .then(async (res) => {
-        const json = (await res.json()) as { today?: string; rows?: Row[]; error?: string };
+        const json = (await res.json()) as { today?: string; rows?: Row[]; suggestions?: Suggestion[]; error?: string };
         if (!alive) return;
         if (!res.ok) return setMsg({ ok: false, text: json.error ?? "불러오지 못했어요." });
         setToday(json.today ?? "");
         setDay((d) => d || json.today || "");
         setRows(json.rows ?? []);
+        setSuggestions(json.suggestions ?? []);
       })
       .catch(() => alive && setMsg({ ok: false, text: "불러오지 못했어요." }));
     return () => {
@@ -58,6 +61,30 @@ export function QuizAdmin() {
       }
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "저장하지 못했어요." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** 채택: 포인트를 주고 문제를 위 입력칸에 채움(날짜 골라 저장) · 거절 */
+  async function decide(s: Suggestion, action: "adopt" | "reject") {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/quiz", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: s.id, action }) });
+      const json = (await res.json()) as { suggestions?: Suggestion[]; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "처리하지 못했어요.");
+      setSuggestions(json.suggestions ?? []);
+      if (action === "adopt") {
+        setQuestion(s.question);
+        setChoices([...s.choices, "", "", "", ""].slice(0, 4));
+        setAnswer(s.answer);
+        setExplanation(s.explanation);
+        setMsg({ ok: true, text: `${s.nickname}님 문제를 채택했어요(+50P). 날짜를 골라 저장하세요.` });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else setMsg({ ok: true, text: "제안을 거절했어요." });
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "처리하지 못했어요." });
     } finally {
       setBusy(false);
     }
@@ -118,6 +145,35 @@ export function QuizAdmin() {
           {msg ? <p className={cn("text-sm font-bold", msg.ok ? "text-emerald-300" : "text-rose-300")}>{msg.text}</p> : null}
         </div>
       </form>
+
+      <section className="grid gap-2" data-quiz-suggestions>
+        <h2 className="text-base font-bold">회원이 낸 문제 {suggestions.length ? `(${suggestions.length})` : ""}</h2>
+        {suggestions.length ? (
+          <ul className="grid gap-2">
+            {suggestions.map((s) => (
+              <li key={s.id} className="grid gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold">{s.nickname}</span>
+                  <span className="text-xs text-muted-foreground">{s.createdAt.slice(0, 10)}</span>
+                  <span className="ml-auto flex gap-1">
+                    <button type="button" disabled={busy} onClick={() => void decide(s, "adopt")} className="min-h-9 rounded-lg bg-[#c9a25c] px-3 text-xs font-bold text-black">
+                      채택(+50P)
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => void decide(s, "reject")} className="min-h-9 rounded-lg border border-white/20 px-3 text-xs">
+                      거절
+                    </button>
+                  </span>
+                </div>
+                <p className="font-semibold">{s.question}</p>
+                <p className="text-xs text-muted-foreground">{s.choices.map((c, i) => (i === s.answer ? `✅${c}` : c)).join(" · ")}</p>
+                <p className="text-xs text-muted-foreground">해설: {s.explanation}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">기다리는 제안이 없어요.</p>
+        )}
+      </section>
 
       <section className="grid gap-2" data-quiz-admin-list>
         <h2 className="text-base font-bold">최근 · 예약된 문제</h2>

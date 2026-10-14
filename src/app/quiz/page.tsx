@@ -9,6 +9,8 @@ import { getQuiz, recentQuizzes } from "@/lib/quiz-server";
 import { quizInitial } from "@/lib/quiz-view";
 import { KIND_LABEL, type QuizKind } from "@/lib/quiz";
 import { getRanking } from "@/lib/ranking";
+import { QuizAlertToggle } from "@/components/quiz/quiz-alert-toggle";
+import { QuizSuggestForm } from "@/components/quiz/quiz-suggest-form";
 
 const TITLE = "오늘의 홀덤 퀴즈 — 매일 한 문제 · 푸시폴드 · 승률 · 족보 · 레인지";
 const DESCRIPTION = "매일 새로 나오는 홀덤 퀴즈. 하나만 고르면 정답과 해설, 다른 사람 선택 비율이 바로 나와요. 맞히면 포인트, 이번 달 1위는 「퀴즈 요괴」 칭호.";
@@ -43,12 +45,14 @@ export default async function QuizPage() {
         <p className="ink-panel rounded-2xl p-4 text-sm text-[#d1c7b5]">오늘 문제를 준비하고 있어요. 잠시 뒤 새로고침해 주세요.</p>
       )}
 
+      <QuizAlertToggle />
+
       <StudyAd />
 
       <section aria-label="이번 달 퀴즈 랭킹" data-quiz-ranking className="ink-panel grid gap-2 rounded-2xl p-4">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-black text-[#f3d9a4]">이번 달 퀴즈 랭킹</h2>
-          <span className="text-xs text-zinc-400">1위는 🧩 「퀴즈 요괴」 칭호</span>
+          <span className="text-xs text-zinc-400">1위(3문제 이상)는 🧩 「퀴즈 요괴」 칭호</span>
           <Link href="/ranking?tab=quiz&period=month" className="ml-auto text-xs font-bold text-[#c9a25c]">
             전체 ›
           </Link>
@@ -89,6 +93,8 @@ export default async function QuizPage() {
           </ul>
         </section>
       ) : null}
+
+      <QuizSuggestForm loggedIn={Boolean(initial?.loggedIn)} />
     </div>
   );
 }

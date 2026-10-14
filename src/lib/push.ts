@@ -76,6 +76,13 @@ export async function notifyBroadcast(region: string | null, payload: PushPayloa
   return { ...(await sendAll(subs, payload)), total: subs.length };
 }
 
+/** 오늘의 퀴즈 알림을 켠 기기 */
+export async function notifyQuiz(payload: PushPayload) {
+  if (!configure()) return { sent: 0, total: 0 };
+  const subs = await prisma.pushSubscription.findMany({ where: { quizAlerts: true }, take: 20000 });
+  return { ...(await sendAll(subs, payload)), total: subs.length };
+}
+
 type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
 
 /** 만료된 구독(404/410)은 지웁니다. */

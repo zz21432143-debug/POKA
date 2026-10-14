@@ -6,7 +6,7 @@
  */
 import { unpackSet } from "@/lib/pushfold";
 
-export type QuizKind = "pushfold" | "equity" | "handrank" | "range" | "custom";
+export type QuizKind = "pushfold" | "equity" | "handrank" | "range" | "potodds" | "outs" | "custom";
 export type QuizDraft = { kind: QuizKind; question: string; choices: string[]; answer: number; explanation: string };
 
 export type QuizData = {
@@ -26,6 +26,8 @@ export const KIND_LABEL: Record<QuizKind, string> = {
   equity: "승률",
   handrank: "족보",
   range: "레인지",
+  potodds: "팟 오즈",
+  outs: "아웃츠",
   custom: "운영자 출제",
 };
 
@@ -43,7 +45,7 @@ const HAND_RANKS = [
   { ko: "하이카드", seven: 23294460 },
 ];
 const SEVEN_TOTAL = 133784560;
-const KINDS: QuizKind[] = ["pushfold", "equity", "handrank", "range"];
+const KINDS: QuizKind[] = ["pushfold", "equity", "handrank", "range", "potodds", "outs"];
 
 /** 날짜 → 하루 번호(2026-01-01 = 0) */
 export function dayNumber(day: string) {
@@ -74,9 +76,12 @@ const pct1 = (x: number) => `${(x * 100).toFixed(1)}%`;
 
 /** 받침에 맞는 조사: 한글 끝글자면 이/가 · 은/는, 아니면 둘 다 씀 */
 export function josa(word: string, pair: "이가" | "은는") {
+  const lastCh = word[word.length - 1];
   const last = word.charCodeAt(word.length - 1);
-  if (last < 0xac00 || last > 0xd7a3) return `${word}${pair === "이가" ? "이(가)" : "은(는)"}`;
-  const batchim = (last - 0xac00) % 28 !== 0;
+  // 카드 이름 끝(숫자 · A K Q J T · s o)은 읽는 소리로: 3(삼) 6(육) 7(칠) 8(팔) T(텐)만 받침
+  const spoken = "23456789AKQJTso".includes(lastCh) ? "36780T".includes(lastCh) : null;
+  if (spoken === null && (last < 0xac00 || last > 0xd7a3)) return `${word}${pair === "이가" ? "이(가)" : "은(는)"}`;
+  const batchim = spoken ?? (last - 0xac00) % 28 !== 0;
   return `${word}${pair === "이가" ? (batchim ? "이" : "가") : batchim ? "은" : "는"}`;
 }
 
@@ -107,7 +112,7 @@ function pushfoldQuiz(rand: () => number, data: QuizData): QuizDraft {
     question: `${size}인 테이블, 앞사람이 모두 폴드했어요. ${pusher}에서 스택 ${row.s}bb, 내 패는 ${hand}(${handLabel(hand)}). 올인할까요?`,
     choices: ["올인", "폴드"],
     answer: push ? 0 : 1,
-    explanation: `GTO 푸시폴드 차트(앤티 없음) 기준 ${size}인 ${pusher} ${row.s}bb 올인 범위는 전체의 ${row.pushPct}%예요. ${hand}은(는) 이 범위 ${push ? "안이라 올인" : "밖이라 폴드"}이 정답이에요.`,
+    explanation: `GTO 푸시폴드 차트(앤티 없음) 기준 ${size}인 ${pusher} ${row.s}bb 올인 범위는 전체의 ${row.pushPct}%예요. ${josa(hand, "은는")} 이 범위 ${push ? "안이라 올인" : "밖이라 폴드"}이 정답이에요.`,
   };
 }
 
@@ -183,6 +188,71 @@ function rangeQuiz(rand: () => number, data: QuizData): QuizDraft {
   };
 }
 
+/** 숫자 보기: 정답 + 오답 후보에서 서로 다른 4개(작은 순) */
+function numberChoices(rand: () => number, answer: number, wrong: number[], fmt: (n: number) => string) {
+  const picked = [answer];
+  for (const w of [...wrong].sort(() => rand() - 0.5)) {
+    if (picked.length >= 4) break;
+    if (w > 0 && !picked.includes(w)) picked.push(w);
+  }
+  picked.sort((a, b) => a - b);
+  return { choices: picked.map(fmt), answer: picked.indexOf(answer) };
+}
+
+/** 팟 오즈: 콜에 필요한 최소 승률 = 콜 금액 ÷ (콜한 뒤 전체 팟) */
+const BET_SIZES = [
+  { f: 1 / 4, ko: "팟의 1/4" },
+  { f: 1 / 3, ko: "팟의 1/3" },
+  { f: 1 / 2, ko: "하프 팟" },
+  { f: 2 / 3, ko: "팟의 2/3" },
+  { f: 3 / 4, ko: "팟의 3/4" },
+  { f: 1, ko: "팟 사이즈" },
+  { f: 3 / 2, ko: "팟의 1.5배" },
+  { f: 2, ko: "팟의 2배(오버벳)" },
+];
+function potoddsQuiz(rand: () => number): QuizDraft {
+  const pot = (2 + Math.floor(rand() * 19)) * 50;
+  const size = BET_SIZES[Math.floor(rand() * BET_SIZES.length)];
+  const bet = Math.round((pot * size.f) / 5) * 5;
+  const need = Math.round((bet / (pot + 2 * bet)) * 100);
+  const forgot = Math.round((bet / (pot + bet)) * 100); // 내 콜을 팟에 안 넣는 흔한 실수
+  const { choices, answer } = numberChoices(rand, need, [forgot, Math.round(need / 2), need + 8, need - 7, need + 15, Math.min(95, Math.round((bet / pot) * 100))], (n) => `${n}%`);
+  return {
+    kind: "potodds",
+    question: `팟 ${pot.toLocaleString()}에 상대가 ${bet.toLocaleString()} 베팅(${size.ko}). 콜하려면 최소 몇 % 승률이 필요할까요?`,
+    choices,
+    answer,
+    explanation: `콜 금액 ÷ 콜한 뒤 전체 팟 = ${bet} ÷ (${pot} + ${bet} + ${bet}) ≈ ${need}%. 내 콜까지 팟에 넣는 걸 잊으면 ${forgot}%로 잘못 계산하기 쉬워요.`,
+  };
+}
+
+/** 아웃츠: 플랍에서 다음 카드로 원하는 패가 되는 카드 수 */
+const OUTS = [
+  { hand: "A♥5♥", board: "K♥9♥2♣", goal: "플러시", outs: 9, why: "남은 하트 13 − 4 = 9장" },
+  { hand: "9♠8♦", board: "7♣6♥2♠", goal: "스트레이트", outs: 8, why: "5 네 장 + 10 네 장(오픈엔디드)" },
+  { hand: "9♠8♦", board: "6♣5♥K♠", goal: "스트레이트", outs: 4, why: "7 네 장만(거트샷)" },
+  { hand: "9♥8♥", board: "7♥6♥2♠", goal: "플러시나 스트레이트", outs: 15, why: "하트 9장 + 5·10 중 하트가 아닌 6장" },
+  { hand: "Q♥J♥", board: "9♥8♣2♥", goal: "플러시나 스트레이트", outs: 12, why: "하트 9장 + 10 중 하트가 아닌 3장" },
+  { hand: "7♠7♦", board: "7♣K♥2♠", goal: "풀하우스 이상", outs: 7, why: "K 3장 + 2 3장 + 마지막 7 1장" },
+  { hand: "K♠9♦", board: "K♣9♥2♠", goal: "풀하우스", outs: 4, why: "남은 K 2장 + 9 2장" },
+  { hand: "A♠K♦", board: "9♣6♥2♠", goal: "탑 페어(A나 K)", outs: 6, why: "A 3장 + K 3장" },
+  { hand: "A♠K♦", board: "A♣7♥2♠", goal: "트리플(A 세 장)", outs: 2, why: "남은 A 2장" },
+  { hand: "5♣5♦", board: "K♥9♠2♣", goal: "세트(5 세 장)", outs: 2, why: "남은 5 2장" },
+  { hand: "J♠10♠", board: "Q♠9♦3♣", goal: "스트레이트", outs: 8, why: "K 네 장 + 8 네 장(오픈엔디드)" },
+  { hand: "A♦K♦", board: "Q♦J♣4♦", goal: "플러시나 스트레이트", outs: 12, why: "다이아 9장 + 10 중 다이아가 아닌 3장" },
+];
+function outsQuiz(rand: () => number): QuizDraft {
+  const s = OUTS[Math.floor(rand() * OUTS.length)];
+  const { choices, answer } = numberChoices(rand, s.outs, [s.outs - 3, s.outs - 2, s.outs - 1, s.outs + 1, s.outs + 2, s.outs + 3], (n) => `${n}장`);
+  return {
+    kind: "outs",
+    question: `내 패 ${s.hand}, 플랍 ${s.board}. 턴 한 장으로 「${s.goal}」 완성 — 이런 카드(아웃츠)는 몇 장일까요?`,
+    choices,
+    answer,
+    explanation: `${s.why} = ${s.outs}장. 턴에 나올 확률은 ${s.outs}/47 ≈ ${((s.outs / 47) * 100).toFixed(0)}%, 리버까지 보면 대략 아웃츠×4 ≈ ${Math.min(100, s.outs * 4)}%예요.`,
+  };
+}
+
 /** 그날 문제(같은 날짜 = 같은 문제) */
 export function generateQuiz(day: string, data: QuizData): QuizDraft {
   const rand = seeded(day);
@@ -190,5 +260,7 @@ export function generateQuiz(day: string, data: QuizData): QuizDraft {
   if (kind === "pushfold") return pushfoldQuiz(rand, data);
   if (kind === "equity") return equityQuiz(rand, data);
   if (kind === "handrank") return handrankQuiz(rand);
+  if (kind === "potodds") return potoddsQuiz(rand);
+  if (kind === "outs") return outsQuiz(rand);
   return rangeQuiz(rand, data);
 }

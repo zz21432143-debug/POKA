@@ -15,13 +15,14 @@ export type TitlePeriod = "all" | "month";
  */
 export const HONOR_KEYS = ["level", "weekExp", "monthExp", "marks", "attendance", "quiz"] as const;
 export type HonorKey = (typeof HONOR_KEYS)[number];
-export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: string; tab: "level" | "marks" | "attendance" | "quiz"; period: "all" | "week" | "month" }> = {
+/** minScore: 이 점수 이상이어야 칭호(예: 퀴즈는 이번 달 3문제 이상) */
+export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: string; tab: "level" | "marks" | "attendance" | "quiz"; period: "all" | "week" | "month"; minScore?: number }> = {
   level: { icon: "👑", name: "백귀의 왕", desc: "레벨 랭킹(전체) 1위", tab: "level", period: "all" },
   weekExp: { icon: "🔥", name: "이번 주 사천왕", desc: "이번 주 경험치 1위", tab: "level", period: "week" },
   monthExp: { icon: "🌙", name: "이달의 귀신", desc: "이번 달 경험치 1위", tab: "level", period: "month" },
   marks: { icon: "🎴", name: "요괴 수집가", desc: "마크 수집 랭킹(전체) 1위", tab: "marks", period: "all" },
   attendance: { icon: "📅", name: "개근 도깨비", desc: "이번 달 출석 1위", tab: "attendance", period: "month" },
-  quiz: { icon: "🧩", name: "퀴즈 요괴", desc: "이번 달 퀴즈 1위", tab: "quiz", period: "month" },
+  quiz: { icon: "🧩", name: "퀴즈 요괴", desc: "이번 달 퀴즈 1위(3문제 이상)", tab: "quiz", period: "month", minScore: 3 },
 };
 /** top: 1이면 1위만, 3이면 1~3위까지(이름 뒤에 · 2위처럼 붙음) */
 export type HonorSetting = { enabled: boolean; name: string; top: 1 | 3 };

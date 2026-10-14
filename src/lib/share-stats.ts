@@ -8,6 +8,7 @@ export const SHARE_TOOLS = {
   "pushfold-hu": "GTO 푸시폴드(헤즈업)",
   "pushfold-icm": "ICM 푸시폴드",
   "hand-rankings": "족보 순위",
+  quiz: "오늘의 퀴즈",
 } as const;
 export type ShareTool = keyof typeof SHARE_TOOLS;
 

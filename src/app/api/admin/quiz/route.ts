@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { shiftDate, todayKstDate } from "@/lib/dates";
+import { decideSuggestion, listSuggestions, parseQuizInput } from "@/lib/quiz-suggest";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,19 @@ async function list() {
 export async function GET() {
   const { error } = await requireAdmin();
   if (error) return error;
-  return NextResponse.json({ today: todayKstDate(), rows: await list() });
+  const [rows, suggestions] = await Promise.all([list(), listSuggestions()]);
+  return NextResponse.json({ today: todayKstDate(), rows, suggestions });
+}
+
+/** 회원 제안 채택(+포인트) · 거절 */
+export async function PATCH(request: Request) {
+  const { error } = await requireAdmin();
+  if (error) return error;
+  const body = (await request.json().catch(() => ({}))) as { id?: unknown; action?: unknown };
+  if (typeof body.id !== "string" || (body.action !== "adopt" && body.action !== "reject")) return NextResponse.json({ error: "잘못된 요청이에요." }, { status: 400 });
+  const ok = await decideSuggestion(body.id, body.action);
+  if (!ok) return NextResponse.json({ error: "이미 처리된 제안이에요." }, { status: 409 });
+  return NextResponse.json({ ok: true, suggestions: await listSuggestions() });
 }
 
 /** 그날 문제를 직접 넣기(이미 누가 답했으면 못 바꿈) */
@@ -28,16 +41,11 @@ export async function POST(request: Request) {
   if (error) return error;
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const day = body.day;
-  const question = typeof body.question === "string" ? body.question.trim().slice(0, 200) : "";
-  const explanation = typeof body.explanation === "string" ? body.explanation.trim().slice(0, 600) : "";
-  const choices = Array.isArray(body.choices) ? body.choices.map((c) => (typeof c === "string" ? c.trim().slice(0, 60) : "")).filter(Boolean) : [];
-  const answer = Number(body.answer);
   if (!validDay(day)) return NextResponse.json({ error: "날짜를 확인해 주세요." }, { status: 400 });
   if (day < todayKstDate()) return NextResponse.json({ error: "지난 날짜 문제는 바꿀 수 없어요." }, { status: 400 });
-  if (!question) return NextResponse.json({ error: "문제를 적어 주세요." }, { status: 400 });
-  if (choices.length < 2 || choices.length > 4 || new Set(choices).size !== choices.length) return NextResponse.json({ error: "보기는 서로 다른 2~4개로 적어 주세요." }, { status: 400 });
-  if (!Number.isInteger(answer) || answer < 0 || answer >= choices.length) return NextResponse.json({ error: "정답 보기를 골라 주세요." }, { status: 400 });
-  if (!explanation) return NextResponse.json({ error: "해설을 적어 주세요." }, { status: 400 });
+  const parsed = parseQuizInput(body);
+  if (parsed.error !== null) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const { question, choices, answer, explanation } = parsed.value;
   const existing = await prisma.dailyQuiz.findUnique({ where: { day } });
   if (existing) {
     const answered = await prisma.quizAnswer.count({ where: { quizId: existing.id } });

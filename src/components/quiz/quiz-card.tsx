@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { cn } from "cn";
 import { KIND_LABEL } from "@/lib/quiz";
+import { ShareButton } from "@/components/tools/share-button";
+import { shareResultImage } from "@/lib/share-image";
 import type { QuizPublic, QuizResult } from "@/lib/quiz-server";
 
 /**
@@ -102,6 +104,28 @@ export function QuizCard({
             {total ? `회원 ${total.toLocaleString()}명이 풀었어요` : "아직 푼 회원이 없어요 — 첫 정답자가 되어 보세요"}
             {loggedIn && result.streak > 0 ? ` · 연속 정답 ${result.streak}일째(7일마다 보너스 +30P)` : ""}
           </p>
+          {/* 친구에게 문제 내기: 정답은 안 넣고 문제 · 보기 · 내 결과만 */}
+          <ShareButton
+            tool="quiz"
+            label="친구에게 문제 내기"
+            className="mt-1"
+            onShare={(format, byline) =>
+              shareResultImage({
+                title: "오늘의 홀덤 퀴즈",
+                subtitle: `${quiz.day.replace(/-/g, ".")} · ${KIND_LABEL[quiz.kind]} · 정답은 QR로!`,
+                note: quiz.question,
+                lines: [
+                  ...quiz.choices.map((c, i) => ({ label: `보기 ${i + 1}`, value: c })),
+                  { label: byline ? `${byline}님은` : "나는", value: result.correct ? `맞혔어요 ✅${loggedIn && result.streak > 1 ? ` · ${result.streak}일 연속` : ""}` : "틀렸어요 😭", strong: true },
+                ],
+                url: `pokerwiki.co.kr/quiz/${quiz.day}`,
+                fileName: `POKA_퀴즈_${quiz.day}`,
+                format,
+                byline,
+                cta: "바로 도전",
+              })
+            }
+          />
           {!loggedIn ? (
             <p className="text-xs text-[#e7c98a]">
               <Link href="/login?next=%2Fquiz" className="font-bold underline">

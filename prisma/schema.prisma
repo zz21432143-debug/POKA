@@ -299,6 +299,8 @@ model PushSubscription {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   /// 관리자 알림(새 광고·홍보 문의) 받기. 급구 지역 알림과 따로 켭니다.
   adminAlerts Boolean @default(false)
+  /// 오늘의 퀴즈 알림(매일 아침 9시)
+  quizAlerts Boolean @default(false)
   createdAt DateTime @default(now())
 
   @@index([region])

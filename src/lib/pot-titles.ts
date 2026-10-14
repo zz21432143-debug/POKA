@@ -137,7 +137,7 @@ export async function getHonorInfo(): Promise<HonorInfo> {
     keys.map(async (key) => {
       const rows = await getRanking(HONOR_DEFS[key].tab, HONOR_DEFS[key].period).catch(() => []);
       owners[key] = rows
-        .filter((r) => !excluded.has(r.nickname))
+        .filter((r) => !excluded.has(r.nickname) && r.score >= (HONOR_DEFS[key].minScore ?? 0))
         .slice(0, config.honors[key].top)
         .map((r) => r.nickname);
     }),

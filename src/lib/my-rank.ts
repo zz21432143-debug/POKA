@@ -93,7 +93,7 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
   if (excluded.has(user.id)) return { excluded: true, reason: "admin" };
 
   const config = await loadTitleConfig();
-  const [weekExp, marks, attendance, pot, above] = await Promise.all([
+  const [weekExp, marks, attendance, pot, above, quiz, quizStreakDays] = await Promise.all([
     exactRank("level", "week", user.id).catch(() => null),
     exactRank("marks", "all", user.id).catch(() => null),
     exactRank("attendance", "month", user.id).catch(() => null),
@@ -109,6 +109,8 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
         },
       })
       .catch(() => null),
+    exactRank("quiz", "month", user.id).catch(() => null),
+    import("@/lib/quiz-server").then((m) => m.quizStreak(user.id)).catch(() => 0),
   ]);
   const potIndex = pot.findIndex((r) => r.userId === user.id);
   const potRow = potIndex >= 0 ? pot[potIndex] : null;
@@ -137,6 +139,14 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
         before: beforeOf("pot"),
         score: potRow ? `${potRow.correct}문제` : "-",
         href: "/tools/practice",
+      },
+      {
+        key: "quiz",
+        label: "이번 달 퀴즈",
+        short: "퀴즈",
+        rank: quiz?.rank ?? null,
+        score: `${quiz ? rankScoreLabel("quiz", quiz.score) : "0문제"}${quizStreakDays > 0 ? ` · 연속 ${quizStreakDays}일` : ""}`,
+        href: "/quiz",
       },
     ],
   };

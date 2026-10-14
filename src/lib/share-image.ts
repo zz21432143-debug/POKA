@@ -61,7 +61,7 @@ async function drawFrame(title: string, subtitle: string | undefined, format: Sh
 }
 
 /** 아래: 사이트 주소 + QR(그 도구 주소) */
-async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string, byline?: string | null) {
+async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string, byline?: string | null, cta = "바로 계산") {
   const qrSize = 130;
   const qrX = W - 80 - qrSize;
   const qrY = H - 70 - qrSize;
@@ -80,7 +80,7 @@ async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string,
   ctx.fillStyle = "#d1c7b5";
   ctx.font = font(28, 700);
   // 로그인한 회원이면 「○○님이 공유」
-  ctx.fillText(byline ? `${byline}님이 공유 · 📱 찍으면 바로 계산` : "📱 카메라로 찍으면 바로 계산해 볼 수 있어요", 80, H - 150);
+  ctx.fillText(byline ? `${byline}님이 공유 · 📱 찍으면 ${cta}` : `📱 카메라로 찍으면 ${cta}해 볼 수 있어요`, 80, H - 150);
   ctx.fillStyle = GOLD;
   let size = 36;
   ctx.font = font(size, 900);
@@ -104,6 +104,8 @@ export async function drawResultImage({
   url,
   format = "square",
   byline,
+  note,
+  cta,
 }: {
   title: string;
   subtitle?: string;
@@ -112,10 +114,31 @@ export async function drawResultImage({
   format?: ShareFormat;
   /** 공유한 회원 닉네임(없으면 안 넣음) */
   byline?: string | null;
+  /** 줄 위에 크게 넣는 긴 글(퀴즈 문제 등) · 최대 3줄로 줄바꿈 */
+  note?: string;
+  /** 아래 안내 「찍으면 ○○」(기본: 바로 계산) */
+  cta?: string;
 }): Promise<Blob | null> {
   const frame = await drawFrame(title, subtitle, format);
   if (!frame) return null;
-  const { canvas, ctx, H, contentTop, contentBottom } = frame;
+  const { canvas, ctx, H, contentBottom } = frame;
+  let { contentTop } = frame;
+  if (note) {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = font(44, 900);
+    const rows: string[] = [];
+    let cur = "";
+    for (const word of note.split(" ")) {
+      const next = cur ? `${cur} ${word}` : word;
+      if (ctx.measureText(next).width > W - 160 && cur) {
+        rows.push(cur);
+        cur = word;
+      } else cur = next;
+    }
+    if (cur) rows.push(cur);
+    rows.slice(0, 3).forEach((row, i) => ctx.fillText(i === 2 && rows.length > 3 ? `${row}…` : row, 80, contentTop + 50 + i * 60));
+    contentTop += 50 + Math.min(rows.length, 3) * 60;
+  }
   // 줄이 적으면 크게, 제목과 아래 사이 가운데로
   const area = contentBottom - contentTop;
   const rowH = Math.min(150, Math.floor(area / Math.max(lines.length, 1)));
@@ -139,7 +162,7 @@ export async function drawResultImage({
     ctx.fillText(line.value, W - 110 - ctx.measureText(line.value).width, y);
     y += rowH;
   }
-  await drawFooter(ctx, H, url, byline);
+  await drawFooter(ctx, H, url, byline, cta);
   return toBlob(canvas);
 }
 
@@ -216,6 +239,6 @@ export async function shareBlob(blob: Blob | null, opts: { title: string; url: s
 }
 
 /** 결과 카드 그려서 공유 · 저장. 결과: "shared" | "downloaded" | "failed" */
-export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string; format?: ShareFormat; byline?: string | null }) {
+export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string; format?: ShareFormat; byline?: string | null; note?: string; cta?: string }) {
   return shareBlob(await drawResultImage(opts).catch(() => null), opts);
 }
