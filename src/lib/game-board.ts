@@ -105,6 +105,38 @@ export function defaultBoard(): GameBoardData {
   };
 }
 
+/** 새 현황판 시작 방법: 기본 구조 · 빈 상태(1레벨) · 지난 현황판 구조 가져오기 */
+export type BoardTemplate = "basic" | "empty" | "copy";
+
+/** 새 현황판 데이터. copy는 지난 현황판의 블라인드·칩·등록 마감·프라이즈·공지·배경만 가져오고 인원·시계는 0부터 */
+export function newBoardData(template: BoardTemplate, name: string, source?: GameBoardData | null): GameBoardData {
+  const base = defaultBoard();
+  const title = name.trim() || base.name;
+  if (template === "empty") {
+    return { ...base, name: title, levels: [{ sb: 100, bb: 200, ante: 200, minutes: 20 }] };
+  }
+  if (template === "copy" && source) {
+    return {
+      ...base,
+      name: title,
+      subtitle: source.subtitle,
+      levels: source.levels,
+      startStack: source.startStack,
+      rebuyStack: source.rebuyStack,
+      earlyStack: source.earlyStack,
+      addonOn: source.addonOn,
+      addonStack: source.addonStack,
+      regLevel: source.regLevel,
+      prizeTitle: source.prizeTitle,
+      prizes: source.prizes,
+      notice: source.notice,
+      bgUrl: source.bgUrl,
+      bgDim: source.bgDim,
+    };
+  }
+  return { ...base, name: title };
+}
+
 const int = (v: unknown, min: number, max: number, fallback = 0) => {
   const n = Math.floor(Number(v));
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { applyClock, boardStats, clockText, clockView, defaultBoard, makeStructure, normalizeBoard, type GameBoardData } from "./game-board";
+import { applyClock, boardStats, clockText, clockView, defaultBoard, makeStructure, newBoardData, normalizeBoard, type GameBoardData } from "./game-board";
 
 const MIN = 60_000;
 function board(levels = [20, 20, 10, 20].map((minutes, i) => (i === 2 ? { sb: 0, bb: 0, ante: 0, minutes, isBreak: true } : { sb: 100 * (i + 1), bb: 200 * (i + 1), ante: 200 * (i + 1), minutes }))): GameBoardData {
@@ -147,4 +147,25 @@ describe("set the clock by typing", () => {
     d.clock = applyClock(d, { op: "set", ms: 0 }, 2 * MIN);
     assert.equal(clockView(d, 2 * MIN).remainingMs, 1_000);
   });
+});
+
+it("새 현황판: 기본 · 빈 상태 · 지난 현황판 구조 가져오기", () => {
+  const basic = normalizeBoard(newBoardData("basic", " 데일리 "));
+  assert.equal(basic.name, "데일리");
+  assert.equal(basic.levels.length, defaultBoard().levels.length);
+
+  const empty = normalizeBoard(newBoardData("empty", ""));
+  assert.equal(empty.name, defaultBoard().name);
+  assert.equal(empty.levels.length, 1);
+
+  const source = { ...defaultBoard(), levels: makeStructure({ count: 5, breakEvery: 0 }), startStack: 50_000, entries: 42, remaining: 9, prizes: [{ place: "1위", amount: "100만", color: "gold" as const }], clock: { level: 3, elapsedMs: 1000, runningSince: 5 } };
+  const copy = normalizeBoard(newBoardData("copy", "터보", source));
+  assert.equal(copy.name, "터보");
+  assert.equal(copy.levels.length, 5);
+  assert.equal(copy.startStack, 50_000);
+  assert.equal(copy.prizes.length, 1);
+  // 인원 · 시계는 0부터
+  assert.equal(copy.entries, 0);
+  assert.equal(copy.remaining, 0);
+  assert.deepEqual(copy.clock, { level: 0, elapsedMs: 0, runningSince: null });
 });

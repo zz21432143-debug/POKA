@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
-import { applyClock, defaultBoard, normalizeBoard, type ClockOp, type GameBoardData } from "@/lib/game-board";
+import { applyClock, defaultBoard, newBoardData, normalizeBoard, type BoardTemplate, type ClockOp, type GameBoardData } from "@/lib/game-board";
 
 /** 계정 하나가 만들 수 있는 현황판 수 */
 export const MAX_BOARDS = 30;
@@ -36,9 +36,16 @@ export async function boardVersion(ownerId: string, id: string) {
   return row?.version ?? -1;
 }
 
-export async function createBoard(ownerId: string, name?: string) {
+export async function createBoard(ownerId: string, name?: string, template: BoardTemplate = "basic", copyFrom?: string) {
   if ((await prisma.gameBoard.count({ where: { ownerId } })) >= MAX_BOARDS) throw new GameBoardError(`현황판은 ${MAX_BOARDS}개까지 만들 수 있습니다. 안 쓰는 것을 지워 주세요.`);
-  const data = normalizeBoard({ ...defaultBoard(), name: name?.trim() || defaultBoard().name });
+  let source: GameBoardData | null = null;
+  if (template === "copy") {
+    // 내 현황판에서만 가져옴
+    const from = copyFrom ? await prisma.gameBoard.findFirst({ where: { id: copyFrom, ownerId }, select: { dataJson: true } }) : null;
+    if (!from) throw new GameBoardError("가져올 현황판을 찾을 수 없습니다.");
+    source = normalizeBoard(parse(from.dataJson));
+  }
+  const data = normalizeBoard(newBoardData(template, name ?? "", source));
   const row = await prisma.gameBoard.create({ data: { ownerId, name: data.name, dataJson: JSON.stringify(data) } });
   return row.id;
 }

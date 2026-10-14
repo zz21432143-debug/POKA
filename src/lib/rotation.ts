@@ -6,6 +6,8 @@
 import { alignToStart, parseClock, type PlanDealer, type RotationPlan } from "@/lib/rotation-plan";
 
 export const MAX_TABLES = 100;
+/** 계정마다 만들 수 있는 게임 수 */
+export const MAX_GAMES = 100;
 export const MAX_DEALERS = 150;
 export const INTERVAL_CHOICES = [10, 15, 20, 25, 30, 40, 45, 60] as const;
 
@@ -61,7 +63,7 @@ export type RotationStateView = {
   shareToken: string | null;
   /** 최대 연속 딜(분). 0이면 제한 없음 */
   maxStreakMinutes: number;
-  /** 최근 게임(날짜 최신순) */
+  /** 이 계정의 게임(날짜 최신순, 최대 MAX_GAMES개) */
   games: RotationGame[];
   version: number;
   tableCount: number;
@@ -102,7 +104,9 @@ export type RotationAction =
   | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
   | { type: "createGame"; name: string; workDate: string; copyDealers?: boolean; copySettings?: boolean }
   | { type: "setGame"; name?: string; workDate?: string }
-  | { type: "deleteGame" };
+  | { type: "deleteGame" }
+  /** 지난 게임 여러 개 한꺼번에 지우기(지금 보는 게임은 남김) */
+  | { type: "deleteGames"; ids: string[] };
 
 /** 최대 연속 딜 선택지(분). 0 = 제한 없음 */
 export const MAX_STREAK_CHOICES = [0, 40, 60, 80, 100, 120] as const;

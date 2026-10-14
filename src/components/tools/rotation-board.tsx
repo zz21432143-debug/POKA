@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
+import { ToolDialog } from "@/components/tools/tool-dialog";
 import {
   INTERVAL_CHOICES,
   MAX_STREAK_CHOICES,
   MAX_DEALERS,
+  MAX_GAMES,
   MAX_TABLES,
   STATUS_LABEL,
   closedFromOf,
@@ -112,6 +114,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     setOrigin(window.location.origin);
   }, []);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
+  /** 지난 게임 정리 창: 고른 게임 id(null이면 닫힘) */
+  const [cleanup, setCleanup] = useState<string[] | null>(null);
   // 화면 탭: 운영(시간표) · 딜러 · 공유 · 설정. 딜러가 없으면 딜러 탭부터
   const [tab, setTab] = useState<"run" | "dealers" | "share" | "settings">(() => (initial.dealers.length ? "run" : "dealers"));
   // 딜러 등록 칸: 등록한 뒤에도 접히지 않게(여러 번 나눠 등록)
@@ -526,6 +530,69 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </button>
         </div>
       </section>
+
+      {/* 처음 쓰는 사람용 3단계 안내: 다 끝나면(시간표가 생기면) 사라집니다 */}
+      {!plan || state.dealers.length === 0 ? (
+        <section data-rotation-guide aria-label="시작 안내" className="grid gap-2 rounded-2xl border border-amber-400/50 bg-amber-950/40 p-3">
+          <h2 className="text-sm font-black text-amber-200">처음이면 이 순서대로 해 주세요</h2>
+          <ol className="grid gap-1.5 sm:grid-cols-3">
+            {(
+              [
+                { key: "dealers", no: "①", title: "딜러 등록", body: `딜러 탭 · 지금 ${state.dealers.length}명`, done: state.dealers.length > 0 },
+                { key: "settings", no: "②", title: "테이블 정하기", body: `설정 탭 · 지금 ${state.tableCount}개`, done: state.tableCount > 0 },
+                { key: "run", no: "③", title: "Auto 누르기", body: "시간표 자동 완성", done: !!plan },
+              ] as const
+            ).map((step, index, steps) => {
+              // 앞 단계가 다 끝난 첫 단계를 강조
+              const active = !step.done && steps.slice(0, index).every((s) => s.done);
+              return (
+                <li key={step.key}>
+                  <button
+                    type="button"
+                    data-guide-step={step.key}
+                    disabled={busy}
+                    onClick={() => {
+                      setTab(step.key);
+                      // ③은 바로 Auto(앞 단계가 남았으면 runAuto가 무엇부터 할지 알려 줌)
+                      if (step.key === "run") runAuto();
+                    }}
+                    className={cn(
+                      "flex min-h-12 w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition active:scale-[0.98]",
+                      step.done
+                        ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-200"
+                        : active
+                          ? "border-amber-400 bg-amber-400 text-black"
+                          : "border-white/15 bg-black/40 text-zinc-300",
+                    )}
+                  >
+                    <span className="text-lg font-black">{step.done ? "✔" : step.no}</span>
+                    <span className="grid min-w-0 flex-1">
+                      <span className="text-sm font-black">{step.title}</span>
+                      <span className={cn("truncate text-xs", active ? "text-black/70" : "opacity-75")}>{step.body}</span>
+                    </span>
+                    <span aria-hidden className="text-base font-black">›</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ) : null}
+
+      {/* 게임 수 한도에 가까우면 지난 게임 정리 안내 */}
+      {state.games.length >= MAX_GAMES - 20 ? (
+        <p data-cleanup-notice className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/50 px-3 py-2 text-sm font-bold text-amber-200">
+          게임이 {state.games.length}/{MAX_GAMES}개예요. {state.games.length >= MAX_GAMES ? "더 만들려면" : "한도에 가까워요."} 지난 게임을 정리해 주세요.
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => setCleanup([])}
+            className="ml-auto min-h-10 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
+          >
+            지난 게임 정리하기
+          </button>
+        </p>
+      ) : null}
 
       {/* 탭: 운영(시간표) · 딜러 · 공유 · 설정 */}
       <nav aria-label="로테이션 메뉴" role="tablist" className="grid grid-cols-4 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
@@ -1288,7 +1355,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
       {/* 시간 바꾸기 */}
       {plan && timeEdit ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="시간 바꾸기">
+        <ToolDialog label="시간 바꾸기">
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">교대 시간 바꾸기</h3>
             <p className="text-xs text-zinc-400">이 칸 시간을 바꾸면 뒤 칸은 로테이션 간격({plan.interval}분)대로 다시 맞춰집니다. 배정은 그대로입니다.</p>
@@ -1307,12 +1374,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </button>
             </div>
           </div>
-        </div>
+        </ToolDialog>
       ) : null}
 
       {/* 칸 바꾸기 */}
       {plan && cell && candidates ? (
-        <div className="fixed inset-0 z-[60] grid place-items-end bg-black/70 p-3 sm:place-items-center" role="dialog" aria-label="칸 바꾸기">
+        <ToolDialog label="칸 바꾸기" className="place-items-end p-3 sm:place-items-center">
           <div className="grid max-h-[85dvh] w-full max-w-lg gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
               {formatClock(candidates.slot.at)} · T{labels[cell.table]}{" "}
@@ -1364,12 +1431,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </button>
             </div>
           </div>
-        </div>
+        </ToolDialog>
       ) : null}
 
       {/* 새 게임 · 날짜 변경 · 이름/날짜 고치기 */}
       {gameDialog ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="게임">
+        <ToolDialog label="게임">
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
               {gameDialog.mode === "day" ? "날짜 변경(새 근무일)" : gameDialog.mode === "new" ? "새 게임" : "이름·날짜 고치기"}
@@ -1444,17 +1511,94 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   게임 삭제
                 </button>
               ) : null}
+              {gameDialog.mode === "edit" && state.games.length > 1 ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setGameDialog(null);
+                    setCleanup([]);
+                  }}
+                  className="min-h-11 rounded-lg border border-amber-400/70 px-3 text-sm font-black text-amber-300"
+                >
+                  지난 게임 정리
+                </button>
+              ) : null}
               <button type="button" onClick={() => setGameDialog(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
                 닫기
               </button>
             </div>
           </div>
-        </div>
+        </ToolDialog>
+      ) : null}
+
+      {/* 지난 게임 정리: 지금 보는 게임 말고 나머지를 오래된 순으로 골라 한꺼번에 지움 */}
+      {cleanup ? (
+        <ToolDialog label="지난 게임 정리">
+          <div className="grid max-h-[90dvh] w-full max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">지난 게임 정리 · {state.games.length}/{MAX_GAMES}개</h3>
+            {(() => {
+              const others = state.games.filter((g) => g.id !== state.game.id);
+              const today = kstDate();
+              const past = others.filter((g) => !g.workDate || g.workDate < today).map((g) => g.id);
+              return (
+                <div className="flex flex-wrap gap-1.5 text-xs">
+                  <button type="button" onClick={() => setCleanup(past)} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold">
+                    오늘 이전 전부({past.length})
+                  </button>
+                  <button type="button" onClick={() => setCleanup([])} className="min-h-10 rounded-lg border border-white/25 px-3 font-bold">
+                    선택 해제
+                  </button>
+                  <span className="self-center text-zinc-400">지금 보는 게임은 지울 수 없어요.</span>
+                </div>
+              );
+            })()}
+            <ul className="grid content-start gap-1 overflow-y-auto overscroll-contain pr-1">
+              {state.games
+                .filter((g) => g.id !== state.game.id)
+                .slice()
+                .reverse()
+                .map((g) => {
+                  const checked = cleanup.includes(g.id);
+                  return (
+                    <li key={g.id}>
+                      <label className={cn("flex min-h-11 items-center gap-2 rounded-lg border px-2 text-sm font-bold", checked ? "border-rose-500/70 bg-rose-950/50" : "border-white/15")}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => setCleanup(e.target.checked ? [...cleanup, g.id] : cleanup.filter((id) => id !== g.id))}
+                          className="size-5"
+                        />
+                        <span className="shrink-0 text-zinc-400">{formatWorkDate(g.workDate)}</span>
+                        <span className="min-w-0 truncate">{g.name}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy || cleanup.length === 0}
+                onClick={async () => {
+                  if (!window.confirm(`고른 게임 ${cleanup.length}개를 지울까요? 딜러 명단과 시간표도 함께 지워지고 되돌릴 수 없어요.`)) return;
+                  if (await send({ type: "deleteGames", ids: cleanup })) setCleanup(null);
+                }}
+                className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-black text-white disabled:opacity-40"
+              >
+                {cleanup.length}개 지우기
+              </button>
+              <button type="button" onClick={() => setCleanup(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold">
+                닫기
+              </button>
+            </div>
+          </div>
+        </ToolDialog>
       ) : null}
 
       {/* 출근·퇴근 시간 바꾸기 */}
       {times ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="출근·퇴근 시간">
+        <ToolDialog label="출근·퇴근 시간">
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">{times.name} · 출근/퇴근 시간</h3>
             <label className="grid gap-1 text-sm font-bold">
@@ -1492,12 +1636,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </button>
             </div>
           </div>
-        </div>
+        </ToolDialog>
       ) : null}
 
       {/* 딜러 수정 */}
       {editing ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-label="딜러 수정">
+        <ToolDialog label="딜러 수정">
           <div className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">딜러 수정</h3>
             <label className="grid gap-1 text-sm font-bold">
@@ -1536,7 +1680,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </button>
             </div>
           </div>
-        </div>
+        </ToolDialog>
       ) : null}
     </div>
   );

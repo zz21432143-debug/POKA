@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import {
   MAX_DEALERS,
+  MAX_GAMES,
   kstDate,
   kstDateAt,
   normalizeWorkDate,
@@ -17,10 +18,8 @@ import {
 } from "@/lib/rotation";
 import { remapPlanTables, type RotationPlan } from "@/lib/rotation-plan";
 
-/** 게임 목록에 보여 줄 개수 */
-const GAME_LIST = 40;
-/** 계정당 게임 수 상한 */
-const MAX_GAMES = 100;
+/** 게임 목록에 보여 줄 개수(정리 창에서 전부 골라 지울 수 있게 상한만큼) */
+const GAME_LIST = MAX_GAMES;
 const GAME_ORDER = [{ workDate: { sort: "desc" as const, nulls: "last" as const } }, { createdAt: "desc" as const }];
 /** 시간표 칸 수 상한(5분 간격 24시간 = 288칸) */
 const MAX_SLOTS = 300;
@@ -359,6 +358,16 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           data.workDate = workDate;
         }
         await tx.rotationMeta.update({ where: { id: META_ID }, data });
+        break;
+      }
+      case "deleteGames": {
+        const ids = Array.isArray(action.ids) ? action.ids.filter((x): x is string => typeof x === "string" && x !== META_ID).slice(0, MAX_GAMES) : [];
+        if (ids.length === 0) throw new RotationError("지울 게임을 골라 주세요.");
+        // 내 게임만, 지금 보는 게임은 빼고
+        const mine = await tx.rotationMeta.findMany({ where: { ownerId, id: { in: ids } }, select: { id: true } });
+        const targets = mine.map((m) => m.id);
+        await tx.rotationDealer.deleteMany({ where: { gameId: { in: targets } } });
+        await tx.rotationMeta.deleteMany({ where: { ownerId, id: { in: targets } } });
         break;
       }
       case "deleteGame": {

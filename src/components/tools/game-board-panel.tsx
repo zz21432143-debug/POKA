@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type PrizeColor, type PrizeRow } from "@/lib/game-board";
+import { ToolDialog } from "@/components/tools/tool-dialog";
+import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type BoardTemplate, type PrizeColor, type PrizeRow } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
@@ -34,6 +35,9 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
   const [error, setError] = useState<string | null>(null);
   const [tv, setTv] = useState(false);
   const [tab, setTab] = useState<"play" | "prize" | "setup">("play");
+  /** 새 현황판 창(이름 · 시작 방법 · 가져올 현황판) */
+  const [creating, setCreating] = useState(false);
+  const [maker, setMaker] = useState<{ name: string; template: BoardTemplate; copyFrom: string } | null>(null);
   const dirty = useRef(false);
   const saveTimer = useRef<number | null>(null);
   // 화면에 보이는 최신 입력(빠르게 연달아 바꿔도 늘 이걸 바탕으로) · 몇 번째 입력인지
@@ -137,11 +141,19 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
     }
   }
 
+  function startCreate() {
+    // 지난 현황판이 있으면 지금 보는 것(없으면 최근 것) 구조를 기본으로 고름
+    const from = board?.id ?? boards[0]?.id ?? "";
+    setMaker({ name: "", template: from ? "copy" : "basic", copyFrom: from });
+  }
+
   async function create() {
-    const name = window.prompt("현황판 이름(예: 메인 토너먼트, 데일리 터보)", "메인 토너먼트");
-    if (name === null) return;
+    if (!maker || creating) return;
+    setCreating(true);
+    setError(null);
     try {
-      const json = await call({ action: "create", name });
+      const json = await call({ action: "create", name: maker.name.trim() || "메인 토너먼트", template: maker.template, copyFrom: maker.copyFrom });
+      setMaker(null);
       if (json.boards) setBoards(json.boards);
       if (json.board) {
         // 다른 현황판으로 바꾸면, 앞 현황판의 저장 답이 이 화면을 덮지 않게
@@ -154,6 +166,8 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
       }
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -235,7 +249,7 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
               ))}
             </select>
           </label>
-          <button type="button" onClick={() => void create()} className="min-h-11 self-end rounded-xl bg-amber-400 px-4 text-sm font-black text-black">
+          <button type="button" onClick={startCreate} className="min-h-11 self-end rounded-xl bg-amber-400 px-4 text-sm font-black text-black">
             + 새 현황판
           </button>
           {board ? (
@@ -247,10 +261,91 @@ export function GameBoardPanel({ initialBoards, initialBoard }: { initialBoards:
         {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
       </section>
 
+      {/* 새 현황판: 이름 + 시작 방법(기본 구조 · 빈 상태 · 지난 현황판 구조 가져오기) */}
+      {maker ? (
+        <ToolDialog label="새 현황판">
+          <div className="grid max-h-[90dvh] w-full max-w-md gap-3 overflow-y-auto rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black text-white">새 현황판</h3>
+            <label className="grid gap-1 text-sm font-bold text-zinc-200">
+              현황판 이름
+              <input
+                value={maker.name}
+                maxLength={BOARD_LIMITS.name}
+                placeholder="예: 메인 토너먼트, 데일리 터보"
+                onChange={(e) => setMaker({ ...maker, name: e.target.value })}
+                className="h-11 rounded-lg border border-white/20 bg-black px-2 text-base text-white"
+              />
+            </label>
+            <fieldset className="grid gap-1.5">
+              <legend className="mb-1 text-sm font-bold text-zinc-200">어떻게 시작할까요?</legend>
+              {(
+                [
+                  ["copy", "지난 현황판 구조 가져오기", "블라인드 · 칩 · 등록 마감 · 프라이즈 · 공지 · 배경을 그대로. 인원 · 시계는 0부터"],
+                  ["basic", "기본 구조로 시작", "BB 200부터 20분 16레벨(4레벨마다 휴식)"],
+                  ["empty", "빈 상태로 시작", "블라인드 1레벨만 두고 직접 채우기"],
+                ] as const
+              ).map(([key, title, body]) => {
+                const disabled = key === "copy" && boards.length === 0;
+                return (
+                  <label
+                    key={key}
+                    data-board-template={key}
+                    className={cn(
+                      "flex min-h-12 items-start gap-2 rounded-xl border px-3 py-2",
+                      maker.template === key ? "border-amber-400 bg-amber-950/50" : "border-white/15",
+                      disabled && "opacity-40",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="board-template"
+                      checked={maker.template === key}
+                      disabled={disabled}
+                      onChange={() => setMaker({ ...maker, template: key })}
+                      className="mt-0.5 size-5 shrink-0"
+                    />
+                    <span className="grid min-w-0">
+                      <span className="text-sm font-black text-white">{title}</span>
+                      <span className="text-xs leading-5 text-zinc-400">{disabled ? "아직 만든 현황판이 없어요" : body}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+            {maker.template === "copy" && boards.length > 0 ? (
+              <label className="grid gap-1 text-sm font-bold text-zinc-200">
+                가져올 현황판
+                <select
+                  aria-label="가져올 현황판"
+                  value={maker.copyFrom}
+                  onChange={(e) => setMaker({ ...maker, copyFrom: e.target.value })}
+                  className="h-11 w-full min-w-0 rounded-lg border border-white/20 bg-black px-2 text-base font-bold text-white"
+                >
+                  {boards.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={creating} onClick={() => void create()} className="min-h-11 rounded-lg bg-amber-400 px-5 text-sm font-black text-black disabled:opacity-40">
+                {creating ? "만드는 중…" : "만들기"}
+              </button>
+              <button type="button" onClick={() => setMaker(null)} className="ml-auto min-h-11 rounded-lg border border-white/30 px-4 text-sm font-bold text-white">
+                닫기
+              </button>
+            </div>
+          </div>
+        </ToolDialog>
+      ) : null}
+
       {!board || !draft ? (
         <section className="ink-panel grid justify-items-center gap-3 rounded-2xl px-4 py-10 text-center">
           <p className="text-base text-[#D1D5DB]">아직 현황판이 없습니다. 게임마다 하나씩 만들어 TV에 띄우세요.</p>
-          <button type="button" onClick={() => void create()} className="min-h-12 rounded-xl bg-amber-400 px-6 text-base font-black text-black">
+          <button type="button" onClick={startCreate} className="min-h-12 rounded-xl bg-amber-400 px-6 text-base font-black text-black">
             첫 현황판 만들기
           </button>
         </section>

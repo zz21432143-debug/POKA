@@ -37,11 +37,12 @@ const CLOCK_OPS = new Set(["start", "pause", "next", "prev", "reset", "add", "se
 export async function POST(request: Request) {
   const access = await guard();
   if ("denied" in access) return access.denied;
-  const body = (await request.json().catch(() => ({}))) as { action?: string; id?: string; name?: string; data?: unknown; clock?: { op?: string; ms?: number; index?: number }; on?: boolean };
+  const body = (await request.json().catch(() => ({}))) as { action?: string; id?: string; name?: string; data?: unknown; clock?: { op?: string; ms?: number; index?: number }; on?: boolean; template?: string; copyFrom?: string };
   const id = typeof body.id === "string" ? body.id : "";
   try {
     if (body.action === "create") {
-      const newId = await createBoard(access.ownerId, typeof body.name === "string" ? body.name.slice(0, 30) : undefined);
+      const template = body.template === "empty" || body.template === "copy" ? body.template : "basic";
+      const newId = await createBoard(access.ownerId, typeof body.name === "string" ? body.name.slice(0, 30) : undefined, template, typeof body.copyFrom === "string" ? body.copyFrom : undefined);
       return NextResponse.json({ ok: true, id: newId, boards: await listBoards(access.ownerId), board: await loadBoard(access.ownerId, newId) });
     }
     if (body.action === "delete") {
