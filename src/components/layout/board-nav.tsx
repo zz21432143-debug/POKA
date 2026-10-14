@@ -8,6 +8,7 @@ import { SIDEBAR_NAV, navItemActive } from "@/lib/nav";
 import { BrandIcon } from "@/components/brand/brand-icon";
 import {
   AwardIcon,
+  BarChart3Icon,
   BellIcon,
   BookOpenIcon,
   BriefcaseIcon,
@@ -51,6 +52,7 @@ const NAV_ICON: Record<string, LucideIcon> = {
   "/tools/practice": TargetIcon,
   "/community/equity": PercentIcon,
   "/community/hand-rankings": ListOrderedIcon,
+  "/community/hand-ranges": BarChart3Icon,
   "/attendance": CalendarCheckIcon,
   "/boards/schedule": CalendarDaysIcon,
   "/boards/tda": BookOpenIcon,

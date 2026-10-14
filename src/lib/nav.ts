@@ -70,6 +70,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
       { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
       { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 핸드 랭킹", icon: "cards" },
+      { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },

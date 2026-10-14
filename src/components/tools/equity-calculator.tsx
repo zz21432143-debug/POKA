@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2Icon, RotateCcwIcon, ShuffleIcon } from "lucide-react";
 import { cardCode, cardIndex } from "@/lib/hand-eval";
-import { exactEquity, madeHand, randomEquity, requiredEquity, type EquityResult } from "@/lib/equity";
+import { classCombos, exactEquity, madeHand, randomEquity, rangeEquity, requiredEquity, type EquityResult } from "@/lib/equity";
+import { HAND_NAMES, handCombos, topRange } from "@/lib/hand-ranking";
 import { cn } from "cn";
 
 type Slot = "h1" | "h2" | "v1" | "v2" | "f1" | "f2" | "f3" | "t" | "r";
