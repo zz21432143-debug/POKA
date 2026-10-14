@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon } from "lucide-react";
+import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon, PieChartIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "대회 · 정보" };
@@ -9,6 +9,7 @@ const CARDS = [
   { href: "/boards/schedule", title: "홀덤 대회 캘린더", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
   { href: "/boards/tda", title: "TDA 룰", body: "토너먼트 공식 홀덤 룰 정리.", icon: BookOpenIcon },
   { href: "/info/guide", title: "딜러 가이드", body: "테이블에서 바로 쓰는 기본 룰.", icon: GraduationCapIcon },
+  { href: "/info/icm", title: "ICM 계산기", body: "파이널 테이블 딜 금액을 공정하게.", icon: PieChartIcon },
 ] as const;
 
 export default function InfoHubPage() {
