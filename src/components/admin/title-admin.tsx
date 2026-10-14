@@ -220,12 +220,39 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
             </div>
           ))}
         </div>
+        {/* 지난주 급상승 보상 */}
+        <div data-riser-reward className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3 text-sm">
+          <label className="flex items-center gap-2 font-semibold">
+            <input
+              type="checkbox"
+              aria-label="지난주 급상승 보상 켜기"
+              disabled={!canEdit}
+              checked={draft.riserReward.enabled}
+              onChange={(e) => setDraft({ ...draft, riserReward: { ...draft.riserReward, enabled: e.target.checked } })}
+              className="size-5"
+            />
+            🔥 지난주 급상승 회원에게 포인트 보상
+          </label>
+          <input
+            type="number"
+            inputMode="numeric"
+            aria-label="지난주 급상승 보상 포인트"
+            disabled={!canEdit}
+            min={0}
+            max={10000}
+            value={draft.riserReward.points}
+            onChange={(e) => setDraft({ ...draft, riserReward: { ...draft.riserReward, points: Number(e.target.value) || 0 } })}
+            className="h-10 w-24 rounded-lg border border-border bg-card px-2 text-base"
+          />
+          P
+          <span className="text-xs text-muted-foreground">월요일에 LIVE 띠 소식과 함께 한 번 지급돼요(주마다 한 명).</span>
+        </div>
         {canEdit ? (
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={busy || !dirty}
-              onClick={() => void send("PATCH", { enabled: draft.enabled, names: draft.names, difficulty: draft.difficulty, period: draft.period, honors: draft.honors }, "칭호 설정을 저장했습니다.")}
+              onClick={() => void send("PATCH", { enabled: draft.enabled, names: draft.names, difficulty: draft.difficulty, period: draft.period, honors: draft.honors, riserReward: draft.riserReward }, "칭호 설정을 저장했습니다.")}
               className="min-h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
               저장

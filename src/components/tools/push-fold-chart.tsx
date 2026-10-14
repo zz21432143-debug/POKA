@@ -179,8 +179,9 @@ function HeadsUp({ mode, view }: { mode: string; view: View }) {
       </div>
       {view === "range" ? (
         <ShareButton
+          tool="pushfold-hu"
           label="이 차트 이미지로 공유"
-          onShare={async (format) =>
+          onShare={async (format, byline) =>
             shareBlob(
               await drawRangeImage({
                 title: "GTO 푸시폴드 · 헤즈업",
@@ -192,6 +193,7 @@ function HeadsUp({ mode, view }: { mode: string; view: View }) {
                 names: NAMES,
                 url: "pokerwiki.co.kr/info/push-fold",
                 format,
+                byline,
               }).catch(() => null),
               { title: "GTO 푸시폴드 헤즈업", url: "pokerwiki.co.kr/info/push-fold", fileName: `POKA_헤즈업_${s}bb` },
             )
@@ -305,8 +307,9 @@ function Positions({ mode, view }: { mode: string; view: View }) {
       </div>
       {view === "range" ? (
         <ShareButton
+          tool="pushfold-pos"
           label="이 차트 이미지로 공유"
-          onShare={async (format) =>
+          onShare={async (format, byline) =>
             shareBlob(
               await drawRangeImage({
                 title: "GTO 푸시폴드",
@@ -318,6 +321,7 @@ function Positions({ mode, view }: { mode: string; view: View }) {
                 names: NAMES,
                 url: "pokerwiki.co.kr/info/push-fold",
                 format,
+                byline,
               }).catch(() => null),
               { title: "GTO 푸시폴드 차트", url: "pokerwiki.co.kr/info/push-fold", fileName: `POKA_푸시폴드_${pusherName}_${s}bb` },
             )

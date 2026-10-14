@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { loadSiteStats } from "@/lib/site-stats";
+import { SHARE_TOOLS, shareStats, type ShareTool } from "@/lib/share-stats";
 import { formatKstLabel } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "방문 · 가입 통계", robots: { index: false } };
@@ -30,7 +31,8 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
   if (!user || !isStaff(user)) notFound();
   const { days: daysParam } = await searchParams;
   const range = RANGES.find((value) => String(value) === daysParam) ?? 30;
-  const stats = await loadSiteStats(range);
+  const [stats, shares] = await Promise.all([loadSiteStats(range), shareStats(range)]);
+  const shareRows = (Object.keys(SHARE_TOOLS) as ShareTool[]).map((k) => ({ key: k, label: SHARE_TOOLS[k], ...shares[k] })).sort((a, b) => b.total - a.total);
   const maxVisitors = Math.max(1, ...stats.days.map((row) => row.visitors));
   const sum = (key: "visitors" | "signups" | "withdrawals") => stats.days.reduce((total, row) => total + row[key], 0);
 
@@ -124,6 +126,33 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* 이미지 공유: 어떤 도구 결과가 많이 퍼지는지(공유 창 = 카톡 등으로 바로 보냄, 저장 = 이미지 내려받음) */}
+      <section aria-label="이미지 공유" data-share-stats className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h2 className="text-lg font-semibold">📤 이미지 공유 · 최근 {range}일</h2>
+        <table className="mt-2 w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-muted-foreground">
+              <th className="py-1">도구</th>
+              <th className="py-1 text-right">합계</th>
+              <th className="py-1 text-right">공유 창</th>
+              <th className="py-1 text-right">저장</th>
+              <th className="py-1 text-right">세로형</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shareRows.map((r) => (
+              <tr key={r.key} data-share-row={r.key} className="border-t border-border">
+                <td className="py-1.5">{r.label}</td>
+                <td className="py-1.5 text-right font-bold tabular-nums">{n(r.total)}</td>
+                <td className="py-1.5 text-right tabular-nums">{n(r.shared)}</td>
+                <td className="py-1.5 text-right tabular-nums">{n(r.downloaded)}</td>
+                <td className="py-1.5 text-right tabular-nums">{n(r.story)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </div>
   );

@@ -68,9 +68,17 @@ async function announceLastWeekRiser(week: string, now: RankSnap) {
   if (!pick) return;
   const user = await prisma.user.findUnique({ where: { id: pick.userId }, select: { nickname: true } });
   if (!user) return;
+  // 보상(관리자가 켠 경우): 포인트 지급 · 기록
+  const { riserReward } = await loadTitleConfig();
+  const reward = riserReward.enabled && riserReward.points > 0 ? riserReward.points : 0;
+  if (reward) {
+    await prisma.user.update({ where: { id: pick.userId }, data: { points: { increment: reward } } });
+    const { recordPointGain } = await import("@/lib/point-ledger");
+    await recordPointGain(pick.userId, reward, "riser").catch(() => undefined);
+  }
   await pushTicker({
     kind: `RISER:${prevWeek}`,
-    message: `🔥 지난주 급상승 ${user.nickname}님 · ${pick.label} ▲${pick.change} — 축하해요!`,
+    message: `🔥 지난주 급상승 ${user.nickname}님 · ${pick.label} ▲${pick.change}${reward ? ` · 보상 ${reward.toLocaleString()}P` : ""} — 축하해요!`,
     href: `/u/${encodeURIComponent(user.nickname)}#profile`,
   });
 }

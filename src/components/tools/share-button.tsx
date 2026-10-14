@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "cn";
 import type { ShareFormat } from "@/lib/share-image";
+import type { ShareTool } from "@/lib/share-stats";
 
 /** 이 기기에 기억하는 이미지 모양 */
 const FORMAT_KEY = "poka-share-format";
@@ -12,17 +13,34 @@ const FORMAT_KEY = "poka-share-format";
  * onShare가 실제로 그려서 공유 · 저장하고 결과를 돌려줌.
  */
 export function ShareButton({
+  tool,
   label,
   onShare,
   className,
 }: {
+  /** 공유 통계용 도구 이름(src/lib/share-stats.ts) */
+  tool: ShareTool;
   label: string;
-  onShare: (format: ShareFormat) => Promise<"shared" | "downloaded" | "failed">;
+  /** byline: 로그인한 회원 닉네임(이미지에 「○○님이 공유」) */
+  onShare: (format: ShareFormat, byline: string | null) => Promise<"shared" | "downloaded" | "failed">;
   className?: string;
 }) {
   const [format, setFormat] = useState<ShareFormat>("square");
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [nickname, setNickname] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void fetch("/api/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { nickname?: string | null } | null) => {
+        if (alive && j?.nickname) setNickname(j.nickname);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
   useEffect(() => {
     try {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 값은 화면이 뜬 뒤에만 읽을 수 있습니다.
@@ -48,8 +66,10 @@ export function ShareButton({
         onClick={async () => {
           setBusy(true);
           setNote(null);
-          const done = await onShare(format).catch(() => "failed" as const);
+          const done = await onShare(format, nickname).catch(() => "failed" as const);
           setBusy(false);
+          // 공유 통계(실패는 빼고)
+          if (done !== "failed") void fetch("/api/share-stat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool, format, result: done }) }).catch(() => undefined);
           setNote(done === "shared" ? "공유했어요" : done === "downloaded" ? "이미지를 저장했어요" : "이미지를 만들지 못했어요");
         }}
         className="min-h-11 rounded-xl bg-[#FEE500] px-4 text-sm font-black text-black disabled:opacity-60"

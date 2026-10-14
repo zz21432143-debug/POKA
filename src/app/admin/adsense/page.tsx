@@ -43,8 +43,16 @@ function daysAgo(days: number) {
 
 /** 공개 글 수 기준(직접 쓴 글이 이만큼 있으면 심사에 유리) */
 const GOOD_POSTS = 30;
-/** 커뮤니티 게시판마다 최소 글 수 · 최근 30일 새 글 최소 */
-const COMMUNITY_BOARDS = ["FREE", "RULE_QA", "SKETCH", "HAND_REVIEW"] as const;
+/**
+ * 실제 커뮤니티 게시판(메뉴 기준): 자유게시판(질문 · 현장 스케치는 자유게시판 안의 말머리) · 핸드리뷰.
+ * 게시판마다 최소 글 수 · 최근 30일 새 글 최소
+ */
+const COMMUNITY_BOARDS = [
+  { label: "자유게시판", types: ["FREE", "RULE_QA", "SKETCH"], write: "/boards/free/write", hint: "잡담 · 질문 · 현장 스케치 말머리 아무거나" },
+  { label: "핸드리뷰", types: ["HAND_REVIEW"], write: "/boards/hand-review/write", hint: "핸드를 그려 투표받기" },
+] as const;
+/** 자유게시판 말머리(따로 세지 않고 자유게시판에 합침) */
+const FREE_FAMILY = new Set<string>(["FREE", "RULE_QA", "SKETCH"]);
 const BOARD_MIN = 5;
 const RECENT_MIN = 10;
 
@@ -71,16 +79,23 @@ export default async function AdminAdsensePage() {
   const slotCount = slots.filter((s) => s.set).length;
 
   // 승인 전 할 일: 부족한 것부터 짚어 줌
-  const countOf = (type: string) => byBoard.find((b) => b.boardType === type)?._count._all ?? 0;
-  const todos: string[] = [];
-  if (total < GOOD_POSTS) todos.push(`공개 글을 ${GOOD_POSTS - total}개 더 올려 주세요(지금 ${total}개 · 권장 ${GOOD_POSTS}개 이상).`);
-  for (const type of COMMUNITY_BOARDS) {
-    const n = countOf(type);
-    if (n < BOARD_MIN) todos.push(`「${BOARD_LABELS[type as BoardTypeKey] ?? type}」에 글 ${BOARD_MIN - n}개 더(지금 ${n}개) — 질문 · 경험담처럼 직접 쓴 글이 좋아요.`);
+  const countOf = (types: readonly string[]) => byBoard.filter((b) => types.includes(b.boardType)).reduce((sum, b) => sum + b._count._all, 0);
+  const todos: { text: string; href?: string; action?: string }[] = [];
+  if (total < GOOD_POSTS) todos.push({ text: `공개 글을 ${GOOD_POSTS - total}개 더 올려 주세요(지금 ${total}개 · 권장 ${GOOD_POSTS}개 이상).` });
+  for (const board of COMMUNITY_BOARDS) {
+    const n = countOf(board.types);
+    if (n < BOARD_MIN) todos.push({ text: `「${board.label}」에 글 ${BOARD_MIN - n}개 더(지금 ${n}개) — ${board.hint}.`, href: board.write, action: "글 쓰러 가기" });
   }
-  if (recent < RECENT_MIN) todos.push(`최근 30일 새 글이 ${recent}개예요. 일주일에 3~4개씩 꾸준히 올리면 「살아 있는 사이트」로 보여요.`);
-  if (!adsTxtOk) todos.push("ads.txt에 게시자 ID를 넣어 주세요(public/ads.txt).");
-  if (slotCount === 0) todos.push("승인 메일을 받으면: 광고 단위 3개(게시판 하단 · 글 아래 · PC 사이드)를 만들고 Vercel에 ID를 넣어 주세요.");
+  if (recent < RECENT_MIN) todos.push({ text: `최근 30일 새 글이 ${recent}개예요. 일주일에 3~4개씩 꾸준히 올리면 「살아 있는 사이트」로 보여요.`, href: "/boards/free/write", action: "자유게시판에 쓰기" });
+  if (!adsTxtOk) todos.push({ text: "ads.txt에 게시자 ID를 넣어 주세요(public/ads.txt)." });
+  if (slotCount === 0) todos.push({ text: "승인 메일을 받으면: 광고 단위 3개(게시판 하단 · 글 아래 · PC 사이드)를 만들고 Vercel에 ID를 넣어 주세요." });
+  // 글 수 표: 자유게시판 말머리(질문 · 현장 스케치)는 자유게시판에 합쳐서
+  const boardRows = [
+    { key: "FREE", label: "자유게시판(말머리 포함)", n: countOf([...FREE_FAMILY]) },
+    ...byBoard.filter((b) => !FREE_FAMILY.has(b.boardType)).map((b) => ({ key: b.boardType, label: BOARD_LABELS[b.boardType as BoardTypeKey] ?? b.boardType, n: b._count._all })),
+  ]
+    .filter((r) => r.n > 0)
+    .sort((a, b) => b.n - a.n);
 
   const card = "rounded-2xl border border-border bg-card p-3 sm:p-4";
   return (
@@ -98,7 +113,14 @@ export default async function AdminAdsensePage() {
         {todos.length ? (
           <ol className="mt-2 grid list-decimal gap-1.5 pl-5 text-sm">
             {todos.map((t) => (
-              <li key={t}>{t}</li>
+              <li key={t.text}>
+                {t.text}
+                {t.href ? (
+                  <Link href={t.href} data-adsense-write className="ml-2 inline-flex min-h-8 items-center rounded-lg bg-primary px-2.5 text-xs font-bold text-primary-foreground">
+                    {t.action} ›
+                  </Link>
+                ) : null}
+              </li>
             ))}
           </ol>
         ) : null}
@@ -110,14 +132,12 @@ export default async function AdminAdsensePage() {
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">직접 쓴 글(복사 아님)이 꾸준히 올라오는 사이트가 잘 승인돼요. 홀덤 공부 도구 설명 글도 도움이 됩니다.</p>
         <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-3">
-          {byBoard
-            .sort((a, b) => b._count._all - a._count._all)
-            .map((b) => (
-              <li key={b.boardType} className="flex justify-between rounded-lg bg-background px-2 py-1">
-                <span>{BOARD_LABELS[b.boardType as BoardTypeKey] ?? b.boardType}</span>
-                <b>{b._count._all}</b>
-              </li>
-            ))}
+          {boardRows.map((b) => (
+            <li key={b.key} className="flex justify-between rounded-lg bg-background px-2 py-1">
+              <span>{b.label}</span>
+              <b>{b.n}</b>
+            </li>
+          ))}
         </ul>
       </section>
 

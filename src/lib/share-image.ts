@@ -61,7 +61,7 @@ async function drawFrame(title: string, subtitle: string | undefined, format: Sh
 }
 
 /** 아래: 사이트 주소 + QR(그 도구 주소) */
-async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string) {
+async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string, byline?: string | null) {
   const qrSize = 130;
   const qrX = W - 80 - qrSize;
   const qrY = H - 70 - qrSize;
@@ -79,7 +79,8 @@ async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string)
   }
   ctx.fillStyle = "#d1c7b5";
   ctx.font = font(28, 700);
-  ctx.fillText("📱 카메라로 찍으면 바로 계산해 볼 수 있어요", 80, H - 150);
+  // 로그인한 회원이면 「○○님이 공유」
+  ctx.fillText(byline ? `${byline}님이 공유 · 📱 찍으면 바로 계산` : "📱 카메라로 찍으면 바로 계산해 볼 수 있어요", 80, H - 150);
   ctx.fillStyle = GOLD;
   let size = 36;
   ctx.font = font(size, 900);
@@ -102,12 +103,15 @@ export async function drawResultImage({
   lines,
   url,
   format = "square",
+  byline,
 }: {
   title: string;
   subtitle?: string;
   lines: ShareLine[];
   url: string;
   format?: ShareFormat;
+  /** 공유한 회원 닉네임(없으면 안 넣음) */
+  byline?: string | null;
 }): Promise<Blob | null> {
   const frame = await drawFrame(title, subtitle, format);
   if (!frame) return null;
@@ -135,7 +139,7 @@ export async function drawResultImage({
     ctx.fillText(line.value, W - 110 - ctx.measureText(line.value).width, y);
     y += rowH;
   }
-  await drawFooter(ctx, H, url);
+  await drawFooter(ctx, H, url, byline);
   return toBlob(canvas);
 }
 
@@ -147,6 +151,7 @@ export async function drawRangeImage({
   names,
   url,
   format = "square",
+  byline,
 }: {
   title: string;
   subtitle?: string;
@@ -154,6 +159,8 @@ export async function drawRangeImage({
   names: string[];
   url: string;
   format?: ShareFormat;
+  /** 공유한 회원 닉네임(없으면 안 넣음) */
+  byline?: string | null;
 }): Promise<Blob | null> {
   const frame = await drawFrame(title, subtitle, format);
   if (!frame) return null;
@@ -183,7 +190,7 @@ export async function drawRangeImage({
       ctx.fillText(name, x + (cell - w) / 2, y + cell * 0.62);
     });
   });
-  await drawFooter(ctx, H, url);
+  await drawFooter(ctx, H, url, byline);
   return toBlob(canvas);
 }
 
@@ -209,6 +216,6 @@ export async function shareBlob(blob: Blob | null, opts: { title: string; url: s
 }
 
 /** 결과 카드 그려서 공유 · 저장. 결과: "shared" | "downloaded" | "failed" */
-export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string; format?: ShareFormat }) {
+export async function shareResultImage(opts: { title: string; subtitle?: string; lines: ShareLine[]; url: string; fileName: string; format?: ShareFormat; byline?: string | null }) {
   return shareBlob(await drawResultImage(opts).catch(() => null), opts);
 }

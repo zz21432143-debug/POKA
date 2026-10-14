@@ -37,6 +37,8 @@ export type TitleConfig = {
   rankExcluded: string[];
   /** 랭킹 제외 까닭 메모(회원 id → 짧은 글, 예: 운영진 · 테스트 계정) */
   rankNotes: Record<string, string>;
+  /** 지난주 급상승 회원 포인트 보상(관리자가 켜기/끄기) */
+  riserReward: { enabled: boolean; points: number };
 };
 
 const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name, top: 1 }])) as Record<HonorKey, HonorSetting>;
@@ -50,6 +52,7 @@ export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   honors: DEFAULT_HONORS,
   rankExcluded: [],
   rankNotes: {},
+  riserReward: { enabled: false, points: 100 },
 };
 
 export const TITLE_NAME_MAX = 12;
@@ -90,6 +93,10 @@ export function normalizeTitleConfig(raw: unknown): TitleConfig {
     period: value.period === "month" ? "month" : "all",
     excluded: Array.isArray(value.excluded) ? [...new Set(value.excluded.map(String).filter(Boolean))].slice(0, 500) : [],
     rankExcluded: Array.isArray(value.rankExcluded) ? [...new Set(value.rankExcluded.map(String).filter(Boolean))].slice(0, 500) : [],
+    riserReward: {
+      enabled: Boolean((value.riserReward as { enabled?: unknown } | undefined)?.enabled),
+      points: Math.max(0, Math.min(10_000, Math.floor(Number((value.riserReward as { points?: unknown } | undefined)?.points) || 100))),
+    },
     rankNotes:
       value.rankNotes && typeof value.rankNotes === "object"
         ? Object.fromEntries(

@@ -232,8 +232,9 @@ export function IcmPushFold({
           ) : null}
           {shown && table ? (
             <ShareButton
+              tool="pushfold-icm"
               label="이 차트 이미지로 공유"
-              onShare={async (format) =>
+              onShare={async (format, byline) =>
                 shareBlob(
                   await drawRangeImage({
                     title: "ICM 푸시폴드",
@@ -245,6 +246,7 @@ export function IcmPushFold({
                     names: table.names,
                     url: "pokerwiki.co.kr/info/push-fold",
                     format,
+                    byline,
                   }).catch(() => null),
                   { title: "ICM 푸시폴드 차트", url: "pokerwiki.co.kr/info/push-fold", fileName: "POKA_ICM푸시폴드" },
                 )

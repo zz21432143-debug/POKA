@@ -63,6 +63,7 @@ export async function PATCH(request: Request) {
     excluded: current.excluded,
     rankExcluded: current.rankExcluded,
     rankNotes: current.rankNotes,
+    riserReward: { ...current.riserReward, ...((body.riserReward as object) ?? {}) },
   });
   await saveTitleConfig(next);
   return NextResponse.json({ ok: true, ...(await snapshot()) });

@@ -291,8 +291,9 @@ export function IcmCalculator() {
           ) : null}
           {result ? (
             <ShareButton
+              tool="icm"
               label="이미지로 공유"
-              onShare={(format) =>
+              onShare={(format, byline) =>
                 shareResultImage({
                   title: "ICM 딜 계산",
                   subtitle: `남은 상금 ${won(result.pool)} · ${result.rows.length}명`,
@@ -300,6 +301,7 @@ export function IcmCalculator() {
                   url: "pokerwiki.co.kr/info/icm",
                   fileName: "POKA_ICM",
                   format,
+                  byline,
                 })
               }
             />

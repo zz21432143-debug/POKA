@@ -376,8 +376,9 @@ export function EquityCalculator() {
       {/* 결과 이미지로 공유(카톡방 등) · 휴대폰은 공유 창, PC는 내려받기 */}
       {lastStreet && (!guessMode || revealed) ? (
         <ShareButton
+          tool="equity"
           label="결과 이미지로 공유"
-          onShare={async (format) => {
+          onShare={async (format, byline) => {
             const cardText = (c: string | null) => (c ? `${c[0].replace("T", "10")}${({ h: "♥", d: "♦", c: "♣", s: "♠" } as Record<string, string>)[c[1]] ?? ""}` : "");
             const board = (["f1", "f2", "f3", "t", "r"] as const).map((s) => cardText(cards[s])).filter(Boolean).join(" ");
             const villain = villainMode === "cards" ? `${cardText(cards.v1)} ${cardText(cards.v2)}` : villainMode === "range" ? `상위 ${rangePct}% 패` : "모르는 패";
@@ -391,6 +392,7 @@ export function EquityCalculator() {
               url: "pokerwiki.co.kr/community/equity",
               fileName: "POKA_승률",
               format,
+              byline,
             });
           }}
         />

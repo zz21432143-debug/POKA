@@ -5,6 +5,7 @@ import { CardRow } from "@/components/cards/poker-card";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
 import { StudyAd } from "@/components/ads/board-bottom-ad";
+import { HandRankingShare } from "@/components/tools/hand-ranking-share";
 
 const TITLE = "홀덤 족보 순위 — 카드로 보는 핸드 랭킹 10가지와 확률";
 const DESCRIPTION =
@@ -109,6 +110,9 @@ export default function HandRankingsPage() {
           </li>
         ))}
       </ol>
+
+      {/* 족보 순위 이미지로 공유(카톡 · 스토리) */}
+      <HandRankingShare rows={RANKINGS.map((r, i) => ({ label: `${i + 1}. ${r.ko}`, value: percent(r.seven, SEVEN_TOTAL) }))} />
 
       {/* 구글 광고: 족보 카드 바로 아래(가장 오래 보는 자리) */}
       <StudyAd />
