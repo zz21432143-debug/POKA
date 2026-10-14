@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { IcmCalculator } from "@/components/tools/icm-calculator";
 import { jsonLdString } from "@/lib/job-jsonld";
@@ -58,10 +59,10 @@ export default function IcmPage() {
     <article className="flex flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <header className="board-intro">
-        <Link href="/info" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
-          ← 대회 · 정보
+        <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 홀덤 공부
         </Link>
-        <h1>ICM 계산기</h1>
+        <BoardTitle sticker={BOARD_STICKER["icm"]}>ICM 계산기</BoardTitle>
         <p className="mt-2">파이널 테이블 딜, 공정하게 나누세요. 남은 사람 칩과 순위별 상금만 넣으면 각자의 상금 가치(ICM 금액)가 바로 나와요. 로그인 없이 무료.</p>
       </header>
 

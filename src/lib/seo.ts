@@ -91,6 +91,7 @@ export const SITEMAP_PATHS = [
   { path: "/tools/pay", changeFrequency: "monthly" as const, priority: 0.7 },
   { path: "/tools/practice", changeFrequency: "weekly" as const, priority: 0.7 },
   { path: "/info/guide", changeFrequency: "monthly" as const, priority: 0.6 },
+  { path: "/study", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/info/icm", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/info/push-fold", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/community/equity", changeFrequency: "monthly" as const, priority: 0.8 },

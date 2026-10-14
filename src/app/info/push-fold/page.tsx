@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { PushFoldChart } from "@/components/tools/push-fold-chart";
 import { jsonLdString } from "@/lib/job-jsonld";
@@ -58,10 +59,10 @@ export default function PushFoldPage() {
     <article className="flex flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <header className="board-intro">
-        <Link href="/info" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
-          ← 대회 · 정보
+        <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 홀덤 공부
         </Link>
-        <h1>GTO 푸시폴드 차트</h1>
+        <BoardTitle sticker={BOARD_STICKER["push-fold"]}>GTO 푸시폴드 차트</BoardTitle>
         <p className="mt-2">포지션과 유효 스택을 고르면 올인할 패, 뒤 자리가 콜할 패가 바로 보여요. 칸을 누르면 그 패를 몇 bb까지 올인 · 콜하는지 알려 줘요.</p>
       </header>
 

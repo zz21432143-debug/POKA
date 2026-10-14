@@ -74,6 +74,12 @@ export const BOARD_STICKER: Record<string, OniStickerName> = {
   tools: "work",
   board: "cool",
   search: "curious",
+  study: "study",
+  "push-fold": "think",
+  equity: "curious",
+  icm: "win",
+  "hand-ranges": "confident",
+  "hand-rankings": "cool",
 };
 
 export function OniSticker({ name, className }: { name: OniStickerName; className?: string }) {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon, Grid3x3Icon, PieChartIcon } from "lucide-react";
+import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const metadata: Metadata = { title: "대회 · 정보" };
@@ -8,9 +8,7 @@ export const metadata: Metadata = { title: "대회 · 정보" };
 const CARDS = [
   { href: "/boards/schedule", title: "홀덤 대회 캘린더", body: "이번 주 허브와 일자별 달력.", icon: CalendarDaysIcon },
   { href: "/boards/tda", title: "TDA 룰", body: "토너먼트 공식 홀덤 룰 정리.", icon: BookOpenIcon },
-  { href: "/info/guide", title: "딜러 가이드", body: "테이블에서 바로 쓰는 기본 룰.", icon: GraduationCapIcon },
-  { href: "/info/icm", title: "ICM 계산기", body: "파이널 테이블 딜 금액을 공정하게.", icon: PieChartIcon },
-  { href: "/info/push-fold", title: "GTO 푸시폴드 차트", body: "포지션별 · 헤즈업 올인 · 콜 범위.", icon: Grid3x3Icon },
+  { href: "/study", title: "홀덤 공부 도구", body: "GTO 푸시폴드 · 승률 · ICM · 레인지 · 족보 · 딜러 가이드.", icon: GraduationCapIcon },
 ] as const;
 
 export default function InfoHubPage() {
@@ -18,7 +16,7 @@ export default function InfoHubPage() {
     <div className="flex flex-col gap-5">
       <header className="board-intro">
         <BoardTitle sticker={BOARD_STICKER.info}>대회 · 정보</BoardTitle>
-        <p className="mt-2">대회 일정, TDA 룰, 딜러 가이드.</p>
+        <p className="mt-2">대회 일정과 TDA 룰. 공부 · 계산 도구는 「홀덤 공부」에 모았어요.</p>
       </header>
       <ul className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((card) => (

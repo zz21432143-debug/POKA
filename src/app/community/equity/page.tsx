@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { EquityCalculator } from "@/components/tools/equity-calculator";
 
@@ -17,10 +18,10 @@ export default function EquityPage() {
   return (
     <article className="flex flex-col gap-4">
       <header className="board-intro">
-        <Link href="/community" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
-          ← 커뮤니티
+        <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 홀덤 공부
         </Link>
-        <h1>승률 계산기</h1>
+        <BoardTitle sticker={BOARD_STICKER["equity"]}>승률 계산기</BoardTitle>
         <p className="mt-2">내 패 · 상대 패 · 보드를 고르면 스트리트마다 승률이 나와요. 「맞춰 보기」를 켜면 내 예상을 먼저 적고 정답과 비교할 수 있어요.</p>
       </header>
       <EquityCalculator />

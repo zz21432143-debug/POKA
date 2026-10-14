@@ -18,6 +18,7 @@ export const TOP_NAV = [
   { href: "/", label: "홈" },
   { href: "/boards/jobs", label: "구인구직" },
   { href: "/community", label: "커뮤니티" },
+  { href: "/study", label: "홀덤 공부" },
   { href: "/info", label: "대회 · 정보" },
   { href: "/tools", label: "매장 관리" },
 ] as const;
@@ -44,6 +45,23 @@ export type SidebarGroup = {
   closed?: boolean;
 };
 
+/** 홀덤 공부(무료 도구). 주소는 예전 그대로 두고 메뉴만 한곳에 모읍니다. */
+export const STUDY_ITEMS: SidebarItem[] = [
+  { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위 · ICM", icon: "cards" },
+  { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
+  { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
+  { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
+  { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
+  { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
+  { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
+];
+
+/** 위 메뉴에서 이 주소가 어느 칸인지(홀덤 공부 도구는 주소와 메뉴가 달라서 따로 매핑) */
+export function topNavPath(pathname: string) {
+  if (pathname === "/study" || STUDY_ITEMS.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))) return "/study";
+  return pathname;
+}
+
 /** 홈 사이드바(시안). 피드 검증용 BOARD_NAV와 분리 */
 export const SIDEBAR_NAV: SidebarGroup[] = [
   {
@@ -67,12 +85,13 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
-      { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
-      { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
-      { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 핸드 랭킹", icon: "cards" },
-      { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
+  },
+  {
+    // 무료 공부 · 계산 도구(로그인 없이)
+    title: "홀덤 공부",
+    items: STUDY_ITEMS,
   },
   {
     // 읽는 곳: 대회 일정 · 룰 · 가이드
@@ -82,9 +101,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     items: [
       { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
-      { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
-      { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
-      { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위", icon: "cards" },
     ],
   },
   {

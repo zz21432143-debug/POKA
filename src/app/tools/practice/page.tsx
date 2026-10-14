@@ -17,8 +17,8 @@ export default async function PracticePage() {
     <div className="flex flex-col gap-3">
       <header className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-        <Link href="/community" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
-          ← 커뮤니티
+        <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 홀덤 공부
         </Link>
         <h1 className="text-2xl font-black text-white">딜러 연습장</h1>
         <p className="text-xs text-zinc-400">팟 계산 연습(풀이 · 기록 · 랭킹)과 현장에서 바로 쓰는 사이드팟 계산기.</p>

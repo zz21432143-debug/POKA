@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "next/link";
 import { HandRangeRanking } from "@/components/tools/hand-range-ranking";
 
@@ -17,10 +18,10 @@ export default function HandRangesPage() {
   return (
     <article className="flex flex-col gap-4">
       <header className="board-intro">
-        <Link href="/community" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
-          ← 커뮤니티
+        <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
+          ← 홀덤 공부
         </Link>
-        <h1>핸드 레인지 순위</h1>
+        <BoardTitle sticker={BOARD_STICKER["hand-ranges"]}>핸드 레인지 순위</BoardTitle>
         <p className="mt-2">169개 시작 패를 강한 순서로 줄 세웠어요. 상대 수를 바꾸면 순위가 달라지고, 「상위 X%」를 고르면 그 범위에 드는 패가 표에 표시돼요.</p>
       </header>
       <HandRangeRanking />

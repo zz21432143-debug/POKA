@@ -16,8 +16,8 @@ export function HomeStudyTools() {
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-white">홀덤 공부 도구</h2>
         <span className="rounded-full bg-[#1f6f4a] px-2 py-0.5 text-[11px] font-black text-[#eafff3]">무료 · 로그인 없이</span>
-        <Link href="/info" className="ml-auto inline-flex min-h-10 items-center text-xs font-bold text-[#e7c98a]">
-          대회 · 정보
+        <Link href="/study" className="ml-auto inline-flex min-h-10 items-center text-xs font-bold text-[#e7c98a]">
+          홀덤 공부 전체
           <ChevronRightIcon className="size-4" />
         </Link>
       </div>
