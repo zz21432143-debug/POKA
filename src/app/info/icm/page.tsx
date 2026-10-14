@@ -92,6 +92,7 @@ export default function IcmPage() {
 
       <nav aria-label="함께 쓰면 좋은 도구" className="flex flex-wrap gap-2">
         {[
+          { href: "/info/push-fold", label: "푸시 폴드 차트" },
           { href: "/tools/board", label: "게임 현황판(대회 타이머)" },
           { href: "/tools/seat-draw", label: "싯드로우" },
           { href: "/info/guide/tournament-terms", label: "토너먼트 용어 정리" },

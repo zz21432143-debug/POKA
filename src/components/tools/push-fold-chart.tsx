@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import rawData from "@/lib/data/pushfold-hu.json";
-import { COMBOS, GRID_RANKS, rowAt, thresholds, unpackSet, type PushFoldData } from "@/lib/pushfold";
+import { COMBOS, rowAt, thresholds, unpackSet, type PushFoldData } from "@/lib/pushfold";
 import { cn } from "cn";
 
 const data = rawData as PushFoldData;
@@ -50,7 +50,7 @@ function Grid({
           )}
         </span>
       </figcaption>
-      <div role="grid" aria-label={side === "push" ? "SB 올인 차트" : "BB 콜 차트"} className="grid grid-cols-13 gap-[2px] rounded-lg bg-black/40 p-[2px]" style={{ gridTemplateColumns: "repeat(13, minmax(0, 1fr))" }}>
+      <div role="grid" aria-label={side === "push" ? "SB 올인 차트" : "BB 콜 차트"} className="grid gap-[2px] rounded-lg bg-black/40 p-[2px]" style={{ gridTemplateColumns: "repeat(13, minmax(0, 1fr))" }}>
         {data.names.map((name, k) => {
           const inRange = set.has(k);
           const v = nums[k];

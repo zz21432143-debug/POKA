@@ -81,6 +81,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
       { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
       { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
+      { href: "/info/push-fold", label: "푸시 폴드 차트", hint: "숏스택 올인 · 콜 범위", icon: "cards" },
     ],
   },
   {

@@ -72,7 +72,7 @@ export default function PushFoldPage() {
         <ol className="list-decimal space-y-1 pl-5">
           <li>169개 시작 패끼리 올인했을 때의 승률을 모든 조합(1만 4천여 쌍)마다 30만 판씩 직접 돌려 계산했습니다. 오차는 약 ±0.1%포인트입니다.</li>
           <li>카드가 겹치는 경우(예: AK를 들면 상대가 AA일 조합이 줄어듦)까지 반영했습니다.</li>
-          <li>그 승률로 SB 올인 · BB 콜의 내시 균형을 0.1bb 간격(1~25bb)으로 풀었습니다. 균형에서 한쪽만 전략을 바꿔 얻을 수 있는 이득이 0.001bb 아래인 것까지 확인했습니다.</li>
+          <li>그 승률로 SB 올인 · BB 콜의 내시 균형을 0.1bb 간격(1~25bb)으로 풀었습니다. 균형에서 한쪽만 전략을 바꿔 얻을 수 있는 이득이 0.002bb 아래(사실상 0)인 것까지 확인했습니다.</li>
         </ol>
         <h3 className="mt-1 font-black text-white">이 차트의 조건</h3>
         <ul className="list-disc space-y-1 pl-5">
