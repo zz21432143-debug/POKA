@@ -16,8 +16,27 @@ const PotTitleContext = createContext<PotTitleInfo>(EMPTY_TITLES);
 export type HonorInfo = {
   defs: { key: string; icon: string; name: string; desc: string }[];
   holders: Record<string, { key: string; rank: number }[]>;
+  /** 닉네임 → 대표 칭호(랭킹 칭호 키 또는 "pot") */
+  main?: Record<string, string>;
 };
 const EMPTY_HONORS: HonorInfo = { defs: [], holders: {} };
+
+/** 이 회원이 지금 가진 칭호(대표 칭호 고르기용): 키 · 보이는 이름 */
+export function useMyTitles(nickname: string) {
+  const honors = useContext(HonorContext);
+  const pot = useContext(PotTitleContext);
+  const hydrated = useHydrated();
+  if (!hydrated) return { list: [] as { key: string; label: string }[], main: "" };
+  const defs = new Map(honors.defs.map((d) => [d.key, d]));
+  const list: { key: string; label: string }[] = [];
+  const potRank = pot.enabled ? pot.holders[nickname] : undefined;
+  if (potRank) list.push({ key: "pot", label: `${TITLE_ICON[potRank]} ${pot.names[potRank]}` });
+  for (const h of honors.holders[nickname] ?? []) {
+    const d = defs.get(h.key);
+    if (d) list.push({ key: d.key, label: `${d.icon} ${d.name}${h.rank > 1 ? ` · ${h.rank}위` : ""}` });
+  }
+  return { list, main: honors.main?.[nickname] ?? "" };
+}
 const HonorContext = createContext<HonorInfo>(EMPTY_HONORS);
 
 export function CrownProvider({ children }: { children: ReactNode }) {
@@ -113,10 +132,12 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
     const d = defs.get(h.key);
     return d ? [{ ...d, rank: h.rank }] : [];
   });
-  return (
-    <>
-      <PotOnlyBadge nickname={nickname} className={className} />
-      {mine.slice(0, Math.max(0, max - (hasPot ? 1 : 0))).map((d) => (
+  // 대표 칭호를 골랐으면 맨 앞에(팟 계산 칭호를 골랐으면 그대로 팟 칭호가 먼저)
+  const main = honors.main?.[nickname] ?? "";
+  const potFirst = hasPot && (main === "" || main === "pot" || !mine.some((d) => d.key === main));
+  if (main && main !== "pot") mine.sort((a, b) => Number(b.key === main) - Number(a.key === main));
+  const honorSlots = Math.max(0, max - (hasPot ? 1 : 0));
+  const honorBadges = mine.slice(0, hasPot && !potFirst ? max - 1 : honorSlots).map((d) => (
         <span
           key={d.key}
           data-honor={d.key}
@@ -127,7 +148,13 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
           {d.icon} {d.name}
           {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
         </span>
-      ))}
+  ));
+  return (
+    <>
+      {potFirst ? <PotOnlyBadge nickname={nickname} className={className} /> : null}
+      {honorBadges.slice(0, 1)}
+      {!potFirst && hasPot && max > 1 ? <PotOnlyBadge nickname={nickname} className={className} /> : null}
+      {honorBadges.slice(1)}
     </>
   );
 }

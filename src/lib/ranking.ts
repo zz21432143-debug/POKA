@@ -79,7 +79,7 @@ async function levelRows(period: RankPeriod): Promise<RawRow[]> {
       SELECT u.nickname, u.level, SUM(x.delta)::int AS score, u."profileMarkImageUrl", u."isMaster"
       FROM "ExpLedger" x
       JOIN "User" u ON u.id = x."userId"
-      WHERE x.delta > 0 AND x."createdAt" >= ${start} AND u."withdrawnAt" IS NULL
+      WHERE x.delta > 0 AND x."createdAt" >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
       LIMIT 20
@@ -88,7 +88,7 @@ async function levelRows(period: RankPeriod): Promise<RawRow[]> {
   return prisma.$queryRaw<RawRow[]>`
     SELECT nickname, level, exp AS score, "profileMarkImageUrl", "isMaster"
     FROM "User"
-    WHERE "withdrawnAt" IS NULL AND exp > 0
+    WHERE "withdrawnAt" IS NULL AND "isMaster" = false AND exp > 0
     ORDER BY level DESC, exp DESC, nickname ASC
     LIMIT 20
   `;
@@ -102,7 +102,7 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
       FROM "UserMark" um
       JOIN "Mark" m ON m.id = um."markId"
       JOIN "User" u ON u.id = um."userId"
-      WHERE m.slug IN (${Prisma.join(YOKAI_SLUGS)}) AND u."withdrawnAt" IS NULL
+      WHERE m.slug IN (${Prisma.join(YOKAI_SLUGS)}) AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
       LIMIT 20
@@ -115,7 +115,7 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
     JOIN "User" u ON u.id = um."userId"
       WHERE m.slug IN (${Prisma.join(YOKAI_SLUGS)})
       AND um."purchasedAt" >= ${start}
-      AND u."withdrawnAt" IS NULL
+      AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
     LIMIT 20
@@ -129,7 +129,7 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
       SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
       FROM "DailyAttendance" d
       JOIN "User" u ON u.id = d."userId"
-      WHERE u."withdrawnAt" IS NULL
+      WHERE u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
       LIMIT 20
@@ -139,13 +139,14 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
     SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
     FROM "DailyAttendance" d
     JOIN "User" u ON u.id = d."userId"
-    WHERE d.date >= ${start} AND u."withdrawnAt" IS NULL
+    WHERE d.date >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
     LIMIT 20
   `;
 }
 
+/** 랭킹(회원만): 탈퇴 회원 · 마스터(운영) 계정은 모든 랭킹 · 칭호 · 왕관에서 뺍니다 */
 export async function getRanking(tab: RankTab, period: RankPeriod): Promise<RankRow[]> {
   const raw =
     tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await levelRows(period);
@@ -163,7 +164,7 @@ export async function weeklyExpWinner(weekStart: string) {
     SELECT u.id, u.nickname, SUM(x.delta)::int AS score
     FROM "ExpLedger" x
     JOIN "User" u ON u.id = x."userId"
-    WHERE x.delta > 0 AND x."createdAt" >= ${start} AND x."createdAt" < ${end} AND u."withdrawnAt" IS NULL
+    WHERE x.delta > 0 AND x."createdAt" >= ${start} AND x."createdAt" < ${end} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
     LIMIT 1

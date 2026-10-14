@@ -134,6 +134,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [addText, setAddText] = useState("");
   /** TV 쪽 넘김 간격(초) — TV 링크에 붙음 */
   const [tvSec, setTvSec] = useState(10);
+  /** TV 밝은 화면(조명이 밝은 매장) */
+  const [tvLight, setTvLight] = useState(false);
   /** 간격 직접 입력(목록에 없는 값이면 처음부터 입력칸) */
   const [customInterval, setCustomInterval] = useState(() => !(INTERVAL_CHOICES as readonly number[]).includes(initial.interval));
   const [intervalText, setIntervalText] = useState(() => String(initial.interval));
@@ -551,6 +553,27 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </button>
         </div>
       </section>
+
+      {/* 휴지통: 내일 완전히 지워질 게임 안내(되살리기 바로) */}
+      {(() => {
+        const soon = state.trash.filter((g) => clock.getTime() - Date.parse(g.deletedAt) >= (TRASH_DAYS - 1) * 86_400_000);
+        return soon.length ? (
+          <p data-trash-soon className="flex flex-wrap items-center gap-2 rounded-xl border border-rose-500/50 bg-rose-950/50 px-3 py-2 text-sm font-bold text-rose-100">
+            🗑 휴지통의 {soon.map((g) => `'${g.name}'`).join(", ")} 게임이 하루 안에 완전히 지워져요.
+            {soon.slice(0, 3).map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                disabled={busy}
+                onClick={() => void send({ type: "restoreGame", trashId: g.id })}
+                className="min-h-9 rounded-lg bg-emerald-500 px-3 text-xs font-black text-black"
+              >
+                {g.name} 되살리기
+              </button>
+            ))}
+          </p>
+        ) : null;
+      })()}
 
       {/* 처음 쓰는 사람용 3단계 안내: 다 끝나면(시간표가 생기면) 사라집니다 */}
       {!plan || state.dealers.length === 0 ? (
@@ -1241,10 +1264,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   </option>
                 ))}
               </select>
-              <span className="text-[11px] font-normal text-zinc-500">(테이블 30개 넘을 때)</span>
+              <span className="text-[11px] font-normal text-zinc-500">(테이블 40개 넘을 때)</span>
+            </label>
+            <label className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/25 px-2 text-xs font-bold text-zinc-300">
+              <input type="checkbox" aria-label="TV 밝은 화면" checked={tvLight} onChange={(e) => setTvLight(e.target.checked)} className="size-4" />
+              TV 밝은 화면
             </label>
             <a
-              href={`${shareUrl}?tv=1${tvSec !== 10 ? `&sec=${tvSec}` : ""}`}
+              href={`${shareUrl}?tv=1${tvSec !== 10 ? `&sec=${tvSec}` : ""}${tvLight ? "&theme=light" : ""}`}
               data-tv-link
               target="_blank"
               rel="noreferrer"

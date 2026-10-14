@@ -5,6 +5,7 @@ import { HONOR_DEFS, HONOR_KEYS, monthStartKst, parseTitleConfig, type HonorKey,
 import { getRanking } from "@/lib/ranking";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { pushTicker } from "@/lib/ticker";
+import { notifyUser } from "@/lib/push";
 
 /**
  * 팟 계산 랭킹 · 칭호.
@@ -36,7 +37,8 @@ export async function rankingRows(difficulty: Difficulty, period: TitlePeriod, t
   const runs = await prisma.dealerDrillRun.findMany({
     where: {
       kind: kindOf(difficulty),
-      user: { withdrawnAt: null },
+      // 마스터(운영) 계정은 랭킹 · 칭호에서 뺌
+      user: { withdrawnAt: null, isMaster: false },
       ...(period === "month" ? { createdAt: { gte: monthStartKst() } } : {}),
     },
     orderBy: [{ correct: "desc" }, { durationMs: "asc" }, { createdAt: "asc" }],
@@ -96,7 +98,23 @@ export type HonorInfo = {
   holders: Record<string, HonorHold[]>;
   /** 칭호 → 받는 사람(1위부터) */
   owners: Record<HonorKey, string[]>;
+  /** 닉네임 → 대표 칭호(본인이 고른 것: 랭킹 칭호 키 또는 "pot") */
+  main: Record<string, string>;
 };
+
+/** ToolSaved 종류: 대표 칭호(ownerId = 회원 id, name = 칭호 키) */
+const KIND_MAIN = "honor-main";
+
+/** 대표 칭호 고르기(빈 값이면 지움) */
+export async function setHonorMain(userId: string, key: string) {
+  if (!key) {
+    await prisma.toolSaved.deleteMany({ where: { ownerId: userId, kind: KIND_MAIN } });
+  } else {
+    const id = `honormain_${userId}`;
+    await prisma.toolSaved.upsert({ where: { id }, create: { id, ownerId: userId, kind: KIND_MAIN, name: key, dataJson: "{}" }, update: { name: key } });
+  }
+  honorCache = null;
+}
 
 let honorCache: { at: number; info: HonorInfo; config: string } | null = null;
 
@@ -124,7 +142,23 @@ export async function getHonorInfo(): Promise<HonorInfo> {
   // 순서는 HONOR_KEYS 순(레벨 → 주간 → 월간 → 마크 → 출석), 같은 칭호면 높은 순위부터
   const holders: Record<string, HonorHold[]> = {};
   for (const key of keys) owners[key].forEach((nick, i) => (holders[nick] ??= []).push({ key, rank: i + 1 }));
+  // 대표 칭호: 칭호를 가진 사람(랭킹 칭호 · 팟 계산)만 읽음
+  const pot = await getPotTitleInfo().catch(() => null);
+  const holderNicks = [...new Set([...Object.keys(holders), ...Object.keys(pot?.holders ?? {})])];
+  const main: Record<string, string> = {};
+  if (holderNicks.length) {
+    const users = await prisma.user.findMany({ where: { nickname: { in: holderNicks } }, select: { id: true, nickname: true } });
+    const picks = await prisma.toolSaved
+      .findMany({ where: { kind: KIND_MAIN, ownerId: { in: users.map((u) => u.id) } }, select: { ownerId: true, name: true } })
+      .catch(() => []);
+    const nickOf = new Map(users.map((u) => [u.id, u.nickname]));
+    for (const p of picks) {
+      const nick = nickOf.get(p.ownerId);
+      if (nick) main[nick] = p.name;
+    }
+  }
   const info: HonorInfo = {
+    main,
     defs: keys.map((k) => ({ key: k, icon: HONOR_DEFS[k].icon, name: config.honors[k].name, desc: HONOR_DEFS[k].desc, top: config.honors[k].top })),
     holders,
     owners,
@@ -178,6 +212,12 @@ async function recordAwards(info: HonorInfo, config: TitleConfig) {
       skipDuplicates: true,
     });
     if (count === 0) continue;
+    // 받은 사람 기기로 축하 알림(알림을 켠 기기만 · 실패해도 무시)
+    await notifyUser(userId, {
+      title: `${a.icon} 칭호를 받았어요!`,
+      body: `축하해요! 「${a.title}」 칭호가 닉네임 옆에 붙었어요.`,
+      url: `/u/${encodeURIComponent(a.nickname)}`,
+    }).catch(() => undefined);
     // 이름이 따로 있는 칭호(랭킹 칭호 1위 · 팟 계산 1~3위)만 LIVE 띠로 알림
     if (a.rank === 1 || a.key === "pot") {
       await pushTicker({

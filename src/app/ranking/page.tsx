@@ -96,7 +96,7 @@ export default async function RankingPage({
         <div>
           <p className="yokai-shop-kicker">실시간</p>
           <h1>랭킹</h1>
-          <p>레벨(경험치)·마크·출석 주간·월간 1위는 프로필 마크에 황금 왕관과 오라가 붙습니다. 1~3위는 왕관으로 구분합니다.</p>
+          <p>레벨(경험치)·마크·출석 주간·월간 1위는 프로필 마크에 황금 왕관과 오라가 붙습니다. 1~3위는 왕관으로 구분합니다. 운영자 계정은 랭킹에 들어가지 않아요.</p>
         </div>
       </header>
       {titleRows.length ? (
