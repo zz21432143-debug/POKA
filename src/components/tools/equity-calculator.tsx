@@ -69,7 +69,10 @@ export function EquityCalculator() {
   const [bet, setBet] = useState("");
   const run = useRef(0);
 
-  const used = new Set(Object.values(cards).filter(Boolean) as string[]);
+  // 상대 패를 안 쓰는 방식이면 상대 칸 카드는 빼고 셈
+  const used = new Set(
+    (Object.entries(cards) as [Slot, string | null][]).filter(([slot, c]) => c && !(randomVillain && (slot === "v1" || slot === "v2"))).map(([, c]) => c as string),
+  );
   const hero = [cards.h1, cards.h2];
   const villain = [cards.v1, cards.v2];
   const flop = [cards.f1, cards.f2, cards.f3];
