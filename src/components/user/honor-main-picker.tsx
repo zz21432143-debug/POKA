@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useMyTitles } from "@/components/honor/crowned-frame";
+import { useMyTitles, useSetHonorMain } from "@/components/honor/crowned-frame";
 
 /** 프로필(내 것): 칭호가 2개 이상이면 게시판 목록에 먼저 보일 대표 칭호 고르기 */
 export function HonorMainPicker({ nickname }: { nickname: string }) {
   const { list, main } = useMyTitles(nickname);
+  const setMain = useSetHonorMain();
   const [picked, setPicked] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   if (list.length < 2) return null;
@@ -15,7 +16,8 @@ export function HonorMainPicker({ nickname }: { nickname: string }) {
     setPicked(key);
     setNote(null);
     const res = await fetch("/api/me/honor-main", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) }).catch(() => null);
-    setNote(res?.ok ? "저장했어요. 1분 안에 사이트 전체에 반영돼요." : "저장하지 못했어요. 다시 시도해 주세요.");
+    if (res?.ok) setMain(nickname, key);
+    setNote(res?.ok ? "저장했어요. 내 화면엔 바로, 다른 사람 화면엔 1분 안에 반영돼요." : "저장하지 못했어요. 다시 시도해 주세요.");
   }
 
   return (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
+import { TvPreview } from "@/components/tools/tv-preview";
 import {
   INTERVAL_CHOICES,
   INTERVAL_MAX,
@@ -22,6 +23,7 @@ import {
   formatWorkDate,
   kstClock,
   kstDate,
+  shareExpired,
   nowMinutes,
   parseDealerLines,
   parseTableLabels,
@@ -136,6 +138,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [tvSec, setTvSec] = useState(10);
   /** TV 밝은 화면(조명이 밝은 매장) */
   const [tvLight, setTvLight] = useState(false);
+  const [tvPreview, setTvPreview] = useState(false);
   /** 간격 직접 입력(목록에 없는 값이면 처음부터 입력칸) */
   const [customInterval, setCustomInterval] = useState(() => !(INTERVAL_CHOICES as readonly number[]).includes(initial.interval));
   const [intervalText, setIntervalText] = useState(() => String(initial.interval));
@@ -284,6 +287,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   // 테이블이 많을 때 간격이 너무 짧으면 시간표가 커져 다른 기기 반영이 느려집니다.
   const intervalTooShort = labels.length > 40 && state.interval < 15;
   const shareUrl = state.shareToken && origin ? `${origin}/r/${state.shareToken}` : null;
+  // TV 링크: 쪽 넘김 간격 · 밝은 화면이 붙음
+  const tvHref = shareUrl ? `${shareUrl}?tv=1${tvSec !== 10 ? `&sec=${tvSec}` : ""}${tvLight ? "&theme=light" : ""}` : null;
   useEffect(() => {
     if (!shareUrl) return;
     let alive = true;
@@ -1236,6 +1241,20 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <h2 className="text-base font-black">딜러에게 공유</h2>
           <span className="text-xs text-zinc-400">링크를 받은 사람은 보기만 할 수 있습니다(고치기 불가). 이 게임만 보이고, 다른 게임·계정은 안 보입니다.</span>
         </div>
+        {/* 근무일 다음 날이 지나면 링크가 자동으로 닫힘 → 까닭 · 바로 고치기 */}
+        {shareUrl && shareExpired(state.game.workDate) ? (
+          <p data-share-expired className="flex flex-wrap items-center gap-2 rounded-xl border border-rose-500/60 bg-rose-950/60 px-3 py-2 text-sm font-bold text-rose-100">
+            이 게임의 근무일({formatWorkDate(state.game.workDate)})이 지나 공유 링크 · TV 화면이 닫혀 있어요. 오늘 쓰는 게임이면 날짜를 오늘로 바꿔 주세요.
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void send({ type: "setGame", workDate: kstDate() })}
+              className="min-h-10 rounded-lg bg-amber-400 px-3 text-sm font-black text-black"
+            >
+              날짜를 오늘로 바꾸고 다시 열기
+            </button>
+          </p>
+        ) : null}
         {shareUrl ? (
           <div className="flex flex-wrap items-center gap-1.5">
             <input readOnly value={shareUrl} aria-label="공유 링크" className="h-10 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-sm" />
@@ -1271,7 +1290,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               TV 밝은 화면
             </label>
             <a
-              href={`${shareUrl}?tv=1${tvSec !== 10 ? `&sec=${tvSec}` : ""}${tvLight ? "&theme=light" : ""}`}
+              href={tvHref ?? undefined}
               data-tv-link
               target="_blank"
               rel="noreferrer"
@@ -1279,6 +1298,20 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             >
               TV 화면 열기
             </a>
+            <button
+              type="button"
+              data-tv-preview-toggle
+              onClick={() => setTvPreview((v) => !v)}
+              className="min-h-10 rounded-lg border border-white/30 px-3 text-sm font-black"
+            >
+              {tvPreview ? "미리보기 닫기" : "TV 미리보기"}
+            </button>
+            {tvPreview && tvHref ? (
+              <div className="grid basis-full gap-1">
+                <TvPreview key={tvHref} src={tvHref} />
+                <span className="text-xs text-zinc-400">실제 TV(1920×1080)를 줄여 보여 줘요. 쪽 넘김 · 밝은 화면을 바꾸면 바로 다시 그려요.</span>
+              </div>
+            ) : null}
             {qr ? (
               <a href={qr} download={`${state.game.name.replace(/[\\/:*?"<>|\s]+/g, "_")}_교대표_QR.png`} className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black">
                 QR 저장

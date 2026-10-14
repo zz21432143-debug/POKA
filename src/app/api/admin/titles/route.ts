@@ -5,6 +5,7 @@ import { clientIp } from "@/lib/request";
 import { DIFFICULTIES, DIFFICULTY, kindOf, type Difficulty } from "@/lib/practice";
 import { clearPotTitleCache, getHonorInfo, getPotTitleInfo, loadTitleConfig, rankingRows, saveTitleConfig } from "@/lib/pot-titles";
 import { normalizeTitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
+import { clearHomeRankings } from "@/lib/home-rankings";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,12 @@ async function snapshot(difficulty?: Difficulty, period?: TitlePeriod) {
   const config = await loadTitleConfig();
   const d = difficulty ?? config.difficulty;
   const p = period ?? config.period;
-  const [info, honors, rows, excludedUsers] = await Promise.all([
+  const [info, honors, rows, excludedUsers, rankExcludedUsers] = await Promise.all([
     getPotTitleInfo(),
     getHonorInfo().catch(() => null),
     rankingRows(d, p, 30),
     config.excluded.length ? prisma.user.findMany({ where: { id: { in: config.excluded } }, select: { id: true, nickname: true } }) : [],
+    config.rankExcluded.length ? prisma.user.findMany({ where: { id: { in: config.rankExcluded } }, select: { id: true, nickname: true } }) : [],
   ]);
   const counts = rows.length
     ? await prisma.dealerDrillRun.groupBy({ by: ["userId"], where: { kind: kindOf(d), userId: { in: rows.map((r) => r.userId) } }, _count: { _all: true } })
@@ -33,6 +35,7 @@ async function snapshot(difficulty?: Difficulty, period?: TitlePeriod) {
     rows: rows.map((r) => ({ ...r, runs: countOf.get(r.userId) ?? 0, excluded: config.excluded.includes(r.userId) })),
     excludedUsers,
     honorOwners: honors?.owners ?? null,
+    rankExcludedUsers,
   };
 }
 
@@ -58,6 +61,7 @@ export async function PATCH(request: Request) {
     names: { ...current.names, ...((body.names as object) ?? {}) },
     honors: { ...current.honors, ...((body.honors as object) ?? {}) },
     excluded: current.excluded,
+    rankExcluded: current.rankExcluded,
   });
   await saveTitleConfig(next);
   return NextResponse.json({ ok: true, ...(await snapshot()) });
@@ -71,11 +75,20 @@ export async function PATCH(request: Request) {
 export async function POST(request: Request) {
   const { user, error } = await requireMaster();
   if (error) return error;
-  const body = (await request.json().catch(() => ({}))) as { type?: string; userId?: string; difficulty?: string; view?: { difficulty?: string; period?: string } };
-  const userId = String(body.userId ?? "");
+  const body = (await request.json().catch(() => ({}))) as { type?: string; userId?: string; nickname?: string; difficulty?: string; view?: { difficulty?: string; period?: string } };
+  let userId = String(body.userId ?? "");
+  // 랭킹 제외는 닉네임으로도 고를 수 있음
+  if (!userId && typeof body.nickname === "string" && body.nickname.trim()) {
+    userId = (await prisma.user.findUnique({ where: { nickname: body.nickname.trim() }, select: { id: true } }))?.id ?? "";
+    if (!userId) return NextResponse.json({ error: "그 닉네임의 회원이 없습니다." }, { status: 400 });
+  }
   if (!userId) return NextResponse.json({ error: "회원을 확인하세요." }, { status: 400 });
   const config = await loadTitleConfig();
-  if (body.type === "exclude" || body.type === "include") {
+  if (body.type === "rankExclude" || body.type === "rankInclude") {
+    const rankExcluded = body.type === "rankExclude" ? [...new Set([...config.rankExcluded, userId])] : config.rankExcluded.filter((id) => id !== userId);
+    await saveTitleConfig({ ...config, rankExcluded });
+    clearHomeRankings();
+  } else if (body.type === "exclude" || body.type === "include") {
     const excluded = body.type === "exclude" ? [...new Set([...config.excluded, userId])] : config.excluded.filter((id) => id !== userId);
     await saveTitleConfig({ ...config, excluded });
   } else if (body.type === "deleteRecords") {

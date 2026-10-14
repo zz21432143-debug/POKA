@@ -5,6 +5,8 @@ import { displayMarkSrc } from "@/lib/mark-assets";
 import { ensureExpLedger } from "@/lib/exp-ledger";
 import { shiftDate } from "@/lib/dates";
 import { SHOP_MARKS } from "@/lib/yokai-marks";
+import { SITE_SETTING_ID } from "@/lib/site-settings";
+import { parseTitleConfig } from "@/lib/pot-title-config";
 
 /** level: 레벨 높은 순(같은 레벨이면 경험치 많은 순). 예전 points 주소는 level로 엽니다. */
 export type RankTab = "level" | "marks" | "attendance";
@@ -44,6 +46,7 @@ function periodDate(period: RankPeriod): string | null {
 }
 
 type RawRow = {
+  userId: string;
   nickname: string;
   level: number;
   score: number;
@@ -51,9 +54,13 @@ type RawRow = {
   isMaster: boolean;
 };
 
-function toRows(raw: RawRow[]): RankRow[] {
+/** 표시할 순위 수(SQL은 제외 회원을 빼고도 남게 30명까지 읽음) */
+const RANK_SHOW = 20;
+
+function toRows(raw: RawRow[], excluded: ReadonlySet<string>): RankRow[] {
   return raw
-    .filter((row) => row.score > 0)
+    .filter((row) => row.score > 0 && !excluded.has(row.userId))
+    .slice(0, RANK_SHOW)
     .map((row, index) => ({
       rank: index + 1,
       nickname: row.nickname,
@@ -76,21 +83,21 @@ async function levelRows(period: RankPeriod): Promise<RawRow[]> {
   if (start) {
     await ensureExpLedger();
     return prisma.$queryRaw<RawRow[]>`
-      SELECT u.nickname, u.level, SUM(x.delta)::int AS score, u."profileMarkImageUrl", u."isMaster"
+      SELECT u.id AS "userId", u.nickname, u.level, SUM(x.delta)::int AS score, u."profileMarkImageUrl", u."isMaster"
       FROM "ExpLedger" x
       JOIN "User" u ON u.id = x."userId"
       WHERE x.delta > 0 AND x."createdAt" >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
-      LIMIT 20
+      LIMIT 30
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
-    SELECT nickname, level, exp AS score, "profileMarkImageUrl", "isMaster"
+    SELECT id AS "userId", nickname, level, exp AS score, "profileMarkImageUrl", "isMaster"
     FROM "User"
     WHERE "withdrawnAt" IS NULL AND "isMaster" = false AND exp > 0
     ORDER BY level DESC, exp DESC, nickname ASC
-    LIMIT 20
+    LIMIT 30
   `;
 }
 
@@ -98,18 +105,18 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
   const start = periodStart(period);
   if (!start) {
     return prisma.$queryRaw<RawRow[]>`
-      SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
+      SELECT u.id AS "userId", u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
       FROM "UserMark" um
       JOIN "Mark" m ON m.id = um."markId"
       JOIN "User" u ON u.id = um."userId"
       WHERE m.slug IN (${Prisma.join(YOKAI_SLUGS)}) AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
-      LIMIT 20
+      LIMIT 30
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
-    SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
+    SELECT u.id AS "userId", u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
     FROM "UserMark" um
     JOIN "Mark" m ON m.id = um."markId"
     JOIN "User" u ON u.id = um."userId"
@@ -118,7 +125,7 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
       AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
-    LIMIT 20
+    LIMIT 30
   `;
 }
 
@@ -126,31 +133,51 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
   const start = periodDate(period);
   if (!start) {
     return prisma.$queryRaw<RawRow[]>`
-      SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
+      SELECT u.id AS "userId", u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
       FROM "DailyAttendance" d
       JOIN "User" u ON u.id = d."userId"
       WHERE u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
-      LIMIT 20
+      LIMIT 30
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
-    SELECT u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
+    SELECT u.id AS "userId", u.nickname, u.level, COUNT(*)::int AS score, u."profileMarkImageUrl", u."isMaster"
     FROM "DailyAttendance" d
     JOIN "User" u ON u.id = d."userId"
     WHERE d.date >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
-    LIMIT 20
+    LIMIT 30
   `;
 }
 
 /** 랭킹(회원만): 탈퇴 회원 · 마스터(운영) 계정은 모든 랭킹 · 칭호 · 왕관에서 뺍니다 */
 export async function getRanking(tab: RankTab, period: RankPeriod): Promise<RankRow[]> {
-  const raw =
-    tab === "marks" ? await markRows(period) : tab === "attendance" ? await attendanceRows(period) : await levelRows(period);
-  return toRows(raw);
+  const [raw, excluded] = await Promise.all([
+    tab === "marks" ? markRows(period) : tab === "attendance" ? attendanceRows(period) : levelRows(period),
+    rankExcludedIds(),
+  ]);
+  return toRows(raw, excluded);
+}
+
+let excludedCache: { at: number; ids: ReadonlySet<string> } | null = null;
+
+/** 관리자가 「랭킹 제외」로 고른 회원(id). 30초 캐시 */
+export async function rankExcludedIds(): Promise<ReadonlySet<string>> {
+  const now = Date.now();
+  if (excludedCache && now - excludedCache.at < 30_000) return excludedCache.ids;
+  const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID }, select: { potTitleJson: true } }).catch(() => null);
+  const ids = new Set(parseTitleConfig(row?.potTitleJson).rankExcluded);
+  excludedCache = { at: now, ids };
+  return ids;
+}
+
+/** 랭킹 제외를 바꾸면 바로 반영되게 */
+export function clearRankingCache() {
+  excludedCache = null;
+  crownCache = null;
 }
 
 /** 지난주 경험치 1위(같으면 레벨 높은 순 → 누적 경험치 많은 순). 주간 보상 마크를 받습니다. */
@@ -167,9 +194,10 @@ export async function weeklyExpWinner(weekStart: string) {
     WHERE x.delta > 0 AND x."createdAt" >= ${start} AND x."createdAt" < ${end} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
-    LIMIT 1
+    LIMIT 10
   `;
-  const row = rows[0];
+  const excluded = await rankExcludedIds();
+  const row = rows.find((r) => !excluded.has(r.id));
   if (!row || row.score <= 0) return null;
   return { id: row.id, nickname: row.nickname, score: Number(row.score) };
 }

@@ -169,19 +169,31 @@ export async function rotationVersion(ownerId: string, gameId?: string | null) {
 
 /** 보기 전용 공유: 링크 값으로 찾은 게임(공유를 끄면 null). 로그인 없이 봅니다. */
 export async function loadShared(token: string): Promise<RotationShareView | null> {
-  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return null;
+  const found = await lookupShared(token);
+  return "view" in found ? found.view : null;
+}
+
+/**
+ * 공유 링크 열기 + 못 열면 까닭: missing(링크가 없거나 공유를 끄고 다시 켜 바뀜) · expired(근무일 다음 날이 지나 닫힘).
+ * 보기 화면이 까닭을 그대로 알려 줍니다.
+ */
+export async function lookupShared(token: string): Promise<{ view: RotationShareView } | { reason: "missing" } | { reason: "expired"; workDate: string | null; gameName: string }> {
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return { reason: "missing" };
   const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token } });
-  if (!m || shareExpired(m.workDate)) return null;
+  if (!m) return { reason: "missing" };
+  if (shareExpired(m.workDate)) return { reason: "expired", workDate: m.workDate, gameName: m.name };
   const dealers = await prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
   return {
-    game: { id: m.id, name: m.name, workDate: m.workDate },
-    version: m.version,
-    tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
-    tableState: parseTableState(m.tableStateJson),
-    interval: m.interval,
-    planStart: m.planStart,
-    plan: parsePlan(m.planJson),
-    dealers: dealers.map((d) => ({ id: d.id, name: d.name, status: toDealerStatus(d.status) })),
+    view: {
+      game: { id: m.id, name: m.name, workDate: m.workDate },
+      version: m.version,
+      tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
+      tableState: parseTableState(m.tableStateJson),
+      interval: m.interval,
+      planStart: m.planStart,
+      plan: parsePlan(m.planJson),
+      dealers: dealers.map((d) => ({ id: d.id, name: d.name, status: toDealerStatus(d.status) })),
+    },
   };
 }
 

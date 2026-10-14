@@ -27,7 +27,8 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "DENY");
+  // 교대표 보기(/r/…)만 우리 사이트 안 TV 미리보기에 띄울 수 있게
+  response.headers.set("X-Frame-Options", request.nextUrl.pathname.startsWith("/r/") ? "SAMEORIGIN" : "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
     "Permissions-Policy",

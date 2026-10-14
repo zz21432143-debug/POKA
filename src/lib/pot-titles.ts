@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { kindOf, type Difficulty } from "@/lib/practice";
 import { SITE_SETTING_ID, ensureSiteSettingsRow } from "@/lib/site-settings";
 import { HONOR_DEFS, HONOR_KEYS, monthStartKst, parseTitleConfig, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
-import { getRanking } from "@/lib/ranking";
+import { clearRankingCache, getRanking } from "@/lib/ranking";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { pushTicker } from "@/lib/ticker";
 import { notifyUser } from "@/lib/push";
@@ -34,11 +34,13 @@ export async function saveTitleConfig(config: TitleConfig) {
 
 /** 난이도 랭킹(사람마다 최고 기록) */
 export async function rankingRows(difficulty: Difficulty, period: TitlePeriod, take = 10): Promise<RankRow[]> {
+  const { rankExcluded } = await loadTitleConfig();
   const runs = await prisma.dealerDrillRun.findMany({
     where: {
       kind: kindOf(difficulty),
-      // 마스터(운영) 계정은 랭킹 · 칭호에서 뺌
+      // 마스터(운영) 계정 · 관리자가 고른 「랭킹 제외」 회원은 랭킹 · 칭호에서 뺌
       user: { withdrawnAt: null, isMaster: false },
+      ...(rankExcluded.length ? { userId: { notIn: rankExcluded } } : {}),
       ...(period === "month" ? { createdAt: { gte: monthStartKst() } } : {}),
     },
     orderBy: [{ correct: "desc" }, { durationMs: "asc" }, { createdAt: "asc" }],
@@ -246,6 +248,7 @@ export async function listHonorHistory(userId: string, take = 30): Promise<Honor
 
 /** 기록·설정이 바뀌면 바로 반영되게 */
 export function clearPotTitleCache() {
+  clearRankingCache();
   titleCache = null;
   configCache = null;
   honorCache = null;

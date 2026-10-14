@@ -14,6 +14,8 @@ type Snapshot = {
   excludedUsers: { id: string; nickname: string }[];
   /** 랭킹 칭호 → 지금 받는 사람 */
   honorOwners?: Record<HonorKey, string[]>;
+  /** 모든 랭킹에서 뺀 회원 */
+  rankExcludedUsers?: { id: string; nickname: string }[];
 };
 
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
@@ -233,6 +235,50 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
             </button>
           </div>
         ) : null}
+      </section>
+
+      {/* 랭킹 제외 회원: 운영진 · 테스트 계정 등(마스터는 늘 빠짐) */}
+      <section aria-label="랭킹 제외 회원" data-rank-exclude className="grid gap-2 rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h2 className="text-lg font-semibold">랭킹 제외 회원</h2>
+        <p className="text-xs text-muted-foreground">여기 넣은 회원은 레벨 · 마크 · 출석 · 팟 계산 랭킹과 칭호 · 왕관에서 모두 빠집니다(기록은 그대로). 마스터 계정은 따로 넣지 않아도 늘 빠져요.</p>
+        {canEdit ? (
+          <form
+            className="flex flex-wrap gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const input = e.currentTarget.elements.namedItem("rank-exclude-nick") as HTMLInputElement;
+              const nickname = input.value.trim();
+              if (!nickname) return;
+              void send("POST", { type: "rankExclude", nickname, view }, `${nickname} 님을 랭킹에서 뺐습니다.`).then(() => (input.value = ""));
+            }}
+          >
+            <input name="rank-exclude-nick" aria-label="랭킹에서 뺄 닉네임" placeholder="닉네임" className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2 text-base" />
+            <button type="submit" disabled={busy} className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
+              랭킹에서 빼기
+            </button>
+          </form>
+        ) : null}
+        {data.rankExcludedUsers?.length ? (
+          <ul className="flex flex-wrap gap-1.5">
+            {data.rankExcludedUsers.map((u) => (
+              <li key={u.id} data-rank-excluded={u.nickname} className="flex min-h-10 items-center gap-2 rounded-lg border border-border px-2 text-sm font-semibold">
+                {u.nickname}
+                {canEdit ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send("POST", { type: "rankInclude", userId: u.id, view }, `${u.nickname} 님을 다시 랭킹에 넣었습니다.`)}
+                    className="min-h-8 rounded-md border border-border px-2 text-xs"
+                  >
+                    다시 넣기
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">아직 없어요.</p>
+        )}
       </section>
 
       {/* 랭킹 · 기록 관리 */}

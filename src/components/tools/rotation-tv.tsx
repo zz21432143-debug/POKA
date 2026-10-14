@@ -169,6 +169,8 @@ export function RotationTvScreen({
   const perBlock = Math.ceil(pageTables.length / layout.blocks);
   const blocks = Array.from({ length: layout.blocks }, (_, b) => pageTables.slice(b * perBlock, b * perBlock + perBlock)).filter((b) => b.length);
   const font = Math.max(10, layout.font);
+  // 교대 1분 전부터 「교대」 칸을 깜빡여 멀리서도 알아보게
+  const soon = Boolean(swap && swap.at - now > 0 && swap.at - now <= 1);
   // 머리줄(「교대 01:40」 약 5.2em)도 칸 너비 안에 들어가게
   const headFont = Math.max(10, Math.min(font * 0.8, layout.rowH * 0.5, layout.cellW / 5.4));
   const labelHeadFont = Math.max(9, Math.min(headFont * 0.7, layout.labelW / 3.2));
@@ -202,7 +204,11 @@ export function RotationTvScreen({
 
       {/* 다음 교대: 시간 · 남은 분 · 버튼 자리 · 휴식 들어갈 사람(한 줄) */}
       {plan && swap ? (
-        <section aria-label="다음 교대" className={cn("flex shrink-0 flex-wrap items-baseline gap-x-[1.2vw] gap-y-0 rounded-2xl border-2 px-[1.5vw] py-[0.8dvh]", c.headline)}>
+        <section
+          aria-label="다음 교대"
+          data-tv-soon={soon ? "on" : undefined}
+          className={cn("flex shrink-0 flex-wrap items-baseline gap-x-[1.2vw] gap-y-0 rounded-2xl border-2 px-[1.5vw] py-[0.8dvh]", c.headline, soon && "animate-pulse")}
+        >
           <span className={cn("font-black", c.headlineMain)} style={{ fontSize: "min(3vw, 5dvh)" }}>
             다음 교대 {formatClock(swap.at)}
           </span>
@@ -215,7 +221,12 @@ export function RotationTvScreen({
             </span>
           ) : null}
           {swap.toRest.length ? (
-            <span className={cn("min-w-0 flex-1 basis-full truncate font-bold", c.rest)} style={{ fontSize: "min(1.5vw, 2.6dvh)" }}>
+            // 휴식 들어갈 사람이 많으면 글씨를 줄이고 두 줄까지(잘리지 않게)
+            <span
+              data-tv-rest
+              className={cn("line-clamp-2 min-w-0 flex-1 basis-full font-bold", c.rest)}
+              style={{ fontSize: swap.toRest.length > 12 ? "min(1.2vw, 2.1dvh)" : "min(1.5vw, 2.6dvh)" }}
+            >
               휴식 들어감 {swap.toRest.map(name).join(", ")}
             </span>
           ) : null}
@@ -243,7 +254,7 @@ export function RotationTvScreen({
                     {cols.map(({ slot, index }) => (
                       <th
                         key={slot.at}
-                        className={cn("truncate rounded-lg px-1 font-black whitespace-nowrap tabular-nums", index === next ? c.nextHead : c.nowHead)}
+                        className={cn("truncate rounded-lg px-1 font-black whitespace-nowrap tabular-nums", index === next ? c.nextHead : c.nowHead, index === next && soon && "animate-pulse")}
                         style={{ fontSize: headFont }}
                       >
                         {index === next ? "교대" : "지금"} {formatClock(slot.at)}
@@ -265,6 +276,7 @@ export function RotationTvScreen({
                             className={cn(
                               "truncate rounded-lg px-1 text-center font-black leading-none",
                               text === "컨바인" ? c.shut : index === next ? c.nextCell : c.nowCell,
+                              index === next && soon && "animate-pulse",
                               text === "—" && c.empty,
                             )}
                             style={{ fontSize: font }}

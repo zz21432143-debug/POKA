@@ -33,6 +33,8 @@ export type TitleConfig = {
   excluded: string[];
   /** 랭킹 칭호 켜기/끄기 · 이름 */
   honors: Record<HonorKey, HonorSetting>;
+  /** 모든 랭킹에서 뺄 회원(id) — 운영진 · 테스트 계정 등. 마스터는 따로 늘 빠짐 */
+  rankExcluded: string[];
 };
 
 const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name, top: 1 }])) as Record<HonorKey, HonorSetting>;
@@ -44,6 +46,7 @@ export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   period: "all",
   excluded: [],
   honors: DEFAULT_HONORS,
+  rankExcluded: [],
 };
 
 export const TITLE_NAME_MAX = 12;
@@ -81,6 +84,7 @@ export function normalizeTitleConfig(raw: unknown): TitleConfig {
     difficulty: DIFFICULTIES.includes(value.difficulty as Difficulty) ? (value.difficulty as Difficulty) : DEFAULT_TITLE_CONFIG.difficulty,
     period: value.period === "month" ? "month" : "all",
     excluded: Array.isArray(value.excluded) ? [...new Set(value.excluded.map(String).filter(Boolean))].slice(0, 500) : [],
+    rankExcluded: Array.isArray(value.rankExcluded) ? [...new Set(value.rankExcluded.map(String).filter(Boolean))].slice(0, 500) : [],
   };
 }
 

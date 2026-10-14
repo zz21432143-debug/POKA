@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "cn";
 import { DIFFICULTY } from "@/lib/practice";
 import { DEFAULT_TITLE_CONFIG, PERIOD_LABEL, type TitleConfig } from "@/lib/pot-title-config";
@@ -38,11 +38,17 @@ export function useMyTitles(nickname: string) {
   return { list, main: honors.main?.[nickname] ?? "" };
 }
 const HonorContext = createContext<HonorInfo>(EMPTY_HONORS);
+/** 대표 칭호를 고르면 서버 반영(최대 1분)을 기다리지 않고 내 화면에 바로 */
+const SetHonorMainContext = createContext<(nickname: string, key: string) => void>(() => {});
+export function useSetHonorMain() {
+  return useContext(SetHonorMainContext);
+}
 
 export function CrownProvider({ children }: { children: ReactNode }) {
   const [names, setNames] = useState<ReadonlySet<string>>(new Set());
   const [potTitle, setPotTitle] = useState<PotTitleInfo>(EMPTY_TITLES);
   const [honors, setHonors] = useState<HonorInfo>(EMPTY_HONORS);
+  const setMain = useCallback((nickname: string, key: string) => setHonors((h) => ({ ...h, main: { ...(h.main ?? {}), [nickname]: key } })), []);
   useEffect(() => {
     let cancelled = false;
     fetch("/api/ranking/crowns")
@@ -61,7 +67,9 @@ export function CrownProvider({ children }: { children: ReactNode }) {
   return (
     <CrownContext.Provider value={names}>
       <PotTitleContext.Provider value={potTitle}>
-        <HonorContext.Provider value={honors}>{children}</HonorContext.Provider>
+        <HonorContext.Provider value={honors}>
+          <SetHonorMainContext.Provider value={setMain}>{children}</SetHonorMainContext.Provider>
+        </HonorContext.Provider>
       </PotTitleContext.Provider>
     </CrownContext.Provider>
   );

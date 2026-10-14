@@ -57,10 +57,18 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=3600, must-revalidate" }],
       },
       {
+        // 교대표 보기(/r/…)는 공유 탭 TV 미리보기에서 우리 사이트 안에만 띄울 수 있게(SAMEORIGIN), 나머지는 막음
+        source: "/((?!r/).*)",
+        headers: [{ key: "X-Frame-Options", value: "DENY" }],
+      },
+      {
+        source: "/r/:path*",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",

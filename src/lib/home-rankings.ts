@@ -15,6 +15,11 @@ const TOP = 5;
 const CACHE_MS = 2 * 60_000;
 let cache: { at: number; boards: HomeRankBoard[] } | null = null;
 
+/** 랭킹 제외 등 설정이 바뀌면 바로 다시 계산 */
+export function clearHomeRankings() {
+  cache = null;
+}
+
 /** 팟 계산 시간 1분 23초 */
 function duration(ms: number) {
   const sec = Math.round(ms / 1000);
