@@ -71,7 +71,8 @@ export default function IcmPage() {
         <h2 className="text-lg font-black text-[#f3d9a4]">이렇게 쓰세요</h2>
         <ol className="list-decimal space-y-1 pl-5">
           <li>남은 플레이어의 칩을 적습니다(이름은 비워도 돼요).</li>
-          <li>지금 남은 순위의 상금을 1위부터 적습니다. 이미 받은 상금은 빼고, 남은 순위만 적어요.</li>
+          <li>상금표를 대회 전체 순위로 적습니다. 「총상금 × 비율(%)」로 적거나 「순위별 금액」으로 적을 수 있어요.</li>
+          <li>남은 인원보다 아래 순위(이미 탈락한 사람 몫)는 자동으로 빠지고, 남은 사람끼리 걸린 상금으로만 계산돼요.</li>
           <li>「ICM 금액」이 각자의 공정한 딜 기준입니다. 「결과 복사」로 단톡방에 바로 붙여넣을 수 있어요.</li>
         </ol>
         <p className="text-sm text-[#b7ab97]">
