@@ -11,10 +11,12 @@ export default async function SharedRotationPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ tv?: string }>;
+  searchParams: Promise<{ tv?: string; sec?: string }>;
 }) {
   const { token } = await params;
-  const { tv } = await searchParams;
+  const { tv, sec } = await searchParams;
+  // TV 쪽 넘김 간격(초): 공유 탭에서 고른 값 · 없으면 10초
+  const pageSeconds = [5, 10, 20, 30].includes(Number(sec)) ? Number(sec) : 10;
   const initial = await loadShared(token).catch(() => null);
   if (!initial) {
     return (
@@ -24,5 +26,5 @@ export default async function SharedRotationPage({
       </section>
     );
   }
-  return <RotationViewer token={token} initial={initial} tv={tv === "1"} />;
+  return <RotationViewer token={token} initial={initial} tv={tv === "1"} pageSeconds={pageSeconds} />;
 }

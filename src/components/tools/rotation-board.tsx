@@ -132,6 +132,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [qr, setQr] = useState<string | null>(null);
   // 게임 중 테이블 추가 오픈
   const [addText, setAddText] = useState("");
+  /** TV 쪽 넘김 간격(초) — TV 링크에 붙음 */
+  const [tvSec, setTvSec] = useState(10);
   /** 간격 직접 입력(목록에 없는 값이면 처음부터 입력칸) */
   const [customInterval, setCustomInterval] = useState(() => !(INTERVAL_CHOICES as readonly number[]).includes(initial.interval));
   const [intervalText, setIntervalText] = useState(() => String(initial.interval));
@@ -1225,7 +1227,29 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             >
               {linkCopied ? "복사됨 ✓" : "링크 복사"}
             </button>
-            <a href={`${shareUrl}?tv=1`} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black">
+            <label className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/25 px-2 text-xs font-bold text-zinc-300">
+              TV 쪽 넘김
+              <select
+                aria-label="TV 쪽 넘김 간격"
+                value={tvSec}
+                onChange={(e) => setTvSec(Number(e.target.value))}
+                className="h-8 rounded-md border border-white/20 bg-black px-1 text-sm font-black text-white"
+              >
+                {[5, 10, 20, 30].map((n) => (
+                  <option key={n} value={n}>
+                    {n}초
+                  </option>
+                ))}
+              </select>
+              <span className="text-[11px] font-normal text-zinc-500">(테이블 30개 넘을 때)</span>
+            </label>
+            <a
+              href={`${shareUrl}?tv=1${tvSec !== 10 ? `&sec=${tvSec}` : ""}`}
+              data-tv-link
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-10 items-center rounded-lg bg-white px-3 text-sm font-black text-black"
+            >
               TV 화면 열기
             </a>
             {qr ? (

@@ -22,7 +22,8 @@ export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: st
   marks: { icon: "🎴", name: "요괴 수집가", desc: "마크 수집 랭킹(전체) 1위", tab: "marks", period: "all" },
   attendance: { icon: "📅", name: "개근 도깨비", desc: "이번 달 출석 1위", tab: "attendance", period: "month" },
 };
-export type HonorSetting = { enabled: boolean; name: string };
+/** top: 1이면 1위만, 3이면 1~3위까지(이름 뒤에 · 2위처럼 붙음) */
+export type HonorSetting = { enabled: boolean; name: string; top: 1 | 3 };
 
 export type TitleConfig = {
   enabled: boolean;
@@ -34,7 +35,7 @@ export type TitleConfig = {
   honors: Record<HonorKey, HonorSetting>;
 };
 
-const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name }])) as Record<HonorKey, HonorSetting>;
+const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name, top: 1 }])) as Record<HonorKey, HonorSetting>;
 
 export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   enabled: true,
@@ -60,13 +61,13 @@ const cleanName = (value: unknown, fallback: string) => {
 export function normalizeTitleConfig(raw: unknown): TitleConfig {
   const value = (raw && typeof raw === "object" ? raw : {}) as Omit<Partial<TitleConfig>, "names" | "honors"> & {
     names?: Record<string, unknown>;
-    honors?: Record<string, { enabled?: unknown; name?: unknown } | undefined>;
+    honors?: Record<string, { enabled?: unknown; name?: unknown; top?: unknown } | undefined>;
   };
   const names: Record<string, unknown> = value.names ?? {};
   const honors = Object.fromEntries(
     HONOR_KEYS.map((k) => {
       const h = value.honors?.[k] ?? {};
-      return [k, { enabled: typeof h.enabled === "boolean" ? h.enabled : true, name: cleanName(h.name, HONOR_DEFS[k].name) }];
+      return [k, { enabled: typeof h.enabled === "boolean" ? h.enabled : true, name: cleanName(h.name, HONOR_DEFS[k].name), top: Number(h.top) === 3 ? 3 : 1 }];
     }),
   ) as Record<HonorKey, HonorSetting>;
   return {

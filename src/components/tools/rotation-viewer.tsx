@@ -26,10 +26,9 @@ const ALERT_BEFORE = 5;
 const COLS = 8;
 const COLS_NARROW = 4;
 
-/** TV: 한 화면에 보일 테이블 수(넘으면 TV_PAGE_MS마다 쪽 넘김) · 이보다 많으면 좌우 두 칸으로 나눔 */
+/** TV: 한 화면에 보일 테이블 수(넘으면 pageSeconds초마다 쪽 넘김) · 이보다 많으면 좌우 두 칸으로 나눔 */
 const TV_PAGE = 30;
 const TV_SPLIT = 12;
-const TV_PAGE_MS = 10_000;
 /** 두 칸으로 나눌 때 칸마다 보일 시간 수 */
 const TV_SPLIT_COLS = 4;
 
@@ -57,7 +56,18 @@ function untilLabel(minutes: number) {
  * 보기 전용 교대표: 다음 교대, 내 일정(이름 고르기), 시간표.
  * TV 화면 모드는 화면 전체를 쓰고 글씨를 크게 합니다. 고칠 수는 없습니다.
  */
-export function RotationViewer({ token, initial, tv: tvInitial }: { token: string; initial: RotationShareView; tv: boolean }) {
+export function RotationViewer({
+  token,
+  initial,
+  tv: tvInitial,
+  pageSeconds = 10,
+}: {
+  token: string;
+  initial: RotationShareView;
+  tv: boolean;
+  /** TV 쪽 넘김 간격(초, 테이블이 30개 넘을 때) */
+  pageSeconds?: number;
+}) {
   const [state, setState] = useState(initial);
   const [clock, setClock] = useState(() => new Date());
   const [closed, setClosed] = useState(false);
@@ -188,9 +198,9 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
   const pageCount = tv ? Math.ceil(openTables.length / TV_PAGE) : 1;
   useEffect(() => {
     if (pageCount <= 1) return;
-    const timer = window.setInterval(() => setPageTick((n) => n + 1), TV_PAGE_MS);
+    const timer = window.setInterval(() => setPageTick((n) => n + 1), pageSeconds * 1000);
     return () => window.clearInterval(timer);
-  }, [pageCount]);
+  }, [pageCount, pageSeconds]);
 
   async function turnOnAlert() {
     try {
@@ -384,7 +394,7 @@ export function RotationViewer({ token, initial, tv: tvInitial }: { token: strin
           {/* 30개 넘으면 쪽 표시(10초마다 넘어감) */}
           {pages.length > 1 ? (
             <p data-tv-page className="text-right font-black text-amber-300" style={{ fontSize: "min(1.4vw, 2.4dvh)" }}>
-              테이블 {pageIndex + 1}/{pages.length}쪽 · {TV_PAGE_MS / 1000}초마다 넘어가요
+              테이블 {pageIndex + 1}/{pages.length}쪽 · {pageSeconds}초마다 넘어가요
             </p>
           ) : (
             <span />

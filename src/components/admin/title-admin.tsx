@@ -13,7 +13,7 @@ type Snapshot = {
   rows: Row[];
   excludedUsers: { id: string; nickname: string }[];
   /** 랭킹 칭호 → 지금 받는 사람 */
-  honorOwners?: Record<HonorKey, string | null>;
+  honorOwners?: Record<HonorKey, string[]>;
 };
 
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
@@ -202,7 +202,19 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
                 onChange={(e) => setDraft({ ...draft, honors: { ...draft.honors, [key]: { ...draft.honors[key], name: e.target.value } } })}
                 className="h-10 rounded-lg border border-border bg-card px-2 text-base"
               />
-              <span className="text-xs text-muted-foreground">지금: {data.honorOwners?.[key] ?? "없음"}</span>
+              <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <select
+                  aria-label={`${HONOR_DEFS[key].desc} 칭호 받는 순위`}
+                  disabled={!canEdit}
+                  value={draft.honors[key].top}
+                  onChange={(e) => setDraft({ ...draft, honors: { ...draft.honors, [key]: { ...draft.honors[key], top: Number(e.target.value) === 3 ? 3 : 1 } } })}
+                  className="h-10 rounded-lg border border-border bg-card px-2 text-sm"
+                >
+                  <option value={1}>1위만</option>
+                  <option value={3}>1~3위</option>
+                </select>
+                지금: {data.honorOwners?.[key]?.length ? data.honorOwners[key].join(" · ") : "없음"}
+              </span>
             </div>
           ))}
         </div>

@@ -3,6 +3,8 @@ import { kindOf, type Difficulty } from "@/lib/practice";
 import { SITE_SETTING_ID, ensureSiteSettingsRow } from "@/lib/site-settings";
 import { HONOR_DEFS, HONOR_KEYS, monthStartKst, parseTitleConfig, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
 import { getRanking } from "@/lib/ranking";
+import { todayKstDate, weekStartKst } from "@/lib/dates";
+import { pushTicker } from "@/lib/ticker";
 
 /**
  * 팟 계산 랭킹 · 칭호.
@@ -84,47 +86,122 @@ export async function getPotTitleInfo(): Promise<PotTitleInfo> {
   return info;
 }
 
-/** 랭킹 칭호(켜진 것만): 이름 · 아이콘 · 설명과 받는 사람(닉네임 → 칭호 목록) */
+/** 받은 칭호 하나: 어떤 칭호 · 몇 위 */
+export type HonorHold = { key: HonorKey; rank: number };
+
+/** 랭킹 칭호(켜진 것만): 이름 · 아이콘 · 설명과 받는 사람 */
 export type HonorInfo = {
-  defs: { key: HonorKey; icon: string; name: string; desc: string }[];
-  holders: Record<string, HonorKey[]>;
-  /** 칭호 → 받는 사람(없으면 null) */
-  owners: Record<HonorKey, string | null>;
+  defs: { key: HonorKey; icon: string; name: string; desc: string; top: 1 | 3 }[];
+  /** 닉네임 → 받은 칭호(순위 포함) */
+  holders: Record<string, HonorHold[]>;
+  /** 칭호 → 받는 사람(1위부터) */
+  owners: Record<HonorKey, string[]>;
 };
 
-let honorCache: { at: number; info: HonorInfo } | null = null;
+let honorCache: { at: number; info: HonorInfo; config: string } | null = null;
 
-/** 랭킹 칭호: 각 랭킹 1위(칭호 제외 회원은 건너뜀). 1분 캐시 */
+/** 랭킹 칭호: 각 랭킹 1위(관리자가 고르면 1~3위). 칭호 제외 회원은 건너뜀. 1분 캐시 */
 export async function getHonorInfo(): Promise<HonorInfo> {
   const now = Date.now();
-  if (honorCache && now - honorCache.at < 60_000) return honorCache.info;
   const config = await loadTitleConfig();
+  // 설정이 바뀌면(관리자 저장) 1분을 기다리지 않고 다시 계산 — 페이지와 API는 캐시가 따로라 설정으로 맞춤
+  const configKey = JSON.stringify(config);
+  if (honorCache && honorCache.config === configKey && now - honorCache.at < 60_000) return honorCache.info;
   const keys = HONOR_KEYS.filter((k) => config.honors[k].enabled);
   const excluded = config.excluded.length
     ? new Set((await prisma.user.findMany({ where: { id: { in: config.excluded } }, select: { nickname: true } })).map((u) => u.nickname))
     : new Set<string>();
-  const owners = Object.fromEntries(HONOR_KEYS.map((k) => [k, null])) as Record<HonorKey, string | null>;
-  const holders: Record<string, HonorKey[]> = {};
+  const owners = Object.fromEntries(HONOR_KEYS.map((k) => [k, [] as string[]])) as Record<HonorKey, string[]>;
   await Promise.all(
     keys.map(async (key) => {
       const rows = await getRanking(HONOR_DEFS[key].tab, HONOR_DEFS[key].period).catch(() => []);
-      const first = rows.find((r) => !excluded.has(r.nickname));
-      if (!first) return;
-      owners[key] = first.nickname;
+      owners[key] = rows
+        .filter((r) => !excluded.has(r.nickname))
+        .slice(0, config.honors[key].top)
+        .map((r) => r.nickname);
     }),
   );
-  // 순서는 HONOR_KEYS 순(레벨 → 주간 → 월간 → 마크 → 출석)
-  for (const key of keys) {
-    const nick = owners[key];
-    if (nick) (holders[nick] ??= []).push(key);
-  }
+  // 순서는 HONOR_KEYS 순(레벨 → 주간 → 월간 → 마크 → 출석), 같은 칭호면 높은 순위부터
+  const holders: Record<string, HonorHold[]> = {};
+  for (const key of keys) owners[key].forEach((nick, i) => (holders[nick] ??= []).push({ key, rank: i + 1 }));
   const info: HonorInfo = {
-    defs: keys.map((k) => ({ key: k, icon: HONOR_DEFS[k].icon, name: config.honors[k].name, desc: HONOR_DEFS[k].desc })),
+    defs: keys.map((k) => ({ key: k, icon: HONOR_DEFS[k].icon, name: config.honors[k].name, desc: HONOR_DEFS[k].desc, top: config.honors[k].top })),
     holders,
     owners,
   };
-  honorCache = { at: now, info };
+  honorCache = { at: now, info, config: configKey };
+  // 새로 받은 칭호는 기록 · LIVE 띠(응답은 기다리지 않음)
+  void recordAwards(info, config).catch(() => undefined);
   return info;
+}
+
+/** ToolSaved 종류: 회원별 칭호 받은 기록(ownerId = 회원 id) */
+const KIND_HISTORY = "honor-history";
+const POT_ICONS = ["👹", "🪙", "🏮"] as const;
+/** 이 서버에서 이미 기록한 것(같은 칭호를 1분마다 다시 확인하지 않게) */
+const recorded = new Set<string>();
+
+/** 기간 표시: 전체 · 이번 주(월요일 날짜) · 이번 달(YYYY-MM). 같은 기간에는 한 번만 기록 · 알림 */
+function periodStamp(period: "all" | "week" | "month") {
+  if (period === "week") return weekStartKst();
+  if (period === "month") return todayKstDate().slice(0, 7);
+  return "all";
+}
+
+type Award = { key: string; rank: number; nickname: string; title: string; icon: string; stamp: string };
+
+async function recordAwards(info: HonorInfo, config: TitleConfig) {
+  const awards: Award[] = [];
+  for (const d of info.defs) {
+    info.owners[d.key].forEach((nickname, i) =>
+      awards.push({ key: d.key, rank: i + 1, nickname, title: i ? `${d.name} · ${i + 1}위` : d.name, icon: d.icon, stamp: periodStamp(HONOR_DEFS[d.key].period) }),
+    );
+  }
+  const pot = await getPotTitleInfo().catch(() => null);
+  if (pot?.enabled) {
+    for (const [nickname, rank] of Object.entries(pot.holders)) {
+      awards.push({ key: "pot", rank, nickname, title: pot.names[rank], icon: POT_ICONS[rank - 1], stamp: config.period === "month" ? periodStamp("month") : "all" });
+    }
+  }
+  const fresh = awards.filter((a) => !recorded.has(`${a.key}:${a.rank}:${a.stamp}:${a.nickname}`));
+  if (fresh.length === 0) return;
+  const users = await prisma.user.findMany({ where: { nickname: { in: [...new Set(fresh.map((a) => a.nickname))] } }, select: { id: true, nickname: true } });
+  const idOf = new Map(users.map((u) => [u.nickname, u.id]));
+  for (const a of fresh) {
+    const userId = idOf.get(a.nickname);
+    recorded.add(`${a.key}:${a.rank}:${a.stamp}:${a.nickname}`);
+    if (!userId) continue;
+    const tag = `${a.key}:${a.rank}:${a.stamp}`;
+    // id를 칭호 · 순위 · 기간으로 정해 두어, 여러 요청이 동시에 와도 한 번만 저장됨(이미 있으면 건너뜀)
+    const { count } = await prisma.toolSaved.createMany({
+      data: [{ id: `honor_${userId}_${tag}`, ownerId: userId, kind: KIND_HISTORY, name: tag, dataJson: JSON.stringify({ key: a.key, rank: a.rank, title: a.title, icon: a.icon, stamp: a.stamp }) }],
+      skipDuplicates: true,
+    });
+    if (count === 0) continue;
+    // 이름이 따로 있는 칭호(랭킹 칭호 1위 · 팟 계산 1~3위)만 LIVE 띠로 알림
+    if (a.rank === 1 || a.key === "pot") {
+      await pushTicker({
+        kind: `HONOR:${tag}:${userId}`,
+        message: `${a.icon} ${a.nickname}님이 「${a.title}」 칭호를 받았습니다!`,
+        href: `/u/${encodeURIComponent(a.nickname)}`,
+      });
+    }
+  }
+}
+
+/** 회원이 받았던 칭호 기록(최근 것부터) */
+export type HonorRecord = { key: string; rank: number; title: string; icon: string; stamp: string; at: string };
+export async function listHonorHistory(userId: string, take = 30): Promise<HonorRecord[]> {
+  const rows = await prisma.toolSaved
+    .findMany({ where: { ownerId: userId, kind: KIND_HISTORY }, orderBy: { createdAt: "desc" }, take, select: { dataJson: true, createdAt: true } })
+    .catch(() => []);
+  return rows.flatMap((r) => {
+    try {
+      return [{ ...(JSON.parse(r.dataJson) as Omit<HonorRecord, "at">), at: r.createdAt.toISOString() }];
+    } catch {
+      return [];
+    }
+  });
 }
 
 /** 기록·설정이 바뀌면 바로 반영되게 */

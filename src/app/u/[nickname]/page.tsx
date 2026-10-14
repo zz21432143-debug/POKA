@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
 import { PublicProfileCard } from "@/components/user/public-profile-card";
+import { HonorShelf } from "@/components/user/honor-shelf";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 
@@ -54,6 +55,7 @@ export default async function MemberPage({
           attendanceStreak: user.attendanceStreak,
         }}
       />
+      <HonorShelf userId={user.id} nickname={user.nickname} mine={mine} />
       <div className="flex flex-col gap-2">
         <Link
           href={`/u/${encodeURIComponent(user.nickname)}/posts`}

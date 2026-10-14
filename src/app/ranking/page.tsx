@@ -69,7 +69,16 @@ export default async function RankingPage({
   const potOwner = (rank: 1 | 2 | 3) => (pot ? (Object.entries(pot.holders).find(([, r]) => r === rank)?.[0] ?? null) : null);
   // 칭호 안내: 랭킹 칭호 + 팟 계산 칭호(1~3위)
   const titleRows = [
-    ...(honors?.defs ?? []).map((d) => ({ key: d.key, label: `${d.icon} ${d.name}`, how: d.desc, owner: honors?.owners[d.key as keyof typeof honors.owners] ?? null, pot: false })),
+    ...(honors?.defs ?? []).map((d) => {
+      const list = honors?.owners[d.key] ?? [];
+      return {
+        key: d.key,
+        label: `${d.icon} ${d.name}`,
+        how: d.top === 3 ? d.desc.replace("1위", "1~3위") : d.desc,
+        owner: list.length ? list.map((n, i) => (list.length > 1 ? `${i + 1}위 ${n}` : n)).join(" · ") : null,
+        pot: false,
+      };
+    }),
     ...(pot?.enabled
       ? ([1, 2, 3] as const).map((r) => ({
           key: `pot${r}`,

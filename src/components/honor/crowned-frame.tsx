@@ -15,7 +15,7 @@ const PotTitleContext = createContext<PotTitleInfo>(EMPTY_TITLES);
 /** 랭킹 칭호(레벨 · 경험치 · 마크 · 출석 1위): 정의와 받는 사람 */
 export type HonorInfo = {
   defs: { key: string; icon: string; name: string; desc: string }[];
-  holders: Record<string, string[]>;
+  holders: Record<string, { key: string; rank: number }[]>;
 };
 const EMPTY_HONORS: HonorInfo = { defs: [], holders: {} };
 const HonorContext = createContext<HonorInfo>(EMPTY_HONORS);
@@ -109,7 +109,10 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
   if (!hydrated) return null;
   const hasPot = Boolean(potInfo.enabled && potInfo.holders[nickname]);
   const defs = new Map(honors.defs.map((d) => [d.key, d]));
-  const mine = (honors.holders[nickname] ?? []).map((k) => defs.get(k)).filter((d) => d != null);
+  const mine = (honors.holders[nickname] ?? []).flatMap((h) => {
+    const d = defs.get(h.key);
+    return d ? [{ ...d, rank: h.rank }] : [];
+  });
   return (
     <>
       <PotOnlyBadge nickname={nickname} className={className} />
@@ -117,10 +120,12 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
         <span
           key={d.key}
           data-honor={d.key}
-          title={d.desc}
+          data-honor-rank={d.rank}
+          title={d.rank > 1 ? `${d.desc.replace("1위", `${d.rank}위`)}` : d.desc}
           className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-full border px-1.5 py-px text-[11px] font-black whitespace-nowrap", HONOR_TONE, className)}
         >
           {d.icon} {d.name}
+          {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
         </span>
       ))}
     </>
