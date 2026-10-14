@@ -24,7 +24,7 @@ export function MyRankList({ ranks, compact = false }: { ranks: MyRanks; compact
           >
             <span className="min-w-0 flex-1 truncate text-zinc-300">{compact ? r.short : r.label}</span>
             <b className={cn("shrink-0 tabular-nums", r.rank == null ? "font-bold text-zinc-500" : r.rank <= 3 ? "text-[#f5d76e]" : "text-white")}>
-              {r.rank == null ? "순위 밖" : `${r.rank}위`}
+              {r.rank == null ? "기록 없음" : `${r.rank}위`}
             </b>
             {compact ? null : <span className="shrink-0 text-xs text-zinc-500">{r.score}</span>}
           </Link>

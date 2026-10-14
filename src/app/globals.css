@@ -1661,6 +1661,16 @@ select {
     margin: 0;
   }
 
+  /* 휴대폰: 칭호는 대표 1개만, 닉네임은 잘리지 않게 */
+  .board-author-title + .board-author-title {
+    display: none;
+  }
+
+  .board-author-copy .board-author-name {
+    flex-shrink: 0;
+    max-width: 9em;
+  }
+
   .board-author {
     flex: 0 1 auto;
   }
@@ -2133,5 +2143,28 @@ select {
 @media (min-width: 640px) {
   .notice-body {
     font-size: 18px;
+  }
+}
+
+/* 칭호를 받은 날: 프로필 마크가 금빛으로 반짝임(움직임 줄이기 설정이면 멈춤) */
+.honor-sparkle {
+  position: relative;
+  box-shadow: 0 0 0 2px #f5d76e, 0 0 14px 4px rgba(245, 215, 110, 0.55);
+  animation: honor-sparkle 1.6s ease-in-out infinite;
+}
+
+@keyframes honor-sparkle {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px #f5d76e, 0 0 10px 2px rgba(245, 215, 110, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 3px #fff3c4, 0 0 22px 8px rgba(245, 215, 110, 0.75);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .honor-sparkle {
+    animation: none;
   }
 }

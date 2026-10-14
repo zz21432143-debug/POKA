@@ -33,7 +33,8 @@ export async function saveTitleConfig(config: TitleConfig) {
 }
 
 /** 난이도 랭킹(사람마다 최고 기록) */
-export async function rankingRows(difficulty: Difficulty, period: TitlePeriod, take = 10): Promise<RankRow[]> {
+/** scan: 읽을 기록 수(사람마다 최고 기록만 쓰므로 정확한 순위를 볼 때는 크게) */
+export async function rankingRows(difficulty: Difficulty, period: TitlePeriod, take = 10, scan = 600): Promise<RankRow[]> {
   const { rankExcluded } = await loadTitleConfig();
   const runs = await prisma.dealerDrillRun.findMany({
     where: {
@@ -44,7 +45,7 @@ export async function rankingRows(difficulty: Difficulty, period: TitlePeriod, t
       ...(period === "month" ? { createdAt: { gte: monthStartKst() } } : {}),
     },
     orderBy: [{ correct: "desc" }, { durationMs: "asc" }, { createdAt: "asc" }],
-    take: 600,
+    take: scan,
     select: { userId: true, correct: true, durationMs: true, createdAt: true, user: { select: { nickname: true } } },
   });
   const rows: RankRow[] = [];

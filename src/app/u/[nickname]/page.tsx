@@ -4,6 +4,10 @@ import Link from "next/link";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
 import { PublicProfileCard } from "@/components/user/public-profile-card";
 import { HonorShelf } from "@/components/user/honor-shelf";
+import { listHonorHistory } from "@/lib/pot-titles";
+import { todayKstDate } from "@/lib/dates";
+
+const kstDateOf = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toISOString().slice(0, 10);
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 
@@ -33,6 +37,9 @@ export default async function MemberPage({
   if (!user || user.withdrawnAt) notFound();
   const viewer = await getCurrentUser().catch(() => null);
   const mine = viewer?.id === user.id;
+  // 오늘(한국 날짜) 칭호를 받았으면 마크 반짝임
+  const today = todayKstDate();
+  const sparkle = (await listHonorHistory(user.id, 5).catch(() => [])).some((h) => kstDateOf(h.at) === today);
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -43,6 +50,7 @@ export default async function MemberPage({
         </p>
       </header>
       <PublicProfileCard
+        sparkle={sparkle}
         user={{
           nickname: user.nickname,
           profileMarkImageUrl: user.profileMarkImageUrl,

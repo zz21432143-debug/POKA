@@ -20,12 +20,6 @@ export function clearHomeRankings() {
   cache = null;
 }
 
-/** 팟 계산 시간 1분 23초 */
-function duration(ms: number) {
-  const sec = Math.round(ms / 1000);
-  return sec >= 60 ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : `${sec}초`;
-}
-
 /** 홈: 레벨 · 마크 수집 · 팟 계산 랭킹 TOP 5 */
 export async function getHomeRankings(): Promise<HomeRankBoard[]> {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.boards;
@@ -76,7 +70,8 @@ async function potBoard(): Promise<HomeRankBoard> {
         nickname: r.nickname,
         level: u?.level ?? 1,
         markUrl: displayMarkSrc({ isMaster: u?.isMaster ?? false, profileMarkImageUrl: u?.profileMarkImageUrl ?? null }),
-        score: `${r.correct}문제 · ${duration(r.durationMs)}`,
+        // 이름이 잘리지 않게 점수(문제 수 · 시간)는 홈에서 빼고 순위만
+        score: "",
       };
     }),
   };

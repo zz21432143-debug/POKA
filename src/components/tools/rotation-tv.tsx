@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { formatWorkDate, kstClock, tableTag } from "@/lib/rotation";
 import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
-import { rotationSoonSound, rotationSwapSound, unlockBoardSound } from "@/lib/board-sound";
+import { rotationSoonSound, rotationSwapSound, unlockBoardSound, type RotationVolume } from "@/lib/board-sound";
 
 /** TV 교대 알림음 켜기/끄기(이 기기에 기억) */
 const SOUND_KEY = "poka-tv-sound";
+/** 누를 때마다: 꺼짐 → 작게 → 보통 → 크게 → 꺼짐 */
+const SOUND_LABEL = ["🔕 교대 소리", "🔈 소리 작게", "🔉 소리 보통", "🔊 소리 크게"] as const;
 
 /** TV 한 쪽에 보일 테이블 수(넘으면 pageSeconds초마다 쪽 넘김). 지금 · 교대 두 칸만이라 40개까지 한 화면 */
 const TV_PAGE = 40;
@@ -139,7 +141,9 @@ export function RotationTvScreen({
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [pageTick, setPageTick] = useState(0);
   const [qr, setQr] = useState<string | null>(null);
-  const [soundOn, setSoundOn] = useState(false);
+  /** 0 꺼짐 · 1 작게 · 2 보통 · 3 크게 */
+  const [sound, setSound] = useState<0 | RotationVolume>(0);
+  const soundOn = sound > 0;
 
   // QR: 보기 화면(TV 말고) 주소 — 딜러가 이름을 골라 내 일정을 봄
   useEffect(() => {
@@ -158,18 +162,23 @@ export function RotationTvScreen({
   // 교대 소리: 이 기기에 켜 둔 값(브라우저 자동 재생 제한 때문에 화면을 한 번 누르면 확실히 켜짐)
   useEffect(() => {
     try {
+      // 예전 값 "1"(켜짐)은 보통으로
+      const saved = Number(window.localStorage.getItem(SOUND_KEY) ?? 0);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 값은 화면이 뜬 뒤에만 읽을 수 있습니다.
-      if (window.localStorage.getItem(SOUND_KEY) === "1") setSoundOn(true);
+      if (saved >= 1 && saved <= 3) setSound((window.localStorage.getItem(`${SOUND_KEY}-level`) ? saved : 2) as RotationVolume);
     } catch {
       /* 저장소를 못 쓰면 꺼진 채로 */
     }
   }, []);
   function toggleSound() {
     unlockBoardSound();
-    const next = !soundOn;
-    setSoundOn(next);
+    const next = ((sound + 1) % 4) as 0 | RotationVolume;
+    setSound(next);
+    // 바꾼 크기로 한 번 들려줌
+    if (next > 0) rotationSoonSound(next as RotationVolume);
     try {
-      window.localStorage.setItem(SOUND_KEY, next ? "1" : "0");
+      window.localStorage.setItem(SOUND_KEY, String(next));
+      window.localStorage.setItem(`${SOUND_KEY}-level`, "1");
     } catch {
       /* 무시 */
     }
@@ -220,9 +229,9 @@ export function RotationTvScreen({
     const last = lastRef.current;
     lastRef.current = { current, soon };
     if (!soundOn || !last) return;
-    if (current !== last.current && current >= 0) rotationSwapSound();
-    else if (soon && !last.soon) rotationSoonSound();
-  }, [current, soon, soundOn]);
+    if (current !== last.current && current >= 0) rotationSwapSound(sound as RotationVolume);
+    else if (soon && !last.soon) rotationSoonSound(sound as RotationVolume);
+  }, [current, soon, soundOn, sound]);
   // 머리줄(「교대 01:40」 약 5.2em)도 칸 너비 안에 들어가게
   const headFont = Math.max(10, Math.min(font * 0.8, layout.rowH * 0.5, layout.cellW / 5.4));
   const labelHeadFont = Math.max(9, Math.min(headFont * 0.7, layout.labelW / 3.2));
@@ -251,10 +260,11 @@ export function RotationTvScreen({
           <button
             type="button"
             data-tv-sound={soundOn ? "on" : "off"}
+            data-tv-volume={sound}
             onClick={toggleSound}
             className={cn("min-h-8 rounded-lg border px-2 text-xs font-black", soundOn ? "border-amber-400 bg-amber-400 text-black" : c.exit)}
           >
-            {soundOn ? "🔔 교대 소리 켜짐" : "🔕 교대 소리"}
+            {SOUND_LABEL[sound]}
           </button>
           <button type="button" onClick={onExit} className={cn("min-h-8 rounded-lg border px-2 text-xs font-black", c.exit)}>
             TV 화면 끄기

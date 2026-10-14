@@ -4,6 +4,8 @@ import { replaceTo } from "@/lib/history-redirect";
 import { Badge } from "@/components/ui/badge";
 import { HandViewer } from "@/components/hand/hand-viewer";
 import { AUTHOR_SELECT, AuthorChip } from "@/components/posts/author-chip";
+import { PostList, type PostSummary } from "@/components/posts/post-list";
+import { FREE_BOARD_TYPES } from "@/lib/feed";
 import { HandPoll } from "@/components/hand/hand-poll";
 import { POLL_CHOICES } from "@/lib/poll";
 import { CommentForm } from "@/components/posts/comment-form";
@@ -256,7 +258,9 @@ export default async function PostDetailPage({
   const listHref = boardListHref(post.boardType, post.jobKind);
 
   // 아래 「다른 글」: 구인은 같은 지역 모집 중 공고, 그 밖은 같은 게시판 최신 글
-  const related = await prisma.post
+  const related = !isJobPost
+    ? []
+    : await prisma.post
     .findMany({
       where: isJobPost
         ? { AND: [{ boardType: "JOBS", hidden: false, isAttendanceThread: false, id: { not: post.id }, jobKind: { not: "SEEKING" } }, regionWhere(parseJobRegion(titleRegion(post.jobLocation))), openJobWhere()] }
@@ -266,6 +270,41 @@ export default async function PostDetailPage({
       select: { id: true, title: true },
     })
     .catch(() => [] as { id: string; title: string }[]);
+  // 구인 말고는 실제 게시판 목록처럼(말머리 · 제목 · 작성자 · 칭호 · 날짜 · 댓글): 자유게시판은 질문 · 현장 스케치까지
+  const freeFamily = (FREE_BOARD_TYPES as readonly string[]).includes(post.boardType);
+  const relatedPosts: PostSummary[] = isJobPost
+    ? []
+    : await prisma.post
+        .findMany({
+          where: {
+            boardType: freeFamily ? { in: [...FREE_BOARD_TYPES] } : post.boardType,
+            hidden: false,
+            isPrivate: false,
+            isAttendanceThread: false,
+            id: { not: post.id },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 8,
+          include: { author: { select: AUTHOR_SELECT }, _count: { select: { comments: true } } },
+        })
+        .then((rows) =>
+          rows.map((r) => ({
+            id: r.id,
+            boardType: r.boardType,
+            title: r.title,
+            author: r.author,
+            upvoteCount: r.upvoteCount,
+            createdAt: r.createdAt.toISOString(),
+            viewCount: r.viewCount,
+            commentCount: r._count.comments,
+            ratingManner: r.ratingManner,
+            ratingService: r.ratingService,
+            ratingFacility: r.ratingFacility,
+            ratingAtmosphere: r.ratingAtmosphere,
+            isPrivate: r.isPrivate,
+          })),
+        )
+        .catch(() => [] as PostSummary[]);
 
   // 검색엔진용: 모집 중인 공고는 구글 채용 검색(JobPosting), 대회 일정은 Event
   const base = siteUrl();
@@ -587,7 +626,19 @@ export default async function PostDetailPage({
       ) : null}
       </div>
 
-      {related.length ? (
+      {/* 이 게시판 다른 글: 게시판 목록과 같은 모양 */}
+      {!isJobPost && relatedPosts.length ? (
+        <section aria-label="이 게시판 다른 글" data-related-posts className="grid gap-2">
+          <div className="flex items-center gap-2 px-1">
+            <h2 className="text-base font-black text-[#f3d9a4]">{freeFamily ? "자유게시판" : (BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시판")} 다른 글</h2>
+            <Link href={listHref} className="ml-auto text-xs font-bold text-[#c9a25c]">
+              목록 전체 ›
+            </Link>
+          </div>
+          <PostList posts={relatedPosts} emptyText="" showBoard={freeFamily} />
+        </section>
+      ) : null}
+      {isJobPost && related.length ? (
         <section aria-label={isJobPost ? "이 지역 다른 공고" : "이 게시판 다른 글"} className="ink-panel grid gap-1 rounded-2xl p-4">
           <h2 className="text-base font-black text-[#f3d9a4]">{isJobPost ? `${titleRegion(post.jobLocation)} 다른 공고` : `${BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시판"} 다른 글`}</h2>
           <ul className="grid">

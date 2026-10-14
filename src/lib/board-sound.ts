@@ -92,15 +92,25 @@ export function breakSound(minutes: number) {
   say(`Break time. ${minutes} minutes.`, 1100);
 }
 
+/** 로테이션 소리 크기: 1 작게 · 2 보통 · 3 크게(크게는 소리가 더 또렷한 파형) */
+export type RotationVolume = 1 | 2 | 3;
+const VOL: Record<RotationVolume, { gain: number; wave: OscillatorType }> = {
+  1: { gain: 0.3, wave: "triangle" },
+  2: { gain: 0.7, wave: "triangle" },
+  3: { gain: 1, wave: "square" },
+};
+
 /** 로테이션 교대 시각: 딩-동 두 번(음성 없이, 매장 소음 속에서도 들리게) */
-export function rotationSwapSound() {
-  tone(988, 0, 0.35, 0.8, "triangle");
-  tone(784, 0.38, 0.55, 0.8, "triangle");
-  tone(988, 1.1, 0.35, 0.8, "triangle");
-  tone(784, 1.48, 0.7, 0.8, "triangle");
+export function rotationSwapSound(volume: RotationVolume = 2) {
+  const { gain, wave } = VOL[volume];
+  tone(988, 0, 0.35, gain, wave);
+  tone(784, 0.38, 0.55, gain, wave);
+  tone(988, 1.1, 0.35, gain, wave);
+  tone(784, 1.48, 0.7, gain, wave);
 }
 
 /** 로테이션 교대 1분 전: 짧은 "띵" 한 번 */
-export function rotationSoonSound() {
-  tone(1175, 0, 0.25, 0.6, "triangle");
+export function rotationSoonSound(volume: RotationVolume = 2) {
+  const { gain, wave } = VOL[volume];
+  tone(1175, 0, 0.25, gain * 0.8, wave);
 }

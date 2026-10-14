@@ -30,6 +30,17 @@ const GAME_ORDER = [{ workDate: { sort: "desc" as const, nulls: "last" as const 
 /** ToolSaved 종류: 딜러 명단 · 지운 게임(휴지통) */
 const KIND_ROSTER = "roster";
 const KIND_TRASH = "rotation-trash";
+/** 계정 설정(새 게임 공유 기간 기본값): ToolSaved id = rotprefs_계정 */
+const prefsId = (ownerId: string) => `rotprefs_${ownerId}`;
+async function loadPrefs(ownerId: string): Promise<{ shareDays: number }> {
+  const row = await prisma.toolSaved.findUnique({ where: { id: prefsId(ownerId) }, select: { dataJson: true } }).catch(() => null);
+  try {
+    const days = Number((JSON.parse(row?.dataJson ?? "{}") as { shareDays?: unknown }).shareDays);
+    return { shareDays: [0, 1, 3].includes(days) ? days : 1 };
+  } catch {
+    return { shareDays: 1 };
+  }
+}
 
 type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 type MetaRow = Awaited<ReturnType<typeof prisma.rotationMeta.findUniqueOrThrow>>;
@@ -140,6 +151,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
     shareToken: m.shareToken,
     maxStreakMinutes: m.maxStreakMinutes,
     shareDays: m.shareDays,
+    defaultShareDays: (await loadPrefs(ownerId)).shareDays,
     version: m.version,
     tableCount: m.tableCount,
     tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
@@ -414,6 +426,8 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
             workDate,
             tableCount: 0,
             tableLabels: "",
+            // 공유 링크 열림 기간: 계정 기본값
+            shareDays: (await loadPrefs(ownerId)).shareDays,
             ...(action.copySettings
               ? {
                   interval: from.interval,
@@ -463,6 +477,13 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       case "setShareDays": {
         const days = [0, 1, 3].includes(Number(action.days)) ? Number(action.days) : 1;
         await tx.rotationMeta.update({ where: { id: META_ID }, data: { shareDays: days } });
+        if (action.asDefault) {
+          await tx.toolSaved.upsert({
+            where: { id: prefsId(ownerId) },
+            create: { id: prefsId(ownerId), ownerId, kind: "rotation-prefs", dataJson: JSON.stringify({ shareDays: days }) },
+            update: { dataJson: JSON.stringify({ shareDays: days }) },
+          });
+        }
         break;
       }
       case "restoreGame": {

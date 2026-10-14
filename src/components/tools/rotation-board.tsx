@@ -1260,6 +1260,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </option>
               ))}
             </select>
+            {state.defaultShareDays === state.shareDays ? (
+              <span data-share-default className="rounded-full bg-emerald-950/60 px-2 py-0.5 font-bold text-emerald-300">새 게임 기본값</span>
+            ) : (
+              <button
+                type="button"
+                data-share-make-default
+                disabled={busy}
+                onClick={() => void send({ type: "setShareDays", days: state.shareDays, asDefault: true })}
+                className="min-h-9 rounded-lg border border-emerald-500/60 px-2 font-bold text-emerald-200"
+              >
+                새 게임도 이 기간으로
+              </button>
+            )}
             <span className="font-normal text-zinc-500">지나면 링크 · TV가 자동으로 닫혀요(오래된 교대표가 계속 보이지 않게)</span>
           </label>
         ) : null}

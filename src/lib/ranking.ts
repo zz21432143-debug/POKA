@@ -78,7 +78,7 @@ function toRows(raw: RawRow[], excluded: ReadonlySet<string>): RankRow[] {
  * - 전체: 레벨 높은 순, 같은 레벨이면 누적 경험치 많은 순(점수 = 누적 경험치)
  * - 이번 주·이번 달: 그 기간에 얻은 경험치 순, 같으면 레벨·누적 경험치 순(점수 = 얻은 경험치)
  */
-async function levelRows(period: RankPeriod): Promise<RawRow[]> {
+async function levelRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
   const start = periodStart(period);
   if (start) {
     await ensureExpLedger();
@@ -89,7 +89,7 @@ async function levelRows(period: RankPeriod): Promise<RawRow[]> {
       WHERE x.delta > 0 AND x."createdAt" >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.exp DESC, u.nickname ASC
-      LIMIT 30
+      LIMIT ${limit}
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
@@ -97,11 +97,11 @@ async function levelRows(period: RankPeriod): Promise<RawRow[]> {
     FROM "User"
     WHERE "withdrawnAt" IS NULL AND "isMaster" = false AND exp > 0
     ORDER BY level DESC, exp DESC, nickname ASC
-    LIMIT 30
+    LIMIT ${limit}
   `;
 }
 
-async function markRows(period: RankPeriod): Promise<RawRow[]> {
+async function markRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
   const start = periodStart(period);
   if (!start) {
     return prisma.$queryRaw<RawRow[]>`
@@ -112,7 +112,7 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
       WHERE m.slug IN (${Prisma.join(YOKAI_SLUGS)}) AND u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
-      LIMIT 30
+      LIMIT ${limit}
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
@@ -125,11 +125,11 @@ async function markRows(period: RankPeriod): Promise<RawRow[]> {
       AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
-    LIMIT 30
+    LIMIT ${limit}
   `;
 }
 
-async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
+async function attendanceRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
   const start = periodDate(period);
   if (!start) {
     return prisma.$queryRaw<RawRow[]>`
@@ -139,7 +139,7 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
       WHERE u."withdrawnAt" IS NULL AND u."isMaster" = false
       GROUP BY u.id
       ORDER BY score DESC, u.level DESC, u.nickname ASC
-      LIMIT 30
+      LIMIT ${limit}
     `;
   }
   return prisma.$queryRaw<RawRow[]>`
@@ -149,7 +149,7 @@ async function attendanceRows(period: RankPeriod): Promise<RawRow[]> {
     WHERE d.date >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
     GROUP BY u.id
     ORDER BY score DESC, u.level DESC, u.nickname ASC
-    LIMIT 30
+    LIMIT ${limit}
   `;
 }
 
@@ -160,6 +160,18 @@ export async function getRanking(tab: RankTab, period: RankPeriod): Promise<Rank
     rankExcludedIds(),
   ]);
   return toRows(raw, excluded);
+}
+
+/** 내 정확한 순위(회원만, 20위 밖도): 점수 순으로 줄 세워 내 자리. 점수가 없으면 null */
+export async function exactRank(tab: RankTab, period: RankPeriod, userId: string): Promise<{ rank: number; score: number } | null> {
+  const ALL = 100_000;
+  const [raw, excluded] = await Promise.all([
+    tab === "marks" ? markRows(period, ALL) : tab === "attendance" ? attendanceRows(period, ALL) : levelRows(period, ALL),
+    rankExcludedIds(),
+  ]);
+  const rows = raw.filter((row) => Number(row.score) > 0 && !excluded.has(row.userId));
+  const i = rows.findIndex((row) => row.userId === userId);
+  return i >= 0 ? { rank: i + 1, score: Number(rows[i].score) } : null;
 }
 
 let excludedCache: { at: number; ids: ReadonlySet<string> } | null = null;

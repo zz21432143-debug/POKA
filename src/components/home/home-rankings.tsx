@@ -47,7 +47,7 @@ export async function HomeRankings() {
                       <span className="truncate text-sm font-bold text-white">{row.nickname}</span>
                       <PotTitleBadge nickname={row.nickname} max={1} className="max-lg:hidden" />
                     </Link>
-                    <span className="shrink-0 text-xs font-black text-[#e7c98a] tabular-nums">{row.score}</span>
+                    {row.score ? <span className="shrink-0 text-xs font-black text-[#e7c98a] tabular-nums">{row.score}</span> : null}
                   </li>
                 ))}
               </ol>

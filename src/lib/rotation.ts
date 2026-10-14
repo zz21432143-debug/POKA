@@ -68,6 +68,8 @@ export type RotationStateView = {
   maxStreakMinutes: number;
   /** 공유 링크 열림 기간(1 · 3 · 0=계속) */
   shareDays: number;
+  /** 새 게임을 만들 때 쓸 열림 기간(계정 설정) */
+  defaultShareDays: number;
   /** 이 계정의 게임(날짜 최신순, 최대 MAX_GAMES개) */
   games: RotationGame[];
   version: number;
@@ -118,8 +120,8 @@ export type RotationAction =
   | { type: "deleteGames"; ids: string[] }
   /** 휴지통(지운 지 7일 안)에서 게임 되살리기 */
   | { type: "restoreGame"; trashId: string }
-  /** 공유 링크 열림 기간 */
-  | { type: "setShareDays"; days: number }
+  /** 공유 링크 열림 기간(asDefault면 새 게임 기본값으로도 저장) */
+  | { type: "setShareDays"; days: number; asDefault?: boolean }
   /** 딜러 명단 따로 저장(계정마다 · 게임과 상관없이 남음). id가 있으면 고치기 */
   | { type: "saveRoster"; id?: string; name: string; text: string }
   | { type: "deleteRoster"; id: string };

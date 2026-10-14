@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { getRanking, rankExcludedIds, rankScoreLabel } from "@/lib/ranking";
+import { exactRank, rankExcludedIds, rankScoreLabel } from "@/lib/ranking";
 import { loadTitleConfig, rankingRows } from "@/lib/pot-titles";
 import { DIFFICULTY } from "@/lib/practice";
 
@@ -7,11 +7,8 @@ import { DIFFICULTY } from "@/lib/practice";
 export type MyRankRow = { key: string; label: string; short: string; rank: number | null; score: string; href: string };
 export type MyRanks = { excluded: false; rows: MyRankRow[] } | { excluded: true; reason: "master" | "admin" };
 
-/** 랭킹에 보이는 순위 수(이보다 밖이면 「순위 밖」) */
-const SHOWN = 20;
-
 /**
- * 내 랭킹: 레벨(전체)은 정확한 순위, 나머지는 랭킹 화면 20위 안이면 순위 · 밖이면 「순위 밖」.
+ * 내 랭킹: 모두 정확한 순위(20위 밖도). 기록이 없으면 「기록 없음」.
  * 마스터 · 랭킹 제외 회원은 랭킹에 없으므로 따로 알려 줌.
  */
 export async function getMyRanks(user: { id: string; nickname: string; level: number; exp: number; isMaster: boolean }): Promise<MyRanks> {
@@ -21,10 +18,10 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
 
   const config = await loadTitleConfig();
   const [weekExp, marks, attendance, pot, above] = await Promise.all([
-    getRanking("level", "week").catch(() => []),
-    getRanking("marks", "all").catch(() => []),
-    getRanking("attendance", "month").catch(() => []),
-    rankingRows(config.difficulty, config.period, SHOWN).catch(() => []),
+    exactRank("level", "week", user.id).catch(() => null),
+    exactRank("marks", "all", user.id).catch(() => null),
+    exactRank("attendance", "month", user.id).catch(() => null),
+    rankingRows(config.difficulty, config.period, 100_000, 50_000).catch(() => []),
     // 레벨(전체) 정확한 순위: 나보다 레벨이 높거나, 같은 레벨에서 경험치가 많은 회원 수 + 1
     prisma.user
       .count({
@@ -37,26 +34,20 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
       })
       .catch(() => null),
   ]);
-  const at = (rows: { nickname: string }[]) => {
-    const i = rows.findIndex((r) => r.nickname === user.nickname);
-    return i >= 0 ? i + 1 : null;
-  };
-  const weekRow = weekExp.find((r) => r.nickname === user.nickname);
-  const markRow = marks.find((r) => r.nickname === user.nickname);
-  const attRow = attendance.find((r) => r.nickname === user.nickname);
-  const potRow = pot.find((r) => r.nickname === user.nickname);
+  const potIndex = pot.findIndex((r) => r.userId === user.id);
+  const potRow = potIndex >= 0 ? pot[potIndex] : null;
   return {
     excluded: false,
     rows: [
       { key: "level", label: "레벨(전체)", short: "레벨", rank: user.exp > 0 && above != null ? above + 1 : null, score: `Lv.${user.level}`, href: "/ranking?tab=level" },
-      { key: "weekExp", label: "이번 주 경험치", short: "주간 경험치", rank: at(weekExp), score: weekRow ? rankScoreLabel("level", weekRow.score, "week") : "-", href: "/ranking?tab=level&period=week" },
-      { key: "marks", label: "마크 수집", short: "마크", rank: at(marks), score: markRow ? rankScoreLabel("marks", markRow.score) : "-", href: "/ranking?tab=marks" },
-      { key: "attendance", label: "이번 달 출석", short: "월간 출석", rank: at(attendance), score: attRow ? rankScoreLabel("attendance", attRow.score, "month") : "-", href: "/ranking?tab=attendance&period=month" },
+      { key: "weekExp", label: "이번 주 경험치", short: "주간 경험치", rank: weekExp?.rank ?? null, score: weekExp ? rankScoreLabel("level", weekExp.score, "week") : "-", href: "/ranking?tab=level&period=week" },
+      { key: "marks", label: "마크 수집", short: "마크", rank: marks?.rank ?? null, score: marks ? rankScoreLabel("marks", marks.score) : "-", href: "/ranking?tab=marks" },
+      { key: "attendance", label: "이번 달 출석", short: "월간 출석", rank: attendance?.rank ?? null, score: attendance ? rankScoreLabel("attendance", attendance.score, "month") : "-", href: "/ranking?tab=attendance&period=month" },
       {
         key: "pot",
         label: `팟 계산(${DIFFICULTY[config.difficulty].label})`,
         short: "팟 계산",
-        rank: at(pot),
+        rank: potIndex >= 0 ? potIndex + 1 : null,
         score: potRow ? `${potRow.correct}문제` : "-",
         href: "/tools/practice",
       },
