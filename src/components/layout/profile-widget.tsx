@@ -9,6 +9,7 @@ import { memberRankTitle } from "@/lib/levels";
 import Link from "next/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
 import { InquiryBadge } from "@/components/admin/inquiry-badge";
+import { MyHonorMini } from "@/components/user/my-honor-mini";
 export { MarkImage };
 
 function ProfileAction({
@@ -150,6 +151,8 @@ export function ProfileWidget({
         streak={profile.attendanceStreak}
         lastAttendanceDate={profile.lastAttendanceDate}
       />
+      {/* 내 칭호 · 랭킹(창을 열면 불러옴) */}
+      <MyHonorMini nickname={profile.nickname} />
       <div className="mt-3 flex flex-col gap-2 pb-3">
         {profile.isAdmin ? <InquiryBadge /> : null}
         {profile.isAdmin ? <ProfileAction href="/admin">관리자 페이지</ProfileAction> : null}

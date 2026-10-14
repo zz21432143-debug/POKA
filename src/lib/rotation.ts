@@ -66,6 +66,8 @@ export type RotationStateView = {
   shareToken: string | null;
   /** 최대 연속 딜(분). 0이면 제한 없음 */
   maxStreakMinutes: number;
+  /** 공유 링크 열림 기간(1 · 3 · 0=계속) */
+  shareDays: number;
   /** 이 계정의 게임(날짜 최신순, 최대 MAX_GAMES개) */
   games: RotationGame[];
   version: number;
@@ -116,6 +118,8 @@ export type RotationAction =
   | { type: "deleteGames"; ids: string[] }
   /** 휴지통(지운 지 7일 안)에서 게임 되살리기 */
   | { type: "restoreGame"; trashId: string }
+  /** 공유 링크 열림 기간 */
+  | { type: "setShareDays"; days: number }
   /** 딜러 명단 따로 저장(계정마다 · 게임과 상관없이 남음). id가 있으면 고치기 */
   | { type: "saveRoster"; id?: string; name: string; text: string }
   | { type: "deleteRoster"; id: string };
@@ -153,10 +157,18 @@ export function kstDate(now = new Date()) {
  * 보기 전용 링크가 끝났는지: 근무일 다음 날(밤샘 대회 고려)까지만 열립니다.
  * 날짜가 없으면 끝나지 않은 것으로 봅니다.
  */
-export function shareExpired(workDate: string | null, today = kstDate()) {
-  if (!workDate || !normalizeWorkDate(workDate)) return false;
+/** 공유 링크 열림 기간 선택: 근무일 + n일까지(0 = 계속) */
+export const SHARE_DAY_CHOICES = [
+  { days: 1, label: "근무일 다음 날까지" },
+  { days: 3, label: "근무일 3일 뒤까지" },
+  { days: 0, label: "계속(공유를 끌 때까지)" },
+] as const;
+
+/** 공유 링크가 닫혔는지: 근무일 + days일이 지나면 닫힘(days 0이면 안 닫힘) */
+export function shareExpired(workDate: string | null, today = kstDate(), days = 1) {
+  if (days <= 0 || !workDate || !normalizeWorkDate(workDate)) return false;
   const [y, m, d] = workDate.split("-").map(Number);
-  const lastDay = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  const lastDay = new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
   return today > lastDay;
 }
 

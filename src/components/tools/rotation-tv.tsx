@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { formatWorkDate, kstClock, tableTag } from "@/lib/rotation";
 import { formatClock, type RotationPlan } from "@/lib/rotation-plan";
+import { rotationSoonSound, rotationSwapSound, unlockBoardSound } from "@/lib/board-sound";
+
+/** TV 교대 알림음 켜기/끄기(이 기기에 기억) */
+const SOUND_KEY = "poka-tv-sound";
 
 /** TV 한 쪽에 보일 테이블 수(넘으면 pageSeconds초마다 쪽 넘김). 지금 · 교대 두 칸만이라 40개까지 한 화면 */
 const TV_PAGE = 40;
@@ -93,6 +97,7 @@ type Swap = { at: number; rows: (Row & { label: number })[]; toRest: string[] } 
  * 테이블이 40개를 넘으면 pageSeconds초마다 쪽을 넘김.
  */
 export function RotationTvScreen({
+  token,
   gameName,
   workDate,
   clock,
@@ -110,6 +115,8 @@ export function RotationTvScreen({
   theme,
   onExit,
 }: {
+  /** 공유 링크 값: 오른쪽 위 QR(찍으면 휴대폰으로 내 일정 화면) */
+  token: string;
   gameName: string;
   workDate: string | null;
   clock: Date;
@@ -131,6 +138,42 @@ export function RotationTvScreen({
   const boardRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [pageTick, setPageTick] = useState(0);
+  const [qr, setQr] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState(false);
+
+  // QR: 보기 화면(TV 말고) 주소 — 딜러가 이름을 골라 내 일정을 봄
+  useEffect(() => {
+    let alive = true;
+    void import("qrcode")
+      .then((QR) => QR.toDataURL(`${window.location.origin}/r/${token}`, { width: 360, margin: 1, color: { dark: "#000000", light: "#ffffff" } }))
+      .then((url) => {
+        if (alive) setQr(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [token]);
+
+  // 교대 소리: 이 기기에 켜 둔 값(브라우저 자동 재생 제한 때문에 화면을 한 번 누르면 확실히 켜짐)
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 값은 화면이 뜬 뒤에만 읽을 수 있습니다.
+      if (window.localStorage.getItem(SOUND_KEY) === "1") setSoundOn(true);
+    } catch {
+      /* 저장소를 못 쓰면 꺼진 채로 */
+    }
+  }, []);
+  function toggleSound() {
+    unlockBoardSound();
+    const next = !soundOn;
+    setSoundOn(next);
+    try {
+      window.localStorage.setItem(SOUND_KEY, next ? "1" : "0");
+    } catch {
+      /* 무시 */
+    }
+  }
 
   // 표가 들어갈 자리 크기(화면 크기 · 돌림이 바뀌면 다시 잼)
   useEffect(() => {
@@ -171,6 +214,15 @@ export function RotationTvScreen({
   const font = Math.max(10, layout.font);
   // 교대 1분 전부터 「교대」 칸을 깜빡여 멀리서도 알아보게
   const soon = Boolean(swap && swap.at - now > 0 && swap.at - now <= 1);
+  // 소리: 1분 전 「띵」, 교대 칸이 바뀌는 순간 「딩동 딩동」
+  const lastRef = useRef<{ current: number; soon: boolean } | null>(null);
+  useEffect(() => {
+    const last = lastRef.current;
+    lastRef.current = { current, soon };
+    if (!soundOn || !last) return;
+    if (current !== last.current && current >= 0) rotationSwapSound();
+    else if (soon && !last.soon) rotationSoonSound();
+  }, [current, soon, soundOn]);
   // 머리줄(「교대 01:40」 약 5.2em)도 칸 너비 안에 들어가게
   const headFont = Math.max(10, Math.min(font * 0.8, layout.rowH * 0.5, layout.cellW / 5.4));
   const labelHeadFont = Math.max(9, Math.min(headFont * 0.7, layout.labelW / 3.2));
@@ -183,7 +235,7 @@ export function RotationTvScreen({
       className={cn("inset-0 z-[9999] flex h-[100dvh] flex-col gap-[1.2dvh] overflow-hidden p-[1.2dvh]", c.root)}
       style={{ position: "fixed" }}
     >
-      <header className={cn("flex shrink-0 items-center gap-[1.2vw] rounded-2xl border px-[1.5vw] py-[0.8dvh]", c.panel)}>
+      <header className={cn("flex shrink-0 items-center gap-[1.2vw] rounded-2xl border py-[0.8dvh] pr-[0.8dvh] pl-[1.5vw]", c.panel)}>
         {/* eslint-disable-next-line @next/next/no-img-element -- 작은 로고 한 장 */}
         <img src="/brand/poka-oni-mark.png" alt="POKA" className="h-auto w-[min(5vw,8dvh)] shrink-0" />
         <span className={cn("min-w-0 truncate font-black leading-tight", c.title)} style={{ fontSize: "min(3.2vw, 5.5dvh)" }}>
@@ -195,9 +247,30 @@ export function RotationTvScreen({
         <span className={cn("ml-auto shrink-0 font-black tabular-nums", c.clock)} style={{ fontSize: "min(3.6vw, 6dvh)" }}>
           {kstClock(clock)}
         </span>
-        <button type="button" onClick={onExit} className={cn("min-h-9 shrink-0 rounded-lg border px-2 text-xs font-black", c.exit)}>
-          TV 화면 끄기
-        </button>
+        <span className="grid shrink-0 gap-1">
+          <button
+            type="button"
+            data-tv-sound={soundOn ? "on" : "off"}
+            onClick={toggleSound}
+            className={cn("min-h-8 rounded-lg border px-2 text-xs font-black", soundOn ? "border-amber-400 bg-amber-400 text-black" : c.exit)}
+          >
+            {soundOn ? "🔔 교대 소리 켜짐" : "🔕 교대 소리"}
+          </button>
+          <button type="button" onClick={onExit} className={cn("min-h-8 rounded-lg border px-2 text-xs font-black", c.exit)}>
+            TV 화면 끄기
+          </button>
+        </span>
+        {/* 오른쪽 위: 딜러가 휴대폰으로 찍으면 내 일정 화면 */}
+        {qr ? (
+          <span data-tv-qr className="flex shrink-0 items-center gap-[0.6vw]">
+            <span className={cn("text-right font-bold leading-tight", c.sub)} style={{ fontSize: "min(1.1vw, 1.9dvh)" }}>
+              📱 찍으면
+              <br />내 일정
+            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 만든 QR 그림 */}
+            <img src={qr} alt="내 일정 보기 QR" className="aspect-square w-[min(7vw,11dvh)] rounded-md bg-white p-[0.3dvh]" />
+          </span>
+        ) : null}
       </header>
 
       {closed ? <p className="shrink-0 rounded-xl bg-rose-950 px-3 py-2 text-sm font-bold text-rose-200">공유가 꺼졌습니다. 담당자에게 새 링크를 받아 주세요.</p> : null}

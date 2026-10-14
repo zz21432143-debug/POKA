@@ -35,6 +35,8 @@ export type TitleConfig = {
   honors: Record<HonorKey, HonorSetting>;
   /** 모든 랭킹에서 뺄 회원(id) — 운영진 · 테스트 계정 등. 마스터는 따로 늘 빠짐 */
   rankExcluded: string[];
+  /** 랭킹 제외 까닭 메모(회원 id → 짧은 글, 예: 운영진 · 테스트 계정) */
+  rankNotes: Record<string, string>;
 };
 
 const DEFAULT_HONORS = Object.fromEntries(HONOR_KEYS.map((k) => [k, { enabled: true, name: HONOR_DEFS[k].name, top: 1 }])) as Record<HonorKey, HonorSetting>;
@@ -47,9 +49,12 @@ export const DEFAULT_TITLE_CONFIG: TitleConfig = {
   excluded: [],
   honors: DEFAULT_HONORS,
   rankExcluded: [],
+  rankNotes: {},
 };
 
 export const TITLE_NAME_MAX = 12;
+/** 랭킹 제외 메모 글자 수 */
+export const RANK_NOTE_MAX = 30;
 export const PERIOD_LABEL: Record<TitlePeriod, string> = { all: "전체 기록", month: "이번 달" };
 
 const cleanName = (value: unknown, fallback: string) => {
@@ -85,6 +90,15 @@ export function normalizeTitleConfig(raw: unknown): TitleConfig {
     period: value.period === "month" ? "month" : "all",
     excluded: Array.isArray(value.excluded) ? [...new Set(value.excluded.map(String).filter(Boolean))].slice(0, 500) : [],
     rankExcluded: Array.isArray(value.rankExcluded) ? [...new Set(value.rankExcluded.map(String).filter(Boolean))].slice(0, 500) : [],
+    rankNotes:
+      value.rankNotes && typeof value.rankNotes === "object"
+        ? Object.fromEntries(
+            Object.entries(value.rankNotes as Record<string, unknown>)
+              .map(([id, note]) => [id, String(note ?? "").replace(/\s+/g, " ").trim().slice(0, RANK_NOTE_MAX)] as const)
+              .filter(([, note]) => note)
+              .slice(0, 500),
+          )
+        : {},
   };
 }
 

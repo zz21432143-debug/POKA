@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "cn";
 import { DIFFICULTIES, DIFFICULTY, ROUND_SIZE, type Difficulty } from "@/lib/practice";
-import { HONOR_DEFS, HONOR_KEYS, PERIOD_LABEL, TITLE_NAME_MAX, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
+import { HONOR_DEFS, HONOR_KEYS, PERIOD_LABEL, RANK_NOTE_MAX, TITLE_NAME_MAX, type HonorKey, type TitleConfig, type TitlePeriod } from "@/lib/pot-title-config";
 
 type Row = { userId: string; nickname: string; correct: number; durationMs: number; at: string; runs: number; excluded: boolean };
 type Snapshot = {
@@ -15,7 +15,7 @@ type Snapshot = {
   /** 랭킹 칭호 → 지금 받는 사람 */
   honorOwners?: Record<HonorKey, string[]>;
   /** 모든 랭킹에서 뺀 회원 */
-  rankExcludedUsers?: { id: string; nickname: string }[];
+  rankExcludedUsers?: { id: string; nickname: string; note?: string }[];
 };
 
 const secText = (ms: number) => `${Math.floor(ms / 60000) ? `${Math.floor(ms / 60000)}분 ` : ""}${((ms % 60000) / 1000).toFixed(1)}초`;
@@ -247,12 +247,23 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
             onSubmit={(e) => {
               e.preventDefault();
               const input = e.currentTarget.elements.namedItem("rank-exclude-nick") as HTMLInputElement;
+              const noteInput = e.currentTarget.elements.namedItem("rank-exclude-note") as HTMLInputElement;
               const nickname = input.value.trim();
               if (!nickname) return;
-              void send("POST", { type: "rankExclude", nickname, view }, `${nickname} 님을 랭킹에서 뺐습니다.`).then(() => (input.value = ""));
+              void send("POST", { type: "rankExclude", nickname, note: noteInput.value, view }, `${nickname} 님을 랭킹에서 뺐습니다.`).then(() => {
+                input.value = "";
+                noteInput.value = "";
+              });
             }}
           >
             <input name="rank-exclude-nick" aria-label="랭킹에서 뺄 닉네임" placeholder="닉네임" className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2 text-base" />
+            <input
+              name="rank-exclude-note"
+              aria-label="랭킹 제외 메모"
+              placeholder="메모(예: 운영진, 테스트 계정)"
+              maxLength={RANK_NOTE_MAX}
+              className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2 text-base"
+            />
             <button type="submit" disabled={busy} className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
               랭킹에서 빼기
             </button>
@@ -263,6 +274,7 @@ export function TitleAdmin({ canEdit }: { canEdit: boolean }) {
             {data.rankExcludedUsers.map((u) => (
               <li key={u.id} data-rank-excluded={u.nickname} className="flex min-h-10 items-center gap-2 rounded-lg border border-border px-2 text-sm font-semibold">
                 {u.nickname}
+                {u.note ? <span data-rank-note className="text-xs font-normal text-muted-foreground">· {u.note}</span> : null}
                 {canEdit ? (
                   <button
                     type="button"

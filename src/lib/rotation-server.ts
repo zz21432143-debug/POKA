@@ -139,6 +139,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
     games,
     shareToken: m.shareToken,
     maxStreakMinutes: m.maxStreakMinutes,
+    shareDays: m.shareDays,
     version: m.version,
     tableCount: m.tableCount,
     tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
@@ -181,7 +182,7 @@ export async function lookupShared(token: string): Promise<{ view: RotationShare
   if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return { reason: "missing" };
   const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token } });
   if (!m) return { reason: "missing" };
-  if (shareExpired(m.workDate)) return { reason: "expired", workDate: m.workDate, gameName: m.name };
+  if (shareExpired(m.workDate, undefined, m.shareDays)) return { reason: "expired", workDate: m.workDate, gameName: m.name };
   const dealers = await prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
   return {
     view: {
@@ -199,8 +200,8 @@ export async function lookupShared(token: string): Promise<{ view: RotationShare
 
 export async function sharedVersion(token: string) {
   if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) return -1;
-  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token }, select: { version: true, workDate: true } });
-  if (!m || shareExpired(m.workDate)) return -1;
+  const m = await prisma.rotationMeta.findUnique({ where: { shareToken: token }, select: { version: true, workDate: true, shareDays: true } });
+  if (!m || shareExpired(m.workDate, undefined, m.shareDays)) return -1;
   return m.version;
 }
 
@@ -457,6 +458,11 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         if ((await tx.rotationMeta.count({ where: { ownerId } })) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
         await moveToTrash(tx, ownerId, [META_ID]);
         deleted = true;
+        break;
+      }
+      case "setShareDays": {
+        const days = [0, 1, 3].includes(Number(action.days)) ? Number(action.days) : 1;
+        await tx.rotationMeta.update({ where: { id: META_ID }, data: { shareDays: days } });
         break;
       }
       case "restoreGame": {

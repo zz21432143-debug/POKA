@@ -125,5 +125,9 @@ describe("view-only link expiry", () => {
     assert.equal(shareExpired("2026-10-13", "2026-10-15"), true);
     assert.equal(shareExpired("2026-12-31", "2027-01-01"), false);
     assert.equal(shareExpired(null, "2030-01-01"), false);
+    // 열림 기간: 3일 뒤까지 · 0이면 계속
+    assert.equal(shareExpired("2026-10-13", "2026-10-16", 3), false);
+    assert.equal(shareExpired("2026-10-13", "2026-10-17", 3), true);
+    assert.equal(shareExpired("2026-10-01", "2027-10-01", 0), false);
   });
 });

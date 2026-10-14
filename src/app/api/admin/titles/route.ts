@@ -35,7 +35,7 @@ async function snapshot(difficulty?: Difficulty, period?: TitlePeriod) {
     rows: rows.map((r) => ({ ...r, runs: countOf.get(r.userId) ?? 0, excluded: config.excluded.includes(r.userId) })),
     excludedUsers,
     honorOwners: honors?.owners ?? null,
-    rankExcludedUsers,
+    rankExcludedUsers: rankExcludedUsers.map((u) => ({ ...u, note: config.rankNotes[u.id] ?? "" })),
   };
 }
 
@@ -62,6 +62,7 @@ export async function PATCH(request: Request) {
     honors: { ...current.honors, ...((body.honors as object) ?? {}) },
     excluded: current.excluded,
     rankExcluded: current.rankExcluded,
+    rankNotes: current.rankNotes,
   });
   await saveTitleConfig(next);
   return NextResponse.json({ ok: true, ...(await snapshot()) });
@@ -75,7 +76,7 @@ export async function PATCH(request: Request) {
 export async function POST(request: Request) {
   const { user, error } = await requireMaster();
   if (error) return error;
-  const body = (await request.json().catch(() => ({}))) as { type?: string; userId?: string; nickname?: string; difficulty?: string; view?: { difficulty?: string; period?: string } };
+  const body = (await request.json().catch(() => ({}))) as { type?: string; userId?: string; nickname?: string; note?: string; difficulty?: string; view?: { difficulty?: string; period?: string } };
   let userId = String(body.userId ?? "");
   // 랭킹 제외는 닉네임으로도 고를 수 있음
   if (!userId && typeof body.nickname === "string" && body.nickname.trim()) {
@@ -86,7 +87,11 @@ export async function POST(request: Request) {
   const config = await loadTitleConfig();
   if (body.type === "rankExclude" || body.type === "rankInclude") {
     const rankExcluded = body.type === "rankExclude" ? [...new Set([...config.rankExcluded, userId])] : config.rankExcluded.filter((id) => id !== userId);
-    await saveTitleConfig({ ...config, rankExcluded });
+    // 메모: 뺄 때 적은 까닭(다시 넣으면 지움)
+    const rankNotes = { ...config.rankNotes };
+    if (body.type === "rankExclude" && typeof body.note === "string" && body.note.trim()) rankNotes[userId] = body.note;
+    if (body.type === "rankInclude") delete rankNotes[userId];
+    await saveTitleConfig(normalizeTitleConfig({ ...config, rankExcluded, rankNotes }));
     clearHomeRankings();
   } else if (body.type === "exclude" || body.type === "include") {
     const excluded = body.type === "exclude" ? [...new Set([...config.excluded, userId])] : config.excluded.filter((id) => id !== userId);

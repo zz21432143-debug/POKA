@@ -18,6 +18,10 @@ export type TickerItem = {
  * 예전처럼 옆으로 계속 흐르면 어지럽다는 의견이 있어, 한 줄 높이만 짧게 움직입니다.
  * 마우스를 올리거나 누르고 있으면 멈춥니다.
  */
+/** 칭호 소식(「…」 칭호를 받았습니다)은 금색으로 크게 */
+const isHonorNews = (message: string) => /칭호를 받았습니다/.test(message);
+const HONOR_CLASS = "font-black text-[#f5d76e] drop-shadow-[0_0_6px_rgba(245,215,110,0.55)] md:text-base";
+
 export function LedTicker({ items }: { items: TickerItem[] }) {
   const source =
     items.length > 0
@@ -56,7 +60,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
           <span
             key={`out-${index}`}
             aria-hidden
-            className="led-roll-out absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] md:text-sm md:tracking-wide"
+            className={`led-roll-out absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] md:text-sm md:tracking-wide ${isHonorNews(previous.message) ? HONOR_CLASS : ""}`}
           >
             <span className="line-clamp-1">{previous.message}</span>
           </span>
@@ -66,7 +70,8 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
           key={`in-${index}`}
           href={current.href}
           aria-live="polite"
-          className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] hover:text-white md:text-sm md:tracking-wide`}
+          data-ticker-honor={isHonorNews(current.message) ? "on" : undefined}
+          className={`${index > 0 ? "led-roll-in " : ""}absolute inset-0 flex items-center text-[12px] font-medium leading-snug text-[#f4eadf] hover:text-white md:text-sm md:tracking-wide ${isHonorNews(current.message) ? HONOR_CLASS : ""}`}
         >
           <span className="line-clamp-1">{current.message}</span>
         </Link>

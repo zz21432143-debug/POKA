@@ -4,6 +4,9 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { replaceToLogin } from "@/lib/history-redirect";
 import { logoutAllAction } from "@/lib/logout-action";
+import { HonorShelf } from "@/components/user/honor-shelf";
+import { MyRankList } from "@/components/user/my-rank-list";
+import { getMyRanks } from "@/lib/my-rank";
 
 export const metadata: Metadata = { title: "내 정보", robots: { index: false } };
 
@@ -12,9 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function AccountPage() {
   const user = await getCurrentUser().catch(() => null);
   if (!user) replaceToLogin("/account");
-  const links = await prisma.user
-    .findUnique({ where: { id: user.id }, select: { kakaoId: true, googleId: true } })
-    .catch(() => null);
+  const [links, me] = await Promise.all([
+    prisma.user.findUnique({ where: { id: user.id }, select: { kakaoId: true, googleId: true } }).catch(() => null),
+    prisma.user.findUnique({ where: { id: user.id }, select: { id: true, nickname: true, level: true, exp: true, isMaster: true } }).catch(() => null),
+  ]);
+  const ranks = me ? await getMyRanks(me).catch(() => null) : null;
 
   return (
     <article className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -24,6 +29,22 @@ export default async function AccountPage() {
           닉네임·이메일을 확인하고, 닉네임을 바꿀 수 있습니다. 탈퇴는 별도 화면입니다.
         </p>
       </header>
+      {/* 내 칭호 · 내 랭킹 */}
+      <div id="my-honor" className="grid scroll-mt-24 gap-2">
+        <HonorShelf userId={user.id} nickname={user.nickname} mine />
+        {ranks ? (
+          <section aria-label="내 랭킹" className="grid gap-2 rounded-2xl border border-[#c9a25c]/30 bg-black/30 p-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-black text-[#e7c98a]">내 랭킹</h2>
+              <a href="/ranking" className="ml-auto text-xs font-bold text-[#c9a25c]">
+                전체 랭킹 ›
+              </a>
+            </div>
+            <MyRankList ranks={ranks} />
+            <p className="text-[11px] text-zinc-500">레벨은 정확한 순위, 나머지는 랭킹 화면(20위)에 있으면 순위가 보여요.</p>
+          </section>
+        ) : null}
+      </div>
       <AccountPrivacyPanel
         nickname={user.nickname}
         email={user.email}

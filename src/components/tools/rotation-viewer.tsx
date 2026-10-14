@@ -402,6 +402,7 @@ export function RotationViewer({
     // TV 화면: 지금 · 교대 두 칸만 크게, 스크롤 없이. 사이트 메뉴(위 고정 막대)보다 위에 오도록 페이지 맨 바깥(body)에 그립니다.
     const screen = (
       <RotationTvScreen
+        token={token}
         gameName={state.game.name}
         workDate={state.game.workDate}
         clock={clock}

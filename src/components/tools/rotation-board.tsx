@@ -24,6 +24,7 @@ import {
   kstClock,
   kstDate,
   shareExpired,
+  SHARE_DAY_CHOICES,
   nowMinutes,
   parseDealerLines,
   parseTableLabels,
@@ -1242,7 +1243,27 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <span className="text-xs text-zinc-400">링크를 받은 사람은 보기만 할 수 있습니다(고치기 불가). 이 게임만 보이고, 다른 게임·계정은 안 보입니다.</span>
         </div>
         {/* 근무일 다음 날이 지나면 링크가 자동으로 닫힘 → 까닭 · 바로 고치기 */}
-        {shareUrl && shareExpired(state.game.workDate) ? (
+        {/* 링크 열림 기간: 근무일 다음 날 · 3일 뒤 · 계속 */}
+        {shareUrl ? (
+          <label className="flex flex-wrap items-center gap-2 text-xs font-bold text-zinc-300">
+            링크 열림 기간
+            <select
+              aria-label="공유 링크 열림 기간"
+              value={state.shareDays}
+              disabled={busy}
+              onChange={(e) => void send({ type: "setShareDays", days: Number(e.target.value) })}
+              className="h-10 rounded-lg border border-white/20 bg-zinc-900 px-2 text-sm font-bold text-white"
+            >
+              {SHARE_DAY_CHOICES.map((c) => (
+                <option key={c.days} value={c.days}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <span className="font-normal text-zinc-500">지나면 링크 · TV가 자동으로 닫혀요(오래된 교대표가 계속 보이지 않게)</span>
+          </label>
+        ) : null}
+        {shareUrl && shareExpired(state.game.workDate, undefined, state.shareDays) ? (
           <p data-share-expired className="flex flex-wrap items-center gap-2 rounded-xl border border-rose-500/60 bg-rose-950/60 px-3 py-2 text-sm font-bold text-rose-100">
             이 게임의 근무일({formatWorkDate(state.game.workDate)})이 지나 공유 링크 · TV 화면이 닫혀 있어요. 오늘 쓰는 게임이면 날짜를 오늘로 바꿔 주세요.
             <button
