@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { VersionRefresh } from "@/components/layout/version-refresh";
 import { Black_Han_Sans, Caveat, Dokdo, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -142,6 +143,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteJsonLd() }} />
         <GoogleAnalytics />
+        <VersionRefresh />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>
       </body>

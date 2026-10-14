@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/site";
 export const SITE_TITLE = "POKA - 홀덤·딜러 커뮤니티";
 
 export const SITE_DESCRIPTION =
-  "딜러 구인부터 게임 현황판 · 딜러 로테이션 · 매장 관리까지 POKA 하나로. 홀덤 플레이어와 딜러를 위한 커뮤니티 — 대회 일정, 핸드리뷰.";
+  "딜러 구인부터 게임 현황판 · 딜러 로테이션 · 매장 관리까지 POKA 하나로. GTO 푸시폴드 · ICM · 승률 계산기 무료. 홀덤 플레이어와 딜러를 위한 커뮤니티 — 대회 일정, 핸드리뷰.";
 
 export const SITE_NAME = "POKA";
 
