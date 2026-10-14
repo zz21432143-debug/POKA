@@ -81,7 +81,10 @@ export function EquityCalculator() {
   const flopReady = flop.every(Boolean);
   const boardFor = (n: number) => [cards.f1, cards.f2, cards.f3, cards.t, cards.r].slice(0, n);
   const streetReady = (n: number) => heroReady && villainReady && boardFor(n).every(Boolean) && (n === 0 || flopReady);
-  const key = JSON.stringify([cards, randomVillain]);
+  const key = JSON.stringify([cards, villainMode, villainMode === "range" ? rangePct : 0]);
+  const rangeSet = villainMode === "range" ? topRange(rangePct) : null;
+  const rangeCombos = rangeSet ? [...rangeSet].flatMap((k) => classCombos(HAND_NAMES[k])) : [];
+  const rangeComboCount = rangeSet ? [...rangeSet].reduce((sum, k) => sum + handCombos(HAND_NAMES[k]), 0) : 0;
 
   useEffect(() => {
     const id = ++run.current;
