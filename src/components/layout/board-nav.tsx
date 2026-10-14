@@ -36,6 +36,7 @@ import {
   UsersIcon,
   WalletIcon,
   ZapIcon,
+  StoreIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -149,7 +150,11 @@ export function BoardNav({
               })}
             </ul>
           );
-          const heading = "rounded-lg bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]";
+          // 매장 관리는 금색으로 돋보이게(위 메뉴와 같은 느낌)
+          const store = group.title === "매장 관리";
+          const heading = store
+            ? "rounded-lg border border-[#e7c98a] bg-[#c9a25c] px-3 py-1.5 text-sm font-black text-[#1d1611]"
+            : "rounded-lg bg-[#2a2017] px-3 py-1.5 text-sm font-bold text-[#e7c98a]";
           if (group.collapsible && group.title) {
             // 처음엔 펼친 상태(closed 그룹은 접힘 — 지금 보는 페이지가 안에 있으면 펼침). 제목을 눌러 접고 펼침.
             const open = !group.closed || group.items.some((item) => navItemActive(pathname, item.href));
@@ -161,7 +166,10 @@ export function BoardNav({
                     "touch-target flex min-h-11 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden",
                   )}
                 >
-                  {group.title}
+                  <span className="inline-flex items-center gap-1.5" data-nav-group={store ? "store" : undefined}>
+                    {store ? <StoreIcon className="size-4" /> : null}
+                    {group.title}
+                  </span>
                   <ChevronDownIcon className="size-4 transition-transform group-open/nav:rotate-180" />
                 </summary>
                 <div className="mt-2">{items}</div>

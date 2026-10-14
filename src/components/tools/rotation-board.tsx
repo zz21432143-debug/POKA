@@ -192,7 +192,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             type: "createGame",
             name: gameDialog.name,
             workDate: gameDialog.workDate,
-            copyDealers: gameDialog.copyDealers,
+            copyDealers: gameDialog.mode === "day" && gameDialog.copyDealers,
             copySettings: gameDialog.copySettings,
           });
     if (ok) setGameDialog(null);
@@ -332,6 +332,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
   function runAuto() {
+    // 새 게임은 테이블 0개 · 딜러 0명으로 시작하므로 먼저 정하라고 안내
+    if (state.tableCount === 0) {
+      setError("테이블이 0개예요. 설정 탭에서 테이블 번호(예: 1-8)를 먼저 정해 주세요.");
+      return;
+    }
+    if (state.dealers.length === 0) {
+      setError("딜러가 없어요. 딜러 탭에서 딜러를 먼저 등록해 주세요.");
+      return;
+    }
     const nowMin = nowMinutes(start, new Date());
     const leftIds = new Set(state.dealers.filter((d) => d.status === "LEFT").map((d) => d.id));
     const dealers = planDealers(state.dealers, start).map((d) => (leftIds.has(d.id) ? { ...d, to: Math.min(d.to ?? nowMin, nowMin) } : d));
@@ -502,7 +511,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <button
             type="button"
             disabled={busy}
-            onClick={() => setGameDialog({ mode: "new", name: "", workDate: state.game.workDate ?? kstDate(), copyDealers: false, copySettings: true })}
+            onClick={() => setGameDialog({ mode: "new", name: "", workDate: state.game.workDate ?? kstDate(), copyDealers: false, copySettings: false })}
             className="min-h-11 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
           >
             + 새 게임
@@ -1368,7 +1377,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <p className="text-xs text-zinc-400">
               {gameDialog.mode === "edit"
                 ? "지금 게임의 이름과 날짜만 바꿉니다."
-                : "새 게임은 딜러·테이블·시간표가 따로입니다. 지금 게임은 그대로 남고, 위 목록에서 언제든 다시 볼 수 있습니다."}
+                : "새 게임은 딜러 0명 · 테이블 0개로 새로 시작합니다. 지금 게임은 그대로 남고, 위 목록에서 언제든 다시 볼 수 있습니다."}
             </p>
             <label className="grid gap-1 text-sm font-bold">
               날짜
@@ -1391,6 +1400,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </label>
             {gameDialog.mode !== "edit" ? (
               <>
+                {gameDialog.mode === "day" ? (
                 <label className="flex items-center gap-2 text-sm font-bold">
                   <input
                     type="checkbox"
@@ -1400,6 +1410,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   />
                   지금 딜러 명단 가져오기 <span className="text-xs text-zinc-400">(출근 기록은 비움)</span>
                 </label>
+                ) : null}
                 <label className="flex items-center gap-2 text-sm font-bold">
                   <input
                     type="checkbox"
@@ -1407,7 +1418,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     onChange={(e) => setGameDialog({ ...gameDialog, copySettings: e.target.checked })}
                     className="size-5"
                   />
-                  설정 가져오기 <span className="text-xs text-zinc-400">(테이블 번호·간격·시작 시간)</span>
+                  시간 설정 가져오기 <span className="text-xs text-zinc-400">(교대 간격 · 시작/끝 시간 · 최대 연속 딜)</span>
                 </label>
               </>
             ) : null}

@@ -23,9 +23,10 @@ export function HomeStudyTools() {
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         {TOOLS.map(({ href, icon: Icon, title, body }) => (
-          <Link key={href} href={href} title={body} className="touch-target flex min-h-12 items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-2.5 last:col-span-2 hover:border-[#c9a25c] sm:last:col-span-1">
+          <Link key={href} href={href} title={body} className="group touch-target flex min-h-12 items-center gap-2 rounded-xl border border-[#c9a25c]/30 bg-black/30 px-2.5 transition last:col-span-2 hover:border-[#c9a25c] hover:bg-[#2a2017] active:scale-[0.98] sm:last:col-span-1">
             <Icon aria-hidden className="size-5 shrink-0 text-[#c9a25c]" />
-            <span className="min-w-0 truncate text-sm font-black text-white">{title}</span>
+            <span className="min-w-0 flex-1 truncate text-sm font-black text-white">{title}</span>
+            <ChevronRightIcon className="size-4 shrink-0 text-[#c9a25c] transition group-hover:translate-x-0.5" />
           </Link>
         ))}
       </div>

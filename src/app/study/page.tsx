@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BarChart3Icon, Grid3x3Icon, ListOrderedIcon, PercentIcon, PieChartIcon, GraduationCapIcon, TargetIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle, OniSticker } from "@/components/brand/oni";
+import { ToolCard } from "@/components/tools/tool-card";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
@@ -34,14 +35,7 @@ export default function StudyHubPage() {
       <ul className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((card) => (
           <li key={card.href}>
-            <Link href={card.href} className="ink-panel touch-target flex min-h-28 flex-col rounded-2xl p-5 hover:bg-[#241c1e]">
-              <span className="flex items-center gap-2">
-                <card.icon className="size-5 text-[#C59B27]" />
-                {"tag" in card ? <span className="rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">{card.tag}</span> : null}
-              </span>
-              <p className="mt-3 font-bold text-white">{card.title}</p>
-              <p className="mt-1 text-sm text-[#D1D5DB]">{card.body}</p>
-            </Link>
+            <ToolCard href={card.href} icon={card.icon} title={card.title} body={card.body} tag={"tag" in card ? card.tag : undefined} />
           </li>
         ))}
       </ul>

@@ -312,7 +312,8 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         break;
       }
       case "createGame": {
-        // 새 게임(다른 날짜 또는 같은 날 다른 이벤트). 설정·딜러 명단은 골라서 가져옵니다.
+        // 새 게임(다른 날짜 또는 같은 날 다른 이벤트). 테이블은 항상 0개로 시작하고,
+        // 시간 설정(간격 · 시작/끝 · 준비 · 최대 연속)과 딜러 명단(날짜 변경일 때만)은 골라서 가져옵니다.
         const workDate = normalizeWorkDate(action.workDate);
         if (!workDate) throw new RotationError("날짜를 확인하세요.");
         if ((await tx.rotationMeta.count({ where: { ownerId } })) >= MAX_GAMES) {
@@ -327,10 +328,10 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
             ownerId,
             name,
             workDate,
+            tableCount: 0,
+            tableLabels: "",
             ...(action.copySettings
               ? {
-                  tableCount: from.tableCount,
-                  tableLabels: from.tableLabels,
                   interval: from.interval,
                   planStart: from.planStart,
                   planEnd: from.planEnd,

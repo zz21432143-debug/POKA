@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ChevronRightIcon, MonitorPlayIcon, RefreshCwIcon, ShuffleIcon, WalletIcon } from "lucide-react";
+import { MonitorPlayIcon, RefreshCwIcon, ShuffleIcon, WalletIcon } from "lucide-react";
+import { ToolCard } from "@/components/tools/tool-card";
 import { toolMetadata } from "@/lib/tool-seo";
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools, DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
@@ -28,25 +28,7 @@ export default async function ToolsPage() {
       </header>
       <div className="grid gap-3 sm:grid-cols-2">
         {TOOLS.map((tool) => (
-          <Link
-            key={tool.href}
-            href={tool.href}
-            data-tool-card
-            className="ink-panel group touch-target flex flex-col gap-2 rounded-2xl p-4 transition hover:-translate-y-0.5 hover:border-[#c9a25c] hover:bg-[#241c1e] active:translate-y-0 active:scale-[0.99]"
-          >
-            <span className="flex items-center gap-2.5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c9a25c]/15 text-[#e7c98a] ring-1 ring-[#c9a25c]/40">
-                <tool.icon className="size-5" />
-              </span>
-              <span className="text-lg font-black text-white">{tool.title}</span>
-            </span>
-            <span className="text-sm leading-6 text-[#D1D5DB]">{tool.body}</span>
-            {/* 눌러서 들어가는 곳이라는 표시 */}
-            <span className="mt-auto inline-flex min-h-10 w-fit items-center gap-1 rounded-full bg-[#c9a25c] px-4 text-sm font-black text-[#1d1611] transition group-hover:bg-[#e7c98a]">
-              열기
-              <ChevronRightIcon className="size-4 transition group-hover:translate-x-0.5" />
-            </span>
-          </Link>
+          <ToolCard key={tool.href} href={tool.href} icon={tool.icon} title={tool.title} body={tool.body} />
         ))}
       </div>
     </div>
