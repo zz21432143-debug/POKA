@@ -55,8 +55,8 @@ describe("weekly hub and kakao lines", () => {
 });
 
 describe("evergreen guides and verified dealers", () => {
-  it("has fifty-nine indexed holdem guides with unique slugs", () => {
-    assert.equal(GUIDE_ARTICLES.length, 59);
+  it("has sixty-four indexed holdem guides with unique slugs", () => {
+    assert.equal(GUIDE_ARTICLES.length, 64);
     assert.equal(new Set(GUIDE_ARTICLES.map((row) => row.slug)).size, GUIDE_ARTICLES.length);
     assert.ok(getGuideArticle("hand-rankings"));
     assert.equal(getGuideArticle("missing"), null);

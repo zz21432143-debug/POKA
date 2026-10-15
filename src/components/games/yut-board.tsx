@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { BIG_NODES, END, GOAL_XY, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
@@ -179,8 +179,24 @@ export function YutBoard({
   });
   const blaze = fires.some((f) => f.size >= 4);
   // 3개 이상 업힌 말이 잡힘 → 불길 진압(연기 1.6초)
-  const douseKey = ev?.type === "capture" && (ev.captured ?? 0) >= 3 ? ev.at : 0;
+  // 처음 열었을 때 이미 지난 일은 다시 연출하지 않음
+  const firstEvAt = useRef(ev?.at ?? 0);
+  const douseKey = ev?.type === "capture" && (ev.captured ?? 0) >= 3 && ev.at !== firstEvAt.current ? ev.at : 0;
   const [douse, setDouse] = useState<{ key: number; node: string } | null>(null);
+  // 골인: 말이 골인 칸에 닿는 순간(한 칸씩 점프가 끝난 뒤) GOAL! + 금빛 파편
+  const goalKey = ev?.type === "finish" && ev.at !== firstEvAt.current ? ev.at : 0;
+  const [goal, setGoal] = useState<number | null>(null);
+  useEffect(() => {
+    if (!goalKey) return;
+    const wait = (ev?.path?.length ?? 1) * stepMs;
+    const on = window.setTimeout(() => setGoal(goalKey), wait);
+    const off = window.setTimeout(() => setGoal(null), wait + 1500);
+    return () => {
+      window.clearTimeout(on);
+      window.clearTimeout(off);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 골인에만
+  }, [goalKey]);
   useEffect(() => {
     if (!douseKey || !ev) return;
     setDouse({ key: douseKey, node: ev.to });
@@ -293,6 +309,15 @@ export function YutBoard({
             </span>
           );
         })}
+        {/* 골인: GOAL! + 금빛 파편 */}
+        {goal ? (
+          <>
+            <b key={`goal-${goal}`} data-yut-goal-pop aria-hidden className="yut-goal-pop pointer-events-none absolute z-[46] -translate-x-1/2 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614,0_0_14px_#fff]" style={{ left: `${GOAL_XY[0] - 6}%`, top: `${GOAL_XY[1] - 16}%` }}>
+              GOAL!
+            </b>
+            <PixelBurst key={`goal-bits-${goal}`} x={GOAL_XY[0]} y={GOAL_XY[1]} seed={goal} colors={["#ffcf4a", "#fff6dc", "#ff5d6c", "#6ad7ff"]} count={26} spread={80} size={7} up={0.6} />
+          </>
+        ) : null}
         {/* 불길 진압: 연기 + 「진압!」 */}
         {douse ? (
           <span key={`douse-${douse.key}`} data-yut-douse aria-hidden className="yut-douse pointer-events-none absolute z-[45] grid -translate-x-1/2 -translate-y-full justify-items-center" style={{ left: `${xy(douse.node)[0]}%`, top: `${xy(douse.node)[1]}%` }}>

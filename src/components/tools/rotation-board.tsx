@@ -163,6 +163,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [gridOpen, setGridOpen] = useState(false);
   /** 딜러 탭 찾기 · 상태 거르기 */
   const [dealerQ, setDealerQ] = useState("");
+  // 딜러 빼기 모드: 여러 명 골라 한 번에
+  const [removeMode, setRemoveMode] = useState(false);
+  const [removePick, setRemovePick] = useState<Set<string>>(() => new Set());
   const [dealerFilter, setDealerFilter] = useState<
     "all" | "in" | "rest" | "nextRest" | "left"
   >("all");
@@ -818,7 +821,24 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             }
             className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold"
           >
-            ✎ 날짜·삭제
+            ✎ 날짜·이름
+          </button>
+          <button
+            type="button"
+            data-game-delete
+            disabled={busy}
+            onClick={async () => {
+              if (
+                !window.confirm(
+                  `'${state.game.name}' 게임을 지울까요?\n${TRASH_DAYS}일 동안 휴지통에 남아 그 안에는 되살릴 수 있어요.${state.games.length <= 1 ? "\n(마지막 게임이라 지우면 빈 새 게임이 생겨요)" : ""}`,
+                )
+              )
+                return;
+              await send({ type: "deleteGame" });
+            }}
+            className="min-h-11 rounded-lg bg-rose-600 px-3 text-sm font-black text-white"
+          >
+            🗑 게임 삭제
           </button>
         </div>
       </section>
@@ -2259,8 +2279,61 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           <p className="text-xs text-zinc-400">
             <b className="text-zinc-200">이름 ✎</b>을 누르면 이름 수정·삭제,{" "}
             <b className="text-zinc-200">출근/퇴근 시간</b>을 누르면 시간을 바꿀
-            수 있습니다.
+            수 있습니다. 여러 명을 빼려면 <b className="text-zinc-200">🗑 딜러 빼기</b>를 누르고 고르세요.
           </p>
+          {state.dealers.length ? (
+            <div data-dealer-remove-bar className={cn("flex flex-wrap items-center gap-2", removeMode && "sticky top-2 z-30 rounded-xl border border-rose-500/50 bg-zinc-950/95 p-2 shadow-lg backdrop-blur")}>
+              <button
+                type="button"
+                data-dealer-remove-mode
+                aria-pressed={removeMode}
+                onClick={() => {
+                  setRemoveMode(!removeMode);
+                  setRemovePick(new Set());
+                }}
+                className={cn(
+                  "min-h-11 rounded-lg px-4 text-sm font-black",
+                  removeMode ? "bg-zinc-700 text-white" : "bg-rose-600 text-white",
+                )}
+              >
+                {removeMode ? "빼기 취소" : "🗑 딜러 빼기"}
+              </button>
+              {removeMode ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRemovePick(
+                        removePick.size === shownDealers.length
+                          ? new Set()
+                          : new Set(shownDealers.map((d) => d.id)),
+                      )
+                    }
+                    className="min-h-11 rounded-lg border border-white/25 px-3 text-sm font-bold"
+                  >
+                    {removePick.size === shownDealers.length ? "모두 해제" : "보이는 딜러 모두 고르기"}
+                  </button>
+                  <button
+                    type="button"
+                    data-dealer-remove-go
+                    disabled={busy || removePick.size === 0}
+                    onClick={async () => {
+                      const names = state.dealers.filter((d) => removePick.has(d.id)).map((d) => d.name);
+                      if (!window.confirm(`${names.length}명을 뺄까요?\n${names.slice(0, 12).join(", ")}${names.length > 12 ? " …" : ""}\n시간표에서는 '(삭제됨)'으로 남으니 Auto로 다시 짜 주세요.`)) return;
+                      if (await send({ type: "removeDealers", ids: [...removePick] })) {
+                        setRemovePick(new Set());
+                        setRemoveMode(false);
+                      }
+                    }}
+                    className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-black text-white disabled:opacity-40"
+                  >
+                    선택한 {removePick.size}명 빼기
+                  </button>
+                  <span className="text-xs text-zinc-400">딜러 칸을 눌러 고르세요</span>
+                </>
+              ) : null}
+            </div>
+          ) : null}
           {state.dealers.length ? (
             <div
               data-dealer-tools
@@ -2373,13 +2446,39 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             key={dealer.id}
                             data-dealer={dealer.name}
                             className={cn(
-                              "flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                              "relative flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
                               dealer.status === "IN"
                                 ? "border-emerald-500/40 bg-emerald-950/30"
                                 : "border-white/10 bg-zinc-950",
                               dealer.status === "LEFT" && "opacity-60",
+                              removeMode && removePick.has(dealer.id) && "border-rose-500 bg-rose-950/40 opacity-100",
                             )}
                           >
+                            {/* 빼기 모드: 칸 전체를 눌러 고르기 */}
+                            {removeMode ? (
+                              <button
+                                type="button"
+                                data-dealer-pick={dealer.name}
+                                aria-pressed={removePick.has(dealer.id)}
+                                onClick={() => {
+                                  const next = new Set(removePick);
+                                  if (next.has(dealer.id)) next.delete(dealer.id);
+                                  else next.add(dealer.id);
+                                  setRemovePick(next);
+                                }}
+                                className="absolute inset-0 z-10 flex items-center justify-end rounded-lg pr-2"
+                                aria-label={`${dealer.name} 고르기`}
+                              >
+                                <span
+                                  className={cn(
+                                    "grid size-7 place-items-center rounded-md border-2 text-sm font-black",
+                                    removePick.has(dealer.id) ? "border-rose-400 bg-rose-500 text-white" : "border-white/40 bg-black/60 text-transparent",
+                                  )}
+                                >
+                                  ✓
+                                </span>
+                              </button>
+                            ) : null}
                             <button
                               type="button"
                               onClick={() =>
@@ -2994,7 +3093,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               >
                 {gameDialog.mode === "edit" ? "저장" : "만들기"}
               </button>
-              {gameDialog.mode === "edit" && state.games.length > 1 ? (
+              {gameDialog.mode === "edit" ? (
                 <button
                   type="button"
                   disabled={busy}

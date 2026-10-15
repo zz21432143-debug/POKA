@@ -3962,3 +3962,31 @@ aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
     animation: none;
   }
 }
+
+/* 윷 골인 순간: GOAL! 튀어 오름 */
+.yut-goal-pop {
+  animation: yut-goal-pop 1.5s cubic-bezier(0.2, 1.4, 0.3, 1) both;
+}
+@keyframes yut-goal-pop {
+  0% {
+    transform: translate(-50%, 30%) scale(0.3);
+    opacity: 0;
+  }
+  18% {
+    transform: translate(-50%, 0) scale(1.25);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -10%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -40%) scale(0.9);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yut-goal-pop {
+    animation: none;
+  }
+}

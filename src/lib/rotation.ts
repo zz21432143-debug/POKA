@@ -96,6 +96,8 @@ export type RotationAction =
   | { type: "setTimes"; id: string; start?: string | null; end?: string | null }
   | { type: "updateDealer"; id: string; name?: string; startTime?: string | null }
   | { type: "removeDealer"; id: string }
+  /** 여러 딜러 한꺼번에 빼기 */
+  | { type: "removeDealers"; ids: string[] }
   | { type: "checkIn"; id: string }
   | { type: "setStatus"; id: string; status: "WAIT" | "OFF" | "LEFT" }
   | {

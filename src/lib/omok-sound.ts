@@ -228,3 +228,33 @@ export function portalSound() {
   tone(a, 330, t, 0.45, "square", 0.05, 1320);
   tone(a, 495, t + 0.05, 0.4, "triangle", 0.06, 1980);
 }
+
+/** 윷 불길: 화르륵(낮은 울림 + 올라가는 바람 소리) */
+export function fireSound(big = false) {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, big ? 70 : 90, t, big ? 0.7 : 0.45, "sawtooth", big ? 0.12 : 0.08, big ? 140 : 160);
+  [0, 0.08, 0.16, 0.24, 0.32].forEach((d, i) => noiseHit(a, t + d, 0.18, 500 + i * 450, big ? 0.55 : 0.4));
+}
+
+/** 윷 불길 진압: 치익(높은 쉿 소리가 길게 사그라듦) */
+export function douseSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  noiseHit(a, t, 0.9, 5200, 0.55);
+  noiseHit(a, t + 0.05, 0.6, 3200, 0.35);
+}
+
+/** 윷 골인: 짧은 팡파르 */
+export function goalSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.08, 0.18, "square", 0.08));
+  noiseHit(a, t + 0.32, 0.25, 2600, 0.3);
+}

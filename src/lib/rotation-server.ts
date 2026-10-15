@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { randomBytes, randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db";
 import {
@@ -122,11 +123,17 @@ function parsePlan(json: string | null): RotationPlan | null {
 /** 이 계정의 게임 하나 상태 전체(게임을 안 주면 가장 최근 게임) */
 export async function loadRotation(ownerId: string, gameId?: string | null): Promise<RotationStateView> {
   const m = await resolveGame(ownerId, gameId);
-  // 휴지통: TRASH_DAYS일 지난 게임은 완전히 지움
-  await prisma.toolSaved
-    .deleteMany({ where: { ownerId, kind: KIND_TRASH, createdAt: { lt: new Date(Date.now() - TRASH_DAYS * 86_400_000) } } })
-    .catch(() => undefined);
-  const [dealers, games, rosterRows, trashRows] = await Promise.all([
+  // 휴지통: TRASH_DAYS일 지난 게임은 완전히 지움 — 화면 응답을 기다리게 하지 않도록 응답 뒤에
+  const cleanTrash = () =>
+    prisma.toolSaved
+      .deleteMany({ where: { ownerId, kind: KIND_TRASH, createdAt: { lt: new Date(Date.now() - TRASH_DAYS * 86_400_000) } } })
+      .catch(() => undefined);
+  try {
+    after(cleanTrash);
+  } catch {
+    void cleanTrash();
+  }
+  const [dealers, games, rosterRows, trashRows, prefs] = await Promise.all([
     prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] }),
     prisma.rotationMeta.findMany({ where: { ownerId }, orderBy: GAME_ORDER, take: GAME_LIST, select: { id: true, name: true, workDate: true } }),
     // 명단은 내용까지, 휴지통은 이름만(내용은 되살릴 때 읽음)
@@ -136,6 +143,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
     prisma.toolSaved
       .findMany({ where: { ownerId, kind: KIND_TRASH }, orderBy: { createdAt: "desc" }, take: MAX_GAMES, select: { id: true, name: true, createdAt: true } })
       .catch(() => []),
+    loadPrefs(ownerId),
   ]);
   const rosters = rosterRows.map((s) => ({ id: s.id, name: s.name, text: s.dataJson }));
   const trash = trashRows
@@ -151,7 +159,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
     shareToken: m.shareToken,
     maxStreakMinutes: m.maxStreakMinutes,
     shareDays: m.shareDays,
-    defaultShareDays: (await loadPrefs(ownerId)).shareDays,
+    defaultShareDays: prefs.shareDays,
     version: m.version,
     tableCount: m.tableCount,
     tableLabels: tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null }),
@@ -297,6 +305,13 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       case "removeDealer": {
         await own(action.id);
         await tx.rotationDealer.delete({ where: { id: action.id } });
+        break;
+      }
+      case "removeDealers": {
+        const ids = Array.isArray(action.ids) ? action.ids.filter((x): x is string => typeof x === "string").slice(0, 200) : [];
+        if (!ids.length) throw new RotationError("뺄 딜러를 골라 주세요.");
+        // 이 게임 딜러만
+        await tx.rotationDealer.deleteMany({ where: { gameId: META_ID, id: { in: ids } } });
         break;
       }
       case "checkIn": {
@@ -469,7 +484,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         break;
       }
       case "deleteGame": {
-        if ((await tx.rotationMeta.count({ where: { ownerId } })) <= 1) throw new RotationError("게임이 하나뿐이라 지울 수 없습니다.");
+        // 하나뿐인 게임도 지울 수 있음(지우면 오늘 날짜 빈 게임이 새로 생김 · 휴지통에서 되살리기 가능)
         await moveToTrash(tx, ownerId, [META_ID]);
         deleted = true;
         break;

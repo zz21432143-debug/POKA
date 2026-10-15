@@ -30,8 +30,10 @@ import { WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
 import type { WinReward } from "@/lib/game-reward";
 import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
 import {
-  bellSound,
   cutInSound,
+  douseSound,
+  fireSound,
+  goalSound,
   fightSound,
   omokSoundOn,
   portalSound,
@@ -293,6 +295,8 @@ export function YutRoom({
             });
             setKick({ key: e.at, node: e.to });
             setKnock({ key: e.at, items: victims });
+            // 3개 이상 업힌 불길이 잡힘 → 치익
+            if (victims.length >= 3) later(() => douseSound(), 250);
             setCutIn({
               key: e.at,
               hero,
@@ -311,6 +315,7 @@ export function YutRoom({
               count: 12,
             });
             const upN = s.pieces[e.team].filter((p) => p.pos === e.to).length;
+            if (upN >= 3) fireSound(upN >= 4);
             setCallout({
               text: upN >= 4 ? `🔥🔥 대화재! ×${upN}` : upN === 3 ? `🔥 불길이 붙었다! ×3` : `업었다! ×${upN}`,
               color,
@@ -331,7 +336,7 @@ export function YutRoom({
               });
           }
           if (e.type === "finish") {
-            bellSound();
+            goalSound();
             setCallout({
               text: e.count > 1 ? `${e.count}개 골인!` : "골인!",
               color,
