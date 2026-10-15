@@ -106,7 +106,7 @@ export const BASE_WORDS: Record<ProfanityCategory, string[]> = {
  */
 export const NICK_ADULT_WORDS = [
   // 성기 · 신체
-  "보지", "자지", "잠지", "음순", "음핵", "음경", "불알", "부랄", "봉알", "젖꼭지", "젖탱", "젖가슴", "젖소",
+  "보지", "자지", "잠지", "잼지", "보쥐", "자쥐", "보징", "봊", "음순", "음핵", "음경", "불알", "부랄", "봉알", "젖꼭지", "젖탱", "젖가슴", "젖소",
   "젖빨", "왕젖", "찌찌", "유두", "빨통", "거유", "폭유", "빈유", "엉밑살", "똥구멍", "항문",
   // 성행위 · 은어
   "섹", "떡치", "떡방", "따먹", "박아줘", "빨아줘", "핥아", "빨아", "자위", "딸딸", "딸치", "딸쳐",
@@ -120,6 +120,68 @@ export const NICK_ADULT_WORDS = [
   "pussy", "dick", "penis", "vagina", "boob", "tits", "nipple", "horny", "milf", "blowjob", "handjob", "cumshot",
   "orgasm", "hentai", "nude", "naked", "xxx", "fuckme", "slut", "whore", "bitch", "porn", "sexy", "onlyfans",
 ];
+
+/* ── 소리로 비교(닉네임 성적 표현): 째앰지 · 쨈지 → 잼지, 봊이 → 보지, 보오지 → 보지, 정애액 → 정액 ── */
+const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const JUNG = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
+const JONG = ["", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+/** 된소리 → 예사소리(ㅉ → ㅈ) · 받침 ㄲ ㅋ → ㄱ, ㅆ → ㅅ */
+const PLAIN: Record<string, string> = { "ㄲ": "ㄱ", "ㄸ": "ㄷ", "ㅃ": "ㅂ", "ㅆ": "ㅅ", "ㅉ": "ㅈ", "ㅋ": "ㄱ" };
+/** 소리가 거의 같은 모음(ㅐ ㅔ ㅒ ㅖ)만 하나로 — 넓게 묶으면 「자이」 · 「아동」 같은 정상 말이 걸림 */
+const SAME_VOWEL: Record<string, string> = { "ㅐ": "ㅔ", "ㅒ": "ㅔ", "ㅖ": "ㅔ" };
+type Syl = { c: string; v: string; f: string };
+
+function syllables(text: string): Syl[] {
+  const out: Syl[] = [];
+  for (const ch of text) {
+    const code = ch.charCodeAt(0) - 0xac00;
+    if (code < 0 || code > 11171) continue;
+    const c = CHO[Math.floor(code / 588)];
+    const v = JUNG[Math.floor((code % 588) / 28)];
+    const f = JONG[code % 28];
+    out.push({ c: PLAIN[c] ?? c, v: SAME_VOWEL[v] ?? v, f: f.length === 1 ? (PLAIN[f] ?? f) : f });
+  }
+  return out;
+}
+
+/** 음절을 소리 열쇠로(음절마다 | 로 끊어 음절 단위로만 맞춤). link = 받침을 다음 ㅇ 자리로 넘김(봊이 → 보지) */
+function soundKey(text: string, link: boolean) {
+  const out: Syl[] = [];
+  for (const syl of syllables(text)) {
+    const s = { ...syl };
+    const prev = out[out.length - 1];
+    if (prev && s.c === "ㅇ") {
+      // 같은 모음을 ㅇ으로 늘여 쓴 것(째앰 → 잼, 보오 → 보, 애액 → 액)
+      if (!prev.f && s.v === prev.v) {
+        prev.f = s.f;
+        continue;
+      }
+      if (link && prev.f.length === 1 && prev.f !== "ㅇ") {
+        s.c = prev.f;
+        prev.f = "";
+      }
+    }
+    out.push(s);
+  }
+  return `|${out.map((s) => s.c + s.v + s.f).join("|")}|`;
+}
+
+/** 소리로 비교할 단어: 한글 단어만 · 된소리가 뜻을 가르는 말(따먹 → 다먹)은 빼고 */
+let soundWords: { word: string; key: string }[] | null = null;
+function adultSoundWords() {
+  if (!soundWords)
+    soundWords = [...new Set(NICK_ADULT_WORDS.concat(BASE_WORDS.adult))]
+      .filter((w) => /^[가-힣]+$/.test(w) && !/[까-낗따-띻빠-삧싸-앃짜-찧]/.test(w))
+      .map((word) => ({ word, key: soundKey(word, false) }));
+  return soundWords;
+}
+
+/** 닉네임이 성적 표현과 소리가 같으면 그 단어 */
+function adultBySound(hangul: string, disabled?: ReadonlySet<string>) {
+  if (!hangul) return null;
+  const keys = [soundKey(hangul, false), soundKey(hangul, true)];
+  return adultSoundWords().find((w) => !disabled?.has(w.word) && keys.some((k) => k.includes(w.key)))?.word ?? null;
+}
 
 const NICK_LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b" };
 
@@ -223,6 +285,8 @@ export function findProfanity(
       (w) => !opts.disabled?.has(w) && shapes.some((s) => s.includes(w.toLowerCase())),
     );
     if (sexual) return { category: "adult", match: sexual };
+    const bySound = adultBySound(normalized.replace(/[^가-힣]/g, ""), opts.disabled);
+    if (bySound) return { category: "adult", match: bySound };
     // 닉네임은 _ · 숫자 · 영문으로 끊어 쓰는 우회도 막음(씨_발, 개1새끼, 씨x발)
     const nick = nickRuleFor(opts.disabled);
     const found =
