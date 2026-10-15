@@ -38,6 +38,11 @@ export function splitForMidAd(text: string): [string, string] | null {
   return [text.slice(0, at).trimEnd(), text.slice(at).trimStart()];
 }
 
+/** 광고 단위 ID: 숫자만 뽑기(「data-ad-slot="123"」 · 따옴표 · 공백이 섞여 있어도) */
+export function slotDigits(raw: string | undefined): string {
+  return raw?.match(/\d{6,}/)?.[0] ?? "";
+}
+
 export function adsenseSlotId(placement: AdSensePlacement): string {
   const byPlacement = {
     "post-top": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_TOP,
@@ -52,9 +57,11 @@ export function adsenseSlotId(placement: AdSensePlacement): string {
     a1: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A1,
     a2: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A2,
     a3: process.env.NEXT_PUBLIC_ADSENSE_SLOT_A3,
-  }[placement]?.trim();
-  if (byPlacement) return byPlacement;
-  return process.env.NEXT_PUBLIC_ADSENSE_SLOT_A?.trim() ?? "";
+  }[placement];
+  // 값에 data-ad-slot="…" 통째로 넣어도 숫자만 씀
+  const slot = slotDigits(byPlacement);
+  if (slot) return slot;
+  return slotDigits(process.env.NEXT_PUBLIC_ADSENSE_SLOT_A);
 }
 
 export const GOOGLE_REMNANT_MOCKS: Record<
