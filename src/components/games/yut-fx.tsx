@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { PixelBurst, seeded } from "@/components/games/pixel-burst";
 import { TEAM_COLOR, YokaiToken } from "@/components/games/yut-board";
 import { YUT_NAMES, type Team } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
-import type { YutTitle } from "@/lib/yut-titles";
 
 type Face = { species: YokaiSpecies; stage: number } | null;
 
@@ -123,8 +123,9 @@ export function YutCatchCutIn({
   taunt: string;
 }) {
   const color = TEAM_COLOR[team];
-  return (
-    <div data-yut-cutin className="yut-cutin pointer-events-none fixed inset-0 z-[60] overflow-hidden">
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <div data-yut-cutin className="yut-cutin pointer-events-none fixed inset-0 z-[80] overflow-hidden">
       <div className="yut-cutin-a absolute inset-0" style={{ background: `linear-gradient(120deg, ${color} 0%, #1a0f2e 75%)` }}>
         <div className="absolute inset-0 bg-[repeating-linear-gradient(-30deg,transparent_0_18px,rgba(0,0,0,.18)_18px_22px)]" />
         {hero ? (
@@ -148,16 +149,7 @@ export function YutCatchCutIn({
           “{taunt}”
         </p>
       </div>
-    </div>
-  );
-}
-
-/** 윷 칭호 픽셀 배지(닉네임 위) */
-export function YutTitleBadge({ title, className }: { title: YutTitle | null; className?: string }) {
-  if (!title) return null;
-  return (
-    <span data-yut-title-badge className={`yut-title inline-flex w-fit max-w-full items-center gap-0.5 truncate bg-[#0a0614] px-1 text-[10px] leading-4 font-black ${className ?? ""}`} style={{ color: title.tone }}>
-      {title.icon} {title.name}
-    </span>
+    </div>,
+    document.body,
   );
 }

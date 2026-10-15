@@ -849,6 +849,8 @@ model YutGame {
   version    Int       @default(0)
   turnAt     DateTime?
   emoteJson  String    @default("")
+  /// 도전 줄(승자 연전): [{ id, n, at }]
+  queueJson  String    @default("")
   kickedJson String    @default("")
   isPrivate  Boolean   @default(false)
   /// 빈자리를 요괴 봇으로 채운 판(전적 · 보상 없음)

@@ -15,6 +15,7 @@ import { getSponsorCreative } from "@/lib/inventory";
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
+import { SidebarRail } from "@/components/layout/sidebar-rail";
 import { VisitBeacon } from "@/components/analytics/visit-beacon";
 import { HideOnGames } from "@/components/layout/route-hide";
 import { SourceBeacon } from "@/components/analytics/source-beacon";
@@ -103,7 +104,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <ConnectedNickNotice />
       </Suspense>
       <div className="site-columns mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-6">
-        <aside className="hidden w-[16rem] shrink-0 lg:flex lg:flex-col lg:gap-3">
+        <SidebarRail>
           <div className="wood-frame flex flex-col">
             <BoardNav />
           </div>
@@ -115,7 +116,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <div className="sticky top-24">
             <GoogleAdUnit placement="sidebar" media="(min-width: 1024px)" />
           </div>
-        </aside>
+        </SidebarRail>
         <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
           {children}
           <Suspense fallback={null}>

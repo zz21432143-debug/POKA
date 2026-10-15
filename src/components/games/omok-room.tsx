@@ -27,7 +27,7 @@ import {
   type Stone,
 } from "@/lib/omok";
 import type { YokaiSpecies } from "@/lib/yokai";
-import { ONI_EMOTES } from "@/lib/omok-emotes";
+import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
 import { WIN_REWARD } from "@/lib/game-config";
 import { PLAYER_LINES, pickOmokLine, yokaiVoice } from "@/lib/omok-lines";
 import {
@@ -623,6 +623,21 @@ export function OmokRoom({
           className="arcade-btn btn-dark grid size-14 !min-h-0 place-items-center p-0.5"
         >
           <EmoteArt e={em.key} className="size-full" />
+        </button>
+      ))}
+      {QUICK_TEXTS.map((q) => (
+        <button
+          key={q.key}
+          type="button"
+          data-omok-quick={q.key}
+          disabled={emoteWait > now}
+          onClick={() => {
+            setEmoteWait(Date.now() + (action === "emote" ? 3000 : 2500));
+            void act(action, { e: q.key });
+          }}
+          className="arcade-btn btn-dark grid min-h-11 w-full place-items-center px-1 text-sm font-black"
+        >
+          {q.label}
         </button>
       ))}
     </div>

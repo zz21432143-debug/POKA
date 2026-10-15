@@ -185,14 +185,46 @@ export function cheerSound() {
   tone(a, 880, a.currentTime, 0.12, "sine", 0.12, 1320);
 }
 
-/** 윷가락 던지기: 딱 · 딱딱 · 딱(나무 부딪는 소리) */
+/** 윷가락 던지기: 휘익(바람 가르는 소리) */
 export function yutThrowSound() {
   if (!omokSoundOn()) return;
   const a = audio();
   if (!a) return;
   const t = a.currentTime;
-  [0, 0.09, 0.16, 0.27].forEach((d, i) => {
-    noiseHit(a, t + 0.25 + d, 0.05, 1800 + i * 300, 0.4);
-    tone(a, 420 + i * 60, t + 0.25 + d, 0.06, "triangle", 0.08);
+  noiseHit(a, t, 0.35, 900, 0.18);
+  tone(a, 260, t, 0.32, "triangle", 0.05, 820);
+}
+
+/** 윷가락 착지: 둔탁한 「팍!」(낮은 쿵 + 나무 부딪힘 몇 번) */
+export function yutLandSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, 140, t, 0.22, "sine", 0.55, 48);
+  noiseHit(a, t, 0.12, 600, 0.7);
+  [0.03, 0.07, 0.12].forEach((d, i) => {
+    noiseHit(a, t + d, 0.04, 1500 + i * 400, 0.3);
+    tone(a, 380 + i * 70, t + d, 0.05, "square", 0.04);
   });
+}
+
+/** 남은 3초: 째깍 · 째깍(번갈아 높낮이) */
+export function tickSound(high: boolean) {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, high ? 1760 : 1320, t, 0.05, "square", 0.09);
+  noiseHit(a, t, 0.03, high ? 6000 : 4500, 0.25);
+}
+
+/** 지름길 포털: 우웅~ 올라가는 소리 */
+export function portalSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, 330, t, 0.45, "square", 0.05, 1320);
+  tone(a, 495, t + 0.05, 0.4, "triangle", 0.06, 1980);
 }

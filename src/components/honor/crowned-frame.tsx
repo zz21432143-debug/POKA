@@ -237,3 +237,22 @@ function TipBadge({ tip, className, data, children }: { tip: string; className?:
     </span>
   );
 }
+
+/** 미니게임 1위 칭호(이번 달 오목 · 윷놀이 랭킹 1위 한 명만): 게임 화면 닉네임 위 금빛 픽셀 배지 */
+export function GameChampionBadge({ nickname, game, className }: { nickname: string; game: "omok" | "yut" | "chess"; className?: string }) {
+  const honors = useContext(HonorContext);
+  const hydrated = useHydrated();
+  if (!hydrated) return null;
+  const hold = (honors.holders[nickname] ?? []).find((h) => h.key === game);
+  const def = honors.defs.find((d) => d.key === game);
+  if (!hold || !def) return null;
+  return (
+    <span
+      data-game-champion={game}
+      title={def.desc}
+      className={cn("yut-title inline-flex w-fit max-w-full items-center gap-0.5 truncate bg-[#0a0614] px-1 text-[10px] leading-4 font-black text-[#ffcf4a]", className)}
+    >
+      👑 {def.icon} {def.name} · 1위
+    </span>
+  );
+}

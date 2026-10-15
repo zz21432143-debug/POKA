@@ -82,10 +82,13 @@ export function BoardNav({
   onNavigate,
   id,
   inDrawer = false,
+  compact = false,
 }: {
   onNavigate?: () => void;
   id?: string;
   inDrawer?: boolean;
+  /** 아이콘만(게임방에서 접힌 메뉴) */
+  compact?: boolean;
 }) {
   const pathname = usePathname();
   const groups = SIDEBAR_NAV.map((group) => ({
@@ -93,6 +96,27 @@ export function BoardNav({
     items: group.items.filter((item) => item.href !== "/"),
   })).filter((group) => group.items.length > 0);
   const homeActive = pathname === "/";
+  if (compact) {
+    const all = [{ href: "/", label: "홈", icon: "torii" as Parameters<typeof BrandIcon>[0]["name"] }, ...groups.flatMap((g) => g.items)];
+    return (
+      <nav id={id} aria-label="전체 게시판(접힘)" data-nav-compact className="flex flex-col items-center gap-1 py-2">
+        {all.map((item) => {
+          const active = item.href === "/" ? homeActive : navItemActive(pathname, item.href);
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              title={item.label}
+              aria-label={item.label}
+              className={cn("grid size-10 place-items-center rounded-xl", active ? "bg-[#7a1c22]" : "hover:bg-[#2a2017]")}
+            >
+              <NavIcon href={item.href} icon={item.icon} active={active} />
+            </a>
+          );
+        })}
+      </nav>
+    );
+  }
 
   return (
     <nav id={id} aria-label="전체 게시판" className="flex flex-col">

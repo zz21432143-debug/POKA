@@ -6,7 +6,7 @@ import { bgmOn, bgmPlaying, setBgmOn, startBgm, stopBgm, type BgmTrack } from "@
 
 /**
  * 게임방 BGM: 처음 화면을 누르면 시작(브라우저가 소리 자동 재생을 막아서) · 다른 탭으로 가면 멈춤 · 게임방을 나가면 끝.
- * 오른쪽 아래 🎵 버튼으로 켜고 끄기(기억함). 윷놀이 화면은 풍물놀이 곡, 그 밖은 요괴 국악 곡.
+ * 오른쪽 아래 🎵 버튼으로 켜고 끄기(기억함). 윷놀이 화면은 잔치집 8비트 칩튠, 그 밖은 요괴 국악 곡.
  */
 export function GameAudio() {
   const [on, setOn] = useState(true);

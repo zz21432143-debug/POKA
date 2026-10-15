@@ -1,13 +1,11 @@
 import { createHash, randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { roomTitle } from "@/lib/game-room";
-import { ttlCache } from "@/lib/ttl-cache";
-import { yutTitleFor, type YutTitle } from "@/lib/yut-titles";
 import { anyoneHere, watchersWithFaces, type Watcher } from "@/lib/game-watch";
 import { todayKstDate } from "@/lib/dates";
 import { profileYokai } from "@/lib/yokai-server";
 import { YOKAI_ORDER, type YokaiSpecies } from "@/lib/yokai";
-import { isOniEmote } from "@/lib/omok-emotes";
+import { isGameEmote } from "@/lib/omok-emotes";
 import { WIN_REWARD } from "@/lib/game-config";
 import { MIN_COUNTED_MOVES } from "@/lib/game-stats";
 import { applyMove, applyThrow, autoStep, newState, other, type Team, type YutState } from "@/lib/yut";
@@ -54,6 +52,17 @@ const stateOf = (row: { stateJson: string }): YutState | null => {
     return null;
   }
 };
+type QueueEntry = { id: string; n: string; at: number };
+const queueOf = (row: { queueJson: string }): QueueEntry[] => {
+  try {
+    const v = row.queueJson ? JSON.parse(row.queueJson) : [];
+    return Array.isArray(v) ? v.filter((e) => e && typeof e.id === "string") : [];
+  } catch {
+    return [];
+  }
+};
+const PLAYER_GONE_MS = 15_000;
+
 const kickedOf = (row: { kickedJson: string }): string[] => {
   try {
     const v = row.kickedJson ? JSON.parse(row.kickedJson) : [];
@@ -92,7 +101,7 @@ export function currentSeat(seats: Seat[], s: YutState): Seat | null {
   return team[s.turnIdx[s.turnTeam] % team.length];
 }
 
-async function makeRoom(data: { hostId: string; mode: number; seatsJson: string; isPrivate: boolean; title?: string }) {
+async function makeRoom(data: { hostId: string; mode: number; seatsJson: string; isPrivate: boolean; title?: string; queueJson?: string }) {
   for (let i = 0; i < 8; i += 1) {
     const code = Array.from({ length: 6 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
     const made = await prisma.yutGame.create({ data: { ...data, code }, select: { id: true } }).catch(() => null);
@@ -156,6 +165,47 @@ async function recordYut(row: Row, s: YutState) {
   }
 }
 
+/**
+ * 승자 연전: 판이 끝났는데 도전 줄이 있으면 바로 다음 판.
+ * 이긴 팀은 그 자리 그대로(자동 READY) · 진 팀 자리에는 줄 앞사람부터 앉고, 자리를 내준 진 사람은 줄 맨 뒤로.
+ * 줄이 모자라면 남은 진 사람은 그대로 다시 함께.
+ */
+async function autoYutNext(row: Row) {
+  if (row.status !== "done" || row.nextId || !row.winner || row.endReason === "cancel") return;
+  const q = queueOf(row);
+  if (!q.length) return;
+  const seats = seatsOf(row);
+  const winner = row.winner as Team;
+  const inGame = new Set(seats.filter((x) => x.userId).map((x) => x.userId!));
+  const line = q.filter((e) => !inGame.has(e.id));
+  if (!line.length) return;
+  const cache = new Map<string, YutPlayer | null>();
+  const pushedBack: QueueEntry[] = [];
+  const next: Seat[] = seats.map((x) => {
+    const keep = x.userId && !x.bot && !x.left ? x.userId : null;
+    if (x.team === winner) return { team: x.team, idx: x.idx, userId: keep, ready: Boolean(keep) };
+    const head = line.shift();
+    if (head) {
+      if (keep) pushedBack.push({ id: keep, n: "", at: Date.now() });
+      return { team: x.team, idx: x.idx, userId: head.id, ready: false };
+    }
+    return { team: x.team, idx: x.idx, userId: keep, ready: false };
+  });
+  for (const p of pushedBack) p.n = (await playerOf(p.id, cache))?.nickname ?? "?";
+  const host = next.find((x) => x.team === winner && x.userId)?.userId ?? next.find((x) => x.userId)?.userId;
+  if (!host) return;
+  const made = await makeRoom({ hostId: host, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate, title: row.title, queueJson: JSON.stringify([...line, ...pushedBack.filter((p) => p.n !== "(탈퇴 회원)")]) });
+  const linked = await prisma.yutGame.updateMany({ where: { id: row.id, nextId: null }, data: { nextId: made.id, version: { increment: 1 } } });
+  if (linked.count !== 1) await prisma.yutGame.delete({ where: { id: made.id } }).catch(() => undefined);
+}
+
+/** 판이 끝난 뒤: 전적 · 보상 · 승자 연전 */
+async function afterDone(row: Row, s: YutState) {
+  await recordYut(row, s).catch(() => undefined);
+  const fresh = (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? row;
+  await autoYutNext(fresh).catch(() => undefined);
+}
+
 /* ───────── 볼 때마다: 비어 있는 대기실 정리 · AI 차례 진행 ───────── */
 
 async function lastSeenMap(gameId: string, ids: string[]) {
@@ -177,8 +227,9 @@ async function settle(row: Row): Promise<Row> {
     }
     const gone = seats.filter((x) => x.userId && x.userId !== row.hostId && now - Math.max(seen.get(x.userId) ?? 0, row.updatedAt.getTime()) > SEAT_AWAY_MS);
     if (gone.length) {
-      const next = seats.map((x) => (gone.includes(x) ? { ...x, userId: null, ready: false } : x));
-      await prisma.yutGame.updateMany({ where: { id: row.id, version: row.version }, data: { seatsJson: JSON.stringify(next), version: { increment: 1 } } });
+      const line = queueOf(row).filter((e) => !seats.some((x) => x.userId === e.id));
+      const next = seats.map((x) => (gone.includes(x) ? { ...x, userId: line.shift()?.id ?? null, ready: false } : x));
+      await prisma.yutGame.updateMany({ where: { id: row.id, version: row.version }, data: { seatsJson: JSON.stringify(next), queueJson: JSON.stringify(line), version: { increment: 1 } } });
       return (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? row;
     }
     return row;
@@ -186,6 +237,23 @@ async function settle(row: Row): Promise<Row> {
   if (row.status !== "playing") return row;
   const s = stateOf(row);
   if (!s) return row;
+  if (row.mode === 1 && !row.withBots) {
+    const humans = seats.filter((x) => x.userId && !x.bot);
+    const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
+    const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
+    const goneSeats = humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
+    if (goneSeats.length === 1) {
+      const winner = other(goneSeats[0].team);
+      const ended: YutState = { ...s, winner, results: [], throws: 0 };
+      const r = await prisma.yutGame.updateMany({
+        where: { id: row.id, version: row.version, status: "playing" },
+        data: { status: "done", winner, endReason: "leave", stateJson: JSON.stringify(ended), version: { increment: 1 } },
+      });
+      const fresh = (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? row;
+      if (r.count === 1) await afterDone(fresh, ended);
+      return (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? fresh;
+    }
+  }
   const seat = currentSeat(seats, s);
   const since = now - (row.turnAt?.getTime() ?? now);
   let due = since > TURN_MS + 800;
@@ -213,14 +281,17 @@ async function saveState(row: Row, s: YutState, now: number, _meta: { auto?: boo
     },
   });
   const fresh = (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? row;
-  if (saved.count === 1 && done) await recordYut(fresh, s).catch(() => undefined);
+  if (saved.count === 1 && done) {
+    await afterDone(fresh, s);
+    return (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? fresh;
+  }
   return fresh;
 }
 
 /* ───────── 화면에 보낼 모양 ───────── */
 
 export type YutPlayer = { nickname: string; yokai: { species: YokaiSpecies; stage: number } | null };
-export type YutSeatView = { team: Team; idx: number; player: YutPlayer | null; ready: boolean; bot: boolean; left: boolean; me: boolean; host: boolean; surrender: boolean; title: YutTitle | null };
+export type YutSeatView = { team: Team; idx: number; player: YutPlayer | null; ready: boolean; bot: boolean; left: boolean; me: boolean; host: boolean; surrender: boolean };
 export type YutView = {
   id: string;
   code: string | null;
@@ -247,18 +318,13 @@ export type YutView = {
   emote: { seat: string; e: string; at: number } | null;
   cheers: Cheer[];
   nextId: string | null;
+  /** 도전 줄(닉네임 순서) · 내 순번(0 = 없음) */
+  queue: string[];
+  queueMine: number;
   watchers?: number;
   watcherNames?: string[];
   watcherList?: Watcher[];
 };
-
-/** 윷 칭호(승수 · 1분 캐시) */
-async function yutTitleOf(userId: string) {
-  return ttlCache(`yut-title:${userId}`, 60_000, async () => {
-    const wins = await prisma.gameResult.count({ where: { game: "yut", winnerId: userId } }).catch(() => 0);
-    return yutTitleFor(wins);
-  });
-}
 
 async function playerOf(userId: string, cache: Map<string, YutPlayer | null>): Promise<YutPlayer | null> {
   if (cache.has(userId)) return cache.get(userId) ?? null;
@@ -286,7 +352,6 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
       me: Boolean(viewerId && x.userId === viewerId),
       host: Boolean(x.userId && x.userId === row.hostId),
       surrender: Boolean(x.surrender),
-      title: x.userId && !x.bot ? await yutTitleOf(x.userId) : null,
     })),
   );
   const mine = seats.find((x) => viewerId && x.userId === viewerId);
@@ -317,6 +382,8 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
     emote: em.last,
     cheers: em.cheers.filter((c) => Date.now() - c.at < 15_000),
     nextId: row.nextId,
+    queue: queueOf(row).map((e) => e.n),
+    queueMine: viewerId ? queueOf(row).findIndex((e) => e.id === viewerId) + 1 : 0,
   };
 }
 
@@ -345,7 +412,7 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
 
 /* ───────── 동작 ───────── */
 
-export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "surrender" | "surrender-cancel";
+export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave";
 type ActResult = { ok: true; view: YutView } | { ok: false; error: string; status: number };
 
 export async function yutAct(
@@ -484,7 +551,7 @@ export async function yutAct(
   }
   if (action === "emote" || action === "cheer") {
     const e = String(payload.e ?? "");
-    if (!isOniEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
+    if (!isGameEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
     const em = emoteOf(row);
     if (action === "emote") {
       if (!mine) return fail("자리에 앉은 사람만 보낼 수 있어요.", 403);
@@ -516,7 +583,7 @@ export async function yutAct(
       });
       if (r.count !== 1) return fail("판이 바뀌었어요. 다시 해 주세요.", 409);
       const fresh = await prisma.yutGame.findUnique({ where: { id } });
-      if (fresh) await recordYut(fresh, ended).catch(() => undefined);
+      if (fresh) await afterDone(fresh, ended);
       return done();
     }
     const r = await prisma.yutGame.updateMany({ where: { id, version: row.version, status: "playing" }, data: { seatsJson: JSON.stringify(next), version: { increment: 1 } } });
@@ -527,11 +594,43 @@ export async function yutAct(
     if (row.status === "waiting") {
       if (isHost) await prisma.yutGame.updateMany({ where: { id, status: "waiting" }, data: { status: "done", endReason: "cancel", version: { increment: 1 } } });
       else if (mine) await saveSeats(seats.map((x) => (x.userId === userId ? { ...x, userId: null, ready: false } : x)));
+    } else if (row.status === "playing" && mine && row.mode === 1) {
+      // 1:1에서 나가면 기권패(상대 승리 · 보상)
+      const st = stateOf(row);
+      if (st) {
+        const winner = other(mine.team);
+        const ended: YutState = { ...st, winner, results: [], throws: 0 };
+        const r = await prisma.yutGame.updateMany({ where: { id, version: row.version, status: "playing" }, data: { status: "done", winner, endReason: "leave", stateJson: JSON.stringify(ended), version: { increment: 1 } } });
+        const fresh = await prisma.yutGame.findUnique({ where: { id } });
+        if (r.count === 1 && fresh) await afterDone(fresh, ended);
+      }
     } else if (row.status === "playing" && mine) {
-      // 대국 중에 나가면 그 자리는 요괴 AI가 이어서(게임은 계속)
+      // 팀전에서 나가면 그 자리는 요괴 AI가 이어서(게임은 계속)
       await prisma.yutGame.updateMany({ where: { id, status: "playing" }, data: { seatsJson: JSON.stringify(seats.map((x) => (x.userId === userId ? { ...x, left: true } : x))), version: { increment: 1 } } });
     }
+    // 줄에 서 있었으면 빼기
+    if (queueOf(row).some((e) => e.id === userId)) await prisma.yutGame.update({ where: { id }, data: { queueJson: JSON.stringify(queueOf(row).filter((e) => e.id !== userId)), version: { increment: 1 } } }).catch(() => undefined);
     await prisma.gameWatch.deleteMany({ where: { gameId: id, viewer: `p:${userId}` } }).catch(() => undefined);
+    return done();
+  }
+  if (action === "queue-join" || action === "queue-leave") {
+    const q = queueOf(row);
+    if (action === "queue-leave") {
+      await prisma.yutGame.update({ where: { id }, data: { queueJson: JSON.stringify(q.filter((e) => e.id !== userId)), version: { increment: 1 } } });
+      return done();
+    }
+    if (mine) return fail("이미 자리에 앉아 있어요.", 409);
+    if (row.nextId || (row.status === "done" && row.endReason === "cancel")) return fail("다음 판에서 줄을 서 주세요.", 409);
+    if (row.status === "waiting" && seats.some((x) => !x.userId)) return fail("빈자리가 있어요. 바로 앉아 주세요!", 409);
+    if (!(await hasYokai(userId))) return fail(NO_YOKAI, 403);
+    if (q.some((e) => e.id === userId)) return done();
+    const me = await prisma.user.findUnique({ where: { id: userId }, select: { nickname: true } });
+    if (!me) return fail("로그인해 주세요.", 401);
+    const nextQ = [...q, { id: userId, n: me.nickname, at: now }].slice(0, 20);
+    await prisma.yutGame.update({ where: { id }, data: { queueJson: JSON.stringify(nextQ), version: { increment: 1 } } });
+    // 막 끝난 판이면 바로 연전
+    const fresh = await prisma.yutGame.findUnique({ where: { id } });
+    if (fresh?.status === "done") await autoYutNext(fresh).catch(() => undefined);
     return done();
   }
   if (action === "rematch") {

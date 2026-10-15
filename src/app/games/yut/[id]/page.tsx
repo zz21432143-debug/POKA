@@ -23,7 +23,7 @@ export default async function YutRoomPage({ params }: { params: Promise<{ id: st
   if (!state || state.same) notFound();
   const yokai = user ? Boolean(await profileYokai(user.id).catch(() => null)) : false;
   return (
-    <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-2">
+    <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-2">
       <Link href="/games/yut" className="inline-flex min-h-10 w-fit items-center text-sm font-black text-[#ffcf4a]">
         ← 요괴 윷놀이
       </Link>

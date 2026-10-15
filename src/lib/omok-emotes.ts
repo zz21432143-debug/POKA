@@ -16,3 +16,19 @@ export const isOniEmote = (v: unknown): v is OniEmote =>
 export const emoteSrc = (key: string) => `/brand/oni/stickers/${key}.webp`;
 export const emoteLabel = (key: string) =>
   ONI_EMOTES.find((e) => e.key === key)?.label ?? key;
+
+/** 픽셀 퀵 말풍선(글자) — 대국자 · 관전자 공통 */
+export const QUICK_TEXTS = [
+  { key: "q-kk", label: "ㅋㅋㅋ" },
+  { key: "q-gg", label: "GG" },
+  { key: "q-nice", label: "나이스!" },
+  { key: "q-good", label: "굿굿" },
+  { key: "q-oops", label: "아깝다!" },
+  { key: "q-wow", label: "헉!" },
+  { key: "q-sad", label: "ㅠㅠ" },
+  { key: "q-hurry", label: "빨리~" },
+] as const;
+export const isQuickText = (v: unknown) => typeof v === "string" && QUICK_TEXTS.some((q) => q.key === v);
+export const quickLabel = (key: string) => QUICK_TEXTS.find((q) => q.key === key)?.label ?? key;
+/** 보낼 수 있는 것: 오니 이모티콘 · 퀵 말풍선 */
+export const isGameEmote = (v: unknown) => isOniEmote(v) || isQuickText(v);

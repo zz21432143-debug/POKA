@@ -13,7 +13,7 @@ import {
 } from "@/lib/omok";
 import { profileYokai } from "@/lib/yokai-server";
 import type { YokaiSpecies } from "@/lib/yokai";
-import { isOniEmote } from "@/lib/omok-emotes";
+import { isGameEmote } from "@/lib/omok-emotes";
 import { gameRecord, headToHead, recordGameResult } from "@/lib/game-stats";
 
 /**
@@ -935,7 +935,7 @@ export async function omokAct(
         : 0);
     if (!seat) return fail("대국하는 사람만 보낼 수 있어요.", 403);
     const e = String(payload.e ?? "");
-    if (!isOniEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
+    if (!isGameEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
     await prisma.omokGame.update({
       where: { id },
       data: {
@@ -1033,7 +1033,7 @@ export async function omokAct(
       return fail("대국하는 사람은 이모티콘 버튼을 써 주세요.", 403);
     if (row.status === "done") return fail("끝난 대국이에요.", 409);
     const e = String(payload.e ?? "");
-    if (!isOniEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
+    if (!isGameEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
     const me = await prisma.user
       .findUnique({ where: { id: userId }, select: { nickname: true } })
       .catch(() => null);

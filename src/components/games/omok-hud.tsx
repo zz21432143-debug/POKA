@@ -2,13 +2,26 @@
 
 import { cn } from "cn";
 import { StoneDot } from "@/components/games/omok-board";
-import { PotTitleBadge } from "@/components/honor/crowned-frame";
+import { GameChampionBadge, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
-import { emoteLabel, emoteSrc, isOniEmote } from "@/lib/omok-emotes";
+import { emoteLabel, emoteSrc, isOniEmote, isQuickText, quickLabel } from "@/lib/omok-emotes";
 import type { Watcher } from "@/lib/game-watch";
 
 /** 오니 이모티콘 그림(예전 글자 이모티콘이면 글자 그대로) */
 export function EmoteArt({ e, className }: { e: string; className?: string }) {
+  if (isQuickText(e))
+    return (
+      <span
+        data-quick-text={e}
+        className={cn(
+          "relative grid place-items-center border-2 border-[#0a0614] bg-[#fff6dc] px-1.5 text-[13px] leading-none font-black whitespace-nowrap text-[#2a1400] shadow-[2px_2px_0_#0a0614] after:absolute after:-bottom-[7px] after:left-1/2 after:size-0 after:-translate-x-1/2 after:border-x-[5px] after:border-t-[6px] after:border-x-transparent after:border-t-[#0a0614]",
+          className,
+          "!h-auto !w-auto min-h-7 min-w-9",
+        )}
+      >
+        {quickLabel(e)}
+      </span>
+    );
   if (!isOniEmote(e)) return <span className={className}>{e}</span>;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- 오니 이모티콘
@@ -158,6 +171,7 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
               <StoneDot color={seat.color} className="size-4" />
             ) : null}
           </div>
+          {!seat.empty && seat.name ? <GameChampionBadge nickname={seat.name} game="omok" /> : null}
           <b className="max-w-full truncate text-[15px] leading-tight font-black text-white sm:text-base">
             {seat.empty ? "도전자 대기 중" : seat.name}
           </b>

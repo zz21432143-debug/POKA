@@ -6,6 +6,9 @@ import { BIG_NODES, END, NODE_XY, START, YUT_NAMES, type Team, type YutState } f
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { PixelBurst } from "@/components/games/pixel-burst";
 
+/** 지름길로 들어가는 칸(오른쪽 위 꼭짓점 · 왼쪽 위 꼭짓점 · 가운데 방) */
+export const SHORTCUT_NODES = ["o5", "o10", "c"];
+
 export const TEAM_NAME: Record<Team, string> = { A: "홍팀", B: "청팀" };
 export const TEAM_COLOR: Record<Team, string> = { A: "#ff5d6c", B: "#4aa8ff" };
 type Face = { species: YokaiSpecies; stage: number } | null;
@@ -67,9 +70,11 @@ export function YutBoard({
   fast,
   movable,
   selected,
-  ghost,
+  ghosts,
   onPiece,
   onGhost,
+  onCancel,
+  portal,
   burst,
   impact,
   stepMs: stepMsProp,
@@ -83,9 +88,14 @@ export function YutBoard({
   /** 지금 누를 수 있는 말(내 팀 · 판 위) */
   movable: number[];
   selected: number | null;
-  ghost: string | null;
+  /** 고른 말이 갈 수 있는 칸(윷 결과마다) — 눌러서 그 칸으로 */
+  ghosts: { node: string; ri: number; label: string }[];
   onPiece: (i: number) => void;
-  onGhost: () => void;
+  onGhost: (ri: number) => void;
+  /** 빈 땅 클릭 · 우클릭: 고른 것 취소 */
+  onCancel: () => void;
+  /** 지름길 진입 포털(꼭짓점 · 방에 도착) */
+  portal: { node: string; key: number } | null;
   burst: YutBurst | null;
   /** 착지 · 잡기 순간 판 진동 */
   impact: boolean;
@@ -143,8 +153,16 @@ export function YutBoard({
   return (
     <div
       data-yut-board
-      className={cn("relative mx-auto aspect-square w-full max-w-[min(100%,760px)] select-none rounded-3xl border-4 border-[#3b2766] bg-[radial-gradient(circle_at_50%_45%,#2c1a4a,#140b24_70%)] shadow-[0_6px_0_#0a0614]", impact && "yut-impact")}
+      className={cn("relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-3xl border-4 border-[#3b2766] bg-[radial-gradient(circle_at_50%_45%,#2c1a4a,#140b24_70%)] shadow-[0_6px_0_#0a0614]", impact && "yut-impact")}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
+      onClick={(e) => {
+        // 말 · 갈 곳이 아닌 빈 땅을 누르면 취소
+        if (!(e.target as HTMLElement).closest("button")) onCancel();
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onCancel();
+      }}
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
         {line("o0", "o5")}
@@ -168,6 +186,9 @@ export function YutBoard({
             />
           );
         })}
+        {SHORTCUT_NODES.map((n) => (
+          <circle key={`portal-${n}`} className="yut-portal-ring" cx={NODE_XY[n][0]} cy={NODE_XY[n][1]} r={6.4} fill="none" stroke="#6ad7ff" strokeWidth={0.7} strokeDasharray="2 1.6" />
+        ))}
         <text x={NODE_XY.o0[0] - 1} y={99} textAnchor="middle" fontSize="3.4" fontWeight={900} fill="#ffcf4a">
           출발 · 골
         </text>
@@ -176,18 +197,27 @@ export function YutBoard({
         </text>
       </svg>
 
-      {ghost ? (
+      {ghosts.map((g) => (
         <button
+          key={`${g.node}-${g.ri}`}
           type="button"
-          data-yut-ghost
-          onClick={onGhost}
-          aria-label={ghost === END ? "골인시키기" : "여기로 옮기기"}
-          className="yut-target absolute z-30 grid size-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-dashed border-[#ffcf4a] bg-[#ffcf4a]/25 text-[11px] font-black text-[#ffe08a]"
-          style={{ left: `${xy(ghost)[0]}%`, top: `${xy(ghost)[1] + (ghost === END ? 9 : 0)}%` }}
+          data-yut-ghost={g.node}
+          onClick={() => onGhost(g.ri)}
+          aria-label={g.node === END ? `${g.label}로 골인` : `${g.label}로 여기 옮기기`}
+          className="yut-target absolute z-30 grid size-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/30 text-[11px] leading-tight font-black text-[#ffe08a] [image-rendering:pixelated]"
+          style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1] + (g.node === END ? 9 : 0)}%` }}
         >
-          {ghost === END ? "골인!" : "여기"}
+          <span>{g.node === END ? "골인!" : "여기"}</span>
+          <span className="rounded-sm bg-[#0a0614] px-1 text-[10px] text-[#ffcf4a]">{g.label}</span>
         </button>
+      ))}
+      {portal ? (
+        <span key={`portal-${portal.key}`} data-yut-portal className="yut-portal pointer-events-none absolute z-20 grid size-[22%] place-items-center" style={{ left: `${xy(portal.node)[0]}%`, top: `${xy(portal.node)[1]}%` }}>
+          <span className="absolute inset-0 rounded-full border-4 border-dashed border-[#6ad7ff]" />
+          <span className="absolute inset-[18%] rounded-full border-4 border-dotted border-[#b77bff]" />
+        </span>
       ) : null}
+      {portal ? <PixelBurst key={`portal-bits-${portal.key}`} x={xy(portal.node)[0]} y={xy(portal.node)[1]} seed={portal.key + 5} colors={["#6ad7ff", "#b77bff", "#ffffff"]} count={16} spread={60} size={6} up={0} /> : null}
 
       {pieces.map((p) => {
         const [x, y] = xy(p.pos);
@@ -211,6 +241,12 @@ export function YutBoard({
             >
               <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className={cn("size-full", can && "yut-target", isSel && "scale-110")} />
             </span>
+            {/* 점프 중 잔상: 달리는 느낌 */}
+            {hopping(p.team, p.i) ? (
+              <span key={`trail-${anim?.key}-${walkIdx}`} className="yut-afterimage pointer-events-none absolute inset-0 -z-10 scale-90 opacity-0 blur-[1px]" style={{ ["--hop" as string]: `${stepMs}ms` }} aria-hidden>
+                <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" />
+              </span>
+            ) : null}
             {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="absolute -bottom-3.5 left-1/2 -translate-x-1/2" /> : null}
             {p.top && p.count > 1 ? (
               <span data-yut-stack className="absolute -right-1.5 -top-2 rounded-full border-2 border-[#0a0614] bg-[#ffcf4a] px-1.5 text-[11px] font-black leading-4 text-[#2a1400]">

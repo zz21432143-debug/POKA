@@ -1,7 +1,7 @@
 import { audio } from "@/lib/omok-sound";
-import { PUNGMUL_STEP, PUNGMUL_STEPS, playPungmulStep } from "@/lib/game-bgm-pungmul";
+import { YUT_STEP, YUT_STEPS, playYutStep } from "@/lib/game-bgm-yut";
 
-/** 곡: omok = 계면조 요괴 가락 · yut = 신나는 풍물놀이 */
+/** 곡: omok = 계면조 요괴 가락 · yut = 잔치집 8비트 칩튠 */
 export type BgmTrack = "omok" | "yut";
 
 /**
@@ -182,7 +182,7 @@ export function startBgm(track: BgmTrack = "omok") {
   lp.type = "lowpass";
   lp.frequency.value = 2400;
   const delay = a.createDelay();
-  delay.delayTime.value = track === "yut" ? PUNGMUL_STEP * 3 : EIGHTH * 3;
+  delay.delayTime.value = track === "yut" ? YUT_STEP * 3 : EIGHTH * 3;
   const fb = a.createGain();
   fb.gain.value = track === "yut" ? 0.15 : 0.28;
   lead.connect(lp).connect(master);
@@ -215,9 +215,9 @@ export function startBgm(track: BgmTrack = "omok") {
   b.timer = window.setInterval(() => {
     while (b.next < a.currentTime + 0.15) {
       if (track === "yut") {
-        playPungmulStep(a, b.master, lead, b.step, b.next);
-        b.next += PUNGMUL_STEP;
-        b.step = (b.step + 1) % PUNGMUL_STEPS;
+        playYutStep(a, b.master, lead, b.step, b.next);
+        b.next += YUT_STEP;
+        b.step = (b.step + 1) % YUT_STEPS;
       } else {
         playStep(a, b, b.step, b.next, lead);
         b.next += EIGHTH;
