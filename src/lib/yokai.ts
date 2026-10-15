@@ -106,12 +106,12 @@ export function nextStageProgress(exp: number) {
 }
 
 /** 밥 한 번: 경험치 · 포만감 · 친밀도 */
-export const FEED = { exp: 20, fullness: 20, affection: 3 } as const;
+export const FEED = { exp: 20, fullness: 20, affection: 5 } as const;
 /** 포만감이 이 값 이상이면 배불러서 안 먹음 */
 export const FULL_LIMIT = 80;
 /** 포만감은 한 시간에 FULLNESS_DECAY씩 줄어듦(0 밑으로는 안 내려감 · 죽지 않음) */
 export const FULLNESS_DECAY = 5;
-/** 쓰다듬기: 요괴마다 하루 PET_MAX번, 한 번 하면 PET_COOLDOWN_MIN분 쉬어야 함 · 친밀도 +1 */
+/** 쓰다듬기: 하루 PET_MAX번, 한 번 하면 PET_COOLDOWN_MIN분 쉬어야 함 · 친밀도 +PET_AFFECTION */
 export const PET_MAX = 5;
 export const PET_COOLDOWN_MIN = 60;
 
@@ -130,7 +130,7 @@ export function nextFeedTime(fullness: number, now = new Date()) {
 /** 청결도: 한 시간에 CLEAN_DECAY씩 줄어듦 · SHOWER_BELOW 미만일 때 샤워 가능(샤워하면 100 · 친밀도 +2) */
 export const CLEAN_DECAY = 4;
 export const SHOWER_BELOW = 70;
-export const SHOWER_AFFECTION = 2;
+export const SHOWER_AFFECTION = 5;
 /** 깨끗하면(CLEAN_BONUS_AT 이상) 밥 경험치 +CLEAN_BONUS_EXP */
 export const CLEAN_BONUS_AT = 50;
 export const CLEAN_BONUS_EXP = 5;
@@ -152,15 +152,26 @@ export const FEED_COOLDOWN_MIN = 120;
 export const SHOWER_COOLDOWN_MIN = 360;
 /** 대표 요괴 바꾸기 값(돌보기는 대표 요괴만 · 여러 마리를 한꺼번에 키우지 못하게). 요괴마다 처음 대표로 정할 때는 무료 */
 export const MAIN_CHANGE_COST = 200;
-/** 친밀도 보상: 단계 · 받는 포인트 · 이름 */
+/** 친밀도 보상: 단계 · 받는 포인트 · 이름(하루 한 번 들르는 회원 기준 첫날 10 → 3일쯤 50 → 6일쯤 100) */
 export const BOND_TIERS = [
+  { at: 10, points: 20, name: "친구" },
+  { at: 30, points: 50, name: "다정한 친구" },
   { at: 50, points: 100, name: "단짝" },
+  { at: 70, points: 150, name: "찐친" },
   { at: 100, points: 300, name: "영혼의 단짝" },
 ] as const;
+/** 친밀도 오르는 양: 쓰다듬기 · 하루 첫 방문 인사(밥은 FEED.affection, 샤워는 SHOWER_AFFECTION) */
+export const PET_AFFECTION = 3;
+export const GREET_AFFECTION = 5;
 export function bondName(affection: number) {
   let name = "친해지는 중";
   for (const t of BOND_TIERS) if (affection >= t.at) name = t.name;
   return name;
+}
+/** 다음 친밀도 보상(다 받았으면 null) */
+export function nextBond(affection: number) {
+  const t = BOND_TIERS.find((x) => affection < x.at);
+  return t ? { at: t.at, points: t.points, name: t.name, left: t.at - affection } : null;
 }
 
 /** 쿨타임이 끝나는 시각(지금 할 수 있으면 null) */

@@ -717,6 +717,8 @@ model YokaiPet {
   petDay        String @default("")
   pettedAt      DateTime?
   showerAt      DateTime?
+  /// 하루 첫 방문 인사(친밀도 +) 받은 한국 날짜
+  greetDay      String @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }

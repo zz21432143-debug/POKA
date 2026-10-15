@@ -119,3 +119,17 @@ describe("청결도 · 샤워 · 대사", () => {
     }
   });
 });
+
+describe("친밀도 단계", () => {
+  it("10 · 30 · 50 · 70 · 100 보상 · 다음 목표", async () => {
+    const { BOND_TIERS, bondName, nextBond, FEED, PET_AFFECTION, SHOWER_AFFECTION, GREET_AFFECTION } = await import("./yokai");
+    assert.deepEqual(BOND_TIERS.map((t) => t.at), [10, 30, 50, 70, 100]);
+    assert.equal(bondName(9), "친해지는 중");
+    assert.equal(bondName(10), "친구");
+    assert.equal(bondName(55), "단짝");
+    assert.deepEqual(nextBond(45), { at: 50, points: 100, name: "단짝", left: 5 });
+    assert.equal(nextBond(100), null);
+    // 하루 한 번 들르는 회원(인사 + 밥 1 + 쓰다듬기 1 + 샤워 1) ≈ 18 → 첫날 10 넘음
+    assert.equal(GREET_AFFECTION + FEED.affection + PET_AFFECTION + SHOWER_AFFECTION, 18);
+  });
+});

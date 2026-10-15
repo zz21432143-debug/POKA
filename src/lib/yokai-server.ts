@@ -2,6 +2,9 @@ import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import {
   BOND_TIERS,
+  GREET_AFFECTION,
+  PET_AFFECTION,
+  nextBond,
   FEED_COOLDOWN_MIN,
   MAIN_CHANGE_COST,
   SHOWER_COOLDOWN_MIN,
@@ -52,8 +55,9 @@ export type YokaiCare = {
   fullness: number;
   clean: number;
   affection: number;
-  /** 친밀도 단계 이름(친해지는 중 · 단짝 · 영혼의 단짝) */
+  /** 친밀도 단계 이름 · 다음 보상 */
   bond: string;
+  nextBond: ReturnType<typeof nextBond>;
   /** 이 요괴를 대표로 바꾸는 값(처음이면 0) */
   mainCost: number;
 };
@@ -85,6 +89,8 @@ export type YokaiView = {
   /** 못 만난 요괴 진행도 한 줄 */
   progress: Partial<Record<YokaiSpecies, string>>;
   tails: { label: string; done: boolean; progress: string }[];
+  /** 오늘 처음 들어와서 받은 인사 보너스(없으면 null) */
+  greeting: { amount: number; bond: { at: number; points: number; name: string } | null } | null;
   /** 요괴 대사(성격 · 상황별) · 시스템 안내 한 줄 */
   mood: string;
   tip: string | null;
@@ -198,6 +204,7 @@ function careOf(o: OwnedRow, now = new Date()): YokaiCare {
     clean: cleanNow(o.clean, o.cleanAt, now),
     affection: o.affection,
     bond: bondName(o.affection),
+    nextBond: nextBond(o.affection),
     mainCost: o.wasMain ? MAIN_CHANGE_COST : 0,
   };
 }
@@ -236,9 +243,15 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
   owned = await grantArrivals(userId, owned, stats);
   await prisma.yokaiPet.update({ where: { userId }, data: { arrivalCheckedAt: new Date() } }).catch(() => undefined);
 
-  const valid = owned.filter((o) => isSpecies(o.species));
+  let valid = owned.filter((o) => isSpecies(o.species));
   if (!valid.length) return null;
-  const activeRow = valid.find((o) => o.species === mainOf(pet)) ?? valid[0];
+  let activeRow = valid.find((o) => o.species === mainOf(pet)) ?? valid[0];
+  // 하루 첫 방문 인사(친밀도 +) → 바뀐 값으로 다시 읽음
+  const greeting = await greetToday(userId, pet, activeRow).catch(() => null);
+  if (greeting) {
+    valid = (await ownedList(userId)).filter((o) => isSpecies(o.species));
+    activeRow = valid.find((o) => o.species === activeRow.species) ?? activeRow;
+  }
   const species = activeRow.species as YokaiSpecies;
   const now = new Date();
   const care = careOf(activeRow, now);
@@ -276,6 +289,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
     newcomers: dex.filter((s) => !seen.includes(s)).sort((x, y) => RARITY_ORDER.indexOf(YOKAI[x].rarity) - RARITY_ORDER.indexOf(YOKAI[y].rarity)),
     progress,
     tails: gumihoTails(stats, stages),
+    greeting,
     mood: pickLine(species, situation(fullness, clean), Math.floor(Date.now() / 3_600_000)),
     tip: tipLine({ fullness, clean, feedsLeft: Math.max(0, allowed - used), src: sources }),
     points: (await prisma.user.findUnique({ where: { id: userId }, select: { points: true } }).catch(() => null))?.points ?? 0,
@@ -357,15 +371,29 @@ async function activeOf(userId: string) {
   return row ? { pet, row } : null;
 }
 
-/** 친밀도가 단계(50 · 100)를 넘으면 한 번만 보상 */
+/** 친밀도가 단계(10 · 30 · 50 · 70 · 100)를 넘으면 한 번만 보상 · 한꺼번에 여러 단계를 넘으면 모두 더해서 */
 async function grantBond(userId: string, row: OwnedRow, affection: number) {
-  const tier = [...BOND_TIERS].reverse().find((t) => affection >= t.at && row.bondReward < t.at);
-  if (!tier) return null;
-  const claimed = await prisma.yokaiOwned.updateMany({ where: { id: row.id, bondReward: { lt: tier.at } }, data: { bondReward: tier.at } });
+  const passed = BOND_TIERS.filter((t) => affection >= t.at && row.bondReward < t.at);
+  if (!passed.length) return null;
+  const top = passed[passed.length - 1];
+  const points = passed.reduce((sum, t) => sum + t.points, 0);
+  const claimed = await prisma.yokaiOwned.updateMany({ where: { id: row.id, bondReward: row.bondReward }, data: { bondReward: top.at } });
   if (claimed.count !== 1) return null;
   const { grantRewards } = await import("@/lib/exp");
-  await grantRewards(userId, 0, tier.points, { ignorePointCap: true }).catch(() => undefined);
-  return { at: tier.at, points: tier.points, name: tier.name };
+  await grantRewards(userId, 0, points, { ignorePointCap: true }).catch(() => undefined);
+  return { at: top.at, points, name: top.name };
+}
+
+/** 하루 첫 방문 인사: 대표 요괴 친밀도 +GREET_AFFECTION(하루 한 번 · 동시에 열어도 한 번) */
+async function greetToday(userId: string, pet: { id: string; greetDay: string }, row: OwnedRow) {
+  const day = todayKstDate();
+  if (pet.greetDay === day) return null;
+  const claimed = await prisma.yokaiPet.updateMany({ where: { id: pet.id, greetDay: pet.greetDay }, data: { greetDay: day } });
+  if (claimed.count !== 1) return null;
+  const affection = Math.min(100, row.affection + GREET_AFFECTION);
+  await prisma.yokaiOwned.update({ where: { id: row.id }, data: { affection } });
+  const bond = await grantBond(userId, row, affection);
+  return { amount: affection - row.affection, bond };
 }
 
 type CareResult = { ok: true; evolved?: number | null; bond?: { at: number; points: number; name: string } | null } | { ok: false; error: string };
@@ -395,7 +423,7 @@ export async function feedYokai(userId: string): Promise<CareResult> {
   return { ok: true, evolved: after > before ? after : null, bond: await grantBond(userId, row, affection) };
 }
 
-/** 쓰다듬기(대표 요괴만): 하루 PET_MAX번 · 한 번 하면 쉬기(모든 요괴 함께) · 친밀도 +1 */
+/** 쓰다듬기(대표 요괴만): 하루 PET_MAX번 · 한 번 하면 쉬기(모든 요괴 함께) · 친밀도 +PET_AFFECTION */
 export async function petYokai(userId: string): Promise<CareResult> {
   const found = await activeOf(userId);
   if (!found) return { ok: false, error: "먼저 요괴를 골라 주세요." };
@@ -407,7 +435,7 @@ export async function petYokai(userId: string): Promise<CareResult> {
   if (wait) return { ok: false, error: `조금 쉬는 중이에요. ${waitText(wait, now)} 뒤에 다시 쓰다듬어 주세요.` };
   const done = await prisma.yokaiPet.updateMany({ where: { id: pet.id, pettedAt: pet.pettedAt }, data: { petDay: todayKstDate(), pettedToday: count + 1, pettedAt: now } });
   if (done.count !== 1) return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
-  const affection = Math.min(100, row.affection + 1);
+  const affection = Math.min(100, row.affection + PET_AFFECTION);
   await prisma.yokaiOwned.update({ where: { id: row.id }, data: { affection } });
   return { ok: true, bond: await grantBond(userId, row, affection) };
 }

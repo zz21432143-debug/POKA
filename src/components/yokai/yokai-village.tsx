@@ -23,6 +23,7 @@ import {
   type YokaiSpecies,
 } from "@/lib/yokai";
 import { pickLine } from "@/lib/yokai-lines";
+import { josa } from "@/lib/quiz";
 import type { YokaiView } from "@/lib/yokai-server";
 import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
@@ -166,7 +167,30 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
     text: string;
     key: number;
     exp?: number;
-  } | null>(null);
+  } | null>(() => {
+    // 오늘 처음 들어왔으면 인사 보너스 말풍선
+    const g = initial?.greeting;
+    if (!g || !initial) return null;
+    const base = `👋 오늘 첫 방문! 친밀도 +${g.amount}`;
+    return g.bond
+      ? {
+          kind: "bond",
+          text: `${base} · 💕 ${josa(g.bond.name, "이가")} 됐어요! +${g.bond.points}P`,
+          key: -1,
+        }
+      : {
+          kind: "pet",
+          text: `${base} · ${pickLine(initial.active.species, "greet", 1)}`,
+          key: -1,
+        };
+  });
+  useEffect(() => {
+    const id = window.setTimeout(
+      () => setReaction((r) => (r?.key === -1 ? null : r)),
+      6000,
+    );
+    return () => window.clearTimeout(id);
+  }, []);
   const [now, refreshNow] = useNow();
 
   async function act(body: Record<string, unknown>) {
@@ -208,7 +232,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
           if (json.bond)
             setReaction({
               kind: "bond",
-              text: `💕 ${json.bond.name}이 됐어요! +${json.bond.points}P · ${pickLine(next.species, "bond", key)}`,
+              text: `💕 ${josa(json.bond.name, "이가")} 됐어요! +${json.bond.points}P · ${pickLine(next.species, "bond", key)}`,
               key,
             });
           else
@@ -576,7 +600,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   value={v.affection}
                   max={100}
                   color="linear-gradient(90deg,#d84f7a,#f39ab5)"
-                  right={`${v.affection} · ${v.bond}${v.affection < 50 ? " (50에 단짝 +100P)" : v.affection < 100 ? " (100에 +300P)" : ""}`}
+                  right={`${v.affection} · ${v.bond}${v.nextBond ? ` · ${v.nextBond.name}까지 ${v.nextBond.left} (+${v.nextBond.points}P)` : " · 최고 단계"}`}
                 />
                 {v.next ? (
                   <Bar
