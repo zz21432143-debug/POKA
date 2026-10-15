@@ -184,3 +184,15 @@ export function cheerSound() {
   if (!a) return;
   tone(a, 880, a.currentTime, 0.12, "sine", 0.12, 1320);
 }
+
+/** 윷가락 던지기: 딱 · 딱딱 · 딱(나무 부딪는 소리) */
+export function yutThrowSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  [0, 0.09, 0.16, 0.27].forEach((d, i) => {
+    noiseHit(a, t + 0.25 + d, 0.05, 1800 + i * 300, 0.4);
+    tone(a, 420 + i * 60, t + 0.25 + d, 0.06, "triangle", 0.08);
+  });
+}

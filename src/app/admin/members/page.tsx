@@ -43,7 +43,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
       orderBy: [...SORTS[sort].orderBy] as unknown as Prisma.UserOrderByWithRelationInput[],
       skip: (page - 1) * PAGE,
       take: PAGE,
-      select: { nickname: true, level: true, points: true, createdAt: true, lastLoginAt: true, isDealerVerified: true, isAdmin: true, status: true },
+      select: { id: true, nickname: true, level: true, points: true, createdAt: true, lastLoginAt: true, isDealerVerified: true, isAdmin: true, status: true },
     }),
     badNicknames(50).catch(() => []),
   ]);
@@ -107,7 +107,8 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
             {members.map((m) => (
               <li key={m.nickname} data-member-row={m.nickname} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3">
                 <div className="grid min-w-0 flex-1 gap-0.5">
-                  <Link href={`/u/${encodeURIComponent(m.nickname)}`} className="truncate font-semibold hover:text-primary">
+                  <Link
+                    href={`/admin/members/${m.id}`} className="truncate font-semibold hover:text-primary">
                     {m.nickname}
                     {m.isDealerVerified ? <span className="ml-1.5 rounded bg-[#c9a25c] px-1 text-[10px] text-black">인증</span> : null}
                     {m.isAdmin ? <span className="ml-1 rounded bg-sky-700 px-1 text-[10px]">관리자</span> : null}

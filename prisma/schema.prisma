@@ -829,3 +829,30 @@ model TrafficDaily {
 
   @@id([day, source])
 }
+
+/// 요괴 윷놀이: 방 하나 = 한 판. mode 1~4(1:1 ~ 4:4). status waiting · playing · done. winner "A" · "B" · ""
+/// seatsJson [{team, idx, userId, ready, bot}] · stateJson 게임 상태(src/lib/yut.ts YutState)
+model YutGame {
+  id         String    @id @default(cuid())
+  code       String?   @unique
+  hostId     String
+  mode       Int       @default(1)
+  status     String    @default("waiting")
+  seatsJson  String    @default("[]")
+  stateJson  String    @default("")
+  winner     String    @default("")
+  endReason  String    @default("")
+  version    Int       @default(0)
+  turnAt     DateTime?
+  emoteJson  String    @default("")
+  kickedJson String    @default("")
+  isPrivate  Boolean   @default(false)
+  /// 빈자리를 요괴 봇으로 채운 판(전적 · 보상 없음)
+  withBots   Boolean   @default(false)
+  nextId     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([hostId, createdAt])
+}

@@ -18,7 +18,13 @@ const GAMES = [
     hint: "요괴 AI · 친구 대전 · 관전",
     ready: true,
   },
-  { href: "", icon: "🥌", name: "요괴 알까기", hint: "준비 중", ready: false },
+  {
+    href: "/games/yut",
+    icon: "🎲",
+    name: "요괴 윷놀이",
+    hint: "1:1 ~ 4:4 팀전 · 초대 코드",
+    ready: true,
+  },
   { href: "", icon: "♟️", name: "요괴 체스", hint: "준비 중", ready: false },
 ];
 

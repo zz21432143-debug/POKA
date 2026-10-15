@@ -13,19 +13,19 @@ export type TitlePeriod = "all" | "month";
  * 랭킹 칭호(팟 계산 말고): 각 랭킹 1위에게 붙음. 관리자가 켜기/끄기 · 이름을 바꿉니다.
  * tab · period는 /ranking 랭킹 종류와 기간.
  */
-export const HONOR_KEYS = ["level", "weekExp", "monthExp", "attendance", "quiz", "omok", "alkkagi", "chess"] as const;
+export const HONOR_KEYS = ["level", "weekExp", "monthExp", "attendance", "quiz", "omok", "yut", "chess"] as const;
 /** 미니게임 칭호(게임마다 이번 달 1위 한 명만) */
-export const GAME_HONOR_KEYS = ["omok", "alkkagi", "chess"] as const;
+export const GAME_HONOR_KEYS = ["omok", "yut", "chess"] as const;
 export type HonorKey = (typeof HONOR_KEYS)[number];
 /** minScore: 이 점수 이상이어야 칭호(예: 퀴즈는 이번 달 3문제 이상) */
-export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: string; tab: "level" | "marks" | "attendance" | "quiz" | "omok" | "alkkagi" | "chess"; period: "all" | "week" | "month"; minScore?: number }> = {
+export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: string; tab: "level" | "marks" | "attendance" | "quiz" | "omok" | "yut" | "chess"; period: "all" | "week" | "month"; minScore?: number }> = {
   level: { icon: "👑", name: "백귀의 왕", desc: "레벨 랭킹(전체) 1위", tab: "level", period: "all" },
   weekExp: { icon: "🔥", name: "이번 주 사천왕", desc: "이번 주 경험치 1위", tab: "level", period: "week" },
   monthExp: { icon: "🌙", name: "이달의 귀신", desc: "이번 달 경험치 1위", tab: "level", period: "month" },
   attendance: { icon: "📅", name: "개근 도깨비", desc: "이번 달 출석 1위", tab: "attendance", period: "month" },
   quiz: { icon: "🧩", name: "퀴즈 요괴", desc: "이번 달 퀴즈 1위(3문제 이상)", tab: "quiz", period: "month", minScore: 3 },
   omok: { icon: "⚫", name: "오목 요괴", desc: "이번 달 오목 랭킹 1위(5판 이상)", tab: "omok", period: "month" },
-  alkkagi: { icon: "🥌", name: "알까기 요괴", desc: "이번 달 알까기 랭킹 1위(5판 이상)", tab: "alkkagi", period: "month" },
+  yut: { icon: "🎲", name: "윷놀이 요괴", desc: "이번 달 윷놀이 랭킹 1위(5판 이상)", tab: "yut", period: "month" },
   chess: { icon: "♟️", name: "체스 요괴", desc: "이번 달 체스 랭킹 1위(5판 이상)", tab: "chess", period: "month" },
 };
 /** top: 1이면 1위만, 3이면 1~3위까지(이름 뒤에 · 2위처럼 붙음) */

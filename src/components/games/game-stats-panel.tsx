@@ -9,7 +9,7 @@ import {
   type GameKind,
 } from "@/lib/game-stats";
 
-/** 게임 전적 · 이번 달 랭킹 칸(오목 · 알까기 · 체스 공통). 공개 전에는 로비에 안 나옴(gameStatsVisible) */
+/** 게임 전적 · 이번 달 랭킹 칸(오목 · 윷놀이 · 체스 공통). 공개 전에는 로비에 안 나옴(gameStatsVisible) */
 export async function GameStatsPanel({
   game,
   userId,

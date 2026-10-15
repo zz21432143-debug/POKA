@@ -33,7 +33,7 @@ import { displayMarkSrc } from "@/lib/mark-assets";
 /** 미니게임 랭킹: 게임 고르기(준비 중인 게임은 흐리게) */
 const GAMES: { id: GameKind; ready: boolean; href: string }[] = [
   { id: "omok", ready: true, href: "/games/omok" },
-  { id: "alkkagi", ready: false, href: "/games" },
+  { id: "yut", ready: true, href: "/games/yut" },
   { id: "chess", ready: false, href: "/games" },
 ];
 

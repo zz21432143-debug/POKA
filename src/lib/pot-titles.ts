@@ -137,7 +137,7 @@ export async function getHonorInfo(): Promise<HonorInfo> {
     keys.map(async (key) => {
       const def = HONOR_DEFS[key];
       // 오목은 게임 전적 랭킹(이번 달 · 5판 이상), 나머지는 /ranking 랭킹
-      const isGame = def.tab === "omok" || def.tab === "alkkagi" || def.tab === "chess";
+      const isGame = def.tab === "omok" || def.tab === "yut" || def.tab === "chess";
       const rows = isGame
         ? await import("@/lib/game-stats").then((m) => m.gameRanking(def.tab as "omok", "month", 1)).catch(() => [])
         : await getRanking(def.tab as "level", def.period).catch(() => []);

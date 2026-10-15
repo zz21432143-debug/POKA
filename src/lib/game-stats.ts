@@ -2,23 +2,23 @@ import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 
 /**
- * 게임 전적 · 랭킹(오목 · 알까기 · 체스 공통). 친구 대전 결과만(서버가 판정한 판).
+ * 게임 전적 · 랭킹(오목 · 윷놀이 · 체스 공통). 친구 대전 결과만(서버가 판정한 판).
  * 전적 · 랭킹 공개(GAME_STATS_PUBLIC=0이면 숨김) · 이긴 보상 켜짐(GAME_REWARDS=0이면 끔). 기권은 그냥 패.
  * 마스터는 /games/stats에서 미리 볼 수 있음(어디에도 링크 없음).
  */
-export type GameKind = "omok" | "alkkagi" | "chess";
+export type GameKind = "omok" | "yut" | "chess";
 export const GAME_LABEL: Record<GameKind, string> = {
   omok: "오목",
-  alkkagi: "알까기",
+  yut: "윷놀이",
   chess: "체스",
 };
 export const isGameKind = (v: unknown): v is GameKind =>
-  v === "omok" || v === "alkkagi" || v === "chess";
+  v === "omok" || v === "yut" || v === "chess";
 
 /** 전적에 넣는 최소 수(너무 짧은 판 = 바로 기권 장난은 빼기) */
 export const MIN_COUNTED_MOVES: Record<GameKind, number> = {
   omok: 9,
-  alkkagi: 3,
+  yut: 12,
   chess: 10,
 };
 /** 랭킹에 오르는 최소 판 수 */
