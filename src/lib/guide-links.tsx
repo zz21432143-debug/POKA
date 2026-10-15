@@ -7,25 +7,25 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "start",
     label: "입문",
     hint: "딜러를 처음 준비하는 사람",
-    slugs: ["how-to-become-dealer", "dealer-first-month", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings", "dealer-dress-seasons", "dealer-guest-manners", "dealer-resume", "applying-to-jobs", "dealer-personal-items", "guest-faq-for-dealers"],
+    slugs: ["how-to-become-dealer", "dealer-first-month", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings", "dealer-dress-seasons", "dealer-guest-manners", "dealer-resume", "applying-to-jobs", "dealer-personal-items", "guest-faq-for-dealers", "dealer-voice-care"],
   },
   {
     id: "skill",
     label: "딜링 기술",
     hint: "셔플 · 피치 · 칩 · 팟 · 판정",
-    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "chip-colors-units", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes", "reading-hand-reviews", "self-dealing-practice-kit", "dealer-mental-reset", "betting-line", "counterfeit-hands", "practice-scenarios", "exposed-card-rules"],
+    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "chip-colors-units", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes", "reading-hand-reviews", "self-dealing-practice-kit", "dealer-mental-reset", "betting-line", "counterfeit-hands", "practice-scenarios", "exposed-card-rules", "deck-check"],
   },
   {
     id: "rules",
     label: "룰 · 토너먼트",
     hint: "TDA · 블라인드 · 분쟁 대처",
-    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry", "straddle-rules", "chip-race", "final-table-dealing", "incomplete-raise-rule"],
+    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry", "straddle-rules", "chip-race", "final-table-dealing", "incomplete-raise-rule", "hand-for-hand", "dead-button-rules"],
   },
   {
     id: "work",
     label: "근무 · 매장",
     hint: "급여 · 로테이션 · 건강 · 매장 운영",
-    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers", "rotation-handover", "new-store-first-month", "dealer-break-time"],
+    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers", "rotation-handover", "new-store-first-month", "dealer-break-time", "seat-change-requests"],
   },
 ];
 
@@ -57,6 +57,8 @@ const TERM_LINKS: [string, string][] = [
   ["교대", "rotation-handover"],
   ["베팅 라인", "betting-line"],
   ["카운터펠트", "counterfeit-hands"],
+  ["핸드 포 핸드", "hand-for-hand"],
+  ["데드 버튼", "dead-button-rules"],
   ["파이널 테이블", "final-table-dealing"],
   ["이력서", "dealer-resume"],
   ["핸드리뷰", "reading-hand-reviews"],
