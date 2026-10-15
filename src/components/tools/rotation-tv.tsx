@@ -276,6 +276,8 @@ export function RotationTvScreen({
             <span className={cn("text-right font-bold leading-tight", c.sub)} style={{ fontSize: "min(1.1vw, 1.9dvh)" }}>
               📱 찍으면
               <br />내 일정
+              <br />
+              <b className="font-black text-amber-300">POKA</b>
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element -- 만든 QR 그림 */}
             <img src={qr} alt="내 일정 보기 QR" className="aspect-square w-[min(7vw,11dvh)] rounded-md bg-white p-[0.3dvh]" />

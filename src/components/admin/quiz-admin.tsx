@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "cn";
-import { KIND_LABEL, type QuizKind } from "@/lib/quiz";
+import { KIND_LABEL, quizSlotLabel, type QuizKind } from "@/lib/quiz";
 
 type Row = { id: string; day: string; kind: string; question: string; choices: string[]; answer: number; explanation: string; source: string; answers: number };
 type Suggestion = { id: string; nickname: string; question: string; choices: string[]; answer: number; explanation: string; createdAt: string };
@@ -14,6 +14,9 @@ export function QuizAdmin() {
   const [today, setToday] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [day, setDay] = useState("");
+  // 아침 9시(0) · 저녁 9시(1) 문제
+  const [half, setHalf] = useState(0);
+  const slot = half ? `${day}-2` : day;
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState(["", "", "", ""]);
   const [answer, setAnswer] = useState(0);
@@ -32,7 +35,7 @@ export function QuizAdmin() {
         if (!alive) return;
         if (!res.ok) return setMsg({ ok: false, text: json.error ?? "불러오지 못했어요." });
         setToday(json.today ?? "");
-        setDay((d) => d || json.today || "");
+        setDay((d) => d || (json.today ?? "").slice(0, 10));
         setRows(json.rows ?? []);
         setSuggestions(json.suggestions ?? []);
       })
@@ -54,7 +57,7 @@ export function QuizAdmin() {
       const json = (await res.json()) as { rows?: Row[]; error?: string };
       if (!res.ok) throw new Error(json.error ?? "저장하지 못했어요.");
       setRows(json.rows ?? []);
-      setMsg({ ok: true, text: method === "POST" ? `${targetDay} 문제를 저장했어요.` : `${targetDay} 문제를 지웠어요(그날 자동 문제가 나가요).` });
+      setMsg({ ok: true, text: method === "POST" ? `${quizSlotLabel(targetDay)} 문제를 저장했어요.` : `${quizSlotLabel(targetDay)} 문제를 지웠어요(그때 자동 문제가 나가요).` });
       if (method === "POST") {
         setQuestion("");
         setChoices(["", "", "", ""]);
@@ -95,7 +98,8 @@ export function QuizAdmin() {
   }
 
   function edit(row: Row) {
-    setDay(row.day);
+    setDay(row.day.slice(0, 10));
+    setHalf(row.day.endsWith("-2") ? 1 : 0);
     setQuestion(row.question);
     setChoices([...row.choices, "", "", "", ""].slice(0, 4));
     setAnswer(row.answer);
@@ -112,7 +116,7 @@ export function QuizAdmin() {
         className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
         onSubmit={(e) => {
           e.preventDefault();
-          void send("POST", day);
+          void send("POST", slot);
         }}
       >
         <h2 className="text-base font-bold">직접 문제 넣기</h2>
@@ -124,10 +128,19 @@ export function QuizAdmin() {
             </button>
           </p>
         ) : null}
-        <label className="grid gap-1 text-sm">
-          날짜
-          <input type="date" value={day} min={today} onChange={(e) => setDay(e.target.value)} className={cn(field, "max-w-48")} required />
-        </label>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="grid gap-1 text-sm">
+            날짜
+            <input type="date" value={day} min={today.slice(0, 10)} onChange={(e) => setDay(e.target.value)} className={cn(field, "max-w-48")} required />
+          </label>
+          <label className="grid gap-1 text-sm">
+            시간
+            <select value={half} onChange={(e) => setHalf(Number(e.target.value))} className={cn(field, "max-w-40")}>
+              <option value={0}>아침 9시 문제</option>
+              <option value={1}>저녁 9시 문제</option>
+            </select>
+          </label>
+        </div>
         <label className="grid gap-1 text-sm">
           문제
           <textarea value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={200} rows={2} className={field} required placeholder="예) 9max BTN 10bb, A5s는 올인? 폴드?" />
@@ -195,8 +208,8 @@ export function QuizAdmin() {
             {rows.map((r) => (
               <li key={r.id} className="grid gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold tabular-nums">{r.day}</span>
-                  {r.day === today ? <span className="rounded-full bg-[#7a1c22] px-2 text-[11px] font-bold">오늘</span> : r.day > today ? <span className="rounded-full bg-sky-900 px-2 text-[11px] font-bold">예약</span> : null}
+                  <span className="font-bold tabular-nums">{quizSlotLabel(r.day)}</span>
+                  {r.day === today ? <span className="rounded-full bg-[#7a1c22] px-2 text-[11px] font-bold">지금</span> : r.day > today ? <span className="rounded-full bg-sky-900 px-2 text-[11px] font-bold">예약</span> : null}
                   <span className="rounded-full border border-white/20 px-2 text-[11px]">{KIND_LABEL[r.kind as QuizKind] ?? r.kind}</span>
                   <span className="text-xs text-muted-foreground">{r.source === "admin" ? "직접 넣음" : r.source.startsWith("member:") ? "회원 출제" : "자동"} · {r.answers}명 답함</span>
                   {r.day >= today && r.answers === 0 ? (

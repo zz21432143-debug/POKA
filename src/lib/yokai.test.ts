@@ -84,7 +84,7 @@ describe("요괴가 찾아오는 조건", () => {
   });
 
   it("구미호: 아홉 꼬리를 다 모아야 찾아옴", () => {
-    const full: YokaiStats = { ...ZERO, attendDays: 60, quizCorrect: 50, drillRuns: 100, handActs: 20, freeActs: 50, monthlyHonors: 1, level: 60 };
+    const full: YokaiStats = { ...ZERO, attendDays: 60, quizCorrect: 80, drillRuns: 100, handActs: 20, freeActs: 50, monthlyHonors: 1, level: 60 };
     const owned = { dokkaebi: 3, ingeo: 3, samdugumi: 3, nudeogi: 1, samagwi: 1, eodukssini: 1, noejeongwi: 1, bulgasari: 1, hwaryong: 1, bakjwigwi: 1, deungbulgwi: 1, keunnuni: 1, seolnyeo: 1, tamrang: 1, yacha: 1 } as const;
     assert.equal(gumihoTails(full, owned).filter((t) => t.done).length, 9);
     assert.ok(meets("gumiho", full, owned));

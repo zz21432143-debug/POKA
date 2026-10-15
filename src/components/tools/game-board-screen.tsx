@@ -55,6 +55,21 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   const nowLabel = kstTime(now);
   const ticker = data.notice.trim();
 
+  // 오른쪽 위 QR: 손님 · 딜러가 찍으면 POKA(홍보) — 어디서 왔는지 from=board
+  const [qr, setQr] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void import("qrcode")
+      .then((QR) => QR.toDataURL(`https://${SITE}/?from=board`, { width: 300, margin: 1, color: { dark: "#000000", light: "#ffffff" } }))
+      .then((url) => {
+        if (alive) setQr(url);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <div data-game-screen className={cn("@container-[size] relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,#2a0d0d_0%,#0b0706_60%,#050303_100%)] text-white", className)}>
       {/* 배경 사진(올렸으면) + 글씨가 잘 보이게 어둡게 */}
@@ -78,6 +93,17 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
           {data.subtitle ? <span className="truncate text-[clamp(11px,calc(var(--u)*1.6),30px)] font-bold text-zinc-300">{data.subtitle}</span> : null}
         </div>
         <span className="ml-auto shrink-0 text-[clamp(16px,calc(var(--u)*2.8),52px)] leading-none font-black text-zinc-200 tabular-nums">{nowLabel}</span>
+        {qr ? (
+          <span data-board-qr className="flex shrink-0 items-center gap-[calc(var(--u)*0.6)] [@container(max-height:380px)]:hidden">
+            <span className="text-right text-[clamp(9px,calc(var(--u)*1.05),20px)] leading-tight font-bold text-zinc-300">
+              📱 찍으면
+              <br />
+              <b className="font-black text-amber-300">POKA</b> 홀덤 커뮤니티
+            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 만든 QR 그림 */}
+            <img src={qr} alt="POKA 바로가기 QR" className="aspect-square w-[clamp(36px,calc(var(--u)*5.5),110px)] rounded-[calc(var(--u)*0.4)] bg-white p-[calc(var(--u)*0.2)]" />
+          </span>
+        ) : null}
       </header>
 
       {/* 흐르는 공지(위쪽): 적었을 때만 */}
@@ -201,7 +227,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
 
       {/* 맨 아래 한 줄: POKA 주소 · 홍보(움직이지 않음) */}
       <footer data-promo className="flex items-center justify-center gap-[calc(var(--u)*0.8)] border-t border-[#c9a25c]/30 bg-black/60 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.45)] text-[clamp(10px,calc(var(--u)*1.35),26px)] font-bold whitespace-nowrap text-zinc-300">
-        <b className="font-black text-amber-300">POKA</b>
+        <b className="font-black text-amber-300">FREE GAME CLOCK BY POKA</b>
         <span className="truncate">{PROMO}</span>
         <b className="font-black tracking-wide text-[#e2bd72]">{SITE}</b>
       </footer>

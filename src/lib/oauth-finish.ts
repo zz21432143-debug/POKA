@@ -101,6 +101,10 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
     }
     await setSessionUser(user);
     if (isNew) {
+      // 친구 초대 링크로 왔으면 초대한 사람 기록(보상은 첫 출석 때)
+      const { INVITE_COOKIE, recordInvite } = await import("@/lib/invite");
+      await recordInvite(user.id, jar.get(INVITE_COOKIE)?.value, ip).catch(() => undefined);
+      jar.delete(INVITE_COOKIE);
       const welcome = new URL("/welcome", request.url);
       if (next !== "/") welcome.searchParams.set("next", next);
       return sendTo(welcome);

@@ -26,6 +26,11 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
   const response = NextResponse.next({ request: { headers: requestHeaders } });
+  // 친구 초대 링크(?ref=코드)로 들어오면 30일 동안 기억 → 가입할 때 초대한 사람 기록(src/lib/invite.ts) · 먼저 받은 초대가 우선
+  const ref = request.nextUrl.searchParams.get("ref")?.toLowerCase();
+  if (ref && /^[a-z0-9]{6}$/.test(ref) && !request.cookies.get("poka_ref")) {
+    response.cookies.set("poka_ref", ref, { maxAge: 60 * 60 * 24 * 30, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
+  }
   response.headers.set("X-Content-Type-Options", "nosniff");
   // 교대표 보기(/r/…)만 우리 사이트 안 TV 미리보기에 띄울 수 있게
   response.headers.set("X-Frame-Options", request.nextUrl.pathname.startsWith("/r/") ? "SAMEORIGIN" : "DENY");

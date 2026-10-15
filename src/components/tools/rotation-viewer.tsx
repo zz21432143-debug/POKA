@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { closedFromOf, formatWorkDate, kstClock, nowMinutes, tableTag, type RotationShareView } from "@/lib/rotation";
@@ -394,6 +395,16 @@ export function RotationViewer({
           </table>
         </section>
       ) : null}
+
+      {/* 교대표 QR을 찍고 들어온 딜러에게 POKA 홍보 */}
+      <Link href="/boards/jobs?from=rotation" data-viewer-promo className="flex min-h-14 items-center gap-3 rounded-2xl border border-[#c9a25c]/40 bg-[#c9a25c]/10 px-4 py-3">
+        <span aria-hidden className="text-2xl">🔔</span>
+        <span className="grid min-w-0 gap-0.5">
+          <b className="text-sm font-black text-[#f3d9a4]">딜러 급구 · 대타 공고, 휴대폰 알림으로 받기</b>
+          <span className="text-xs text-zinc-300">POKA 홀덤 커뮤니티 · 구인구직 · 무료 홀덤 도구</span>
+        </span>
+        <span className="ml-auto shrink-0 text-xs font-black text-[#e7c98a]">둘러보기 ›</span>
+      </Link>
 
       <p className="text-center text-xs text-zinc-500">ⓒ POKA 홀덤 커뮤니티 · pokerwiki.co.kr · 15초마다 자동으로 새로 고칩니다</p>
     </div>

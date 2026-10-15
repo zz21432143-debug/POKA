@@ -7,13 +7,13 @@ import { QuizCard } from "@/components/quiz/quiz-card";
 import { StudyAd } from "@/components/ads/board-bottom-ad";
 import { getQuiz, recentQuizzes } from "@/lib/quiz-server";
 import { quizInitial } from "@/lib/quiz-view";
-import { KIND_LABEL, type QuizKind } from "@/lib/quiz";
+import { KIND_LABEL, quizSlotAt, quizSlotDate, quizSlotLabel, type QuizKind } from "@/lib/quiz";
 import { getRanking } from "@/lib/ranking";
 import { QuizAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 import { QuizSuggestForm } from "@/components/quiz/quiz-suggest-form";
 
-const TITLE = "오늘의 홀덤 퀴즈 — 매일 한 문제 · 푸시폴드 · 승률 · 족보 · 레인지";
-const DESCRIPTION = "매일 새로 나오는 홀덤 퀴즈. 하나만 고르면 정답과 해설, 다른 사람 선택 비율이 바로 나와요. 맞히면 포인트, 이번 달 1위는 「퀴즈 요괴」 칭호.";
+const TITLE = "오늘의 홀덤 퀴즈 — 하루 두 문제 · 푸시폴드 · 승률 · 족보 · 레인지";
+const DESCRIPTION = "아침 9시 · 저녁 9시, 하루 두 번 새로 나오는 홀덤 퀴즈. 하나만 고르면 정답과 해설, 다른 사람 선택 비율이 바로 나와요. 맞히면 포인트, 이번 달 1위는 「퀴즈 요괴」 칭호.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-/** 오늘의 퀴즈: 오늘 문제 · 이번 달 퀴즈 랭킹 · 지난 문제(정답 · 해설) */
+/** 오늘의 퀴즈: 지금 문제(12시간마다) · 이번 달 퀴즈 랭킹 · 지난 문제(정답 · 해설) */
 export default async function QuizPage() {
   const quiz = await getQuiz().catch(() => null);
   const [initial, ranking, past] = await Promise.all([
@@ -32,11 +32,13 @@ export default async function QuizPage() {
     recentQuizzes(31),
   ]);
   const older = past.filter((q) => q.day !== quiz?.day);
+  // 오늘(퀴즈 날짜) 문제는 저녁 문제가 나온 뒤에도 맞히면 포인트
+  const todayDate = quizSlotDate(quizSlotAt());
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
         <BoardTitle sticker={BOARD_STICKER.study}>오늘의 퀴즈</BoardTitle>
-        <p className="mt-2">매일 0시에 새 문제 · 하나만 고르면 정답과 해설이 바로 나와요. 맞히면 +10P, 7일 연속이면 보너스 +30P.</p>
+        <p className="mt-2">아침 9시 · 저녁 9시, 하루 두 번 새 문제 · 하나만 고르면 정답과 해설이 바로 나와요. 맞히면 +10P, 7일 연속이면 보너스 +30P.</p>
       </header>
 
       {initial ? (
@@ -84,7 +86,8 @@ export default async function QuizPage() {
             {older.map((q) => (
               <li key={q.id}>
                 <Link href={`/quiz/${q.day}`} className="flex min-h-11 items-center gap-2 border-b border-white/5 text-sm last:border-0 hover:text-[#e7c98a]">
-                  <span className="shrink-0 text-xs text-zinc-400 tabular-nums">{q.day.slice(5).replace("-", ".")}</span>
+                  <span className="shrink-0 text-xs text-zinc-400 tabular-nums">{quizSlotLabel(q.day)}</span>
+                  {quizSlotDate(q.day) === todayDate ? <span className="shrink-0 rounded-full bg-[#1f6f4a] px-1.5 text-[10px] font-black text-[#eafff3]">+10P</span> : null}
                   <span className="shrink-0 rounded-full border border-[#c9a25c]/40 px-1.5 text-[10px] font-bold text-[#e7c98a]">{KIND_LABEL[q.kind as QuizKind] ?? q.kind}</span>
                   <span className="min-w-0 truncate text-[#E5E7EB]">{q.question}</span>
                 </Link>

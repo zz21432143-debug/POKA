@@ -141,8 +141,8 @@ async function quizRows(period: RankPeriod, limit = 30): Promise<RawRow[]> {
     JOIN "DailyQuiz" q ON q.id = a."quizId"
     JOIN "User" u ON u.id = a."userId"
     WHERE a.correct = true AND q.day >= ${start} AND u."withdrawnAt" IS NULL AND u."isMaster" = false
-      -- 그날(KST) 푼 것만: 지난 문제를 몰아 풀어서 랭킹을 올리지 못하게
-      AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day
+      -- 그날 푼 것만: 지난 문제를 몰아 풀어서 랭킹을 올리지 못하게(퀴즈 날짜 = 아침 9시 시작 · 예전 0시 시작 문제도 인정)
+      AND (to_char(a."createdAt", 'YYYY-MM-DD') = left(q.day, 10) OR to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day)
     GROUP BY u.id
     ORDER BY score DESC, MIN(a."createdAt") ASC, u.nickname ASC
     LIMIT ${limit}

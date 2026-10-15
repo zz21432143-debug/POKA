@@ -40,11 +40,16 @@ export function CommentForm({
         attendance?: boolean;
         exp?: number;
         points?: number;
+        invite?: { inviter: string; points: number } | null;
       };
       if (!response.ok) {
         throw new Error(payload.error ?? "작성에 실패했습니다.");
       }
       setContent("");
+      // 친구 초대로 가입한 회원의 첫 출석 선물
+      if (payload.attendance && payload.invite) {
+        setGranted(`🤝 ${payload.invite.inviter ? `${payload.invite.inviter}님 초대 ` : ""}첫 출석 선물 +${payload.invite.points}P가 지급되었습니다.`);
+      }
       if (!payload.attendance && typeof payload.points === "number") {
         setGranted(
           payload.points > 0

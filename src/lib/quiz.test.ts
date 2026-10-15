@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import fs from "node:fs";
-import { TDA_OX, generateQuiz, handLabel, josa, type QuizData } from "./quiz";
+import { QUIZ_SLOT_RE, TDA_OX, dayNumber, generateQuiz, handLabel, josa, quizSlotAt, quizSlotLabel, type QuizData } from "./quiz";
 
 const read = (p: string) => JSON.parse(fs.readFileSync(new URL(p, import.meta.url), "utf8"));
 const data: QuizData = {
@@ -79,5 +79,26 @@ describe("오늘의 퀴즈 자동 생성", () => {
     assert.equal(josa("KTo", "은는"), "KTo는");
     assert.equal(josa("AT", "은는"), "AT은");
     assert.equal(josa("POKA!", "이가"), "POKA!이(가)");
+  });
+});
+
+describe("퀴즈 12시간 칸", () => {
+  it("KST 9시 · 21시에 칸이 바뀜(키 = 퀴즈 날짜 · 저녁은 -2)", () => {
+    // KST 08:59 = UTC 전날 23:59 → 전날 저녁 문제
+    assert.equal(quizSlotAt(Date.parse("2026-10-15T23:59:00Z")), "2026-10-15-2");
+    assert.equal(quizSlotAt(Date.parse("2026-10-16T00:00:00Z")), "2026-10-16");
+    assert.equal(quizSlotAt(Date.parse("2026-10-16T11:59:00Z")), "2026-10-16");
+    assert.equal(quizSlotAt(Date.parse("2026-10-16T12:00:00Z")), "2026-10-16-2");
+  });
+  it("문자열 순서 = 시간 순서 · 이름", () => {
+    assert.ok("2026-10-15" < "2026-10-15-2" && "2026-10-15-2" < "2026-10-16");
+    assert.ok(QUIZ_SLOT_RE.test("2026-10-15-2") && QUIZ_SLOT_RE.test("2026-10-15") && !QUIZ_SLOT_RE.test("2026-10-15-3"));
+    assert.equal(quizSlotLabel("2026-10-15-2"), "10.15 저녁");
+    assert.equal(quizSlotLabel("2026-10-15"), "10.15 아침");
+  });
+  it("아침 · 저녁 문제 종류가 다름", () => {
+    assert.equal(dayNumber("2026-10-15-2"), dayNumber("2026-10-15"));
+    assert.notEqual(generateQuiz("2026-10-15", data).kind, generateQuiz("2026-10-15-2", data).kind);
+    assert.notEqual(generateQuiz("2026-10-15-2", data).question, generateQuiz("2026-10-16", data).question);
   });
 });

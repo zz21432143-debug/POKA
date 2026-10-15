@@ -137,8 +137,8 @@ export async function loadYokaiStats(userId: string): Promise<YokaiStats> {
       safe(prisma.gameBoard.count({ where: { ownerId: userId } })),
       safe(prisma.rotationMeta.count({ where: { ownerId: userId } })),
       // 그날 푼 정답만(지난 문제를 몰아 풀어도 안 셈 · 퀴즈 랭킹과 같은 기준)
-      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day`),
-      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND q.kind = 'tda' AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day`),
+      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND (to_char(a."createdAt", 'YYYY-MM-DD') = left(q.day, 10) OR to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day)`),
+      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND q.kind = 'tda' AND (to_char(a."createdAt", 'YYYY-MM-DD') = left(q.day, 10) OR to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day)`),
       safe(
         import("@/lib/point-ledger")
           .then((m) => m.ensurePointLedger())

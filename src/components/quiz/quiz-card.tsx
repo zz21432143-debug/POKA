@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "cn";
-import { KIND_LABEL } from "@/lib/quiz";
+import { KIND_LABEL, quizSlotName } from "@/lib/quiz";
 import { ShareButton } from "@/components/tools/share-button";
 import { shareResultImage } from "@/lib/share-image";
 import type { QuizPublic, QuizResult } from "@/lib/quiz-server";
@@ -55,7 +55,9 @@ export function QuizCard({
             ✍️ {quiz.author}님 출제
           </span>
         ) : null}
-        <span className="text-xs text-zinc-400">{quiz.day.replace(/-/g, ".")}</span>
+        <span className="text-xs text-zinc-400">
+          {quiz.day.slice(0, 10).replace(/-/g, ".")} {quizSlotName(quiz.day)}
+        </span>
         {compact ? (
           <Link href="/quiz" className="ml-auto text-xs font-bold text-[#e7c98a]">
             퀴즈 랭킹 · 지난 문제 ›
@@ -117,7 +119,7 @@ export function QuizCard({
             onShare={(format, byline) =>
               shareResultImage({
                 title: "오늘의 홀덤 퀴즈",
-                subtitle: `${quiz.day.replace(/-/g, ".")} · ${quiz.author ? `${quiz.author}님 출제` : KIND_LABEL[quiz.kind]} · 정답은 QR로!`,
+                subtitle: `${quiz.day.slice(0, 10).replace(/-/g, ".")} ${quizSlotName(quiz.day)} · ${quiz.author ? `${quiz.author}님 출제` : KIND_LABEL[quiz.kind]} · 정답은 QR로!`,
                 note: quiz.question,
                 lines: [
                   ...quiz.choices.map((c, i) => ({ label: `보기 ${i + 1}`, value: c })),

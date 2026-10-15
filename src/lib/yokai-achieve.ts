@@ -59,7 +59,7 @@ export const NEED = {
 /** 구미호 「아홉 꼬리의 시련」 */
 export const TAILS: { label: string; done: (s: YokaiStats, o: OwnedStages) => boolean; progress: (s: YokaiStats, o: OwnedStages) => string }[] = [
   { label: "출석 60일", done: (s) => s.attendDays >= 60, progress: (s) => `${Math.min(s.attendDays, 60)}/60` },
-  { label: "퀴즈 50문제 정답(그날 푼 것)", done: (s) => s.quizCorrect >= 50, progress: (s) => `${Math.min(s.quizCorrect, 50)}/50` },
+  { label: "퀴즈 80문제 정답(그날 푼 것)", done: (s) => s.quizCorrect >= 80, progress: (s) => `${Math.min(s.quizCorrect, 80)}/80` },
   { label: "팟 계산 연습 100번", done: (s) => s.drillRuns >= 100, progress: (s) => `${Math.min(s.drillRuns, 100)}/100` },
   { label: "핸드리뷰 글 · 투표 20번", done: (s) => s.handActs >= 20, progress: (s) => `${Math.min(s.handActs, 20)}/20` },
   { label: "자유게시판 글 · 댓글 50개", done: (s) => s.freeActs >= 50, progress: (s) => `${Math.min(s.freeActs, 50)}/50` },

@@ -48,10 +48,27 @@ const HAND_RANKS = [
 const SEVEN_TOTAL = 133784560;
 const KINDS: QuizKind[] = ["pushfold", "equity", "handrank", "range", "potodds", "outs", "tda"];
 
-/** 날짜 → 하루 번호(2026-01-01 = 0) */
+/** 날짜(또는 퀴즈 칸 키) → 하루 번호(2026-01-01 = 0) */
 export function dayNumber(day: string) {
-  return Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse("2026-01-01T00:00:00Z")) / 86_400_000);
+  return Math.round((Date.parse(`${day.slice(0, 10)}T00:00:00Z`) - Date.parse("2026-01-01T00:00:00Z")) / 86_400_000);
 }
+
+/**
+ * 퀴즈는 12시간마다 새 문제: 아침 9시 · 저녁 9시(KST).
+ * 칸 키 = 퀴즈 날짜(아침) · 퀴즈 날짜-2(저녁). KST 9시가 UTC 0시라 「퀴즈 날짜」 = UTC 날짜.
+ * (저녁 문제는 다음 날 아침 8:59까지) · 문자열 순서 = 시간 순서
+ */
+export const QUIZ_SLOT_RE = /^\d{4}-\d{2}-\d{2}(-2)?$/;
+export function quizSlotAt(ms = Date.now()) {
+  const d = new Date(ms);
+  const date = d.toISOString().slice(0, 10);
+  return d.getUTCHours() >= 12 ? `${date}-2` : date;
+}
+export const quizSlotDate = (slot: string) => slot.slice(0, 10);
+export const isEveningSlot = (slot: string) => slot.endsWith("-2");
+export const quizSlotName = (slot: string) => (isEveningSlot(slot) ? "저녁" : "아침");
+/** "10.15 저녁" */
+export const quizSlotLabel = (slot: string) => `${slot.slice(5, 10).replace("-", ".")} ${quizSlotName(slot)}`;
 
 /** 날짜로 정해지는 난수(같은 날 = 같은 문제) */
 function seeded(day: string) {
@@ -295,10 +312,12 @@ function outsQuiz(rand: () => number): QuizDraft {
   };
 }
 
-/** 그날 문제(같은 날짜 = 같은 문제) */
+/** 그 칸 문제(같은 칸 키 = 같은 문제) */
 export function generateQuiz(day: string, data: QuizData): QuizDraft {
   const rand = seeded(day);
-  const kind = KINDS[((dayNumber(day) % KINDS.length) + KINDS.length) % KINDS.length];
+  // 칸마다 다음 종류(아침 · 저녁이 서로 다름)
+  const step = dayNumber(day) * 2 + (isEveningSlot(day) ? 1 : 0);
+  const kind = KINDS[((step % KINDS.length) + KINDS.length) % KINDS.length];
   if (kind === "pushfold") return pushfoldQuiz(rand, data);
   if (kind === "equity") return equityQuiz(rand, data);
   if (kind === "handrank") return handrankQuiz(rand);

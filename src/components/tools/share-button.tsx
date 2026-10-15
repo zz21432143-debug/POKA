@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "cn";
-import type { ShareFormat } from "@/lib/share-image";
+import { setShareRef, type ShareFormat } from "@/lib/share-image";
 import type { ShareTool } from "@/lib/share-stats";
 
 /** 이 기기에 기억하는 이미지 모양 */
@@ -33,8 +33,10 @@ export function ShareButton({
     let alive = true;
     void fetch("/api/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { nickname?: string | null } | null) => {
+      .then((j: { nickname?: string | null; inviteCode?: string | null } | null) => {
         if (alive && j?.nickname) setNickname(j.nickname);
+        // 공유 이미지 QR에 내 초대 코드(찍고 가입하면 친구 초대)
+        if (alive) setShareRef(j?.inviteCode ?? null);
       })
       .catch(() => undefined);
     return () => {

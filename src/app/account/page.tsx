@@ -36,6 +36,10 @@ export default async function AccountPage() {
         <YokaiNudge />
         <ProfileYokai userId={user.id} viewerIsMaster={Boolean(user.isMaster)} />
         <HonorShelf userId={user.id} nickname={user.nickname} mine />
+        <a href="/invite" data-account-invite className="flex min-h-12 items-center gap-2 rounded-2xl border border-[#FEE500]/40 bg-[#FEE500]/10 px-3 text-sm font-black text-[#fff3a8]">
+          🤝 친구 초대하고 포인트 받기
+          <span className="ml-auto text-xs font-bold text-[#e7c98a]">친구 첫 출석 시 둘 다 선물 ›</span>
+        </a>
         {ranks ? (
           <section aria-label="내 랭킹" className="grid gap-2 rounded-2xl border border-[#c9a25c]/30 bg-black/30 p-3">
             <div className="flex items-center gap-2">

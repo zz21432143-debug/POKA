@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { replaceToLogin } from "@/lib/history-redirect";
 import { NICKNAME_CHANGE_HREF, NICKNAME_TICKET_NAME } from "@/lib/nickname-change";
 import { safeNextPath } from "@/lib/oauth-consent";
+import { INVITEE_POINTS, myInviter } from "@/lib/invite";
 
 export const metadata: Metadata = { title: "가입 완료", robots: { index: false } };
 
@@ -18,6 +19,7 @@ export default async function WelcomePage({
   if (!user) replaceToLogin("/");
   const { next } = await searchParams;
   const later = safeNextPath(next);
+  const inviter = await myInviter(user.id).catch(() => null);
 
   return (
     <article className="mx-auto w-full max-w-md rounded-2xl border border-border bg-[#1a1617] p-5 shadow-sm">
@@ -27,6 +29,17 @@ export default async function WelcomePage({
         {user.nickname}님, 홀덤·딜러 커뮤니티에 오신 것을 환영합니다. 지금 닉네임은 카카오 또는 구글에서 가져온
         이름입니다.
       </p>
+      {inviter?.status === "pending" ? (
+        <section data-welcome-invite className="mt-4 rounded-xl border border-[#FEE500]/40 bg-[#FEE500]/10 px-3 py-3">
+          <h2 className="text-sm font-semibold text-[#fff3a8]">🤝 {inviter.nickname}님의 초대로 오셨네요!</h2>
+          <p className="mt-1.5 text-sm leading-6 text-[#fff3a8]">
+            <Link href="/attendance" className="font-black underline underline-offset-2">
+              출석체크
+            </Link>
+            를 처음 하면 {INVITEE_POINTS}P 선물이 바로 들어와요. {inviter.nickname}님도 함께 받아요.
+          </p>
+        </section>
+      ) : null}
       <section className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-950/40 px-3 py-3">
         <h2 className="text-sm font-semibold text-emerald-300">{NICKNAME_TICKET_NAME} 최초 1회 지급</h2>
         <p className="mt-1.5 text-sm leading-6 text-emerald-300">

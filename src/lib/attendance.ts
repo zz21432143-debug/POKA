@@ -92,6 +92,10 @@ export async function checkInAttendance(userId: string, message: string, authorI
     await grantRewards(userId, bonus.exp, bonus.points, { ignorePointCap: true });
   }
 
+  // 친구 초대로 가입한 회원의 첫 출석이면 두 사람 모두 선물(한 번만)
+  const { settleInvite } = await import("@/lib/invite");
+  const invite = await settleInvite(userId).catch(() => null);
+
   const todayCount = await prisma.dailyAttendance.count({ where: { date } });
   const { pushTicker } = await import("@/lib/ticker");
   if (bonus) {
@@ -115,6 +119,7 @@ export async function checkInAttendance(userId: string, message: string, authorI
     exp: ATTENDANCE_EXP + (bonus?.exp ?? 0),
     points: ATTENDANCE_POINTS + (bonus?.points ?? 0),
     bonus,
+    invite,
     postId: post.id,
   };
 }

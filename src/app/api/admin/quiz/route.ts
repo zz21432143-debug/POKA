@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
-import { shiftDate, todayKstDate } from "@/lib/dates";
+import { shiftDate } from "@/lib/dates";
+import { QUIZ_SLOT_RE, quizSlotAt, quizSlotDate } from "@/lib/quiz";
 import { decideSuggestion, listSuggestions, parseQuizInput } from "@/lib/quiz-suggest";
 
 export const dynamic = "force-dynamic";
 
-const validDay = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+/** 칸 키: 날짜(아침 9시) · 날짜-2(저녁 9시) */
+const validDay = (v: unknown): v is string => typeof v === "string" && QUIZ_SLOT_RE.test(v);
 
 /** 최근 14일 + 앞으로 잡아 둔 문제(답한 사람 수 포함) */
 async function list() {
-  const from = shiftDate(todayKstDate(), -14);
+  const from = shiftDate(quizSlotDate(quizSlotAt()), -14);
   const rows = await prisma.dailyQuiz.findMany({ where: { day: { gte: from } }, orderBy: { day: "desc" }, take: 60 });
   const counts = rows.length ? await prisma.quizAnswer.groupBy({ by: ["quizId"], where: { quizId: { in: rows.map((r) => r.id) } }, _count: { _all: true } }) : [];
   const countOf = new Map(counts.map((c) => [c.quizId, c._count._all]));
@@ -21,7 +23,7 @@ export async function GET() {
   const { error } = await requireAdmin();
   if (error) return error;
   const [rows, suggestions] = await Promise.all([list(), listSuggestions()]);
-  return NextResponse.json({ today: todayKstDate(), rows, suggestions });
+  return NextResponse.json({ today: quizSlotAt(), rows, suggestions });
 }
 
 /** 회원 제안 채택(+포인트) · 거절 */
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const day = body.day;
   if (!validDay(day)) return NextResponse.json({ error: "날짜를 확인해 주세요." }, { status: 400 });
-  if (day < todayKstDate()) return NextResponse.json({ error: "지난 날짜 문제는 바꿀 수 없어요." }, { status: 400 });
+  if (day < quizSlotAt()) return NextResponse.json({ error: "지난 문제는 바꿀 수 없어요." }, { status: 400 });
   const parsed = parseQuizInput(body);
   if (parsed.error !== null) return NextResponse.json({ error: parsed.error }, { status: 400 });
   const { question, choices, answer, explanation } = parsed.value;

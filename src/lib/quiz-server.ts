@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { prisma } from "@/lib/db";
-import { todayKstDate, shiftDate } from "@/lib/dates";
-import { generateQuiz, type QuizData, type QuizKind } from "@/lib/quiz";
+import { shiftDate } from "@/lib/dates";
+import { generateQuiz, quizSlotAt, quizSlotDate, type QuizData, type QuizKind } from "@/lib/quiz";
 import handRanking from "@/lib/data/hand-ranking.json";
 
 /** 맞히면 포인트 · 연속 STREAK_DAYS일 맞히면 보너스 */
@@ -52,13 +52,13 @@ export async function toPublicWithAuthor(q: QuizFull): Promise<QuizPublic> {
   return { ...toPublic(q), author: await quizAuthor(q.source) };
 }
 
-/** 그날 퀴즈(없으면 자동으로 만들어 저장 · 오늘 이후 날짜는 만들지 않음) */
-export async function getQuiz(day = todayKstDate()): Promise<QuizFull | null> {
+/** 그 칸 퀴즈(기본 = 지금 칸 · 없으면 자동으로 만들어 저장 · 아직 안 열린 칸은 만들지 않음) */
+export async function getQuiz(day = quizSlotAt()): Promise<QuizFull | null> {
   const found = await prisma.dailyQuiz.findUnique({ where: { day } });
   if (found) return toFull(found);
-  if (day > todayKstDate()) return null;
+  if (day > quizSlotAt()) return null;
   const draft = generateQuiz(day, await loadData());
-  // 여러 요청이 동시에 와도 하루 한 문제(먼저 저장된 것을 씀)
+  // 여러 요청이 동시에 와도 칸마다 한 문제(먼저 저장된 것을 씀)
   await prisma.dailyQuiz
     .createMany({ data: [{ day, kind: draft.kind, question: draft.question, choicesJson: JSON.stringify(draft.choices), answer: draft.answer, explanation: draft.explanation, source: "auto" }], skipDuplicates: true })
     .catch(() => undefined);
@@ -72,16 +72,19 @@ export async function quizStats(quizId: string, choices: number): Promise<QuizSt
   return { counts, total: counts.reduce((a, b) => a + b, 0) };
 }
 
-/** 연속으로 맞힌 날 수: 오늘(또는 어제)부터 거꾸로 하루도 안 빠지고 그날 맞힌 날(지난 문제를 나중에 푼 건 안 침) */
+/**
+ * 연속으로 맞힌 날 수: 오늘(또는 어제)부터 거꾸로 하루도 안 빠지고 그날 문제를 그날 맞힌 날(지난 문제를 나중에 푼 건 안 침).
+ * 날짜 = 퀴즈 날짜(아침 9시 시작). 예전(0시 시작) 문제도 그날 푼 것으로 셈
+ */
 export async function quizStreak(userId: string): Promise<number> {
   const rows = await prisma.$queryRaw<{ day: string }[]>`
-    SELECT q.day FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId"
+    SELECT left(q.day, 10) AS day FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId"
     WHERE a."userId" = ${userId} AND a.correct = true
-      AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day
-    ORDER BY q.day DESC LIMIT 400
+      AND (to_char(a."createdAt", 'YYYY-MM-DD') = left(q.day, 10) OR to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day)
+    ORDER BY q.day DESC LIMIT 800
   `.catch(() => [] as { day: string }[]);
   const days = new Set(rows.map((r) => r.day));
-  let day = todayKstDate();
+  let day = quizSlotDate(quizSlotAt());
   if (!days.has(day)) day = shiftDate(day, -1);
   let streak = 0;
   while (days.has(day)) {
@@ -98,7 +101,7 @@ export async function myAnswer(quizId: string, userId: string) {
 
 /**
  * 답하기: 로그인 회원은 한 번만 기록 · 맞히면 포인트(연속 7일마다 보너스).
- * 비로그인은 기록 없이 정답만 보여 줌. 오늘 문제가 아닌 지난 문제는 포인트 없음.
+ * 비로그인은 기록 없이 정답만 보여 줌. 포인트는 오늘(퀴즈 날짜) 문제만 — 아침 문제는 저녁 문제가 나온 뒤에도 그날이면 받음.
  */
 export async function answerQuiz(quizId: string, choice: number, userId: string | null): Promise<QuizResult | null> {
   const row = await prisma.dailyQuiz.findUnique({ where: { id: quizId } });
@@ -119,7 +122,7 @@ export async function answerQuiz(quizId: string, choice: number, userId: string 
         .createMany({ data: [{ quizId: quiz.id, userId, choice, correct }], skipDuplicates: true })
         .catch(() => ({ count: 0 }));
       saved = created.count === 1;
-      if (saved && correct && quiz.day === todayKstDate()) {
+      if (saved && correct && quizSlotDate(quiz.day) === quizSlotDate(quizSlotAt())) {
         const streakNow = await quizStreak(userId);
         gained = QUIZ_POINTS + (streakNow > 0 && streakNow % STREAK_DAYS === 0 ? STREAK_BONUS : 0);
         await prisma.user.update({ where: { id: userId }, data: { points: { increment: gained } } }).catch(() => undefined);
@@ -132,9 +135,9 @@ export async function answerQuiz(quizId: string, choice: number, userId: string 
   return { correct: finalChoice === quiz.answer, choice: finalChoice, answer: quiz.answer, explanation: quiz.explanation, stats, gained, streak, saved };
 }
 
-/** 지난 퀴즈 목록(최근 것부터, 오늘 포함) */
+/** 지난 퀴즈 목록(최근 것부터, 지금 칸 포함) */
 export async function recentQuizzes(take = 30) {
   return prisma.dailyQuiz
-    .findMany({ where: { day: { lte: todayKstDate() } }, orderBy: { day: "desc" }, take, select: { id: true, day: true, kind: true, question: true } })
+    .findMany({ where: { day: { lte: quizSlotAt() } }, orderBy: { day: "desc" }, take, select: { id: true, day: true, kind: true, question: true } })
     .catch(() => []);
 }

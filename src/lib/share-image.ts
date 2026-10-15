@@ -1,3 +1,4 @@
+import { INVITEE_POINTS } from "@/lib/invite-config";
 /**
  * 계산 결과 · 차트를 이미지로 그려 카톡 등으로 공유하거나 저장합니다(브라우저 전용).
  * 크기: 정사각형 1080×1080(카톡 · 단톡방) · 세로형 1080×1920(인스타 스토리).
@@ -60,6 +61,12 @@ async function drawFrame(title: string, subtitle: string | undefined, format: Sh
   return { canvas, ctx, H, contentTop: 260 + top, contentBottom: H - FOOT_H - (format === "story" ? 120 : 10) };
 }
 
+/** 로그인 회원 초대 코드(공유 버튼이 넣어 줌): QR에 ?ref=코드가 붙어, 찍고 가입하면 친구 초대로 기록 */
+let shareRef: string | null = null;
+export function setShareRef(code: string | null) {
+  shareRef = code && /^[a-z0-9]{6}$/.test(code) ? code : null;
+}
+
 /** 아래: 사이트 주소 + QR(그 도구 주소) */
 async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string, byline?: string | null, cta = "바로 계산") {
   const qrSize = 130;
@@ -67,7 +74,9 @@ async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string,
   const qrY = H - 70 - qrSize;
   try {
     const QR = await import("qrcode");
-    const dataUrl = await QR.toDataURL(`https://${url}`, { width: qrSize * 2, margin: 1, color: { dark: "#000000", light: "#ffffff" } });
+    const target = `https://${url}`;
+    const qrTarget = shareRef ? `${target}${target.includes("?") ? "&" : "?"}ref=${shareRef}` : target;
+    const dataUrl = await QR.toDataURL(qrTarget, { width: qrSize * 2, margin: 1, color: { dark: "#000000", light: "#ffffff" } });
     const img = await loadImage(dataUrl);
     if (img) {
       ctx.fillStyle = "#ffffff";
@@ -78,9 +87,15 @@ async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string,
     /* QR을 못 그려도 주소는 들어감 */
   }
   ctx.fillStyle = "#d1c7b5";
-  ctx.font = font(28, 700);
-  // 로그인한 회원이면 「○○님이 공유」
-  ctx.fillText(byline ? `${byline}님이 공유 · 📱 찍으면 ${cta}` : `📱 카메라로 찍으면 ${cta}해 볼 수 있어요`, 80, H - 150);
+  // 로그인한 회원이면 「○○님이 공유」 · 초대 코드가 붙으면 가입 선물도 알림
+  const line = byline ? `${byline}님이 공유 · 📱 찍으면 ${cta}${shareRef ? ` · 가입 선물 ${INVITEE_POINTS}P` : ""}` : `📱 카메라로 찍으면 ${cta}해 볼 수 있어요`;
+  let lineSize = 28;
+  ctx.font = font(lineSize, 700);
+  while (ctx.measureText(line).width > qrX - 110 && lineSize > 18) {
+    lineSize -= 2;
+    ctx.font = font(lineSize, 700);
+  }
+  ctx.fillText(line, 80, H - 150);
   ctx.fillStyle = GOLD;
   let size = 36;
   ctx.font = font(size, 900);

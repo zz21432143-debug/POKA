@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
+import { QUIZ_SLOT_RE } from "@/lib/quiz";
 import { answerQuiz, getQuiz, myAnswer, quizStats, quizStreak, toPublicWithAuthor } from "@/lib/quiz-server";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
 
-/** 오늘(또는 ?day=) 퀴즈: 정답은 답한 뒤에만 */
+/** 지금 칸(또는 ?day=) 퀴즈: 정답은 답한 뒤에만 */
 export async function GET(request: Request) {
   const day = new URL(request.url).searchParams.get("day") ?? undefined;
-  if (day && !/^\d{4}-\d{2}-\d{2}$/.test(day)) return NextResponse.json({ error: "날짜를 확인하세요." }, { status: 400 });
+  if (day && !QUIZ_SLOT_RE.test(day)) return NextResponse.json({ error: "날짜를 확인하세요." }, { status: 400 });
   const quiz = await getQuiz(day).catch(() => null);
   if (!quiz) return NextResponse.json({ quiz: null }, { headers: NO_STORE });
   const user = await getCurrentUser().catch(() => null);
