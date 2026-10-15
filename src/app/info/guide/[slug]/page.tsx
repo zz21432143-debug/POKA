@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { GUIDE_ARTICLES, getGuideArticle } from "@/lib/info-pages";
+import { GUIDE_ARTICLES, GUIDE_UPDATED_DEFAULT, getGuideArticle } from "@/lib/info-pages";
 import { linkGuideTerms } from "@/lib/guide-links";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
@@ -40,6 +40,8 @@ export default async function GuideArticlePage({
   // 다른 가이드 4편(이 글 다음부터 돌아가며)
   const related = Array.from({ length: Math.min(4, GUIDE_ARTICLES.length - 1) }, (_, i) => GUIDE_ARTICLES[(index + 2 + i) % GUIDE_ARTICLES.length]).filter((row) => row.slug !== slug);
   const base = siteUrl();
+  const updated = article.updated ?? GUIDE_UPDATED_DEFAULT;
+  const [uy, um, ud] = updated.split("-").map(Number);
   const ld = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -47,7 +49,9 @@ export default async function GuideArticlePage({
     description: article.summary,
     inLanguage: "ko-KR",
     mainEntityOfPage: `${base}/info/guide/${article.slug}`,
-    author: { "@type": "Organization", name: "POKA", url: base },
+    author: { "@type": "Organization", name: "POKA 운영팀", url: `${base}/operator` },
+    datePublished: updated,
+    dateModified: updated,
     publisher: { "@type": "Organization", name: "POKA", logo: { "@type": "ImageObject", url: `${base}/icon.png` } },
   };
 
@@ -64,6 +68,14 @@ export default async function GuideArticlePage({
       <header className="board-intro">
         <h1>{article.title}</h1>
         <p className="mt-2">{article.summary}</p>
+        {/* 누가 · 언제 쓴 글인지(검색 신뢰도) */}
+        <p data-guide-byline className="mt-2 text-xs text-[#9CA3AF]">
+          작성{" "}
+          <Link href="/operator" className="font-semibold text-[#e7c98a] hover:underline">
+            POKA 운영팀
+          </Link>{" "}
+          · 최종 수정 <time dateTime={updated}>{uy}년 {um}월 {ud}일</time> · 매장 하우스 룰이 있으면 그 룰이 우선입니다
+        </p>
       </header>
       <div className="ink-panel rounded-2xl px-4 py-5">
         {/* 본문 용어는 관련 가이드로 이어짐(글마다 처음 나온 곳 하나) */}

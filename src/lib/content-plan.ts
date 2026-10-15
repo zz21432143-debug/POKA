@@ -1,7 +1,7 @@
 import type { BoardType } from "@/generated/prisma/enums";
+import { HAND_PLAN } from "@/lib/content-plan-hands";
 import type { PollChoice as PollChoiceId } from "@/lib/poll";
 import type { HandReviewData } from "@/lib/hand-review";
-import { prizeToWon } from "@/lib/prize";
 
 /**
  * 1주일 콘텐츠 발행 계획(하루 2개, 14개). 관리자 「콘텐츠 발행」 화면에서 POKA 계정으로 올립니다.
@@ -492,7 +492,7 @@ A. 아닙니다. A는 메인팟(60,000)만 가져가고, 사이드팟은 B·C �
 ];
 
 /** 요일과 상관없이 아무 때나 올리는 기본 정보 글(기존 글과 겹치지 않게 범위를 나눔) */
-export const EXTRA_PLAN: PlanItem[] = [
+const BASE_EXTRA_PLAN: PlanItem[] = [
   {
     id: "extra-glossary",
     day: "추가",
@@ -1093,6 +1093,9 @@ TV에서 한 번 화면을 눌러 줘야 소리가 켜집니다(브라우저 정
   },
 ];
 
+/** 추가 글 + 해설 핸드리뷰 4편 */
+export const EXTRA_PLAN: PlanItem[] = [...BASE_EXTRA_PLAN, ...HAND_PLAN];
+
 export type ScheduleRow = {
   id: string;
   title: string;
@@ -1116,18 +1119,18 @@ function rangeLabel(row: ScheduleRow) {
     : dayLabel(row.eventDate);
 }
 
-/** 대회 캘린더 일정을 상금 큰 순서로 정리한 본문. 일정이 없으면 null. */
+/** 대회 캘린더 일정을 날짜 순서로 정리한 본문(상금은 앞세우지 않음). 일정이 없으면 null. */
 export function scheduleSummary(rows: ScheduleRow[], mode: "week" | "weekend"): string | null {
   if (rows.length === 0) return null;
-  const sorted = [...rows].sort((a, b) => prizeToWon(b.eventPrize) - prizeToWon(a.eventPrize));
+  const sorted = [...rows].sort((a, b) => (a.eventDate ?? "9999").localeCompare(b.eventDate ?? "9999"));
   const lines = sorted.slice(0, 10).map((row, index) => {
-    const parts = [rangeLabel(row), row.promoLocation, row.eventPrize ? `총상금 ${row.eventPrize}` : null].filter(Boolean);
+    const parts = [rangeLabel(row), row.promoLocation].filter(Boolean);
     return `${index + 1}. ${row.title}\n   ${parts.join(" · ")}`;
   });
   const head =
     mode === "week"
-      ? "이번 주 열리는 홀덤 대회를 총상금이 큰 순서대로 정리했습니다."
-      : "이번 주말 나갈 대회를 고르는 분들을 위해 상금 순으로 모았습니다.";
+      ? "이번 주 열리는 홀덤 대회를 날짜 순서대로 정리했습니다. 딜러 · 플레이어 모두 일정 확인용으로 보세요."
+      : "이번 주말 열리는 대회를 날짜 · 장소 순으로 모았습니다.";
   const tail =
     mode === "week"
       ? "빠진 대회가 있으면 댓글로 알려 주세요. 확인 후 캘린더에 추가하겠습니다.\n이번 주 어디 나가시나요? 댓글로 남겨 주세요 👇"
@@ -1135,7 +1138,7 @@ export function scheduleSummary(rows: ScheduleRow[], mode: "week" | "weekend"): 
   return `${head}
 자세한 내용은 대회 · 정보 → 대회 캘린더에서 날짜를 누르면 볼 수 있습니다.
 
-🏆 ${mode === "week" ? "이번 주 대회" : "주말 대회"} (상금 순)
+🗓 ${mode === "week" ? "이번 주 대회" : "주말 대회"} (날짜 순)
 ${lines.join("\n")}
 
 ▶ 체크 포인트

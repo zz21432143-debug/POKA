@@ -20,7 +20,7 @@ describe("weekly content plan", () => {
   });
 
   it("ships valid hands for the hand review posts", () => {
-    for (const post of CONTENT_PLAN.filter((p) => p.boardType === "HAND_REVIEW" && !p.manualHand)) {
+    for (const post of [...CONTENT_PLAN, ...EXTRA_PLAN].filter((p) => p.boardType === "HAND_REVIEW" && !p.manualHand)) {
       assert.ok(post.hand, post.id);
       assert.equal(validateHandReview(normalizeHand(post.hand)), null, post.id);
     }
@@ -39,7 +39,7 @@ describe("weekly content plan", () => {
     }
   });
 
-  it("lists tournaments by prize", () => {
+  it("lists tournaments by date", () => {
     const text = scheduleSummary(
       [
         { id: "a", title: "작은 대회", eventDate: "2026-10-17", eventEndDate: null, promoLocation: "서울", eventPrize: "GTD 1,000만" },
@@ -48,7 +48,8 @@ describe("weekly content plan", () => {
       "week",
     );
     assert.ok(text);
-    assert.ok(text.indexOf("큰 대회") < text.indexOf("작은 대회"));
+    assert.ok(text.indexOf("작은 대회") < text.indexOf("큰 대회"));
+    assert.ok(!text.includes("총상금"));
     assert.match(text, /10\/18\(일\) ~ 10\/19\(월\)/);
     assert.equal(scheduleSummary([], "weekend"), null);
   });
