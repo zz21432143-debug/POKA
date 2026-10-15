@@ -68,6 +68,7 @@ const FILES = [
   "prisma/migrations/20261120090000_site_ads_reward_notice/migration.sql",
   "prisma/migrations/20261122090000_adsense_cleanup/migration.sql",
   "prisma/migrations/20261124090000_job_tags/migration.sql",
+  "prisma/migrations/20261126090000_schedule_post_cleanup/migration.sql",
 ];
 
 function databaseUrl() {

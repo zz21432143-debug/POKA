@@ -34,7 +34,7 @@ import { displayMarkSrc } from "@/lib/mark-assets";
 const GAMES: { id: GameKind; ready: boolean; href: string }[] = [
   { id: "omok", ready: true, href: "/games/omok" },
   { id: "yut", ready: true, href: "/games/yut" },
-  { id: "chess", ready: false, href: "/games" },
+  // 요괴 체스: 완성되면 다시 넣음
 ];
 
 async function GameRanking({

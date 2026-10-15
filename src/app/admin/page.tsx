@@ -20,12 +20,14 @@ export const dynamic = "force-dynamic";
 async function AdminHome({ isMaster }: { isMaster: boolean }) {
   const dayStart = new Date(`${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date())}T00:00:00+09:00`);
   const { badNicknames } = await import("@/lib/nickname-force");
-  const [pendingReports, restricted, signups, members, bad] = await Promise.all([
+  const [pendingReports, restricted, signups, members, bad, errors7] = await Promise.all([
     prisma.report.count({ where: { status: "pending" } }).catch(() => 0),
     prisma.user.count({ where: { status: { in: ["SUSPENDED", "BANNED"] } } }).catch(() => 0),
     prisma.user.count({ where: { createdAt: { gte: dayStart } } }).catch(() => 0),
     prisma.user.count({ where: { withdrawnAt: null, isMaster: false } }).catch(() => 0),
     isMaster ? badNicknames(100).catch(() => []) : Promise.resolve([]),
+    // 최근 7일 서버 오류(같은 오류는 10분에 한 번만 기록됨)
+    prisma.toolSaved.count({ where: { kind: "server-error", createdAt: { gte: new Date(dayStart.getTime() - 6 * 86_400_000) } } }).catch(() => 0),
   ]);
   const cards = [
     { label: "처리할 신고", value: pendingReports, href: "/admin?tab=reports", tone: pendingReports ? "text-rose-300" : "text-emerald-300" },
@@ -33,6 +35,7 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
     { label: "오늘 가입", value: signups, href: "/admin/stats", tone: "text-sky-300" },
     { label: "전체 회원", value: members, href: "/admin/members", tone: "text-[#e7c98a]", master: true },
     { label: "정지 · 차단 중", value: restricted, href: "/admin?tab=sanctions", tone: "text-zinc-200" },
+    { label: "최근 7일 서버 오류", value: errors7, href: "/admin/errors", tone: errors7 ? "text-amber-300" : "text-emerald-300" },
   ].filter((c) => !c.master || isMaster);
   return (
     <div className="grid gap-4">
@@ -40,7 +43,7 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
         <h1 className="text-2xl font-semibold">🛠 관리 홈</h1>
         <p className="mt-1 text-sm text-muted-foreground">위 메뉴는 하는 일별로 묶여 있어요. 숫자를 누르면 바로 그 화면으로 가요.</p>
       </header>
-      <section aria-label="지금 할 일" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <section aria-label="지금 할 일" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {cards.map((c) => (
           <Link key={c.label} href={c.href} data-admin-card className="grid gap-1 rounded-2xl border border-border bg-[#151213] p-3 hover:bg-muted">
             <span className="text-xs text-muted-foreground">{c.label}</span>

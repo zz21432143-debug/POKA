@@ -51,7 +51,7 @@ const ALIASES: Record<string, string> = {
 const FREE_TABS = [
   { slug: "free", label: "전체" },
   { slug: "rules", label: "질문" },
-  { slug: "sketch", label: "현장 스케치" },
+  // 현장 스케치: 글이 없어 탭 숨김(주소는 그대로 · 글이 쌓이면 다시 넣기)
 ] as const;
 
 export async function generateMetadata({

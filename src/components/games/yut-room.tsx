@@ -191,7 +191,7 @@ export function YutRoom({
     let tick = 0;
     const loop = async () => {
       tick += 1;
-      const watch = seatedRef.current || tick % 4 === 1 ? `&w=${watchKey}` : "";
+      const watch = seatedRef.current || tick % 2 === 1 ? `&w=${watchKey}` : "";
       try {
         const res = await fetch(
           `/api/games/yut/${initial.id}?v=${versionRef.current}${watch}`,
@@ -216,7 +216,8 @@ export function YutRoom({
       } catch {
         /* 다음에 다시 */
       }
-      if (alive) timer = window.setTimeout(loop, document.hidden ? 5000 : 1000);
+      // 자리에 앉은 사람 1초 / 관전자 2초(서버 사용량 줄이기)
+      if (alive) timer = window.setTimeout(loop, document.hidden ? 5000 : seatedRef.current ? 1000 : 2000);
     };
     timer = window.setTimeout(loop, 600);
     return () => {

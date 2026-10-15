@@ -4037,3 +4037,9 @@ aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
     animation: none;
   }
 }
+
+/* 홈 아래쪽 덩어리: 화면 근처에 올 때 그림(휴대폰 첫 화면 가볍게) */
+.home-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}

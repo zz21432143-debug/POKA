@@ -172,7 +172,7 @@ export function OmokRoom({
       tick += 1;
       // 4번에 1번 「보고 있어요」(관전자 = 관전자 수 · 대국자 = 자리 지킴, 오래 안 보이면 방 정리)
       const watch =
-        seatedRef.current || tick % 4 === 1 ? `&w=${watchKey}` : "";
+        seatedRef.current || tick % 2 === 1 ? `&w=${watchKey}` : "";
       try {
         const res = await fetch(
           `/api/games/omok/${initial.id}?v=${versionRef.current}${watch}`,
@@ -198,7 +198,8 @@ export function OmokRoom({
         /* 다음에 다시 */
       }
       if (alive)
-        timer = window.setTimeout(loop, document.hidden ? 5000 : fastPollRef.current ? 400 : 1000);
+        // 대국자: 상대 차례 0.4초 · 내 차례 1초 / 관전자: 2초(서버 사용량 줄이기)
+        timer = window.setTimeout(loop, document.hidden ? 5000 : fastPollRef.current ? 400 : seatedRef.current ? 1000 : 2000);
     };
     timer = window.setTimeout(loop, 700);
     return () => {
