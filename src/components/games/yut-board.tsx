@@ -335,7 +335,7 @@ export function YutBoard({
         {burst ? <PixelBurst key={`burst-${burst.key}`} x={xy(burst.node)[0]} y={xy(burst.node)[1]} seed={burst.key} colors={burst.colors} count={burst.count ?? 18} spread={70} size={8} up={0.2} /> : null}
         {/* 잡힌 요괴: 드롭킥에 맞고 빙글빙글 화면 밖으로 + K.O.! */}
         {knock?.items.length ? (
-          <b key={`ko-${knock.key}`} data-yut-ko className="yut-ko pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-1/2 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ff3b4e] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]" style={{ left: `${xy(knock.items[0].node)[0]}%`, top: `${xy(knock.items[0].node)[1] - 12}%` }}>
+          <b key={`ko-${knock.key}`} data-yut-ko className="yut-ko pointer-events-none absolute z-40 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ff3b4e] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]" style={{ left: `${xy(knock.items[0].node)[0]}%`, top: `${xy(knock.items[0].node)[1] - 12}%` }}>
             K.O.!
           </b>
         ) : null}

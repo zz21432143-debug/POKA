@@ -680,7 +680,8 @@ export function YutRoom({
         key={`${seat.team}${seat.idx}`}
         data-yut-seat={`${seat.team}${seat.idx}`}
         className={cn(
-          "yut-hud-chip relative flex min-h-11 min-w-[8.5rem] shrink-0 items-center gap-1.5 border-2 px-1.5 py-1",
+          "yut-hud-chip relative flex min-w-0 items-center gap-1.5 border-2 px-1.5 py-1",
+          view.mode >= 3 ? "min-h-10" : "min-h-11",
           turn ? "yut-hud-chip-on border-[#ffcf4a]" : "border-[#6ad7ff]/40",
         )}
       >
@@ -695,15 +696,18 @@ export function YutRoom({
         <YokaiToken
           face={seat.player?.yokai ?? null}
           team={seat.team}
-          className={cn("size-8 shrink-0", turn && "arcade-bob")}
+          className={cn(view.mode >= 3 ? "size-7 shrink-0" : "size-8 shrink-0", turn && "arcade-bob")}
         />
-        <span className="grid min-w-0 leading-tight">
+        <span className="grid min-w-0 flex-1 leading-tight">
           {seat.player && !seat.bot ? (
             <GameChampionBadge nickname={seat.player.nickname} game="yut" />
           ) : null}
           <b
+            data-yut-seat-name
+            title={seat.player?.nickname}
             className={cn(
-              "truncate text-[13px] font-black",
+              "truncate font-black",
+              view.mode >= 4 ? "text-[11px]" : view.mode >= 3 ? "text-[12px]" : "text-[13px]",
               seat.me ? "text-[#ffcf4a]" : "text-white",
             )}
           >
@@ -1307,23 +1311,26 @@ export function YutRoom({
             {/* 오른쪽(PC) · 아래(휴대폰): 팀 · 차례 · 이모티콘 · 관전석 · 도전 줄 */}
             <div className="grid min-w-0 gap-2 max-lg:contents">
               {/* 팀 줄(가로로 밀어서 보기) */}
-              <div className="grid gap-1 max-lg:-order-1">
+              <div data-yut-teams className="grid gap-1.5 max-lg:-order-1">
                 {(["A", "B"] as const).map((team) => (
-                  <div key={team} className="flex min-w-0 items-center gap-1.5">
+                  <div key={team} className="grid min-w-0 gap-1">
                     <b
-                      className="w-9 shrink-0 text-center text-xs leading-tight font-black"
+                      className="flex items-center gap-1.5 text-xs leading-tight font-black"
                       style={{ color: TEAM_COLOR[team] }}
                     >
                       {TEAM_NAME[team]}
                       {view.status === "done" && view.winner === team ? (
                         <span className="block">🏆</span>
                       ) : myTeam === team ? (
-                        <span className="block text-[9px] text-[#d6cdee]">
-                          우리
+                        <span className="text-[10px] text-[#d6cdee]">우리 팀</span>
+                      ) : null}
+                      {s ? (
+                        <span data-yut-left={team} className="ml-auto text-[10px] font-bold text-[#d6cdee]">
+                          남은 말 {s.pieces[team].filter((p) => p.pos !== END).length}/{s.pieces[team].length}
                         </span>
                       ) : null}
                     </b>
-                    <ul className="flex min-w-0 gap-1.5 overflow-x-auto pt-1 [scrollbar-width:none]">
+                    <ul className={cn("grid min-w-0 gap-1", view.mode >= 2 ? "grid-cols-2" : "grid-cols-1")}>
                       {view.seats.filter((x) => x.team === team).map(seatChip)}
                     </ul>
                   </div>

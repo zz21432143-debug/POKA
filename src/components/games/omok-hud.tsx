@@ -231,7 +231,8 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
       ) : ratio !== null ? (
         <div
           className={cn(
-            "flex items-center gap-1.5",
+            // 차례가 바뀌어도 명판 높이가 그대로(판이 위아래로 밀리지 않게)
+            "flex h-6 items-center gap-1.5",
             right && "flex-row-reverse",
           )}
           aria-label={`남은 시간 ${seat.secondsLeft}초`}
@@ -253,8 +254,10 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           </span>
         </div>
       ) : (
-        <div className="hud-bar opacity-40">
-          <span style={{ width: "0%" }} />
+        <div className="flex h-6 items-center">
+          <div className="hud-bar flex-1 opacity-40">
+            <span style={{ width: "0%" }} />
+          </div>
         </div>
       )}
       {seat.result === "win" ? (
