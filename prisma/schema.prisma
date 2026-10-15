@@ -726,6 +726,9 @@ model YokaiOwned {
   petDay      String    @default("")
   pettedToday Int       @default(0)
   pettedAt    DateTime?
+  /// 청결도(cleanAt 기준 값 · 시간이 지나면 줄어듦)
+  clean       Int       @default(100)
+  cleanAt     DateTime  @default(now())
   createdAt   DateTime  @default(now())
 
   @@unique([userId, species])

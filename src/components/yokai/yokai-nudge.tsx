@@ -28,13 +28,15 @@ export async function YokaiNudge() {
       </YokaiInvite>
     );
   }
-  if (!n.newcomers.length && !n.hungry) return null;
+  if (!n.newcomers.length && !n.hungry && !n.dirty) return null;
   const first = n.newcomers[0];
   const text = first
     ? `${n.newcomers.length > 1 ? `새 요괴 ${n.newcomers.length}마리가` : `${YOKAI[first].rarity === "legend" ? "✨ 전설의 " : ""}${YOKAI[first].name}가`} 요괴 마을에 찾아왔어요!`
-    : `${n.name}가 배고파해요. 밥을 주러 가 볼까요? 🍙`;
+    : n.hungry
+      ? `${n.name}가 배고파해요. 밥을 주러 가 볼까요? 🍙`
+      : `${n.name}가 꼬질꼬질해요. 샤워시켜 줄까요? 🛁`;
   return (
-    <Link href="/yokai" data-yokai-nudge={first ? "arrival" : "hungry"} className={linkClass}>
+    <Link href="/yokai" data-yokai-nudge={first ? "arrival" : n.hungry ? "hungry" : "dirty"} className={linkClass}>
       {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림(새 요괴는 실루엣) */}
       <img src={first ? yokaiImage(first, 1) : yokaiImage(n.species, n.stage)} alt="" className={first ? "size-9 shrink-0 object-contain brightness-0 invert-[.85]" : "size-9 shrink-0 object-contain"} />
       <span className="min-w-0 flex-1">{text}</span>

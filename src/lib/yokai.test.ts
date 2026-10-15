@@ -92,3 +92,30 @@ describe("요괴가 찾아오는 조건", () => {
     assert.ok(!meets("gumiho", { ...full, level: 59 }, owned));
   });
 });
+
+describe("청결도 · 샤워 · 대사", () => {
+  it("청결도는 시간이 지나면 줄고, 70 미만이어야 샤워 · 깨끗하면 밥 경험치 +5", async () => {
+    const { cleanNow, nextShowerTime, feedExp } = await import("./yokai");
+    const at = new Date("2026-10-15T00:00:00Z");
+    assert.equal(cleanNow(100, at, new Date("2026-10-15T10:00:00Z")), 60);
+    assert.equal(cleanNow(100, at, new Date("2026-10-17T00:00:00Z")), 0);
+    assert.equal(nextShowerTime(69, at), null);
+    // 100 → 69가 되려면 31/4시간 = 7시간 45분
+    assert.equal(nextShowerTime(100, at)?.toISOString(), "2026-10-15T07:45:00.000Z");
+    assert.equal(feedExp(50), 25);
+    assert.equal(feedExp(49), 20);
+  });
+
+  it("25종 모두 상황별 대사가 있고, 말풍선에 들어갈 길이", async () => {
+    const { YOKAI_LINES, pickLine } = await import("./yokai-lines");
+    const kinds = ["greet", "hungry", "full", "dirty", "fed", "pet", "shower"] as const;
+    for (const s of YOKAI_ORDER) {
+      for (const k of kinds) {
+        const list = YOKAI_LINES[s][k];
+        assert.ok(list.length >= 1, `${s} ${k}`);
+        for (const line of list) assert.ok(line.trim().length > 0 && line.length <= 45, `${s} ${k}: ${line}`);
+      }
+      assert.equal(pickLine(s, "greet", 7), pickLine(s, "greet", 7));
+    }
+  });
+});

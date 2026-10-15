@@ -3,10 +3,13 @@ import { todayKstDate } from "@/lib/dates";
 import {
   FEED,
   PET_MAX,
+  SHOWER_AFFECTION,
+  cleanNow,
+  feedExp,
+  nextShowerTime,
   YOKAI,
   feedsAllowed,
   fullnessNow,
-  moodLine,
   nextFeedTime,
   nextPetTime,
   nextStageProgress,
@@ -21,6 +24,7 @@ import {
   type YokaiSpecies,
 } from "@/lib/yokai";
 import { arrivals, gumihoTails, progressLine, type OwnedStages, type YokaiStats } from "@/lib/yokai-achieve";
+import { pickLine, type LineKind } from "@/lib/yokai-lines";
 
 /** 요괴 마을 공개 여부(기본 공개 · 급히 닫을 때 YOKAI_PUBLIC=0 → 마스터만) */
 export const yokaiPublic = () => process.env.YOKAI_PUBLIC !== "0";
@@ -42,6 +46,9 @@ export type YokaiActive = {
   nextFeedAt: string | null;
   /** 쓰다듬기 쉬는 중이면 다시 할 수 있는 시각(ISO) */
   nextPetAt: string | null;
+  /** 청결도 · 아직 깨끗해서 샤워를 못 하면 할 수 있는 시각(ISO) */
+  clean: number;
+  nextShowerAt: string | null;
   pets: { used: number; max: number };
 };
 
@@ -58,7 +65,9 @@ export type YokaiView = {
   /** 못 만난 요괴 진행도 한 줄 */
   progress: Partial<Record<YokaiSpecies, string>>;
   tails: { label: string; done: boolean; progress: string }[];
+  /** 요괴 대사(성격 · 상황별) · 시스템 안내 한 줄 */
   mood: string;
+  tip: string | null;
   /** 내 포인트 · 마을 배경(가진 것 · 쓰는 것) */
   points: number;
   bg: { owned: YokaiBackground[]; active: YokaiBackground };
@@ -194,6 +203,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
   const species = activeRow.species as YokaiSpecies;
   const stage = stageForExp(activeRow.exp);
   const fullness = fullnessNow(activeRow.fullness, activeRow.fullnessAt);
+  const clean = cleanNow(activeRow.clean, activeRow.cleanAt);
   const allowed = feedsAllowed(sources) + snacksToday(pet);
   const used = fedToday(pet);
   const feedAt = nextFeedTime(fullness);
@@ -220,6 +230,8 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
       affection: activeRow.affection,
       nextFeedAt: feedAt?.toISOString() ?? null,
       nextPetAt: petAt?.toISOString() ?? null,
+      clean,
+      nextShowerAt: nextShowerTime(clean)?.toISOString() ?? null,
       pets: { used: pettedToday(activeRow), max: PET_MAX },
     },
     owned: valid.map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
@@ -231,7 +243,8 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
     newcomers: dex.filter((s) => !seen.includes(s)).sort((x, y) => RARITY_ORDER.indexOf(YOKAI[x].rarity) - RARITY_ORDER.indexOf(YOKAI[y].rarity)),
     progress,
     tails: gumihoTails(stats, stages),
-    mood: moodLine({ name: YOKAI[species].name, fullness, affection: activeRow.affection, feedsLeft: Math.max(0, allowed - used), src: sources }),
+    mood: pickLine(species, situation(fullness, clean), Math.floor(Date.now() / 3_600_000)),
+    tip: tipLine({ fullness, clean, feedsLeft: Math.max(0, allowed - used), src: sources }),
     points: (await prisma.user.findUnique({ where: { id: userId }, select: { points: true } }).catch(() => null))?.points ?? 0,
     bg: bgState(pet),
   };
@@ -267,6 +280,24 @@ export async function applyBackground(userId: string, id: YokaiBackground) {
   if (!pet || !bgState(pet).owned.includes(id)) return { ok: false as const, error: "아직 없는 배경이에요." };
   await prisma.yokaiPet.update({ where: { userId }, data: { bgActive: id } });
   return { ok: true as const };
+}
+
+/** 지금 상황 → 대사 종류(배고픔 → 꼬질꼬질 → 배부름 → 인사) */
+function situation(fullness: number, clean: number): LineKind {
+  if (fullness < 20) return "hungry";
+  if (clean < 30) return "dirty";
+  if (fullness >= 80) return "full";
+  return "greet";
+}
+
+/** 할 일 안내 한 줄(대사와 따로) */
+function tipLine(i: { fullness: number; clean: number; feedsLeft: number; src: FeedSources }) {
+  if (i.clean < 30) return "🛁 꼬질꼬질해요. 샤워시키면 밥 경험치 보너스가 다시 붙어요";
+  if (i.feedsLeft > 0 && i.fullness < 80) return `🍙 오늘 밥이 ${i.feedsLeft}번 남았어요`;
+  if (!i.src.attended) return "📅 출석하면 오늘 밥이 하나 더 생겨요";
+  if (!i.src.quiz) return "🧩 오늘의 퀴즈를 맞히면 밥이 하나 더 생겨요";
+  if (!i.src.wrote) return "✍️ 글이나 댓글을 쓰면 밥이 하나 더 생겨요";
+  return null;
 }
 
 /** 첫 요괴 고르기(이미 있으면 그대로 · 다시 고르기 없음) */
@@ -306,7 +337,7 @@ export async function feedYokai(userId: string) {
   // 다른 탭에서 동시에 눌러도 한 번만(오늘 횟수가 그대로일 때만 바뀜)
   const counted = await prisma.yokaiPet.updateMany({ where: { id: pet.id, day: pet.day, fedToday: pet.fedToday }, data: { day: todayKstDate(), fedToday: used + 1 } });
   if (counted.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
-  const exp = row.exp + FEED.exp;
+  const exp = row.exp + feedExp(cleanNow(row.clean, row.cleanAt, now));
   await prisma.yokaiOwned.update({
     where: { id: row.id },
     data: { exp, fullness: Math.min(100, fullness + FEED.fullness), fullnessAt: now, affection: Math.min(100, row.affection + FEED.affection) },
@@ -329,6 +360,22 @@ export async function petYokai(userId: string) {
   const done = await prisma.yokaiOwned.updateMany({
     where: { id: row.id, pettedAt: row.pettedAt },
     data: { affection: Math.min(100, row.affection + 1), petDay: todayKstDate(), pettedToday: count + 1, pettedAt: now },
+  });
+  if (done.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
+  return { ok: true as const };
+}
+
+/** 샤워: 청결도가 SHOWER_BELOW 미만일 때만 · 100으로 · 친밀도 +SHOWER_AFFECTION */
+export async function showerYokai(userId: string) {
+  const found = await activeOf(userId);
+  if (!found) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
+  const { row } = found;
+  const now = new Date();
+  const wait = nextShowerTime(cleanNow(row.clean, row.cleanAt, now), now);
+  if (wait) return { ok: false as const, error: `아직 깨끗해요. ${waitText(wait, now)} 뒤에 씻겨 주세요.` };
+  const done = await prisma.yokaiOwned.updateMany({
+    where: { id: row.id, cleanAt: row.cleanAt },
+    data: { clean: 100, cleanAt: now, affection: Math.min(100, row.affection + SHOWER_AFFECTION) },
   });
   if (done.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
   return { ok: true as const };
@@ -395,7 +442,8 @@ export async function yokaiNudge(userId: string) {
   const active = owned.find((o) => o.species === pet.activeSpecies) ?? owned[0];
   if (!active || !isSpecies(active.species)) return null;
   const fullness = fullnessNow(active.fullness, active.fullnessAt);
-  return { invite: false as const, newcomers, hungry: fullness < 30, species: active.species, stage: stageForExp(active.exp), name: YOKAI[active.species].name };
+  const clean = cleanNow(active.clean, active.cleanAt);
+  return { invite: false as const, newcomers, hungry: fullness < 30, dirty: clean < 30, species: active.species, stage: stageForExp(active.exp), name: YOKAI[active.species].name };
 }
 
 /** 간식 사기: 포인트로 오늘 밥 한 번 더(하루 SNACK_MAX번 · 동시에 눌러도 한 번씩) */
@@ -435,6 +483,7 @@ export async function yokaiHome(userId: string) {
     stageName: YOKAI[species].stages[stage - 1],
     rarity: YOKAI[species].rarity,
     fullness,
+    clean: cleanNow(active.clean, active.cleanAt),
     next: nextStageProgress(active.exp),
     feedsLeft: Math.max(0, allowed - fedToday(pet)),
     feedAt: nextFeedTime(fullness)?.toISOString() ?? null,

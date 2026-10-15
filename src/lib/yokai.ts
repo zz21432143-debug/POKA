@@ -127,6 +127,29 @@ export function nextFeedTime(fullness: number, now = new Date()) {
   return new Date(now.getTime() + Math.ceil(hours * 60) * 60_000);
 }
 
+/** 청결도: 한 시간에 CLEAN_DECAY씩 줄어듦 · SHOWER_BELOW 미만일 때 샤워 가능(샤워하면 100 · 친밀도 +2) */
+export const CLEAN_DECAY = 4;
+export const SHOWER_BELOW = 70;
+export const SHOWER_AFFECTION = 2;
+/** 깨끗하면(CLEAN_BONUS_AT 이상) 밥 경험치 +CLEAN_BONUS_EXP */
+export const CLEAN_BONUS_AT = 50;
+export const CLEAN_BONUS_EXP = 5;
+
+export function cleanNow(stored: number, at: Date, now = new Date()) {
+  const hours = Math.max(0, (now.getTime() - at.getTime()) / 3_600_000);
+  return Math.max(0, Math.min(100, Math.round(stored - hours * CLEAN_DECAY)));
+}
+
+/** 아직 깨끗해서 샤워를 못 할 때: 할 수 있는 시각(지금 할 수 있으면 null) */
+export function nextShowerTime(clean: number, now = new Date()) {
+  if (clean < SHOWER_BELOW) return null;
+  const hours = (clean - SHOWER_BELOW + 1) / CLEAN_DECAY;
+  return new Date(now.getTime() + Math.ceil(hours * 60) * 60_000);
+}
+
+/** 밥 한 번 경험치(깨끗하면 보너스) */
+export const feedExp = (clean: number) => FEED.exp + (clean >= CLEAN_BONUS_AT ? CLEAN_BONUS_EXP : 0);
+
 /** 쓰다듬기 쉬는 중이면 다시 할 수 있는 시각 */
 export function nextPetTime(pettedAt: Date | null, now = new Date()) {
   if (!pettedAt) return null;

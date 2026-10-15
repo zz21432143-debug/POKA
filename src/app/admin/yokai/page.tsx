@@ -13,13 +13,28 @@ export const dynamic = "force-dynamic";
 
 const n = (v: unknown) => Number(v ?? 0) || 0;
 
+/** 등급별 적정 보유율(요괴를 고른 회원 중 몇 %가 가지면 좋은지) */
+const TARGET: Record<string, [number, number] | null> = { starter: null, common: [40, 95], rare: [10, 60], hero: [2, 25], legend: [0, 8] };
+/** 판정은 회원 MIN_PETS명 · MIN_DAYS일 이상 쌓인 뒤에 */
+const MIN_PETS = 20;
+const MIN_DAYS = 7;
+
+function verdict(rarity: string, pct: number, ready: boolean) {
+  const t = TARGET[rarity];
+  if (!t) return { text: "-", tone: "text-muted-foreground" };
+  if (!ready) return { text: "데이터 모으는 중", tone: "text-muted-foreground" };
+  if (pct < t[0]) return { text: "너무 어려움 → 기준 낮추기", tone: "text-rose-300" };
+  if (pct > t[1]) return { text: "너무 쉬움 → 기준 올리기", tone: "text-amber-300" };
+  return { text: "적절", tone: "text-emerald-300" };
+}
+
 /** 요괴 마을 통계: 시작 요괴 · 요괴별 보유 · 최종 진화 · 전설 보유자 · 오늘 활동 · 포인트 쓴 곳 */
 export default async function AdminYokaiPage() {
   const user = await getCurrentUser();
   if (!user || !isStaff(user)) notFound();
   const today = todayKstDate();
   const final = STAGE_EXP[4];
-  const [pets, starters, perSpecies, legends, todayRow, bgRow] = await Promise.all([
+  const [pets, starters, perSpecies, legends, todayRow, bgRow, first] = await Promise.all([
     prisma.yokaiPet.count(),
     prisma.yokaiPet.groupBy({ by: ["species"], _count: { _all: true } }),
     prisma.$queryRaw<{ species: string; owners: bigint; finals: bigint }[]>`
@@ -31,7 +46,11 @@ export default async function AdminYokaiPage() {
       SELECT COUNT(*) FILTER (WHERE day = ${today} AND "fedToday" > 0) AS fed,
              COALESCE(SUM("snacksToday") FILTER (WHERE "snackDay" = ${today}), 0) AS snacks FROM "YokaiPet"`,
     prisma.$queryRaw<{ bought: bigint }[]>`SELECT COALESCE(SUM(GREATEST(json_array_length("bgOwnedJson"::json) - 1, 0)), 0) AS bought FROM "YokaiPet"`,
+    // 오픈 며칠째(첫 요괴를 고른 날부터 · DB 시각은 UTC)
+    prisma.$queryRaw<{ days: number | null }[]>`SELECT FLOOR(EXTRACT(EPOCH FROM ((now() AT TIME ZONE 'UTC') - MIN("createdAt"))) / 86400) AS days FROM "YokaiPet"`,
   ]);
+  const days = n(first[0]?.days);
+  const ready = pets >= MIN_PETS && days >= MIN_DAYS;
   const owned = new Map(perSpecies.map((r) => [r.species, { owners: n(r.owners), finals: n(r.finals) }]));
   const totalOwned = perSpecies.reduce((a, r) => a + n(r.owners), 0);
   const stat = (label: string, value: string, sub?: string) => (
@@ -73,9 +92,12 @@ export default async function AdminYokaiPage() {
       </section>
 
       <section className="grid gap-2">
-        <h2 className="text-base font-bold">요괴별 보유 · 최종 진화</h2>
+        <h2 className="text-base font-bold">요괴별 보유 · 최종 진화 · 판정</h2>
+        <p className="text-xs text-muted-foreground">
+          적정 보유율: 일반 40~95% · 희귀 10~60% · 영웅 2~25% · 전설 0~8%. {ready ? `오픈 ${days}일째 · ${pets}명 기준으로 판정했어요.` : `회원 ${MIN_PETS}명 · ${MIN_DAYS}일이 쌓이면 판정해요(지금 ${pets}명 · ${days}일).`}
+        </p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm" data-admin-yokai-table>
+          <table className="w-full min-w-[640px] text-sm" data-admin-yokai-table>
             <thead className="text-left text-xs text-muted-foreground">
               <tr>
                 <th className="py-1">요괴</th>
@@ -83,6 +105,7 @@ export default async function AdminYokaiPage() {
                 <th className="text-right">가진 회원</th>
                 <th className="text-right">비율</th>
                 <th className="text-right">5단계</th>
+                <th className="pl-3">판정</th>
                 <th className="pl-4">얻는 방법</th>
               </tr>
             </thead>
@@ -100,6 +123,14 @@ export default async function AdminYokaiPage() {
                     <td className="text-right tabular-nums">{row.owners}</td>
                     <td className="text-right tabular-nums">{pets ? `${Math.round((row.owners / pets) * 100)}%` : "-"}</td>
                     <td className="text-right tabular-nums">{row.finals}</td>
+                    {(() => {
+                      const v = verdict(YOKAI[s].rarity, pets ? (row.owners / pets) * 100 : 0, ready);
+                      return (
+                        <td data-verdict={s} className={`pl-3 text-xs font-bold ${v.tone}`}>
+                          {v.text}
+                        </td>
+                      );
+                    })()}
                     <td className="pl-4 text-xs text-muted-foreground">{YOKAI[s].how}</td>
                   </tr>
                 );

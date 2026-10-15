@@ -50,6 +50,7 @@ const FILES = [
   "prisma/migrations/20261027090000_exp_curve/migration.sql",
   "prisma/migrations/20261027100000_yokai_bg/migration.sql",
   "prisma/migrations/20261028090000_yokai_public/migration.sql",
+  "prisma/migrations/20261029090000_yokai_clean/migration.sql",
 ];
 
 function databaseUrl() {

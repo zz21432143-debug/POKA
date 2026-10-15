@@ -66,7 +66,9 @@ export async function HomeYokai() {
     ? { text: `✨ 새 요괴 ${y.newcomers.length}마리가 찾아왔어요!`, cta: "만나러 가기", hot: true }
     : y.fullness < 30
       ? { text: `🍙 ${y.name}가 배고파해요`, cta: "밥 주러 가기", hot: true }
-      : y.feedsLeft > 0 && !full
+      : y.clean < 30
+        ? { text: `🛁 ${y.name}가 꼬질꼬질해요`, cta: "샤워시키러 가기", hot: true }
+        : y.feedsLeft > 0 && !full
         ? { text: `🍙 오늘 밥이 ${y.feedsLeft}번 남았어요`, cta: "밥 주러 가기", hot: true }
         : full && y.feedsLeft > 0
           ? { text: "배불러요 · 조금 뒤에 또 먹을 수 있어요", cta: "요괴 마을 가기", hot: false }
@@ -93,6 +95,10 @@ export async function HomeYokai() {
               포만감 <span className="tabular-nums">{y.fullness}/100</span>
             </span>
             {bar(y.fullness, 100, "#e7a24a")}
+            <span className="flex justify-between">
+              청결도 <span className="tabular-nums">{y.clean}/100</span>
+            </span>
+            {bar(y.clean, 100, "#6cc3f0")}
             {y.next ? (
               <>
                 <span className="flex justify-between">
