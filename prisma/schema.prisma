@@ -746,3 +746,28 @@ model YokaiOwned {
 
   @@unique([userId, species])
 }
+
+/// 요괴 오목 친구 대전: 방 하나 = 한 판. status waiting(상대 기다림) · playing · done. winner 0 없음/무승부 · 1 흑 · 2 백
+/// endReason five · resign · timeout · draw · cancel. version은 수를 둘 때마다 +1(동시에 두기 막기 · 화면 새로 고침 판단)
+model OmokGame {
+  id        String    @id @default(cuid())
+  hostId    String
+  blackId   String?
+  whiteId   String?
+  movesJson String    @default("[]")
+  status    String    @default("waiting")
+  winner    Int       @default(0)
+  endReason String    @default("")
+  version   Int       @default(0)
+  /// 지금 차례가 시작된 시각(한 수 제한 시간)
+  turnAt    DateTime?
+  /// 마지막 이모티콘 {by, e, at}
+  emoteJson String    @default("")
+  /// 「한 판 더」로 만든 다음 판
+  nextId    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, updatedAt])
+  @@index([hostId, createdAt])
+}

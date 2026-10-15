@@ -2294,3 +2294,83 @@ img[src*="/yokai/"] {
 [data-yokai-bg-thumb] {
   -webkit-touch-callout: none;
 }
+
+/* ───── 요괴 오목 ───── */
+.omok-frame {
+  background: linear-gradient(145deg, #3a1210, #1a0807 55%, #2b0e0c);
+  box-shadow: 0 0 0 1px rgba(201, 162, 92, 0.55), 0 0 0 4px #120605, 0 0 0 5px rgba(201, 162, 92, 0.35), 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+.omok-wood {
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(92deg, rgba(120, 70, 20, 0.08) 0 3px, transparent 3px 9px),
+    radial-gradient(ellipse at 30% 20%, #f2c98a, transparent 60%),
+    linear-gradient(135deg, #e3b06a, #cf9450 55%, #c08443);
+  box-shadow: inset 0 0 18px rgba(80, 40, 10, 0.45);
+}
+.omok-stone {
+  display: block;
+}
+.omok-black {
+  background: radial-gradient(circle at 34% 30%, #6b6b6b 0, #262626 32%, #050505 70%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.55), inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+}
+.omok-white {
+  background: radial-gradient(circle at 34% 30%, #ffffff 0, #f2ede2 40%, #c9c1b0 85%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45), inset 0 -2px 3px rgba(120, 100, 70, 0.35);
+}
+.omok-drop {
+  animation: omok-drop 0.22s ease-out;
+}
+@keyframes omok-drop {
+  from {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.4;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+.omok-win {
+  animation: omok-win 0.9s ease-in-out infinite alternate;
+  z-index: 2;
+}
+@keyframes omok-win {
+  from {
+    box-shadow: 0 0 0 2px #f5c451, 0 0 8px 2px rgba(245, 196, 81, 0.7);
+  }
+  to {
+    box-shadow: 0 0 0 3px #ffe08a, 0 0 18px 6px rgba(255, 120, 60, 0.85);
+  }
+}
+.omok-forbid {
+  color: #b91c1c;
+  font-weight: 900;
+  font-size: min(3.2vw, 18px);
+  line-height: 1;
+  opacity: 0.75;
+}
+.omok-turn {
+  box-shadow: 0 0 0 2px #f5c451, 0 0 16px rgba(245, 196, 81, 0.45);
+}
+.omok-bubble-pop {
+  animation: omok-bubble 0.25s ease-out;
+}
+@keyframes omok-bubble {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .omok-drop,
+  .omok-win,
+  .omok-bubble-pop {
+    animation: none;
+  }
+}

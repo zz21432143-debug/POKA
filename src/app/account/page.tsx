@@ -36,6 +36,12 @@ export default async function AccountPage() {
         <YokaiNudge />
         <ProfileYokai userId={user.id} viewerIsMaster={Boolean(user.isMaster)} />
         <HonorShelf userId={user.id} nickname={user.nickname} mine />
+        {user.isMaster ? (
+          <a href="/games" data-account-games className="flex min-h-12 items-center gap-2 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-3 text-sm font-black text-sky-200">
+            🎮 요괴 게임방
+            <span className="ml-auto text-xs font-bold text-sky-300">비공개 테스트 · 마스터만 ›</span>
+          </a>
+        ) : null}
         <a href="/invite" data-account-invite className="flex min-h-12 items-center gap-2 rounded-2xl border border-[#FEE500]/40 bg-[#FEE500]/10 px-3 text-sm font-black text-[#fff3a8]">
           🤝 친구 초대하고 포인트 받기
           <span className="ml-auto text-xs font-bold text-[#e7c98a]">친구 첫 출석 시 둘 다 선물 ›</span>
