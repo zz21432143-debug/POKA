@@ -34,7 +34,7 @@ export default async function GamesPage() {
   const user = await getCurrentUser().catch(() => null);
   if (!gamesOpen(user)) notFound();
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 pt-12">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pt-12">
       <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
         <p className="arcade-px neon-purple text-[10px]">POKA</p>
         <h1 className="arcade-px neon-gold text-2xl leading-snug">
@@ -84,6 +84,33 @@ export default async function GamesPage() {
           ),
         )}
       </ul>
+      {/* 하는 법 한눈에 · 랭킹 · 요괴 마을(PC 빈 공간 채움) */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <section className="arcade-panel grid gap-1.5 p-4 text-sm leading-6 text-zinc-200">
+          <h2 className="arcade-kr text-base text-[#ffe08a]">⚫ 오목 하는 법</h2>
+          <p>가로 · 세로 · 대각선으로 내 돌 5개를 먼저 이으면 승리. 흑은 삼삼 금수가 있어요.</p>
+          <p>휴대폰: 자리를 한 번 눌러 고르고, 한 번 더 누르거나 「착수」로 둬요.</p>
+        </section>
+        <section className="arcade-panel grid gap-1.5 p-4 text-sm leading-6 text-zinc-200">
+          <h2 className="arcade-kr text-base text-[#ffe08a]">🎲 윷놀이 하는 법</h2>
+          <p>① 윷 던지기 → ② 반짝이는 내 말 고르기 → ③ 노란 칸 누르기. 3개를 업으면 판에 불길!</p>
+          <p>출발 모서리 아래 「골인」 칸에 말을 모두 넣으면 승리.</p>
+        </section>
+        <Link href="/ranking?tab=game" className="arcade-panel flex min-h-16 items-center gap-3 p-4 transition hover:brightness-125">
+          <span className="text-2xl" aria-hidden>🏆</span>
+          <span className="grid">
+            <b className="arcade-kr text-base text-[#ffe08a]">이달의 게임 랭킹</b>
+            <span className="text-xs text-zinc-300">1위는 「오목 요괴」 · 「윷놀이 요괴」 칭호</span>
+          </span>
+        </Link>
+        <Link href="/yokai" className="arcade-panel flex min-h-16 items-center gap-3 p-4 transition hover:brightness-125">
+          <span className="text-2xl" aria-hidden>🏮</span>
+          <span className="grid">
+            <b className="arcade-kr text-base text-[#ffe08a]">요괴 마을</b>
+            <span className="text-xs text-zinc-300">내 말이 되는 요괴를 키워요</span>
+          </span>
+        </Link>
+      </div>
     </div>
   );
 }

@@ -4038,8 +4038,10 @@ aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
   }
 }
 
-/* 홈 아래쪽 덩어리: 화면 근처에 올 때 그림(휴대폰 첫 화면 가볍게) */
-.home-lazy {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 900px;
+
+/* 광고 칸: 구글이 광고를 채웠을 때만 펼침(승인 전 · 광고 없음이면 높이 0 — 빈 상자로 화면을 먹지 않게) */
+aside[aria-label="광고"]:not(:has(ins.adsbygoogle[data-ad-status="filled"])) {
+  max-height: 0;
+  border-width: 0;
+  overflow: hidden;
 }

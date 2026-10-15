@@ -242,7 +242,7 @@ export function EquityCalculator() {
         </div>
         <div role="grid" aria-label="카드 고르기" className="grid gap-1">
           {SUIT_ROW.map((suit) => (
-            <div key={suit.code} className="grid gap-1" style={{ gridTemplateColumns: "repeat(13, minmax(0, 1fr))" }}>
+            <div key={suit.code} className="grid grid-cols-7 gap-1 sm:grid-cols-13">
               {RANK_ROW.split("").map((rank) => {
                 const code = `${rank}${suit.code}`;
                 const taken = used.has(code);

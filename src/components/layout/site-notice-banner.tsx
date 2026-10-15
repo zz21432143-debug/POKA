@@ -48,7 +48,7 @@ export function SiteNoticeBanner({ text, items = [] }: { text: string | null | u
     <div data-rolling-notice className="border-b border-amber-500/30 bg-amber-950/40">
       <div key={i} className="notice-roll mx-auto flex max-w-[1560px] items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-amber-200 sm:px-5">
         {cur.href ? (
-          <Link href={cur.href} className="flex min-w-0 items-center gap-2 hover:underline">
+          <Link href={cur.href} className="flex min-h-9 min-w-0 items-center gap-2 hover:underline">
             {body}
           </Link>
         ) : (

@@ -59,11 +59,18 @@ const nextConfig: NextConfig = {
       {
         // 교대표 보기(/r/…)는 공유 탭 TV 미리보기에서 우리 사이트 안에만 띄울 수 있게(SAMEORIGIN), 나머지는 막음
         source: "/((?!r/).*)",
-        headers: [{ key: "X-Frame-Options", value: "DENY" }],
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          // 스크립트는 막지 않는 안전한 항목만(광고 · 카카오 · 구글 로그인 그대로): 액자 금지 · 기준 주소 고정 · 플러그인 금지 · http 자동 https
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests" },
+        ],
       },
       {
         source: "/r/:path*",
-        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests" },
+        ],
       },
       {
         source: "/:path*",

@@ -29,7 +29,7 @@ export async function GameStatsPanel({
     >
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-[#f3d9a4]">🏆 {GAME_LABEL[game]} 전적 · 이번 달 랭킹</h2>
-        <Link href={`/ranking?tab=game&game=${game}`} className="ml-auto text-sm font-bold text-[#ffcf4a]">
+        <Link href={`/ranking?tab=game&game=${game}`} className="inline-flex min-h-10 items-center ml-auto text-sm font-bold text-[#ffcf4a]">
           전체 랭킹 ›
         </Link>
       </div>

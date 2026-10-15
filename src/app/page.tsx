@@ -64,7 +64,7 @@ async function HomeFeedSections() {
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
-      <div data-home-latest-rank className="home-lazy grid gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
+      <div data-home-latest-rank className="grid gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
         <Suspense fallback={<HomePanelFallback className="h-48" />}>
           <HomeRankings />
@@ -72,9 +72,7 @@ async function HomeFeedSections() {
       </div>
       {/* 광고 구좌 2: 랭킹 · 커뮤니티 아래 피드 사이 */}
       <GoogleAdUnit placement="infeed" />
-      <div className="home-lazy">
-        <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
-      </div>
+      <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>
   );
 }

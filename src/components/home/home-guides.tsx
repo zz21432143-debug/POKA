@@ -14,7 +14,7 @@ export function HomeGuides() {
     <section data-home-guides aria-label="오늘의 딜러 가이드" className="ink-panel grid gap-3 rounded-2xl p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-black text-[#f3d9a4]">📘 오늘의 딜러 가이드</h2>
-        <Link href="/info/guide" className="text-sm font-bold text-[#e7c98a] hover:underline">
+        <Link href="/info/guide" className="inline-flex min-h-10 items-center text-sm font-bold text-[#e7c98a] hover:underline">
           가이드 {GUIDE_ARTICLES.length}편 모두 보기 →
         </Link>
       </div>

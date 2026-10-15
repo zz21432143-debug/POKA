@@ -69,7 +69,7 @@ export function HeroCarousel({ slides }: { slides: { key: string; label: string;
               aria-label={`${s.label} 보기`}
               aria-current={k === i}
               onClick={() => setI(k)}
-              className="grid size-6 place-items-center"
+              className="grid size-8 place-items-center"
             >
               <span className={cn("block h-2 rounded-full transition-all", k === i ? "w-5 bg-[#ffcf4a]" : "w-2 bg-white/50")} />
             </button>
