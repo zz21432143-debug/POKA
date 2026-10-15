@@ -44,6 +44,8 @@ export const POST_POINTS: Record<BoardType, number> = {
 export const ATTENDANCE_EXP = 100;
 /** 출석 포인트(2026-10 조정: 375 → 150, 글 · 댓글 · 퀴즈 활동을 하는 회원이 더 받도록) */
 export const ATTENDANCE_POINTS = 150;
+/** 그날 1 · 2 · 3번째로 출석한 사람 추가 경험치 */
+export const EARLY_BIRD_EXP = [50, 30, 20] as const;
 export const COMMENT_EXP = 2;
 export const COMMENT_POINTS = 10;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;

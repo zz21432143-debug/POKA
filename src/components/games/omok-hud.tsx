@@ -164,9 +164,9 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           {seat.vs ? (
             <span
               data-omok-vs
-              className="max-w-full truncate rounded-md bg-[#6ad7ff]/15 px-1.5 text-[11px] font-black text-[#8eeaff]"
+              className="max-w-full rounded-md bg-[#6ad7ff]/15 px-1.5 text-[11px] leading-4 font-black whitespace-nowrap text-[#8eeaff]"
             >
-              ⚔️ {seat.vs}
+              ⚔ {seat.vs}
             </span>
           ) : null}
         </div>
@@ -441,6 +441,79 @@ export function CheerStack({
           </span>
         </span>
       ))}
+    </div>
+  );
+}
+
+/**
+ * 관전석 줄(HUD와 판 사이 · 늘 같은 높이): 관전자 수 · 닉네임, 응원이 오면 크게 오니 이모티콘 + 닉네임.
+ * 판은 가리지 않고, 화면에서 가장 잘 보이는 자리.
+ */
+export function CheerStrip({
+  count,
+  names,
+  cheers,
+  now,
+  me,
+}: {
+  count: number;
+  names: string[];
+  cheers: { n: string; e: string; at: number }[];
+  now: number;
+  me?: boolean;
+}) {
+  const live = cheers.filter((c) => now - c.at < 5000).slice(-4);
+  return (
+    <div
+      data-omok-cheer-strip
+      className="flex min-h-[72px] items-center gap-2 overflow-hidden rounded-2xl border-2 border-[#6ad7ff]/40 bg-[#0d1a33]/70 px-2.5 py-1.5"
+    >
+      <span className="grid shrink-0 justify-items-center leading-tight">
+        <span className="text-lg">👀</span>
+        <b className="text-xs font-black text-[#8eeaff]">
+          관전 {count}
+          {me ? "(나)" : ""}
+        </b>
+      </span>
+      {live.length ? (
+        <div
+          data-omok-cheers
+          className="flex min-w-0 flex-1 items-center justify-end gap-2"
+        >
+          {live.map((c) => (
+            <span
+              key={`${c.n}-${c.at}`}
+              data-omok-cheer
+              className="cheer-pop grid shrink-0 justify-items-center"
+            >
+              <EmoteArt
+                e={c.e}
+                className="size-12 drop-shadow-[0_3px_0_#0a0614] sm:size-14"
+              />
+              <span className="max-w-20 truncate rounded-full bg-[#0a0614] px-2 text-[11px] font-black text-[#8eeaff]">
+                {c.n}
+              </span>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          {names.length ? (
+            names.slice(0, 6).map((n) => (
+              <span key={n} data-omok-spectator className="g-chip !text-white">
+                {n}
+              </span>
+            ))
+          ) : (
+            <span className="text-sm text-[#d6cdee]">
+              {count ? "손님이 관전 중이에요" : "응원이 오면 여기에 크게 떠요"}
+            </span>
+          )}
+          {names.length > 6 ? (
+            <span className="g-chip">+{names.length - 6}</span>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

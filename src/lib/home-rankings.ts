@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/db";
 import { DIFFICULTY } from "@/lib/practice";
 import { displayMarkSrc } from "@/lib/mark-assets";
-import { getRanking, rankOrder, rankScoreLabel } from "@/lib/ranking";
+import { getRanking, rankOrder } from "@/lib/ranking";
 import { getWeekSnapshot } from "@/lib/my-rank";
 import { loadTitleConfig, rankingRows } from "@/lib/pot-titles";
 import { PERIOD_LABEL } from "@/lib/pot-title-config";
 
 /** 홈 랭킹 한 줄 */
 export type HomeRankRow = { rank: number; nickname: string; level: number; markUrl: string; score: string };
-export type HomeRankBoard = { key: "level" | "marks" | "pot"; title: string; note: string; href: string; rows: HomeRankRow[] };
+export type HomeRankBoard = { key: "level" | "marks" | "pot" | "omok"; title: string; note: string; href: string; rows: HomeRankRow[] };
 
 /** 홈에 보일 순위 수 */
 const TOP = 5;
@@ -21,12 +21,12 @@ export function clearHomeRankings() {
   cache = null;
 }
 
-/** 홈: 레벨 · 마크 수집 · 팟 계산 랭킹 TOP 5 */
+/** 홈: 레벨 · 오목(이번 달) · 팟 계산 랭킹 TOP 5 */
 export async function getHomeRankings(): Promise<HomeRankBoard[]> {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.boards;
-  const [level, marks, pot] = await Promise.all([
+  const [level, omok, pot] = await Promise.all([
     getRanking("level", "all").catch(() => []),
-    getRanking("marks", "all").catch(() => []),
+    omokBoard().catch(() => null),
     potBoard().catch(() => null),
   ]);
   const boards: HomeRankBoard[] = [
@@ -37,17 +37,26 @@ export async function getHomeRankings(): Promise<HomeRankBoard[]> {
       href: "/ranking?tab=level",
       rows: level.slice(0, TOP).map((r) => ({ rank: r.rank, nickname: r.nickname, level: r.level, markUrl: r.markUrl, score: `Lv.${r.level}` })),
     },
-    {
-      key: "marks",
-      title: "마크 랭킹",
-      note: "모은 요괴 마크 종수",
-      href: "/ranking?tab=marks",
-      rows: marks.slice(0, TOP).map((r) => ({ rank: r.rank, nickname: r.nickname, level: r.level, markUrl: r.markUrl, score: rankScoreLabel("marks", r.score) })),
-    },
+    omok ?? { key: "omok", title: "오목 랭킹", note: "이번 달", href: "/games/omok", rows: [] },
     pot ?? { key: "pot", title: "팟 계산 랭킹", note: "", href: "/tools/practice", rows: [] },
   ];
   cache = { at: Date.now(), boards };
   return boards;
+}
+
+/** 오목: 이번 달 랭킹(승 3점 · 무 1점 · 5판 이상) */
+async function omokBoard(): Promise<HomeRankBoard> {
+  const { gameRanking } = await import("@/lib/game-stats");
+  const rows = (await gameRanking("omok", "month", TOP)).slice(0, TOP);
+  const users = await prisma.user.findMany({ where: { nickname: { in: rows.map((r) => r.nickname) } }, select: { nickname: true, level: true, isMaster: true, profileMarkImageUrl: true } });
+  const by = new Map(users.map((u) => [u.nickname, u]));
+  return {
+    key: "omok",
+    title: "오목 랭킹",
+    note: "이번 달 · 승 3점",
+    href: "/games/omok",
+    rows: rows.map((r) => ({ rank: r.rank, nickname: r.nickname, level: by.get(r.nickname)?.level ?? 1, markUrl: displayMarkSrc({ isMaster: Boolean(by.get(r.nickname)?.isMaster), profileMarkImageUrl: by.get(r.nickname)?.profileMarkImageUrl ?? null }), score: `${r.wins}승 ${r.losses}패` })),
+  };
 }
 
 /** 팟 계산: 칭호 기준 난이도 · 기간 랭킹(맞힌 수 → 빠른 순) */

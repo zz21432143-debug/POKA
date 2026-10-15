@@ -41,11 +41,17 @@ export function CommentForm({
         exp?: number;
         points?: number;
         invite?: { inviter: string; points: number } | null;
+        order?: number;
+        earlyExp?: number;
       };
       if (!response.ok) {
         throw new Error(payload.error ?? "작성에 실패했습니다.");
       }
       setContent("");
+      // 그날 1~3등 출석 보너스
+      if (payload.attendance && payload.earlyExp) {
+        setGranted(`${["🥇", "🥈", "🥉"][(payload.order ?? 1) - 1] ?? "🎉"} 오늘 ${payload.order}등 출석! 보너스 EXP +${payload.earlyExp}`);
+      }
       // 친구 초대로 가입한 회원의 첫 출석 선물
       if (payload.attendance && payload.invite) {
         setGranted(`🤝 ${payload.invite.inviter ? `${payload.invite.inviter}님 초대 ` : ""}첫 출석 선물 +${payload.invite.points}P가 지급되었습니다.`);

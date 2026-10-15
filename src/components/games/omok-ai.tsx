@@ -430,7 +430,12 @@ export function OmokAi({
         ) : null}
       </div>
       {myTurn && preview !== null ? (
-        <button type="button" data-omok-place onClick={() => apply(preview, "me")} className="arcade-btn btn-gold min-h-14 text-xl">
+        <button
+          type="button"
+          data-omok-place
+          onClick={() => apply(preview, "me")}
+          className="arcade-btn btn-gold min-h-14 text-xl"
+        >
           ✅ 여기에 착수
         </button>
       ) : null}

@@ -38,13 +38,14 @@ export async function GET(request: Request) {
 }
 
 /** 방 만들기 → { id }(요괴가 없으면 code: NO_YOKAI) */
-export async function POST() {
+export async function POST(request: Request) {
   const user = await getCurrentUser().catch(() => null);
   if (!user)
     return NextResponse.json({ error: "로그인해 주세요." }, { status: 401 });
   if (!gamesOpen(user))
     return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
-  const made = await createOmok(user.id);
+  const body = (await request.json().catch(() => ({}))) as { private?: unknown };
+  const made = await createOmok(user.id, { isPrivate: body.private === true });
   if ("error" in made)
     return NextResponse.json(
       { error: "함께할 요괴를 먼저 골라 주세요.", code: NO_YOKAI },

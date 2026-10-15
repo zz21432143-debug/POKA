@@ -27,7 +27,6 @@ export const dynamic = "force-dynamic";
 
 const TABS: { id: RankTab; label: string }[] = [
   { id: "level", label: "레벨 랭킹" },
-  { id: "marks", label: "마크 수집 랭킹" },
   { id: "attendance", label: "출석 랭킹" },
   { id: "quiz", label: "퀴즈 랭킹" },
 ];

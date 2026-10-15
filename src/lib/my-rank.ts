@@ -93,9 +93,8 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
   if (excluded.has(user.id)) return { excluded: true, reason: "admin" };
 
   const config = await loadTitleConfig();
-  const [weekExp, marks, attendance, pot, above, quiz, quizStreakDays] = await Promise.all([
+  const [weekExp, attendance, pot, above, quiz, quizStreakDays] = await Promise.all([
     exactRank("level", "week", user.id).catch(() => null),
-    exactRank("marks", "all", user.id).catch(() => null),
     exactRank("attendance", "month", user.id).catch(() => null),
     rankingRows(config.difficulty, config.period, 100_000, 50_000).catch(() => []),
     // 레벨(전체) 정확한 순위: 나보다 레벨이 높거나, 같은 레벨에서 경험치가 많은 회원 수 + 1
@@ -128,7 +127,6 @@ export async function getMyRanks(user: { id: string; nickname: string; level: nu
     rows: [
       { key: "level", label: "레벨(전체)", short: "레벨", rank: levelRank, change: change("level", levelRank), before: beforeOf("level"), score: `Lv.${user.level}`, href: "/ranking?tab=level" },
       { key: "weekExp", label: "이번 주 경험치", short: "주간 경험치", rank: weekExp?.rank ?? null, score: weekExp ? rankScoreLabel("level", weekExp.score, "week") : "-", href: "/ranking?tab=level&period=week" },
-      { key: "marks", label: "마크 수집", short: "마크", rank: marks?.rank ?? null, change: change("marks", marks?.rank ?? null), before: beforeOf("marks"), score: marks ? rankScoreLabel("marks", marks.score) : "-", href: "/ranking?tab=marks" },
       { key: "attendance", label: "이번 달 출석", short: "월간 출석", rank: attendance?.rank ?? null, score: attendance ? rankScoreLabel("attendance", attendance.score, "month") : "-", href: "/ranking?tab=attendance&period=month" },
       {
         key: "pot",

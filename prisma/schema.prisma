@@ -759,6 +759,10 @@ model OmokGame {
   guestReady Boolean  @default(false)
   /// 방장이 내보낸 회원 id 목록(JSON)
   kickedJson String   @default("")
+  /// 다음 판 도전 줄(JSON [{id, n, at}])
+  queueJson  String   @default("")
+  /// 비공개 방: 로비 목록에 안 보임(코드 · 링크로만)
+  isPrivate  Boolean  @default(false)
   hostId    String
   blackId   String?
   whiteId   String?

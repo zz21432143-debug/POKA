@@ -25,7 +25,8 @@ export type RankRow = {
 const YOKAI_SLUGS = SHOP_MARKS.map((mark) => mark.slug);
 
 export function parseRankTab(value: string | undefined): RankTab {
-  if (value === "marks" || value === "attendance" || value === "quiz") return value;
+  // 마크 수집 랭킹은 내림(예전 주소 ?tab=marks는 레벨로)
+  if (value === "attendance" || value === "quiz") return value;
   return "level";
 }
 

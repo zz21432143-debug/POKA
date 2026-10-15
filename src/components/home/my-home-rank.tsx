@@ -29,7 +29,7 @@ export function MyHomeRank() {
   }, []);
 
   // 홈 랭킹 세 칸과 같은 항목만(레벨 · 마크 · 팟 계산)
-  const rows = ranks && !ranks.excluded ? ranks.rows.filter((r) => ["level", "marks", "pot"].includes(r.key)) : [];
+  const rows = ranks && !ranks.excluded ? ranks.rows.filter((r) => ["level", "pot", "quiz"].includes(r.key)) : [];
   return (
     <div ref={boxRef} data-my-home-rank className="min-h-1">
       {ranks?.excluded ? (

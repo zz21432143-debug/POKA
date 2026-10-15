@@ -8,8 +8,9 @@ export function OmokCreate() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priv, setPriv] = useState(false);
   return (
-    <div className="grid gap-1">
+    <div className="grid gap-2">
       <button
         type="button"
         data-omok-create
@@ -18,7 +19,11 @@ export function OmokCreate() {
           setBusy(true);
           setError(null);
           try {
-            const res = await fetch("/api/games/omok", { method: "POST" });
+            const res = await fetch("/api/games/omok", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ private: priv }),
+            });
             const json = (await res.json()) as {
               id?: string;
               error?: string;
@@ -38,8 +43,21 @@ export function OmokCreate() {
         }}
         className="arcade-btn btn-main min-h-14 w-full text-xl"
       >
-        {busy ? "방 만드는 중…" : "🏮 방 만들기"}
+        {busy ? "방 만드는 중…" : priv ? "🔒 비공개 방 만들기" : "🏮 방 만들기"}
       </button>
+      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-black/30 px-3 text-sm font-bold text-white">
+        <input
+          type="checkbox"
+          data-omok-private
+          checked={priv}
+          onChange={(e) => setPriv(e.target.checked)}
+          className="size-5 accent-[#b77bff]"
+        />
+        🔒 비공개 방{" "}
+        <span className="font-normal text-[#d6cdee]">
+          — 로비 목록에 안 나오고 코드 · 링크로만 들어와요
+        </span>
+      </label>
       {error ? (
         <p className="text-sm font-bold text-[#ff5d6c]">{error}</p>
       ) : null}

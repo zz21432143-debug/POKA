@@ -8,7 +8,7 @@ import { OmokBoard } from "@/components/games/omok-board";
 import {
   ArcadeBanner,
   BigWinCutIn,
-  CheerStack,
+  CheerStrip,
   EmoteArt,
   OmokHud,
   Spectators,
@@ -475,7 +475,7 @@ export function OmokRoom({
   /** 흑(대기실은 방장) 쪽이면 a 기준, 백(손님) 쪽이면 b 기준 */
   const vsText = (sideA: boolean) =>
     h2h
-      ? `상대전적 ${sideA ? h2h.a : h2h.b}승 ${sideA ? h2h.b : h2h.a}패${h2h.draws ? ` ${h2h.draws}무` : ""}`
+      ? `상대 ${sideA ? h2h.a : h2h.b}승 ${sideA ? h2h.b : h2h.a}패${h2h.draws ? ` ${h2h.draws}무` : ""}`
       : null;
   const seatOf = (c: Stone): HudSeat => {
     const p = info(c);
@@ -587,7 +587,6 @@ export function OmokRoom({
     >
       {/* ── 왼쪽(휴대폰은 위): HUD · 판 · 조작 ── */}
       <div className="relative grid gap-2.5">
-        <CheerStack cheers={view.cheers ?? []} now={now + offset} />
         <div className="flex flex-wrap items-center gap-2">
           {(() => {
             // 나가기: 대국 중 = 기권 · 방장 대기실 = 방 닫기 · 손님 = 일어나기 · 그 밖 = 로비로
@@ -647,20 +646,23 @@ export function OmokRoom({
               <b className="arcade-px text-[12px] tracking-widest">{code}</b>
             </button>
           ) : null}
-          <span className="ml-auto">
-            {watching.count > 0 ? (
-              <Spectators
-                count={watching.count}
-                names={watching.names}
-                me={spectator}
-              />
-            ) : spectator ? (
-              <span className="g-chip !text-[#8eeaff]">👀 관전 중</span>
-            ) : null}
-          </span>
+          {view.isPrivate ? (
+            <span className="g-chip !border-[#b77bff]/70 !text-[#e7c4ff]">
+              🔒 비공개 방
+            </span>
+          ) : null}
         </div>
 
         <OmokHud left={hud.left} right={hud.right} />
+
+        {/* 관전석 줄: 관전자 · 응원(판 바로 위, 판은 안 가림) */}
+        <CheerStrip
+          count={watching.count}
+          names={watching.names}
+          cheers={view.cheers ?? []}
+          now={now + offset}
+          me={spectator && watching.count > 0}
+        />
 
         <div className={cn("relative mt-1", theyAsked && "arcade-shake")}>
           <OmokBoard
@@ -680,7 +682,59 @@ export function OmokRoom({
               data-omok-waiting
               className="arcade-overlay absolute inset-0 z-20 grid place-items-center rounded-[14px] p-4 text-center"
             >
-              <div className="grid justify-items-center gap-3">
+              <div className="grid justify-items-center gap-2">
+                {/* 착석 · READY 버튼(판 한가운데 · 가장 잘 보이게) */}
+                <div className="grid w-full min-w-[240px] gap-2">
+                  {seated ? (
+                    <button
+                      type="button"
+                      data-omok-ready={myReady ? "on" : "off"}
+                      disabled={busy || (view.seat === "host" && !view.guest)}
+                      onClick={() => void act("ready", { ready: !myReady })}
+                      className={cn(
+                        "arcade-btn min-h-14 text-xl",
+                        myReady ? "btn-dark" : "btn-green",
+                      )}
+                    >
+                      {view.seat === "host" && !view.guest
+                        ? "친구가 앉으면 READY!"
+                        : myReady
+                          ? "READY 취소"
+                          : "✅ READY!"}
+                    </button>
+                  ) : !view.guest ? (
+                    !loggedIn ? (
+                      <Link
+                        href={`/login?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
+                        className="arcade-btn btn-main grid min-h-14 place-items-center text-xl"
+                      >
+                        로그인하고 착석하기
+                      </Link>
+                    ) : !hasYokai ? (
+                      <Link
+                        href={`/yokai?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
+                        data-omok-need-yokai
+                        className="arcade-btn btn-gold grid min-h-14 place-items-center text-lg"
+                      >
+                        🏮 요괴를 고르고 착석하기
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        data-omok-join
+                        disabled={busy}
+                        onClick={() => void act("sit")}
+                        className="arcade-btn btn-main min-h-14 text-xl"
+                      >
+                        ⚔️ 착석하기
+                      </button>
+                    )
+                  ) : (
+                    <p className="rounded-xl bg-white/5 p-3 text-center text-sm font-bold text-[#d6cdee]">
+                      자리가 다 찼어요. 관전석에서 볼 수 있어요.
+                    </p>
+                  )}
+                </div>
                 <p className="arcade-px neon-gold text-xs sm:text-sm">
                   ROOM CODE
                 </p>
@@ -865,7 +919,15 @@ export function OmokRoom({
                   {!view.me &&
                   !view.nextId &&
                   view.endReason !== "cancel" &&
-                  loggedIn ? (
+                  loggedIn &&
+                  !view.canChallenge &&
+                  view.queue.length ? (
+                    <p className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#d6cdee]">
+                      ⏳ 도전 줄: {view.queue[0]}님 차례
+                      {view.queueMine ? ` · 내 순서 ${view.queueMine}번` : ""}
+                    </p>
+                  ) : null}
+                  {view.canChallenge ? (
                     <button
                       type="button"
                       data-omok-challenge
@@ -873,7 +935,9 @@ export function OmokRoom({
                       onClick={() => void act("challenge")}
                       className="arcade-btn btn-main"
                     >
-                      ⚔️ 다음 판 도전(승자와 대결)
+                      {view.queueMine === 1
+                        ? "⚔️ 내 차례! 지금 도전하기"
+                        : "⚔️ 다음 판 도전(승자와 대결)"}
                     </button>
                   ) : null}
                   {!view.me && view.nextId ? (
@@ -970,55 +1034,6 @@ export function OmokRoom({
         {/* ── 대기실 조작 ── */}
         {waiting ? (
           <div className="grid gap-2">
-            {seated ? (
-              <button
-                type="button"
-                data-omok-ready={myReady ? "on" : "off"}
-                disabled={busy || (view.seat === "host" && !view.guest)}
-                onClick={() => void act("ready", { ready: !myReady })}
-                className={cn(
-                  "arcade-btn min-h-14 text-xl",
-                  myReady ? "btn-dark" : "btn-green",
-                )}
-              >
-                {view.seat === "host" && !view.guest
-                  ? "친구가 앉으면 READY!"
-                  : myReady
-                    ? "READY 취소"
-                    : "✅ READY!"}
-              </button>
-            ) : !view.guest ? (
-              !loggedIn ? (
-                <Link
-                  href={`/login?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
-                  className="arcade-btn btn-main grid min-h-14 place-items-center text-xl"
-                >
-                  로그인하고 착석하기
-                </Link>
-              ) : !hasYokai ? (
-                <Link
-                  href={`/yokai?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
-                  data-omok-need-yokai
-                  className="arcade-btn btn-gold grid min-h-14 place-items-center text-lg"
-                >
-                  🏮 요괴를 고르고 착석하기
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  data-omok-join
-                  disabled={busy}
-                  onClick={() => void act("sit")}
-                  className="arcade-btn btn-main min-h-14 text-xl"
-                >
-                  ⚔️ 착석하기
-                </button>
-              )
-            ) : (
-              <p className="rounded-xl bg-white/5 p-3 text-center text-sm font-bold text-[#d6cdee]">
-                자리가 다 찼어요. 관전석에서 볼 수 있어요.
-              </p>
-            )}
             {seated ? emoteRow : null}
             {note ? (
               <p className="text-center text-sm font-bold text-[#ff5d6c]">
@@ -1209,6 +1224,63 @@ export function OmokRoom({
 
         <section data-omok-watch-panel className="arcade-panel grid gap-2 p-4">
           <h2 className="arcade-kr text-lg text-white">👀 관전석</h2>
+          {/* 다음 판 도전 줄 */}
+          <div
+            data-omok-queue
+            className="grid gap-1.5 rounded-xl bg-black/30 p-3"
+          >
+            <p className="text-sm font-black text-white">
+              🙋 다음 판 도전 줄{" "}
+              {view.queue.length ? `(${view.queue.length}명)` : ""}
+            </p>
+            {view.queue.length ? (
+              <ol className="grid gap-1 text-sm">
+                {view.queue.map((n, i) => (
+                  <li
+                    key={n}
+                    className={cn(
+                      "flex items-center gap-2",
+                      view.queueMine === i + 1 && "font-black text-[#ffcf4a]",
+                    )}
+                  >
+                    <span className="grid size-6 place-items-center rounded-full bg-white/15 text-xs font-black">
+                      {i + 1}
+                    </span>
+                    {n}
+                    {view.queueMine === i + 1 ? " (나)" : ""}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-xs text-[#d6cdee]">
+                줄을 서면 판이 끝났을 때 순서대로 이긴 사람에게 도전할 수
+                있어요.
+              </p>
+            )}
+            {spectator && loggedIn && !waiting && !view.nextId ? (
+              view.queueMine ? (
+                <button
+                  type="button"
+                  data-omok-queue-leave
+                  disabled={busy}
+                  onClick={() => void act("queue-leave")}
+                  className="arcade-btn btn-dark !min-h-10 text-sm"
+                >
+                  줄에서 빠지기
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-omok-queue-join
+                  disabled={busy}
+                  onClick={() => void act("queue-join")}
+                  className="arcade-btn btn-gold !min-h-11 text-base"
+                >
+                  🙋 다음 판 도전 줄 서기
+                </button>
+              )
+            ) : null}
+          </div>
           {view.cheers?.length ? (
             <ul data-omok-cheer-log className="grid gap-1">
               {view.cheers

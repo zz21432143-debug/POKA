@@ -14,10 +14,10 @@ describe("칭호 설정", () => {
   });
 
   it("1~3위 · 끄기 · 이름(길이 제한) 반영, 이상한 값은 1위로", () => {
-    const c = normalizeTitleConfig({ honors: { level: { top: 3, name: "  만렙   오니  " }, marks: { enabled: false, top: 7 } } });
+    const c = normalizeTitleConfig({ honors: { level: { top: 3, name: "  만렙   오니  " }, attendance: { enabled: false, top: 7 } } });
     assert.equal(c.honors.level.top, 3);
     assert.equal(c.honors.level.name, "만렙 오니");
-    assert.equal(c.honors.marks.enabled, false);
-    assert.equal(c.honors.marks.top, 1);
+    assert.equal(c.honors.attendance.enabled, false);
+    assert.equal(c.honors.attendance.top, 1);
   });
 });

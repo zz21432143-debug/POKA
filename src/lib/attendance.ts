@@ -5,6 +5,7 @@ import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PAGE_SIZE } from "@/lib/feed";
 import {
   ATTENDANCE_EXP,
+  EARLY_BIRD_EXP,
   ATTENDANCE_MIN_COMMENT_LENGTH,
   ATTENDANCE_POINTS,
   streakBonusFor,
@@ -65,8 +66,9 @@ export async function checkInAttendance(userId: string, message: string, authorI
     },
   });
 
+  let mine: { createdAt: Date } | null = null;
   try {
-    await prisma.dailyAttendance.create({
+    mine = await prisma.dailyAttendance.create({
       data: {
         userId,
         date,
@@ -97,6 +99,10 @@ export async function checkInAttendance(userId: string, message: string, authorI
   const invite = await settleInvite(userId).catch(() => null);
 
   const todayCount = await prisma.dailyAttendance.count({ where: { date } });
+  // 그날 1~3등(먼저 출석한 순서): 추가 경험치
+  const order = mine ? await prisma.dailyAttendance.count({ where: { date, createdAt: { lte: mine.createdAt } } }) : todayCount;
+  const earlyExp = order >= 1 && order <= EARLY_BIRD_EXP.length ? EARLY_BIRD_EXP[order - 1] : 0;
+  if (earlyExp) await grantRewards(userId, earlyExp, 0, { ignorePointCap: true });
   const { pushTicker } = await import("@/lib/ticker");
   if (bonus) {
     await pushTicker({
@@ -105,7 +111,13 @@ export async function checkInAttendance(userId: string, message: string, authorI
       href: "/attendance",
     });
   }
-  if (todayCount === 1 || todayCount === 7 || todayCount === 10) {
+  if (earlyExp) {
+    await pushTicker({
+      kind: `LUCKY:${date}:${userId}`,
+      message: `${["🥇", "🥈", "🥉"][order - 1]} ${user.nickname}님이 오늘 ${order}등으로 출석! 보너스 EXP +${earlyExp}`,
+      href: "/attendance",
+    });
+  } else if (todayCount === 7 || todayCount === 10) {
     await pushTicker({
       kind: `LUCKY:${date}:${userId}`,
       message: `🎁 ${user.nickname}님이 오늘 ${todayCount}번째 출석자입니다!`,
@@ -116,7 +128,10 @@ export async function checkInAttendance(userId: string, message: string, authorI
   return {
     date,
     streak,
-    exp: ATTENDANCE_EXP + (bonus?.exp ?? 0),
+    exp: ATTENDANCE_EXP + (bonus?.exp ?? 0) + earlyExp,
+    /** 그날 몇 등(1~3등이면 earlyExp 추가) */
+    order,
+    earlyExp,
     points: ATTENDANCE_POINTS + (bonus?.points ?? 0),
     bonus,
     invite,
