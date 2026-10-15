@@ -10,7 +10,7 @@ import { SiteSettingsAdmin } from "@/components/admin/site-settings-admin";
 import { isStaff } from "@/lib/roles";
 import { getSiteSettings } from "@/lib/site-settings";
 import type { Prisma } from "@/generated/prisma/client";
-import { BASE_WORDS, PROFANITY_CATEGORIES, PROFANITY_LABEL } from "@/lib/profanity";
+import { BASE_WORDS, NICK_ADULT_WORDS, PROFANITY_CATEGORIES, PROFANITY_LABEL } from "@/lib/profanity";
 
 export const metadata: Metadata = { title: "관리자", robots: { index: false } };
 
@@ -169,11 +169,14 @@ export default async function AdminPage({
           </p>
           <ForbiddenWordsAdmin
             words={words.map((row) => ({ id: row.id, word: row.word }))}
-            base={PROFANITY_CATEGORIES.map((category) => ({
-              category,
-              label: PROFANITY_LABEL[category],
-              words: BASE_WORDS[category],
-            }))}
+            base={[
+              ...PROFANITY_CATEGORIES.map((category) => ({
+                category,
+                label: PROFANITY_LABEL[category],
+                words: BASE_WORDS[category],
+              })),
+              { category: "nick-adult", label: "닉네임 전용 · 성적 표현", words: NICK_ADULT_WORDS },
+            ]}
             disabled={disabledWords.map((row) => row.word)}
           />
         </section>

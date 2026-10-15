@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { clearForbiddenWordsCache } from "@/lib/forbidden-words";
-import { BASE_WORDS } from "@/lib/profanity";
+import { BASE_WORDS, NICK_ADULT_WORDS } from "@/lib/profanity";
 
-const ALL_BASE_WORDS = new Set(Object.values(BASE_WORDS).flat());
+const ALL_BASE_WORDS = new Set([...Object.values(BASE_WORDS).flat(), ...NICK_ADULT_WORDS]);
 
 export async function GET() {
   const { error } = await requireAdmin();

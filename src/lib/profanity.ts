@@ -73,6 +73,10 @@ export const BASE_WORDS: Record<ProfanityCategory, string[]> = {
     "조건만남", "조건만", "출장안마", "출장마사지", "출장샵", "오피", "op사이트", "야동", "야설",
     "성인용품", "휴게텔", "섹파", "섹스", "sex", "porn", "폰섹", "립카페", "키스방", "안마방",
     "유흥업소", "애인대행", "만남어플", "19금방",
+    "소음순", "대음순", "음핵", "클리토리스", "보짓물", "보빨", "보지털", "자지털", "딸딸이", "질싸", "질내사정",
+    "노콘", "펠라치오", "사까시", "똥까시", "정액받이", "오르가즘", "젖탱이", "젖꼭지", "빨통", "야짤",
+    "근친상간", "윤간", "강간해", "박아줘", "빨아줘", "꼴린다", "꼴려서", "pussy", "blowjob", "boobs", "hentai",
+    "xvideos", "pornhub",
   ],
   gambling: [
     "온라인카지노", "카지노사이트", "라이브카지노", "바카라사이트", "온라인바카라", "슬롯사이트", "슬롯게임",
@@ -94,6 +98,30 @@ export const BASE_WORDS: Record<ProfanityCategory, string[]> = {
     "관리자", "운영자", "운영진", "운영팀", "매니저", "공식", "시스템", "어드민", "고객센터", "마스터",
   ],
 };
+
+/**
+ * 닉네임 전용 성적 표현: 들어가기만 해도 막음.
+ * 글에서는 「보지 마세요」 · 「자지 마」처럼 정상 문장이 많아 닉네임에만 씁니다.
+ * (「클리어」 · 「청양고추」 · 「처녀자리」 · 「젖은낙엽」 같은 말은 걸리지 않게 형태를 좁혀 둠)
+ */
+export const NICK_ADULT_WORDS = [
+  // 성기 · 신체
+  "보지", "자지", "잠지", "음순", "음핵", "음경", "불알", "부랄", "봉알", "젖꼭지", "젖탱", "젖가슴", "젖소",
+  "젖빨", "왕젖", "찌찌", "유두", "빨통", "거유", "폭유", "빈유", "엉밑살", "똥구멍", "항문",
+  // 성행위 · 은어
+  "섹", "떡치", "떡방", "따먹", "박아줘", "빨아줘", "핥아", "빨아", "자위", "딸딸", "딸치", "딸쳐",
+  "정액", "사정해", "질싸", "질내", "노콘", "오랄", "펠라", "사까시", "애무", "애액", "발기", "꼴려", "꼴리",
+  "꼴림", "오르가", "신음", "흥분해", "후장", "애널", "쓰리썸", "스와핑", "69자세",
+  // 성매매 · 성범죄 · 비하
+  "창녀", "창년", "갈보", "매춘", "원조교제", "몸팔", "몸캠", "몰카", "도촬", "강간", "윤간", "성폭", "성노예",
+  "근친", "노출증", "변태", "음란", "야한", "야동", "야짤", "에로", "포르노", "av배우", "숫처녀", "걸레년",
+  "팬티", "노브라", "노팬",
+  // 영문
+  "pussy", "dick", "penis", "vagina", "boob", "tits", "nipple", "horny", "milf", "blowjob", "handjob", "cumshot",
+  "orgasm", "hentai", "nude", "naked", "xxx", "fuckme", "slut", "whore", "bitch", "porn", "sexy", "onlyfans",
+];
+
+const NICK_LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b" };
 
 /** 끌 수 없는 고정 패턴(우회 없이 그대로 잡음) */
 const FIXED_PATTERNS: Partial<Record<ProfanityCategory, string[]>> = {
@@ -181,6 +209,20 @@ export function findProfanity(
     if (found) return { category, match: found[0] };
   }
   if (opts.nickname) {
+    const shapes = [
+      ...new Set([
+        normalized,
+        normalized.replace(/[_0-9]/g, ""),
+        normalized.replace(/[^가-힣]/g, ""),
+        normalized.replace(/[^a-z]/g, ""),
+        // 숫자로 바꿔 쓴 영문(s3xy → sexy, d1ck → dick)
+        normalized.replace(/[0-9]/g, (d) => NICK_LEET[d] ?? d).replace(/[^a-z]/g, ""),
+      ]),
+    ].filter(Boolean);
+    const sexual = NICK_ADULT_WORDS.concat(BASE_WORDS.adult).find(
+      (w) => !opts.disabled?.has(w) && shapes.some((s) => s.includes(w.toLowerCase())),
+    );
+    if (sexual) return { category: "adult", match: sexual };
     // 닉네임은 _ · 숫자 · 영문으로 끊어 쓰는 우회도 막음(씨_발, 개1새끼, 씨x발)
     const nick = nickRuleFor(opts.disabled);
     const found =
