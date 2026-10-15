@@ -710,6 +710,11 @@ model YokaiPet {
   arrivalCheckedAt DateTime?
   snackDay      String @default("")
   snacksToday   Int    @default(0)
+  /// 돌보기 쿨타임(회원 단위 · 모든 요괴가 함께): 마지막 밥 · 쓰다듬기(날짜 · 횟수 · 시각) · 샤워
+  fedAt         DateTime?
+  petDay        String @default("")
+  pettedAt      DateTime?
+  showerAt      DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
@@ -729,6 +734,8 @@ model YokaiOwned {
   /// 청결도(cleanAt 기준 값 · 시간이 지나면 줄어듦)
   clean       Int       @default(100)
   cleanAt     DateTime  @default(now())
+  /// 받은 친밀도 보상 단계(0 · 50 · 100)
+  bondReward  Int       @default(0)
   createdAt   DateTime  @default(now())
 
   @@unique([userId, species])

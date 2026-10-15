@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import {
+  BOND_TIERS,
+  FEED_COOLDOWN_MIN,
+  MAIN_CHANGE_COST,
+  SHOWER_COOLDOWN_MIN,
+  bondName,
+  cooldownUntil,
+  later,
   FEED,
   PET_MAX,
   SHOWER_AFFECTION,
@@ -33,7 +40,8 @@ export const yokaiPublic = () => process.env.YOKAI_PUBLIC !== "0";
 export const SNACK_PRICE = 500;
 export const SNACK_MAX = 2;
 
-export type YokaiActive = {
+/** 요괴 한 마리 상태(내 요괴들 · 보기용) */
+export type YokaiCare = {
   species: YokaiSpecies;
   name: string;
   stage: number;
@@ -41,21 +49,30 @@ export type YokaiActive = {
   exp: number;
   next: ReturnType<typeof nextStageProgress>;
   fullness: number;
+  clean: number;
   affection: number;
-  /** 배불러서 못 먹으면 다시 먹을 수 있는 시각(ISO) */
+  /** 친밀도 단계 이름(친해지는 중 · 단짝 · 영혼의 단짝) */
+  bond: string;
+};
+
+/** 대표 요괴(돌보는 요괴) + 돌보기 쿨타임(회원 단위 · 모든 요괴가 함께) */
+export type YokaiActive = YokaiCare & {
+  /** 배부르거나 밥 쿨타임이면 다시 줄 수 있는 시각(ISO) */
   nextFeedAt: string | null;
   /** 쓰다듬기 쉬는 중이면 다시 할 수 있는 시각(ISO) */
   nextPetAt: string | null;
-  /** 청결도 · 아직 깨끗해서 샤워를 못 하면 할 수 있는 시각(ISO) */
-  clean: number;
+  /** 아직 깨끗하거나 샤워 쿨타임이면 할 수 있는 시각(ISO) */
   nextShowerAt: string | null;
   pets: { used: number; max: number };
 };
 
 export type YokaiView = {
+  /** 대표 요괴: 밥 · 쓰다듬기 · 샤워는 이 요괴만 */
   active: YokaiActive;
-  owned: { species: YokaiSpecies; stage: number }[];
+  owned: YokaiCare[];
   main: YokaiSpecies;
+  /** 대표 요괴 바꾸기 값(P) */
+  mainChangeCost: number;
   feeds: { used: number; allowed: number; sources: FeedSources };
   /** 오늘 산 간식 · 하루 최대 · 값 */
   snacks: { used: number; max: number; price: number };
@@ -161,7 +178,25 @@ type OwnedRow = NonNullable<Awaited<ReturnType<typeof prisma.yokaiOwned.findFirs
 /** 날짜가 바뀌었으면 오늘 횟수는 0부터 */
 const fedToday = (pet: { day: string; fedToday: number }) => (pet.day === todayKstDate() ? pet.fedToday : 0);
 const snacksToday = (pet: { snackDay: string; snacksToday: number }) => (pet.snackDay === todayKstDate() ? pet.snacksToday : 0);
-const pettedToday = (o: OwnedRow) => (o.petDay === todayKstDate() ? o.pettedToday : 0);
+const pettedToday = (pet: { petDay: string; pettedToday: number }) => (pet.petDay === todayKstDate() ? pet.pettedToday : 0);
+const mainOf = (pet: { mainSpecies: string; activeSpecies: string; species: string }) => pet.mainSpecies || pet.activeSpecies || pet.species;
+
+function careOf(o: OwnedRow, now = new Date()): YokaiCare {
+  const species = o.species as YokaiSpecies;
+  const stage = stageForExp(o.exp);
+  return {
+    species,
+    name: YOKAI[species].name,
+    stage,
+    stageName: YOKAI[species].stages[stage - 1],
+    exp: o.exp,
+    next: nextStageProgress(o.exp),
+    fullness: fullnessNow(o.fullness, o.fullnessAt, now),
+    clean: cleanNow(o.clean, o.cleanAt, now),
+    affection: o.affection,
+    bond: bondName(o.affection),
+  };
+}
 const ownedList = (userId: string) => prisma.yokaiOwned.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
 
 /** 새로 찾아온 요괴를 가진 요괴로 넣음(전설이면 공개 후 LIVE 공지) */
@@ -199,15 +234,16 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
 
   const valid = owned.filter((o) => isSpecies(o.species));
   if (!valid.length) return null;
-  const activeRow = valid.find((o) => o.species === pet.activeSpecies) ?? valid[0];
+  const activeRow = valid.find((o) => o.species === mainOf(pet)) ?? valid[0];
   const species = activeRow.species as YokaiSpecies;
-  const stage = stageForExp(activeRow.exp);
-  const fullness = fullnessNow(activeRow.fullness, activeRow.fullnessAt);
-  const clean = cleanNow(activeRow.clean, activeRow.cleanAt);
+  const now = new Date();
+  const care = careOf(activeRow, now);
+  const { fullness, clean } = care;
   const allowed = feedsAllowed(sources) + snacksToday(pet);
   const used = fedToday(pet);
-  const feedAt = nextFeedTime(fullness);
-  const petAt = pettedToday(activeRow) < PET_MAX ? nextPetTime(activeRow.pettedAt) : null;
+  const feedAt = later(nextFeedTime(fullness, now), cooldownUntil(pet.fedAt, FEED_COOLDOWN_MIN, now));
+  const petAt = pettedToday(pet) < PET_MAX ? nextPetTime(pet.pettedAt, now) : null;
+  const showerAt = later(nextShowerTime(clean, now), cooldownUntil(pet.showerAt, SHOWER_COOLDOWN_MIN, now));
   const stages: OwnedStages = Object.fromEntries(valid.map((o) => [o.species, stageForExp(o.exp)]));
   const dex = valid.map((o) => o.species as YokaiSpecies);
   const seen = parseList(pet.seenJson);
@@ -220,22 +256,15 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
   }
   return {
     active: {
-      species,
-      name: YOKAI[species].name,
-      stage,
-      stageName: YOKAI[species].stages[stage - 1],
-      exp: activeRow.exp,
-      next: nextStageProgress(activeRow.exp),
-      fullness,
-      affection: activeRow.affection,
+      ...care,
       nextFeedAt: feedAt?.toISOString() ?? null,
       nextPetAt: petAt?.toISOString() ?? null,
-      clean,
-      nextShowerAt: nextShowerTime(clean)?.toISOString() ?? null,
-      pets: { used: pettedToday(activeRow), max: PET_MAX },
+      nextShowerAt: showerAt?.toISOString() ?? null,
+      pets: { used: pettedToday(pet), max: PET_MAX },
     },
-    owned: valid.map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
-    main: isSpecies(pet.mainSpecies) && stages[pet.mainSpecies] ? pet.mainSpecies : species,
+    owned: valid.map((o) => careOf(o, now)),
+    main: species,
+    mainChangeCost: MAIN_CHANGE_COST,
     feeds: { used, allowed, sources },
     snacks: { used: snacksToday(pet), max: SNACK_MAX, price: SNACK_PRICE },
     dex,
@@ -313,80 +342,99 @@ export async function chooseStarter(userId: string, species: YokaiSpecies) {
   return { ok: true as const };
 }
 
+/** 대표 요괴(돌보는 요괴) */
 async function activeOf(userId: string) {
   const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
   if (!pet) return null;
   const row =
-    (await prisma.yokaiOwned.findUnique({ where: { userId_species: { userId, species: pet.activeSpecies || pet.species } } })) ??
+    (await prisma.yokaiOwned.findUnique({ where: { userId_species: { userId, species: mainOf(pet) } } })) ??
     (await prisma.yokaiOwned.findFirst({ where: { userId }, orderBy: { createdAt: "asc" } }));
   return row ? { pet, row } : null;
 }
 
-/** 밥 주기: 오늘 밥 횟수 안에서, 배부르지 않을 때만. 진화하면 evolved에 새 단계 */
-export async function feedYokai(userId: string) {
+/** 친밀도가 단계(50 · 100)를 넘으면 한 번만 보상 */
+async function grantBond(userId: string, row: OwnedRow, affection: number) {
+  const tier = [...BOND_TIERS].reverse().find((t) => affection >= t.at && row.bondReward < t.at);
+  if (!tier) return null;
+  const claimed = await prisma.yokaiOwned.updateMany({ where: { id: row.id, bondReward: { lt: tier.at } }, data: { bondReward: tier.at } });
+  if (claimed.count !== 1) return null;
+  const { grantRewards } = await import("@/lib/exp");
+  await grantRewards(userId, 0, tier.points, { ignorePointCap: true }).catch(() => undefined);
+  return { at: tier.at, points: tier.points, name: tier.name };
+}
+
+type CareResult = { ok: true; evolved?: number | null; bond?: { at: number; points: number; name: string } | null } | { ok: false; error: string };
+
+/** 밥 주기(대표 요괴만): 오늘 밥 횟수 안에서 · 배부르지 않고 밥 쿨타임(모든 요괴 함께)이 지났을 때. 진화하면 evolved */
+export async function feedYokai(userId: string): Promise<CareResult> {
   const found = await activeOf(userId);
-  if (!found) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
+  if (!found) return { ok: false, error: "먼저 요괴를 골라 주세요." };
   const { pet, row } = found;
   const now = new Date();
   const fullness = fullnessNow(row.fullness, row.fullnessAt, now);
   const full = nextFeedTime(fullness, now);
-  if (full) return { ok: false as const, error: `배불러서 안 먹어요. ${waitText(full, now)} 뒤에 다시 주세요.` };
+  if (full) return { ok: false, error: `배불러서 안 먹어요. ${waitText(full, now)} 뒤에 다시 주세요.` };
+  const cool = cooldownUntil(pet.fedAt, FEED_COOLDOWN_MIN, now);
+  if (cool) return { ok: false, error: `방금 밥을 줬어요. ${waitText(cool, now)} 뒤에 다시 줄 수 있어요(모든 요괴 함께).` };
   const sources = await feedSources(userId);
   const used = fedToday(pet);
-  if (used >= feedsAllowed(sources) + snacksToday(pet)) return { ok: false as const, error: "오늘 밥을 다 줬어요. 출석 · 퀴즈 · 글쓰기로 더 받을 수 있어요." };
+  if (used >= feedsAllowed(sources) + snacksToday(pet)) return { ok: false, error: "오늘 밥을 다 줬어요. 출석 · 퀴즈 · 글쓰기로 더 받을 수 있어요." };
   // 다른 탭에서 동시에 눌러도 한 번만(오늘 횟수가 그대로일 때만 바뀜)
-  const counted = await prisma.yokaiPet.updateMany({ where: { id: pet.id, day: pet.day, fedToday: pet.fedToday }, data: { day: todayKstDate(), fedToday: used + 1 } });
-  if (counted.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
+  const counted = await prisma.yokaiPet.updateMany({ where: { id: pet.id, day: pet.day, fedToday: pet.fedToday }, data: { day: todayKstDate(), fedToday: used + 1, fedAt: now } });
+  if (counted.count !== 1) return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
   const exp = row.exp + feedExp(cleanNow(row.clean, row.cleanAt, now));
-  await prisma.yokaiOwned.update({
-    where: { id: row.id },
-    data: { exp, fullness: Math.min(100, fullness + FEED.fullness), fullnessAt: now, affection: Math.min(100, row.affection + FEED.affection) },
-  });
+  const affection = Math.min(100, row.affection + FEED.affection);
+  await prisma.yokaiOwned.update({ where: { id: row.id }, data: { exp, fullness: Math.min(100, fullness + FEED.fullness), fullnessAt: now, affection } });
   const before = stageForExp(row.exp);
   const after = stageForExp(exp);
-  return { ok: true as const, evolved: after > before ? after : null };
+  return { ok: true, evolved: after > before ? after : null, bond: await grantBond(userId, row, affection) };
 }
 
-/** 쓰다듬기: 요괴마다 하루 PET_MAX번 · 한 번 하면 잠시 쉬기 · 친밀도 +1 */
-export async function petYokai(userId: string) {
+/** 쓰다듬기(대표 요괴만): 하루 PET_MAX번 · 한 번 하면 쉬기(모든 요괴 함께) · 친밀도 +1 */
+export async function petYokai(userId: string): Promise<CareResult> {
   const found = await activeOf(userId);
-  if (!found) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
-  const { row } = found;
+  if (!found) return { ok: false, error: "먼저 요괴를 골라 주세요." };
+  const { pet, row } = found;
   const now = new Date();
-  const count = pettedToday(row);
-  if (count >= PET_MAX) return { ok: false as const, error: "오늘은 충분히 쓰다듬어 줬어요. 내일 또 만나요!" };
-  const wait = nextPetTime(row.pettedAt, now);
-  if (wait) return { ok: false as const, error: `조금 쉬는 중이에요. ${waitText(wait, now)} 뒤에 다시 쓰다듬어 주세요.` };
-  const done = await prisma.yokaiOwned.updateMany({
-    where: { id: row.id, pettedAt: row.pettedAt },
-    data: { affection: Math.min(100, row.affection + 1), petDay: todayKstDate(), pettedToday: count + 1, pettedAt: now },
-  });
-  if (done.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
-  return { ok: true as const };
+  const count = pettedToday(pet);
+  if (count >= PET_MAX) return { ok: false, error: "오늘은 충분히 쓰다듬어 줬어요. 내일 또 만나요!" };
+  const wait = nextPetTime(pet.pettedAt, now);
+  if (wait) return { ok: false, error: `조금 쉬는 중이에요. ${waitText(wait, now)} 뒤에 다시 쓰다듬어 주세요.` };
+  const done = await prisma.yokaiPet.updateMany({ where: { id: pet.id, pettedAt: pet.pettedAt }, data: { petDay: todayKstDate(), pettedToday: count + 1, pettedAt: now } });
+  if (done.count !== 1) return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
+  const affection = Math.min(100, row.affection + 1);
+  await prisma.yokaiOwned.update({ where: { id: row.id }, data: { affection } });
+  return { ok: true, bond: await grantBond(userId, row, affection) };
 }
 
-/** 샤워: 청결도가 SHOWER_BELOW 미만일 때만 · 100으로 · 친밀도 +SHOWER_AFFECTION */
-export async function showerYokai(userId: string) {
+/** 샤워(대표 요괴만): 청결도가 SHOWER_BELOW 미만 · 샤워 쿨타임(모든 요괴 함께)이 지났을 때 · 100으로 · 친밀도 +SHOWER_AFFECTION */
+export async function showerYokai(userId: string): Promise<CareResult> {
   const found = await activeOf(userId);
-  if (!found) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
-  const { row } = found;
+  if (!found) return { ok: false, error: "먼저 요괴를 골라 주세요." };
+  const { pet, row } = found;
   const now = new Date();
   const wait = nextShowerTime(cleanNow(row.clean, row.cleanAt, now), now);
-  if (wait) return { ok: false as const, error: `아직 깨끗해요. ${waitText(wait, now)} 뒤에 씻겨 주세요.` };
-  const done = await prisma.yokaiOwned.updateMany({
-    where: { id: row.id, cleanAt: row.cleanAt },
-    data: { clean: 100, cleanAt: now, affection: Math.min(100, row.affection + SHOWER_AFFECTION) },
-  });
-  if (done.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
-  return { ok: true as const };
+  if (wait) return { ok: false, error: `아직 깨끗해요. ${waitText(wait, now)} 뒤에 씻겨 주세요.` };
+  const cool = cooldownUntil(pet.showerAt, SHOWER_COOLDOWN_MIN, now);
+  if (cool) return { ok: false, error: `방금 샤워했어요. ${waitText(cool, now)} 뒤에 다시 할 수 있어요(모든 요괴 함께).` };
+  const done = await prisma.yokaiPet.updateMany({ where: { id: pet.id, showerAt: pet.showerAt }, data: { showerAt: now } });
+  if (done.count !== 1) return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
+  const affection = Math.min(100, row.affection + SHOWER_AFFECTION);
+  await prisma.yokaiOwned.update({ where: { id: row.id }, data: { clean: 100, cleanAt: now, affection } });
+  return { ok: true, bond: await grantBond(userId, row, affection) };
 }
 
-/** 키울 요괴 바꾸기 · 대표 요괴 정하기(가진 요괴만) */
-export async function setYokai(userId: string, field: "active" | "main", species: YokaiSpecies) {
+/** 대표 요괴 바꾸기(가진 요괴만 · MAIN_CHANGE_COST P 차감 · 쿨타임은 그대로 이어짐) */
+export async function setMainYokai(userId: string, species: YokaiSpecies) {
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
+  if (!pet) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
+  if (mainOf(pet) === species) return { ok: true as const };
   const has = await prisma.yokaiOwned.findUnique({ where: { userId_species: { userId, species } }, select: { id: true } });
   if (!has) return { ok: false as const, error: "아직 만나지 못한 요괴예요." };
-  await prisma.yokaiPet.update({ where: { userId }, data: field === "active" ? { activeSpecies: species } : { mainSpecies: species } });
-  if (field === "main") repCache = null;
+  const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: MAIN_CHANGE_COST } }, data: { points: { decrement: MAIN_CHANGE_COST } } });
+  if (paid.count !== 1) return { ok: false as const, error: `포인트가 모자라요(${MAIN_CHANGE_COST}P 필요).` };
+  await prisma.yokaiPet.update({ where: { userId }, data: { mainSpecies: species, activeSpecies: species } });
+  repCache = null;
   return { ok: true as const };
 }
 

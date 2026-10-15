@@ -147,6 +147,31 @@ export function nextShowerTime(clean: number, now = new Date()) {
   return new Date(now.getTime() + Math.ceil(hours * 60) * 60_000);
 }
 
+/** 돌보기 쿨타임(회원 단위 · 모든 요괴가 함께 씀): 밥 사이 · 샤워 사이 최소 간격(분) */
+export const FEED_COOLDOWN_MIN = 120;
+export const SHOWER_COOLDOWN_MIN = 360;
+/** 대표 요괴 바꾸기 값(돌보기는 대표 요괴만 · 여러 마리를 한꺼번에 키우지 못하게) */
+export const MAIN_CHANGE_COST = 300;
+/** 친밀도 보상: 단계 · 받는 포인트 · 이름 */
+export const BOND_TIERS = [
+  { at: 50, points: 100, name: "단짝" },
+  { at: 100, points: 300, name: "영혼의 단짝" },
+] as const;
+export function bondName(affection: number) {
+  let name = "친해지는 중";
+  for (const t of BOND_TIERS) if (affection >= t.at) name = t.name;
+  return name;
+}
+
+/** 쿨타임이 끝나는 시각(지금 할 수 있으면 null) */
+export function cooldownUntil(at: Date | null, minutes: number, now = new Date()) {
+  if (!at) return null;
+  const until = new Date(at.getTime() + minutes * 60_000);
+  return until > now ? until : null;
+}
+/** 둘 중 늦은 시각 */
+export const later = (a: Date | null, b: Date | null) => (a && b ? (a > b ? a : b) : (a ?? b));
+
 /** 밥 한 번 경험치(깨끗하면 보너스) */
 export const feedExp = (clean: number) => FEED.exp + (clean >= CLEAN_BONUS_AT ? CLEAN_BONUS_EXP : 0);
 

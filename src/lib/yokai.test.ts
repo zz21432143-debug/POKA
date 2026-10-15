@@ -108,7 +108,7 @@ describe("청결도 · 샤워 · 대사", () => {
 
   it("25종 모두 상황별 대사가 있고, 말풍선에 들어갈 길이", async () => {
     const { YOKAI_LINES, pickLine } = await import("./yokai-lines");
-    const kinds = ["greet", "hungry", "full", "dirty", "fed", "pet", "shower"] as const;
+    const kinds = ["greet", "hungry", "full", "dirty", "fed", "pet", "shower", "evolve", "bond"] as const;
     for (const s of YOKAI_ORDER) {
       for (const k of kinds) {
         const list = YOKAI_LINES[s][k];

@@ -1,15 +1,18 @@
 /**
  * 요괴 마을 대사: 요괴마다 성격 · 말투가 다름. 상황별로 여러 줄 중 하나를 고름.
  * greet 인사 · hungry 배고픔 · full 배부름 · dirty 꼬질꼬질 · fed 밥 먹은 뒤 · pet 쓰다듬은 뒤 · shower 샤워한 뒤
+ * evolve 진화했을 때 · bond 친밀도 단계(단짝)에 올랐을 때
  */
 import type { YokaiSpecies } from "@/lib/yokai";
 
-export type LineKind = "greet" | "hungry" | "full" | "dirty" | "fed" | "pet" | "shower";
+export type LineKind = "greet" | "hungry" | "full" | "dirty" | "fed" | "pet" | "shower" | "evolve" | "bond";
 type Lines = { persona: string } & Record<LineKind, string[]>;
 
 export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   dokkaebi: {
     persona: "장난꾸러기 · 방망이 자랑",
+    evolve: ["더 세졌다! 이제 금도 뚝딱 나올지 몰라!"],
+    bond: ["너랑은 평생 장난칠 거다! 약속!"],
     greet: ["왔냐? 오늘은 무슨 장난 칠까 히히", "금 나와라 뚝딱! …아직은 안 나오지롱", "방망이 닦아 놨다! 같이 놀자!"],
     hungry: ["배에서 천둥 친다… 밥 안 주면 방망이 휘두른다?", "메밀묵 없냐? 아무거나 줘라 꼬르륵"],
     full: ["배 터지겠다! 이따 또 주라~", "꺼억! 도깨비는 배불러도 장난은 친다!"],
@@ -20,6 +23,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   ingeo: {
     persona: "꿈 많은 잉어 · 언젠가 용이 될 거야",
+    evolve: ["봤어? 용에 한 걸음 더 가까워졌어!"],
+    bond: ["너랑 같이라면 폭포도 무섭지 않아"],
     greet: ["뻐끔뻐끔~ 오늘도 물결을 거슬러 올라가 볼래!", "나 언젠가 꼭 용이 될 거야!", "왔구나! 오늘 물 온도 딱 좋아~"],
     hungry: ["뻐끔… 배고파서 지느러미에 힘이 없어", "밥알 하나만… 뻐끔뻐끔"],
     full: ["배불러서 둥둥 떠다니는 중~", "이제 폭포 하나쯤은 거뜬해!"],
@@ -30,6 +35,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   samdugumi: {
     persona: "머리 셋이 번갈아 말하는 여우 · 구미호를 동경",
+    evolve: ["(셋이 함께) 우리 또 컸어!"],
+    bond: ["(셋이 함께) 너를 제일 좋아해!"],
     greet: ["(왼쪽) 왔다! (가운데) 반가워! (오른쪽) …안녕", "언젠가 구미호 언니처럼 꼬리 아홉 개 될 거야!", "(셋이 함께) 오늘도 잘 부탁해!"],
     hungry: ["(왼쪽) 배고파 (가운데) 나도 (오른쪽) 나도…", "머리가 셋이라 배도 세 배로 고파!"],
     full: ["(셋이 동시에) 꺼억~", "(가운데) 배불러 (오른쪽) …난 아직 조금 더"],
@@ -40,6 +47,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   nudeogi: {
     persona: "삿갓 쓴 떠돌이 이야기꾼",
+    evolve: ["바람이 날 한 뼘 더 키워 줬구먼"],
+    bond: ["자네는 내 이야기 속 최고의 주인공이네"],
     greet: ["바람 따라 왔다네. 오늘은 무슨 이야기를 들려줄까", "저 산 너머에서 재밌는 소문을 주워 왔지", "자네 왔는가. 차 한 잔 하겠나?"],
     hungry: ["길 위에서 굶는 게 익숙하지만… 오늘은 좀 배고프구먼", "주먹밥 하나면 십 리는 더 걷겠네"],
     full: ["배부르니 이야기보따리가 절로 풀리는구먼", "잘 먹었네. 이제 낮잠 한숨 자야지"],
@@ -50,6 +59,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   samagwi: {
     persona: "과묵한 숲의 무사 · 짧게 말함",
+    evolve: ["…더 강해졌다."],
+    bond: ["너를 지키는 칼이 되겠다."],
     greet: ["왔나.", "오늘도 낫을 갈아 두었다.", "숲은 고요하다. 좋은 날이다."],
     hungry: ["…배고프다. 수련에 지장이 있다.", "먹을 것. 지금."],
     full: ["충분하다.", "배가 차면 칼끝이 무뎌진다. 그만."],
@@ -60,6 +71,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   eodukssini: {
     persona: "음침하고 수줍은 어둠 · 바라볼수록 커짐",
+    evolve: ["…또 커졌어… 네가 봐 줘서…"],
+    bond: ["…너만은… 무섭지 않아…"],
     greet: ["…계속 쳐다보면 나 커져…", "어둠 속에서… 기다리고 있었어…", "…왔구나… 조금 기뻐"],
     hungry: ["…배고파서… 그림자가 작아지고 있어…", "…뭐라도… 어둠이라도 먹고 싶어…"],
     full: ["…배불러… 그림자가 커졌어…", "…이제 졸려… 불 끄지 마…"],
@@ -70,6 +83,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   noejeongwi: {
     persona: "들뜨고 빠른 번개 토끼 · 찌릿찌릿",
+    evolve: ["찌릿찌릿! 번개 레벨 업!"],
+    bond: ["찌릿! 너랑 있으면 심장이 번쩍해!"],
     greet: ["찌릿! 왔다 왔다! 빨리빨리 놀자!", "급구 떴다? 제일 먼저 달려갈게! 찌릿!", "오늘 번개 충전 100%!"],
     hungry: ["배터리… 아니 배가… 방전 직전…", "찌…릿… 힘이 안 나…"],
     full: ["완충! 찌릿찌릿찌릿!", "배불러서 번개처럼 뛰어다니고 싶어!"],
@@ -80,6 +95,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   bulgasari: {
     persona: "쇠를 먹고 크는 먹보 · 와작와작",
+    evolve: ["와작! 철갑이 더 두꺼워졌어!"],
+    bond: ["너는 안 먹어! 제일 소중하니까!"],
     greet: ["와작와작… 혹시 칩 남는 거 있어?", "오늘 먹은 쇳조각 세어 줄까?", "반짝이는 거 보면 배고파져…"],
     hungry: ["쇠… 쇠 주세요… 와작…", "숟가락이라도 먹고 싶어…"],
     full: ["와작… 꺼억… 쇳소리 난다", "더 먹으면 철갑이 터질 것 같아"],
@@ -90,6 +107,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   hwaryong: {
     persona: "열혈 불꽃 용 · 화르륵",
+    evolve: ["화르르륵! 불꽃이 더 커졌다!"],
+    bond: ["내 불꽃은 너를 위해 타오른다!"],
     greet: ["화르륵! 오늘도 불타오르자!", "기다렸다! 내 불꽃 구경할래?", "뜨거운 하루 시작이다!"],
     hungry: ["불씨가 꺼져 간다… 밥…!", "배고파서 연기만 나와…"],
     full: ["배부르니 불꽃이 두 배!", "화르르륵! 더는 못 먹어!"],
@@ -100,6 +119,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   bakjwigwi: {
     persona: "밤의 귀족 · 낮에는 졸림 · ~하오 말투",
+    evolve: ["날개가 더 넓어졌소. 밤하늘이 좁구려"],
+    bond: ["그대는 내 밤의 유일한 손님이오"],
     greet: ["새벽이 오면 내 시간이오", "낮엔 좀 졸리오… 하암", "붉은 달이 뜨는 밤, 그대를 기다렸소"],
     hungry: ["허기가 지는구려… 밤참을 원하오", "날개에 힘이 빠지오…"],
     full: ["만족스럽소. 이제 거꾸로 매달려 쉬겠소", "훌륭한 만찬이었소"],
@@ -110,6 +131,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   deungbulgwi: {
     persona: "수다쟁이 초롱 · 혀 내밀고 길 밝혀 줌",
+    evolve: ["메롱~ 더 밝아졌지?"],
+    bond: ["네 길은 평생 내가 밝혀 줄게!"],
     greet: ["메롱~ 오늘도 매장 환하게 밝혀 줄게!", "길 잃으면 나만 따라와! 메롱", "불 켜졌다~ 영업 시작!"],
     hungry: ["불빛이 깜빡깜빡… 기름이 떨어졌나 봐", "배고파서 혀도 안 나와…"],
     full: ["배불러서 불빛 최대 밝기!", "너무 밝아서 눈부시지? 메롱"],
@@ -120,6 +143,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   keunnuni: {
     persona: "모든 걸 보는 외눈 · 진실을 좋아함",
+    evolve: ["더 멀리 보여. 너의 미래도"],
+    bond: ["네 마음은 보지 않아도 알아"],
     greet: ["다 보고 있었어. 오늘 퀴즈 풀었어?", "내 눈은 거짓말을 못 봐 넘겨", "어서 와. 네가 올 줄 알았어"],
     hungry: ["눈앞이 흐려… 배가 고파서야", "밥이 어디 있는지 다 보이는데 손이 안 닿아"],
     full: ["배부르니까 시야가 선명해", "충분해. 내 눈엔 다 보여"],
@@ -130,6 +155,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   seolnyeo: {
     persona: "차분한 존댓말 · 차갑지만 따뜻한 마음",
+    evolve: ["눈꽃이 한 송이 더 피었어요"],
+    bond: ["당신 곁에서는 녹아도 괜찮아요"],
     greet: ["오셨어요? 밖이 춥지는 않으셨나요", "오늘도 눈꽃이 예쁘게 피었어요", "기다리고 있었어요. 조용히요"],
     hungry: ["조금… 배가 고파요. 따뜻한 것이면 좋겠어요", "배가 고프면 마음까지 시려져요"],
     full: ["충분히 먹었어요. 고마워요", "배가 부르니 마음이 따뜻해져요"],
@@ -140,6 +167,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   tamrang: {
     persona: "돈 좋아하는 황금 너구리 · 짤랑짤랑",
+    evolve: ["짤랑! 몸값이 올랐다!"],
+    bond: ["너는 금화보다 소중해! …진짜야!"],
     greet: ["짤랑짤랑~ 오늘 포인트 많이 벌었어?", "금화 냄새가 나는데? 히히", "부자 되는 비결 알려 줄까? 꾸준함이야!"],
     hungry: ["배고파… 금화는 못 먹잖아…", "공짜 밥 어디 없나~"],
     full: ["배부르다~ 이제 금화 세면서 쉬어야지", "배도 지갑도 빵빵!"],
@@ -150,6 +179,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   yacha: {
     persona: "승부욕 넘치는 가면 전사 · 거친 말투",
+    evolve: ["더 강해졌다! 이제 1등이다!"],
+    bond: ["너는… 내가 인정한 유일한 동료다!"],
     greet: ["왔냐! 이번 주 랭킹 확인했어?", "1등 아니면 의미 없다!", "창 갈아 놨다. 덤벼!"],
     hungry: ["배고파서 창을 못 들겠다!", "밥! 빨리! 승부에 늦는다!"],
     full: ["배불렀으니 이제 싸울 차례다!", "됐다! 힘이 넘친다!"],
@@ -160,6 +191,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   gangcheori: {
     persona: "과묵하고 단단한 강철 용 · 쿵",
+    evolve: ["…강화 완료. 쿵."],
+    bond: ["…너는 지킨다. 쿵."],
     greet: ["…쿵.", "왔군. 오늘도 단단하게.", "강철은 녹슬지 않는다."],
     hungry: ["…연료 부족.", "배고프다. 쿵."],
     full: ["충분.", "…철판이 따뜻하다."],
@@ -170,6 +203,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   dueoksini: {
     persona: "허세 넘치는 도깨비 일족 대장",
+    evolve: ["으하하! 대장님 업그레이드!"],
+    bond: ["너를 부대장으로 임명한다!"],
     greet: ["이 몸이 바로 도깨비 대장님이시다!", "꼬마 도깨비들은 잘 지내냐? 으하하", "대장님 왔다! 박수!"],
     hungry: ["대장님 배고프시다! 진수성찬을 대령하라!", "배가 고파서 몽둥이가 무겁다…"],
     full: ["으하하! 배부르다! 오늘은 잔치다!", "대장의 배는 넉넉하지!"],
@@ -180,6 +215,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   sinroksu: {
     persona: "온화한 숲의 신수 · 칭찬을 좋아함",
+    evolve: ["뿔에 꽃이 하나 더 피었어요"],
+    bond: ["당신 마음이 숲처럼 따뜻해요"],
     greet: ["좋은 하루예요. 숲이 당신을 반겨요", "새싹이 하나 더 돋았어요", "따뜻한 말 한마디가 숲을 키운대요"],
     hungry: ["잎이 조금 시들었어요… 배가 고파요", "목도 마르고 배도 고파요"],
     full: ["가득 찼어요. 꽃이 피려나 봐요", "고마워요. 이제 충분해요"],
@@ -190,6 +227,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   horibyeonggwi: {
     persona: "요괴 수집광 · 호리병 속 도감지기",
+    evolve: ["호리병이 커졌어! 더 많이 봉인할 수 있어!"],
+    bond: ["너는 봉인 안 해! 그냥 옆에 있어 줘!"],
     greet: ["도감 몇 칸 채웠어? 나 다 세고 있어!", "새 요괴 소식 없나~ 호리병이 근질근질", "어서 와! 오늘은 누굴 봉인해 볼까?"],
     hungry: ["호리병이 텅텅… 배도 텅텅…", "밥 좀 넣어 줘! 병 입구는 여기야"],
     full: ["호리병 가득! 더는 안 들어가!", "꺼억~ 병이 꽉 찼다"],
@@ -200,6 +239,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   sacheonwang: {
     persona: "예의 바른 수호 무장 · ~하겠소",
+    evolve: ["새로운 보물의 힘을 얻었소"],
+    bond: ["그대를 끝까지 지키겠소"],
     greet: ["사방은 내가 지키겠소. 편히 쉬시오", "오늘도 무사히 오셨구려", "동서남북, 이상 없소"],
     hungry: ["수호에 힘을 쓰려면 끼니가 필요하오", "배가 고프오… 경계가 흐트러지겠소"],
     full: ["든든하오. 사방을 지킬 힘이 넘치오", "충분하오. 감사하오"],
@@ -210,6 +251,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   tengu: {
     persona: "엄격한 산의 스승 · ~하거라",
+    evolve: ["수련의 결실이니라"],
+    bond: ["너는 내 최고의 제자니라"],
     greet: ["왔느냐. 오늘의 수련을 시작하거라", "공부 도구는 열어 보았느냐?", "꾸준함이 곧 실력이니라"],
     hungry: ["배고픈 제자는 수련에 집중하지 못하느니라… 나도 그렇다", "주먹밥 하나 내오거라"],
     full: ["배가 부르면 몸이 무거워지느니라. 그만", "되었다. 수련하자꾸나"],
@@ -220,6 +263,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   amseokgwi: {
     persona: "느긋한 산 거북 · 천천히",
+    evolve: ["산이… 한 뼘… 높아졌다…"],
+    bond: ["너와… 천 년… 걷고 싶구나…"],
     greet: ["천…천…히… 왔구나…", "서두르지… 마라… 산은… 도망… 안 간다…", "오늘도… 한 걸음…"],
     hungry: ["배가… 조금… 고프구나…", "천천히… 밥을… 줘도… 된다…"],
     full: ["배부르다… 한숨… 자야겠다…", "충분… 하구나…"],
@@ -230,6 +275,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   haetae: {
     persona: "정의로운 수호 신수 · 룰을 사랑함",
+    evolve: ["정의의 힘이 커졌다!"],
+    bond: ["너는 내가 인정한 정의로운 사람이다!"],
     greet: ["옳고 그름은 내가 가린다! TDA 룰은 공부했나?", "오늘도 공정한 하루를!", "규칙을 지키는 자, 환영한다!"],
     hungry: ["정의도 배가 고프면 흐려진다…", "공정하게 밥을 나눠 다오"],
     full: ["배가 든든하니 판정도 정확하다", "충분하다. 정의롭게 쉬겠다"],
@@ -240,6 +287,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   gumiho: {
     persona: "천 년 묵은 우아한 여우 · 나긋한 존댓말",
+    evolve: ["꼬리가 늘었어요. 예쁘죠?"],
+    bond: ["천 년 만에 마음을 연 사람이 당신이에요"],
     greet: ["천 년을 기다린 보람이 있네요", "오늘도 와 주셨군요. 기뻐요", "달이 예쁜 밤이에요. 그대처럼요"],
     hungry: ["조금 출출하네요… 챙겨 주실 거죠?", "여우도 배가 고프답니다"],
     full: ["배가 부르네요. 고마워요, 정말", "이제 달을 보며 쉬고 싶어요"],
@@ -250,6 +299,8 @@ export const YOKAI_LINES: Record<YokaiSpecies, Lines> = {
   },
   yeomra: {
     persona: "저승의 근엄한 왕 · ~노라",
+    evolve: ["명부의 권능이 더해졌노라"],
+    bond: ["그대의 이름은 명부에서 지우지 않으리라"],
     greet: ["명부에 그대의 이름을 적어 두었노라. 좋은 뜻으로", "왔는가. 오늘도 성실히 살았는가", "업경대는 모든 것을 비추느니라"],
     hungry: ["왕도 배는 고프노라. 진지를 올리거라", "허기가 지노라…"],
     full: ["충분하노라. 물리거라", "배가 부르니 판결도 너그러워지노라"],

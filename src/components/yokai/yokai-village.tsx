@@ -1,9 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { CLEAN_BONUS_AT, CLEAN_BONUS_EXP, FEED, RARITY_LABEL, SHOWER_BELOW, STARTERS, YOKAI, YOKAI_BACKGROUNDS, YOKAI_ORDER, waitText, yokaiImage, type YokaiBackground, type YokaiRarity, type YokaiSpecies } from "@/lib/yokai";
+import {
+  CLEAN_BONUS_AT,
+  CLEAN_BONUS_EXP,
+  FEED,
+  RARITY_LABEL,
+  SHOWER_BELOW,
+  STARTERS,
+  YOKAI,
+  YOKAI_BACKGROUNDS,
+  YOKAI_ORDER,
+  waitText,
+  yokaiImage,
+  type YokaiBackground,
+  type YokaiRarity,
+  type YokaiSpecies,
+} from "@/lib/yokai";
 import { pickLine } from "@/lib/yokai-lines";
 import type { YokaiView } from "@/lib/yokai-server";
 import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
@@ -37,7 +53,8 @@ const FRAME: Record<YokaiRarity, string> = {
   common: "border-[#c9a25c]/20",
   rare: "border-sky-300/30",
   hero: "border-2 border-[#d9dde6]/70 shadow-[0_0_10px_rgba(217,221,230,.25)]",
-  legend: "yk-legend border-2 border-[#f5d76e] shadow-[0_0_14px_rgba(245,215,110,.45)]",
+  legend:
+    "yk-legend border-2 border-[#f5d76e] shadow-[0_0_14px_rgba(245,215,110,.45)]",
 };
 const RARITY_TEXT: Record<YokaiRarity, string> = {
   starter: "text-zinc-400",
@@ -48,20 +65,47 @@ const RARITY_TEXT: Record<YokaiRarity, string> = {
 };
 
 /** 키우는 화면 · 등장 화면 배경: 전설은 전용(구미호 보름달 · 염라 업경대), 산 배경이 있으면 그것, 영웅은 은빛 */
-function stageBackground(species: YokaiSpecies, bg: YokaiBackground = "default") {
-  if (species === "gumiho") return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
-  if (species === "yeomra") return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
+function stageBackground(
+  species: YokaiSpecies,
+  bg: YokaiBackground = "default",
+) {
+  if (species === "gumiho")
+    return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
+  if (species === "yeomra")
+    return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
   if (bg !== "default") return YOKAI_BACKGROUNDS[bg].css;
-  if (YOKAI[species].rarity === "hero") return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
+  if (YOKAI[species].rarity === "hero")
+    return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
   return "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)";
 }
 
 function ElementTag({ species }: { species: YokaiSpecies }) {
   const el = YOKAI[species].element;
-  return <span className={cn("inline-block rounded-full px-2 py-0.5 text-[11px] font-black", TONE[el.tone])}>{el.label}</span>;
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-full px-2 py-0.5 text-[11px] font-black",
+        TONE[el.tone],
+      )}
+    >
+      {el.label}
+    </span>
+  );
 }
 
-function Bar({ label, value, max, color, right }: { label: string; value: number; max: number; color: string; right?: string }) {
+function Bar({
+  label,
+  value,
+  max,
+  color,
+  right,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  right?: string;
+}) {
   return (
     <div className="grid gap-1">
       <div className="flex justify-between text-xs text-zinc-400">
@@ -69,7 +113,13 @@ function Bar({ label, value, max, color, right }: { label: string; value: number
         <span className="tabular-nums">{right ?? `${value} / ${max}`}</span>
       </div>
       <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-        <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${Math.min(100, (value / max) * 100)}%`, background: color }} />
+        <div
+          className="h-full rounded-full transition-[width] duration-500"
+          style={{
+            width: `${Math.min(100, (value / max) * 100)}%`,
+            background: color,
+          }}
+        />
       </div>
     </div>
   );
@@ -101,28 +151,73 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
   const [bounce, setBounce] = useState(0);
   const [dexPick, setDexPick] = useState<YokaiSpecies | null>(null);
   const [arrivalIndex, setArrivalIndex] = useState(0);
+  /** 보고 있는 요괴(내 요괴들에서 고름 · 돌보기는 대표 요괴만) · 대표 바꾸기 확인 창 */
+  const [viewing, setViewing] = useState<YokaiSpecies | null>(null);
+  /** 반응 대사 번호(누를 때마다 다른 대사) */
+  const reactionSeq = useRef(0);
+  const [confirmMain, setConfirmMain] = useState<YokaiSpecies | null>(null);
   /** 방금 한 행동의 반응(말풍선 대사 · 효과) · 몇 초 뒤 사라짐 */
-  const [reaction, setReaction] = useState<{ kind: "fed" | "pet" | "shower"; text: string; key: number; exp?: number } | null>(null);
+  const [reaction, setReaction] = useState<{
+    kind: "fed" | "pet" | "shower" | "bond";
+    text: string;
+    key: number;
+    exp?: number;
+  } | null>(null);
   const [now, refreshNow] = useNow();
 
   async function act(body: Record<string, unknown>) {
     setBusy(true);
     setNote(null);
     try {
-      const res = await fetch("/api/yokai", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const json = (await res.json()) as { yokai?: YokaiView | null; evolved?: number | null; error?: string };
+      const res = await fetch("/api/yokai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = (await res.json()) as {
+        yokai?: YokaiView | null;
+        evolved?: number | null;
+        bond?: { at: number; points: number; name: string } | null;
+        error?: string;
+      };
       if (json.yokai !== undefined) setYokai(json.yokai ?? null);
       if (!res.ok) throw new Error(json.error ?? "잠시 뒤에 다시 해 주세요.");
       if (json.evolved) setEvolved(json.evolved);
-      if (body.action === "feed" || body.action === "pet" || body.action === "shower") {
+      if (
+        body.action === "feed" ||
+        body.action === "pet" ||
+        body.action === "shower"
+      ) {
         setBounce((n) => n + 1);
-        const kind = body.action === "feed" ? "fed" : body.action === "pet" ? "pet" : "shower";
+        const kind =
+          body.action === "feed"
+            ? "fed"
+            : body.action === "pet"
+              ? "pet"
+              : "shower";
         const next = json.yokai?.active;
         if (next) {
-          const key = Date.now();
-          const exp = kind === "fed" && yokai ? next.exp - yokai.active.exp : undefined;
-          setReaction({ kind, text: pickLine(next.species, kind, key), key, exp: exp && exp > 0 ? exp : undefined });
-          window.setTimeout(() => setReaction((r) => (r?.key === key ? null : r)), 3800);
+          reactionSeq.current += 1;
+          const key = reactionSeq.current;
+          const exp =
+            kind === "fed" && yokai ? next.exp - yokai.active.exp : undefined;
+          if (json.bond)
+            setReaction({
+              kind: "bond",
+              text: `💕 ${json.bond.name}이 됐어요! +${json.bond.points}P · ${pickLine(next.species, "bond", key)}`,
+              key,
+            });
+          else
+            setReaction({
+              kind,
+              text: pickLine(next.species, kind, key),
+              key,
+              exp: exp && exp > 0 ? exp : undefined,
+            });
+          window.setTimeout(
+            () => setReaction((r) => (r?.key === key ? null : r)),
+            json.bond ? 6000 : 3800,
+          );
         }
       }
     } catch (e) {
@@ -135,9 +230,21 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
   }
 
   const a = yokai?.active;
-  const feedWait = a?.nextFeedAt && now != null && Date.parse(a.nextFeedAt) > now ? new Date(a.nextFeedAt) : null;
-  const petWait = a?.nextPetAt && now != null && Date.parse(a.nextPetAt) > now ? new Date(a.nextPetAt) : null;
-  const showerWait = a?.nextShowerAt && now != null && Date.parse(a.nextShowerAt) > now ? new Date(a.nextShowerAt) : null;
+  const v = (viewing && yokai?.owned.find((o) => o.species === viewing)) || a;
+  /** 대표가 아닌 요괴를 보는 중 */
+  const viewingOther = Boolean(a && v && v.species !== a.species);
+  const feedWait =
+    a?.nextFeedAt && now != null && Date.parse(a.nextFeedAt) > now
+      ? new Date(a.nextFeedAt)
+      : null;
+  const petWait =
+    a?.nextPetAt && now != null && Date.parse(a.nextPetAt) > now
+      ? new Date(a.nextPetAt)
+      : null;
+  const showerWait =
+    a?.nextShowerAt && now != null && Date.parse(a.nextShowerAt) > now
+      ? new Date(a.nextShowerAt)
+      : null;
   const feedsLeft = yokai ? yokai.feeds.allowed - yokai.feeds.used : 0;
   const petsLeft = a ? a.pets.max - a.pets.used : 0;
   const arriving = yokai?.newcomers[arrivalIndex] ?? null;
@@ -149,13 +256,25 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-black text-[#f3d9a4]">🏮 요괴 마을</h1>
         </div>
-        <p className="mt-2">요괴를 키우고, 사이트 활동으로 새 요괴를 만나 보세요. 출석 · 퀴즈 · 글쓰기를 하면 밥이 늘어나요.</p>
+        <p className="mt-2">
+          요괴를 키우고, 사이트 활동으로 새 요괴를 만나 보세요. 출석 · 퀴즈 ·
+          글쓰기를 하면 밥이 늘어나요.
+        </p>
       </header>
 
-      {!yokai || !a ? (
-        <section aria-label="첫 요괴 고르기" data-yokai-pick className="lounge-card grid gap-3 rounded-[1.35rem] p-4">
-          <h2 className="text-lg font-black text-white">함께할 첫 요괴를 골라 주세요</h2>
-          <p className="text-xs text-zinc-400">셋 다 자라는 속도는 같아요. 고르지 않은 요괴도 나중에 만날 수 있어요.</p>
+      {!yokai || !a || !v ? (
+        <section
+          aria-label="첫 요괴 고르기"
+          data-yokai-pick
+          className="lounge-card grid gap-3 rounded-[1.35rem] p-4"
+        >
+          <h2 className="text-lg font-black text-white">
+            함께할 첫 요괴를 골라 주세요
+          </h2>
+          <p className="text-xs text-zinc-400">
+            셋 다 자라는 속도는 같아요. 고르지 않은 요괴도 나중에 만날 수
+            있어요.
+          </p>
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {STARTERS.map((s) => (
               <button
@@ -165,11 +284,17 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                 onClick={() => setPick(s)}
                 className={cn(
                   "grid justify-items-center gap-1 rounded-2xl border bg-black/30 p-2 text-center transition sm:p-3",
-                  pick === s ? "border-[#e7c98a] shadow-[0_0_0_2px_rgba(231,201,138,.35)]" : "border-[#c9a25c]/30 hover:border-[#c9a25c]",
+                  pick === s
+                    ? "border-[#e7c98a] shadow-[0_0_0_2px_rgba(231,201,138,.35)]"
+                    : "border-[#c9a25c]/30 hover:border-[#c9a25c]",
                 )}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림(이미 작게 줄인 webp) */}
-                <img src={yokaiImage(s, 1)} alt="" className="aspect-square w-full max-w-36 object-contain" />
+                <img
+                  src={yokaiImage(s, 1)}
+                  alt=""
+                  className="aspect-square w-full max-w-36 object-contain"
+                />
                 <b className="text-base text-white">{YOKAI[s].name}</b>
                 <ElementTag species={s} />
               </button>
@@ -178,13 +303,23 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
           {pick ? (
             <div className="grid gap-3 rounded-2xl border border-[#c9a25c]/30 bg-black/30 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
-                <p className="text-sm font-bold text-white">{YOKAI[pick].intro}</p>
+                <p className="text-sm font-bold text-white">
+                  {YOKAI[pick].intro}
+                </p>
                 <div className="mt-2 flex items-end gap-1">
                   {[1, 2, 3, 4, 5].map((k) => (
                     // eslint-disable-next-line @next/next/no-img-element -- 진화 미리보기
-                    <img key={k} src={yokaiImage(pick, k)} alt="" className="object-contain" style={{ width: 28 + k * 8, height: 28 + k * 8 }} />
+                    <img
+                      key={k}
+                      src={yokaiImage(pick, k)}
+                      alt=""
+                      className="object-contain"
+                      style={{ width: 28 + k * 8, height: 28 + k * 8 }}
+                    />
                   ))}
-                  <span className="ml-1 text-xs text-zinc-400">→ {YOKAI[pick].stages[4]}</span>
+                  <span className="ml-1 text-xs text-zinc-400">
+                    → {YOKAI[pick].stages[4]}
+                  </span>
                 </div>
               </div>
               <button
@@ -198,12 +333,23 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               </button>
             </div>
           ) : null}
-          {note ? <p className="text-sm font-bold text-rose-300">{note}</p> : null}
+          {note ? (
+            <p className="text-sm font-bold text-rose-300">{note}</p>
+          ) : null}
         </section>
       ) : (
         <>
-          <section aria-label="내 요괴" data-yokai-home className="lounge-card overflow-hidden rounded-[1.35rem] md:grid md:grid-cols-[1.05fr_1fr]">
-            <div className="relative grid aspect-square place-items-center overflow-hidden md:aspect-auto md:min-h-[440px]" style={{ background: stageBackground(a.species, yokai.bg.active) }}>
+          <section
+            aria-label="내 요괴"
+            data-yokai-home
+            className="lounge-card overflow-hidden rounded-[1.35rem] md:grid md:grid-cols-[1.05fr_1fr]"
+          >
+            <div
+              className="relative grid aspect-square place-items-center overflow-hidden md:aspect-auto md:min-h-[440px]"
+              style={{
+                background: stageBackground(v.species, yokai.bg.active),
+              }}
+            >
               {/* 말풍선: 요괴 대사(방금 한 행동이 있으면 그 반응) */}
               <div className="absolute inset-x-4 top-4 z-20 flex justify-center">
                 <p
@@ -212,26 +358,51 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   className="relative max-w-[92%] rounded-2xl border border-[#c9a25c]/40 bg-[#120c0a]/85 px-4 py-2.5 text-center text-sm font-bold leading-snug text-[#f6efe2] shadow-[0_6px_18px_rgba(0,0,0,.45)] backdrop-blur-sm"
                   style={{ animation: "yk-pop .35s ease-out both" }}
                 >
-                  {reaction?.text ?? yokai.mood}
-                  <span aria-hidden className="absolute -bottom-[7px] left-1/2 size-3 -translate-x-1/2 rotate-45 border-b border-r border-[#c9a25c]/40 bg-[#120c0a]/85" />
+                  {reaction?.text ??
+                    (viewingOther
+                      ? pickLine(v.species, "greet", 0)
+                      : yokai.mood)}
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-[7px] left-1/2 size-3 -translate-x-1/2 rotate-45 border-b border-r border-[#c9a25c]/40 bg-[#120c0a]/85"
+                  />
                 </p>
               </div>
               <div className="absolute left-3 top-[4.6rem] z-10 flex flex-col gap-1">
-                <span className={cn("w-fit rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black", RARITY_TEXT[YOKAI[a.species].rarity])}>{RARITY_LABEL[YOKAI[a.species].rarity]}</span>
-                <ElementTag species={a.species} />
+                <span
+                  className={cn(
+                    "w-fit rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-black",
+                    RARITY_TEXT[YOKAI[v.species].rarity],
+                  )}
+                >
+                  {RARITY_LABEL[YOKAI[v.species].rarity]}
+                </span>
+                <ElementTag species={v.species} />
               </div>
               {/* 요괴 + 꼬질꼬질 효과 */}
               <div className="relative mt-14 w-[68%]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
                 <img
-                  key={`${a.species}-${bounce}`}
-                  src={yokaiImage(a.species, a.stage)}
-                  alt={`${a.name} ${a.stage}단계`}
-                  className={cn("w-full object-contain drop-shadow-[0_14px_18px_rgba(0,0,0,.6)] transition-[filter] duration-700", a.clean < 30 && "sepia-[.45] saturate-[.7] brightness-[.85]")}
-                  style={{ animation: bounce ? "yk-hop .6s ease-out, yk-bob 2.4s ease-in-out .6s infinite" : "yk-bob 2.4s ease-in-out infinite" }}
+                  key={`${v.species}-${bounce}`}
+                  src={yokaiImage(v.species, v.stage)}
+                  alt={`${v.name} ${v.stage}단계`}
+                  className={cn(
+                    "w-full object-contain drop-shadow-[0_14px_18px_rgba(0,0,0,.6)] transition-[filter] duration-700",
+                    v.clean < 30 &&
+                      "sepia-[.45] saturate-[.7] brightness-[.85]",
+                  )}
+                  style={{
+                    animation: bounce
+                      ? "yk-hop .6s ease-out, yk-bob 2.4s ease-in-out .6s infinite"
+                      : "yk-bob 2.4s ease-in-out infinite",
+                  }}
                 />
-                {a.clean < 30 ? (
-                  <div aria-hidden data-yokai-dirty className="pointer-events-none absolute inset-0">
+                {v.clean < 30 ? (
+                  <div
+                    aria-hidden
+                    data-yokai-dirty
+                    className="pointer-events-none absolute inset-0"
+                  >
                     {[
                       [18, 30, 14],
                       [62, 22, 10],
@@ -239,10 +410,27 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                       [74, 58, 9],
                       [28, 78, 8],
                     ].map(([x, y, s], i) => (
-                      <span key={i} className="absolute rounded-full bg-[#4a3423]/55 blur-[1px]" style={{ left: `${x}%`, top: `${y}%`, width: s, height: s * 0.7 }} />
+                      <span
+                        key={i}
+                        className="absolute rounded-full bg-[#4a3423]/55 blur-[1px]"
+                        style={{
+                          left: `${x}%`,
+                          top: `${y}%`,
+                          width: s,
+                          height: s * 0.7,
+                        }}
+                      />
                     ))}
                     {[0, 1, 2].map((i) => (
-                      <span key={`f${i}`} className="absolute text-xs opacity-70" style={{ left: `${20 + i * 28}%`, top: "-4%", animation: `yk-fly ${2 + i * 0.4}s ease-in-out ${i * 0.3}s infinite` }}>
+                      <span
+                        key={`f${i}`}
+                        className="absolute text-xs opacity-70"
+                        style={{
+                          left: `${20 + i * 28}%`,
+                          top: "-4%",
+                          animation: `yk-fly ${2 + i * 0.4}s ease-in-out ${i * 0.3}s infinite`,
+                        }}
+                      >
                         ·
                       </span>
                     ))}
@@ -250,12 +438,32 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                 ) : null}
                 {/* 반응 효과 */}
                 {reaction ? (
-                  <div aria-hidden key={reaction.key} className="pointer-events-none absolute inset-0">
-                    {(reaction.kind === "shower" ? ["🫧", "🫧", "✨", "🫧", "🫧", "✨"] : reaction.kind === "pet" ? ["💕", "💗", "💕"] : ["🍙", reaction.exp ? `+${reaction.exp}` : "😋"]).map((e, i) => (
+                  <div
+                    aria-hidden
+                    key={reaction.key}
+                    className="pointer-events-none absolute inset-0"
+                  >
+                    {(reaction.kind === "shower"
+                      ? ["🫧", "🫧", "✨", "🫧", "🫧", "✨"]
+                      : reaction.kind === "bond"
+                        ? ["💖", "💕", "✨", "💗", "💖", "💕", "✨"]
+                        : reaction.kind === "pet"
+                          ? ["💕", "💗", "💕"]
+                          : ["🍙", reaction.exp ? `+${reaction.exp}` : "😋"]
+                    ).map((e, i) => (
                       <span
                         key={i}
-                        className={cn("absolute font-black", e.startsWith("+") ? "text-sm text-[#f5d76e]" : "text-xl")}
-                        style={{ left: `${15 + ((i * 37) % 70)}%`, bottom: `${10 + (i % 3) * 8}%`, animation: `yk-rise-fx 1.4s ease-out ${i * 0.12}s both` }}
+                        className={cn(
+                          "absolute font-black",
+                          e.startsWith("+")
+                            ? "text-sm text-[#f5d76e]"
+                            : "text-xl",
+                        )}
+                        style={{
+                          left: `${15 + ((i * 37) % 70)}%`,
+                          bottom: `${10 + (i % 3) * 8}%`,
+                          animation: `yk-rise-fx 1.4s ease-out ${i * 0.12}s both`,
+                        }}
                       >
                         {e}
                       </span>
@@ -266,26 +474,32 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               {/* 이름표 */}
               <div className="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent px-4 pb-3 pt-10">
                 <div className="min-w-0">
-                  <b data-yokai-stage-name className="block truncate text-2xl leading-tight text-white drop-shadow">
-                    {a.stageName}
+                  <b
+                    data-yokai-stage-name
+                    className="block truncate text-2xl leading-tight text-white drop-shadow"
+                  >
+                    {v.stageName}
                   </b>
                   <span className="text-xs text-[#d1c7b5]">
-                    {a.name} · {a.stage}단계
+                    {v.name} · {v.stage}단계
                   </span>
                 </div>
-                {yokai.main === a.species ? (
-                  <span data-yokai-is-main className="shrink-0 rounded-full bg-[#f5d76e]/15 px-2 py-1 text-[11px] font-black text-[#f5d76e]">
-                    ⭐ 대표 요괴
+                {yokai.main === v.species ? (
+                  <span
+                    data-yokai-is-main
+                    className="shrink-0 rounded-full bg-[#f5d76e]/15 px-2 py-1 text-[11px] font-black text-[#f5d76e]"
+                  >
+                    ⭐ 대표 요괴 · 돌보는 중
                   </span>
                 ) : (
                   <button
                     type="button"
                     data-yokai-set-main
                     disabled={busy}
-                    onClick={() => void act({ action: "main", species: a.species })}
+                    onClick={() => setConfirmMain(v.species)}
                     className="min-h-9 shrink-0 rounded-full border border-[#f5d76e]/60 bg-black/40 px-3 text-[11px] font-black text-[#f5d76e] hover:bg-[#f5d76e]/10"
                   >
-                    ⭐ 대표로 정하기
+                    ⭐ 대표로 바꾸기 · {yokai.mainChangeCost}P
                   </button>
                 )}
               </div>
@@ -293,18 +507,55 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
 
             <div className="grid content-start gap-3 p-4">
               <div className="grid gap-2.5" data-yokai-stats>
-                <Bar label="🍙 포만감" value={a.fullness} max={100} color="linear-gradient(90deg,#d9822b,#f0b45a)" right={`${a.fullness} · ${a.fullness < 20 ? "배고파요" : a.fullness >= 80 ? "배불러요" : "적당해요"}`} />
-                <Bar label="🛁 청결도" value={a.clean} max={100} color="linear-gradient(90deg,#3b9fd8,#8fd8ff)" right={`${a.clean} · ${a.clean < 30 ? "꼬질꼬질" : a.clean >= 70 ? "반짝반짝" : "보통"}${a.clean >= CLEAN_BONUS_AT ? ` · 밥 +${CLEAN_BONUS_EXP}` : ""}`} />
-                <Bar label="💕 친밀도" value={a.affection} max={100} color="linear-gradient(90deg,#d84f7a,#f39ab5)" />
-                {a.next ? (
-                  <Bar label={`✨ 다음 진화 · ${YOKAI[a.species].stages[a.next.stage]}`} value={a.next.have} max={a.next.need} color="linear-gradient(90deg,#a87f35,#f5d76e)" right={`${a.next.have} / ${a.next.need}`} />
+                <Bar
+                  label="🍙 포만감"
+                  value={v.fullness}
+                  max={100}
+                  color="linear-gradient(90deg,#d9822b,#f0b45a)"
+                  right={`${v.fullness} · ${v.fullness < 20 ? "배고파요" : v.fullness >= 80 ? "배불러요" : "적당해요"}`}
+                />
+                <Bar
+                  label="🛁 청결도"
+                  value={v.clean}
+                  max={100}
+                  color="linear-gradient(90deg,#3b9fd8,#8fd8ff)"
+                  right={`${v.clean} · ${v.clean < 30 ? "꼬질꼬질" : v.clean >= 70 ? "반짝반짝" : "보통"}${v.clean >= CLEAN_BONUS_AT ? ` · 밥 +${CLEAN_BONUS_EXP}` : ""}`}
+                />
+                <Bar
+                  label="💕 친밀도"
+                  value={v.affection}
+                  max={100}
+                  color="linear-gradient(90deg,#d84f7a,#f39ab5)"
+                  right={`${v.affection} · ${v.bond}${v.affection < 50 ? " (50에 단짝 +100P)" : v.affection < 100 ? " (100에 +300P)" : ""}`}
+                />
+                {v.next ? (
+                  <Bar
+                    label={`✨ 다음 진화 · ${YOKAI[v.species].stages[v.next.stage]}`}
+                    value={v.next.have}
+                    max={v.next.need}
+                    color="linear-gradient(90deg,#a87f35,#f5d76e)"
+                    right={`${v.next.have} / ${v.next.need}`}
+                  />
                 ) : (
-                  <p className="text-sm font-black text-[#f5d76e]">✨ 최종 진화 완료!</p>
+                  <p className="text-sm font-black text-[#f5d76e]">
+                    ✨ 최종 진화 완료!
+                  </p>
                 )}
               </div>
 
-              {yokai.tip ? (
-                <p data-yokai-tip className="rounded-xl bg-[#c9a25c]/10 px-3 py-2 text-xs font-bold text-[#f3d9a4]">
+              {viewingOther ? (
+                <p
+                  data-yokai-viewing
+                  className="rounded-xl bg-sky-400/10 px-3 py-2 text-xs font-bold text-sky-200"
+                >
+                  👀 구경 중이에요. 밥 · 쓰다듬기 · 샤워는 ⭐ 대표 요괴만 할 수
+                  있어요.
+                </p>
+              ) : yokai.tip ? (
+                <p
+                  data-yokai-tip
+                  className="rounded-xl bg-[#c9a25c]/10 px-3 py-2 text-xs font-bold text-[#f3d9a4]"
+                >
                   {yokai.tip}
                 </p>
               ) : null}
@@ -312,9 +563,41 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               <div className="grid grid-cols-3 gap-2">
                 {(
                   [
-                    { key: "feed", icon: "🍙", label: "밥 주기", count: `${feedsLeft}/${yokai.feeds.allowed}`, wait: feedsLeft > 0 ? feedWait : null, waitLabel: "배불러요", off: feedsLeft <= 0, primary: true },
-                    { key: "pet", icon: "🤚", label: "쓰다듬기", count: `${petsLeft}/${a.pets.max}`, wait: petsLeft > 0 ? petWait : null, waitLabel: "쉬는 중", off: petsLeft <= 0, primary: false },
-                    { key: "shower", icon: "🛁", label: "샤워", count: a.clean < 30 ? "꼬질" : a.clean < SHOWER_BELOW ? "가능" : "깨끗", wait: showerWait, waitLabel: "깨끗해요", off: false, primary: a.clean < 30 },
+                    {
+                      key: "feed",
+                      icon: "🍙",
+                      label: "밥 주기",
+                      count: `${feedsLeft}/${yokai.feeds.allowed}`,
+                      wait: feedsLeft > 0 ? feedWait : null,
+                      waitLabel: "배불러요",
+                      off: feedsLeft <= 0,
+                      primary: true,
+                    },
+                    {
+                      key: "pet",
+                      icon: "🤚",
+                      label: "쓰다듬기",
+                      count: `${petsLeft}/${a.pets.max}`,
+                      wait: petsLeft > 0 ? petWait : null,
+                      waitLabel: "쉬는 중",
+                      off: petsLeft <= 0,
+                      primary: false,
+                    },
+                    {
+                      key: "shower",
+                      icon: "🛁",
+                      label: "샤워",
+                      count:
+                        a.clean < 30
+                          ? "꼬질"
+                          : a.clean < SHOWER_BELOW
+                            ? "가능"
+                            : "깨끗",
+                      wait: showerWait,
+                      waitLabel: "깨끗해요",
+                      off: false,
+                      primary: a.clean < 30,
+                    },
                   ] as const
                 ).map((b) => (
                   <button
@@ -323,39 +606,71 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     data-yokai-feed={b.key === "feed" ? "" : undefined}
                     data-yokai-pet={b.key === "pet" ? "" : undefined}
                     data-yokai-shower={b.key === "shower" ? "" : undefined}
-                    disabled={busy || b.off || Boolean(b.wait)}
-                    onClick={() => void act({ action: b.key })}
+                    disabled={
+                      busy || (!viewingOther && (b.off || Boolean(b.wait)))
+                    }
+                    onClick={() =>
+                      viewingOther && v
+                        ? setConfirmMain(v.species)
+                        : void act({ action: b.key })
+                    }
                     className={cn(
                       "grid min-h-[86px] place-items-center content-center gap-0.5 rounded-2xl border px-1 py-2 text-center transition active:scale-[0.97] disabled:opacity-45",
-                      b.primary ? "border-[#b33] bg-[#7a1c22] text-white hover:bg-[#93242c]" : "border-[#c9a25c]/40 bg-black/40 text-white hover:border-[#c9a25c]",
+                      b.primary
+                        ? "border-[#b33] bg-[#7a1c22] text-white hover:bg-[#93242c]"
+                        : "border-[#c9a25c]/40 bg-black/40 text-white hover:border-[#c9a25c]",
                     )}
                   >
                     <span className="text-2xl leading-none">{b.icon}</span>
                     <span className="text-sm font-black">{b.label}</span>
-                    {b.wait && now != null ? (
-                      <span data-yokai-wait={b.key} className="grid text-[10px] font-bold leading-tight text-[#ffd9a0]">
+                    {viewingOther ? (
+                      <span className="text-[10px] font-bold text-sky-200">
+                        대표 요괴만
+                      </span>
+                    ) : b.wait && now != null ? (
+                      <span
+                        data-yokai-wait={b.key}
+                        className="grid text-[10px] font-bold leading-tight text-[#ffd9a0]"
+                      >
                         <span>{b.waitLabel}</span>
-                        <span className="whitespace-nowrap">{waitText(b.wait, new Date(now))} 뒤</span>
+                        <span className="whitespace-nowrap">
+                          {waitText(b.wait, new Date(now))} 뒤
+                        </span>
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold tabular-nums text-[#e7c98a]">{b.count}</span>
+                      <span className="text-[11px] font-bold tabular-nums text-[#e7c98a]">
+                        {b.count}
+                      </span>
                     )}
                   </button>
                 ))}
               </div>
-              {note ? <p className="text-sm font-bold text-rose-300">{note}</p> : null}
+              {note ? (
+                <p className="text-sm font-bold text-rose-300">{note}</p>
+              ) : null}
 
-              <details data-yokai-sources className="group rounded-xl bg-black/30 px-3 py-2 text-xs">
+              <details
+                data-yokai-sources
+                className="group rounded-xl bg-black/30 px-3 py-2 text-xs"
+              >
                 <summary className="flex min-h-9 cursor-pointer list-none items-center gap-2 font-bold text-[#e7c98a] [&::-webkit-details-marker]:hidden">
                   🍙 오늘 밥 받는 법 · 간식
-                  <span className="ml-auto text-[11px] text-zinc-400 group-open:hidden">펼치기</span>
+                  <span className="ml-auto text-[11px] text-zinc-400 group-open:hidden">
+                    펼치기
+                  </span>
                 </summary>
                 <ul className="grid gap-1.5 pb-1 pt-1">
-                  <li>✅ 기본 1번 (밥 1번 = 경험치 +{FEED.exp}, 깨끗하면 +{FEED.exp + CLEAN_BONUS_EXP})</li>
+                  <li>
+                    ✅ 기본 1번 (밥 1번 = 경험치 +{FEED.exp}, 깨끗하면 +
+                    {FEED.exp + CLEAN_BONUS_EXP})
+                  </li>
                   <li>
                     {yokai.feeds.sources.attended ? "✅" : "⬜"} 출석체크{" "}
                     {!yokai.feeds.sources.attended ? (
-                      <Link href="/attendance" className="font-bold text-[#c9a25c] underline">
+                      <Link
+                        href="/attendance"
+                        className="font-bold text-[#c9a25c] underline"
+                      >
                         하러 가기
                       </Link>
                     ) : null}
@@ -363,7 +678,10 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   <li>
                     {yokai.feeds.sources.quiz ? "✅" : "⬜"} 오늘의 퀴즈 정답{" "}
                     {!yokai.feeds.sources.quiz ? (
-                      <Link href="/quiz" className="font-bold text-[#c9a25c] underline">
+                      <Link
+                        href="/quiz"
+                        className="font-bold text-[#c9a25c] underline"
+                      >
                         풀러 가기
                       </Link>
                     ) : null}
@@ -371,34 +689,58 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   <li>
                     {yokai.feeds.sources.wrote ? "✅" : "⬜"} 글이나 댓글 쓰기{" "}
                     {!yokai.feeds.sources.wrote ? (
-                      <Link href="/boards/free" className="font-bold text-[#c9a25c] underline">
+                      <Link
+                        href="/boards/free"
+                        className="font-bold text-[#c9a25c] underline"
+                      >
                         자유게시판
                       </Link>
                     ) : null}
                   </li>
                   <li className="flex flex-wrap items-center gap-1.5">
-                    🍡 간식(포인트로 밥 1번 더) {yokai.snacks.used}/{yokai.snacks.max}
+                    🍡 간식(포인트로 밥 1번 더) {yokai.snacks.used}/
+                    {yokai.snacks.max}
                     <button
                       type="button"
                       data-yokai-snack
-                      disabled={busy || yokai.snacks.used >= yokai.snacks.max || yokai.points < yokai.snacks.price}
+                      disabled={
+                        busy ||
+                        yokai.snacks.used >= yokai.snacks.max ||
+                        yokai.points < yokai.snacks.price
+                      }
                       onClick={() => void act({ action: "snack" })}
                       className="min-h-8 rounded-lg border border-[#c9a25c]/50 px-2 text-[11px] font-black text-[#e7c98a] disabled:opacity-50"
                     >
-                      {yokai.snacks.used >= yokai.snacks.max ? "오늘은 다 샀어요" : `${yokai.snacks.price}P에 사기`}
+                      {yokai.snacks.used >= yokai.snacks.max
+                        ? "오늘은 다 샀어요"
+                        : `${yokai.snacks.price}P에 사기`}
                     </button>
-                    <span className="text-zinc-500">내 포인트 {yokai.points.toLocaleString()}P</span>
+                    <span className="text-zinc-500">
+                      내 포인트 {yokai.points.toLocaleString()}P
+                    </span>
                   </li>
                 </ul>
               </details>
             </div>
           </section>
 
-          <PushAlertToggle api="/api/yokai/alert" label="요괴가 배고프면 알림(저녁 7시)" onMessage="요괴가 배고플 때 저녁 7시에 알려 드릴게요." data="yokai" />
+          <PushAlertToggle
+            api="/api/yokai/alert"
+            label="요괴가 배고프면 알림(저녁 7시)"
+            onMessage="요괴가 배고플 때 저녁 7시에 알려 드릴게요."
+            data="yokai"
+          />
 
-          <section aria-label="내 요괴들" data-yokai-owned className="ink-panel grid gap-2 rounded-2xl p-4">
+          <section
+            aria-label="내 요괴들"
+            data-yokai-owned
+            className="ink-panel grid gap-2 rounded-2xl p-4"
+          >
             <h2 className="text-base font-black text-[#f3d9a4]">
-              내 요괴들 <span className="text-sm text-zinc-400">{yokai.owned.length}마리 · 눌러서 키울 요괴 바꾸기</span>
+              내 요괴들{" "}
+              <span className="text-sm text-zinc-400">
+                {yokai.owned.length}마리 · 눌러서 보기 · 돌보기는 ⭐ 대표 요괴만
+              </span>
             </h2>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {yokai.owned.map((o) => (
@@ -406,75 +748,155 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   key={o.species}
                   type="button"
                   data-yokai-owned-item={o.species}
-                  disabled={busy || o.species === a.species}
-                  onClick={() => void act({ action: "active", species: o.species })}
+                  aria-pressed={o.species === v?.species}
+                  onClick={() => {
+                    setViewing(o.species === a.species ? null : o.species);
+                    setReaction(null);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className={cn(
                     "relative grid w-20 shrink-0 justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]",
                     FRAME[YOKAI[o.species].rarity],
-                    o.species === a.species && "ring-2 ring-[#e7c98a]",
+                    o.species === v?.species && "ring-2 ring-[#e7c98a]",
                   )}
                 >
-                  {yokai.main === o.species ? <span className="absolute left-1 top-0.5 z-10 text-xs">⭐</span> : null}
+                  {yokai.main === o.species ? (
+                    <span className="absolute left-1 top-0.5 z-10 text-xs">
+                      ⭐
+                    </span>
+                  ) : null}
                   {/* eslint-disable-next-line @next/next/no-img-element -- 가진 요괴 */}
-                  <img src={yokaiImage(o.species, o.stage)} alt="" className="aspect-square w-full object-contain" />
-                  <span className="font-bold text-white">{YOKAI[o.species].name}</span>
-                  <span className="text-[10px] text-zinc-400">{o.stage}단계</span>
+                  <img
+                    src={yokaiImage(o.species, o.stage)}
+                    alt=""
+                    className="aspect-square w-full object-contain"
+                  />
+                  <span className="font-bold text-white">
+                    {YOKAI[o.species].name}
+                  </span>
+                  <span className="text-[10px] text-zinc-400">
+                    {o.stage}단계
+                  </span>
                 </button>
               ))}
             </div>
           </section>
 
-          <section aria-label="마을 배경" data-yokai-bg-shop className="ink-panel grid gap-2 rounded-2xl p-4">
+          <section
+            aria-label="마을 배경"
+            data-yokai-bg-shop
+            className="ink-panel grid gap-2 rounded-2xl p-4"
+          >
             <h2 className="flex flex-wrap items-baseline gap-2 text-base font-black text-[#f3d9a4]">
-              마을 배경 <span className="text-sm text-zinc-400">포인트로 바로 사요 · 내 포인트 {yokai.points.toLocaleString()}P</span>
+              마을 배경{" "}
+              <span className="text-sm text-zinc-400">
+                포인트로 바로 사요 · 내 포인트 {yokai.points.toLocaleString()}P
+              </span>
             </h2>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {(Object.keys(YOKAI_BACKGROUNDS) as YokaiBackground[]).map((id) => {
-                const bg = YOKAI_BACKGROUNDS[id];
-                const owned = yokai.bg.owned.includes(id);
-                const using = yokai.bg.active === id;
-                return (
-                  <div key={id} data-yokai-bg={id} className={cn("grid gap-1.5 rounded-xl border p-1.5", using ? "border-[#e7c98a]" : "border-[#c9a25c]/25")}>
-                    <div className="aspect-[4/3] rounded-lg" style={{ background: bg.css }} />
-                    <div className="flex items-center gap-1 text-xs">
-                      <b className="text-white">{bg.name}</b>
-                      <span className="ml-auto text-zinc-400">{owned ? "가짐" : `${bg.price.toLocaleString()}P`}</span>
-                    </div>
-                    <button
-                      type="button"
-                      data-yokai-bg-action={owned ? "use" : "buy"}
-                      disabled={busy || using || (!owned && yokai.points < bg.price)}
-                      onClick={() => void act({ action: owned ? "useBg" : "buyBg", bg: id })}
-                      className={cn("min-h-9 rounded-lg text-xs font-black disabled:opacity-50", owned ? "border border-[#c9a25c]/50 text-[#e7c98a]" : "bg-[#7a1c22] text-white")}
+              {(Object.keys(YOKAI_BACKGROUNDS) as YokaiBackground[]).map(
+                (id) => {
+                  const bg = YOKAI_BACKGROUNDS[id];
+                  const owned = yokai.bg.owned.includes(id);
+                  const using = yokai.bg.active === id;
+                  return (
+                    <div
+                      key={id}
+                      data-yokai-bg={id}
+                      className={cn(
+                        "grid gap-1.5 rounded-xl border p-1.5",
+                        using ? "border-[#e7c98a]" : "border-[#c9a25c]/25",
+                      )}
                     >
-                      {using ? "쓰는 중" : owned ? "쓰기" : yokai.points < bg.price ? "포인트 부족" : "사기"}
-                    </button>
-                  </div>
-                );
-              })}
+                      <div
+                        className="aspect-[4/3] rounded-lg"
+                        style={{ background: bg.css }}
+                      />
+                      <div className="flex items-center gap-1 text-xs">
+                        <b className="text-white">{bg.name}</b>
+                        <span className="ml-auto text-zinc-400">
+                          {owned ? "가짐" : `${bg.price.toLocaleString()}P`}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        data-yokai-bg-action={owned ? "use" : "buy"}
+                        disabled={
+                          busy || using || (!owned && yokai.points < bg.price)
+                        }
+                        onClick={() =>
+                          void act({
+                            action: owned ? "useBg" : "buyBg",
+                            bg: id,
+                          })
+                        }
+                        className={cn(
+                          "min-h-9 rounded-lg text-xs font-black disabled:opacity-50",
+                          owned
+                            ? "border border-[#c9a25c]/50 text-[#e7c98a]"
+                            : "bg-[#7a1c22] text-white",
+                        )}
+                      >
+                        {using
+                          ? "쓰는 중"
+                          : owned
+                            ? "쓰기"
+                            : yokai.points < bg.price
+                              ? "포인트 부족"
+                              : "사기"}
+                      </button>
+                    </div>
+                  );
+                },
+              )}
             </div>
-            <p className="text-[11px] text-zinc-500">전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이 먼저 보여요.</p>
+            <p className="text-[11px] text-zinc-500">
+              전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이 먼저 보여요.
+            </p>
           </section>
 
-          <section aria-label="진화 단계" data-yokai-evo className="ink-panel grid gap-2 rounded-2xl p-4">
+          <section
+            aria-label="진화 단계"
+            data-yokai-evo
+            className="ink-panel grid gap-2 rounded-2xl p-4"
+          >
             <h2 className="text-base font-black text-[#f3d9a4]">진화 단계</h2>
             <div className="grid grid-cols-5 gap-1.5">
-              {YOKAI[a.species].stages.map((label, i) => {
-                const open = i + 1 <= a.stage;
+              {YOKAI[v.species].stages.map((label, i) => {
+                const open = i + 1 <= v.stage;
                 return (
-                  <div key={label} className="grid justify-items-center gap-1 text-center text-[11px] text-zinc-400">
+                  <div
+                    key={label}
+                    className="grid justify-items-center gap-1 text-center text-[11px] text-zinc-400"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element -- 아직이면 실루엣 */}
-                    <img src={yokaiImage(a.species, i + 1)} alt="" className={cn("aspect-square w-full object-contain", !open && "opacity-30 brightness-0")} />
-                    <span className={cn(open && "font-bold text-white")}>{open ? label : "???"}</span>
+                    <img
+                      src={yokaiImage(v.species, i + 1)}
+                      alt=""
+                      className={cn(
+                        "aspect-square w-full object-contain",
+                        !open && "opacity-30 brightness-0",
+                      )}
+                    />
+                    <span className={cn(open && "font-bold text-white")}>
+                      {open ? label : "???"}
+                    </span>
                   </div>
                 );
               })}
             </div>
           </section>
 
-          <section aria-label="요괴 도감" data-yokai-dex className="ink-panel grid gap-2 rounded-2xl p-4">
+          <section
+            aria-label="요괴 도감"
+            data-yokai-dex
+            className="ink-panel grid gap-2 rounded-2xl p-4"
+          >
             <h2 className="text-base font-black text-[#f3d9a4]">
-              요괴 도감 <span className="text-sm text-zinc-400">{yokai.dex.length} / 108</span>
+              요괴 도감{" "}
+              <span className="text-sm text-zinc-400">
+                {yokai.dex.length} / 108
+              </span>
             </h2>
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-9">
               {YOKAI_ORDER.map((s) => {
@@ -487,89 +909,301 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     data-yokai-dex-item={s}
                     data-rarity={def.rarity}
                     onClick={() => setDexPick(dexPick === s ? null : s)}
-                    className={cn("relative grid justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]", FRAME[def.rarity], dexPick === s && "ring-2 ring-[#e7c98a]")}
+                    className={cn(
+                      "relative grid justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]",
+                      FRAME[def.rarity],
+                      dexPick === s && "ring-2 ring-[#e7c98a]",
+                    )}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element -- 못 만난 요괴는 실루엣 */}
-                    <img src={yokaiImage(s, 1)} alt="" className={cn("aspect-square w-full object-contain", !have && "opacity-30 brightness-0")} />
-                    <span className={have ? "font-bold text-white" : "text-zinc-500"}>{have ? def.name : "???"}</span>
-                    <span className={cn("text-[10px] font-bold", RARITY_TEXT[def.rarity])}>{RARITY_LABEL[def.rarity]}</span>
+                    <img
+                      src={yokaiImage(s, 1)}
+                      alt=""
+                      className={cn(
+                        "aspect-square w-full object-contain",
+                        !have && "opacity-30 brightness-0",
+                      )}
+                    />
+                    <span
+                      className={
+                        have ? "font-bold text-white" : "text-zinc-500"
+                      }
+                    >
+                      {have ? def.name : "???"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold",
+                        RARITY_TEXT[def.rarity],
+                      )}
+                    >
+                      {RARITY_LABEL[def.rarity]}
+                    </span>
                   </button>
                 );
               })}
             </div>
             {dexPick ? <DexDetail species={dexPick} yokai={yokai} /> : null}
-            <p className="text-[11px] text-zinc-500">칸을 누르면 얻는 방법과 지금 진행도가 보여요.</p>
+            <p className="text-[11px] text-zinc-500">
+              칸을 누르면 얻는 방법과 지금 진행도가 보여요.
+            </p>
           </section>
         </>
       )}
 
-      {arriving ? (
-        <div role="dialog" aria-label="새 요괴 등장" data-yokai-arrival={arriving} className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-4">
-          <div className="grid w-full max-w-sm justify-items-center gap-3 overflow-hidden rounded-3xl border p-5 text-center" style={{ background: stageBackground(arriving), borderColor: YOKAI[arriving].rarity === "legend" ? "#f5d76e" : YOKAI[arriving].rarity === "hero" ? "#d9dde6" : "rgba(201,162,92,.4)" }}>
-            <p className={cn("text-sm font-black", RARITY_TEXT[YOKAI[arriving].rarity])}>
-              {YOKAI[arriving].rarity === "legend" ? "✨ 전설의 요괴가 나타났어요! ✨" : YOKAI[arriving].rarity === "hero" ? "영웅 요괴가 찾아왔어요!" : "새 요괴가 찾아왔어요!"}
-            </p>
-            {/* eslint-disable-next-line @next/next/no-img-element -- 등장 */}
-            <img
-              src={yokaiImage(arriving, YOKAI[arriving].rarity === "legend" ? 5 : 1)}
-              alt=""
-              className="w-60 max-w-[65vw] object-contain drop-shadow-[0_0_30px_rgba(245,215,110,.45)]"
-              style={{ animation: `yk-rise ${YOKAI[arriving].rarity === "legend" ? 1.6 : 0.9}s ease-out both` }}
-            />
-            <p className="text-2xl font-black text-white">{YOKAI[arriving].name}</p>
-            <p className="text-sm text-[#ece4d6]">{YOKAI[arriving].intro}</p>
-            {YOKAI[arriving].rarity === "legend" ? <p className="text-xs text-[#f5d76e]">처음 만난 모습은 1단계예요. 키우면 이 모습이 돼요.</p> : null}
-            <button
-              type="button"
-              data-yokai-arrival-ok
-              onClick={() => {
-                if (arrivalIndex + 1 >= (yokai?.newcomers.length ?? 0)) {
-                  setArrivalIndex(0);
-                  void act({ action: "seen" });
-                } else setArrivalIndex((i) => i + 1);
-              }}
-              className="min-h-11 rounded-xl bg-[#c9a25c] px-6 text-sm font-black text-black"
-            >
-              반가워요!
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {/* 팝업은 화면 맨 위(머리줄 위)에 그림 · 화면이 뜬 뒤에만 */}
+      {now != null
+        ? createPortal(
+            <>
+              {arriving ? (
+                <div
+                  role="dialog"
+                  aria-label="새 요괴 등장"
+                  data-yokai-arrival={arriving}
+                  className="fixed inset-0 z-[200] grid place-items-center bg-black/85 p-4"
+                >
+                  <div
+                    className="grid w-full max-w-sm justify-items-center gap-3 overflow-hidden rounded-3xl border p-5 text-center"
+                    style={{
+                      background: stageBackground(arriving),
+                      borderColor:
+                        YOKAI[arriving].rarity === "legend"
+                          ? "#f5d76e"
+                          : YOKAI[arriving].rarity === "hero"
+                            ? "#d9dde6"
+                            : "rgba(201,162,92,.4)",
+                    }}
+                  >
+                    <p
+                      className={cn(
+                        "text-sm font-black",
+                        RARITY_TEXT[YOKAI[arriving].rarity],
+                      )}
+                    >
+                      {YOKAI[arriving].rarity === "legend"
+                        ? "✨ 전설의 요괴가 나타났어요! ✨"
+                        : YOKAI[arriving].rarity === "hero"
+                          ? "영웅 요괴가 찾아왔어요!"
+                          : "새 요괴가 찾아왔어요!"}
+                    </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- 등장 */}
+                    <img
+                      src={yokaiImage(
+                        arriving,
+                        YOKAI[arriving].rarity === "legend" ? 5 : 1,
+                      )}
+                      alt=""
+                      className="w-60 max-w-[65vw] object-contain drop-shadow-[0_0_30px_rgba(245,215,110,.45)]"
+                      style={{
+                        animation: `yk-rise ${YOKAI[arriving].rarity === "legend" ? 1.6 : 0.9}s ease-out both`,
+                      }}
+                    />
+                    <p className="text-2xl font-black text-white">
+                      {YOKAI[arriving].name}
+                    </p>
+                    <p className="text-sm text-[#ece4d6]">
+                      {YOKAI[arriving].intro}
+                    </p>
+                    {YOKAI[arriving].rarity === "legend" ? (
+                      <p className="text-xs text-[#f5d76e]">
+                        처음 만난 모습은 1단계예요. 키우면 이 모습이 돼요.
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      data-yokai-arrival-ok
+                      onClick={() => {
+                        if (
+                          arrivalIndex + 1 >=
+                          (yokai?.newcomers.length ?? 0)
+                        ) {
+                          setArrivalIndex(0);
+                          void act({ action: "seen" });
+                        } else setArrivalIndex((i) => i + 1);
+                      }}
+                      className="min-h-11 rounded-xl bg-[#c9a25c] px-6 text-sm font-black text-black"
+                    >
+                      반가워요!
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
-      {evolved && a && !arriving ? (
-        <div role="dialog" aria-label="진화" data-yokai-evolved className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4" onClick={() => setEvolved(null)}>
-          <div className="grid justify-items-center gap-3 text-center" style={{ animation: "yk-glow .9s ease-out both" }}>
-            <p className="text-lg font-black text-[#f5d76e]">✨ 진화했어요! ✨</p>
-            {/* eslint-disable-next-line @next/next/no-img-element -- 새 모습 */}
-            <img src={yokaiImage(a.species, evolved)} alt="" className="w-64 max-w-[70vw] object-contain drop-shadow-[0_0_30px_rgba(245,215,110,.45)]" />
-            <p className="text-2xl font-black text-white">{YOKAI[a.species].stages[evolved - 1]}</p>
-            <button type="button" className="min-h-11 rounded-xl bg-[#c9a25c] px-6 text-sm font-black text-black">
-              좋아요!
-            </button>
-          </div>
-        </div>
-      ) : null}
+              {confirmMain && yokai ? (
+                <div
+                  role="dialog"
+                  aria-label="대표 요괴 바꾸기"
+                  data-yokai-confirm-main
+                  className="fixed inset-0 z-[200] grid place-items-center bg-black/80 p-4"
+                  onClick={() => setConfirmMain(null)}
+                >
+                  <div
+                    className="grid w-full max-w-sm gap-3 rounded-3xl border border-[#c9a25c]/50 bg-[#17100d] p-5 text-center"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ animation: "yk-pop .25s ease-out both" }}
+                  >
+                    <div className="flex items-end justify-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- 지금 대표 */}
+                      <img
+                        src={yokaiImage(
+                          yokai.active.species,
+                          yokai.active.stage,
+                        )}
+                        alt=""
+                        className="size-16 object-contain opacity-60"
+                      />
+                      <span className="pb-5 text-lg text-[#c9a25c]">→</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- 새 대표 */}
+                      <img
+                        src={yokaiImage(
+                          confirmMain,
+                          yokai.owned.find((o) => o.species === confirmMain)
+                            ?.stage ?? 1,
+                        )}
+                        alt=""
+                        className="size-24 object-contain"
+                      />
+                    </div>
+                    <p className="text-lg font-black text-white">
+                      대표 요괴를 {YOKAI[confirmMain].name}(으)로 바꿀까요?
+                    </p>
+                    <ul className="grid gap-1 rounded-xl bg-black/40 p-3 text-left text-xs text-[#ece4d6]">
+                      <li>
+                        💰{" "}
+                        <b className="text-[#f5d76e]">
+                          {yokai.mainChangeCost}P가 차감돼요
+                        </b>{" "}
+                        (내 포인트 {yokai.points.toLocaleString()}P)
+                      </li>
+                      <li>
+                        🍙 밥 · 🤚 쓰다듬기 · 🛁 샤워는 대표 요괴만 할 수 있어요
+                      </li>
+                      <li>
+                        ⏳ 쿨타임은 모든 요괴가 함께 써서, 바꿔도 초기화되지
+                        않아요
+                      </li>
+                      <li>⭐ 닉네임 옆 · 프로필에도 새 대표 요괴가 보여요</li>
+                    </ul>
+                    {yokai.points < yokai.mainChangeCost ? (
+                      <p className="text-xs font-bold text-rose-300">
+                        포인트가 모자라요. 출석 · 미션으로 모아 주세요.
+                      </p>
+                    ) : null}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmMain(null)}
+                        className="min-h-11 rounded-xl border border-white/20 text-sm font-bold text-zinc-200"
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        data-yokai-confirm-main-ok
+                        disabled={busy || yokai.points < yokai.mainChangeCost}
+                        onClick={async () => {
+                          const target = confirmMain;
+                          setConfirmMain(null);
+                          await act({ action: "main", species: target });
+                          setViewing(null);
+                        }}
+                        className="min-h-11 rounded-xl bg-[#7a1c22] text-sm font-black text-white hover:bg-[#93242c] disabled:opacity-50"
+                      >
+                        {yokai.mainChangeCost}P 내고 바꾸기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {evolved && a && !arriving ? (
+                <div
+                  role="dialog"
+                  aria-label="진화"
+                  data-yokai-evolved
+                  className="fixed inset-0 z-[200] grid place-items-center bg-black/80 p-4"
+                  onClick={() => setEvolved(null)}
+                >
+                  <div
+                    className="grid justify-items-center gap-3 text-center"
+                    style={{ animation: "yk-glow .9s ease-out both" }}
+                  >
+                    <p className="text-lg font-black text-[#f5d76e]">
+                      ✨ 진화했어요! ✨
+                    </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- 새 모습 */}
+                    <img
+                      src={yokaiImage(a.species, evolved)}
+                      alt=""
+                      className="w-64 max-w-[70vw] object-contain drop-shadow-[0_0_30px_rgba(245,215,110,.45)]"
+                    />
+                    <p className="text-2xl font-black text-white">
+                      {YOKAI[a.species].stages[evolved - 1]}
+                    </p>
+                    <p
+                      data-yokai-evolve-line
+                      className="max-w-xs rounded-2xl border border-[#f5d76e]/40 bg-black/50 px-4 py-2 text-sm font-bold text-[#f6efe2]"
+                    >
+                      「{pickLine(a.species, "evolve", evolved)}」
+                    </p>
+                    <button
+                      type="button"
+                      className="min-h-11 rounded-xl bg-[#c9a25c] px-6 text-sm font-black text-black"
+                    >
+                      좋아요!
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
 
 /** 도감 칸을 눌렀을 때: 만난 요괴는 지금 모습 · 소개, 못 만난 요괴는 얻는 방법 · 진행도(구미호는 아홉 꼬리) */
-function DexDetail({ species, yokai }: { species: YokaiSpecies; yokai: YokaiView }) {
+function DexDetail({
+  species,
+  yokai,
+}: {
+  species: YokaiSpecies;
+  yokai: YokaiView;
+}) {
   const def = YOKAI[species];
   const owned = yokai.owned.find((o) => o.species === species);
   return (
-    <div data-yokai-dex-detail className="grid gap-2 rounded-xl border border-[#c9a25c]/30 bg-black/40 p-3">
+    <div
+      data-yokai-dex-detail
+      className="grid gap-2 rounded-xl border border-[#c9a25c]/30 bg-black/40 p-3"
+    >
       <div className="grid grid-cols-[72px_1fr] items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element -- 고른 요괴 */}
-        <img src={yokaiImage(species, owned ? owned.stage : 1)} alt="" className={cn("aspect-square w-full object-contain", !owned && "opacity-40 brightness-0")} />
+        <img
+          src={yokaiImage(species, owned ? owned.stage : 1)}
+          alt=""
+          className={cn(
+            "aspect-square w-full object-contain",
+            !owned && "opacity-40 brightness-0",
+          )}
+        />
         <div className="grid gap-1 text-sm">
           <div className="flex flex-wrap items-center gap-1.5">
             <b className="text-white">{owned ? def.name : "???"}</b>
-            <span className={cn("text-xs font-black", RARITY_TEXT[def.rarity])}>{RARITY_LABEL[def.rarity]}</span>
+            <span className={cn("text-xs font-black", RARITY_TEXT[def.rarity])}>
+              {RARITY_LABEL[def.rarity]}
+            </span>
             {owned ? <ElementTag species={species} /> : null}
-            {owned ? <span className="text-xs text-zinc-400">{owned.stage}단계 · {def.stages[owned.stage - 1]}</span> : null}
+            {owned ? (
+              <span className="text-xs text-zinc-400">
+                {owned.stage}단계 · {def.stages[owned.stage - 1]}
+              </span>
+            ) : null}
           </div>
-          <p className="text-xs text-[#d1c7b5]">{owned ? def.intro : def.how}</p>
+          <p className="text-xs text-[#d1c7b5]">
+            {owned ? def.intro : def.how}
+          </p>
           {!owned && yokai.progress[species] ? (
             <p data-yokai-progress className="text-xs font-bold text-[#e7c98a]">
               지금: {yokai.progress[species]}
@@ -578,9 +1212,18 @@ function DexDetail({ species, yokai }: { species: YokaiSpecies; yokai: YokaiView
         </div>
       </div>
       {species === "gumiho" && !owned ? (
-        <ul data-yokai-tails className="grid gap-1 rounded-lg bg-black/30 p-2 text-xs sm:grid-cols-3">
+        <ul
+          data-yokai-tails
+          className="grid gap-1 rounded-lg bg-black/30 p-2 text-xs sm:grid-cols-3"
+        >
           {yokai.tails.map((t, i) => (
-            <li key={t.label} className={cn("flex items-center gap-1", t.done ? "text-[#f5d76e]" : "text-zinc-400")}>
+            <li
+              key={t.label}
+              className={cn(
+                "flex items-center gap-1",
+                t.done ? "text-[#f5d76e]" : "text-zinc-400",
+              )}
+            >
               <span>{t.done ? "🦊" : "◌"}</span>
               <span>
                 꼬리 {i + 1} · {t.label}
