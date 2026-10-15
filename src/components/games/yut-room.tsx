@@ -154,14 +154,21 @@ export function YutRoom({
 
   // 말 이동을 화면에서 먼저 보여 준 경우: 서버 결과가 같은 이동이면 연출이 두 번 돌지 않게 시각(at)을 맞춤
   const optimisticRef = useRef<{ at: number; team: Team; from: string; to: string } | null>(null);
+  // 서버 시각 → 화면에서 먼저 보여 준 시각(같은 이동이 1초 확인 · 버튼 응답으로 두 번 와도 한 번만 연출)
+  const aliasRef = useRef<Map<number, number>>(new Map());
   function receive(incoming: YutView) {
+    // 늦게 도착한 옛 상태가 새 상태를 덮으면 이동 · 업기 연출이 다시 돌므로 버림
+    if (incoming.version < versionRef.current) return;
     let next = incoming;
     const o = optimisticRef.current;
     const e = next.state?.event;
     if (o && next.state && e && e.team === o.team && e.from === o.from && e.to === o.to) {
-      next = { ...next, state: { ...next.state, event: { ...e, at: o.at } } };
+      aliasRef.current.set(e.at, o.at);
+      if (aliasRef.current.size > 8) aliasRef.current.delete(aliasRef.current.keys().next().value as number);
       optimisticRef.current = null;
     }
+    const alias = e ? aliasRef.current.get(e.at) : undefined;
+    if (alias !== undefined && next.state && e) next = { ...next, state: { ...next.state, event: { ...e, at: alias } } };
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.mySeat);
     if (next.watchers !== undefined)
@@ -1303,6 +1310,8 @@ export function YutRoom({
                   stepMs={stepMs}
                   fast={fast}
                   movable={movable}
+                  guide={moving && !busy ? (selected === null ? "pick" : "dest") : null}
+                  startPick={startRep ?? null}
                   selected={selected}
                   ghosts={ghosts}
                   portal={portal}

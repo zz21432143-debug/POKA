@@ -1,5 +1,6 @@
 import type { BoardType } from "@/generated/prisma/enums";
 import { HAND_PLAN } from "@/lib/content-plan-hands";
+import { HAND_PLAN_2 } from "@/lib/content-plan-hands-2";
 import type { PollChoice as PollChoiceId } from "@/lib/poll";
 import type { HandReviewData } from "@/lib/hand-review";
 
@@ -1094,7 +1095,7 @@ TV에서 한 번 화면을 눌러 줘야 소리가 켜집니다(브라우저 정
 ];
 
 /** 추가 글 + 해설 핸드리뷰 4편 */
-export const EXTRA_PLAN: PlanItem[] = [...BASE_EXTRA_PLAN, ...HAND_PLAN];
+export const EXTRA_PLAN: PlanItem[] = [...BASE_EXTRA_PLAN, ...HAND_PLAN, ...HAND_PLAN_2];
 
 export type ScheduleRow = {
   id: string;

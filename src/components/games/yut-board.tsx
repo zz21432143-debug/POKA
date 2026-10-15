@@ -97,6 +97,8 @@ export function YutBoard({
   kick,
   bubbles = [],
   throwReady = false,
+  guide = null,
+  startPick = null,
 }: {
   state: YutState;
   faces: Record<Team, Face[]>;
@@ -129,6 +131,10 @@ export function YutBoard({
   bubbles?: { who: string; e: string; at: number; color: string }[];
   /** 던지기 차례: 가운데 멍석을 누르면 던짐 */
   throwReady?: boolean;
+  /** 내 말 옮기기 안내: pick = 말 고르기 · dest = 갈 곳 고르기 */
+  guide?: "pick" | "dest" | null;
+  /** 출발 전 말(대기 말) 중 고를 수 있는 하나 — 출발 모서리 「새 말」 버튼 */
+  startPick?: number | null;
 }) {
   // 한 칸씩 점프: 판 상태의 마지막 이동(event.path)에서 바로 계산 — 새 이동이 온 그 화면부터 첫 칸에 있게
   const ev = state.event;
@@ -173,11 +179,29 @@ export function YutBoard({
   const pieces: { team: Team; i: number; pos: string; level: number; top: boolean; count: number }[] = [];
   stacks.forEach((list, pos) => list.forEach((p, level) => pieces.push({ ...p, pos, level, top: level === list.length - 1, count: list.length })));
   const nodes = Object.keys(NODE_XY);
-  const fires: { pos: string; team: Team; size: number }[] = [];
-  stacks.forEach((list, pos) => {
-    if (list.length >= 3) fires.push({ pos, team: list[0].team, size: list.length });
+  // 불길(판 테두리): 어느 팀이든 3개 업으면 작은 불 · 4개 이상이면 큰 불
+  let maxStack = 0;
+  stacks.forEach((list) => {
+    if (list.length > maxStack) maxStack = list.length;
   });
-  const blaze = fires.some((f) => f.size >= 4);
+  const fireLevel = maxStack >= 4 ? 2 : maxStack >= 3 ? 1 : 0;
+  const blaze = fireLevel === 2;
+  // 테두리 불꽃 자리(위 · 아래 · 왼쪽 · 오른쪽 가장자리를 따라)
+  const frameFlames = (() => {
+    if (!fireLevel) return [] as { left: number; top: number; size: number; delay: number }[];
+    // 나무 테두리 안쪽(판 밖으로 삐져나가지 않게)
+    const per = fireLevel === 2 ? 10 : 7;
+    const E = 1.7;
+    const out: { left: number; top: number; size: number; delay: number }[] = [];
+    for (let k = 0; k < per; k += 1) {
+      const t = 4 + ((k + 0.5) / per) * 92;
+      out.push({ left: t, top: E, size: 1, delay: k * 97 });
+      out.push({ left: t, top: 100 - E, size: 1, delay: k * 131 + 40 });
+      out.push({ left: E, top: t, size: 0.9, delay: k * 113 + 70 });
+      out.push({ left: 100 - E, top: t, size: 0.9, delay: k * 89 + 20 });
+    }
+    return out;
+  })();
   // 3개 이상 업힌 말이 잡힘 → 불길 진압(연기 1.6초)
   // 처음 열었을 때 이미 지난 일은 다시 연출하지 않음
   const firstEvAt = useRef(ev?.at ?? 0);
@@ -220,6 +244,7 @@ export function YutBoard({
       className={cn(
         "yut-wood @container relative mx-auto aspect-square w-full max-w-[min(100%,980px,calc(100dvh-140px))] select-none rounded-[18px] p-[3.2%]",
         impact && "yut-impact",
+        fireLevel === 1 && "yut-fire-frame-1",
         blaze && "yut-blaze",
       )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
@@ -232,8 +257,27 @@ export function YutBoard({
         onCancel();
       }}
     >
+      {/* 불길: 판 테두리를 따라 불꽃(3업 작은 불 · 4업 큰 불) */}
+      {fireLevel ? (
+        <div data-yut-fire={fireLevel === 2 ? "big" : "small"} aria-hidden className="pointer-events-none absolute inset-0 z-[3]">
+          {frameFlames.map((f, k) => (
+            <span
+              key={k}
+              className="yut-flame absolute -translate-x-1/2 -translate-y-1/2 leading-none"
+              style={{
+                left: `${f.left}%`,
+                top: `${f.top}%`,
+                fontSize: `calc(${fireLevel === 2 ? "clamp(22px, 6cqw, 50px)" : "clamp(18px, 4.6cqw, 36px)"} * ${f.size})`,
+                animationDelay: `${f.delay}ms`,
+              }}
+            >
+              🔥
+            </span>
+          ))}
+        </div>
+      ) : null}
       {/* 멍석 바닥 */}
-      <div className="yut-mat relative size-full rounded-[10px]">
+      <div className={cn("yut-mat relative size-full rounded-[10px]", fireLevel === 1 && "yut-mat-heat-1", fireLevel === 2 && "yut-mat-heat-2")}>
         <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
           {line("o0", "o5")}
           {line("o5", "o10")}
@@ -280,35 +324,40 @@ export function YutBoard({
         >
           GOAL · 골인
         </span>
-        {/* 불길: 3개 업힌 칸 = 작은 불 · 4개 이상 = 큰 불 */}
-        {fires.map((f) => {
-          const [fx, fy] = xy(f.pos);
-          const big = f.size >= 4;
-          return (
-            <span
-              key={`fire-${f.team}-${f.pos}`}
-              data-yut-fire={big ? "big" : "small"}
-              aria-hidden
-              className={cn("pointer-events-none absolute z-[9] -translate-x-1/2 -translate-y-[78%]", big ? "h-[26%] w-[26%]" : "h-[17%] w-[17%]")}
-              style={{ left: `${fx}%`, top: `${fy}%` }}
-            >
-              <span className={cn("yut-fire-glow absolute inset-x-0 bottom-0 h-[40%] rounded-[50%]", big && "yut-fire-glow-big")} />
-              {(big ? [0, 1, 2, 3, 4, 5] : [0, 1, 2]).map((k) => (
-                <span
-                  key={k}
-                  className="yut-flame absolute bottom-[8%] leading-none"
-                  style={{
-                    left: `${big ? 4 + k * 16 : 12 + k * 26}%`,
-                    fontSize: big ? "clamp(16px, 5.4cqw, 40px)" : "clamp(12px, 3.6cqw, 26px)",
-                    animationDelay: `${k * 130}ms`,
-                  }}
-                >
-                  🔥
-                </span>
-              ))}
-            </span>
-          );
-        })}
+        {/* 단계 안내: ① 말 고르기 → ② 노란 칸 누르기 */}
+        {guide ? (
+          <div data-yut-guide={guide} className="pointer-events-none absolute top-[1.5%] left-1/2 z-[55] -translate-x-1/2">
+            <p className="yut-guide-pill flex items-center gap-1.5 rounded-full border-[3px] border-[#0a0614] bg-[#ffcf4a] px-3 py-1 text-[clamp(11px,2.6cqw,17px)] font-black whitespace-nowrap text-[#2a1400] shadow-[3px_3px_0_#0a0614]">
+              {guide === "pick" ? (
+                <>
+                  <span className="grid size-[1.5em] place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">1</span>
+                  반짝이는 내 말{startPick !== null ? " 또는 「새 말」" : ""}을 누르세요
+                </>
+              ) : (
+                <>
+                  <span className="grid size-[1.5em] place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">2</span>
+                  노란 점선 칸(갈 곳)을 누르세요
+                </>
+              )}
+            </p>
+          </div>
+        ) : null}
+        {/* 출발 모서리: 대기 말 내보내기(판에서 바로) */}
+        {guide && startPick !== null ? (
+          <button
+            type="button"
+            data-yut-new-piece
+            onClick={() => onPiece(startPick)}
+            className={cn(
+              "absolute z-[35] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-lg border-[3px] border-[#0a0614] px-1.5 py-1 text-[clamp(9px,2.2cqw,14px)] leading-tight font-black shadow-[3px_3px_0_#0a0614]",
+              selected === startPick ? "bg-[#6ad7ff] text-[#04263a]" : "yut-select-jump bg-[#ffcf4a] text-[#2a1400]",
+            )}
+            style={{ left: `${NODE_XY.o0[0] - 16}%`, top: `${NODE_XY.o0[1]}%` }}
+          >
+            <span>🐾 새 말</span>
+            <span className="text-[0.8em]">{selected === startPick ? "골랐어요" : "내보내기"}</span>
+          </button>
+        ) : null}
         {/* 골인: GOAL! + 금빛 파편 */}
         {goal ? (
           <>
@@ -383,6 +432,12 @@ export function YutBoard({
               {hop ? (
                 <span key={`trail-${anim?.key}-${walkIdx}`} className="yut-afterimage pointer-events-none absolute inset-0 -z-10 scale-90 opacity-0 blur-[1px]" style={{ ["--hop" as string]: `${stepMs}ms` }} aria-hidden>
                   <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" />
+                </span>
+              ) : null}
+              {can && p.top && !isSel && guide === "pick" ? (
+                <span data-yut-tap aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[40%] left-1/2 grid -translate-x-1/2 justify-items-center">
+                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-[family-name:var(--font-arcade)] text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">TAP</b>
+                  <span className="text-[clamp(10px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
               {/* 고른 말: 머리 위 SELECT! 노란 픽셀 손가락 화살표 */}
