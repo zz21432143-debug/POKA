@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description:
     "POKA 요괴 오목 — 친구와 한 판! 링크나 방 코드로 들어와 착석하거나 관전하세요.",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "요괴 오목 — 한 판 하자!",
+    description: "POKA 요괴 오목 — 친구와 한 판! 링크나 방 코드로 들어와 착석하거나 관전하세요.",
+    images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 게임방" }],
+  },
 };
 export const dynamic = "force-dynamic";
 /** 판 화면: 두 손가락 확대 · 두 번 탭 확대 막기(판이 흔들리지 않게) */

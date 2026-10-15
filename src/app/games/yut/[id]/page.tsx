@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: "요괴 윷놀이",
   description: "POKA 요괴 윷놀이 — 초대 링크로 들어와 홍팀 · 청팀 자리에 앉으세요!",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "요괴 윷놀이 — 한 판 하자!",
+    description: "POKA 요괴 윷놀이 — 초대 링크로 들어와 홍팀 · 청팀 자리에 앉으세요!",
+    images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 게임방" }],
+  },
 };
 export const dynamic = "force-dynamic";
 /** 판 화면: 두 손가락 확대 · 두 번 탭 확대 막기(판이 흔들리지 않게) */

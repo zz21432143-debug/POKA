@@ -18,6 +18,7 @@ import { yokaiImage } from "@/lib/yokai";
 export const metadata: Metadata = {
   title: "요괴 오목",
   robots: { index: false, follow: false },
+  openGraph: { title: "요괴 오목", description: "POKA 요괴 게임방: 요괴 AI · 친구 대전 · 관전", url: "/games/omok", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
 };
 export const dynamic = "force-dynamic";
 

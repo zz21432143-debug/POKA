@@ -44,7 +44,7 @@ export function HomeHero() {
   return (
     <HeroCarousel
       slides={[
-        { key: "games", label: "요괴 마을 · 요괴 게임방", node: <GamesSlide /> },
+        { key: "games", label: "요괴 마을 · 요괴 게임방", node: <GamesSlide />, ms: 10000 },
         { key: "main", label: "구인구직 · 매장 관리", node: main },
       ]}
     />
@@ -66,18 +66,23 @@ function GamesSlide() {
         fetchPriority="high"
         className="absolute inset-0 size-full object-cover object-[50%_48%]"
       />
+      {/* 그림 어디를 눌러도 요괴 마을로(아래 버튼은 각자 갈 곳으로) */}
+      <Link href="/yokai" data-hero-yokai-link aria-label="요괴 마을 가기" draggable={false} className="absolute inset-0 z-[1]" />
       {/* 글씨가 잘 보이게 왼쪽 · 아래만 살짝 어둡게(가운데 간판은 그대로) */}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,6,20,.82)_0%,rgba(10,6,20,.35)_30%,transparent_45%,transparent_70%,rgba(10,6,20,.55)_100%)]" />
-      <div className="relative flex h-full flex-col justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(10,6,20,.82)_0%,rgba(10,6,20,.35)_30%,transparent_45%,transparent_70%,rgba(10,6,20,.55)_100%)]" />
+      <div className="pointer-events-none relative z-[2] flex h-full flex-col justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
         <div className="grid max-w-[13rem] gap-1 sm:max-w-[17rem]">
-          <p className="w-fit rounded-full bg-black/60 px-2 text-[10px] font-black tracking-[0.2em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">POKA · NEW OPEN</p>
+          <p className="w-fit rounded-full bg-black/60 px-2 text-[10px] font-black tracking-[0.2em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">
+            <span className="sm:hidden">🏮 요괴 마을 · NEW OPEN</span>
+            <span className="hidden sm:inline">POKA · NEW OPEN</span>
+          </p>
           {/* 휴대폰은 그림 가운데 「요괴마을」 간판을 가리지 않게 글씨는 숨김 */}
           <h2 className="hidden text-2xl leading-tight font-black text-white [text-shadow:2px_2px_0_#0a0614] sm:block">
             요괴 마을 오픈!
             <span className="block text-xs font-bold text-[#f3e8ff] sm:text-sm">요괴 키우고 ·<br />요괴 게임방에서 윷놀이 · 오목 한 판</span>
           </h2>
         </div>
-        <div className="flex flex-wrap gap-1.5 pr-12 sm:pr-0">
+        <div className="pointer-events-auto flex w-fit flex-wrap gap-1.5 pr-12 sm:pr-0">
           <Link href="/yokai" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10 bg-[#ffcf4a] px-2.5 text-xs font-black text-[#2a1400] shadow-[2px_2px_0_#0a0614] sm:px-3 sm:text-sm">
             🏮 요괴 마을 가기
           </Link>

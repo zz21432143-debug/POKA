@@ -13,7 +13,11 @@ import { gamesOpenYut, yutLobby } from "@/lib/yut-server";
 import { profileYokai } from "@/lib/yokai-server";
 import { yokaiImage } from "@/lib/yokai";
 
-export const metadata: Metadata = { title: "요괴 윷놀이", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: "요괴 윷놀이",
+  robots: { index: false, follow: false },
+  openGraph: { title: "요괴 윷놀이", description: "POKA 요괴 게임방: 1:1 ~ 4:4 팀전 · 요괴봇", url: "/games/yut", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
+};
 export const dynamic = "force-dynamic";
 
 const TEAM = { A: { name: "홍팀", color: "#ff5d6c" }, B: { name: "청팀", color: "#4aa8ff" } } as const;

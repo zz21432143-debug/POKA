@@ -7,6 +7,7 @@ import { gamesOpen } from "@/lib/omok-server";
 export const metadata: Metadata = {
   title: "요괴 게임방",
   robots: { index: false, follow: false },
+  openGraph: { title: "요괴 게임방 — 윷놀이 · 오목", description: "POKA 요괴 마을의 요괴 게임방: 윷놀이 · 오목 한 판", url: "/games", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
 };
 export const dynamic = "force-dynamic";
 

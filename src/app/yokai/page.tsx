@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: "/yokai",
-    images: ["/yokai/gumiho-5.webp"],
+    images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }],
   },
 };
 export const dynamic = "force-dynamic";
