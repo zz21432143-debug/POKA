@@ -3764,3 +3764,22 @@ aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
     animation: none;
   }
 }
+
+/* 윷 던지기 준비 동작: 누르자마자 손에 쥐고 흔듦(결과가 오면 던지기 연출이 이어받음) */
+.yut-windup {
+  animation: yut-windup 0.18s ease-in-out infinite alternate;
+  filter: drop-shadow(0 6px 0 #0a0614);
+}
+@keyframes yut-windup {
+  from {
+    transform: translateY(6px) rotate(-6deg);
+  }
+  to {
+    transform: translateY(-10px) rotate(6deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yut-windup {
+    animation: none;
+  }
+}

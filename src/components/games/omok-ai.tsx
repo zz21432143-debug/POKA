@@ -485,14 +485,17 @@ export function OmokAi({
           </div>
         ) : null}
       </div>
-      {myTurn && preview !== null ? (
+      {myTurn ? (
         <button
           type="button"
           data-omok-place
-          onClick={() => apply(preview, "me")}
-          className="arcade-btn btn-gold min-h-14 text-xl"
+          disabled={preview === null}
+          onClick={() => {
+            if (preview !== null) apply(preview, "me");
+          }}
+          className={cn("arcade-btn min-h-14 text-xl", preview !== null ? "btn-gold" : "btn-dark")}
         >
-          ✅ 여기에 착수
+          {preview !== null ? "✅ 여기에 착수" : "👆 놓을 자리를 눌러 주세요"}
         </button>
       ) : null}
       <p

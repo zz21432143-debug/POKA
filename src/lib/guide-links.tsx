@@ -13,19 +13,19 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "skill",
     label: "딜링 기술",
     hint: "셔플 · 피치 · 칩 · 팟 · 판정",
-    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "chip-colors-units", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes", "reading-hand-reviews", "self-dealing-practice-kit"],
+    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "chip-colors-units", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes", "reading-hand-reviews", "self-dealing-practice-kit", "dealer-mental-reset"],
   },
   {
     id: "rules",
     label: "룰 · 토너먼트",
     hint: "TDA · 블라인드 · 분쟁 대처",
-    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry"],
+    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry", "straddle-rules", "chip-race"],
   },
   {
     id: "work",
     label: "근무 · 매장",
     hint: "급여 · 로테이션 · 건강 · 매장 운영",
-    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers"],
+    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers", "rotation-handover", "new-store-first-month"],
   },
 ];
 
@@ -52,6 +52,9 @@ const TERM_LINKS: [string, string][] = [
   ["앤티", "blinds-antes"],
   ["면접", "dealer-interview"],
   ["리엔트리", "late-reg-reentry"],
+  ["스트래들", "straddle-rules"],
+  ["칩 레이스", "chip-race"],
+  ["교대", "rotation-handover"],
   ["이력서", "dealer-resume"],
   ["핸드리뷰", "reading-hand-reviews"],
   ["팟 오즈", "reading-hand-reviews"],

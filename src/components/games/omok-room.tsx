@@ -1202,15 +1202,18 @@ export function OmokRoom({
           ) : null}
         </div>
 
-        {/* 착수 버튼(한 번 눌러 고른 자리에 두기) */}
-        {myTurn && preview !== null && !busy && !theyAsked ? (
+        {/* 착수 버튼: 내 차례면 늘 같은 자리(고르기 전엔 안내) · 누르면 고른 자리에 바로 */}
+        {myTurn && !theyAsked ? (
           <button
             type="button"
             data-omok-place
-            onClick={() => void act("move", { p: preview })}
-            className="arcade-btn btn-gold min-h-14 text-xl"
+            disabled={preview === null || busy}
+            onClick={() => {
+              if (preview !== null) moveNow(preview);
+            }}
+            className={cn("arcade-btn min-h-14 text-xl", preview !== null ? "btn-gold" : "btn-dark")}
           >
-            ✅ 여기에 착수
+            {preview !== null ? "✅ 여기에 착수" : "👆 놓을 자리를 눌러 주세요"}
           </button>
         ) : null}
 

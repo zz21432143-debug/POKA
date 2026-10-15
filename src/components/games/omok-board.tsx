@@ -32,7 +32,7 @@ export function OmokBoard({
   preview?: number | null;
   previewColor?: 1 | 2;
   onPick?: (p: number) => void;
-  /** 휴대폰: 누른 채 돋보기로 맞추고 손을 떼면 바로 착수(없으면 onPick) */
+  /** 휴대폰 돋보기 켜기(누르는 동안 확대) — 손을 떼면 그 자리를 고르기만 하고(onPick), 같은 자리를 한 번 더 누르면 착수 */
   onTouchPlace?: (p: number) => void;
   disabled?: boolean;
   /** 다시 보기: 수 번호 표시 */
@@ -42,7 +42,7 @@ export function OmokBoard({
   const last = moves.length ? moves[moves.length - 1] : -1;
   const win = new Set(line ?? []);
   const order = new Map(moves.map((m, n) => [m, n + 1]));
-  // 손가락 돋보기: 누르고 있는 동안 손가락 위쪽에 확대 칸 · 떼면 착수 · 판 밖으로 빼면 취소
+  // 손가락 돋보기: 누르고 있는 동안 손가락 위쪽에 확대 칸 · 떼면 그 자리를 고름(두 번 누르면 착수) · 판 밖으로 빼면 취소
   const [touch, setTouch] = useState<{ p: number; x: number; y: number } | null>(null);
   const cellAt = (el: HTMLElement, cx: number, cy: number) => {
     const rect = el.getBoundingClientRect();
@@ -97,11 +97,8 @@ export function OmokBoard({
         onPointerUp={(e) => {
           if (disabled || !onPick) return;
           const hit = cellAt(e.currentTarget, e.clientX, e.clientY);
-          if (touch) {
-            setTouch(null);
-            if (hit && onTouchPlace) onTouchPlace(hit.p);
-            return;
-          }
+          if (touch) setTouch(null);
+          // 휴대폰도 PC와 같게: 첫 탭 = 미리보기, 같은 자리 한 번 더 = 착수(잘못 눌러 바로 두는 일 없게)
           if (hit) onPick(hit.p);
         }}
       >
@@ -219,18 +216,31 @@ export function OmokBoard({
 
         {/* 미리보기(한 번 더 누르면 둠) */}
         {preview !== null && preview !== undefined && board[preview] === 0 ? (
-          <span
-            data-omok-preview
-            className={cn(
-              "omok-stone pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full opacity-60",
-              previewColor === 2 ? "omok-white" : "omok-black",
-            )}
-            style={{
-              ...pos(preview),
-              width: `${CELL * 0.92}%`,
-              height: `${CELL * 0.92}%`,
-            }}
-          />
+          <>
+            <span
+              data-omok-preview
+              className={cn(
+                "omok-stone pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full opacity-70",
+                previewColor === 2 ? "omok-white" : "omok-black",
+              )}
+              style={{
+                ...pos(preview),
+                width: `${CELL * 0.92}%`,
+                height: `${CELL * 0.92}%`,
+              }}
+            />
+            {/* 고른 자리 금색 고리(돌 스타일과 따로 그려 휴대폰에서도 잘 보이게) */}
+            <span
+              data-omok-preview-ring
+              aria-hidden
+              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#ffcf4a] shadow-[0_0_10px_#ffcf4a]"
+              style={{
+                ...pos(preview),
+                width: `${CELL * 1.18}%`,
+                height: `${CELL * 1.18}%`,
+              }}
+            />
+          </>
         ) : null}
       </div>
     </div>

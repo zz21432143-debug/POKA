@@ -102,6 +102,8 @@ export function YutRoom({
   const [throwFx, setThrowFx] = useState<NonNullable<
     YutState["lastThrow"]
   > | null>(null);
+  // 던지기를 누른 순간 ~ 결과가 올 때까지: 윷가락을 쥐고 흔드는 준비 동작(반응 공백 없애기)
+  const [winding, setWinding] = useState(false);
   const [callout, setCallout] = useState<{
     text: string;
     color: string;
@@ -420,6 +422,7 @@ export function YutRoom({
     }
     setBusy(true);
     setNote(null);
+    if (action === "throw") setWinding(true);
     try {
       const res = await fetch(`/api/games/yut/${view.id}`, {
         method: "POST",
@@ -450,6 +453,7 @@ export function YutRoom({
       setNote("연결이 끊겼어요. 잠시 뒤 다시 해 주세요.");
     } finally {
       setBusy(false);
+      setWinding(false);
     }
   }
 
@@ -1288,7 +1292,17 @@ export function YutRoom({
                     }}
                   />
                 ) : null}
-                {canThrow && !throwFx && !callout ? (
+                {/* 누르자마자: 윷가락 4개를 쥐고 흔듦 → 결과가 오면 던지기 연출로 */}
+                {winding && !throwFx ? (
+                  <div data-yut-windup aria-hidden className="pointer-events-none absolute inset-0 z-40 grid place-items-center">
+                    <div className="yut-windup flex items-end gap-1.5">
+                      {[0, 1, 2, 3].map((i) => (
+                        <span key={i} className="yut-stick-flat block h-16 w-3.5 rounded-sm sm:h-20 sm:w-4" style={{ transform: `rotate(${(i - 1.5) * 9}deg)` }} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {canThrow && !throwFx && !callout && !winding ? (
                   <p
                     data-yut-press
                     className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-[family-name:var(--font-arcade)] text-[clamp(9px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
