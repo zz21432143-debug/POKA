@@ -65,6 +65,12 @@ export function OmokRoom({
   const [numbers, setNumbers] = useState(false);
   const [copied, setCopied] = useState(false);
   const versionRef = useRef(initial.version);
+  // 관전자 수: 관전자 화면은 몇 초마다 무작위 키로 신호
+  const [watching, setWatching] = useState(initial.watchers ?? 0);
+  const [watchKey] = useState(() =>
+    Math.random().toString(36).slice(2, 14).padEnd(10, "0"),
+  );
+  const meRef = useRef(initial.me);
   const prev = useRef(initial);
 
   useEffect(() => {
@@ -74,6 +80,8 @@ export function OmokRoom({
 
   function receive(next: OmokView) {
     versionRef.current = next.version;
+    meRef.current = next.me;
+    if (next.watchers !== undefined) setWatching(next.watchers);
     setOffset(next.serverNow - Date.now());
     setView(next);
   }
@@ -82,15 +90,26 @@ export function OmokRoom({
   useEffect(() => {
     let alive = true;
     let timer = 0;
+    let tick = 0;
     const loop = async () => {
+      tick += 1;
+      // 관전자는 4번에 1번(약 4초마다) 「보고 있어요」 신호
+      const watch =
+        meRef.current === 0 && tick % 4 === 1 ? `&w=${watchKey}` : "";
       try {
         const res = await fetch(
-          `/api/games/omok/${initial.id}?v=${versionRef.current}`,
+          `/api/games/omok/${initial.id}?v=${versionRef.current}${watch}`,
           { cache: "no-store" },
         );
         if (res.ok) {
-          const json = (await res.json()) as { same: boolean; view?: OmokView };
+          const json = (await res.json()) as {
+            same: boolean;
+            view?: OmokView;
+            watchers?: number;
+          };
           if (alive && !json.same && json.view) receive(json.view);
+          if (alive && json.same && json.watchers !== undefined)
+            setWatching(json.watchers);
         }
       } catch {
         /* 다음에 다시 */
@@ -102,7 +121,7 @@ export function OmokRoom({
       alive = false;
       window.clearTimeout(timer);
     };
-  }, [initial.id]);
+  }, [initial.id, watchKey]);
 
   // 남은 시간 시계
   useEffect(() => {
@@ -384,7 +403,15 @@ export function OmokRoom({
           data-omok-spectate
           className="text-center text-xs font-bold text-sky-300"
         >
-          👀 관전 중 · 1초마다 자동으로 새로 고쳐져요
+          👀 관전 중{watching > 1 ? ` · 나 포함 ${watching}명` : ""} · 1초마다
+          자동으로 새로 고쳐져요
+        </p>
+      ) : playing && watching > 0 ? (
+        <p
+          data-omok-watchers
+          className="text-center text-xs font-bold text-sky-300"
+        >
+          👀 {watching}명이 관전 중이에요
         </p>
       ) : null}
       {card(top)}

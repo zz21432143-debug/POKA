@@ -26,7 +26,7 @@ export default async function InvitePage() {
   const user = await getCurrentUser().catch(() => null);
   const code = user ? await myInviteCode(user.id).catch(() => null) : null;
   const stats = user ? await inviteStats(user.id) : null;
-  const link = code ? `${siteUrl()}/?ref=${code}` : null;
+  const link = code ? `${siteUrl()}/i/${code}` : null;
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-4">

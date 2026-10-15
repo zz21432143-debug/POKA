@@ -16,6 +16,8 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
 import { VisitBeacon } from "@/components/analytics/visit-beacon";
+import { HideOnGames } from "@/components/layout/route-hide";
+import { SourceBeacon } from "@/components/analytics/source-beacon";
 
 async function ConnectedTicker() {
   const events = await getCachedTickerEvents().catch(() => []);
@@ -71,13 +73,18 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>
-        <Suspense fallback={<LedTicker items={[]} />}>
-          <ConnectedTicker />
-        </Suspense>
+        <HideOnGames>
+          <Suspense fallback={<LedTicker items={[]} />}>
+            <ConnectedTicker />
+          </Suspense>
+        </HideOnGames>
       </div>
       {/* 휴대폰 전용 앱 다운로드 띠. 고정(sticky) 영역 밖에 두어 헤더·전광판과 겹치지 않고 스크롤하면 사라집니다. */}
-      <InstallPwaButton variant="strip" />
+      <HideOnGames>
+        <InstallPwaButton variant="strip" />
+      </HideOnGames>
       <VisitBeacon />
+      <SourceBeacon />
       <Suspense fallback={null}>
         <ConnectedNotice />
       </Suspense>
@@ -105,7 +112,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <Suspense fallback={<SiteFooterFallback />}>
         <SiteFooter />
       </Suspense>
-      <MobileBottomNav />
+      <HideOnGames>
+        <MobileBottomNav />
+      </HideOnGames>
     </div>
     </CrownProvider>
   );

@@ -75,7 +75,8 @@ async function drawFooter(ctx: CanvasRenderingContext2D, H: number, url: string,
   try {
     const QR = await import("qrcode");
     const target = `https://${url}`;
-    const qrTarget = shareRef ? `${target}${target.includes("?") ? "&" : "?"}ref=${shareRef}` : target;
+    // 유입 경로(from=share) · 로그인 회원이면 초대 코드
+    const qrTarget = `${target}${target.includes("?") ? "&" : "?"}from=share${shareRef ? `&ref=${shareRef}` : ""}`;
     const dataUrl = await QR.toDataURL(qrTarget, { width: qrSize * 2, margin: 1, color: { dark: "#000000", light: "#ffffff" } });
     const img = await loadImage(dataUrl);
     if (img) {

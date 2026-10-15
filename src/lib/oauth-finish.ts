@@ -105,6 +105,10 @@ export async function finishSocialAuth(request: Request, profile: SocialProfile)
       const { INVITE_COOKIE, recordInvite } = await import("@/lib/invite");
       await recordInvite(user.id, jar.get(INVITE_COOKIE)?.value, ip).catch(() => undefined);
       jar.delete(INVITE_COOKIE);
+      // 유입 경로: 처음 들어온 출처의 가입으로 셈(없으면 직접)
+      const { SOURCE_COOKIE, SOURCE_RE, addTraffic } = await import("@/lib/traffic");
+      const src = jar.get(SOURCE_COOKIE)?.value ?? "";
+      await addTraffic(SOURCE_RE.test(src) ? src : "direct", "signups").catch(() => undefined);
       const welcome = new URL("/welcome", request.url);
       if (next !== "/") welcome.searchParams.set("next", next);
       return sendTo(welcome);

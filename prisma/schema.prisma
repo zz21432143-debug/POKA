@@ -771,3 +771,43 @@ model OmokGame {
   @@index([status, updatedAt])
   @@index([hostId, createdAt])
 }
+
+/// 게임 전적(오목 · 알까기 · 체스 공통). 끝난 판 하나 = 한 줄. 짧은 판(기권 장난)은 기록 안 함
+model GameResult {
+  id        String   @id @default(cuid())
+  /// omok · alkkagi · chess
+  game      String
+  gameId    String   @unique
+  winnerId  String?
+  loserId   String?
+  playerAId String
+  playerBId String
+  draw      Boolean  @default(false)
+  reason    String   @default("")
+  moves     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([game, createdAt])
+  @@index([winnerId])
+  @@index([loserId])
+}
+
+/// 관전자: 대국 화면을 보는 사람(최근 15초 안에 신호를 보낸 수 = 관전 중)
+model GameWatch {
+  gameId String
+  viewer String
+  seenAt DateTime @default(now())
+
+  @@id([gameId, viewer])
+  @@index([gameId, seenAt])
+}
+
+/// 유입 경로: 날짜(KST) · 출처(board · rotation · invite · naver …)별 방문 · 가입
+model TrafficDaily {
+  day     String
+  source  String
+  visits  Int    @default(0)
+  signups Int    @default(0)
+
+  @@id([day, source])
+}

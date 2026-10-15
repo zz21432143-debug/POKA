@@ -276,8 +276,132 @@ function ranked(b: Stone[], c: Stone, defense: number) {
     .sort((a, z) => z.win - a.win || z.score - a.score);
 }
 
+/** p(c가 놓인 상태)를 지나는 dir 방향으로 「4」(한 칸 더 두면 정확히 5목)가 있는지 */
+function fourDir(b: Stone[], p: number, dx: number, dy: number, c: Stone) {
+  const { x, y } = xyOf(p);
+  for (let k = -4; k <= 4; k += 1) {
+    if (k === 0) continue;
+    const qx = x + k * dx;
+    const qy = y + k * dy;
+    if (!inside(qx, qy)) continue;
+    const q = idx(qx, qy);
+    if (b[q] !== 0) continue;
+    b[q] = c;
+    const back = count(b, qx, qy, -dx, -dy, c);
+    const fwd = count(b, qx, qy, dx, dy, c);
+    const ok = back + fwd + 1 === 5 && lineHas(b, q, dx, dy, c, p);
+    b[q] = 0;
+    if (ok) return true;
+  }
+  return false;
+}
+
 /**
- * 요괴 AI 한 수. level 1 도깨비(실수 많음) · 2 텐구(정석) · 3 염라대왕(한 수 앞) · 4 구미호(두 수 앞, 함정).
+ * p에 c를 두면 생기는 위협 점수: 5목 > 열린 4 · 4-4 · 4-3(다음에 반드시 이김) > 3-3(백만) > 4 > 열린 3.
+ * 흑은 삼삼 자리에 못 두니 0.
+ */
+export function threatScore(b: Stone[], p: number, c: Stone) {
+  if (b[p] !== 0) return 0;
+  if (c === BLACK && isDoubleThree(b, p)) return 0;
+  b[p] = c;
+  try {
+    if (fiveLine(b, p, c)) return 100_000_000;
+    let open4 = 0;
+    let four = 0;
+    let open3 = 0;
+    for (const [dx, dy] of DIRS) {
+      if (straightFour(b, p, dx, dy, c)) open4 += 1;
+      else if (fourDir(b, p, dx, dy, c)) four += 1;
+      else if (openThree(b, p, dx, dy, c)) open3 += 1;
+    }
+    if (open4 || four >= 2 || (four && open3)) return 1_000_000;
+    if (open3 >= 2) return 200_000;
+    return four * 4_000 + open3 * 2_500;
+  } finally {
+    b[p] = 0;
+  }
+}
+
+/** 위협까지 보는 후보 순위(염라대왕 · 구미호): 내 공격 + 상대가 거기 두면 생길 위협(막기) + 모양 점수 */
+function rankedSharp(b: Stone[], c: Stone) {
+  const o = other(c);
+  return candidates(b, c)
+    .map((p) => {
+      const attack = threatScore(b, p, c);
+      const defense = threatScore(b, p, o);
+      return {
+        p,
+        win: attack >= 100_000_000 ? 1 : 0,
+        score:
+          attack +
+          defense * 0.9 +
+          cellValue(b, p, c) +
+          cellValue(b, p, o) * 0.9,
+      };
+    })
+    .sort((a, z) => z.win - a.win || z.score - a.score);
+}
+
+const WIN = 1_000_000_000;
+
+/** 판 평가(side가 둘 차례): 다음 수 5목 · 막을 수 없는 두 곳 · 열린 4 같은 결정적 모양부터 */
+function evaluate(b: Stone[], side: Stone) {
+  const o = other(side);
+  let myTop = 0;
+  let my2 = 0;
+  let oppTop = 0;
+  let oppFives = 0;
+  let oppWins = 0;
+  for (let p = 0; p < CELLS; p += 1) {
+    if (b[p] !== 0 || !nearStone(b, p, 2)) continue;
+    const a = threatScore(b, p, side);
+    if (a >= 100_000_000) return WIN;
+    if (a > myTop) {
+      my2 = myTop;
+      myTop = a;
+    } else if (a > my2) my2 = a;
+    const d = threatScore(b, p, o);
+    // 흑은 삼삼 자리를 막을 수 없음 → 그 자리의 상대 5목은 못 막는 수
+    if (d >= 100_000_000)
+      oppFives += side === BLACK && isDoubleThree(b, p) ? 2 : 1;
+    else if (d >= 1_000_000) oppWins += 1;
+    if (d > oppTop) oppTop = d;
+  }
+  if (oppFives >= 2) return -WIN;
+  // 상대 5목 한 곳은 무조건 막아야 함(내 공격은 그다음)
+  if (oppFives === 1) return -200_000 + my2 * 0.2;
+  if (myTop >= 1_000_000) return WIN / 2;
+  if (oppWins >= 2) return -WIN / 4;
+  return myTop + my2 * 0.3 - oppTop * 0.9;
+}
+
+/** side 차례 점수(네가맥스 · 알파베타). 후보는 위협 순 상위 width개 */
+function negamax(
+  b: Stone[],
+  side: Stone,
+  depth: number,
+  alpha: number,
+  beta: number,
+  width: number,
+): number {
+  if (depth <= 0) return evaluate(b, side);
+  const list = rankedSharp(b, side).slice(0, width);
+  if (!list.length) return 0;
+  let best = -Infinity;
+  for (const c of list) {
+    if (c.win) return WIN;
+    b[c.p] = side;
+    const v = -negamax(b, other(side), depth - 1, -beta, -alpha, width);
+    b[c.p] = 0;
+    if (v > best) best = v;
+    if (v > alpha) alpha = v;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+
+/**
+ * 요괴 AI 한 수. level 1 도깨비(실수 많음) · 2 텐구(정석) · 3 염라대왕(위협 읽기 + 한 수 앞) · 4 구미호(위협 읽기 + 두 수 앞, 함정).
  * rand: 0~1 난수(테스트에서 고정 가능)
  */
 export function aiMove(
@@ -315,30 +439,21 @@ export function aiMove(
     const top = list.slice(0, 2);
     return rand() < 0.75 ? top[0].p : top[top.length - 1].p;
   }
-  // 3 · 4: 후보마다 상대 최선 응수를 빼고 비교(4는 내 다음 수까지)
-  const width = level === 3 ? 8 : 10;
-  let best = list[0].p;
+  // 3 · 4: 위협을 읽으며 몇 수 앞까지(네가맥스 + 알파베타)
+  const sharp = rankedSharp(b, me);
+  if (!sharp.length) return list[0].p;
+  // 다음 수에 반드시 이기는 모양(열린 4 · 4-3 · 4-4)이 있고 상대 5목 위협이 없으면 바로
+  if (oppWin === undefined && threatScore(b, sharp[0].p, me) >= 1_000_000)
+    return sharp[0].p;
+  const depth = level === 3 ? 2 : 3;
+  const width = level === 3 ? 8 : 9;
+  let best = sharp[0].p;
   let bestScore = -Infinity;
-  for (const cand of list.slice(0, width)) {
+  for (const cand of sharp.slice(0, width + 2)) {
     b[cand.p] = me;
-    const replies = ranked(b, opp, 0.95);
-    let value = cand.score;
-    if (replies.length) {
-      const r = replies[0];
-      if (r.win) value -= 5_000_000;
-      else {
-        value -= r.score * 0.85;
-        if (level === 4) {
-          b[r.p] = opp;
-          const mine = ranked(b, me, 0.95);
-          if (mine.length)
-            value += mine[0].win ? 2_000_000 : mine[0].score * 0.6;
-          b[r.p] = 0;
-        }
-      }
-    }
+    const value =
+      -negamax(b, opp, depth - 1, -Infinity, -bestScore, width) + rand() * 3;
     b[cand.p] = 0;
-    value += rand() * 3;
     if (value > bestScore) {
       bestScore = value;
       best = cand.p;

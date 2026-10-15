@@ -8,6 +8,8 @@ import { StoneDot } from "@/components/games/omok-board";
 import { getCurrentUser } from "@/lib/current-user";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
 import { gamesOpen, omokLobby } from "@/lib/omok-server";
+import { GameStatsPanel } from "@/components/games/game-stats-panel";
+import { gameStatsVisible } from "@/lib/game-stats";
 
 export const metadata: Metadata = {
   title: "요괴 오목",
@@ -63,6 +65,11 @@ export default async function OmokLobbyPage() {
           </Link>
         )}
       </section>
+
+      {/* 전적 · 랭킹: 공개 전에는 숨김(GAME_STATS_PUBLIC=1이면 보임) */}
+      {gameStatsVisible() ? (
+        <GameStatsPanel game="omok" userId={user?.id ?? null} />
+      ) : null}
 
       <section
         aria-label="요괴 AI 대전"

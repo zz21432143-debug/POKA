@@ -6,7 +6,9 @@ import { isStaff } from "@/lib/roles";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { loadSiteStats } from "@/lib/site-stats";
 import { SHARE_TOOLS, shareStats, type ShareTool } from "@/lib/share-stats";
-import { formatKstLabel } from "@/lib/dates";
+import { formatKstLabel, shiftDate, todayKstDate } from "@/lib/dates";
+import { trafficSummary } from "@/lib/traffic";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = { title: "방문 · 가입 통계", robots: { index: false } };
 
@@ -31,7 +33,14 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
   if (!user || !isStaff(user)) notFound();
   const { days: daysParam } = await searchParams;
   const range = RANGES.find((value) => String(value) === daysParam) ?? 30;
-  const [stats, shares] = await Promise.all([loadSiteStats(range), shareStats(range)]);
+  const since = new Date(`${shiftDate(todayKstDate(), -(range - 1))}T00:00:00+09:00`);
+  const [stats, shares, traffic, invites] = await Promise.all([
+    loadSiteStats(range),
+    shareStats(range),
+    trafficSummary(range),
+    prisma.toolSaved.groupBy({ by: ["name"], where: { kind: "invite", createdAt: { gte: since } }, _count: { _all: true } }).catch(() => []),
+  ]);
+  const inviteCount = (name: string) => invites.find((r) => r.name === name)?._count._all ?? 0;
   const shareRows = (Object.keys(SHARE_TOOLS) as ShareTool[]).map((k) => ({ key: k, label: SHARE_TOOLS[k], ...shares[k] })).sort((a, b) => b.total - a.total);
   const maxVisitors = Math.max(1, ...stats.days.map((row) => row.visitors));
   const sum = (key: "visitors" | "signups" | "withdrawals") => stats.days.reduce((total, row) => total + row[key], 0);
@@ -126,6 +135,43 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* 유입 경로: 어디서 들어와 가입했는지(QR · 초대 · 검색 · SNS) */}
+      <section aria-label="유입 경로" data-traffic-stats className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h2 className="text-lg font-semibold">🧭 유입 경로 · 최근 {range}일</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          표시가 붙은 링크(QR · 초대 · 공유 이미지 · 알림)나 다른 사이트에서 들어온 방문만 셉니다(출처마다 하루 1번). 가입은 처음 들어온 출처로 셉니다.
+        </p>
+        {traffic.length ? (
+          <table className="mt-2 w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="py-1">출처</th>
+                <th className="py-1 text-right">방문</th>
+                <th className="py-1 text-right">가입</th>
+                <th className="py-1 text-right">가입률</th>
+              </tr>
+            </thead>
+            <tbody>
+              {traffic.map((r) => (
+                <tr key={r.source} data-traffic-row={r.source} className="border-t border-border">
+                  <td className="py-1.5">{r.label}</td>
+                  <td className="py-1.5 text-right font-bold tabular-nums">{n(r.visits)}</td>
+                  <td className="py-1.5 text-right tabular-nums">{n(r.signups)}</td>
+                  <td className="py-1.5 text-right tabular-nums">{r.visits ? `${Math.round((r.signups / r.visits) * 100)}%` : "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">아직 기록이 없어요.</p>
+        )}
+        <p data-invite-summary className="mt-3 text-sm">
+          🤝 친구 초대 가입 {n(inviteCount("pending") + inviteCount("done") + inviteCount("capped") + inviteCount("same-ip"))}명 · 첫 출석(보상) {n(inviteCount("done"))}명
+          {inviteCount("same-ip") ? ` · 같은 IP(보상 없음) ${n(inviteCount("same-ip"))}명` : ""}
+          {inviteCount("capped") ? ` · 한도 초과 ${n(inviteCount("capped"))}명` : ""}
+        </p>
       </section>
 
       {/* 이미지 공유: 어떤 도구 결과가 많이 퍼지는지(공유 창 = 카톡 등으로 바로 보냄, 저장 = 이미지 내려받음) */}

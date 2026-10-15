@@ -19,12 +19,15 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const v = new URL(request.url).searchParams.get("v");
+  const query = new URL(request.url).searchParams;
+  const v = query.get("v");
   const user = await getCurrentUser().catch(() => null);
   const state = await omokState(
     id,
     user?.id ?? null,
     v !== null && /^\d+$/.test(v) ? Number(v) : undefined,
+    // 관전자 화면이 보내는 키(관전자 수)
+    query.get("w") ?? undefined,
   );
   if (!state)
     return NextResponse.json(

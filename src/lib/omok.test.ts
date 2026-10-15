@@ -171,3 +171,63 @@ describe("요괴 AI", () => {
     void boardFrom;
   });
 });
+
+describe("요괴 AI 강화(위협 읽기)", () => {
+  const fixed = () => 0.5;
+  it("상대 열린 3은 양끝 중 하나로 막음(염라 · 구미호)", () => {
+    // 흑 (5,7)(6,7)(7,7) 열린 3, 백(AI) 차례 — 백 돌 2개는 먼 곳
+    const moves = [at(5, 7), at(1, 1), at(6, 7), at(1, 13), at(7, 7)];
+    for (const level of [3, 4] as const) {
+      const m = aiMove(moves, level, fixed);
+      assert.ok(
+        [at(4, 7), at(8, 7), at(3, 7), at(9, 7)].includes(m),
+        `level ${level}: ${m % 15},${Math.floor(m / 15)}`,
+      );
+    }
+  });
+  it("4-3을 만들 수 있으면 만듦", () => {
+    // 백(AI): 가로 (3,3)(4,3)(5,3) + 세로 (6,4)(6,5) → (6,3)에 두면 가로 4 + 세로 열린 3
+    // 흑은 먼 곳에 흩어 둠(위협 없음)
+    const moves = [
+      at(10, 12),
+      at(3, 3),
+      at(12, 10),
+      at(4, 3),
+      at(14, 14),
+      at(6, 4),
+      at(0, 14),
+      at(6, 5),
+      at(13, 0),
+    ];
+    // 가로가 한쪽 막히게: 흑 (2,3) 추가하려면 순서 맞추기 어려우니 열린 4 또는 4-3이면 통과
+    const m = aiMove(moves, 4, fixed);
+    assert.ok(
+      m === at(6, 3) || m === at(2, 3),
+      `got ${m % 15},${Math.floor(m / 15)}`,
+    );
+  });
+  it("구미호는 도깨비 · 텐구를 대부분 이김", () => {
+    let seed = 7;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const duel = (a: 1 | 2 | 3 | 4, b: 1 | 2 | 3 | 4) => {
+      let moves: number[] = [];
+      for (let n = 0; n < 225; n += 1) {
+        const m = aiMove(moves, n % 2 === 0 ? a : b, rand);
+        if (m < 0) return 0;
+        const r = play(moves, m);
+        if (!r.ok) return 0;
+        moves = r.moves;
+        if (r.winner) return r.winner;
+        if (r.draw) return 0;
+      }
+      return 0;
+    };
+    let wins = 0;
+    for (let g = 0; g < 6; g += 1) {
+      // 구미호가 흑 3번 · 백 3번
+      const r = g % 2 === 0 ? duel(4, g < 3 ? 1 : 2) : duel(g < 3 ? 1 : 2, 4);
+      if ((g % 2 === 0 && r === 1) || (g % 2 === 1 && r === 2)) wins += 1;
+    }
+    assert.ok(wins >= 5, `구미호 ${wins}/6승`);
+  });
+});

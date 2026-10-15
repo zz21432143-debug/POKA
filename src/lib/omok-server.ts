@@ -11,6 +11,7 @@ import {
 } from "@/lib/omok";
 import { profileYokai } from "@/lib/yokai-server";
 import type { YokaiSpecies } from "@/lib/yokai";
+import { recordGameResult } from "@/lib/game-stats";
 
 /**
  * 요괴 오목 친구 대전(서버가 차례 · 금수 · 승패 · 시간을 판정).
@@ -53,6 +54,8 @@ export type OmokView = {
   emote: { by: Stone; e: string; at: number } | null;
   nextId: string | null;
   line: number[] | null;
+  /** 관전 중인 사람 수 */
+  watchers?: number;
 };
 
 const movesOf = (row: Row) => {
@@ -65,6 +68,41 @@ const movesOf = (row: Row) => {
     return [];
   }
 };
+
+/** 끝난 판이면 전적에 기록(한 판에 한 번 · 짧은 판은 game-stats가 뺌) */
+async function recordIfDone(row: Row) {
+  if (
+    row.status !== "done" ||
+    !row.blackId ||
+    !row.whiteId ||
+    row.endReason === "cancel"
+  )
+    return;
+  await recordGameResult({
+    game: "omok",
+    gameId: row.id,
+    playerAId: row.blackId,
+    playerBId: row.whiteId,
+    winnerId:
+      row.winner === BLACK
+        ? row.blackId
+        : row.winner === WHITE
+          ? row.whiteId
+          : null,
+    reason: row.endReason,
+    moves: movesOf(row).length,
+  }).catch(() => undefined);
+}
+
+/** 관전 중인 사람 수(최근 15초 안에 신호) */
+const WATCH_MS = 15_000;
+async function watchers(gameId: string) {
+  return prisma.gameWatch
+    .count({
+      where: { gameId, seenAt: { gte: new Date(Date.now() - WATCH_MS) } },
+    })
+    .catch(() => 0);
+}
 
 /** 시간 초과 · 오래 기다린 방 정리(볼 때마다 · 원자적으로) */
 async function settle(row: Row): Promise<Row> {
@@ -84,7 +122,10 @@ async function settle(row: Row): Promise<Row> {
         version: { increment: 1 },
       },
     });
-    return (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row;
+    const fresh =
+      (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row;
+    await recordIfDone(fresh);
+    return fresh;
   }
   if (row.status === "waiting" && now - row.createdAt.getTime() > WAIT_MS) {
     await prisma.omokGame.updateMany({
@@ -167,15 +208,46 @@ export async function omokState(
   id: string,
   viewerId: string | null,
   knownVersion?: number,
+  /** 관전자 화면이 몇 초마다 보내는 무작위 키(관전자 수) */
+  watcher?: string,
 ) {
   const found = await prisma.omokGame
     .findUnique({ where: { id } })
     .catch(() => null);
   if (!found) return null;
   const row = await settle(found);
+  const isPlayer = Boolean(
+    viewerId && (viewerId === row.blackId || viewerId === row.whiteId),
+  );
+  if (
+    watcher &&
+    !isPlayer &&
+    row.status === "playing" &&
+    /^[a-z0-9]{8,40}$/.test(watcher)
+  ) {
+    const now = new Date();
+    await prisma.gameWatch
+      .upsert({
+        where: { gameId_viewer: { gameId: id, viewer: watcher } },
+        create: { gameId: id, viewer: watcher, seenAt: now },
+        update: { seenAt: now },
+      })
+      .catch(() => undefined);
+    // 오래된 신호 가끔 정리
+    if (Math.random() < 0.02)
+      await prisma.gameWatch
+        .deleteMany({
+          where: { seenAt: { lt: new Date(Date.now() - 86_400_000) } },
+        })
+        .catch(() => undefined);
+  }
+  const count = row.status === "playing" ? await watchers(id) : 0;
   if (knownVersion !== undefined && row.version === knownVersion)
-    return { same: true as const, serverNow: Date.now() };
-  return { same: false as const, view: await toView(row, viewerId) };
+    return { same: true as const, serverNow: Date.now(), watchers: count };
+  return {
+    same: false as const,
+    view: { ...(await toView(row, viewerId)), watchers: count },
+  };
 }
 
 /** 방 만들기(이미 기다리는 내 방이 있으면 그 방) */
@@ -222,7 +294,14 @@ export async function omokAct(
   const now = new Date();
   const done = async () => {
     const fresh = await prisma.omokGame.findUnique({ where: { id } });
-    return { ok: true as const, view: await toView(fresh ?? row, userId) };
+    if (fresh) await recordIfDone(fresh);
+    return {
+      ok: true as const,
+      view: {
+        ...(await toView(fresh ?? row, userId)),
+        watchers: fresh?.status === "playing" ? await watchers(id) : 0,
+      },
+    };
   };
 
   if (action === "join") {
@@ -245,6 +324,16 @@ export async function omokAct(
     });
     if (joined.count !== 1)
       return fail("다른 사람이 먼저 들어왔어요. 관전으로 볼 수 있어요.", 409);
+    // 방장에게 알림(다른 화면을 보고 있어도 바로 알게)
+    const guest = await prisma.user
+      .findUnique({ where: { id: userId }, select: { nickname: true } })
+      .catch(() => null);
+    const { notifyUser } = await import("@/lib/push");
+    await notifyUser(row.hostId, {
+      title: "⚔️ 오목 상대가 들어왔어요!",
+      body: `${guest?.nickname ?? "친구"}님이 들어와 대국이 시작됐어요. 한 수에 ${TURN_SECONDS}초!`,
+      url: `/games/omok/${id}`,
+    }).catch(() => undefined);
     return done();
   }
 

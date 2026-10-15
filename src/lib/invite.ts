@@ -2,8 +2,8 @@ import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 
 /**
- * 친구 초대: 회원마다 초대 코드(6자) → 초대 링크 `/?ref=코드`.
- * 링크로 들어오면 proxy가 쿠키(poka_ref, 30일)에 코드를 담고, 가입할 때 「누가 초대했는지」를 기록합니다.
+ * 친구 초대: 회원마다 초대 코드(6자) → 초대 링크 `/i/코드`(초대 화면 · 카톡 미리보기). 예전 `/?ref=코드`도 됨.
+ * 링크로 들어오면 /api/track이 진짜 코드일 때만 쿠키(poka_ref, 30일)에 담고, 가입할 때 「누가 초대했는지」를 기록합니다.
  * 초대받은 친구가 첫 출석을 하면 두 사람 모두 포인트(가입만 하고 떠나는 계정으로 포인트를 못 모으게).
  *
  * 저장(ToolSaved, 새 표 없음):
@@ -63,7 +63,7 @@ export async function myInviteCode(userId: string): Promise<string> {
   throw new Error("초대 코드를 만들지 못했어요.");
 }
 
-async function codeOwner(code: string) {
+export async function codeOwner(code: string) {
   if (!INVITE_CODE_RE.test(code)) return null;
   const row = await prisma.toolSaved
     .findUnique({
@@ -198,4 +198,12 @@ export async function inviteStats(userId: string) {
     capped: n("capped"),
     earned: n("done") * INVITER_POINTS,
   };
+}
+
+/** 초대 코드 → 초대한 회원 닉네임(초대 화면 · 카톡 미리보기) · 없거나 탈퇴면 null */
+export async function inviterByCode(code: string) {
+  const id = await codeOwner(code.toLowerCase());
+  if (!id) return null;
+  const user = await prisma.user.findUnique({ where: { id }, select: { nickname: true, withdrawnAt: true } }).catch(() => null);
+  return user && !user.withdrawnAt ? { id, nickname: user.nickname } : null;
 }
