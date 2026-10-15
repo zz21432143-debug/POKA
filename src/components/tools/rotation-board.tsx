@@ -164,7 +164,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   /** 딜러 탭 찾기 · 상태 거르기 */
   const [dealerQ, setDealerQ] = useState("");
   const [dealerFilter, setDealerFilter] = useState<
-    "all" | "in" | "rest" | "left"
+    "all" | "in" | "rest" | "nextRest" | "left"
   >("all");
   const [timeEdit, setTimeEdit] = useState<{
     index: number;
@@ -398,11 +398,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const nowSlot = plan ? plan.slots[Math.max(0, current)] : null;
   /** 지금 칸에서 쉬는 딜러 */
   const restNow = new Set(nowSlot?.rest ?? []);
+  /** 다음 교대 칸에서 쉬는 딜러(교대 때 빠질 사람) */
+  const restNext = new Set(plan && next >= 0 ? (plan.slots[next]?.rest ?? []) : []);
   const shownDealers = state.dealers.filter((d) => {
     const q = dealerQ.trim();
     if (q && !d.name.includes(q)) return false;
     if (dealerFilter === "in") return d.status === "IN" && !restNow.has(d.id);
     if (dealerFilter === "rest") return d.status === "IN" && restNow.has(d.id);
+    if (dealerFilter === "nextRest") return d.status !== "LEFT" && restNext.has(d.id);
     if (dealerFilter === "left") return d.status === "LEFT";
     return true;
   });
@@ -2284,9 +2287,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     ],
                     [
                       "rest",
-                      "휴식",
+                      "지금 휴식",
                       state.dealers.filter(
                         (d) => d.status === "IN" && restNow.has(d.id),
+                      ).length,
+                    ],
+                    [
+                      "nextRest",
+                      "다음 휴식",
+                      state.dealers.filter(
+                        (d) => d.status !== "LEFT" && restNext.has(d.id),
                       ).length,
                     ],
                     [

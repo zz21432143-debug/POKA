@@ -56,7 +56,7 @@ export function NameTag({ name, team, className }: { name: string; team: Team; c
   return (
     <span
       data-yut-name
-      className={cn("pointer-events-none max-w-[5.5rem] truncate border-2 px-1 text-[10px] leading-4 font-black text-white shadow-[2px_2px_0_#0a0614]", className)}
+      className={cn("pointer-events-none relative z-20 max-w-[5.5rem] truncate border-2 px-1 text-[9px] leading-[14px] font-black text-white shadow-[2px_2px_0_#0a0614] sm:text-[10px] sm:leading-4", className)}
       style={{ background: "#0a0614e6", borderColor: TEAM_COLOR[team] }}
     >
       {name}
@@ -86,6 +86,7 @@ export function YutBoard({
   onPiece,
   onGhost,
   onCancel,
+  onTapEmpty,
   portal,
   burst,
   impact,
@@ -107,6 +108,8 @@ export function YutBoard({
   onGhost: (ri: number) => void;
   /** 빈 땅 클릭 · 우클릭: 고른 것 취소 */
   onCancel: () => void;
+  /** 빈 땅 터치(던지기 차례면 던지기 · 아니면 취소) */
+  onTapEmpty?: () => void;
   /** 지름길 진입 포털(꼭짓점 · 방에 도착) */
   portal: { node: string; key: number } | null;
   burst: YutBurst | null;
@@ -177,13 +180,13 @@ export function YutBoard({
       data-yut-board
       data-yut-skin="arcade-mat"
       className={cn(
-        "yut-wood relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-[18px] p-[3.2%]",
+        "yut-wood @container relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-[18px] p-[3.2%]",
         impact && "yut-impact",
       )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
       onClick={(e) => {
         // 말 · 갈 곳이 아닌 빈 땅을 누르면 취소
-        if (!(e.target as HTMLElement).closest("button")) onCancel();
+        if (!(e.target as HTMLElement).closest("button")) (onTapEmpty ?? onCancel)();
       }}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -285,7 +288,7 @@ export function YutBoard({
                   <span className="text-[clamp(12px,3cqw,20px)] leading-none text-[#ffcf4a] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
-              {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="absolute -bottom-[26%] left-1/2 -translate-x-1/2" /> : null}
+              {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="!absolute -bottom-[32%] left-1/2 -translate-x-1/2" /> : null}
               {p.top && p.count > 1 ? (
                 <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-[family-name:var(--font-arcade)] text-[clamp(7px,1.5cqw,11px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
                   ×{p.count}

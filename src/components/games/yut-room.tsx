@@ -115,6 +115,8 @@ export function YutRoom({
     null,
   );
   const [cutIn, setCutIn] = useState<CutIn | null>(null);
+  /** 잡기: 도착한 요괴가 드롭킥 */
+  const [kick, setKick] = useState<{ key: number; node: string } | null>(null);
   const [stepMs, setStepMs] = useState(initial.mode >= 3 ? 160 : 260);
   const [showResult, setShowResult] = useState(initial.status === "done");
   const [emoteWait, setEmoteWait] = useState(0);
@@ -274,6 +276,7 @@ export function YutRoom({
               colors: [color, "#ffcf4a", "#ffffff", "#0a0614"],
               count: 22,
             });
+            setKick({ key: e.at, node: e.to });
             setKnock({ key: e.at, items: victims });
             setCutIn({
               key: e.at,
@@ -375,6 +378,11 @@ export function YutRoom({
     const t = window.setTimeout(() => setMerge(null), 500);
     return () => window.clearTimeout(t);
   }, [merge]);
+  useEffect(() => {
+    if (!kick) return;
+    const t = window.setTimeout(() => setKick(null), 700);
+    return () => window.clearTimeout(t);
+  }, [kick]);
   useEffect(() => {
     if (!portal) return;
     const t = window.setTimeout(() => setPortal(null), 1200);
@@ -525,6 +533,17 @@ export function YutRoom({
       if (uniq.length === 1) void act("move", { ri: only[0].ri, pi: rep });
     } else setSelected(rep);
   }
+  /** 판 빈 곳 터치: 던지기 차례면 바로 던지기(0.5초 연타 막기) · 아니면 고른 것 취소 */
+  function tapEmpty() {
+    const k = keyRef.current;
+    if (canThrow && !busy) {
+      if (Date.now() - k.last < 500) return;
+      k.last = Date.now();
+      throwNow(gauge ? gauge.power : 60 + Math.floor(Math.random() * 30));
+      return;
+    }
+    cancel();
+  }
   function cancel() {
     setSelected(null);
     setGauge(null);
@@ -642,8 +661,8 @@ export function YutRoom({
         key={`${seat.team}${seat.idx}`}
         data-yut-seat={`${seat.team}${seat.idx}`}
         className={cn(
-          "relative flex min-h-11 min-w-[8.5rem] shrink-0 items-center gap-1.5 rounded-lg border-2 bg-black/40 px-1.5 py-1",
-          turn ? "border-[#ffcf4a] bg-[#ffcf4a]/10" : "border-transparent",
+          "yut-hud-chip relative flex min-h-11 min-w-[8.5rem] shrink-0 items-center gap-1.5 border-2 px-1.5 py-1",
+          turn ? "yut-hud-chip-on border-[#ffcf4a]" : "border-[#6ad7ff]/40",
         )}
       >
         {emoteOn(seat) ? (
@@ -1168,6 +1187,7 @@ export function YutRoom({
                   ghosts={ghosts}
                   portal={portal}
                   onCancel={cancel}
+                  onTapEmpty={tapEmpty}
                   onPiece={pickPiece}
                   onGhost={(ri) =>
                     selected !== null && act("move", { ri, pi: selected })
@@ -1176,6 +1196,7 @@ export function YutRoom({
                   impact={impact}
                   knock={knock}
                   merge={merge}
+                  kick={kick}
                 />
                 {throwFx ? (
                   <YutThrowFx
@@ -1191,6 +1212,14 @@ export function YutRoom({
                       setImpact(true);
                     }}
                   />
+                ) : null}
+                {canThrow && !throwFx && !callout ? (
+                  <p
+                    data-yut-press
+                    className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-[family-name:var(--font-arcade)] text-[clamp(9px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
+                  >
+                    PRESS SPACE OR TOUCH TO THROW!
+                  </p>
                 ) : null}
                 {!throwFx && callout ? (
                   <b
@@ -1239,8 +1268,11 @@ export function YutRoom({
               {playing ? (
                 <section
                   data-yut-action
-                  className="arcade-panel grid gap-2 p-2.5"
+                  className="yut-hud grid gap-2 p-2.5"
                 >
+                  <p className="font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                    {myTurn ? (s.phase === "throw" ? "YOUR TURN · THROW!" : "YOUR TURN · MOVE!") : "PLAYER TURN"}
+                  </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <b
                       className="text-base font-black"

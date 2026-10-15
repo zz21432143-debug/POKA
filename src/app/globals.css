@@ -3406,3 +3406,194 @@ img[src*="/yokai/"] {
     animation: none;
   }
 }
+
+/* ───────── 윷놀이 게임판 스킨: 나무 틀 · 멍석 · 픽셀 발판 · 서 있는 요괴 ───────── */
+.yut-wood {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #8a5a2b, #5e3a18);
+  box-shadow:
+    inset 0 0 0 4px #3a210c,
+    inset 0 0 0 7px #b07a3e,
+    inset 0 0 0 10px #3a210c,
+    0 8px 0 #22130a,
+    0 14px 24px rgba(0, 0, 0, 0.55);
+  image-rendering: pixelated;
+}
+.yut-mat {
+  background:
+    repeating-linear-gradient(45deg, rgba(90, 55, 20, 0.22) 0 4px, transparent 4px 8px),
+    repeating-linear-gradient(-45deg, rgba(255, 240, 200, 0.12) 0 4px, transparent 4px 8px),
+    radial-gradient(circle at 50% 45%, #dcb878, #b98d4f 70%, #9c723c);
+  box-shadow:
+    inset 0 0 0 3px #6e4a24,
+    inset 0 0 24px rgba(60, 30, 5, 0.55);
+}
+/* 나무 발판: 윗면 + 아랫면(입체) */
+.yut-tile {
+  border: 2px solid #3a210c;
+  border-radius: 22%;
+  background: linear-gradient(180deg, #f1d39b 0 55%, #d1a764 55% 100%);
+  box-shadow:
+    0 4px 0 #6e4a24,
+    0 5px 0 #3a210c;
+}
+/* 황금 발판: 출발 · 꼭짓점 · 방 */
+.yut-tile-gold {
+  border: 3px solid #5a3a00;
+  border-radius: 24%;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 18%, transparent 18% 100%),
+    linear-gradient(180deg, #ffe58a 0 55%, #e0a51c 55% 100%);
+  box-shadow:
+    0 5px 0 #8a5a00,
+    0 7px 0 #3a2400,
+    0 0 16px rgba(255, 207, 74, 0.7);
+  animation: yut-gold-glow 1.8s ease-in-out infinite alternate;
+}
+@keyframes yut-gold-glow {
+  from {
+    box-shadow:
+      0 5px 0 #8a5a00,
+      0 7px 0 #3a2400,
+      0 0 8px rgba(255, 207, 74, 0.45);
+  }
+  to {
+    box-shadow:
+      0 5px 0 #8a5a00,
+      0 7px 0 #3a2400,
+      0 0 22px rgba(255, 207, 74, 0.95);
+  }
+}
+.yut-tile-lit {
+  filter: brightness(1.35) saturate(1.3);
+}
+.yut-portal-ring-html {
+  animation: yut-portal-spin 6s linear infinite;
+}
+/* 요괴 말: 숨 쉬듯(아래 기준으로 늘었다 줄었다) */
+.yut-idle {
+  transform-origin: 50% 100%;
+  animation: yut-idle 1.3s ease-in-out infinite alternate;
+}
+@keyframes yut-idle {
+  from {
+    transform: scale(1, 1);
+  }
+  to {
+    transform: scale(1.04, 0.95) translateY(1px);
+  }
+}
+/* 고를 수 있는 말: 발밑 노란 반짝 */
+.yut-can-glow {
+  background: radial-gradient(ellipse, rgba(255, 207, 74, 0.85), transparent 70%);
+  animation: yut-target 0.8s ease-in-out infinite alternate;
+}
+/* 고른 말: 폴짝폴짝 + 머리 위 SELECT! 화살표 */
+.yut-select-jump {
+  transform-origin: 50% 100%;
+  animation: yut-select-jump 0.55s ease-in-out infinite;
+}
+@keyframes yut-select-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  45% {
+    transform: translateY(-22%) scale(0.95, 1.06);
+  }
+}
+.yut-select-arrow {
+  animation: yut-select-arrow 0.5s steps(2, end) infinite alternate;
+}
+@keyframes yut-select-arrow {
+  from {
+    transform: translate(-50%, 0);
+  }
+  to {
+    transform: translate(-50%, -18%);
+  }
+}
+/* 잡기: 몸을 뒤로 젖혔다가 날아차기 */
+.yut-kick {
+  transform-origin: 50% 100%;
+  animation: yut-kick 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+@keyframes yut-kick {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+  30% {
+    transform: translate(-18%, -6%) rotate(-18deg);
+  }
+  55% {
+    transform: translate(42%, -30%) rotate(28deg) scale(1.15);
+  }
+  80% {
+    transform: translate(8%, -4%) rotate(4deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+}
+.yut-ko {
+  animation: yut-ko 1.1s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes yut-ko {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2) rotate(-20deg);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.3) rotate(6deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -70%) scale(1) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -90%) scale(1);
+    opacity: 0;
+  }
+}
+/* 던지기 차례: PRESS SPACE OR TOUCH TO THROW! */
+.yut-press {
+  animation: arcade-blink 0.9s steps(2, start) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .yut-tile-gold,
+  .yut-portal-ring-html,
+  .yut-idle,
+  .yut-can-glow,
+  .yut-select-jump,
+  .yut-select-arrow,
+  .yut-kick,
+  .yut-ko,
+  .yut-press {
+    animation: none !important;
+  }
+}
+
+/* 윷놀이 오른쪽 HUD: 오락실 네온 패널(웹 카드 대신) */
+.yut-hud {
+  position: relative;
+  border: 3px solid #6ad7ff;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #0d0a24, #070512);
+  box-shadow:
+    0 0 0 3px #0a0614,
+    0 0 18px rgba(106, 215, 255, 0.45),
+    inset 0 0 18px rgba(106, 215, 255, 0.18);
+}
+.yut-hud-chip {
+  background: linear-gradient(180deg, #120d2c, #0a0614);
+  box-shadow: 2px 2px 0 #0a0614;
+}
+.yut-hud-chip-on {
+  background: linear-gradient(180deg, #3a2a00, #1a1200);
+  box-shadow:
+    2px 2px 0 #0a0614,
+    0 0 14px rgba(255, 207, 74, 0.6);
+}
