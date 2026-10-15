@@ -1052,11 +1052,6 @@ export function YokaiVillage({
                       dexPick === s && "ring-2 ring-[#e7c98a]",
                     )}
                   >
-                    {!have ? (
-                      <span aria-hidden className="pointer-events-none absolute inset-x-0 top-[22%] z-10 text-center text-2xl font-black text-[#c9a25c] [text-shadow:0_0_8px_#c9a25c]">
-                        ?
-                      </span>
-                    ) : null}
                     {/* eslint-disable-next-line @next/next/no-img-element -- 못 만난 요괴는 실루엣 */}
                     <img
                       src={yokaiImage(s, 1)}

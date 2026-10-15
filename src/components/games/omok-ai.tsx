@@ -234,6 +234,23 @@ export function OmokAi({
     apply(p, "me");
   }
 
+  /** 휴대폰 돋보기로 맞추고 손을 떼면 바로 착수 */
+  function placeNow(p: number) {
+    if (!myTurn) return;
+    if (boardFrom(moves)[p] !== 0) return;
+    if (forbidden.includes(p)) {
+      setNote("흑은 삼삼(열린 3이 두 줄)에 둘 수 없어요.");
+      return;
+    }
+    setPreview(null);
+    try {
+      navigator.vibrate?.(30);
+    } catch {
+      /* 진동 없는 기기 */
+    }
+    apply(p, "me");
+  }
+
   function undo() {
     if (!human || winner !== null) return;
     const back = turn === human ? 2 : 1;
@@ -343,6 +360,7 @@ export function OmokAi({
           preview={preview}
           previewColor={human as 1 | 2}
           onPick={pick}
+          onTouchPlace={placeNow}
           disabled={!myTurn}
         />
         {bigWin ? (

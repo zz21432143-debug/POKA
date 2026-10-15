@@ -53,6 +53,8 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   }, [view.index, view.running, view.level, view.number, sound]);
 
   const nowLabel = kstTime(now);
+  // 매장 이름이 길면 글씨를 줄여 한 줄에 다 보이게(16자까지는 그대로)
+  const nameFit = Math.min(1, 16 / Math.max(1, [...data.name].length));
   const ticker = data.notice.trim();
 
   // 오른쪽 위 QR: 손님 · 딜러가 찍으면 POKA(홍보) — 어디서 왔는지 from=board
@@ -86,8 +88,8 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
       <header className="flex items-center gap-[calc(var(--u)*1.5)] border-b border-[#c9a25c]/30 px-[calc(var(--u)*2.5)] py-[calc(var(--u)*0.9)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- 브랜드 마크 */}
         <img src="/brand/poka-oni-mark.png" alt="POKA" className="h-auto w-[clamp(40px,calc(var(--u)*7),130px)] shrink-0" />
-        <div className="grid min-w-0">
-          <span data-board-name className="truncate text-[clamp(22px,calc(var(--u)*4.6),92px)] leading-tight font-black text-amber-300">
+        <div className="grid min-w-0 flex-1">
+          <span data-board-name className="block overflow-hidden text-ellipsis whitespace-nowrap leading-tight font-black text-amber-300" style={{ fontSize: `clamp(14px, calc(var(--u) * ${(4.6 * nameFit).toFixed(2)}), ${Math.round(92 * nameFit)}px)` }}>
             {data.name}
           </span>
           {data.subtitle ? <span className="truncate text-[clamp(11px,calc(var(--u)*1.6),30px)] font-bold text-zinc-300">{data.subtitle}</span> : null}
@@ -139,17 +141,17 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
             <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">TAKE A BREAK</span>
           ) : (
             <>
-              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(22px,calc(var(--u)*4.2),92px)] leading-tight font-black text-amber-200 tabular-nums">
+              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(26px,calc(var(--u)*5.2),110px)] leading-tight font-black text-amber-200 tabular-nums">
                 <small className={BLIND_TAG}>SB</small>
                 {won(view.level.sb)}
                 <span className="text-amber-200/60">/</span>
                 <small className={BLIND_TAG}>BB</small>
                 {won(view.level.bb)}
               </span>
-              {view.level.ante ? <span className="text-[clamp(13px,calc(var(--u)*2),42px)] font-black text-amber-100/90 tabular-nums">BB ANTE {won(view.level.ante)}</span> : null}
+              {view.level.ante ? <span className="text-[clamp(15px,calc(var(--u)*2.5),52px)] font-black text-amber-100 tabular-nums">BB ANTE {won(view.level.ante)}</span> : null}
             </>
           )}
-          <span data-next className="text-[clamp(12px,calc(var(--u)*1.7),34px)] font-bold text-zinc-300 tabular-nums">
+          <span data-next className="text-[clamp(14px,calc(var(--u)*2.2),44px)] font-black text-sky-200 tabular-nums">
             {view.next ? (view.next.isBreak ? `NEXT: BREAK ${view.next.minutes} MIN` : `NEXT: ${blindText(view.next)}${view.next.ante ? ` · ANTE ${won(view.next.ante)}` : ""}`) : "LAST LEVEL"}
           </span>
         </section>
@@ -158,9 +160,9 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         <section className="grid grid-cols-2 content-center gap-[calc(var(--u)*0.4)] text-center @[560px]:order-1 @[560px]:grid-cols-1">
           <div data-players className={CARD}>
             <span className={LABEL}>PLAYERS</span>
-            <span className="text-[clamp(18px,calc(var(--u)*2.5),52px)] leading-tight font-black text-white tabular-nums">
+            <span className="text-[clamp(22px,calc(var(--u)*3.2),66px)] leading-tight font-black text-amber-300 tabular-nums [text-shadow:0_0_12px_rgba(252,211,77,.45)]">
               {won(data.remaining)}
-              <span className="text-zinc-400"> / {won(data.entries)}</span>
+              <span className="text-white/80"> / {won(data.entries)}</span>
             </span>
           </div>
           <div className={cn("grid gap-[calc(var(--u)*0.5)]", data.addonOn ? "grid-cols-3" : "grid-cols-2")}>
@@ -312,9 +314,14 @@ function PrizeList({ prizes }: { prizes: GameBoardData["prizes"] }) {
     <div ref={box} data-prize-box className="min-h-0 flex-1 overflow-hidden">
       <ul ref={list} data-prize-scroll={moving ? "on" : undefined} className="grid gap-[calc(var(--u)*0.3)]">
         {prizes.map((p, i) => (
-          <li key={i} data-prize-row style={{ color: PRIZE_COLORS[p.color].hex }} className="flex items-baseline justify-between gap-[calc(var(--u)*1)] border-b border-white/10 pb-[calc(var(--u)*0.2)] last:border-0">
-            <span className="text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black">{p.place}</span>
-            <span className="text-[clamp(13px,calc(var(--u)*1.8),36px)] font-black tabular-nums">{p.amount}</span>
+          <li key={i} data-prize-row style={{ color: PRIZE_COLORS[p.color].hex }} className="flex items-center justify-between gap-[calc(var(--u)*1)] border-b border-white/10 py-[calc(var(--u)*0.15)] pr-[max(16px,calc(var(--u)*1.2))] pl-[calc(var(--u)*0.4)] last:border-0">
+            <span className="shrink-0 text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black">{p.place}</span>
+            <span
+              data-prize-amount
+              className={cn("min-w-0 truncate text-right leading-tight tabular-nums", i < 3 ? "font-black text-[clamp(17px,calc(var(--u)*2.35),48px)] [text-shadow:0_0_10px_rgba(255,207,74,.75),0_0_2px_#000]" : "font-extrabold text-[clamp(16px,calc(var(--u)*2.25),46px)]")}
+            >
+              {p.amount}
+            </span>
           </li>
         ))}
       </ul>

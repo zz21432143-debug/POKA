@@ -31,10 +31,13 @@ export function GameBoardPanel({
   initialBoards,
   initialBoard,
   initialPresets = [],
+  tvMode = false,
 }: {
   initialBoards: BoardSummary[];
   initialBoard: BoardState | null;
   initialPresets?: BoardPreset[];
+  /** 새 탭으로 연 TV 화면(?tv=1): 열자마자 TV 화면 */
+  tvMode?: boolean;
 }) {
   const [boards, setBoards] = useState(initialBoards);
   /** 따로 저장한 구조 · 저장 창(이름) */
@@ -44,7 +47,9 @@ export function GameBoardPanel({
   const [draft, setDraft] = useState<GameBoardData | null>(initialBoard?.data ?? null);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [tv, setTv] = useState(false);
+  const [tv, setTv] = useState(tvMode);
+  /** TV 탭: 한 번 눌러야 브라우저가 소리 · 전체 화면을 허락 */
+  const [tvArmed, setTvArmed] = useState(false);
   const [tab, setTab] = useState<"play" | "prize" | "setup">("play");
   /** 새 현황판 창(이름 · 시작 방법 · 가져올 현황판) */
   const [creating, setCreating] = useState(false);
@@ -241,9 +246,17 @@ export function GameBoardPanel({
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  async function openTv() {
+  /** TV 화면은 늘 새 탭으로(조작 화면은 그대로 · TV 탭은 3초마다 같은 현황판을 따라감) */
+  function openTv() {
+    if (!board) return;
+    const w = window.open(`/tools/board?id=${encodeURIComponent(board.id)}&tv=1`, "_blank");
+    // 팝업이 막혔으면 이 화면에서 바로
+    if (!w) void enterTv();
+  }
+  async function enterTv() {
     unlockBoardSound();
     setTv(true);
+    setTvArmed(true);
     try {
       if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
       // 휴대폰이면 가로로 돌려 크게(안 되는 기기는 그대로)
@@ -253,6 +266,10 @@ export function GameBoardPanel({
     }
   }
   async function closeTv() {
+    // 새 탭으로 연 TV는 탭을 닫음(브라우저가 막으면 조작 화면으로)
+    if (tvMode) {
+      window.close();
+    }
     setTv(false);
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
@@ -488,7 +505,7 @@ export function GameBoardPanel({
           <section className="grid gap-2">
             <ScaledPreview data={draft} now={now} />
             <button type="button" onClick={() => void openTv()} className="min-h-14 rounded-2xl bg-amber-400 px-5 text-lg font-black text-black shadow-[0_6px_20px_rgba(251,191,36,.25)]">
-              📺 TV 화면으로 띄우기
+              📺 TV 화면으로 보기(새 창)
             </button>
           </section>
 
@@ -525,7 +542,12 @@ export function GameBoardPanel({
           {tv && inBrowser
             ? createPortal(
                 <div data-board-tv className="fixed inset-0 z-[9999] bg-black">
-                  <GameBoardScreen data={draft} now={now} sound />
+                  <GameBoardScreen data={draft} now={now} sound={tvArmed} />
+                  {!tvArmed ? (
+                    <button type="button" data-board-tv-arm onClick={() => void enterTv()} className="absolute bottom-[12%] left-1/2 -translate-x-1/2 rounded-xl bg-amber-400/95 px-5 py-3 text-base font-black text-black shadow-lg">
+                      ⛶ 전체 화면 · 🔊 알림음 켜기
+                    </button>
+                  ) : null}
                   <div className="absolute right-3 bottom-3 flex gap-2 opacity-30 transition-opacity hover:opacity-100 focus-within:opacity-100">
                     <button type="button" onClick={() => void clock({ op: "prev" })} className="rounded-lg bg-white/15 px-3 py-2 text-sm font-black">
                       ◀ 이전

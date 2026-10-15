@@ -118,6 +118,27 @@ export function BoardWriteForm({
                 : "제목을 입력하세요"
           }
         />
+        {boardType === "NOTICE" ? (
+          // 공지 말머리: 누르면 제목 앞에 [업데이트] 같은 태그가 붙고, 맨 위 공지 띠에 색 태그로 보여요
+          <div data-notice-tags className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-bold text-zinc-400">말머리</span>
+            {["업데이트", "이벤트", "점검", "안내", "공지", ""].map((tag) => {
+              const cur = title.match(/^\s*\[([^\]]{1,6})\]/)?.[1] ?? "";
+              return (
+                <button
+                  key={tag || "none"}
+                  type="button"
+                  data-notice-tag={tag || "none"}
+                  aria-pressed={cur === tag}
+                  onClick={() => setTitle((t) => (tag ? `[${tag}] ` : "") + t.replace(/^\s*\[[^\]]{1,6}\]\s*/, ""))}
+                  className={`min-h-9 rounded-full border px-3 text-xs font-black ${cur === tag ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]" : "border-white/20 text-zinc-200 hover:border-[#c9a25c]"}`}
+                >
+                  {tag || "없음"}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
       {boardType === "PROMO" ? (
         <div className="grid gap-3 sm:grid-cols-2">

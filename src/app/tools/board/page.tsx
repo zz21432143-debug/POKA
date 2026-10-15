@@ -11,10 +11,10 @@ import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 export const metadata: Metadata = toolMetadata("/tools/board");
 export const dynamic = "force-dynamic";
 
-export default async function GameBoardPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+export default async function GameBoardPage({ searchParams }: { searchParams: Promise<{ id?: string; tv?: string }> }) {
   const user = await getCurrentUser().catch(() => null);
   if (!user || !canUseDealerTools(user)) return <ToolsLocked next="/tools/board" />;
-  const { id } = await searchParams;
+  const { id, tv } = await searchParams;
   const [boards, presets] = await Promise.all([listBoards(user.id), listPresets(user.id)]);
   const pick = (id && boards.find((b) => b.id === id)?.id) || boards[0]?.id;
   const board = pick ? await loadBoard(user.id, pick) : null;
@@ -27,7 +27,7 @@ export default async function GameBoardPage({ searchParams }: { searchParams: Pr
         <BoardTitle sticker={BOARD_STICKER.board}>게임 현황판</BoardTitle>
         <p className="mt-2">TV에 띄우는 토너먼트 시계. 휴대폰으로 조작하면 TV에 바로 반영돼요.</p>
       </header>
-      <GameBoardPanel initialBoards={boards} initialBoard={board} initialPresets={presets} />
+      <GameBoardPanel initialBoards={boards} initialBoard={board} initialPresets={presets} tvMode={tv === "1" && Boolean(board)} />
     </div>
   );
 }
