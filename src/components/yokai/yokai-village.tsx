@@ -786,13 +786,19 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
             data-yokai-owned
             className="ink-panel grid gap-2 rounded-2xl p-4"
           >
-            <h2 className="text-base font-black text-[#f3d9a4]">
-              내 요괴들{" "}
-              <span className="text-sm text-zinc-400">
-                {yokai.owned.length}마리 · 눌러서 보기 · 돌보기는 ⭐ 대표 요괴만
-              </span>
-            </h2>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="grid gap-0.5">
+              <h2 className="text-base font-black text-[#f3d9a4]">
+                내 요괴들{" "}
+                <span className="text-sm text-zinc-400">
+                  {yokai.owned.length}마리
+                </span>
+              </h2>
+              <p className="text-xs text-zinc-400">
+                눌러서 구경 · 밥 · 쓰다듬기 · 샤워는 ⭐ 대표 요괴만
+              </p>
+            </div>
+            {/* 줄바꿈으로 화면 폭에 맞춤(옆으로 넘기지 않음) */}
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
               {yokai.owned.map((o) => (
                 <button
                   key={o.species}
@@ -805,7 +811,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   className={cn(
-                    "relative grid w-20 shrink-0 justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]",
+                    "relative grid min-w-0 justify-items-center gap-0.5 overflow-hidden rounded-xl border bg-black/30 p-1.5 text-center text-[11px]",
                     FRAME[YOKAI[o.species].rarity],
                     o.species === v?.species && "ring-2 ring-[#e7c98a]",
                   )}
@@ -821,7 +827,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     alt=""
                     className="aspect-square w-full object-contain"
                   />
-                  <span className="font-bold text-white">
+                  <span className="max-w-full truncate font-bold text-white">
                     {YOKAI[o.species].name}
                   </span>
                   <span className="text-[10px] text-zinc-400">
@@ -980,7 +986,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                 {yokai.dex.length} / 108
               </span>
             </h2>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-9">
+            <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 sm:gap-2 lg:grid-cols-9">
               {YOKAI_ORDER.map((s) => {
                 const have = yokai.dex.includes(s);
                 const def = YOKAI[s];
@@ -1007,9 +1013,10 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                       )}
                     />
                     <span
-                      className={
-                        have ? "font-bold text-white" : "text-zinc-500"
-                      }
+                      className={cn(
+                        "max-w-full truncate text-[10px] tracking-tight sm:text-[11px] sm:tracking-normal",
+                        have ? "font-bold text-white" : "text-zinc-500",
+                      )}
                     >
                       {have ? def.name : "???"}
                     </span>

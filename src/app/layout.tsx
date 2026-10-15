@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { VersionRefresh } from "@/components/layout/version-refresh";
 import { StudyVisitPing } from "@/components/layout/study-visit-ping";
+import { ImageGuard } from "@/components/layout/image-guard";
 import { Black_Han_Sans, Caveat, Dokdo, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -146,6 +147,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <GoogleAnalytics />
         <VersionRefresh />
         <StudyVisitPing />
+        <ImageGuard />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>
       </body>

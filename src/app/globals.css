@@ -2281,3 +2281,16 @@ select {
     animation: none;
   }
 }
+
+/* 요괴 그림 · 마을 배경: 휴대폰 꾹 누르기 메뉴(이미지 저장) · 선택 · 끌기 막기 */
+img[src*="/yokai/"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+[data-yokai-home],
+[data-home-yokai],
+[data-yokai-bg-thumb] {
+  -webkit-touch-callout: none;
+}
