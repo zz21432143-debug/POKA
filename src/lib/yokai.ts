@@ -225,11 +225,19 @@ export const isBackground = (v: unknown): v is YokaiBackground => typeof v === "
  * 마을 배경 그림(도트 그림 파일 · public/yokai/bg/이름.webp). 그림이 있는 배경만 판매해요.
  * 새 그림을 넣으면 여기에 한 줄 추가: moon: "/yokai/bg/moon.webp"
  */
-export const BG_IMAGES: Partial<Record<YokaiBackground, string>> = {};
+export const BG_IMAGES: Partial<Record<YokaiBackground, string>> = {
+  moon: "/yokai/bg/moon.webp",
+  blossom: "/yokai/bg/blossom.webp",
+  snow: "/yokai/bg/snow.webp",
+  maple: "/yokai/bg/maple.webp",
+  lantern: "/yokai/bg/lantern.webp",
+  galaxy: "/yokai/bg/galaxy.webp",
+};
 /** 팔 수 있는 배경(기본 배경 · 그림이 준비된 배경) */
 export const bgReady = (id: YokaiBackground) => id === "default" || Boolean(BG_IMAGES[id]);
 /** 화면에 깔 배경(그림이 있으면 그림, 없으면 예전 색 배경) */
 export function bgCss(id: YokaiBackground) {
   const img = BG_IMAGES[id];
-  return img ? `linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.35)), url(${img}) center / cover no-repeat` : YOKAI_BACKGROUNDS[id].css;
+  // 위(말풍선) · 아래(이름표)는 살짝 어둡게 해서 글자가 잘 보이게
+  return img ? `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.05) 30%, rgba(0,0,0,.05) 65%, rgba(0,0,0,.5)), url(${img}) center 70% / cover no-repeat` : YOKAI_BACKGROUNDS[id].css;
 }

@@ -62,7 +62,13 @@ async function HomeFeedSections() {
         <HomePosters />
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
-      <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
+      {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
+      <div data-home-latest-rank className="grid gap-3.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
+        <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
+        <Suspense fallback={<HomePanelFallback className="h-48" />}>
+          <HomeRankings />
+        </Suspense>
+      </div>
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>
   );
@@ -99,8 +105,11 @@ export default async function HomePage() {
           </Suspense>
         </div>
       </div>
-      {/* 무료 홀덤 공부 도구(GTO · 승률 · ICM · 레인지 · 족보) */}
-      <HomeStudyTools />
+      {/* 바로가기 두 줄을 한 줄로: 홀덤 공부 도구 · 매장 관리(PC는 나란히) */}
+      <div data-home-shortcuts className="grid gap-3.5 lg:grid-cols-2 lg:items-stretch">
+        <HomeStudyTools />
+        <HomeDealerTools />
+      </div>
       <Suspense
         fallback={
           <div className="flex flex-col gap-3.5">
@@ -111,11 +120,6 @@ export default async function HomePage() {
       >
         <HomeFeedSections />
       </Suspense>
-      {/* 레벨 · 마크 · 팟 계산 랭킹 */}
-      <Suspense fallback={<HomePanelFallback className="h-48" />}>
-        <HomeRankings />
-      </Suspense>
-      <HomeDealerTools />
       <BoardBottomAd placement="home-bottom" />
     </div>
   );

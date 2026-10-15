@@ -23,7 +23,7 @@ export async function HomeRankings() {
           <ChevronRightIcon className="size-4" />
         </Link>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
         {boards.map((board) => (
           <div key={board.key} data-rank-board={board.key} className="grid content-start gap-1 rounded-xl border border-[#c9a25c]/25 bg-black/30 p-2">
             <Link href={board.href} className="group flex min-h-9 items-center gap-1 px-1">

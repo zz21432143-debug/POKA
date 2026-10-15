@@ -12,7 +12,7 @@ const TOOLS = [
 /** 홈: 무료 홀덤 공부 도구(로그인 없이) 한 줄 바로가기 */
 export function HomeStudyTools() {
   return (
-    <section aria-label="무료 홀덤 도구" data-home-study className="lounge-card grid gap-2 rounded-[1.35rem] p-3 sm:p-4">
+    <section aria-label="무료 홀덤 도구" data-home-study className="lounge-card grid h-full content-start gap-2 rounded-[1.35rem] p-3 sm:p-4">
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-white">홀덤 공부 도구</h2>
         <span className="rounded-full bg-[#1f6f4a] px-2 py-0.5 text-[11px] font-black text-[#eafff3]">무료 · 로그인 없이</span>
@@ -21,9 +21,9 @@ export function HomeStudyTools() {
           <ChevronRightIcon className="size-4" />
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-2">
         {TOOLS.map(({ href, icon: Icon, title, body }) => (
-          <Link key={href} href={href} title={body} className="group touch-target flex min-h-12 items-center gap-2 rounded-xl border border-[#c9a25c]/30 bg-black/30 px-2.5 transition last:col-span-2 hover:border-[#c9a25c] hover:bg-[#2a2017] active:scale-[0.98] sm:last:col-span-1">
+          <Link key={href} href={href} title={body} className="group touch-target flex min-h-12 items-center gap-2 rounded-xl border border-[#c9a25c]/30 bg-black/30 px-2.5 transition last:col-span-2 hover:border-[#c9a25c] hover:bg-[#2a2017] active:scale-[0.98] sm:last:col-span-1 lg:last:col-span-2">
             <Icon aria-hidden className="size-5 shrink-0 text-[#c9a25c]" />
             <span className="min-w-0 flex-1 truncate text-sm font-black text-white">{title}</span>
             <ChevronRightIcon className="size-4 shrink-0 text-[#c9a25c] transition group-hover:translate-x-0.5" />

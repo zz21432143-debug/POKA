@@ -877,8 +877,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               )}
             </div>
             <p className="text-[11px] text-zinc-500">
-              더 예쁜 도트 배경으로 새로 그리는 중이에요. 그림이 준비된 배경부터
-              다시 팔아요. 전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이
+              새 도트 배경 6종! 사면 바로 마을에 깔려요. 전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이
               먼저 보여요.
             </p>
           </section>
