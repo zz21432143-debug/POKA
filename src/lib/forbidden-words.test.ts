@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { findForbiddenWord } from "./forbidden-words";
+import { findForbiddenInNickname, findForbiddenWord } from "./forbidden-words";
 import { POST_COOLDOWN_MS } from "./security";
 import { gaMeasurementId } from "./ga";
 import { flagsFromRole, isStaff, roleFromFlags } from "./roles";
@@ -55,5 +55,24 @@ describe("ga measurement id", () => {
     assert.equal(gaMeasurementId(), "G-ABC123");
     if (previous === undefined) delete process.env.NEXT_PUBLIC_GA_ID;
     else process.env.NEXT_PUBLIC_GA_ID = previous;
+  });
+});
+
+describe("닉네임 금지어(들어가기만 해도 막음)", () => {
+  const words = ["바카라", "첫충", "텔레그램", "casino", "토토 사이트"];
+  it("그대로 · 앞뒤에 붙여도", () => {
+    assert.equal(findForbiddenInNickname("바카라", words), "바카라");
+    assert.equal(findForbiddenInNickname("강남바카라왕", words), "바카라");
+    assert.equal(findForbiddenInNickname("CASINO_KING", words), "casino");
+  });
+  it("사이에 _ · 숫자 · 영문을 끼워도", () => {
+    assert.equal(findForbiddenInNickname("바_카라", words), "바카라");
+    assert.equal(findForbiddenInNickname("바1카2라", words), "바카라");
+    assert.equal(findForbiddenInNickname("첫x충", words), "첫충");
+    assert.equal(findForbiddenInNickname("c4s1no", words), "casino");
+    assert.equal(findForbiddenInNickname("토토사이트왕", words), "토토 사이트");
+  });
+  it("상관없는 닉네임은 통과", () => {
+    for (const n of ["딜러민수", "홀덤조아", "Ace_7", "바다카라멜"]) assert.equal(findForbiddenInNickname(n, words), null, n);
   });
 });

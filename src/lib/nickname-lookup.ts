@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
-import { findForbiddenWord, loadDisabledBaseWords, loadForbiddenWords } from "@/lib/forbidden-words";
+import { findForbiddenInNickname, loadDisabledBaseWords, loadForbiddenWordsFresh } from "@/lib/forbidden-words";
 
 export async function findNicknameOwner(nickname: string, exceptUserId?: string) {
   const next = normalizeNickname(nickname);
@@ -19,8 +19,9 @@ export async function nicknameProblem(raw: string): Promise<string | null> {
   const next = normalizeNickname(raw);
   const invalid = nicknameError(next, await loadDisabledBaseWords().catch(() => undefined));
   if (invalid) return invalid;
-  const words = await loadForbiddenWords().catch(() => [] as string[]);
-  if (findForbiddenWord(next, words)) return "금지어가 들어간 닉네임은 쓸 수 없습니다.";
+  // 관리자가 추가한 금지어: 단어가 들어가기만 해도(사이에 _ · 숫자 · 영문을 끼워도) 못 씀
+  const hit = findForbiddenInNickname(next, await loadForbiddenWordsFresh());
+  if (hit) return `금지어(「${hit}」)가 들어간 닉네임은 쓸 수 없습니다.`;
   return null;
 }
 

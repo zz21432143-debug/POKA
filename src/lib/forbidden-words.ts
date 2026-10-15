@@ -29,6 +29,49 @@ export function findForbiddenWord(text: string, words: string[]): string | null 
   return null;
 }
 
+/** 숫자 · 기호로 바꿔 쓴 영문(s3x → sex, b1tch → bitch) */
+const LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b" };
+
+/**
+ * 닉네임 비교용 모양들: 그대로 · _/숫자 뺀 것 · 한글만 · 영문만 · 숫자→영문.
+ * 사이에 _ · 숫자 · 영문을 끼워 넣는 우회(금_지어, 금1지어, 금x지어)도 걸리게 합니다.
+ */
+function nicknameShapes(raw: string) {
+  const base = raw.normalize("NFC").toLowerCase().replace(/\s+/g, "");
+  const leet = base.replace(/[0-9]/g, (d) => LEET[d] ?? d).replace(/_/g, "");
+  return [
+    ...new Set([
+      base,
+      base.replace(/[_0-9]/g, ""),
+      base.replace(/[^가-힣]/g, ""),
+      base.replace(/[^a-z]/g, ""),
+      leet,
+      leet.replace(/i/g, "l"),
+    ]),
+  ].filter(Boolean);
+}
+
+/** 닉네임에 금지어가 들어 있으면 그 단어(띄어 쓴 금지어는 붙여서 비교) */
+export function findForbiddenInNickname(nickname: string, words: string[]): string | null {
+  const shapes = nicknameShapes(nickname);
+  for (const word of words) {
+    const needle = word.normalize("NFC").toLowerCase().replace(/[\s_]+/g, "");
+    if (needle.length < 2) continue;
+    if (shapes.some((shape) => shape.includes(needle))) return word.trim();
+  }
+  return null;
+}
+
+/** 닉네임 검사용: 캐시 없이 바로 DB에서(관리자가 방금 넣은 금지어도 모든 서버에서 즉시 적용) */
+export async function loadForbiddenWordsFresh() {
+  try {
+    const rows = await prisma.forbiddenWord.findMany({ select: { word: true } });
+    return rows.map((row) => row.word);
+  } catch {
+    return loadForbiddenWords().catch(() => [] as string[]);
+  }
+}
+
 export async function loadForbiddenWords() {
   return ttlCache(FORBIDDEN_CACHE_KEY, 30_000, async () => {
     const rows = await prisma.forbiddenWord.findMany({ orderBy: { createdAt: "desc" } });

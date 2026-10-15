@@ -181,9 +181,13 @@ export function findProfanity(
     if (found) return { category, match: found[0] };
   }
   if (opts.nickname) {
-    // 닉네임은 _ · 숫자로 끊어 쓰는 우회도 막음(씨_발, 개1새끼)
+    // 닉네임은 _ · 숫자 · 영문으로 끊어 쓰는 우회도 막음(씨_발, 개1새끼, 씨x발)
     const nick = nickRuleFor(opts.disabled);
-    const found = nick && (normalized.match(nick) ?? normalized.replace(/[_0-9]/g, "").match(nick));
+    const found =
+      nick &&
+      (normalized.match(nick) ??
+        normalized.replace(/[_0-9]/g, "").match(nick) ??
+        normalized.replace(/[^가-힣]/g, "").match(nick));
     if (found) return { category: "abuse", match: found[0] };
   }
   return null;

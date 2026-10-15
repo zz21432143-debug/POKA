@@ -1,8 +1,8 @@
 import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { nicknameError } from "@/lib/nickname";
-import { findForbiddenWord, loadDisabledBaseWords, loadForbiddenWords } from "@/lib/forbidden-words";
-import { findNicknameOwner } from "@/lib/nickname-lookup";
+import { findForbiddenInNickname, loadDisabledBaseWords, loadForbiddenWordsFresh } from "@/lib/forbidden-words";
+import { findNicknameOwner, nicknameProblem } from "@/lib/nickname-lookup";
 
 /**
  * 닉네임 강제 변경(마스터): 「바른닉네임1234」로 바꾸고 닉네임 변경권 1장 · 알림 · 다음 방문 때 안내 띄움.
@@ -45,7 +45,7 @@ export async function forceNicknameChange(
   // 관리자가 직접 정한 닉네임(규칙 · 중복 검사) · 비우면 바른닉네임○○○○
   const wanted = opts.to?.trim().replace(/s+/g, "") ?? "";
   if (wanted) {
-    const err = nicknameError(wanted);
+    const err = await nicknameProblem(wanted);
     if (err) return { ok: false as const, error: err };
     if (await findNicknameOwner(wanted, user.id))
       return { ok: false as const, error: "이미 쓰는 닉네임이에요." };
@@ -164,10 +164,10 @@ export async function badNicknames(limit = 50) {
     select: { nickname: true, level: true },
     take: 20000,
   });
-  const [disabled, words] = await Promise.all([loadDisabledBaseWords().catch(() => undefined), loadForbiddenWords().catch(() => [] as string[])]);
+  const [disabled, words] = await Promise.all([loadDisabledBaseWords().catch(() => undefined), loadForbiddenWordsFresh()]);
   const out: { nickname: string; level: number; reason: string }[] = [];
   for (const u of users) {
-    const err = nicknameError(u.nickname, disabled) ?? (findForbiddenWord(u.nickname, words) ? "금지어가 들어간 닉네임" : null);
+    const err = nicknameError(u.nickname, disabled) ?? (findForbiddenInNickname(u.nickname, words) ? "금지어가 들어간 닉네임" : null);
     // 길이 · 글자 규칙은 예전 가입자일 수 있어 빼고, 비속어 · 사칭 · 금지어만
     if (err && !err.startsWith("닉네임은"))
       out.push({ nickname: u.nickname, level: u.level, reason: err });
