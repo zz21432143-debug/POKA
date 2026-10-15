@@ -4,24 +4,13 @@ import { cn } from "cn";
 import { StoneDot } from "@/components/games/omok-board";
 import { GameChampionBadge, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
-import { emoteLabel, emoteSrc, isOniEmote, isQuickText, quickLabel } from "@/lib/omok-emotes";
+import { emoteLabel, emoteSrc, isOniEmote, quickOf } from "@/lib/omok-emotes";
 import type { Watcher } from "@/lib/game-watch";
 
 /** 오니 이모티콘 그림(예전 글자 이모티콘이면 글자 그대로) */
-export function EmoteArt({ e, className }: { e: string; className?: string }) {
-  if (isQuickText(e))
-    return (
-      <span
-        data-quick-text={e}
-        className={cn(
-          "relative grid place-items-center border-2 border-[#0a0614] bg-[#fff6dc] px-1.5 text-[13px] leading-none font-black whitespace-nowrap text-[#2a1400] shadow-[2px_2px_0_#0a0614] after:absolute after:-bottom-[7px] after:left-1/2 after:size-0 after:-translate-x-1/2 after:border-x-[5px] after:border-t-[6px] after:border-x-transparent after:border-t-[#0a0614]",
-          className,
-          "!h-auto !w-auto min-h-7 min-w-9",
-        )}
-      >
-        {quickLabel(e)}
-      </span>
-    );
+export function EmoteArt({ e, className, big = false }: { e: string; className?: string; big?: boolean }) {
+  const q = quickOf(e);
+  if (q) return <QuickChip k={e} big={big} tail className={cn(className, "!h-auto !w-auto")} />;
   if (!isOniEmote(e)) return <span className={className}>{e}</span>;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- 오니 이모티콘
@@ -31,6 +20,30 @@ export function EmoteArt({ e, className }: { e: string; className?: string }) {
       draggable={false}
       className={cn("object-contain", className)}
     />
+  );
+}
+
+/**
+ * 퀵 말풍선(ㅋㅋㅋ · GG · 나이스! …): 글자마다 색 · 아이콘 · 픽셀 테두리 · 꼬리.
+ * big = 판 위 연출용(크게) · tail = 말풍선 꼬리(버튼에서는 없음)
+ */
+export function QuickChip({ k, big = false, tail = false, className }: { k: string; big?: boolean; tail?: boolean; className?: string }) {
+  const q = quickOf(k);
+  if (!q) return null;
+  return (
+    <span
+      data-quick-text={k}
+      className={cn(
+        "quick-chip relative inline-flex items-center justify-center gap-1 rounded-lg border-[3px] border-[#0a0614] leading-none font-black whitespace-nowrap",
+        big ? "min-h-14 px-4 text-2xl sm:text-3xl" : "min-h-9 px-2 text-sm",
+        className,
+      )}
+      style={{ background: q.bg, color: q.ink, ["--chip" as string]: q.bg }}
+    >
+      <span aria-hidden className={big ? "text-[1.1em]" : "text-[1.05em]"}>{q.icon}</span>
+      {q.label}
+      {tail ? <span aria-hidden className="quick-chip-tail" /> : null}
+    </span>
   );
 }
 
@@ -470,14 +483,16 @@ export function SpectatorBar({
   cheers,
   now,
   me,
+  ttl = 1600,
 }: {
   count: number;
   list: Watcher[];
   cheers: { n: string; e: string; at: number }[];
   now: number;
   me?: boolean;
+  ttl?: number;
 }) {
-  const live = cheers.filter((c) => now - c.at < 1600);
+  const live = cheers.filter((c) => now - c.at < ttl);
   const popOf = (n: string) => [...live].reverse().find((c) => c.n === n) ?? null;
   // 아바타 줄에 없는 사람(방금 들어옴 등)의 응원도 끝에 띄움
   const strays = live.filter((c) => !list.some((w) => w.n === c.n)).slice(-2);

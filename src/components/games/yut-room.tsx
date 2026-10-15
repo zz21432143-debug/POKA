@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
-import { EmoteArt, SpectatorBar } from "@/components/games/omok-hud";
+import { EmoteArt, QuickChip, SpectatorBar } from "@/components/games/omok-hud";
 import {
   NameTag,
   SHORTCUT_NODES,
@@ -1524,9 +1524,10 @@ export function YutRoom({
                             e: q.key,
                           });
                         }}
-                        className="grid min-h-11 shrink-0 place-items-center rounded-xl bg-black/35 px-2.5 text-sm font-black text-white hover:bg-white/10 disabled:opacity-40"
+                        aria-label={q.label}
+                        className="grid min-h-11 shrink-0 place-items-center transition-transform hover:-translate-y-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
                       >
-                        {q.label}
+                        <QuickChip k={q.key} />
                       </button>
                     ))}
                   </div>

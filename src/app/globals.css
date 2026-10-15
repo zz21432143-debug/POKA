@@ -3705,3 +3705,62 @@ img[src*="/yokai/"] {
 aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
   display: none;
 }
+
+/* ───────── 게임방 퀵 말풍선(ㅋㅋㅋ · GG …) · 판 위 이모티콘 ───────── */
+.quick-chip {
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.18),
+    3px 3px 0 #0a0614;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.quick-chip-tail {
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  margin-left: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 10px solid #0a0614;
+}
+.quick-chip-tail::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: -5px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--chip);
+}
+/* 판 위 이모티콘: 톡 튀어나와 2.6초 머물다 위로 사라짐 */
+.omok-emote-pop {
+  animation: omok-emote-pop 2.6s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+@keyframes omok-emote-pop {
+  0% {
+    transform: translateY(24px) scale(0.3);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(-6px) scale(1.18);
+    opacity: 1;
+  }
+  18% {
+    transform: translateY(0) scale(1);
+  }
+  82% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-18px) scale(0.92);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .omok-emote-pop {
+    animation: none;
+  }
+}

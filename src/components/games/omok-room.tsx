@@ -11,6 +11,7 @@ import {
   SpectatorBar,
   EmoteArt,
   OmokHud,
+  QuickChip,
   Spectators,
   YokaiCutIn,
   type CutInData,
@@ -44,6 +45,10 @@ import {
   warnBeep,
 } from "@/lib/omok-sound";
 import type { OmokRecord, OmokView } from "@/lib/omok-server";
+
+/** 판 위 이모티콘 하나(L/R = 대국자 쪽 · S = 관전자 응원) */
+type Pop = { key: string; who: string; e: string; from: "L" | "R" | "S"; seen: number };
+const POP_MS = 2600;
 import type { Watcher } from "@/lib/game-watch";
 
 const END_TEXT: Record<string, string> = {
@@ -115,11 +120,9 @@ export function OmokRoom({
     title: string;
     tip: string;
   } | null>(null);
-  const [plateEmote, setPlateEmote] = useState<{
-    by: Stone;
-    e: string;
-    key: number;
-  } | null>(null);
+  // 판 위 이모티콘 · 응원: 서버 시각이 아니라 처음 받은 순간부터 2.6초(폴링이 늦어도 꼭 보이게)
+  const [pops, setPops] = useState<Pop[]>([]);
+  const seenPops = useRef(new Set<string>());
   const [showResult, setShowResult] = useState(initial.status === "done");
   const [jump, setJump] = useState<Record<number, number>>({});
   const [watching, setWatching] = useState({
@@ -319,16 +322,14 @@ export function OmokRoom({
       view.draw.deniedBy === view.me
     )
       setNote("상대가 무승부를 거절했어요.");
-    // 이모티콘: 대기실은 요괴와 함께 크게(판에 돌이 없음) · 대국 중에는 보낸 사람 명판 위에(판은 가리지 않음)
+    // 이모티콘: 대기실은 요괴와 함께 크게(판에 돌이 없음) · 대국 중에는 판 위 보낸 사람 쪽에 크게(아래)
     if (
       view.emote &&
       view.emote.at !== before.emote?.at &&
       Date.now() + offset - view.emote.at < 8000
     ) {
       const by = view.emote.by;
-      if (view.status === "playing") {
-        setPlateEmote({ by, e: view.emote.e, key: view.emote.at });
-      } else {
+      if (view.status !== "playing") {
         const yk =
           by === BLACK
             ? (view.host?.yokai ?? null)
@@ -342,6 +343,22 @@ export function OmokRoom({
           tone: "blue",
         });
       }
+    }
+    // 판 위 이모티콘: 대국자 = 자기 명판 쪽 위 · 관전자 응원 = 위쪽 가운데(이름과 함께)
+    {
+      const t = Date.now();
+      const fresh: Pop[] = [];
+      const add = (key: string, who: string, e: string, from: Pop["from"], at: number) => {
+        if (seenPops.current.has(key)) return;
+        seenPops.current.add(key);
+        if (t + offset - at < 10000) fresh.push({ key, who, e, from, seen: t });
+      };
+      if (view.emote && view.status === "playing") {
+        const by = view.emote.by;
+        add(`e${view.emote.at}`, (by === BLACK ? view.black : view.white)?.nickname ?? "", view.emote.e, by === lc ? "L" : "R", view.emote.at);
+      }
+      for (const c of view.cheers ?? []) add(`c${c.n}${c.at}`, c.n, c.e, "S", c.at);
+      if (fresh.length) setPops((old) => [...old.filter((p) => t - p.seen < POP_MS), ...fresh].slice(-6));
     }
   }, [view, offset, router]);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -368,10 +385,10 @@ export function OmokRoom({
     return () => window.clearTimeout(t);
   }, [cutIn]);
   useEffect(() => {
-    if (!plateEmote) return;
-    const t = window.setTimeout(() => setPlateEmote(null), 2600);
+    if (!pops.length) return;
+    const t = window.setTimeout(() => setPops((o) => o.filter((p) => Date.now() - p.seen < POP_MS)), POP_MS + 100);
     return () => window.clearTimeout(t);
-  }, [plateEmote]);
+  }, [pops]);
   useEffect(() => {
     if (!Object.keys(say).length) return;
     const t = window.setTimeout(() => setSay({}), 4000);
@@ -562,8 +579,6 @@ export function OmokRoom({
             : "lose"
           : null,
       jumpKey: jump[c],
-      emote:
-        plateEmote?.by === c ? { e: plateEmote.e, key: plateEmote.key } : null,
       // 접속이 끊기거나 나가서 진 자리: 「퇴장함」
       gone:
         view.status === "done" &&
@@ -627,9 +642,10 @@ export function OmokRoom({
   /** 오니 이모티콘 버튼(대국자 = emote · 관전자 = cheer) */
   const stickerRow = (action: "emote" | "cheer") => (
     <div
-      className="grid grid-cols-5 justify-items-center gap-1.5 sm:grid-cols-9"
+      className="grid gap-2.5"
       aria-label={action === "emote" ? "이모티콘 보내기" : "응원 보내기"}
     >
+      <div className="grid grid-cols-5 gap-1.5 sm:max-lg:grid-cols-9">
       {ONI_EMOTES.map((em) => (
         <button
           key={em.key}
@@ -642,11 +658,13 @@ export function OmokRoom({
             void act(action, { e: em.key });
           }}
           aria-label={em.label}
-          className="arcade-btn btn-dark grid size-14 !min-h-0 place-items-center p-0.5"
+          className="arcade-btn btn-dark grid aspect-square w-full !min-h-0 place-items-center p-0.5"
         >
           <EmoteArt e={em.key} className="size-full" />
         </button>
       ))}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 sm:max-lg:grid-cols-5">
       {QUICK_TEXTS.map((q) => (
         <button
           key={q.key}
@@ -657,14 +675,61 @@ export function OmokRoom({
             setEmoteWait(Date.now() + (action === "emote" ? 3000 : 2500));
             void act(action, { e: q.key });
           }}
-          className="arcade-btn btn-dark grid min-h-11 w-full place-items-center px-1 text-sm font-black"
+          aria-label={q.label}
+          className="grid min-h-11 place-items-stretch transition-transform hover:-translate-y-0.5 active:translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
         >
-          {q.label}
+          <QuickChip k={q.key} className="w-full" />
         </button>
       ))}
+      </div>
     </div>
   );
-  const emoteRow = stickerRow("emote");
+  // 관전자: 다음 판 도전 줄 서기 / 빠지기(판 아래 조작 줄)
+  const queueBtn =
+    spectator && loggedIn && !waiting && !view.nextId ? (
+              view.queueMine ? (
+                <button
+                  type="button"
+                  data-omok-queue-leave
+                  disabled={busy}
+                  onClick={() => {
+                    try {
+                      window.sessionStorage.setItem(`omok-q-out:${view.id}`, "1");
+                    } catch {
+                      /* 이번만 */
+                    }
+                    void act("queue-leave");
+                  }}
+                  className="arcade-btn btn-dark text-sm"
+                >
+                  줄에서 빠지기 ({view.queueMine}번)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-omok-queue-join
+                  disabled={busy}
+                  onClick={() => {
+                    try {
+                      window.sessionStorage.removeItem(`omok-q-out:${view.id}`);
+                    } catch {
+                      /* 이번만 */
+                    }
+                    void act("queue-join");
+                  }}
+                  className="arcade-btn btn-gold text-sm"
+                >
+                  🙋 도전 줄 서기
+                </button>
+              )
+    ) : null;
+  // 이모티콘 패널(오른쪽): 대국자 · 앉은 사람 = 이모티콘 · 관전자 = 응원
+  const emoteAction: "emote" | "cheer" | null =
+    (view.me && playing) || seated
+      ? "emote"
+      : spectator && view.status !== "done"
+        ? "cheer"
+        : null;
 
   return (
     <div
@@ -751,8 +816,9 @@ export function OmokRoom({
         <SpectatorBar
           count={watching.count}
           list={watching.list}
-          cheers={view.cheers ?? []}
-          now={now + offset}
+          cheers={pops.filter((p) => p.from === "S").map((p) => ({ n: p.who, e: p.e, at: p.seen }))}
+          now={now}
+          ttl={POP_MS}
           me={spectator && watching.count > 0}
         />
 
@@ -769,23 +835,42 @@ export function OmokRoom({
             showNumbers={numbers}
           />
 
-          {/* 이모티콘 · 응원: 판 · 돌보다 위에 1.5초(수는 가리지 않게 위쪽) */}
-          {(() => {
-            const t = now + offset;
-            const list: { who: string; e: string; key: string }[] = [];
-            if (plateEmote && t - plateEmote.key < 1600) list.push({ who: info(plateEmote.by)?.nickname ?? "", e: plateEmote.e, key: `p${plateEmote.key}` });
-            for (const c of view.cheers ?? []) if (t - c.at < 1600) list.push({ who: c.n, e: c.e, key: `c${c.n}${c.at}` });
-            return list.length ? (
-              <div data-omok-emote-layer className="pointer-events-none absolute inset-x-0 top-[3%] z-[45] flex flex-wrap justify-center gap-2">
-                {list.slice(-4).map((b) => (
-                  <span key={b.key} data-omok-emote-bubble className="spec-pop grid justify-items-center">
-                    <EmoteArt e={b.e} className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16" />
-                    {b.who ? <span className="max-w-24 truncate border-2 border-[#0a0614] bg-[#6ad7ff] px-1.5 text-[10px] font-black text-[#0a0614]">{b.who}</span> : null}
+          {/* 이모티콘 · 응원: 판 위에 크게 2.6초 — 대국자는 자기 명판 쪽 위 · 관전자 응원은 위쪽 가운데 */}
+          {pops.length ? (
+            <div data-omok-emote-layer className="pointer-events-none absolute inset-0 z-[45]">
+              {(["L", "R"] as const).map((side) => {
+                const p = [...pops].reverse().find((x) => x.from === side);
+                return p ? (
+                  <span
+                    key={p.key}
+                    data-omok-emote-bubble={side}
+                    className={cn(
+                      "omok-emote-pop absolute top-[4%] grid justify-items-center gap-2",
+                      side === "L" ? "left-[4%]" : "right-[4%]",
+                    )}
+                  >
+                    <EmoteArt e={p.e} big className="size-24 drop-shadow-[0_4px_0_#0a0614] sm:size-32" />
+                    <span className="max-w-32 truncate rounded-md border-2 border-[#0a0614] bg-[#ffcf4a] px-2 text-xs font-black text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
+                      {p.who}
+                    </span>
                   </span>
-                ))}
+                ) : null;
+              })}
+              <div className="absolute inset-x-[27%] top-[4%] flex justify-center gap-2">
+                {pops
+                  .filter((x) => x.from === "S")
+                  .slice(-2)
+                  .map((p) => (
+                    <span key={p.key} data-omok-emote-bubble="S" className="omok-emote-pop grid justify-items-center gap-2">
+                      <EmoteArt e={p.e} big className="size-16 drop-shadow-[0_4px_0_#0a0614] sm:size-24" />
+                      <span className="max-w-28 truncate rounded-md border-2 border-[#0a0614] bg-[#6ad7ff] px-2 text-[11px] font-black text-[#04263a] shadow-[2px_2px_0_#0a0614]">
+                        📣 {p.who}
+                      </span>
+                    </span>
+                  ))}
               </div>
-            ) : null;
-          })()}
+            </div>
+          ) : null}
 
           {/* 대기실: 판 위에 방 코드 */}
           {waiting ? (
@@ -1124,29 +1209,31 @@ export function OmokRoom({
           </p>
         ) : null}
 
-        {/* ── 관전자 응원 ── */}
+        {/* ── 관전 조작: 도전 줄 · 수 순서 · 로비(대국자 조작 줄과 같은 자리 · 같은 모양) ── */}
         {spectator && view.status !== "done" ? (
-          <div data-omok-cheer-box className="arcade-panel grid gap-2 p-3">
-            <p className="text-center text-base font-black text-white">
-              📣 오니 이모티콘으로 응원하기
-            </p>
-            {loggedIn ? (
-              stickerRow("cheer")
-            ) : (
-              <Link
-                href={`/login?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
-                className="text-center text-sm font-bold text-[#8eeaff] underline"
-              >
-                로그인하면 응원할 수 있어요
-              </Link>
-            )}
+          <div data-omok-spec-controls className={cn("grid gap-2", queueBtn ? "grid-cols-3" : "grid-cols-2")}>
+            {queueBtn}
+            <button
+              type="button"
+              aria-pressed={numbers}
+              onClick={() => setNumbers(!numbers)}
+              className="arcade-btn btn-dark"
+            >
+              {numbers ? "수 번호 끄기" : "🔢 수 순서"}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/games/omok")}
+              className="arcade-btn btn-dark"
+            >
+              🏠 로비로
+            </button>
           </div>
         ) : null}
 
         {/* ── 대기실 조작 ── */}
         {waiting ? (
           <div className="grid gap-2">
-            {seated ? emoteRow : null}
             {note ? (
               <p className="text-center text-sm font-bold text-[#ff5d6c]">
                 {note}
@@ -1206,7 +1293,6 @@ export function OmokRoom({
                 </button>
               )}
             </div>
-            {emoteRow}
           </div>
         ) : null}
 
@@ -1369,61 +1455,7 @@ export function OmokRoom({
                 있어요.
               </p>
             )}
-            {spectator && loggedIn && !waiting && !view.nextId ? (
-              view.queueMine ? (
-                <button
-                  type="button"
-                  data-omok-queue-leave
-                  disabled={busy}
-                  onClick={() => {
-                    try {
-                      window.sessionStorage.setItem(`omok-q-out:${view.id}`, "1");
-                    } catch {
-                      /* 이번만 */
-                    }
-                    void act("queue-leave");
-                  }}
-                  className="arcade-btn btn-dark !min-h-10 text-sm"
-                >
-                  줄에서 빠지기
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  data-omok-queue-join
-                  disabled={busy}
-                  onClick={() => {
-                    try {
-                      window.sessionStorage.removeItem(`omok-q-out:${view.id}`);
-                    } catch {
-                      /* 이번만 */
-                    }
-                    void act("queue-join");
-                  }}
-                  className="arcade-btn btn-gold !min-h-11 text-base"
-                >
-                  🙋 다음 판 도전 줄 서기
-                </button>
-              )
-            ) : null}
           </div>
-          {view.cheers?.length ? (
-            <ul data-omok-cheer-log className="grid gap-1">
-              {view.cheers
-                .slice(-5)
-                .reverse()
-                .map((c) => (
-                  <li
-                    key={`${c.n}-${c.at}`}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <EmoteArt e={c.e} className="size-8" />
-                    <b className="min-w-0 truncate text-white">{c.n}</b>
-                    <span className="text-[#d6cdee]">님의 응원</span>
-                  </li>
-                ))}
-            </ul>
-          ) : null}
           {watching.count ? (
             <Spectators
               count={watching.count}
@@ -1548,6 +1580,32 @@ export function OmokRoom({
             </button>
           </div>
         </section>
+        {emoteAction ? (
+          <section
+            data-omok-emote-panel={emoteAction}
+            data-omok-cheer-box={emoteAction === "cheer" ? "" : undefined}
+            className="arcade-panel grid gap-2.5 p-4 max-lg:order-first"
+          >
+            <h2 className="arcade-kr text-lg text-white">
+              {emoteAction === "emote" ? "💬 이모티콘" : "📣 응원 이모티콘"}
+            </h2>
+            <p className="-mt-1 text-xs leading-relaxed text-[#d6cdee]">
+              {emoteAction === "emote"
+                ? "누르면 판 위 내 쪽에 크게 떠요"
+                : "누르면 판 위쪽 가운데에 내 이름과 함께 크게 떠요"}
+            </p>
+            {emoteAction === "cheer" && !loggedIn ? (
+              <Link
+                href={`/login?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
+                className="text-center text-sm font-bold text-[#8eeaff] underline"
+              >
+                로그인하면 응원할 수 있어요
+              </Link>
+            ) : (
+              stickerRow(emoteAction)
+            )}
+          </section>
+        ) : null}
       </aside>
     </div>
   );
