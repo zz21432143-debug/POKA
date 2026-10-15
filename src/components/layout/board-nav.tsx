@@ -144,6 +144,7 @@ export function BoardNav({
                     >
                       <NavIcon href={item.href} icon={item.icon} active={active} />
                       <span className="min-w-0 flex-1">{item.label}</span>
+                      {item.badge ? <span className="nav-new-badge">{item.badge}</span> : null}
                     </a>
                   </li>
                 );

@@ -81,20 +81,26 @@ export default async function HomePage() {
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
       </Suspense>
-      {/* 오늘의 미션(로그인 회원) */}
-      <Suspense fallback={null}>
-        <HomeMissions />
-      </Suspense>
-      {/* 요괴 마을: 내 요괴 상태 · 할 일(요괴가 없으면 소개) */}
-      <Suspense fallback={<HomePanelFallback className="h-40" />}>
-        <HomeYokai />
-      </Suspense>
+      {/* 매일 할 일 묶음: 휴대폰은 미션 → 요괴 마을 → 퀴즈, PC는 왼쪽 요괴 마을 · 오른쪽 미션 + 퀴즈 */}
+      <div data-home-daily className="grid gap-3.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+        <div className="lg:col-start-2 lg:row-start-1">
+          <Suspense fallback={null}>
+            <HomeMissions />
+          </Suspense>
+        </div>
+        <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:h-full">
+          <Suspense fallback={<HomePanelFallback className="h-72" />}>
+            <HomeYokai />
+          </Suspense>
+        </div>
+        <div className="lg:col-start-2 lg:row-start-2">
+          <Suspense fallback={<HomePanelFallback className="h-40" />}>
+            <HomeQuiz />
+          </Suspense>
+        </div>
+      </div>
       {/* 무료 홀덤 공부 도구(GTO · 승률 · ICM · 레인지 · 족보) */}
       <HomeStudyTools />
-      {/* 오늘의 퀴즈: 매일 한 문제 */}
-      <Suspense fallback={<HomePanelFallback className="h-40" />}>
-        <HomeQuiz />
-      </Suspense>
       <Suspense
         fallback={
           <div className="flex flex-col gap-3.5">

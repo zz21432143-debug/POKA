@@ -34,7 +34,7 @@ export const MOBILE_BOTTOM_NAV = [
 /** 왼쪽 메뉴 아이콘: 브랜드 아이콘(오니·동양 테마) 이름 */
 export type SidebarIcon = import("@/components/brand/brand-icon").BrandIconName;
 
-export type SidebarItem = NavItem & { icon: SidebarIcon };
+export type SidebarItem = NavItem & { icon: SidebarIcon; /** 메뉴 옆 작은 표시(새 기능 등) */ badge?: string };
 
 export type SidebarGroup = {
   title: string | null;
@@ -86,7 +86,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/quiz", label: "오늘의 퀴즈", hint: "매일 한 문제 · 포인트", icon: "seal" },
-      { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
+      { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern", badge: "NEW" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },

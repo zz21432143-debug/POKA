@@ -12,7 +12,8 @@ const STEP_MS = 3500;
 const FADE_MS = 380;
 /** 왼쪽부터 차례로 바뀌는 간격(물결처럼) */
 const STAGGER_MS = 110;
-const VISIBLE = 3;
+/** 한 번에 보이는 포스터(넓은 화면 4장 · 그보다 좁으면 앞의 3장) */
+const VISIBLE = 4;
 
 export type HomePoster = {
   key: string;
@@ -79,10 +80,11 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           포스터 홍보 문의{empty ? ` · 빈 자리 ${empty}` : ""}
         </Link>
       </div>
-      <ul className="grid grid-cols-3 gap-2">
+      <ul className="grid grid-cols-3 gap-2 lg:grid-cols-4">
         {visible.map((poster, position) => (
           <li
             key={`slot-${position}`}
+            className={position === 3 ? "hidden lg:block" : undefined}
             style={{
               opacity: hidden ? 0 : 1,
               transform: hidden ? "scale(0.97)" : "scale(1)",

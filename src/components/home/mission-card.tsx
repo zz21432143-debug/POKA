@@ -42,7 +42,7 @@ export function MissionCard({ initial }: { initial: MissionStatus }) {
       <div className="h-2 overflow-hidden rounded-full bg-white/10">
         <div className="h-full rounded-full bg-[#c9a25c] transition-[width] duration-500" style={{ width: `${(m.done / m.items.length) * 100}%` }} />
       </div>
-      <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
         {m.items.map((item) => (
           <li key={item.key}>
             <Link
