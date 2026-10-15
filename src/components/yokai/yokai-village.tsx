@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import {
+  bgCss,
+  bgReady,
   CLEAN_BONUS_AT,
   CLEAN_BONUS_EXP,
   FEED,
@@ -73,7 +75,7 @@ function stageBackground(
     return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
   if (species === "yeomra")
     return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
-  if (bg !== "default") return YOKAI_BACKGROUNDS[bg].css;
+  if (bg !== "default") return bgCss(bg);
   if (YOKAI[species].rarity === "hero")
     return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
   return "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)";
@@ -233,6 +235,12 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
   const v = (viewing && yokai?.owned.find((o) => o.species === viewing)) || a;
   /** 대표가 아닌 요괴를 보는 중 */
   const viewingOther = Boolean(a && v && v.species !== a.species);
+  /** 대표 바꾸기 확인 창: 그 요괴로 바꾸는 값(처음이면 0) */
+  const confirmCost =
+    confirmMain && yokai
+      ? (yokai.owned.find((o) => o.species === confirmMain)?.mainCost ??
+        yokai.mainChangeCost)
+      : 0;
   const feedWait =
     a?.nextFeedAt && now != null && Date.parse(a.nextFeedAt) > now
       ? new Date(a.nextFeedAt)
@@ -499,7 +507,8 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     onClick={() => setConfirmMain(v.species)}
                     className="min-h-9 shrink-0 rounded-full border border-[#f5d76e]/60 bg-black/40 px-3 text-[11px] font-black text-[#f5d76e] hover:bg-[#f5d76e]/10"
                   >
-                    ⭐ 대표로 바꾸기 · {yokai.mainChangeCost}P
+                    ⭐ 대표로 바꾸기 ·{" "}
+                    {v.mainCost ? `${v.mainCost}P` : "처음 무료"}
                   </button>
                 )}
               </div>
@@ -799,6 +808,8 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                   const bg = YOKAI_BACKGROUNDS[id];
                   const owned = yokai.bg.owned.includes(id);
                   const using = yokai.bg.active === id;
+                  // 새 그림이 아직 없는 배경은 판매 쉬는 중(산 배경은 그대로 씀)
+                  const soon = !owned && !bgReady(id);
                   return (
                     <div
                       key={id}
@@ -809,20 +820,33 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                       )}
                     >
                       <div
-                        className="aspect-[4/3] rounded-lg"
-                        style={{ background: bg.css }}
-                      />
+                        className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-lg"
+                        style={{ background: bgCss(id) }}
+                      >
+                        {soon ? (
+                          <span className="rounded-full bg-black/70 px-2 py-1 text-[11px] font-black text-[#f3d9a4]">
+                            🎨 새 그림 준비 중
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="flex items-center gap-1 text-xs">
                         <b className="text-white">{bg.name}</b>
                         <span className="ml-auto text-zinc-400">
-                          {owned ? "가짐" : `${bg.price.toLocaleString()}P`}
+                          {owned
+                            ? "가짐"
+                            : soon
+                              ? "곧 열려요"
+                              : `${bg.price.toLocaleString()}P`}
                         </span>
                       </div>
                       <button
                         type="button"
                         data-yokai-bg-action={owned ? "use" : "buy"}
                         disabled={
-                          busy || using || (!owned && yokai.points < bg.price)
+                          busy ||
+                          using ||
+                          soon ||
+                          (!owned && yokai.points < bg.price)
                         }
                         onClick={() =>
                           void act({
@@ -841,9 +865,11 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                           ? "쓰는 중"
                           : owned
                             ? "쓰기"
-                            : yokai.points < bg.price
-                              ? "포인트 부족"
-                              : "사기"}
+                            : soon
+                              ? "준비 중"
+                              : yokai.points < bg.price
+                                ? "포인트 부족"
+                                : "사기"}
                       </button>
                     </div>
                   );
@@ -851,7 +877,9 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               )}
             </div>
             <p className="text-[11px] text-zinc-500">
-              전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이 먼저 보여요.
+              더 예쁜 도트 배경으로 새로 그리는 중이에요. 그림이 준비된 배경부터
+              다시 팔아요. 전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이
+              먼저 보여요.
             </p>
           </section>
 
@@ -1069,11 +1097,23 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                     </p>
                     <ul className="grid gap-1 rounded-xl bg-black/40 p-3 text-left text-xs text-[#ece4d6]">
                       <li>
-                        💰{" "}
-                        <b className="text-[#f5d76e]">
-                          {yokai.mainChangeCost}P가 차감돼요
-                        </b>{" "}
-                        (내 포인트 {yokai.points.toLocaleString()}P)
+                        {confirmCost ? (
+                          <>
+                            💰{" "}
+                            <b className="text-[#f5d76e]">
+                              {confirmCost}P가 차감돼요
+                            </b>{" "}
+                            (내 포인트 {yokai.points.toLocaleString()}P)
+                          </>
+                        ) : (
+                          <>
+                            🎁{" "}
+                            <b className="text-emerald-300">
+                              처음 대표로 정하는 요괴라 무료예요
+                            </b>{" "}
+                            (다음부터는 {yokai.mainChangeCost}P)
+                          </>
+                        )}
                       </li>
                       <li>
                         🍙 밥 · 🤚 쓰다듬기 · 🛁 샤워는 대표 요괴만 할 수 있어요
@@ -1084,7 +1124,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                       </li>
                       <li>⭐ 닉네임 옆 · 프로필에도 새 대표 요괴가 보여요</li>
                     </ul>
-                    {yokai.points < yokai.mainChangeCost ? (
+                    {yokai.points < confirmCost ? (
                       <p className="text-xs font-bold text-rose-300">
                         포인트가 모자라요. 출석 · 미션으로 모아 주세요.
                       </p>
@@ -1100,7 +1140,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                       <button
                         type="button"
                         data-yokai-confirm-main-ok
-                        disabled={busy || yokai.points < yokai.mainChangeCost}
+                        disabled={busy || yokai.points < confirmCost}
                         onClick={async () => {
                           const target = confirmMain;
                           setConfirmMain(null);
@@ -1109,7 +1149,9 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                         }}
                         className="min-h-11 rounded-xl bg-[#7a1c22] text-sm font-black text-white hover:bg-[#93242c] disabled:opacity-50"
                       >
-                        {yokai.mainChangeCost}P 내고 바꾸기
+                        {confirmCost
+                          ? `${confirmCost}P 내고 바꾸기`
+                          : "무료로 바꾸기"}
                       </button>
                     </div>
                   </div>

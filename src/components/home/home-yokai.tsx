@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { getCurrentUser } from "@/lib/current-user";
-import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_BACKGROUNDS, YOKAI_ORDER, yokaiImage } from "@/lib/yokai";
+import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_ORDER, bgCss, yokaiImage } from "@/lib/yokai";
 import { yokaiHome, yokaiPublic } from "@/lib/yokai-server";
 
 const bar = (value: number, max: number, color: string) => (
@@ -79,7 +79,7 @@ export async function HomeYokai() {
       <style>{`@keyframes hy-bob{50%{transform:translateY(-5px)}}`}</style>
       {head}
       <div className="grid grid-cols-[112px_1fr] gap-3 sm:grid-cols-[150px_1fr]">
-        <Link href="/yokai" aria-label={`${y.name} 보러 가기`} className="relative grid aspect-square place-items-center overflow-hidden rounded-2xl border border-[#c9a25c]/30" style={{ background: YOKAI_BACKGROUNDS[y.bg].css }}>
+        <Link href="/yokai" aria-label={`${y.name} 보러 가기`} className="relative grid aspect-square place-items-center overflow-hidden rounded-2xl border border-[#c9a25c]/30" style={{ background: bgCss(y.bg) }}>
           {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
           <img src={yokaiImage(y.species, y.stage)} alt="" className="w-[82%] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.6)]" style={{ animation: "hy-bob 2.4s ease-in-out infinite" }} />
         </Link>

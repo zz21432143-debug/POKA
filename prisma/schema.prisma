@@ -736,6 +736,8 @@ model YokaiOwned {
   cleanAt     DateTime  @default(now())
   /// 받은 친밀도 보상 단계(0 · 50 · 100)
   bondReward  Int       @default(0)
+  /// 대표였던 적이 있는지(처음 대표로 정할 때는 무료)
+  wasMain     Boolean   @default(false)
   createdAt   DateTime  @default(now())
 
   @@unique([userId, species])

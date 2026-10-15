@@ -24,6 +24,7 @@ import {
   waitText,
   isSpecies,
   isBackground,
+  bgReady,
   RARITY_ORDER,
   YOKAI_BACKGROUNDS,
   type YokaiBackground,
@@ -53,6 +54,8 @@ export type YokaiCare = {
   affection: number;
   /** 친밀도 단계 이름(친해지는 중 · 단짝 · 영혼의 단짝) */
   bond: string;
+  /** 이 요괴를 대표로 바꾸는 값(처음이면 0) */
+  mainCost: number;
 };
 
 /** 대표 요괴(돌보는 요괴) + 돌보기 쿨타임(회원 단위 · 모든 요괴가 함께) */
@@ -195,6 +198,7 @@ function careOf(o: OwnedRow, now = new Date()): YokaiCare {
     clean: cleanNow(o.clean, o.cleanAt, now),
     affection: o.affection,
     bond: bondName(o.affection),
+    mainCost: o.wasMain ? MAIN_CHANGE_COST : 0,
   };
 }
 const ownedList = (userId: string) => prisma.yokaiOwned.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
@@ -296,6 +300,7 @@ export async function buyBackground(userId: string, id: YokaiBackground) {
   if (!pet) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
   const state = bgState(pet);
   if (state.owned.includes(id)) return { ok: false as const, error: "이미 가진 배경이에요." };
+  if (!bgReady(id)) return { ok: false as const, error: "새 그림을 준비 중인 배경이에요. 곧 다시 열려요!" };
   const price = YOKAI_BACKGROUNDS[id].price;
   // 포인트가 모자라면 안 바뀜(동시에 눌러도 한 번만)
   const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: price } }, data: { points: { decrement: price } } });
@@ -336,7 +341,7 @@ export async function chooseStarter(userId: string, species: YokaiSpecies) {
     data: [{ userId, species, dexJson: JSON.stringify([species]), seenJson: JSON.stringify([species]), activeSpecies: species, mainSpecies: species, day: todayKstDate() }],
     skipDuplicates: true,
   });
-  if (made.count === 1) await prisma.yokaiOwned.createMany({ data: [{ userId, species }], skipDuplicates: true });
+  if (made.count === 1) await prisma.yokaiOwned.createMany({ data: [{ userId, species, wasMain: true }], skipDuplicates: true });
   // 첫 요괴 = 대표 요괴: 닉네임 옆에 바로 보이게
   repCache = null;
   return { ok: true as const };
@@ -429,10 +434,14 @@ export async function setMainYokai(userId: string, species: YokaiSpecies) {
   const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
   if (!pet) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
   if (mainOf(pet) === species) return { ok: true as const };
-  const has = await prisma.yokaiOwned.findUnique({ where: { userId_species: { userId, species } }, select: { id: true } });
+  const has = await prisma.yokaiOwned.findUnique({ where: { userId_species: { userId, species } }, select: { id: true, wasMain: true } });
   if (!has) return { ok: false as const, error: "아직 만나지 못한 요괴예요." };
-  const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: MAIN_CHANGE_COST } }, data: { points: { decrement: MAIN_CHANGE_COST } } });
-  if (paid.count !== 1) return { ok: false as const, error: `포인트가 모자라요(${MAIN_CHANGE_COST}P 필요).` };
+  // 처음 대표로 정하는 요괴는 무료(동시에 눌러도 한 번만 무료)
+  const firstTime = !has.wasMain && (await prisma.yokaiOwned.updateMany({ where: { id: has.id, wasMain: false }, data: { wasMain: true } })).count === 1;
+  if (!firstTime) {
+    const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: MAIN_CHANGE_COST } }, data: { points: { decrement: MAIN_CHANGE_COST } } });
+    if (paid.count !== 1) return { ok: false as const, error: `포인트가 모자라요(${MAIN_CHANGE_COST}P 필요).` };
+  }
   await prisma.yokaiPet.update({ where: { userId }, data: { mainSpecies: species, activeSpecies: species } });
   repCache = null;
   return { ok: true as const };

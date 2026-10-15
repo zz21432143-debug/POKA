@@ -150,8 +150,8 @@ export function nextShowerTime(clean: number, now = new Date()) {
 /** 돌보기 쿨타임(회원 단위 · 모든 요괴가 함께 씀): 밥 사이 · 샤워 사이 최소 간격(분) */
 export const FEED_COOLDOWN_MIN = 120;
 export const SHOWER_COOLDOWN_MIN = 360;
-/** 대표 요괴 바꾸기 값(돌보기는 대표 요괴만 · 여러 마리를 한꺼번에 키우지 못하게) */
-export const MAIN_CHANGE_COST = 300;
+/** 대표 요괴 바꾸기 값(돌보기는 대표 요괴만 · 여러 마리를 한꺼번에 키우지 못하게). 요괴마다 처음 대표로 정할 때는 무료 */
+export const MAIN_CHANGE_COST = 200;
 /** 친밀도 보상: 단계 · 받는 포인트 · 이름 */
 export const BOND_TIERS = [
   { at: 50, points: 100, name: "단짝" },
@@ -220,3 +220,16 @@ export const YOKAI_BACKGROUNDS = {
 } as const;
 export type YokaiBackground = keyof typeof YOKAI_BACKGROUNDS;
 export const isBackground = (v: unknown): v is YokaiBackground => typeof v === "string" && v in YOKAI_BACKGROUNDS;
+
+/**
+ * 마을 배경 그림(도트 그림 파일 · public/yokai/bg/이름.webp). 그림이 있는 배경만 판매해요.
+ * 새 그림을 넣으면 여기에 한 줄 추가: moon: "/yokai/bg/moon.webp"
+ */
+export const BG_IMAGES: Partial<Record<YokaiBackground, string>> = {};
+/** 팔 수 있는 배경(기본 배경 · 그림이 준비된 배경) */
+export const bgReady = (id: YokaiBackground) => id === "default" || Boolean(BG_IMAGES[id]);
+/** 화면에 깔 배경(그림이 있으면 그림, 없으면 예전 색 배경) */
+export function bgCss(id: YokaiBackground) {
+  const img = BG_IMAGES[id];
+  return img ? `linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.35)), url(${img}) center / cover no-repeat` : YOKAI_BACKGROUNDS[id].css;
+}
