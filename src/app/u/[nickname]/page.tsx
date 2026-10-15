@@ -4,6 +4,7 @@ import Link from "next/link";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
 import { PublicProfileCard } from "@/components/user/public-profile-card";
 import { HonorShelf } from "@/components/user/honor-shelf";
+import { ProfileYokai } from "@/components/yokai/profile-yokai";
 import { listHonorHistory } from "@/lib/pot-titles";
 import { todayKstDate } from "@/lib/dates";
 import { getWeeklyRiser } from "@/lib/home-rankings";
@@ -68,6 +69,7 @@ export default async function MemberPage({
           attendanceStreak: user.attendanceStreak,
         }}
       />
+      <ProfileYokai userId={user.id} viewerIsMaster={Boolean(viewer?.isMaster)} />
       <HonorShelf userId={user.id} nickname={user.nickname} mine={mine} />
       <div className="flex flex-col gap-2">
         <Link

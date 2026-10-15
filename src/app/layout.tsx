@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { VersionRefresh } from "@/components/layout/version-refresh";
+import { StudyVisitPing } from "@/components/layout/study-visit-ping";
 import { Black_Han_Sans, Caveat, Dokdo, Noto_Sans_KR } from "next/font/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -144,6 +145,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteJsonLd() }} />
         <GoogleAnalytics />
         <VersionRefresh />
+        <StudyVisitPing />
         <PwaRegister />
         <SiteShell>{children}</SiteShell>
       </body>

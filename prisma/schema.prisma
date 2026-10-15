@@ -695,8 +695,29 @@ model YokaiPet {
   day         String   @default("")
   fedToday    Int      @default(0)
   pettedToday Int      @default(0)
-  /// 도감에 올라간 요괴 종류(JSON 배열)
+  /// 도감에 올라간 요괴 종류(JSON 배열 · 예전 기록, 지금은 YokaiOwned가 기준)
   dexJson     String   @default("[]")
+  /// 지금 키우는 요괴 · 대표 요괴(닉네임 옆) · 등장 알림을 이미 본 요괴(JSON)
+  activeSpecies String @default("")
+  mainSpecies   String @default("")
+  seenJson      String @default("[]")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+}
+
+/// 요괴 마을: 회원이 가진 요괴 한 마리씩(종류마다 한 줄). 포만감은 fullnessAt 기준 값, 쓰다듬기는 petDay 날짜에 pettedToday번 · 마지막 pettedAt
+model YokaiOwned {
+  id          String    @id @default(cuid())
+  userId      String
+  species     String
+  exp         Int       @default(0)
+  fullness    Int       @default(60)
+  fullnessAt  DateTime  @default(now())
+  affection   Int       @default(0)
+  petDay      String    @default("")
+  pettedToday Int       @default(0)
+  pettedAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, species])
 }

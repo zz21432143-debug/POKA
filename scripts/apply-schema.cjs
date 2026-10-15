@@ -45,6 +45,7 @@ const FILES = [
   "prisma/migrations/20261022090000_daily_quiz/migration.sql",
   "prisma/migrations/20261023090000_quiz_alerts/migration.sql",
   "prisma/migrations/20261024090000_yokai_pet/migration.sql",
+  "prisma/migrations/20261025090000_yokai_owned/migration.sql",
 ];
 
 function databaseUrl() {

@@ -21,6 +21,10 @@ export type HonorInfo = {
 };
 const EMPTY_HONORS: HonorInfo = { defs: [], holders: {} };
 
+/** 닉네임 → 대표 요괴(종류 · 단계). 요괴 마을 공개 전에는 비어 있음 */
+export type YokaiReps = Record<string, { s: string; st: number }>;
+const YokaiRepContext = createContext<YokaiReps>({});
+
 /** 이 회원이 지금 가진 칭호(대표 칭호 고르기용): 키 · 보이는 이름 */
 export function useMyTitles(nickname: string) {
   const honors = useContext(HonorContext);
@@ -48,16 +52,18 @@ export function CrownProvider({ children }: { children: ReactNode }) {
   const [names, setNames] = useState<ReadonlySet<string>>(new Set());
   const [potTitle, setPotTitle] = useState<PotTitleInfo>(EMPTY_TITLES);
   const [honors, setHonors] = useState<HonorInfo>(EMPTY_HONORS);
+  const [yokaiReps, setYokaiReps] = useState<YokaiReps>({});
   const setMain = useCallback((nickname: string, key: string) => setHonors((h) => ({ ...h, main: { ...(h.main ?? {}), [nickname]: key } })), []);
   useEffect(() => {
     let cancelled = false;
     fetch("/api/ranking/crowns")
       .then((response) => response.json())
-      .then((payload: { nicknames?: string[]; potTitle?: PotTitleInfo | null; honors?: HonorInfo | null }) => {
+      .then((payload: { nicknames?: string[]; potTitle?: PotTitleInfo | null; honors?: HonorInfo | null; yokai?: YokaiReps }) => {
         if (cancelled) return;
         setNames(new Set(payload.nicknames ?? []));
         if (payload.potTitle) setPotTitle(payload.potTitle);
         if (payload.honors) setHonors(payload.honors);
+        if (payload.yokai) setYokaiReps(payload.yokai);
       })
       .catch(() => undefined);
     return () => {
@@ -68,7 +74,9 @@ export function CrownProvider({ children }: { children: ReactNode }) {
     <CrownContext.Provider value={names}>
       <PotTitleContext.Provider value={potTitle}>
         <HonorContext.Provider value={honors}>
-          <SetHonorMainContext.Provider value={setMain}>{children}</SetHonorMainContext.Provider>
+          <SetHonorMainContext.Provider value={setMain}>
+            <YokaiRepContext.Provider value={yokaiReps}>{children}</YokaiRepContext.Provider>
+          </SetHonorMainContext.Provider>
         </HonorContext.Provider>
       </PotTitleContext.Provider>
     </CrownContext.Provider>
@@ -132,6 +140,7 @@ const HONOR_TONE = "border-sky-300/70 bg-gradient-to-r from-[#1e1b4b] to-[#3b076
 export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: string; className?: string; max?: number }) {
   const honors = useContext(HonorContext);
   const potInfo = useContext(PotTitleContext);
+  const yokaiReps = useContext(YokaiRepContext);
   const hydrated = useHydrated();
   if (!hydrated) return null;
   const hasPot = Boolean(potInfo.enabled && potInfo.holders[nickname]);
@@ -156,8 +165,13 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
       {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
     </TipBadge>
   ));
+  const rep = yokaiReps[nickname];
   return (
     <>
+      {rep ? (
+        // eslint-disable-next-line @next/next/no-img-element -- 대표 요괴(작은 도트 그림)
+        <img data-yokai-rep={rep.s} src={`/yokai/${rep.s}-${rep.st}.webp`} alt="" title="대표 요괴" className="inline-block size-5 shrink-0 object-contain align-middle" />
+      ) : null}
       {potFirst ? <PotOnlyBadge nickname={nickname} className={className} /> : null}
       {honorBadges.slice(0, 1)}
       {!potFirst && hasPot && max > 1 ? <PotOnlyBadge nickname={nickname} className={className} /> : null}
