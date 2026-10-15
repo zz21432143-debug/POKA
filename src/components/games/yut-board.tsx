@@ -23,17 +23,26 @@ export function pieceName(names: Record<Team, string[]>, team: Team, i: number):
   return list.length ? list[i % list.length] : "";
 }
 
-export function YokaiToken({ face, team, className, dim }: { face: Face; team: Team; className?: string; dim?: boolean }) {
+/**
+ * 요괴 말: 동그란 사진 대신 픽셀 요괴가 그대로 서 있음(발밑에 팀 색 그림자 발판).
+ * idle = 숨 쉬듯 위아래(대기 중), delay로 말마다 박자를 조금씩 다르게.
+ */
+export function YokaiToken({ face, team, className, dim, idle = false, delay = 0 }: { face: Face; team: Team; className?: string; dim?: boolean; idle?: boolean; delay?: number }) {
   return (
-    <span
-      className={cn("relative grid place-items-center rounded-full border-[3px] bg-[#140b24] shadow-[0_3px_0_#0a0614]", dim && "opacity-45", className)}
-      style={{ borderColor: TEAM_COLOR[team] }}
-    >
+    <span className={cn("relative grid place-items-end justify-items-center", dim && "opacity-45", className)}>
+      {/* 발밑 팀 색 그림자 */}
+      <span aria-hidden className="absolute bottom-[-2%] left-1/2 h-[20%] w-[78%] -translate-x-1/2 rounded-[50%] border-2 border-[#0a0614]/70" style={{ background: `${TEAM_COLOR[team]}cc`, boxShadow: `0 0 8px ${TEAM_COLOR[team]}` }} />
       {face ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 대표 요괴 말
-        <img src={yokaiImage(face.species, face.stage)} alt="" draggable={false} className="size-[88%] object-contain [image-rendering:pixelated]" />
+        // eslint-disable-next-line @next/next/no-img-element -- 대표 요괴(픽셀) 말
+        <img
+          src={yokaiImage(face.species, face.stage)}
+          alt=""
+          draggable={false}
+          className={cn("relative z-10 h-[96%] w-auto max-w-[125%] object-contain object-bottom [image-rendering:pixelated] drop-shadow-[2px_2px_0_#0a0614]", idle && "yut-idle")}
+          style={idle ? { animationDelay: `${delay}ms` } : undefined}
+        />
       ) : (
-        <span className="text-[60%] font-black" style={{ color: TEAM_COLOR[team] }}>
+        <span className="relative z-10 mb-[20%] text-[60%] font-black" style={{ color: TEAM_COLOR[team] }}>
           {team}
         </span>
       )}
@@ -47,7 +56,7 @@ export function NameTag({ name, team, className }: { name: string; team: Team; c
   return (
     <span
       data-yut-name
-      className={cn("pointer-events-none max-w-[5.5rem] truncate rounded-md border px-1 text-[10px] leading-4 font-black text-white", className)}
+      className={cn("pointer-events-none max-w-[5.5rem] truncate border-2 px-1 text-[10px] leading-4 font-black text-white shadow-[2px_2px_0_#0a0614]", className)}
       style={{ background: "#0a0614e6", borderColor: TEAM_COLOR[team] }}
     >
       {name}
@@ -62,7 +71,10 @@ export type YutKnock = { key: number; items: { node: string; face: Face; team: T
 /** 픽셀 파편(잡기 충격 · 업기 합체) */
 export type YutBurst = { key: number; node: string; colors: string[]; count?: number };
 
-/** 윷판(29칸) + 말(요괴) · 이름표 · 업기 탑 · 잡기 · 한 칸씩 이동 · 갈 곳 미리보기 */
+/** 칸 종류: 출발 · 꼭짓점 · 방 = 황금 발판 */
+const isGold = (n: string) => BIG_NODES.includes(n);
+
+/** 윷판(29칸) — 나무 틀 · 멍석 바닥 · 입체 픽셀 발판 · 서 있는 요괴 말 · 목말 탑 · 드롭킥 K.O. */
 export function YutBoard({
   state,
   faces,
@@ -80,6 +92,7 @@ export function YutBoard({
   stepMs: stepMsProp,
   knock,
   merge,
+  kick,
 }: {
   state: YutState;
   faces: Record<Team, Face[]>;
@@ -104,6 +117,8 @@ export function YutBoard({
   knock: YutKnock | null;
   /** 업기: 이 칸 탑 꼭대기가 위에서 떨어져 합체 */
   merge: { key: number; node: string } | null;
+  /** 잡기: 이 칸에 도착한 요괴가 드롭킥 */
+  kick?: { key: number; node: string } | null;
 }) {
   // 한 칸씩 점프: 판 상태의 마지막 이동(event.path)에서 바로 계산 — 새 이동이 온 그 화면부터 첫 칸에 있게
   const ev = state.event;
@@ -130,10 +145,11 @@ export function YutBoard({
   const walkIdx = !anim ? -1 : step.key === anim.key ? step.i : 0;
   const hopping = (team: Team, i: number) => Boolean(walking && anim && anim.team === team && anim.moved.includes(i));
   const merging = (p: { pos: string; top: boolean }) => Boolean(!walking && merge && merge.node === p.pos && p.top);
+  const kicking = (p: { pos: string; team: Team }) => Boolean(!walking && kick && kick.node === p.pos && p.team === state.event?.team);
 
   const xy = (n: string) => NODE_XY[n === START || n === END ? "o0" : n] ?? [50, 50];
   const shown = (team: Team, i: number, pos: string) => (walking && anim && anim.team === team && anim.moved.includes(i) ? walking : pos);
-  // 같은 칸 말끼리 묶어서 탑으로
+  // 같은 칸 말끼리 묶어서 목말 탑으로
   const stacks = new Map<string, { team: Team; i: number }[]>();
   (["A", "B"] as const).forEach((team) =>
     state.pieces[team].forEach((p, i) => {
@@ -147,13 +163,23 @@ export function YutBoard({
   const pieces: { team: Team; i: number; pos: string; level: number; top: boolean; count: number }[] = [];
   stacks.forEach((list, pos) => list.forEach((p, level) => pieces.push({ ...p, pos, level, top: level === list.length - 1, count: list.length })));
   const nodes = Object.keys(NODE_XY);
+  // 길: 굵은 나무 홈 + 새끼줄 무늬
   const line = (a: string, b: string) => (
-    <line key={`${a}-${b}`} x1={NODE_XY[a][0]} y1={NODE_XY[a][1]} x2={NODE_XY[b][0]} y2={NODE_XY[b][1]} stroke="#5b3f8f" strokeWidth={1.4} strokeLinecap="round" />
+    <g key={`${a}-${b}`}>
+      <line x1={NODE_XY[a][0]} y1={NODE_XY[a][1]} x2={NODE_XY[b][0]} y2={NODE_XY[b][1]} stroke="#4a2c14" strokeWidth={2.6} strokeLinecap="round" />
+      <line x1={NODE_XY[a][0]} y1={NODE_XY[a][1]} x2={NODE_XY[b][0]} y2={NODE_XY[b][1]} stroke="#c9944c" strokeWidth={1.1} strokeDasharray="1.2 0.8" strokeLinecap="round" />
+    </g>
   );
+  // 같은 칸 탑은 같은 박자로 숨 쉬게(한 몸처럼)
+  const beat = (pos: string) => (pos.charCodeAt(pos.length - 1) * 137) % 900;
   return (
     <div
       data-yut-board
-      className={cn("relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-3xl border-4 border-[#3b2766] bg-[radial-gradient(circle_at_50%_45%,#2c1a4a,#140b24_70%)] shadow-[0_6px_0_#0a0614]", impact && "yut-impact")}
+      data-yut-skin="arcade-mat"
+      className={cn(
+        "yut-wood relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-[18px] p-[3.2%]",
+        impact && "yut-impact",
+      )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
       onClick={(e) => {
         // 말 · 갈 곳이 아닌 빈 땅을 누르면 취소
@@ -164,114 +190,133 @@ export function YutBoard({
         onCancel();
       }}
     >
-      <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
-        {line("o0", "o5")}
-        {line("o5", "o10")}
-        {line("o10", "o15")}
-        {line("o15", "o0")}
-        {line("o5", "o15")}
-        {line("o10", "o0")}
+      {/* 멍석 바닥 */}
+      <div className="yut-mat relative size-full rounded-[10px]">
+        <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
+          {line("o0", "o5")}
+          {line("o5", "o10")}
+          {line("o10", "o15")}
+          {line("o15", "o0")}
+          {line("o5", "o15")}
+          {line("o10", "o0")}
+        </svg>
+
+        {/* 발판: 보통 = 나무 발판 · 출발 · 꼭짓점 · 방 = 황금 발판 */}
         {nodes.map((n) => {
-          const big = BIG_NODES.includes(n);
+          const gold = isGold(n);
           const lit = walking === n;
           return (
-            <circle
+            <span
               key={n}
-              cx={NODE_XY[n][0]}
-              cy={NODE_XY[n][1]}
-              r={big ? 4.6 : 2.9}
-              fill={lit ? "#ffcf4a" : big ? "#3b2766" : "#24163f"}
-              stroke={n === "o0" ? "#ffcf4a" : big ? "#b77bff" : "#6c55a0"}
-              strokeWidth={big ? 1.1 : 0.8}
-            />
+              data-yut-tile={gold ? "gold" : "wood"}
+              aria-hidden
+              className={cn("absolute -translate-x-1/2 -translate-y-1/2", gold ? "yut-tile-gold size-[10.5%]" : "yut-tile size-[6.6%]", lit && "yut-tile-lit")}
+              style={{ left: `${NODE_XY[n][0]}%`, top: `${NODE_XY[n][1]}%` }}
+            >
+              {n === "o0" ? <b className="absolute inset-x-0 -bottom-[46%] text-center text-[clamp(8px,2.2cqw,13px)] font-black whitespace-nowrap text-[#ffe08a] [text-shadow:1px_1px_0_#0a0614]">출발 · 골</b> : null}
+              {n === "c" ? <b className="absolute inset-0 grid place-items-center text-[clamp(8px,2.2cqw,13px)] font-black text-[#5a3a00]">방</b> : null}
+            </span>
           );
         })}
         {SHORTCUT_NODES.map((n) => (
-          <circle key={`portal-${n}`} className="yut-portal-ring" cx={NODE_XY[n][0]} cy={NODE_XY[n][1]} r={6.4} fill="none" stroke="#6ad7ff" strokeWidth={0.7} strokeDasharray="2 1.6" />
+          <span key={`portal-${n}`} aria-hidden className="yut-portal-ring-html pointer-events-none absolute size-[14%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-[#6ad7ff]/70" style={{ left: `${NODE_XY[n][0]}%`, top: `${NODE_XY[n][1]}%` }} />
         ))}
-        <text x={NODE_XY.o0[0] - 1} y={99} textAnchor="middle" fontSize="3.4" fontWeight={900} fill="#ffcf4a">
-          출발 · 골
-        </text>
-        <text x={50} y={57.8} textAnchor="middle" fontSize="3" fontWeight={900} fill="#b77bff">
-          방
-        </text>
-      </svg>
 
-      {ghosts.map((g) => (
-        <button
-          key={`${g.node}-${g.ri}`}
-          type="button"
-          data-yut-ghost={g.node}
-          onClick={() => onGhost(g.ri)}
-          aria-label={g.node === END ? `${g.label}로 골인` : `${g.label}로 여기 옮기기`}
-          className="yut-target absolute z-30 grid size-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/30 text-[11px] leading-tight font-black text-[#ffe08a] [image-rendering:pixelated]"
-          style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1] + (g.node === END ? 9 : 0)}%` }}
-        >
-          <span>{g.node === END ? "골인!" : "여기"}</span>
-          <span className="rounded-sm bg-[#0a0614] px-1 text-[10px] text-[#ffcf4a]">{g.label}</span>
-        </button>
-      ))}
-      {portal ? (
-        <span key={`portal-${portal.key}`} data-yut-portal className="yut-portal pointer-events-none absolute z-20 grid size-[22%] place-items-center" style={{ left: `${xy(portal.node)[0]}%`, top: `${xy(portal.node)[1]}%` }}>
-          <span className="absolute inset-0 rounded-full border-4 border-dashed border-[#6ad7ff]" />
-          <span className="absolute inset-[18%] rounded-full border-4 border-dotted border-[#b77bff]" />
-        </span>
-      ) : null}
-      {portal ? <PixelBurst key={`portal-bits-${portal.key}`} x={xy(portal.node)[0]} y={xy(portal.node)[1]} seed={portal.key + 5} colors={["#6ad7ff", "#b77bff", "#ffffff"]} count={16} spread={60} size={6} up={0} /> : null}
-
-      {pieces.map((p) => {
-        const [x, y] = xy(p.pos);
-        const can = !walking && p.team === state.turnTeam && movable.some((m) => state.pieces[p.team][m]?.pos === p.pos);
-        const isSel = selected !== null && p.team === state.turnTeam && state.pieces[p.team][selected]?.pos === p.pos;
-        return (
+        {ghosts.map((g) => (
           <button
-            key={`${p.team}${p.i}`}
+            key={`${g.node}-${g.ri}`}
             type="button"
-            data-yut-piece={`${p.team}${p.i}`}
-            disabled={!can}
-            onClick={() => onPiece(p.i)}
-            aria-label={`${TEAM_NAME[p.team]} ${pieceName(names, p.team, p.i)} 말${p.count > 1 ? ` (${p.count}개 업힘)` : ""}`}
-            className={cn("yut-piece absolute grid size-[12%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full", can && "cursor-pointer", isSel || walking ? "z-20" : "z-10")}
-            style={{ left: `${x}%`, top: `${y - p.level * 3.2}%` }}
+            data-yut-ghost={g.node}
+            onClick={() => onGhost(g.ri)}
+            aria-label={g.node === END ? `${g.label}로 골인` : `${g.label}로 여기 옮기기`}
+            className="yut-target absolute z-30 grid size-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/35 text-[11px] leading-tight font-black text-[#2a1400] [image-rendering:pixelated]"
+            style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1] + (g.node === END ? 9 : 0)}%` }}
           >
-            <span
-              key={hopping(p.team, p.i) ? `hop-${anim?.key}-${walkIdx}` : merging(p) ? `merge-${merge?.key}` : "still"}
-              className={cn("grid size-full place-items-center", hopping(p.team, p.i) ? "yut-hop" : merging(p) ? "yut-merge" : "")}
-              style={{ ["--hop" as string]: `${stepMs}ms` }}
-            >
-              <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className={cn("size-full", can && "yut-target", isSel && "scale-110")} />
-            </span>
-            {/* 점프 중 잔상: 달리는 느낌 */}
-            {hopping(p.team, p.i) ? (
-              <span key={`trail-${anim?.key}-${walkIdx}`} className="yut-afterimage pointer-events-none absolute inset-0 -z-10 scale-90 opacity-0 blur-[1px]" style={{ ["--hop" as string]: `${stepMs}ms` }} aria-hidden>
-                <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" />
-              </span>
-            ) : null}
-            {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="absolute -bottom-3.5 left-1/2 -translate-x-1/2" /> : null}
-            {p.top && p.count > 1 ? (
-              <span data-yut-stack className="absolute -right-1.5 -top-2 rounded-full border-2 border-[#0a0614] bg-[#ffcf4a] px-1.5 text-[11px] font-black leading-4 text-[#2a1400]">
-                ×{p.count}
-              </span>
-            ) : null}
+            <span className="text-[#fff6dc] [text-shadow:1px_1px_0_#0a0614]">{g.node === END ? "골인!" : "여기"}</span>
+            <span className="bg-[#0a0614] px-1 text-[10px] text-[#ffcf4a]">{g.label}</span>
           </button>
-        );
-      })}
+        ))}
+        {portal ? (
+          <span key={`portal-${portal.key}`} data-yut-portal className="yut-portal pointer-events-none absolute z-20 grid size-[22%] place-items-center" style={{ left: `${xy(portal.node)[0]}%`, top: `${xy(portal.node)[1]}%` }}>
+            <span className="absolute inset-0 rounded-full border-4 border-dashed border-[#6ad7ff]" />
+            <span className="absolute inset-[18%] rounded-full border-4 border-dotted border-[#b77bff]" />
+          </span>
+        ) : null}
+        {portal ? <PixelBurst key={`portal-bits-${portal.key}`} x={xy(portal.node)[0]} y={xy(portal.node)[1]} seed={portal.key + 5} colors={["#6ad7ff", "#b77bff", "#ffffff"]} count={16} spread={60} size={6} up={0} /> : null}
 
-      {/* 칸마다 착지 먼지 */}
-      {walking ? <PixelBurst key={`dust-${anim?.key}-${walkIdx}`} x={xy(walking)[0]} y={xy(walking)[1] + 4} seed={(anim?.key ?? 0) + walkIdx * 31} colors={["#d9b980", "#a9844f", "#6e5232"]} count={7} spread={22} size={5} up={0.9} /> : null}
-      {burst ? <PixelBurst key={`burst-${burst.key}`} x={xy(burst.node)[0]} y={xy(burst.node)[1]} seed={burst.key} colors={burst.colors} count={burst.count ?? 18} spread={70} size={8} up={0.2} /> : null}
-      {knock
-        ? knock.items.map((k, i) => (
-            <span
-              key={`knock-${knock.key}-${i}`}
-              data-yut-knock
-              className="yut-knock pointer-events-none absolute z-30 grid size-[11.5%] place-items-center"
-              style={{ left: `${xy(k.node)[0]}%`, top: `${xy(k.node)[1]}%`, ["--kx" as string]: `${k.kx}px` }}
+        {/* 말: 발이 발판 위에 오게(아래쪽 기준) · 업히면 목말 탑 */}
+        {pieces.map((p) => {
+          const [x, y] = xy(p.pos);
+          const can = !walking && p.team === state.turnTeam && movable.some((m) => state.pieces[p.team][m]?.pos === p.pos);
+          const isSel = selected !== null && p.team === state.turnTeam && state.pieces[p.team][selected]?.pos === p.pos;
+          const hop = hopping(p.team, p.i);
+          return (
+            <button
+              key={`${p.team}${p.i}`}
+              type="button"
+              data-yut-piece={`${p.team}${p.i}`}
+              data-yut-selected={isSel && p.top ? "" : undefined}
+              disabled={!can}
+              onClick={() => onPiece(p.i)}
+              aria-label={`${TEAM_NAME[p.team]} ${pieceName(names, p.team, p.i)} 말${p.count > 1 ? ` (${p.count}개 업힘)` : ""}`}
+              className={cn("yut-piece absolute grid h-[15%] w-[13%] -translate-x-1/2 place-items-end justify-items-center", can && "cursor-pointer", isSel || hop ? "z-20" : "z-10")}
+              // 발 = 칸 중심 조금 아래 · 위층일수록 앞사람 등에 올라탐(목말)
+              style={{ left: `${x + (p.level % 2 ? 1.2 : 0) * (p.level ? 1 : 0)}%`, top: `${y - 12.4 - p.level * 7.2}%`, zIndex: isSel || hop ? 25 : 10 + p.level }}
             >
-              <YokaiToken face={k.face} team={k.team} className="size-full" />
-            </span>
-          ))
-        : null}
+              {/* 고를 수 있는 말: 발밑이 노랗게 반짝 */}
+              {can ? <span aria-hidden className="yut-can-glow absolute bottom-[-6%] left-1/2 h-[26%] w-[92%] -translate-x-1/2 rounded-[50%]" /> : null}
+              <span
+                key={hop ? `hop-${anim?.key}-${walkIdx}` : merging(p) ? `merge-${merge?.key}` : kicking(p) && p.top ? `kick-${kick?.key}` : isSel ? "sel" : "still"}
+                className={cn("grid size-full place-items-end justify-items-center", hop ? "yut-hop" : merging(p) ? "yut-merge" : kicking(p) && p.top ? "yut-kick" : isSel && p.top ? "yut-select-jump" : "")}
+                style={{ ["--hop" as string]: `${stepMs}ms` }}
+              >
+                <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" idle={!hop} delay={beat(p.pos)} />
+              </span>
+              {/* 점프 중 잔상: 달리는 느낌 */}
+              {hop ? (
+                <span key={`trail-${anim?.key}-${walkIdx}`} className="yut-afterimage pointer-events-none absolute inset-0 -z-10 scale-90 opacity-0 blur-[1px]" style={{ ["--hop" as string]: `${stepMs}ms` }} aria-hidden>
+                  <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" />
+                </span>
+              ) : null}
+              {/* 고른 말: 머리 위 SELECT! 노란 픽셀 손가락 화살표 */}
+              {isSel && p.top ? (
+                <span data-yut-select-arrow aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[46%] left-1/2 grid -translate-x-1/2 justify-items-center">
+                  <b className="border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-[family-name:var(--font-arcade)] text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">SELECT!</b>
+                  <span className="text-[clamp(12px,3cqw,20px)] leading-none text-[#ffcf4a] [text-shadow:2px_2px_0_#0a0614]">▼</span>
+                </span>
+              ) : null}
+              {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="absolute -bottom-[26%] left-1/2 -translate-x-1/2" /> : null}
+              {p.top && p.count > 1 ? (
+                <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-[family-name:var(--font-arcade)] text-[clamp(7px,1.5cqw,11px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
+                  ×{p.count}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+
+        {/* 칸마다 착지 먼지 */}
+        {walking ? <PixelBurst key={`dust-${anim?.key}-${walkIdx}`} x={xy(walking)[0]} y={xy(walking)[1] + 2} seed={(anim?.key ?? 0) + walkIdx * 31} colors={["#d9b980", "#a9844f", "#6e5232"]} count={8} spread={24} size={5} up={0.9} /> : null}
+        {burst ? <PixelBurst key={`burst-${burst.key}`} x={xy(burst.node)[0]} y={xy(burst.node)[1]} seed={burst.key} colors={burst.colors} count={burst.count ?? 18} spread={70} size={8} up={0.2} /> : null}
+        {/* 잡힌 요괴: 드롭킥에 맞고 빙글빙글 화면 밖으로 + K.O.! */}
+        {knock?.items.length ? (
+          <b key={`ko-${knock.key}`} data-yut-ko className="yut-ko pointer-events-none absolute z-40 -translate-x-1/2 -translate-y-1/2 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ff3b4e] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]" style={{ left: `${xy(knock.items[0].node)[0]}%`, top: `${xy(knock.items[0].node)[1] - 12}%` }}>
+            K.O.!
+          </b>
+        ) : null}
+        {knock
+          ? knock.items.map((k, i) => (
+              <span
+                key={`knock-${knock.key}-${i}`}
+                data-yut-knock
+                className="yut-knock pointer-events-none absolute z-30 grid h-[15%] w-[13%] place-items-end justify-items-center"
+                style={{ left: `${xy(k.node)[0]}%`, top: `${xy(k.node)[1] - 6}%`, ["--kx" as string]: `${k.kx}px`, animationDelay: "160ms" }}
+              >
+                <YokaiToken face={k.face} team={k.team} className="size-full" />
+              </span>
+            ))
+          : null}
+      </div>
     </div>
   );
 }
