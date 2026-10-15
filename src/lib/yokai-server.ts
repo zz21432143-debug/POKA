@@ -526,7 +526,7 @@ export async function yokaiHome(userId: string) {
   const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
   if (!pet) return null;
   const owned = (await ownedList(userId)).filter((o) => isSpecies(o.species));
-  const active = owned.find((o) => o.species === pet.activeSpecies) ?? owned[0];
+  const active = owned.find((o) => o.species === mainOf(pet)) ?? owned[0];
   if (!active) return null;
   const species = active.species as YokaiSpecies;
   const sources = await feedSources(userId);
@@ -541,11 +541,14 @@ export async function yokaiHome(userId: string) {
     rarity: YOKAI[species].rarity,
     fullness,
     clean: cleanNow(active.clean, active.cleanAt),
+    affection: active.affection,
+    bond: bondName(active.affection),
     next: nextStageProgress(active.exp),
     feedsLeft: Math.max(0, allowed - fedToday(pet)),
-    feedAt: nextFeedTime(fullness)?.toISOString() ?? null,
+    // 배부름 · 밥 쿨타임(모든 요괴 함께) 중 늦은 쪽
+    feedAt: later(nextFeedTime(fullness), cooldownUntil(pet.fedAt, FEED_COOLDOWN_MIN))?.toISOString() ?? null,
     dex: owned.length,
-    owned: owned.slice(0, 8).map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
+    owned: owned.map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
     newcomers: nudge.newcomers,
     bg: bgState(pet).active,
   };

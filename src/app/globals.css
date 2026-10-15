@@ -2252,3 +2252,32 @@ select {
 .nav-hot-badge {
   background: linear-gradient(90deg, #e8590c, #f59f00);
 }
+
+/* 홈 요괴 칸 「마을 들어가기」: 금빛 알약 버튼 · 빛이 지나감 */
+.yk-enter {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(110deg, #c9a25c, #f5d76e 45%, #c9a25c);
+}
+.yk-enter::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
+  transform: skewX(-20deg);
+  animation: yk-enter-shine 2.8s ease-in-out infinite;
+}
+@keyframes yk-enter-shine {
+  0%, 55% {
+    left: -40%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yk-enter::after {
+    animation: none;
+  }
+}

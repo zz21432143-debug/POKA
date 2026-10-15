@@ -352,11 +352,11 @@ export function EquityCalculator() {
         <div className="grid grid-cols-2 gap-2 sm:max-w-md">
           <label className="grid gap-1 text-xs font-bold text-[#9CA3AF]">
             베팅 전 팟
-            <input aria-label="베팅 전 팟" inputMode="decimal" value={pot} onChange={(e) => setPot(e.target.value)} placeholder="예: 100" className="h-11 rounded-xl border border-white/15 bg-black/40 px-3 text-right text-white" />
+            <input aria-label="베팅 전 팟" inputMode="decimal" value={pot} onChange={(e) => setPot(e.target.value)} placeholder="예: 100" className="h-11 w-full min-w-0 rounded-xl border border-white/15 bg-black/40 px-3 text-right text-white" />
           </label>
           <label className="grid gap-1 text-xs font-bold text-[#9CA3AF]">
             상대 베팅
-            <input aria-label="상대 베팅" inputMode="decimal" value={bet} onChange={(e) => setBet(e.target.value)} placeholder="예: 50" className="h-11 rounded-xl border border-white/15 bg-black/40 px-3 text-right text-white" />
+            <input aria-label="상대 베팅" inputMode="decimal" value={bet} onChange={(e) => setBet(e.target.value)} placeholder="예: 50" className="h-11 w-full min-w-0 rounded-xl border border-white/15 bg-black/40 px-3 text-right text-white" />
           </label>
         </div>
         {need != null ? (

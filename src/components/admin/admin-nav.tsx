@@ -18,6 +18,7 @@ export function AdminNav({
     { href: "/admin/titles", label: "칭호 관리" },
     { href: "/admin/quiz", label: "퀴즈 관리" },
     { href: "/admin/yokai", label: "요괴 마을 통계" },
+    { href: "/admin/errors", label: "오류 · 이상 감시" },
     { href: "/admin/adsense", label: "애드센스 점검" },
     ...(isMaster ? [{ href: "/admin/content", label: "콘텐츠 발행" }] : []),
     ...(isMaster ? [{ href: "/admin/push", label: "알림 관리" }] : []),

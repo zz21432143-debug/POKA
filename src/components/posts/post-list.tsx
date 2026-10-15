@@ -115,9 +115,10 @@ export function PostList({
                     <span className="truncate">{anonymous || !post.author ? "익명" : post.author.nickname}</span>
                     {!anonymous && post.author ? (
                       <>
-                        <PotTitleBadge nickname={post.author.nickname} />
+                        {/* 휴대폰은 칭호 · 등급 이름을 빼고 Lv만(날짜가 잘리지 않게) */}
+                        <PotTitleBadge nickname={post.author.nickname} className="max-sm:hidden" />
                         <span className="shrink-0 rounded bg-[#c59b27]/15 px-1 text-[11px] font-bold text-[#e7c98a]">
-                          {post.author.isMaster ? "운영자 · " : memberRankTitle(post.author) ? `${memberRankTitle(post.author)} · ` : ""}Lv.{post.author.level}
+                          <span className="max-sm:hidden">{post.author.isMaster ? "운영자 · " : memberRankTitle(post.author) ? `${memberRankTitle(post.author)} · ` : ""}</span>Lv.{post.author.level}
                         </span>
                       </>
                     ) : null}

@@ -88,7 +88,7 @@ export default async function HomePage() {
         <HomeSummary />
       </Suspense>
       {/* 매일 할 일 묶음: 휴대폰은 미션 → 요괴 마을 → 퀴즈, PC는 왼쪽 요괴 마을 · 오른쪽 미션 + 퀴즈 */}
-      <div data-home-daily className="grid gap-3.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
         <div className="lg:col-start-2 lg:row-start-1">
           <Suspense fallback={null}>
             <HomeMissions />

@@ -46,9 +46,10 @@ export async function HomeYokai() {
       )}
       <Link
         href="/yokai"
-        className="ml-auto inline-flex min-h-10 items-center text-xs font-bold text-[#e7c98a]"
+        data-home-yokai-enter
+        className="yk-enter ml-auto inline-flex min-h-10 items-center gap-1 rounded-full px-3.5 text-xs font-black text-[#2a1606] shadow-[0_0_14px_rgba(245,215,110,.35)] transition active:scale-95"
       >
-        마을로 가기
+        🏮 마을 들어가기
         <ChevronRightIcon className="size-4" />
       </Link>
     </div>
@@ -155,7 +156,7 @@ export async function HomeYokai() {
       >
         <style>{`@keyframes hy-bob{50%{transform:translateY(-5px)}}`}</style>
         {head}
-        <div className="grid grid-cols-[112px_1fr] gap-3 sm:grid-cols-[170px_1fr]">
+        <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 sm:grid-cols-[170px_minmax(0,1fr)]">
           <Link
             href="/yokai"
             aria-label={`${y.name} 보러 가기`}
@@ -186,6 +187,13 @@ export async function HomeYokai() {
                 청결도 <span className="tabular-nums">{y.clean}/100</span>
               </span>
               {bar(y.clean, 100, "#6cc3f0")}
+              <span className="flex justify-between">
+                친밀도{" "}
+                <span className="tabular-nums">
+                  {y.affection}/100 · {y.bond}
+                </span>
+              </span>
+              {bar(y.affection, 100, "#e86a8a")}
               {y.next ? (
                 <>
                   <span className="flex justify-between">
@@ -213,31 +221,52 @@ export async function HomeYokai() {
             </p>
           </div>
         </div>
-        {y.owned.length > 1 ? (
-          <div
-            className="flex items-center gap-1 overflow-hidden"
-            aria-label="내 요괴들"
-          >
-            {y.owned.map((o) => (
-              // eslint-disable-next-line @next/next/no-img-element -- 가진 요괴
-              <img
-                key={o.species}
-                src={yokaiImage(o.species, o.stage)}
-                alt={YOKAI[o.species].name}
-                title={YOKAI[o.species].name}
-                className={cn(
-                  "size-9 shrink-0 rounded-lg bg-black/30 object-contain",
-                  o.species === y.species && "ring-1 ring-[#e7c98a]",
-                )}
-              />
-            ))}
-            {y.dex > y.owned.length ? (
-              <span className="text-xs text-zinc-400">
-                +{y.dex - y.owned.length}
-              </span>
-            ) : null}
+        {/* 미니 도감: 만난 요괴는 그림, 못 만난 요괴는 실루엣(등급별 테두리) */}
+        <div data-home-yokai-dex className="grid gap-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400">
+            <span>요괴 도감</span>
+            <span className="tabular-nums text-[#e7c98a]">
+              {y.dex} / {total}
+            </span>
           </div>
-        ) : null}
+          <div className="grid grid-cols-9 gap-1 [&>*]:min-w-0">
+            {YOKAI_ORDER.map((s) => {
+              const mine = y.owned.find((o) => o.species === s);
+              const r = YOKAI[s].rarity;
+              return (
+                <Link
+                  key={s}
+                  href="/yokai"
+                  title={mine ? YOKAI[s].name : "???"}
+                  aria-label={mine ? YOKAI[s].name : "아직 못 만난 요괴"}
+                  data-home-dex-cell={mine ? "have" : "none"}
+                  className={cn(
+                    "relative grid aspect-square place-items-center overflow-hidden rounded-md border bg-black/35",
+                    r === "legend"
+                      ? "border-[#f5d76e]/70"
+                      : r === "hero"
+                        ? "border-[#d9dde6]/50"
+                        : r === "rare"
+                          ? "border-sky-300/30"
+                          : "border-white/10",
+                    s === y.species && "ring-1 ring-[#e7c98a]",
+                  )}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 · 못 만난 요괴는 실루엣 */}
+                  <img
+                    src={yokaiImage(s, mine ? mine.stage : 1)}
+                    alt=""
+                    loading="lazy"
+                    className={cn(
+                      "size-full object-contain p-0.5",
+                      !mine && "opacity-25 brightness-0",
+                    )}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
         {/* 요괴 한마디(성격 · 지금 상태에 맞게) */}
         <p
           data-home-yokai-line

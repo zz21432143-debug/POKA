@@ -10,3 +10,10 @@ export async function register() {
     .then(({ prisma }) => prisma.$queryRawUnsafe("SELECT 1"))
     .catch(() => undefined);
 }
+
+/** 서버에서 처리 못 한 오류: 기록하고 관리자에게 알림(/admin/errors) */
+export async function onRequestError(error: unknown, request: { path: string; method: string }) {
+  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { recordServerError } = await import("@/lib/error-watch");
+  await recordServerError(error, request.path, request.method);
+}
