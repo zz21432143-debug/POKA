@@ -119,35 +119,53 @@ export function YutCatchCutIn({
   hero: Face;
   heroName: string;
   team: Team;
-  victims: { face: Face; team: Team }[];
+  victims: { face: Face; team: Team; name?: string }[];
   taunt: string;
 }) {
   const color = TEAM_COLOR[team];
   if (typeof document === "undefined") return null;
+  // 판이 비쳐 보이는 반투명 배경 + 가운데 카드(잡은 요괴 · 대사 · 누운 잡힌 말이 한눈에)
   return createPortal(
-    <div data-yut-cutin className="yut-cutin pointer-events-none fixed inset-0 z-[80] overflow-hidden">
-      <div className="yut-cutin-a absolute inset-0" style={{ background: `linear-gradient(120deg, ${color} 0%, #1a0f2e 75%)` }}>
-        <div className="absolute inset-0 bg-[repeating-linear-gradient(-30deg,transparent_0_18px,rgba(0,0,0,.18)_18px_22px)]" />
-        {hero ? (
-          // eslint-disable-next-line @next/next/no-img-element -- 잡은 요괴(큰 픽셀 그림)
-          <img src={yokaiImage(hero.species, hero.stage)} alt="" className="yut-cutin-hero absolute top-[2%] left-[2%] h-[62%] w-auto max-w-[70%] object-contain drop-shadow-[6px_6px_0_#0a0614]" />
-        ) : null}
-        <b className="absolute top-[8%] right-[5%] max-w-[45%] truncate rounded-sm border-2 border-[#0a0614] bg-[#0a0614]/70 px-2 py-1 text-lg font-black text-white">{heroName}</b>
-      </div>
-      <div className="yut-cutin-b absolute inset-0 bg-[#0a0614]/92">
-        <div className="absolute right-[6%] bottom-[30%] flex gap-2">
-          {victims.slice(0, 3).map((v, i) => (
-            <span key={i} className="grid rotate-12 grayscale">
-              <YokaiToken face={v.face} team={v.team} className="size-16 opacity-80" />
-            </span>
-          ))}
-          <b className="self-center text-2xl font-black text-[#ff5d6c] [text-shadow:2px_2px_0_#0a0614]">K.O.</b>
+    <div data-yut-cutin className="yut-cutin pointer-events-none fixed inset-0 z-[80] grid place-items-center overflow-hidden bg-[#0a0614]/40 px-3">
+      {/* 칼선 번쩍 */}
+      <span aria-hidden className="yut-slash absolute top-1/2 left-[-10%] h-[6px] w-[120%] -rotate-12" style={{ background: `linear-gradient(90deg, transparent, #fff 40%, ${color} 60%, transparent)` }} />
+      <div
+        className="yut-cutin-card relative grid w-full max-w-md gap-3 rounded-2xl border-4 border-[#0a0614] p-4 shadow-[6px_6px_0_#0a0614]"
+        style={{ background: `linear-gradient(140deg, ${color}e6 0%, #1a0f2eee 70%)` }}
+      >
+        <div className="flex items-end justify-between gap-3">
+          {/* 잡은 요괴: 적당한 크기 + 이름 */}
+          <div className="grid min-w-0 justify-items-center gap-1">
+            {hero ? (
+              // eslint-disable-next-line @next/next/no-img-element -- 잡은 요괴(픽셀)
+              <img src={yokaiImage(hero.species, hero.stage)} alt="" className="yut-cutin-hero size-24 shrink-0 object-contain drop-shadow-[3px_3px_0_#0a0614] sm:size-28" />
+            ) : null}
+            <b className="max-w-36 truncate rounded-sm border-2 border-[#0a0614] bg-[#0a0614]/80 px-2 text-sm font-black text-white">{heroName}</b>
+          </div>
+          <b className="yut-cutin-ko self-center font-[family-name:var(--font-arcade)] text-2xl text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614] sm:text-3xl">CATCH!</b>
+          {/* 잡힌 말: 누운 모습 크게 + 닉네임 */}
+          <div className={`grid gap-x-2 gap-y-2.5 ${victims.length > 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+            {victims.slice(0, 4).map((v, i) => (
+              <div key={i} className="grid justify-items-center">
+                <span className="yut-cutin-down grid" style={{ animationDelay: `${180 + i * 90}ms` }}>
+                  <YokaiToken face={v.face} team={v.team} className={victims.length > 2 ? "size-11 sm:size-12" : "size-14 sm:size-16"} />
+                </span>
+                <b className="-mt-1 max-w-20 truncate rounded-sm border-2 border-[#0a0614] px-1 text-[10px] font-black text-white" style={{ background: TEAM_COLOR[v.team] }}>
+                  {v.name || "말"}
+                </b>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-      <div className="absolute inset-x-3 bottom-[9%] grid justify-items-center">
-        <p className="yut-cutin-text max-w-xl rounded-md border-4 border-[#0a0614] bg-[#fff6dc] px-4 py-3 text-center text-2xl font-black text-[#2a1400] shadow-[6px_6px_0_#0a0614] sm:text-3xl">
+        <p className="yut-cutin-text rounded-md border-[3px] border-[#0a0614] bg-[#fff6dc] px-3 py-2 text-center text-lg font-black text-[#2a1400] shadow-[3px_3px_0_#0a0614] sm:text-xl">
           “{taunt}”
         </p>
+        {/* 별 파편 */}
+        {[0, 1, 2, 3, 4, 5].map((k) => (
+          <span key={k} aria-hidden className="yut-cutin-star absolute text-xl" style={{ left: `${10 + k * 15}%`, top: k % 2 ? "-6%" : "96%", animationDelay: `${120 + k * 70}ms` }}>
+            ✦
+          </span>
+        ))}
       </div>
     </div>,
     document.body,

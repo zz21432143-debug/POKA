@@ -1,5 +1,8 @@
 "use client";
 
+import { nowMs } from "@/lib/dates";
+/** 게이지 없이 던질 때 세기(60~89) — 렌더 밖에서만 부름 */
+const randomPower = () => 60 + Math.floor(Math.random() * 30);
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -43,6 +46,7 @@ import {
 import {
   END,
   START,
+  applyMove,
   dest,
   movablePieces,
   other,
@@ -61,7 +65,7 @@ type CutIn = {
   hero: Face;
   heroName: string;
   team: Team;
-  victims: { face: Face; team: Team }[];
+  victims: { face: Face; team: Team; name?: string }[];
   taunt: string;
 };
 
@@ -146,7 +150,16 @@ export function YutRoom({
     timers.current.push(window.setTimeout(fn, ms));
   };
 
-  function receive(next: YutView) {
+  // 말 이동을 화면에서 먼저 보여 준 경우: 서버 결과가 같은 이동이면 연출이 두 번 돌지 않게 시각(at)을 맞춤
+  const optimisticRef = useRef<{ at: number; team: Team; from: string; to: string } | null>(null);
+  function receive(incoming: YutView) {
+    let next = incoming;
+    const o = optimisticRef.current;
+    const e = next.state?.event;
+    if (o && next.state && e && e.team === o.team && e.from === o.from && e.to === o.to) {
+      next = { ...next, state: { ...next.state, event: { ...e, at: o.at } } };
+      optimisticRef.current = null;
+    }
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.mySeat);
     if (next.watchers !== undefined)
@@ -258,6 +271,7 @@ export function YutRoom({
               .map((x, k) => ({
                 node: e.to,
                 face: pieceFace(faces, opp, x.i),
+                i: x.i,
                 team: opp,
                 kx: (k % 2 ? -1 : 1) * (140 + ((e.at >> 3) % 80)),
               }));
@@ -284,7 +298,7 @@ export function YutRoom({
               hero,
               heroName: seat?.player?.nickname ?? TEAM_NAME[e.team],
               team: e.team,
-              victims: victims.map((v) => ({ face: v.face, team: v.team })),
+              victims: victims.map((v) => ({ face: v.face, team: v.team, name: pieceName(names, v.team, v.i) })),
               taunt: yutTaunt(hero?.species, e.at),
             });
           } else if (e.type === "stack") {
@@ -296,8 +310,9 @@ export function YutRoom({
               colors: ["#ffcf4a", "#ffe08a", color],
               count: 12,
             });
+            const upN = s.pieces[e.team].filter((p) => p.pos === e.to).length;
             setCallout({
-              text: `업었다! ×${s.pieces[e.team].filter((p) => p.pos === e.to).length}`,
+              text: upN >= 4 ? `🔥🔥 대화재! ×${upN}` : upN === 3 ? `🔥 불길이 붙었다! ×3` : `업었다! ×${upN}`,
               color,
               key: e.at,
             });
@@ -442,7 +457,8 @@ export function YutRoom({
       if (res.ok && action === "exit") router.push("/games/yut");
       if (!res.ok) {
         setNote(json.error ?? "처리하지 못했어요.");
-        if (res.status === 409) {
+        if (action === "move" || res.status === 409) {
+          optimisticRef.current = null;
           const fresh = (await fetch(`/api/games/yut/${view.id}`, {
             cache: "no-store",
           }).then((r) => r.json())) as Json;
@@ -451,10 +467,32 @@ export function YutRoom({
       }
     } catch {
       setNote("연결이 끊겼어요. 잠시 뒤 다시 해 주세요.");
+      if (action === "move") {
+        optimisticRef.current = null;
+        const fresh = (await fetch(`/api/games/yut/${view.id}`, { cache: "no-store" })
+          .then((res) => res.json())
+          .catch(() => ({}))) as Json;
+        if (fresh.view) receive(fresh.view);
+      }
     } finally {
       setBusy(false);
       setWinding(false);
     }
+  }
+
+  /** 말 이동: 누르는 즉시 화면에서 먼저 움직임(같은 규칙 엔진) → 서버 결과로 맞춤 · 거절되면 서버 판으로 되돌림 */
+  function moveNow(ri: number, pi: number) {
+    const st = view.state;
+    if (st) {
+      const res = applyMove(st, ri, pi, nowMs() + offset);
+      if (res.ok && res.state.event) {
+        const e = res.state.event;
+        optimisticRef.current = { at: e.at, team: e.team, from: e.from, to: e.to };
+        setSelected(null);
+        setView((v) => ({ ...v, state: res.state }));
+      }
+    }
+    void act("move", { ri, pi });
   }
 
   async function copy(text: string, label: string) {
@@ -533,16 +571,16 @@ export function YutRoom({
         .map((v, ri) => ({ ri, to: dest(s.pieces[s.turnTeam][rep].pos, v) }))
         .filter((x) => x.to);
       const uniq = [...new Set(only.map((x) => x.to))];
-      if (uniq.length === 1) void act("move", { ri: only[0].ri, pi: rep });
+      if (uniq.length === 1) moveNow(only[0].ri, rep);
     } else setSelected(rep);
   }
   /** 판 빈 곳 터치: 던지기 차례면 바로 던지기(0.5초 연타 막기) · 아니면 고른 것 취소 */
   function tapEmpty() {
     const k = keyRef.current;
     if (canThrow && !busy) {
-      if (Date.now() - k.last < 500) return;
-      k.last = Date.now();
-      throwNow(gauge ? gauge.power : 60 + Math.floor(Math.random() * 30));
+      if (nowMs() - k.last < 500) return;
+      k.last = nowMs();
+      throwNow(gauge ? gauge.power : randomPower());
       return;
     }
     cancel();
@@ -1266,9 +1304,9 @@ export function YutRoom({
                   onCancel={cancel}
                   onTapEmpty={tapEmpty}
                   onPiece={pickPiece}
-                  onGhost={(ri) =>
-                    selected !== null && act("move", { ri, pi: selected })
-                  }
+                  onGhost={(ri) => {
+                    if (selected !== null) moveNow(ri, selected);
+                  }}
                   burst={burst}
                   impact={impact}
                   knock={knock}
@@ -1465,9 +1503,7 @@ export function YutRoom({
                           type="button"
                           data-yut-move
                           disabled={busy}
-                          onClick={() =>
-                            act("move", { ri: ghosts[0].ri, pi: selected })
-                          }
+                          onClick={() => moveNow(ghosts[0].ri, selected)}
                           className="arcade-btn btn-green min-h-12 text-xl"
                         >
                           ✅{" "}

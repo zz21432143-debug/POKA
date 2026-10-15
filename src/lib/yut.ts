@@ -1,12 +1,14 @@
 /**
  * 요괴 윷놀이 규칙(화면 · 서버 · AI 공통). 베팅 없는 순수 민속 놀이.
  *
- * 판(29칸): 바깥 20칸 + 대각선 8칸 + 가운데(방).
- *  - 바깥: o0(참먹이 · 출발/도착 모서리) → o1…o4 → o5(오른쪽 위 모서리) → o6…o9 → o10(왼쪽 위) → o11…o14 → o15(왼쪽 아래) → o16…o19 → 도착
- *  - 지름길: o5에 멈추면 a1 · a2 · c(방) · a3 · a4 → o15 / o10에 멈추면 b1 · b2 · c · b3 · b4 → 도착 / c에 멈추면 b3 · b4 → 도착
+ * 판(29칸 + 골인 칸): 바깥 20칸 + 대각선 8칸 + 가운데(방) + 출발 모서리 아래 골인 칸.
+ *  - 바깥: (출발) → o1…o4 → o5(오른쪽 위 모서리) → o6…o9 → o10(왼쪽 위) → o11…o14 → o15(왼쪽 아래) → o16…o19 → o0(출발 모서리) → 골인
+ *  - 출발 모서리(o0)는 한 바퀴 돈 말이 멈출 수 있는 칸: 딱 닿으면 멈추고, 다음에 무엇이 나오든 아래 골인 칸으로 들어감
+ *  - o1에서 빽도 → o0(출발 모서리)로 와서 다음 차례에 바로 골인할 수 있음
+ *  - 지름길: o5에 멈추면 a1 · a2 · c(방) · a3 · a4 → o15 / o10에 멈추면 b1 · b2 · c · b3 · b4 → o0 → 골인 / c에 멈추면 b3 · b4 → o0 → 골인
  * 윷: 도1 · 개2 · 걸3 · 윷4 · 모5 · 빽도(-1, 한 칸 뒤로). 윷 · 모 · 잡기는 한 번 더 던짐.
  * 내 팀 말이 같은 칸이면 업기(같이 움직임), 상대 말이 있는 칸에 서면 잡기(상대 말은 출발로).
- * 도착 모서리에 닿거나 지나가면 그 말은 완주. 팀 말이 모두 완주하면 승리.
+ * 출발 모서리를 지나 골인 칸에 들어가면 그 말은 완주. 팀 말이 모두 완주하면 승리.
  */
 export type Team = "A" | "B";
 export type Piece = { pos: string };
@@ -17,10 +19,10 @@ export const other = (t: Team): Team => (t === "A" ? "B" : "A");
 
 export const YUT_NAMES: Record<number, string> = { [-1]: "빽도", 0: "낙", 1: "도", 2: "개", 3: "걸", 4: "윷", 5: "모" };
 
-const OUTER = [START, ...Array.from({ length: 19 }, (_, i) => `o${i + 1}`), END];
-const ROUTE_A = ["o5", "a1", "a2", "c", "a3", "a4", "o15", "o16", "o17", "o18", "o19", END];
-const ROUTE_B = ["o10", "b1", "b2", "c", "b3", "b4", END];
-const ROUTE_C = ["c", "b3", "b4", END];
+const OUTER = [START, ...Array.from({ length: 19 }, (_, i) => `o${i + 1}`), "o0", END];
+const ROUTE_A = ["o5", "a1", "a2", "c", "a3", "a4", "o15", "o16", "o17", "o18", "o19", "o0", END];
+const ROUTE_B = ["o10", "b1", "b2", "c", "b3", "b4", "o0", END];
+const ROUTE_C = ["c", "b3", "b4", "o0", END];
 
 /** 이 칸에서 출발할 때 따라갈 길 */
 function routeFrom(pos: string): string[] {
@@ -34,7 +36,9 @@ function routeFrom(pos: string): string[] {
 
 /** 한 칸 뒤(빽도) */
 const BACK: Record<string, string> = {
-  o1: START,
+  // o1에서 빽도 → 출발 모서리(다음 차례에 바로 골인 가능)
+  o1: "o0",
+  o0: "o19",
   a1: "o5",
   a2: "a1",
   c: "a2",
@@ -218,11 +222,15 @@ function danger(s: YutState, team: Team, pos: string) {
 }
 
 const PROGRESS: Record<string, number> = (() => {
-  // 도착까지 남은 칸 수가 적을수록 큼
+  // 골인까지 남은 칸 수가 적을수록 큼(지름길 포함 · 실제 길로 셈)
   const out: Record<string, number> = { [START]: 0, [END]: 30 };
-  OUTER.slice(1, -1).forEach((p, i) => (out[p] = i + 1));
-  ["a1", "a2", "c", "a3", "a4"].forEach((p, i) => (out[p] = 6 + i + 4));
-  ["b1", "b2", "b3", "b4"].forEach((p, i) => (out[p] = 11 + i + 5 + (i >= 2 ? 1 : 0)));
+  const all = new Set([...OUTER, ...ROUTE_A, ...ROUTE_B, ...ROUTE_C]);
+  for (const p of all) {
+    if (p === START || p === END) continue;
+    let k = 1;
+    while (k < 30 && dest(p, k) !== END) k += 1;
+    out[p] = 30 - k;
+  }
   return out;
 })();
 
@@ -262,20 +270,22 @@ export function autoStep(s: YutState, rand: () => number = Math.random, now = Da
   return r.ok ? r.state : endTurn(s);
 }
 
-/** 판 그림 좌표(0~100) */
+/** 판 그림 좌표(0~100) — 출발 모서리 아래 골인 칸 자리를 남기려고 판을 위로 조금 올림 */
+const BX_L = 12;
+const BX_R = 88;
+const BY_T = 5;
+const BY_B = 81;
 export const NODE_XY: Record<string, [number, number]> = (() => {
   const xy: Record<string, [number, number]> = {};
-  const L = 8;
-  const R = 92;
-  const step = (R - L) / 5;
-  xy.o0 = [R, R];
-  for (let k = 1; k <= 4; k += 1) xy[`o${k}`] = [R, R - step * k];
-  xy.o5 = [R, L];
-  for (let k = 1; k <= 4; k += 1) xy[`o${5 + k}`] = [R - step * k, L];
-  xy.o10 = [L, L];
-  for (let k = 1; k <= 4; k += 1) xy[`o${10 + k}`] = [L, L + step * k];
-  xy.o15 = [L, R];
-  for (let k = 1; k <= 4; k += 1) xy[`o${15 + k}`] = [L + step * k, R];
+  const step = (BX_R - BX_L) / 5;
+  xy.o0 = [BX_R, BY_B];
+  for (let k = 1; k <= 4; k += 1) xy[`o${k}`] = [BX_R, BY_B - step * k];
+  xy.o5 = [BX_R, BY_T];
+  for (let k = 1; k <= 4; k += 1) xy[`o${5 + k}`] = [BX_R - step * k, BY_T];
+  xy.o10 = [BX_L, BY_T];
+  for (let k = 1; k <= 4; k += 1) xy[`o${10 + k}`] = [BX_L, BY_T + step * k];
+  xy.o15 = [BX_L, BY_B];
+  for (let k = 1; k <= 4; k += 1) xy[`o${15 + k}`] = [BX_L + step * k, BY_B];
   const mid = 50;
   const lerp = (a: [number, number], b: [number, number], t: number): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
   xy.c = [mid, mid];
@@ -290,3 +300,5 @@ export const NODE_XY: Record<string, [number, number]> = (() => {
   return xy;
 })();
 export const BIG_NODES = ["o0", "o5", "o10", "o15", "c"];
+/** 골인 칸(출발 모서리 바로 아래) */
+export const GOAL_XY: [number, number] = [BX_R, 95];

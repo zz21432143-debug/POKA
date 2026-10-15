@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "cn";
-import { BIG_NODES, END, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
+import { BIG_NODES, END, GOAL_XY, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { PixelBurst } from "@/components/games/pixel-burst";
 import { EmoteArt } from "@/components/games/omok-hud";
@@ -157,7 +157,7 @@ export function YutBoard({
   const merging = (p: { pos: string; top: boolean }) => Boolean(!walking && merge && merge.node === p.pos && p.top);
   const kicking = (p: { pos: string; team: Team }) => Boolean(!walking && kick && kick.node === p.pos && p.team === state.event?.team);
 
-  const xy = (n: string) => NODE_XY[n === START || n === END ? "o0" : n] ?? [50, 50];
+  const xy = (n: string): [number, number] => (n === END ? GOAL_XY : (NODE_XY[n === START ? "o0" : n] ?? [50, 50]));
   const shown = (team: Team, i: number, pos: string) => (walking && anim && anim.team === team && anim.moved.includes(i) ? walking : pos);
   // 같은 칸 말끼리 묶어서 목말 탑으로
   const stacks = new Map<string, { team: Team; i: number }[]>();
@@ -173,6 +173,21 @@ export function YutBoard({
   const pieces: { team: Team; i: number; pos: string; level: number; top: boolean; count: number }[] = [];
   stacks.forEach((list, pos) => list.forEach((p, level) => pieces.push({ ...p, pos, level, top: level === list.length - 1, count: list.length })));
   const nodes = Object.keys(NODE_XY);
+  const fires: { pos: string; team: Team; size: number }[] = [];
+  stacks.forEach((list, pos) => {
+    if (list.length >= 3) fires.push({ pos, team: list[0].team, size: list.length });
+  });
+  const blaze = fires.some((f) => f.size >= 4);
+  // 3개 이상 업힌 말이 잡힘 → 불길 진압(연기 1.6초)
+  const douseKey = ev?.type === "capture" && (ev.captured ?? 0) >= 3 ? ev.at : 0;
+  const [douse, setDouse] = useState<{ key: number; node: string } | null>(null);
+  useEffect(() => {
+    if (!douseKey || !ev) return;
+    setDouse({ key: douseKey, node: ev.to });
+    const t = window.setTimeout(() => setDouse(null), 1600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 잡기에만
+  }, [douseKey]);
   // 길: 굵은 나무 홈 + 새끼줄 무늬
   const line = (a: string, b: string) => (
     <g key={`${a}-${b}`}>
@@ -189,6 +204,7 @@ export function YutBoard({
       className={cn(
         "yut-wood @container relative mx-auto aspect-square w-full max-w-[min(100%,980px,calc(100dvh-140px))] select-none rounded-[18px] p-[3.2%]",
         impact && "yut-impact",
+        blaze && "yut-blaze",
       )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
       onClick={(e) => {
@@ -209,7 +225,18 @@ export function YutBoard({
           {line("o15", "o0")}
           {line("o5", "o15")}
           {line("o10", "o0")}
+          {/* 출발 모서리 → 골인 칸 */}
+          <line x1={NODE_XY.o0[0]} y1={NODE_XY.o0[1]} x2={GOAL_XY[0]} y2={GOAL_XY[1]} stroke="#4a2c14" strokeWidth={2.6} strokeLinecap="round" />
+          <line x1={NODE_XY.o0[0]} y1={NODE_XY.o0[1]} x2={GOAL_XY[0]} y2={GOAL_XY[1]} stroke="#ffcf4a" strokeWidth={1.1} strokeDasharray="1.2 0.8" strokeLinecap="round" />
         </svg>
+        {/* 큰 불: 판 전체에 불티가 올라감 */}
+        {blaze ? (
+          <div data-yut-embers aria-hidden className="pointer-events-none absolute inset-0 z-[4] overflow-hidden rounded-[10px]">
+            {Array.from({ length: 14 }, (_, k) => (
+              <span key={k} className="yut-ember absolute bottom-0 block size-[1.2%] rounded-full" style={{ left: `${(k * 37) % 100}%`, animationDelay: `${(k * 230) % 1800}ms`, animationDuration: `${1600 + ((k * 170) % 900)}ms` }} />
+            ))}
+          </div>
+        ) : null}
 
         {/* 발판: 보통 = 나무 발판 · 출발 · 꼭짓점 · 방 = 황금 발판 */}
         {nodes.map((n) => {
@@ -223,11 +250,56 @@ export function YutBoard({
               className={cn("absolute -translate-x-1/2 -translate-y-1/2", gold ? "yut-tile-gold size-[10.5%]" : "yut-tile size-[6.6%]", lit && "yut-tile-lit")}
               style={{ left: `${NODE_XY[n][0]}%`, top: `${NODE_XY[n][1]}%` }}
             >
-              {n === "o0" ? <b className="absolute inset-x-0 -bottom-[46%] text-center text-[clamp(8px,2.2cqw,13px)] font-black whitespace-nowrap text-[#ffe08a] [text-shadow:1px_1px_0_#0a0614]">출발 · 골</b> : null}
+              {n === "o0" ? <b className="absolute inset-x-0 -top-[46%] text-center text-[clamp(8px,2.2cqw,13px)] font-black whitespace-nowrap text-[#ffe08a] [text-shadow:1px_1px_0_#0a0614]">출발</b> : null}
               {n === "c" ? <b className="absolute inset-0 grid place-items-center text-[clamp(8px,2.2cqw,13px)] font-black text-[#5a3a00]">방</b> : null}
             </span>
           );
         })}
+        {/* 골인 칸: 출발 모서리 바로 아래 */}
+        <span
+          data-yut-goal
+          aria-hidden
+          className="yut-goal absolute grid h-[7%] w-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md border-[3px] border-[#0a0614] text-[clamp(8px,2.2cqw,13px)] font-black text-[#2a1400]"
+          style={{ left: `${GOAL_XY[0]}%`, top: `${GOAL_XY[1]}%` }}
+        >
+          GOAL · 골인
+        </span>
+        {/* 불길: 3개 업힌 칸 = 작은 불 · 4개 이상 = 큰 불 */}
+        {fires.map((f) => {
+          const [fx, fy] = xy(f.pos);
+          const big = f.size >= 4;
+          return (
+            <span
+              key={`fire-${f.team}-${f.pos}`}
+              data-yut-fire={big ? "big" : "small"}
+              aria-hidden
+              className={cn("pointer-events-none absolute z-[9] -translate-x-1/2 -translate-y-[78%]", big ? "h-[26%] w-[26%]" : "h-[17%] w-[17%]")}
+              style={{ left: `${fx}%`, top: `${fy}%` }}
+            >
+              <span className={cn("yut-fire-glow absolute inset-x-0 bottom-0 h-[40%] rounded-[50%]", big && "yut-fire-glow-big")} />
+              {(big ? [0, 1, 2, 3, 4, 5] : [0, 1, 2]).map((k) => (
+                <span
+                  key={k}
+                  className="yut-flame absolute bottom-[8%] leading-none"
+                  style={{
+                    left: `${big ? 4 + k * 16 : 12 + k * 26}%`,
+                    fontSize: big ? "clamp(16px, 5.4cqw, 40px)" : "clamp(12px, 3.6cqw, 26px)",
+                    animationDelay: `${k * 130}ms`,
+                  }}
+                >
+                  🔥
+                </span>
+              ))}
+            </span>
+          );
+        })}
+        {/* 불길 진압: 연기 + 「진압!」 */}
+        {douse ? (
+          <span key={`douse-${douse.key}`} data-yut-douse aria-hidden className="yut-douse pointer-events-none absolute z-[45] grid -translate-x-1/2 -translate-y-full justify-items-center" style={{ left: `${xy(douse.node)[0]}%`, top: `${xy(douse.node)[1]}%` }}>
+            <span className="text-[clamp(20px,7cqw,52px)] leading-none">💨</span>
+            <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1.5 text-[clamp(9px,2.4cqw,15px)] font-black text-[#04263a] shadow-[2px_2px_0_#0a0614]">불길 진압!</b>
+          </span>
+        ) : null}
         {SHORTCUT_NODES.map((n) => (
           <span key={`portal-${n}`} aria-hidden className="yut-portal-ring-html pointer-events-none absolute size-[14%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-[#6ad7ff]/70" style={{ left: `${NODE_XY[n][0]}%`, top: `${NODE_XY[n][1]}%` }} />
         ))}
@@ -240,7 +312,7 @@ export function YutBoard({
             onClick={() => onGhost(g.ri)}
             aria-label={g.node === END ? `${g.label}로 골인` : `${g.label}로 여기 옮기기`}
             className="yut-target absolute z-30 grid size-[16%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/35 text-[11px] leading-tight font-black text-[#2a1400] [image-rendering:pixelated]"
-            style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1] + (g.node === END ? 9 : 0)}%` }}
+            style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1]}%` }}
           >
             <span className="text-[#fff6dc] [text-shadow:1px_1px_0_#0a0614]">{g.node === END ? "골인!" : "여기"}</span>
             <span className="bg-[#0a0614] px-1 text-[10px] text-[#ffcf4a]">{g.label}</span>

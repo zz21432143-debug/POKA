@@ -15,16 +15,22 @@ describe("윷놀이 판", () => {
     assert.equal(dest("o5", 3), "c");
     assert.equal(dest("o10", 3), "c");
     assert.equal(dest("c", 2), "b4");
-    assert.equal(dest("c", 3), END);
+    assert.equal(dest("c", 3), "o0", "방에서 걸이면 출발 모서리에 멈춤");
+    assert.equal(dest("c", 4), END);
     assert.equal(dest("a2", 2), "a3", "a2에서 방을 지나면 a3");
     assert.equal(dest("a4", 1), "o15");
-    assert.equal(dest("o19", 1), END);
+    assert.equal(dest("o19", 1), "o0", "출발 모서리에 딱 닿으면 멈춤");
+    assert.equal(dest("o19", 2), END);
+    assert.equal(dest("o0", 1), END, "출발 모서리에서는 무엇이 나와도 골인");
+    assert.equal(dest("o0", 5), END);
     assert.equal(dest("o18", 5), END);
+    assert.equal(dest("b4", 1), "o0");
     assert.equal(dest("o3", 2), "o5");
   });
   it("빽도: 한 칸 뒤 · 출발 전 말은 못 움직임", () => {
     assert.equal(dest("o3", -1), "o2");
-    assert.equal(dest("o1", -1), START);
+    assert.equal(dest("o1", -1), "o0", "o1에서 빽도 → 출발 모서리(다음에 바로 골인)");
+    assert.equal(dest("o0", -1), "o19");
     assert.equal(dest(START, -1), null);
     assert.equal(dest("a1", -1), "o5");
     assert.equal(dest("b3", -1), "c");
@@ -83,6 +89,16 @@ describe("윷놀이 진행", () => {
     assert.equal(s.lastThrow?.value, 0);
     assert.equal(s.lastThrow?.power, 80);
     assert.ok(s.event?.nak);
+  });
+  it("출발 모서리 말도 잡힘 · 빽도로 모서리 → 다음 차례 골인", () => {
+    const base = newState(2);
+    const st: YutState = { ...base, turnTeam: "B", pieces: { A: [{ pos: "o0" }, { pos: START }], B: [{ pos: "o19" }, { pos: START }] }, phase: "move", results: [1], throws: 0 };
+    const r = applyMove(st, 0, 0);
+    assert.ok(r.ok && r.state.event?.type === "capture" && r.state.pieces.A[0].pos === START);
+    const back: YutState = { ...base, pieces: { A: [{ pos: "o1" }, { pos: START }], B: [{ pos: START }, { pos: START }] }, phase: "move", results: [-1], throws: 0 };
+    const b = applyMove(back, 0, 0);
+    assert.ok(b.ok && b.state.pieces.A[0].pos === "o0");
+    assert.equal(dest(b.ok ? b.state.pieces.A[0].pos : "", 1), END);
   });
   it("한 칸씩: 밟고 간 칸 · 움직인 말", () => {
     let s = applyThrow(newState(2), seq([0.1, 0.1, 0.9, 0.9, 0.9])); // 개
