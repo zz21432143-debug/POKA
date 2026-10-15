@@ -14,6 +14,8 @@ export type ReportAdminRow = {
   title: string;
   commentPreview: string | null;
   authorId: string | null;
+  /** 작성자 지금 닉네임(부적절한 닉네임 신고 처리용) */
+  authorNickname?: string | null;
   authorIp: string | null;
   hidden: boolean;
 };
@@ -21,12 +23,15 @@ export type ReportAdminRow = {
 export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
   const router = useRouter();
 
-  async function act(reportId: string, action: "resolve" | "dismiss" | "delete" | "suspend-author") {
-    await fetch("/api/admin/reports", {
+  async function act(reportId: string, action: "resolve" | "dismiss" | "delete" | "suspend-author" | "rename-author") {
+    const res = await fetch("/api/admin/reports", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reportId, action }),
-    });
+    }).catch(() => null);
+    const data = (await res?.json().catch(() => ({}))) as { error?: string; from?: string; to?: string };
+    if (action === "rename-author")
+      window.alert(res?.ok ? `닉네임을 바꿨어요: ${data.from} → ${data.to}` : (data.error ?? "바꾸지 못했어요."));
     router.refresh();
   }
 
@@ -46,7 +51,7 @@ export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
           ) : null}
           <p className="mt-1 text-muted-foreground">{row.reason}</p>
           <p className="mt-2 font-mono text-xs">
-            작성자 {row.authorId ?? "—"} / IP {row.authorIp ?? "—"}
+            작성자 {row.authorNickname ? <b className="font-sans text-sm">{row.authorNickname}</b> : null} {row.authorId ?? "—"} / IP {row.authorIp ?? "—"}
           </p>
           <p className="font-mono text-xs">
             신고자 {row.reporter} / IP {row.reporterIp ?? "—"} · {row.status}
@@ -75,6 +80,19 @@ export function ReportAdmin({ reports }: { reports: ReportAdminRow[] }) {
                 onClick={() => void act(row.id, "suspend-author")}
               >
                 작성자 정지
+              </Button>
+            ) : null}
+            {row.authorId ? (
+              <Button
+                type="button"
+                size="touch"
+                variant={row.reason.includes("닉네임") ? "default" : "outline"}
+                data-report-rename
+                onClick={() => {
+                  if (window.confirm(`「${row.authorNickname ?? "작성자"}」 닉네임을 바른닉네임○○○○로 바꿀까요?`)) void act(row.id, "rename-author");
+                }}
+              >
+                닉네임 강제 변경
               </Button>
             ) : null}
           </div>

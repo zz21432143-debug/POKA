@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   if (!gamesOpen(user))
     return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
   const body = (await request.json().catch(() => ({}))) as { private?: unknown; title?: unknown };
-  const t = cleanRoomTitle(body.title);
+  const t = await cleanRoomTitle(body.title);
   if ("error" in t) return NextResponse.json({ error: t.error }, { status: 400 });
   const made = await createOmok(user.id, { isPrivate: body.private === true, title: t.title });
   if ("error" in made)

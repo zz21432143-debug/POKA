@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
   const body = (await request.json()) as {
     reportId?: string;
     postId?: string;
-    action?: "resolve" | "dismiss" | "delete" | "hide" | "restore" | "suspend-author";
+    action?: "resolve" | "dismiss" | "delete" | "hide" | "restore" | "suspend-author" | "rename-author";
   };
 
   if (body.reportId) {
@@ -53,6 +53,22 @@ export async function PATCH(request: Request) {
         detail: report.id,
       });
       return NextResponse.json({ ok: true, status: "resolved" });
+    }
+    // 부적절한 닉네임 신고: 작성자 닉네임을 바른닉네임○○○○로(변경권 1장 · 안내 · 기록)
+    if (body.action === "rename-author") {
+      const authorId =
+        report.targetType === "comment" && report.commentId
+          ? (await prisma.comment.findUnique({ where: { id: report.commentId }, select: { authorId: true } }))?.authorId
+          : report.postId
+            ? (await prisma.post.findUnique({ where: { id: report.postId }, select: { authorId: true } }))?.authorId
+            : null;
+      const author = authorId ? await prisma.user.findUnique({ where: { id: authorId }, select: { nickname: true } }) : null;
+      if (!author) return NextResponse.json({ error: "작성자를 찾을 수 없습니다." }, { status: 404 });
+      const { forceNicknameChange } = await import("@/lib/nickname-force");
+      const done = await forceNicknameChange(author.nickname, "profanity", user.id, "admin");
+      if (!done.ok) return NextResponse.json({ error: done.error }, { status: 400 });
+      await prisma.report.update({ where: { id: report.id }, data: { status: "resolved" } });
+      return NextResponse.json({ ok: true, status: "resolved", from: done.from, to: done.to });
     }
     if (body.action === "suspend-author") {
       const authorId =

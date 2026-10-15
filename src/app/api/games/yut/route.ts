@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "로그인해 주세요." }, { status: 401 });
   if (!gamesOpenYut(user)) return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
   const body = (await request.json().catch(() => ({}))) as { mode?: unknown; private?: unknown; title?: unknown };
-  const t = cleanRoomTitle(body.title);
+  const t = await cleanRoomTitle(body.title);
   if ("error" in t) return NextResponse.json({ error: t.error }, { status: 400 });
   const mode = Number(body.mode ?? 1);
   if (!isYutMode(mode)) return NextResponse.json({ error: "1:1 ~ 4:4 중에서 골라 주세요." }, { status: 400 });

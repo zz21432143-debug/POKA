@@ -84,6 +84,12 @@ export default async function AdminPage({
     },
   });
 
+  // 신고 대상 작성자 닉네임(부적절한 닉네임 신고 처리용)
+  const reportAuthorIds = [...new Set(reports.map((r) => r.post?.authorId ?? r.comment?.authorId).filter((v): v is string => Boolean(v)))];
+  const reportAuthors = new Map(
+    (reportAuthorIds.length ? await prisma.user.findMany({ where: { id: { in: reportAuthorIds } }, select: { id: true, nickname: true } }) : []).map((u) => [u.id, u.nickname]),
+  );
+
   const search: Prisma.UserWhereInput | undefined = query
     ? {
         OR: [
@@ -139,6 +145,7 @@ export default async function AdminPage({
               title: row.post?.title ?? (row.comment ? "댓글 신고" : "삭제된 대상"),
               commentPreview: row.comment?.content?.slice(0, 160) ?? null,
               authorId: row.post?.authorId ?? row.comment?.authorId ?? null,
+              authorNickname: reportAuthors.get(row.post?.authorId ?? row.comment?.authorId ?? "") ?? null,
               authorIp: row.post?.authorIp ?? row.comment?.authorIp ?? null,
               hidden: Boolean(row.post?.hidden),
             }))}

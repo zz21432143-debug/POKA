@@ -45,7 +45,9 @@ async function ConnectedHeader() {
 async function ConnectedNickNotice() {
   const user = await getCurrentUser().catch(() => null);
   if (!user) return null;
-  const { pendingNickNotice } = await import("@/lib/nickname-force");
+  const { autoFixBadNickname, pendingNickNotice } = await import("@/lib/nickname-force");
+  // 지금 닉네임이 금지어에 걸리면 접속하자마자 바른닉네임으로(안내 창이 아래에서 바로 뜸)
+  await autoFixBadNickname(user).catch(() => false);
   const notice = await pendingNickNotice(user.id).catch(() => null);
   if (!notice) return null;
   const { NickNotice } = await import("@/components/layout/nick-notice");

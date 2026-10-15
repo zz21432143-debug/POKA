@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { nicknameError } from "@/lib/nickname";
 import { findForbiddenInNickname, loadDisabledBaseWords, loadForbiddenWordsFresh } from "@/lib/forbidden-words";
 import { findNicknameOwner, nicknameProblem } from "@/lib/nickname-lookup";
+import { findProfanity } from "@/lib/profanity";
 
 /**
  * 닉네임 강제 변경(마스터): 「바른닉네임1234」로 바꾸고 닉네임 변경권 1장 · 알림 · 다음 방문 때 안내 띄움.
@@ -86,6 +87,34 @@ export async function forceNicknameChange(
     url: "/account#nickname",
   }).catch(() => undefined);
   return { ok: true as const, from: user.nickname, to };
+}
+
+/** 같은 서버에서 같은 닉네임을 10분 안에 다시 검사하지 않음(접속마다 도는 길이라 가볍게) */
+const checkedNick = new Map<string, number>();
+
+/**
+ * 접속할 때: 지금 닉네임에 욕설 · 성적 표현 · 도박 · 혐오 · 관리자 금지어가 들어 있으면
+ * 자동으로 「바른닉네임○○○○」 + 닉네임 변경권 1장 + 안내 창(다음 화면에 바로 뜸).
+ * 운영진 사칭 · 글자 규칙(예전 가입자)은 오탐이 있을 수 있어 자동으로는 안 바꿈(관리자 목록에서 처리).
+ */
+export async function autoFixBadNickname(user: { id: string; nickname: string; isMaster?: boolean | null }) {
+  if (user.isMaster || user.nickname.startsWith("바른닉네임")) return false;
+  const key = `${user.id}:${user.nickname}`;
+  const at = checkedNick.get(key);
+  if (at && Date.now() - at < 10 * 60_000) return false;
+  if (checkedNick.size > 5000) checkedNick.clear();
+  checkedNick.set(key, Date.now());
+  const [disabled, words] = await Promise.all([
+    loadDisabledBaseWords().catch(() => undefined),
+    loadForbiddenWordsFresh(),
+  ]);
+  const hit = findProfanity(user.nickname, { nickname: true, disabled });
+  const badHit = hit && hit.category !== "impersonation" ? hit : null;
+  const word = badHit ? null : findForbiddenInNickname(user.nickname, words);
+  if (!badHit && !word) return false;
+  const reason: ForceReason = badHit?.category === "gambling" || badHit?.category === "spam" ? "ad" : word ? "etc" : "profanity";
+  const done = await forceNicknameChange(user.nickname, reason, user.id, "auto-filter");
+  return done.ok;
 }
 
 /** 닉네임 변경권 주기(마스터): 1~5장 · 기록 · 알림 */
