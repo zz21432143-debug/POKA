@@ -277,6 +277,8 @@ export async function chooseStarter(userId: string, species: YokaiSpecies) {
     skipDuplicates: true,
   });
   if (made.count === 1) await prisma.yokaiOwned.createMany({ data: [{ userId, species }], skipDuplicates: true });
+  // 첫 요괴 = 대표 요괴: 닉네임 옆에 바로 보이게
+  repCache = null;
   return { ok: true as const };
 }
 
@@ -410,4 +412,35 @@ export async function buySnack(userId: string) {
     return { ok: false as const, error: `포인트가 모자라요(${SNACK_PRICE}P 필요).` };
   }
   return { ok: true as const };
+}
+
+/** 홈 「요괴 마을」 칸: 키우는 요괴 · 포만감 · 진화 진행 · 오늘 밥 · 도감 · 새 요괴(조건 검사는 yokaiNudge와 같이 30분에 한 번) */
+export async function yokaiHome(userId: string) {
+  const nudge = await yokaiNudge(userId);
+  if (!nudge || nudge.invite) return null;
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
+  if (!pet) return null;
+  const owned = (await ownedList(userId)).filter((o) => isSpecies(o.species));
+  const active = owned.find((o) => o.species === pet.activeSpecies) ?? owned[0];
+  if (!active) return null;
+  const species = active.species as YokaiSpecies;
+  const sources = await feedSources(userId);
+  const allowed = feedsAllowed(sources) + snacksToday(pet);
+  const fullness = fullnessNow(active.fullness, active.fullnessAt);
+  const stage = stageForExp(active.exp);
+  return {
+    species,
+    name: YOKAI[species].name,
+    stage,
+    stageName: YOKAI[species].stages[stage - 1],
+    rarity: YOKAI[species].rarity,
+    fullness,
+    next: nextStageProgress(active.exp),
+    feedsLeft: Math.max(0, allowed - fedToday(pet)),
+    feedAt: nextFeedTime(fullness)?.toISOString() ?? null,
+    dex: owned.length,
+    owned: owned.slice(0, 8).map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
+    newcomers: nudge.newcomers,
+    bg: bgState(pet).active,
+  };
 }

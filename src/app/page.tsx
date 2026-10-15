@@ -8,7 +8,7 @@ import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { HomeStudyTools } from "@/components/home/home-study-tools";
 import { HomeQuiz } from "@/components/home/home-quiz";
-import { YokaiNudge } from "@/components/yokai/yokai-nudge";
+import { HomeYokai } from "@/components/home/home-yokai";
 import { HomeMissions } from "@/components/home/home-missions";
 import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
@@ -78,16 +78,16 @@ export default async function HomePage() {
       <HomeHero />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
-      {/* 요괴 마을: 새 요괴 · 배고픔 알림(공개 전에는 마스터만) */}
-      <Suspense fallback={null}>
-        <YokaiNudge />
-      </Suspense>
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
       </Suspense>
       {/* 오늘의 미션(로그인 회원) */}
       <Suspense fallback={null}>
         <HomeMissions />
+      </Suspense>
+      {/* 요괴 마을: 내 요괴 상태 · 할 일(요괴가 없으면 소개) */}
+      <Suspense fallback={<HomePanelFallback className="h-40" />}>
+        <HomeYokai />
       </Suspense>
       {/* 무료 홀덤 공부 도구(GTO · 승률 · ICM · 레인지 · 족보) */}
       <HomeStudyTools />
