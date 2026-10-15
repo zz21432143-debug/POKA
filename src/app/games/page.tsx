@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import { getCurrentUser } from "@/lib/current-user";
 import { gamesOpen } from "@/lib/omok-server";
 
@@ -29,10 +28,17 @@ export default async function GamesPage() {
   if (!gamesOpen(user)) notFound();
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
-      <header className="board-intro">
-        <BoardTitle sticker={BOARD_STICKER.study}>요괴 게임방</BoardTitle>
-        <p className="mt-2">
+      <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
+        <p className="arcade-px neon-purple text-[10px]">POKA</p>
+        <h1 className="arcade-px neon-gold text-2xl leading-snug">
+          YOKAI ARCADE
+        </h1>
+        <p className="arcade-kr text-lg text-white">요괴 게임방</p>
+        <p className="text-xs text-zinc-300">
           요괴들과 한 판! 지금은 마스터만 보이는 비공개 테스트예요.
+        </p>
+        <p className="arcade-px arcade-blink text-[9px] text-[#ffe08a]">
+          SELECT GAME
         </p>
       </header>
       <ul className="grid gap-2">
@@ -41,26 +47,24 @@ export default async function GamesPage() {
             <li key={g.name}>
               <Link
                 href={g.href}
-                className="lounge-card flex min-h-20 items-center gap-3 rounded-[1.35rem] p-4"
+                className="arcade-panel flex min-h-20 items-center gap-3 p-4 transition hover:brightness-125"
               >
                 <span className="text-3xl" aria-hidden>
                   {g.icon}
                 </span>
                 <span className="grid">
-                  <b className="text-base font-black text-[#f3d9a4]">
-                    {g.name}
-                  </b>
+                  <b className="arcade-kr text-lg text-[#ffe08a]">{g.name}</b>
                   <span className="text-xs text-zinc-300">{g.hint}</span>
                 </span>
-                <span className="ml-auto text-sm font-black text-[#e7c98a]">
-                  입장 ›
+                <span className="arcade-px neon-red arcade-blink ml-auto text-[9px]">
+                  PLAY
                 </span>
               </Link>
             </li>
           ) : (
             <li
               key={g.name}
-              className="flex min-h-20 items-center gap-3 rounded-[1.35rem] border border-white/10 bg-black/30 p-4 opacity-60"
+              className="arcade-panel flex min-h-20 items-center gap-3 p-4 opacity-50"
             >
               <span className="text-3xl grayscale" aria-hidden>
                 {g.icon}

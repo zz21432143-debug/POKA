@@ -11,6 +11,9 @@ const ACTIONS: OmokAction[] = [
   "cancel",
   "emote",
   "rematch",
+  "undo-ask",
+  "undo-yes",
+  "undo-no",
 ];
 
 /** 대국 상태(누구나 관전) · ?v=버전이 같으면 { same: true }만 */
@@ -28,6 +31,7 @@ export async function GET(
     v !== null && /^\d+$/.test(v) ? Number(v) : undefined,
     // 관전자 화면이 보내는 키(관전자 수)
     query.get("w") ?? undefined,
+    query.get("rec") === "1",
   );
   if (!state)
     return NextResponse.json(

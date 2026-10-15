@@ -28,9 +28,9 @@ export function OmokCreate() {
             setBusy(false);
           }
         }}
-        className="min-h-14 w-full rounded-2xl bg-gradient-to-b from-[#9b2a2f] to-[#6b1519] px-4 text-base font-black text-[#f6efe2] shadow-[0_0_0_1px_rgba(245,196,81,.5)] disabled:opacity-60"
+        className="arcade-btn arcade-kr min-h-14 w-full bg-gradient-to-b from-[#ff5a5a] to-[#b3122e] px-4 text-lg text-white"
       >
-        {busy ? "방 만드는 중…" : "⚔️ 친구 대전 방 만들기"}
+        {busy ? "방 만드는 중…" : "⚔️ 방 만들고 친구 부르기"}
       </button>
       {error ? (
         <p className="text-sm font-bold text-rose-300">{error}</p>

@@ -763,6 +763,8 @@ model OmokGame {
   turnAt    DateTime?
   /// 마지막 이모티콘 {by, e, at}
   emoteJson String    @default("")
+  /// 물리기 {ask: {by, at, len} | null, used: {"1": n, "2": n}, denied: {by, at} | null}
+  undoJson  String    @default("")
   /// 「한 판 더」로 만든 다음 판
   nextId    String?
   createdAt DateTime  @default(now())

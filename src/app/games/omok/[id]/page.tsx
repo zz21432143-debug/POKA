@@ -22,7 +22,13 @@ export default async function OmokRoomPage({
   const { id } = await params;
   if (!/^[a-z0-9]{10,40}$/i.test(id)) notFound();
   const user = await getCurrentUser().catch(() => null);
-  const state = await omokState(id, user?.id ?? null).catch(() => null);
+  const state = await omokState(
+    id,
+    user?.id ?? null,
+    undefined,
+    undefined,
+    true,
+  ).catch(() => null);
   if (!state || state.same) notFound();
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-2">

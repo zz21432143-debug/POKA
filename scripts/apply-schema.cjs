@@ -57,6 +57,7 @@ const FILES = [
   "prisma/migrations/20261102090000_yokai_greet/migration.sql",
   "prisma/migrations/20261103090000_omok_game/migration.sql",
   "prisma/migrations/20261104090000_game_stats_traffic/migration.sql",
+  "prisma/migrations/20261105090000_omok_undo/migration.sql",
 ];
 
 function databaseUrl() {

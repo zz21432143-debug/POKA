@@ -24,7 +24,7 @@ export async function GameStatsPanel({
     <section
       aria-label={`${GAME_LABEL[game]} 전적 · 랭킹`}
       data-game-stats={game}
-      className="ink-panel grid gap-3 rounded-2xl p-4"
+      className="arcade-panel grid gap-3 p-4"
     >
       <h2 className="text-base font-black text-[#f3d9a4]">
         🏆 {GAME_LABEL[game]} 전적 · 이번 달 랭킹
@@ -33,8 +33,8 @@ export async function GameStatsPanel({
         <dl className="grid grid-cols-4 gap-2 text-center" data-game-record>
           {[
             ["승", mine.wins, "text-[#f5c451]"],
-            ["패", mine.losses, "text-rose-300"],
-            ["무", mine.draws, "text-zinc-300"],
+            ["패", mine.losses - mine.resigns, "text-rose-300"],
+            ["기권", mine.resigns, "text-zinc-300"],
             ["승률", `${mine.rate}%`, "text-white"],
           ].map(([label, value, tone]) => (
             <div key={String(label)} className="rounded-xl bg-black/30 p-2">

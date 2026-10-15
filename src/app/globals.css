@@ -2297,8 +2297,8 @@ img[src*="/yokai/"] {
 
 /* ───── 요괴 오목 ───── */
 .omok-frame {
-  background: linear-gradient(145deg, #3a1210, #1a0807 55%, #2b0e0c);
-  box-shadow: 0 0 0 1px rgba(201, 162, 92, 0.55), 0 0 0 4px #120605, 0 0 0 5px rgba(201, 162, 92, 0.35), 0 18px 40px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(145deg, #2a0f3a, #12061c 55%, #2b0e24);
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px #c9a25c, 0 0 0 6px #000, 0 0 24px rgba(190, 80, 255, 0.45), 0 18px 40px rgba(0, 0, 0, 0.55);
 }
 .omok-wood {
   border-radius: 6px;
@@ -2371,6 +2371,173 @@ img[src*="/yokai/"] {
   .omok-drop,
   .omok-win,
   .omok-bubble-pop {
+    animation: none;
+  }
+}
+
+/* ───── 요괴 게임방 · 아케이드 ───── */
+.arcade-root {
+  position: relative;
+}
+.arcade-px {
+  font-family: var(--font-arcade), monospace;
+  letter-spacing: 0.04em;
+}
+.arcade-kr {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: 0.02em;
+}
+.neon-gold {
+  color: #ffe08a;
+  text-shadow: 0 0 6px rgba(255, 196, 64, 0.9), 0 0 16px rgba(255, 120, 40, 0.6), 0 2px 0 #7a2a00;
+}
+.neon-red {
+  color: #ff6b6b;
+  text-shadow: 0 0 6px rgba(255, 60, 60, 0.9), 0 0 18px rgba(200, 0, 60, 0.6), 0 2px 0 #3a0008;
+}
+.neon-cyan {
+  color: #7df9ff;
+  text-shadow: 0 0 6px rgba(80, 230, 255, 0.9), 0 0 16px rgba(0, 140, 255, 0.5);
+}
+.neon-purple {
+  color: #e3b5ff;
+  text-shadow: 0 0 6px rgba(190, 110, 255, 0.9), 0 0 16px rgba(120, 40, 220, 0.6);
+}
+/* 픽셀 테두리 판(오락실 기계 느낌) + 화면 주사선 */
+.arcade-panel {
+  position: relative;
+  border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(150, 40, 200, 0.18), transparent 60%), linear-gradient(180deg, #150a1f, #0b0610);
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px #c9a25c, 0 0 0 6px #000, 0 0 22px rgba(190, 80, 255, 0.35);
+}
+.arcade-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+}
+.arcade-btn {
+  position: relative;
+  border-radius: 6px;
+  border: 2px solid #000;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.25), 0 3px 0 #000;
+  transition: transform 0.06s ease;
+}
+.arcade-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.2), 0 0 0 #000;
+}
+.arcade-btn:disabled {
+  filter: grayscale(0.6) brightness(0.7);
+}
+.arcade-blink {
+  animation: arcade-blink 1s steps(2, start) infinite;
+}
+@keyframes arcade-blink {
+  to {
+    visibility: hidden;
+  }
+}
+.arcade-pop {
+  animation: arcade-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes arcade-pop {
+  from {
+    transform: scale(0.2) rotate(-8deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+.arcade-bob {
+  animation: arcade-bob 1.2s ease-in-out infinite alternate;
+}
+@keyframes arcade-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+.arcade-shake {
+  animation: arcade-shake 0.4s linear;
+}
+@keyframes arcade-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+/* 대국자 명판(격투 게임 HUD) */
+.hud-plate {
+  position: relative;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(40, 12, 50, 0.95), rgba(14, 6, 18, 0.95));
+  box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(201, 162, 92, 0.55);
+}
+.hud-plate[data-active] {
+  box-shadow: 0 0 0 2px #000, 0 0 0 3px #ffd34d, 0 0 18px rgba(255, 200, 60, 0.6);
+}
+.hud-portrait {
+  border-radius: 4px;
+  background: radial-gradient(circle at 50% 70%, rgba(255, 120, 60, 0.35), transparent 70%), #12070f;
+  box-shadow: inset 0 0 0 2px #000, 0 0 0 2px rgba(201, 162, 92, 0.6);
+  image-rendering: pixelated;
+}
+.hud-bar {
+  height: 8px;
+  border-radius: 2px;
+  background: #2a0f12;
+  box-shadow: inset 0 0 0 1px #000;
+  overflow: hidden;
+}
+.hud-bar > span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, #ffd34d 0 6px, #ffb020 6px 8px);
+  transition: width 0.25s linear;
+}
+.hud-bar[data-low] > span {
+  background: repeating-linear-gradient(90deg, #ff4d4d 0 6px, #c81e3c 6px 8px);
+}
+.vs-badge {
+  font-family: var(--font-arcade), monospace;
+  color: #fff;
+  text-shadow: 0 0 2px #000, 2px 2px 0 #c81e3c, -2px -2px 0 #6b2bd9, 0 0 14px rgba(255, 80, 60, 0.9);
+  animation: vs-flicker 1.6s ease-in-out infinite;
+}
+@keyframes vs-flicker {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.12);
+    filter: brightness(1.4);
+  }
+}
+.arcade-overlay {
+  background: radial-gradient(ellipse at center, rgba(20, 0, 30, 0.72), rgba(0, 0, 0, 0.88));
+  backdrop-filter: blur(1.5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .arcade-blink,
+  .arcade-pop,
+  .arcade-bob,
+  .arcade-shake,
+  .vs-badge {
     animation: none;
   }
 }

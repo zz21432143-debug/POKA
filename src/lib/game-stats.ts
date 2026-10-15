@@ -99,11 +99,21 @@ async function rewardWin(game: GameKind, winnerId: string, loserId: string) {
 export type GameRecord = {
   games: number;
   wins: number;
+  /** 진 판(기권 포함) */
   losses: number;
+  /** 그중 기권 */
+  resigns: number;
   draws: number;
   rate: number;
   streak: number;
 };
+
+/** 「12승 3패 1기권」(패에는 기권 빼고) */
+export function recordLine(
+  r: Pick<GameRecord, "wins" | "losses" | "resigns" | "draws">,
+) {
+  return `${r.wins}승 ${r.losses - r.resigns}패${r.resigns ? ` ${r.resigns}기권` : ""}${r.draws ? ` ${r.draws}무` : ""}`;
+}
 
 /** 내 전적(승 · 패 · 무 · 승률 · 지금 연승) */
 export async function gameRecord(
@@ -111,9 +121,12 @@ export async function gameRecord(
   game: GameKind,
 ): Promise<GameRecord> {
   const where = { game, OR: [{ playerAId: userId }, { playerBId: userId }] };
-  const [wins, losses, games, last] = await Promise.all([
+  const [wins, losses, resigns, games, last] = await Promise.all([
     prisma.gameResult.count({ where: { game, winnerId: userId } }),
     prisma.gameResult.count({ where: { game, loserId: userId } }),
+    prisma.gameResult.count({
+      where: { game, loserId: userId, reason: "resign" },
+    }),
     prisma.gameResult.count({ where }),
     prisma.gameResult.findMany({
       where,
@@ -132,6 +145,7 @@ export async function gameRecord(
     games,
     wins,
     losses,
+    resigns,
     draws,
     rate: games ? Math.round((wins / games) * 100) : 0,
     streak,
