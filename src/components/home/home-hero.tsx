@@ -40,39 +40,52 @@ export function HomeHero() {
     </section>
   );
   if (!games) return main;
-  // 롤링: ① 딜러 구인구직 · 매장 관리 ② 요괴 게임방(윷놀이 · 오목)
+  // 롤링: ① 요괴 마을 · 요괴 게임방(메인) ② 딜러 구인구직 · 매장 관리
   return (
     <HeroCarousel
       slides={[
+        { key: "games", label: "요괴 마을 · 요괴 게임방", node: <GamesSlide /> },
         { key: "main", label: "구인구직 · 매장 관리", node: main },
-        { key: "games", label: "요괴 게임방", node: <GamesSlide /> },
       ]}
     />
   );
 }
 
-/** 대문 두 번째 장: 요괴 게임방 오픈 */
+/** 대문 첫 장: 요괴 마을(메인) + 요괴 게임방(윷놀이 · 오목) 오픈 — 그림 가운데 「요괴마을」 간판이 보이게 */
 function GamesSlide() {
   return (
-    <section aria-label="요괴 게임방" className="relative h-full overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/50 bg-[radial-gradient(circle_at_75%_40%,#3b2766,#140b24_70%)]">
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex w-[52%] items-end justify-end gap-1 pr-2 sm:w-[46%]" aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/yokai/dokkaebi-4.webp" alt="" className="h-[78%] w-auto object-contain drop-shadow-[4px_4px_0_#0a0614] [image-rendering:pixelated]" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/yokai/gumiho-5.webp" alt="" className="h-[92%] w-auto object-contain drop-shadow-[4px_4px_0_#0a0614] [image-rendering:pixelated]" />
-      </div>
-      <div className="relative grid gap-2.5 px-4 py-4 sm:gap-3 sm:px-6 sm:py-6">
-        <p className="text-[11px] font-black tracking-[0.3em] text-[#ffcf4a]">POKA ARCADE · NEW</p>
-        <h2 className="max-w-[15rem] text-[1.2rem] leading-snug font-black text-white sm:max-w-md sm:text-[1.9rem]">
-          요괴 게임방 오픈!
-          <span className="block text-sm font-bold text-[#d6cdee] sm:text-base">내 요괴가 말이 되는 윷놀이 · 친구와 한 판 오목</span>
-        </h2>
-        <div className="flex flex-wrap gap-1.5">
-          <Link href="/games/yut" className="touch-target inline-flex min-h-10 items-center rounded-full border-2 border-[#ffcf4a] bg-[#ffcf4a] px-3 text-sm font-black text-[#2a1400]">
-            🎲 윷놀이 하러 가기
+    <section aria-label="요괴 마을 · 요괴 게임방" data-hero-yokai className="relative h-full min-h-[183px] overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/50 bg-[#140b24] sm:min-h-[210px]">
+      {/* eslint-disable-next-line @next/next/no-img-element -- 대문 그림(요괴 마을) */}
+      <img
+        src="/images/hero/yokai-village.webp"
+        srcSet="/images/hero/yokai-village-860.webp 860w, /images/hero/yokai-village.webp 1600w"
+        sizes="(min-width: 1024px) 70vw, 100vw"
+        alt="요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티"
+        width={1600}
+        height={684}
+        fetchPriority="high"
+        className="absolute inset-0 size-full object-cover object-[50%_48%]"
+      />
+      {/* 글씨가 잘 보이게 왼쪽 · 아래만 살짝 어둡게(가운데 간판은 그대로) */}
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,6,20,.82)_0%,rgba(10,6,20,.35)_30%,transparent_45%,transparent_70%,rgba(10,6,20,.55)_100%)]" />
+      <div className="relative flex h-full flex-col justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="grid max-w-[13rem] gap-1 sm:max-w-[17rem]">
+          <p className="w-fit rounded-full bg-black/60 px-2 text-[10px] font-black tracking-[0.2em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">POKA · NEW OPEN</p>
+          {/* 휴대폰은 그림 가운데 「요괴마을」 간판을 가리지 않게 글씨는 숨김 */}
+          <h2 className="hidden text-2xl leading-tight font-black text-white [text-shadow:2px_2px_0_#0a0614] sm:block">
+            요괴 마을 오픈!
+            <span className="block text-xs font-bold text-[#f3e8ff] sm:text-sm">요괴 키우고 ·<br />요괴 게임방에서 윷놀이 · 오목 한 판</span>
+          </h2>
+        </div>
+        <div className="flex flex-wrap gap-1.5 pr-12 sm:pr-0">
+          <Link href="/yokai" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10 bg-[#ffcf4a] px-2.5 text-xs font-black text-[#2a1400] shadow-[2px_2px_0_#0a0614] sm:px-3 sm:text-sm">
+            🏮 요괴 마을 가기
           </Link>
-          <Link href="/games/omok" className="touch-target inline-flex min-h-10 items-center rounded-full border-2 border-[#ffcf4a]/70 bg-black/50 px-3 text-sm font-black text-[#ffe08a]">
-            ⚫ 오목 한 판
+          <Link href="/games/yut" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10/80 bg-black/60 px-2.5 text-xs font-black text-[#ffe08a] sm:px-3 sm:text-sm">
+            🎲 윷놀이
+          </Link>
+          <Link href="/games/omok" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10/80 bg-black/60 px-2.5 text-xs font-black text-[#ffe08a] sm:px-3 sm:text-sm">
+            ⚫ 오목
           </Link>
         </div>
       </div>
