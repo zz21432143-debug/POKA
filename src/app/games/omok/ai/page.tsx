@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { OmokAi } from "@/components/games/omok-ai";
 import { getCurrentUser } from "@/lib/current-user";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
@@ -27,11 +27,14 @@ export default async function OmokAiPage({
     Math.max(0, Math.floor(Number(vs)) || 0),
   );
   const yk = user ? await profileYokai(user.id).catch(() => null) : null;
+  // 요괴가 없으면 요괴 고르기로(고르면 바로 돌아옴)
+  if (user && !yk)
+    redirect(`/yokai?next=${encodeURIComponent(`/games/omok/ai?vs=${index}`)}`);
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-2">
       <Link
         href="/games/omok"
-        className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]"
+        className="font-black inline-flex min-h-10 w-fit items-center text-sm text-[#ffcf4a]"
       >
         ← 요괴 오목
       </Link>

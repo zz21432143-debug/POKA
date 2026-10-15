@@ -145,7 +145,13 @@ function useNow() {
 }
 
 /** 요괴 마을(개발 중 · 마스터만): 첫 요괴 고르기 → 여러 마리 키우기 · 대표 요괴 · 도감 · 등장 연출 */
-export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
+export function YokaiVillage({
+  initial,
+  returnTo,
+}: {
+  initial: YokaiView | null;
+  /** 첫 요괴를 고르면 돌아갈 곳(게임방 등) */ returnTo?: string | null;
+}) {
   const [yokai, setYokai] = useState<YokaiView | null>(initial);
   const [pick, setPick] = useState<YokaiSpecies | null>(null);
   const [busy, setBusy] = useState(false);
@@ -211,6 +217,11 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
       if (json.yokai !== undefined) setYokai(json.yokai ?? null);
       if (!res.ok) throw new Error(json.error ?? "잠시 뒤에 다시 해 주세요.");
       if (json.evolved) setEvolved(json.evolved);
+      // 게임방에서 요괴를 고르러 왔으면 고른 뒤 바로 돌아감
+      if (body.action === "choose" && returnTo) {
+        window.location.href = returnTo;
+        return;
+      }
       if (
         body.action === "feed" ||
         body.action === "pet" ||
@@ -302,6 +313,15 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
           data-yokai-pick
           className="lounge-card grid gap-3 rounded-[1.35rem] p-4"
         >
+          {returnTo ? (
+            <p
+              data-yokai-need
+              className="rounded-xl border-2 border-[#ffd54a] bg-[#ffd54a]/15 px-3 py-2 text-sm font-black text-[#ffe9a3]"
+            >
+              🎮 요괴 게임방은 함께할 요괴가 있어야 들어갈 수 있어요! 요괴를
+              고르면 바로 돌아가요.
+            </p>
+          ) : null}
           <h2 className="text-lg font-black text-white">
             함께할 첫 요괴를 골라 주세요
           </h2>

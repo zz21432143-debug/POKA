@@ -1,0 +1,7 @@
+-- 요괴 오목 방: 방 코드 · 손님 자리 · 레디 · 관전자 닉네임
+ALTER TABLE "OmokGame" ADD COLUMN IF NOT EXISTS "code" TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS "OmokGame_code_key" ON "OmokGame"("code");
+ALTER TABLE "OmokGame" ADD COLUMN IF NOT EXISTS "guestId" TEXT;
+ALTER TABLE "OmokGame" ADD COLUMN IF NOT EXISTS "hostReady" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "OmokGame" ADD COLUMN IF NOT EXISTS "guestReady" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "GameWatch" ADD COLUMN IF NOT EXISTS "nickname" TEXT;

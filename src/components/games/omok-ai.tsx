@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { OmokBoard } from "@/components/games/omok-board";
-import { ArcadeBanner, OmokHud } from "@/components/games/omok-hud";
+import {
+  ArcadeBanner,
+  OmokHud,
+  YokaiCutIn,
+  type CutInData,
+} from "@/components/games/omok-hud";
 import {
   BLACK,
   WHITE,
@@ -23,7 +28,10 @@ import {
   type OmokLineKind,
 } from "@/lib/omok-lines";
 import {
+  cutInSound,
+  fightSound,
   omokSoundOn,
+  readySound,
   resultSound,
   setOmokSound,
   stoneClick,
@@ -44,6 +52,7 @@ export function OmokAi({
   me: Me;
 }) {
   const opp = OMOK_OPPONENTS[opponentIndex] ?? OMOK_OPPONENTS[0];
+  const oppYokai = { species: opp.species, stage: opp.stage };
   const [human, setHuman] = useState<Stone | 0>(0);
   const [moves, setMoves] = useState<number[]>([]);
   const [preview, setPreview] = useState<number | null>(null);
@@ -63,7 +72,12 @@ export function OmokAi({
     tone?: "gold" | "red" | "cyan";
     key: number;
   } | null>(null);
-  const [hideResult, setHideResult] = useState(false);
+  const [cutIn, setCutIn] = useState<CutInData | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [jump, setJump] = useState<{ me: number; ai: number }>({
+    me: 0,
+    ai: 0,
+  });
   const [sound, setSound] = useState(true);
   const seed = useRef(1);
 
@@ -76,6 +90,11 @@ export function OmokAi({
     const t = window.setTimeout(() => setBanner(null), 1200);
     return () => window.clearTimeout(t);
   }, [banner]);
+  useEffect(() => {
+    if (!cutIn) return;
+    const t = window.setTimeout(() => setCutIn(null), 1800);
+    return () => window.clearTimeout(t);
+  }, [cutIn]);
   useEffect(() => {
     if (!aiSay && !meSay) return;
     const t = window.setTimeout(() => {
@@ -94,28 +113,42 @@ export function OmokAi({
     [moves, myTurn, human],
   );
 
-  function say(who: "ai" | "me", kind: OmokLineKind) {
+  function line4(who: "ai" | "me", kind: OmokLineKind) {
     seed.current += 7;
-    const text =
-      who === "ai"
-        ? pickOmokLine(opp.lines[kind], seed.current)
-        : kind === "think"
-          ? ""
-          : pickOmokLine(PLAYER_LINES[kind], seed.current);
+    return who === "ai"
+      ? pickOmokLine(opp.lines[kind], seed.current)
+      : kind === "think"
+        ? ""
+        : pickOmokLine(PLAYER_LINES[kind], seed.current);
+  }
+  function say(who: "ai" | "me", kind: OmokLineKind) {
+    const text = line4(who, kind);
     if (!text) return;
     if (who === "ai") setAiSay({ text, key: seed.current });
     else setMeSay({ text, key: seed.current });
+  }
+  function cut(who: "ai" | "me", text: string, tone: CutInData["tone"]) {
+    cutInSound();
+    setCutIn({
+      key: Date.now(),
+      side: who === "me" ? "left" : "right",
+      yokai: who === "me" ? me.yokai : oppYokai,
+      text,
+      tone,
+    });
   }
 
   function finish(w: Stone | "draw", byResign = false) {
     setWinner(w);
     setResigned(byResign);
-    setHideResult(false);
-    if (w === "draw") return;
-    const humanWon = w === human;
-    resultSound(humanWon);
-    say("ai", humanWon ? "lose" : "win");
-    say("me", humanWon ? "win" : "lose");
+    setShowResult(false);
+    if (w !== "draw") {
+      const humanWon = w === human;
+      resultSound(humanWon);
+      cut(humanWon ? "me" : "ai", line4(humanWon ? "me" : "ai", "win"), "gold");
+      say(humanWon ? "ai" : "me", "lose");
+    }
+    window.setTimeout(() => setShowResult(true), w === "draw" ? 300 : 1900);
   }
 
   function apply(p: number, by: "ai" | "me") {
@@ -128,12 +161,13 @@ export function OmokAi({
     setMoves(r.moves);
     setPreview(null);
     setNote(null);
+    setJump((j) => ({ ...j, [by]: Date.now() }));
     if (r.winner) {
       setLine(r.line);
       finish(r.winner);
     } else if (r.draw) finish("draw");
     else if (makesFour(r.moves)) {
-      say(by, "four");
+      cut(by, line4(by, "four"), "red");
       say(by === "ai" ? "me" : "ai", "danger");
     }
     return true;
@@ -148,7 +182,7 @@ export function OmokAi({
         if (p >= 0) apply(p, "ai");
         else finish("draw");
       },
-      moves.length ? 380 + Math.random() * 520 : 1300,
+      moves.length ? 420 + Math.random() * 520 : 1500,
     );
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 수가 바뀔 때만
@@ -162,19 +196,20 @@ export function OmokAi({
     setResigned(false);
     setPreview(null);
     setNote(null);
-    setHideResult(false);
+    setShowResult(false);
     seed.current = Math.floor(Math.random() * 1000);
     say("ai", "start");
     setMeSay(null);
+    readySound();
     setBanner({
       text: "READY",
       sub: color === BLACK ? "내가 흑 · 먼저 둬요" : "내가 백 · 요괴가 먼저",
       key: seed.current,
     });
-    window.setTimeout(
-      () => setBanner({ text: "FIGHT!", tone: "red", key: seed.current + 1 }),
-      800,
-    );
+    window.setTimeout(() => {
+      fightSound();
+      setBanner({ text: "FIGHT!", tone: "red", key: seed.current + 1 });
+    }, 900);
   }
 
   function pick(p: number) {
@@ -204,28 +239,31 @@ export function OmokAi({
     setBanner({ text: "UNDO", tone: "cyan", key: Date.now() });
   }
 
-  /* ── 돌 고르기(캐릭터 선택 화면) ── */
+  /* ── 돌 고르기(도전자 화면) ── */
   if (!human) {
     return (
-      <div data-omok-ai-pick className="arcade-panel grid gap-4 p-4">
-        <p className="arcade-px neon-gold text-center text-xs">CHALLENGER</p>
+      <div data-omok-ai-pick className="arcade-panel grid gap-4 p-5">
+        <p className="arcade-px neon-gold text-center text-sm">CHALLENGER</p>
         <div className="grid justify-items-center gap-2 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 상대 요괴 */}
           <img
             src={`/yokai/${opp.species}-${opp.stage}.webp`}
             alt=""
             draggable={false}
-            className="arcade-bob size-36 object-contain drop-shadow-[0_0_16px_rgba(190,110,255,.6)]"
+            className="arcade-bob size-40 object-contain drop-shadow-[0_0_18px_rgba(190,110,255,.6)]"
           />
-          <p className="arcade-kr text-2xl text-white">{opp.title}</p>
-          <p className="arcade-px text-[10px]" style={{ color: opp.tone }}>
-            LV.{opp.level} · {opp.tier}
+          <p className="arcade-kr text-3xl text-white">{opp.title}</p>
+          <p
+            className="rounded-full px-3 py-0.5 text-sm font-black text-black"
+            style={{ background: opp.tone }}
+          >
+            난이도 {opp.tier}
           </p>
-          <p className="rounded-lg border-2 border-black bg-[#fff7e0] px-3 py-1 text-sm font-bold text-[#2a1a10] shadow-[2px_2px_0_#000]">
+          <p className="rounded-xl border-2 border-[#0a0614] bg-[#fff7e0] px-4 py-2 text-base font-black text-[#2a1a10] shadow-[3px_3px_0_#0a0614]">
             {opp.lines.start[0]}
           </p>
         </div>
-        <p className="arcade-kr text-center text-sm text-[#f3d9a4]">
+        <p className="arcade-kr text-center text-xl text-[#ffcf4a]">
           돌을 고르세요
         </p>
         <div className="grid grid-cols-2 gap-2">
@@ -233,7 +271,7 @@ export function OmokAi({
             type="button"
             data-omok-start="b"
             onClick={() => start(BLACK)}
-            className="arcade-btn arcade-kr min-h-14 bg-gradient-to-b from-[#3a3a3a] to-[#050505] text-base text-white"
+            className="arcade-btn min-h-16 bg-gradient-to-b from-[#4a4a4a] to-[#050505] text-lg text-white"
           >
             ⚫ 흑 · 먼저
           </button>
@@ -241,13 +279,13 @@ export function OmokAi({
             type="button"
             data-omok-start="w"
             onClick={() => start(WHITE)}
-            className="arcade-btn arcade-kr min-h-14 bg-gradient-to-b from-white to-[#cfc6b4] text-base text-black"
+            className="arcade-btn min-h-16 bg-gradient-to-b from-white to-[#cfc6b4] text-lg text-black"
           >
             ⚪ 백 · 나중
           </button>
         </div>
-        <p className="text-center text-[11px] text-zinc-400">
-          흑은 삼삼 금지 · 요괴 대전은 전적에 안 들어가요
+        <p className="text-center text-sm text-[#d6cdee]">
+          흑은 삼삼 금지 · 요괴 연습은 전적에 안 들어가요
         </p>
       </div>
     );
@@ -257,15 +295,16 @@ export function OmokAi({
   const resultTitle =
     winner === "draw" ? "DRAW" : humanWon ? "YOU WIN!" : "YOU LOSE";
   return (
-    <div data-omok-ai className="grid gap-2">
+    <div data-omok-ai className="grid gap-2.5">
       <OmokHud
         left={{
           name: me.nickname,
           yokai: me.yokai,
           color: human as 1 | 2,
-          tag: "YOU",
+          tag: "나",
           active: myTurn,
           bubble: meSay,
+          jumpKey: jump.me,
           result:
             winner === null || winner === "draw"
               ? null
@@ -275,12 +314,13 @@ export function OmokAi({
         }}
         right={{
           name: opp.title,
-          yokai: { species: opp.species, stage: opp.stage },
+          yokai: oppYokai,
           color: ai as 1 | 2,
-          tag: "CPU",
-          record: `LV.${opp.level} ${opp.tier}`,
+          tag: "요괴",
+          record: `난이도 ${opp.tier}`,
           active: playing && turn === ai,
           bubble: aiSay,
+          jumpKey: jump.ai,
           result:
             winner === null || winner === "draw"
               ? null
@@ -289,7 +329,7 @@ export function OmokAi({
                 : "win",
         }}
       />
-      <div className="relative">
+      <div className="relative mt-1">
         <OmokBoard
           moves={moves}
           forbidden={forbidden}
@@ -299,6 +339,7 @@ export function OmokAi({
           onPick={pick}
           disabled={!myTurn}
         />
+        {cutIn ? <YokaiCutIn key={cutIn.key} data={cutIn} /> : null}
         {banner ? (
           <ArcadeBanner
             key={banner.key}
@@ -307,12 +348,12 @@ export function OmokAi({
             tone={banner.tone}
           />
         ) : null}
-        {winner !== null && !hideResult ? (
+        {winner !== null && showResult ? (
           <div
             data-omok-result
             className="arcade-overlay absolute inset-0 z-20 grid place-items-center rounded-[14px] p-4 text-center"
           >
-            <div className="grid justify-items-center gap-2">
+            <div className="grid w-full justify-items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element -- 이긴 쪽 요괴 */}
               <img
                 src={
@@ -322,11 +363,11 @@ export function OmokAi({
                 }
                 alt=""
                 draggable={false}
-                className="arcade-bob size-24 object-contain drop-shadow-[0_0_14px_rgba(255,200,60,.7)]"
+                className="arcade-bob size-28 object-contain drop-shadow-[0_0_16px_rgba(255,200,60,.75)]"
               />
               <p
                 className={cn(
-                  "arcade-px arcade-pop text-2xl sm:text-3xl",
+                  "arcade-px arcade-pop text-3xl sm:text-4xl",
                   humanWon
                     ? "neon-gold"
                     : winner === "draw"
@@ -336,7 +377,7 @@ export function OmokAi({
               >
                 {resultTitle}
               </p>
-              <p className="arcade-kr text-sm text-white">
+              <p className="arcade-kr text-lg text-white">
                 {resigned
                   ? "기권"
                   : winner === "draw"
@@ -345,28 +386,30 @@ export function OmokAi({
                       ? `${opp.title}을(를) 이겼어요!`
                       : `${opp.title}의 승리`}
               </p>
-              <div className="mt-1 flex flex-wrap justify-center gap-2">
+              <div className="mt-1 grid w-full max-w-xs gap-2">
                 <button
                   type="button"
                   data-omok-again
                   onClick={() => start(human === BLACK ? WHITE : BLACK)}
-                  className="arcade-btn arcade-kr min-h-11 bg-gradient-to-b from-[#ff5a5a] to-[#b3122e] px-4 text-sm text-white"
+                  className="arcade-btn btn-main"
                 >
                   🔁 흑백 바꿔 한 판 더
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setHideResult(true)}
-                  className="arcade-btn arcade-kr min-h-11 bg-[#2a1636] px-4 text-sm text-[#f3d9a4]"
-                >
-                  판 보기
-                </button>
-                <Link
-                  href="/games/omok"
-                  className="arcade-btn arcade-kr grid min-h-11 place-items-center bg-[#140b1c] px-4 text-sm text-zinc-200"
-                >
-                  다른 요괴
-                </Link>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowResult(false)}
+                    className="arcade-btn btn-dark"
+                  >
+                    판 보기
+                  </button>
+                  <Link
+                    href="/games/omok"
+                    className="arcade-btn btn-dark grid place-items-center"
+                  >
+                    다른 요괴
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -375,12 +418,19 @@ export function OmokAi({
       <p
         role="status"
         className={cn(
-          "arcade-kr min-h-6 text-center text-sm",
-          note?.includes("삼삼") ? "text-rose-300" : "text-[#ffe08a]",
+          "min-h-7 text-center text-base font-black",
+          note?.includes("삼삼")
+            ? "text-[#ff5d6c]"
+            : myTurn
+              ? "text-[#ffcf4a]"
+              : "text-[#d6cdee]",
         )}
       >
         {winner === null
-          ? (note ?? (myTurn ? "▶ 내 차례!" : `${opp.title} 생각 중…`))
+          ? (note ??
+            (myTurn
+              ? "▶ 내 차례! 같은 곳을 두 번 누르면 둬요"
+              : `${opp.title} 생각 중…`))
           : ""}
       </p>
       <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
@@ -391,14 +441,14 @@ export function OmokAi({
               data-omok-undo
               onClick={undo}
               disabled={!moves.length || !myTurn}
-              className="arcade-btn arcade-kr min-h-11 bg-[#2a1636] text-sm text-[#7df9ff]"
+              className="arcade-btn btn-dark"
             >
               ↩ 물리기
             </button>
             <button
               type="button"
               onClick={() => finish(ai, true)}
-              className="arcade-btn arcade-kr min-h-11 bg-[#3a0f18] text-sm text-rose-200"
+              className="arcade-btn btn-dark !text-[#ff9aa4]"
             >
               🏳 기권
             </button>
@@ -406,8 +456,8 @@ export function OmokAi({
         ) : (
           <button
             type="button"
-            onClick={() => setHideResult(false)}
-            className="arcade-btn arcade-kr col-span-2 min-h-11 bg-[#2a1636] text-sm text-[#f3d9a4]"
+            onClick={() => setShowResult(true)}
+            className="arcade-btn btn-dark col-span-2"
           >
             결과 다시 보기
           </button>
@@ -415,13 +465,14 @@ export function OmokAi({
         <button
           type="button"
           aria-pressed={sound}
+          aria-label={sound ? "효과음 끄기" : "효과음 켜기"}
           onClick={() => {
             setOmokSound(!sound);
             setSound(!sound);
           }}
-          className="arcade-btn min-h-11 bg-[#1a0f22] px-3 text-sm"
+          className="arcade-btn btn-dark px-4"
         >
-          {sound ? "🔊" : "🔇"}
+          {sound ? "🔊" : "🔈"}
         </button>
       </div>
     </div>
@@ -439,7 +490,7 @@ export function OpponentCard({
   const o = OMOK_OPPONENTS[index];
   const body = (
     <>
-      <span className="hud-portrait relative grid size-20 place-items-center overflow-hidden">
+      <span className="hud-portrait relative grid size-24 place-items-center overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element -- 요괴 픽셀 그림 */}
         <img
           src={`/yokai/${o.species}-${o.stage}.webp`}
@@ -448,25 +499,26 @@ export function OpponentCard({
           draggable={false}
         />
       </span>
-      <span className="arcade-px text-[9px]" style={{ color: o.tone }}>
-        LV.{o.level} {o.tier}
-      </span>
-      <b className="text-center text-[13px] leading-tight font-black text-white">
+      <b className="text-center text-base leading-tight font-black text-white">
         {o.title}
       </b>
+      <span
+        className="rounded-full px-2.5 py-0.5 text-xs font-black text-black"
+        style={{ background: o.tone }}
+      >
+        {o.tier}
+      </span>
     </>
   );
   return href ? (
     <Link
       href={href}
       data-omok-opponent={o.species}
-      className="hud-plate grid justify-items-center gap-1.5 p-2.5 transition hover:brightness-125 active:scale-95"
+      className="hud-plate grid justify-items-center gap-2 p-3 transition hover:brightness-125 active:scale-95"
     >
       {body}
     </Link>
   ) : (
-    <div className="hud-plate grid justify-items-center gap-1.5 p-2.5">
-      {body}
-    </div>
+    <div className="hud-plate grid justify-items-center gap-2 p-3">{body}</div>
   );
 }

@@ -27,7 +27,7 @@ export default async function GamesPage() {
   const user = await getCurrentUser().catch(() => null);
   if (!gamesOpen(user)) notFound();
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 pt-12">
       <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
         <p className="arcade-px neon-purple text-[10px]">POKA</p>
         <h1 className="arcade-px neon-gold text-2xl leading-snug">

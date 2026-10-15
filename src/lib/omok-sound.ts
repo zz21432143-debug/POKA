@@ -17,7 +17,8 @@ export function setOmokSound(on: boolean) {
   }
 }
 
-function audio() {
+/** 게임 소리 · BGM이 같이 쓰는 오디오 */
+export function audio() {
   if (typeof window === "undefined") return null;
   if (!ctx) {
     const AC =
@@ -80,4 +81,98 @@ export function resultSound(win: boolean) {
     o.start(t);
     o.stop(t + 0.32);
   });
+}
+
+function tone(
+  a: AudioContext,
+  freq: number,
+  at: number,
+  len: number,
+  type: OscillatorType,
+  vol: number,
+  slideTo?: number,
+) {
+  const o = a.createOscillator();
+  const g = a.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, at);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, at + len);
+  g.gain.setValueAtTime(vol, at);
+  g.gain.exponentialRampToValueAtTime(0.001, at + len);
+  o.connect(g).connect(a.destination);
+  o.start(at);
+  o.stop(at + len + 0.02);
+}
+
+function noiseHit(
+  a: AudioContext,
+  at: number,
+  len: number,
+  freq: number,
+  vol: number,
+) {
+  const n = Math.floor(a.sampleRate * len);
+  const buf = a.createBuffer(1, n, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i += 1)
+    d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+  const src = a.createBufferSource();
+  src.buffer = buf;
+  const f = a.createBiquadFilter();
+  f.type = "bandpass";
+  f.frequency.value = freq;
+  const g = a.createGain();
+  g.gain.value = vol;
+  src.connect(f).connect(g).connect(a.destination);
+  src.start(at);
+}
+
+/** READY: 띵-띵 */
+export function readySound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, 660, t, 0.18, "square", 0.08);
+  tone(a, 880, t + 0.16, 0.25, "square", 0.08);
+}
+
+/** FIGHT!: 북 + 징 */
+export function fightSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, 140, t, 0.35, "sine", 0.5, 50);
+  noiseHit(a, t, 0.25, 900, 0.5);
+  tone(a, 196, t + 0.05, 1.4, "triangle", 0.12);
+  tone(a, 293.7, t + 0.05, 1.4, "triangle", 0.08);
+}
+
+/** 컷인(요괴 등장): 휙 */
+export function cutInSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  noiseHit(a, t, 0.3, 2500, 0.35);
+  tone(a, 300, t, 0.3, "sawtooth", 0.05, 1200);
+}
+
+/** 남은 시간 경고: 삑 */
+export function warnBeep() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  tone(a, 1320, a.currentTime, 0.08, "square", 0.06);
+}
+
+/** 손님 착석 · 방 입장: 딩동 */
+export function bellSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime;
+  tone(a, 988, t, 0.3, "sine", 0.15);
+  tone(a, 784, t + 0.22, 0.45, "sine", 0.15);
 }

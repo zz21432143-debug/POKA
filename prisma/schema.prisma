@@ -751,6 +751,12 @@ model YokaiOwned {
 /// endReason five · resign · timeout · draw · cancel. version은 수를 둘 때마다 +1(동시에 두기 막기 · 화면 새로 고침 판단)
 model OmokGame {
   id        String    @id @default(cuid())
+  /// 방 코드(친구에게 불러 주는 5글자)
+  code       String?  @unique
+  /// 대기실에 앉은 손님(시작 전) · 레디
+  guestId    String?
+  hostReady  Boolean  @default(false)
+  guestReady Boolean  @default(false)
   hostId    String
   blackId   String?
   whiteId   String?
@@ -798,6 +804,8 @@ model GameResult {
 model GameWatch {
   gameId String
   viewer String
+  /// 로그인한 관전자 닉네임(손님은 null)
+  nickname String?
   seenAt DateTime @default(now())
 
   @@id([gameId, viewer])

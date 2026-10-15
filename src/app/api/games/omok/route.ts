@@ -1,12 +1,34 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
-import { createOmok, gamesOpen, omokLobby } from "@/lib/omok-server";
+import {
+  NO_YOKAI,
+  createOmok,
+  gamesOpen,
+  omokLobby,
+  roomByCode,
+} from "@/lib/omok-server";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
 
-/** 로비: 대국 중(관전) · 내 최근 대국 — 비공개 기간엔 마스터만 */
-export async function GET() {
+/**
+ * ?code=방코드 → { id }(누구나 · 코드를 받은 사람이 들어오게)
+ * 그 밖: 로비(대기 중인 방 · 대국 중 · 내 최근 대국) — 비공개 기간엔 마스터만
+ */
+export async function GET(request: Request) {
+  const code = new URL(request.url).searchParams.get("code");
+  if (code !== null) {
+    const room = await roomByCode(code);
+    if (!room)
+      return NextResponse.json(
+        { error: "그런 방 코드가 없어요. 다시 확인해 주세요." },
+        { status: 404, headers: NO_STORE },
+      );
+    return NextResponse.json(
+      { id: room.id, status: room.status },
+      { headers: NO_STORE },
+    );
+  }
   const user = await getCurrentUser().catch(() => null);
   if (!gamesOpen(user))
     return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
@@ -15,15 +37,18 @@ export async function GET() {
   });
 }
 
-/** 친구 대전 방 만들기 → { id } */
+/** 방 만들기 → { id }(요괴가 없으면 code: NO_YOKAI) */
 export async function POST() {
   const user = await getCurrentUser().catch(() => null);
   if (!user)
     return NextResponse.json({ error: "로그인해 주세요." }, { status: 401 });
   if (!gamesOpen(user))
     return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
-  return NextResponse.json(
-    { id: await createOmok(user.id) },
-    { headers: NO_STORE },
-  );
+  const made = await createOmok(user.id);
+  if ("error" in made)
+    return NextResponse.json(
+      { error: "함께할 요괴를 먼저 골라 주세요.", code: NO_YOKAI },
+      { status: 403, headers: NO_STORE },
+    );
+  return NextResponse.json({ id: made.id }, { headers: NO_STORE });
 }
