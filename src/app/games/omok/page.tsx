@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { OpponentCard } from "@/components/games/omok-ai";
-import { OmokCodeEntry, OmokCreate } from "@/components/games/omok-create";
+import {
+  LobbyRefresh,
+  OmokCodeEntry,
+  OmokCreate,
+} from "@/components/games/omok-create";
 import { StoneDot } from "@/components/games/omok-board";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { getCurrentUser } from "@/lib/current-user";
@@ -12,7 +16,6 @@ import {
   WIN_REWARD,
   gameRecord,
   gameStatsVisible,
-  opponentRecords,
   recordLine,
   rewardsOn,
 } from "@/lib/game-stats";
@@ -39,14 +42,11 @@ export default async function OmokLobbyPage() {
   if (!gamesOpen(user)) notFound();
   const yk = user ? await profileYokai(user.id).catch(() => null) : null;
   if (user && !yk) redirect("/yokai?next=%2Fgames%2Fomok");
-  const [{ waiting, live, recent }, mine, opponents] = await Promise.all([
+  const [{ waiting, live, recent, latest }, mine] = await Promise.all([
     omokLobby(user?.id ?? null),
     user
       ? gameRecord(user.id, "omok").catch(() => null)
       : Promise.resolve(null),
-    user
-      ? opponentRecords(user.id, "omok", 8).catch(() => [])
-      : Promise.resolve([]),
   ]);
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
@@ -142,42 +142,16 @@ export default async function OmokLobbyPage() {
         <GameStatsPanel game="omok" userId={user?.id ?? null} />
       ) : null}
 
-      {/* 상대별 전적 */}
-      {opponents.length ? (
-        <section
-          aria-label="상대별 전적"
-          data-omok-opponents
-          className="arcade-panel grid gap-2 p-4"
-        >
-          <h2 className="arcade-kr text-xl text-white">⚔️ 상대별 전적</h2>
-          <ul className="grid gap-1.5">
-            {opponents.map((o) => (
-              <li
-                key={o.nickname}
-                className="flex min-h-11 items-center gap-2 rounded-xl bg-black/30 px-3"
-              >
-                <b className="min-w-0 truncate text-base text-white">
-                  vs {o.nickname}
-                </b>
-                <span className="ml-auto shrink-0 text-base font-black text-[#ffcf4a] tabular-nums">
-                  {o.wins}승 {o.losses}패{o.draws ? ` ${o.draws}무` : ""}
-                </span>
-                <span className="w-12 shrink-0 text-right text-xs font-bold text-[#d6cdee]">
-                  {o.games ? Math.round((o.wins / o.games) * 100) : 0}%
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {waiting.length ? (
-        <section
-          aria-label="기다리는 방"
-          data-omok-waiting-list
-          className="arcade-panel grid gap-2 p-4"
-        >
+      <section
+        aria-label="기다리는 방"
+        data-omok-waiting-list
+        className="arcade-panel grid gap-2 p-4"
+      >
+        <div className="flex items-center gap-2">
           <h2 className="arcade-kr text-xl text-white">🏮 기다리는 방</h2>
+          <LobbyRefresh />
+        </div>
+        {waiting.length ? (
           <ul className="grid gap-2">
             {waiting.map((g) => (
               <li key={g.id}>
@@ -198,8 +172,12 @@ export default async function OmokLobbyPage() {
               </li>
             ))}
           </ul>
-        </section>
-      ) : null}
+        ) : (
+          <p className="text-base text-[#d6cdee]">
+            지금 기다리는 방이 없어요. 방을 만들어 친구를 불러 보세요!
+          </p>
+        )}
+      </section>
 
       {/* 요괴 선택 */}
       <section
@@ -255,6 +233,56 @@ export default async function OmokLobbyPage() {
           </p>
         )}
       </section>
+
+      {latest.length ? (
+        <section
+          aria-label="최근 대국"
+          data-omok-latest
+          className="arcade-panel grid gap-2 p-4"
+        >
+          <h2 className="arcade-kr text-xl text-white">🏁 최근 대국 5판</h2>
+          <ul className="grid gap-2">
+            {latest.map((g) => {
+              const draw = !g.winner;
+              const win = g.winner === 1 ? g.black : g.white;
+              const lose = g.winner === 1 ? g.white : g.black;
+              return (
+                <li key={g.id}>
+                  <Link
+                    href={`/games/omok/${g.id}`}
+                    className="flex min-h-12 flex-wrap items-center gap-x-2 gap-y-0.5 rounded-xl bg-black/30 px-3 py-1.5 text-base hover:bg-white/5"
+                  >
+                    {draw ? (
+                      <>
+                        <b className="text-white">{g.black}</b>
+                        <span className="rounded-md bg-white/20 px-1.5 text-xs font-black text-white">
+                          무
+                        </span>
+                        <b className="text-white">{g.white}</b>
+                      </>
+                    ) : (
+                      <>
+                        <span className="rounded-md bg-[#ffcf4a] px-1.5 text-xs font-black text-[#2a1400]">
+                          승
+                        </span>
+                        <b className="text-white">{win}</b>
+                        <span className="text-[#d6cdee]">vs</span>
+                        <span className="rounded-md bg-[#ff5d6c] px-1.5 text-xs font-black text-white">
+                          패
+                        </span>
+                        <b className="text-white">{lose}</b>
+                      </>
+                    )}
+                    <span className="ml-auto text-xs text-[#d6cdee]">
+                      {END[g.endReason] ?? ""} · {g.moves}수 ›
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       {recent.length ? (
         <section

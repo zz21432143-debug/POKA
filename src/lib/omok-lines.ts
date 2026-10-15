@@ -16,7 +16,7 @@ export type OmokOpponent = {
   lines: Record<OmokLineKind, string[]>;
 };
 
-/** 요괴 AI 상대 4명(쉬움 → 최강) */
+/** 요괴 AI 상대 4명(쉬움 · 보통 · 어려움 · 지옥 — 팟 계산 난이도와 같은 이름) */
 export const OMOK_OPPONENTS: OmokOpponent[] = [
   {
     species: "dokkaebi",
@@ -77,7 +77,7 @@ export const OMOK_OPPONENTS: OmokOpponent[] = [
     stage: 5,
     level: 4,
     title: "천년 묵은 구미호",
-    tier: "최강",
+    tier: "지옥",
     tone: "#f87171",
     lines: {
       start: ["후후, 천 년 동안 이 판만 봐 왔단다.", "어디 한번 홀려 볼까?"],

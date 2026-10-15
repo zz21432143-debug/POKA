@@ -23,7 +23,6 @@ import {
   boardFrom,
   colorOfMove,
   forbiddenCells,
-  makesFour,
   winTip,
   type Stone,
 } from "@/lib/omok";
@@ -33,6 +32,7 @@ import { WIN_REWARD } from "@/lib/game-config";
 import { PLAYER_LINES, pickOmokLine, yokaiVoice } from "@/lib/omok-lines";
 import {
   bellSound,
+  cheerSound,
   cutInSound,
   fightSound,
   omokSoundOn,
@@ -91,6 +91,7 @@ export function OmokRoom({
   const [busy, setBusy] = useState(false);
   const [confirmResign, setConfirmResign] = useState(false);
   const [confirmKick, setConfirmKick] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
   const [say, setSay] = useState<Record<number, { text: string; key: number }>>(
     {},
   );
@@ -148,8 +149,8 @@ export function OmokRoom({
     let tick = 0;
     const loop = async () => {
       tick += 1;
-      const watch =
-        !seatedRef.current && tick % 4 === 1 ? `&w=${watchKey}` : "";
+      // 4번에 1번 「보고 있어요」(관전자 = 관전자 수 · 대국자 = 자리 지킴, 오래 안 보이면 방 정리)
+      const watch = tick % 4 === 1 ? `&w=${watchKey}` : "";
       try {
         const res = await fetch(
           `/api/games/omok/${initial.id}?v=${versionRef.current}${watch}`,
@@ -237,22 +238,20 @@ export function OmokRoom({
         },
       });
     }
-    // 돌: 소리 · 둔 사람 요괴 점프 · 4목이면 말풍선만(판은 가리지 않음)
+    // 돌: 소리 · 둔 사람 요괴 점프(4목이어도 아무 말 안 함 — 게임에 영향 없게)
     if (view.moves.length > before.moves.length) {
       stoneClick();
       setPreview(null);
       const by = colorOfMove(view.moves.length - 1);
       setJump((j) => ({ ...j, [by]: seed }));
-      if (view.status === "playing" && makesFour(view.moves)) {
-        setSay({
-          [by]: { text: pickOmokLine(PLAYER_LINES.four, seed), key: seed },
-          [by === BLACK ? WHITE : BLACK]: {
-            text: pickOmokLine(PLAYER_LINES.danger, seed),
-            key: seed + 1,
-          },
-        });
-      }
     }
+    // 관전자 응원이 새로 오면 퐁
+    const lastCheer = view.cheers?.[view.cheers.length - 1];
+    if (
+      lastCheer &&
+      lastCheer.at !== before.cheers?.[before.cheers.length - 1]?.at
+    )
+      cheerSound();
     if (view.moves.length < before.moves.length && view.status === "playing") {
       setNote("↩ 한 수 물렀어요");
       setPreview(null);
@@ -377,6 +376,9 @@ export function OmokRoom({
         return;
       }
       if (json.view) receive(json.view);
+      // 다음 판 도전에 성공하면 그 대기실로
+      if (res.ok && action === "challenge" && json.view?.nextId)
+        router.push(`/games/omok/${json.view.nextId}`);
       if (!res.ok) {
         setNote(json.error ?? "처리하지 못했어요.");
         if (res.status === 409) {
@@ -455,7 +457,7 @@ export function OmokRoom({
     }
     if (preview !== p) {
       setPreview(p);
-      setNote("같은 곳을 한 번 더 누르면 둬요");
+      setNote("같은 곳을 한 번 더 누르거나 「착수」 버튼을 눌러요");
       return;
     }
     void act("move", { p });
@@ -466,6 +468,15 @@ export function OmokRoom({
   const recOf = (c: Stone) =>
     recordText(c === BLACK ? records?.black : records?.white);
   const rightColor: Stone = leftColor === BLACK ? WHITE : BLACK;
+  const h2h =
+    records?.h2h && records.h2h.a + records.h2h.b + records.h2h.draws > 0
+      ? records.h2h
+      : null;
+  /** 흑(대기실은 방장) 쪽이면 a 기준, 백(손님) 쪽이면 b 기준 */
+  const vsText = (sideA: boolean) =>
+    h2h
+      ? `상대전적 ${sideA ? h2h.a : h2h.b}승 ${sideA ? h2h.b : h2h.a}패${h2h.draws ? ` ${h2h.draws}무` : ""}`
+      : null;
   const seatOf = (c: Stone): HudSeat => {
     const p = info(c);
     return {
@@ -474,6 +485,7 @@ export function OmokRoom({
       color: c as 1 | 2,
       tag: view.me === c ? "나" : view.me ? "상대" : c === BLACK ? "흑" : "백",
       record: recOf(c),
+      vs: vsText(c === BLACK),
       active: playing && turn === c,
       secondsLeft: playing && turn === c ? secondsLeft : null,
       totalSeconds: TURN_SECONDS,
@@ -496,6 +508,7 @@ export function OmokRoom({
     color: 0,
     tag: view.seat === "host" ? "나" : "방장",
     record: recordText(records?.black),
+    vs: view.guest ? vsText(true) : null,
     active: false,
     ready: view.hostReady,
   };
@@ -506,6 +519,7 @@ export function OmokRoom({
         color: 0,
         tag: view.seat === "guest" ? "나" : "손님",
         record: recordText(records?.white),
+        vs: vsText(false),
         active: false,
         ready: view.guestReady,
       }
@@ -575,6 +589,53 @@ export function OmokRoom({
       <div className="relative grid gap-2.5">
         <CheerStack cheers={view.cheers ?? []} now={now + offset} />
         <div className="flex flex-wrap items-center gap-2">
+          {(() => {
+            // 나가기: 대국 중 = 기권 · 방장 대기실 = 방 닫기 · 손님 = 일어나기 · 그 밖 = 로비로
+            const risky =
+              (playing && Boolean(view.me)) || (waiting && Boolean(view.seat));
+            const label =
+              playing && view.me
+                ? "🚪 나가기(기권패)"
+                : waiting && view.seat === "host"
+                  ? "🚪 나가기(방 닫기)"
+                  : waiting && view.seat === "guest"
+                    ? "🚪 나가기"
+                    : "🏠 로비로";
+            return confirmExit ? (
+              <span className="flex gap-1.5">
+                <button
+                  type="button"
+                  data-omok-exit-yes
+                  disabled={busy}
+                  onClick={async () => {
+                    await act("exit");
+                    router.push("/games/omok");
+                  }}
+                  className="arcade-btn btn-main !min-h-10 px-3 text-sm"
+                >
+                  정말 나가기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmExit(false)}
+                  className="arcade-btn btn-dark !min-h-10 px-3 text-sm"
+                >
+                  취소
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                data-omok-exit
+                onClick={() =>
+                  risky ? setConfirmExit(true) : router.push("/games/omok")
+                }
+                className="arcade-btn btn-dark !min-h-10 px-3 text-sm"
+              >
+                {label}
+              </button>
+            );
+          })()}
           {code ? (
             <button
               type="button"
@@ -801,6 +862,20 @@ export function OmokRoom({
                       🔁 한 판 더(흑백 바꿈)
                     </button>
                   ) : null}
+                  {!view.me &&
+                  !view.nextId &&
+                  view.endReason !== "cancel" &&
+                  loggedIn ? (
+                    <button
+                      type="button"
+                      data-omok-challenge
+                      disabled={busy}
+                      onClick={() => void act("challenge")}
+                      className="arcade-btn btn-main"
+                    >
+                      ⚔️ 다음 판 도전(승자와 대결)
+                    </button>
+                  ) : null}
                   {!view.me && view.nextId ? (
                     <Link
                       href={`/games/omok/${view.nextId}`}
@@ -835,6 +910,18 @@ export function OmokRoom({
           ) : null}
         </div>
 
+        {/* 착수 버튼(한 번 눌러 고른 자리에 두기) */}
+        {myTurn && preview !== null && !busy && !theyAsked ? (
+          <button
+            type="button"
+            data-omok-place
+            onClick={() => void act("move", { p: preview })}
+            className="arcade-btn btn-gold min-h-14 text-xl"
+          >
+            ✅ 여기에 착수
+          </button>
+        ) : null}
+
         {/* 상태 줄 */}
         {playing ? (
           <p
@@ -854,7 +941,7 @@ export function OmokRoom({
                 : iAsked
                   ? "물리기 요청 중… 상대 대답을 기다려요"
                   : myTurn
-                    ? "▶ 내 차례! 같은 곳을 두 번 누르면 둬요"
+                    ? "▶ 내 차례! 자리를 누르고 한 번 더(또는 착수)"
                     : view.me
                       ? "상대 차례…"
                       : `${turn === BLACK ? "흑" : "백"} 차례`)}

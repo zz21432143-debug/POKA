@@ -176,3 +176,11 @@ export function bellSound() {
   tone(a, 988, t, 0.3, "sine", 0.15);
   tone(a, 784, t + 0.22, 0.45, "sine", 0.15);
 }
+
+/** 관전자 응원: 퐁 */
+export function cheerSound() {
+  if (!omokSoundOn()) return;
+  const a = audio();
+  if (!a) return;
+  tone(a, 880, a.currentTime, 0.12, "sine", 0.12, 1320);
+}

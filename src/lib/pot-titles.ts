@@ -135,7 +135,12 @@ export async function getHonorInfo(): Promise<HonorInfo> {
   const owners = Object.fromEntries(HONOR_KEYS.map((k) => [k, [] as string[]])) as Record<HonorKey, string[]>;
   await Promise.all(
     keys.map(async (key) => {
-      const rows = await getRanking(HONOR_DEFS[key].tab, HONOR_DEFS[key].period).catch(() => []);
+      const def = HONOR_DEFS[key];
+      // 오목은 게임 전적 랭킹(이번 달 · 5판 이상), 나머지는 /ranking 랭킹
+      const rows =
+        def.tab === "omok"
+          ? await import("@/lib/game-stats").then((m) => m.gameRanking("omok", "month", 3)).catch(() => [])
+          : await getRanking(def.tab, def.period).catch(() => []);
       owners[key] = rows
         .filter((r) => !excluded.has(r.nickname) && r.score >= (HONOR_DEFS[key].minScore ?? 0))
         .slice(0, config.honors[key].top)

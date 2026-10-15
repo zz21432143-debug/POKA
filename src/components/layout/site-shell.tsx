@@ -37,6 +37,17 @@ async function ConnectedHeader() {
   return <SiteHeader profile={profile} />;
 }
 
+/** 닉네임 강제 변경 안내(본인에게만 · 확인하면 사라짐) */
+async function ConnectedNickNotice() {
+  const user = await getCurrentUser().catch(() => null);
+  if (!user) return null;
+  const { pendingNickNotice } = await import("@/lib/nickname-force");
+  const notice = await pendingNickNotice(user.id).catch(() => null);
+  if (!notice) return null;
+  const { NickNotice } = await import("@/components/layout/nick-notice");
+  return <NickNotice from={notice.from} to={notice.to} reason={notice.reason} />;
+}
+
 async function ConnectedNotice() {
   const settings = await getSiteSettings().catch(() => null);
   return <SiteNoticeBanner text={settings?.noticeBanner} />;
@@ -87,6 +98,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <SourceBeacon />
       <Suspense fallback={null}>
         <ConnectedNotice />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ConnectedNickNotice />
       </Suspense>
       <div className="site-columns mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-6">
         <aside className="hidden w-[16rem] shrink-0 lg:flex lg:flex-col lg:gap-3">

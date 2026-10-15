@@ -114,3 +114,26 @@ export function OmokCodeEntry() {
     </form>
   );
 }
+
+/** 로비 새로 고침(기다리는 방 · 대국 중 목록) */
+export function LobbyRefresh() {
+  const router = useRouter();
+  const [spin, setSpin] = useState(false);
+  return (
+    <button
+      type="button"
+      data-omok-refresh
+      onClick={() => {
+        setSpin(true);
+        router.refresh();
+        window.setTimeout(() => setSpin(false), 700);
+      }}
+      className="arcade-btn btn-dark ml-auto !min-h-10 px-3 text-sm"
+    >
+      <span className={spin ? "inline-block animate-spin" : "inline-block"}>
+        🔄
+      </span>{" "}
+      새로고침
+    </button>
+  );
+}

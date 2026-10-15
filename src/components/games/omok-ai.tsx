@@ -16,7 +16,6 @@ import {
   boardFrom,
   colorOfMove,
   forbiddenCells,
-  makesFour,
   play,
   winTip,
   type Stone,
@@ -176,11 +175,7 @@ export function OmokAi({
       setLine(r.line);
       finish(r.winner, false, r.moves);
     } else if (r.draw) finish("draw");
-    else if (makesFour(r.moves)) {
-      // 4목: 말풍선만(판은 가리지 않음)
-      say(by, "four");
-      say(by === "ai" ? "me" : "ai", "danger");
-    }
+    // 4목이어도 아무 말 안 함(게임에 영향 없게)
     return true;
   }
 
@@ -233,7 +228,7 @@ export function OmokAi({
     }
     if (preview !== p) {
       setPreview(p);
-      setNote("같은 곳을 한 번 더 누르면 둬요");
+      setNote("같은 곳을 한 번 더 누르거나 「착수」 버튼을 눌러요");
       return;
     }
     apply(p, "me");
@@ -434,6 +429,11 @@ export function OmokAi({
           </div>
         ) : null}
       </div>
+      {myTurn && preview !== null ? (
+        <button type="button" data-omok-place onClick={() => apply(preview, "me")} className="arcade-btn btn-gold min-h-14 text-xl">
+          ✅ 여기에 착수
+        </button>
+      ) : null}
       <p
         role="status"
         className={cn(
@@ -448,7 +448,7 @@ export function OmokAi({
         {winner === null
           ? (note ??
             (myTurn
-              ? "▶ 내 차례! 같은 곳을 두 번 누르면 둬요"
+              ? "▶ 내 차례! 자리를 누르고 한 번 더(또는 착수)"
               : `${opp.title} 생각 중…`))
           : ""}
       </p>

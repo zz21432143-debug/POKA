@@ -28,6 +28,8 @@ export type HudSeat = {
   tag: string;
   /** 「3승 1패 1기권」 */
   record?: string | null;
+  /** 이 사람 기준 상대 전적(「상대전적 2승 1패」) */
+  vs?: string | null;
   active: boolean;
   secondsLeft?: number | null;
   totalSeconds?: number;
@@ -157,6 +159,14 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
               className="max-w-full truncate text-xs font-bold text-[#d6cdee]"
             >
               {seat.record}
+            </span>
+          ) : null}
+          {seat.vs ? (
+            <span
+              data-omok-vs
+              className="max-w-full truncate rounded-md bg-[#6ad7ff]/15 px-1.5 text-[11px] font-black text-[#8eeaff]"
+            >
+              ⚔️ {seat.vs}
             </span>
           ) : null}
         </div>

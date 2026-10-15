@@ -9,7 +9,9 @@ import {
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
-const ACTIONS: OmokAction[] = ["join", "sit", "leave", "kick", "cheer", "ready", "move", "resign", "cancel", "emote", "rematch", "undo-ask", "undo-yes", "undo-no", "draw-offer", "draw-yes", "draw-no"];
+const ACTIONS: OmokAction[] = ["join", "sit", "leave", "kick",
+  "exit",
+  "challenge", "cheer", "ready", "move", "resign", "cancel", "emote", "rematch", "undo-ask", "undo-yes", "undo-no", "draw-offer", "draw-yes", "draw-no"];
 
 /** 대국 상태(누구나 관전) · ?v=버전이 같으면 { same: true }만 */
 export async function GET(
