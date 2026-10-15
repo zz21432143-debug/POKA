@@ -7,25 +7,25 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "start",
     label: "입문",
     hint: "딜러를 처음 준비하는 사람",
-    slugs: ["how-to-become-dealer", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings"],
+    slugs: ["how-to-become-dealer", "dealer-first-month", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings"],
   },
   {
     id: "skill",
     label: "딜링 기술",
     hint: "셔플 · 피치 · 칩 · 팟 · 판정",
-    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes"],
+    slugs: ["dealing-order", "shuffle-pitch-practice", "chip-handling-pot", "chip-colors-units", "side-pots", "multiple-side-pots", "showdown", "showdown-reading", "dealer-calls", "dealer-mistakes"],
   },
   {
     id: "rules",
     label: "룰 · 토너먼트",
     hint: "TDA · 블라인드 · 분쟁 대처",
-    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "floor-call-disputes"],
+    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes"],
   },
   {
     id: "work",
     label: "근무 · 매장",
     hint: "급여 · 로테이션 · 건강 · 매장 운영",
-    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health"],
+    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path"],
   },
 ];
 
@@ -42,6 +42,8 @@ const TERM_LINKS: [string, string][] = [
   ["키커", "showdown-reading"],
   ["미스딜", "dealer-mistakes"],
   ["컬러업", "color-up"],
+  ["밸런싱", "table-balancing"],
+  ["칩 색깔", "chip-colors-units"],
   ["로테이션", "dealer-rotation-guide"],
   ["플로어", "floor-call-disputes"],
   ["피치", "shuffle-pitch-practice"],

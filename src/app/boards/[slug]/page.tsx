@@ -6,6 +6,7 @@ import { ScheduleBoard } from "@/components/listing/schedule-board";
 import { PromoGallery } from "@/components/promo/promo-gallery";
 import { InfinitePostList } from "@/components/posts/infinite-post-list";
 import { PinnedPosts } from "@/components/posts/pinned-posts";
+import { PopularPosts } from "@/components/posts/popular-posts";
 import { buttonVariants } from "@/components/ui/button";
 import { BOARD_DESCRIPTIONS } from "@/lib/boards";
 import { getCurrentUser } from "@/lib/current-user";
@@ -203,6 +204,10 @@ export default async function BoardPage({
                 : [board.boardType]
             }
           />
+          {/* 자유 · 핸드리뷰: 좋은 글이 먼저 보이게 인기글 5개 */}
+          {canonical === "free" || board.boardType === "FREE" || board.boardType === "HAND_REVIEW" ? (
+            <PopularPosts boardTypes={canonical === "free" ? ["FREE", "RULE_QA", "SKETCH"] : [board.boardType]} />
+          ) : null}
           <InfinitePostList
             feedKey={feedKey}
             initialItems={page.posts}

@@ -1,5 +1,6 @@
 import { LONG_GUIDES } from "@/lib/guide-articles-long";
 import { LONG_GUIDES_2 } from "@/lib/guide-articles-long-2";
+import { LONG_GUIDES_3 } from "@/lib/guide-articles-long-3";
 
 export type InfoArticle = {
   title: string;
@@ -325,7 +326,7 @@ DAY 2·파이널처럼 여러 날 진행하는 대회는 다음 날 좌석을 �
 ];
 
 /** 짧은 기본 가이드 + 딜러 실무 긴 글 */
-export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES, ...LONG_GUIDES, ...LONG_GUIDES_2];
+export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES, ...LONG_GUIDES, ...LONG_GUIDES_2, ...LONG_GUIDES_3];
 
 export function getGuideArticle(slug: string) {
   return GUIDE_ARTICLES.find((row) => row.slug === slug) ?? null;
