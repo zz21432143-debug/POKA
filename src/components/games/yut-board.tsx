@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { cn } from "cn";
 import { BIG_NODES, END, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
+import { PixelBurst } from "@/components/games/pixel-burst";
 
 export const TEAM_NAME: Record<Team, string> = { A: "홍팀", B: "청팀" };
 export const TEAM_COLOR: Record<Team, string> = { A: "#ff5d6c", B: "#4aa8ff" };
@@ -52,7 +53,11 @@ export function NameTag({ name, team, className }: { name: string; team: Team; c
 }
 
 /** 한 칸씩 밟고 가는 연출: 움직인 말 · 밟을 칸들 */
-export type YutAnim = { key: number; team: Team; moved: number[]; path: string[] };
+export type YutAnim = { key: number; team: Team; moved: number[]; path: string[]; stepMs: number };
+/** 잡힌 말이 판 밖으로 튕겨 나가는 연출 */
+export type YutKnock = { key: number; items: { node: string; face: Face; team: Team; kx: number }[] };
+/** 픽셀 파편(잡기 충격 · 업기 합체) */
+export type YutBurst = { key: number; node: string; colors: string[]; count?: number };
 
 /** 윷판(29칸) + 말(요괴) · 이름표 · 업기 탑 · 잡기 · 한 칸씩 이동 · 갈 곳 미리보기 */
 export function YutBoard({
@@ -65,9 +70,11 @@ export function YutBoard({
   ghost,
   onPiece,
   onGhost,
-  hit,
-  shake,
-  anim,
+  burst,
+  impact,
+  stepMs: stepMsProp,
+  knock,
+  merge,
 }: {
   state: YutState;
   faces: Record<Team, Face[]>;
@@ -79,27 +86,40 @@ export function YutBoard({
   ghost: string | null;
   onPiece: (i: number) => void;
   onGhost: () => void;
-  hit: { node: string; key: number } | null;
-  shake: boolean;
-  anim: YutAnim | null;
+  burst: YutBurst | null;
+  /** 착지 · 잡기 순간 판 진동 */
+  impact: boolean;
+  /** 한 칸 점프 시간(다인전 · 윷/모 연속이면 빠르게) */
+  stepMs?: number;
+  knock: YutKnock | null;
+  /** 업기: 이 칸 탑 꼭대기가 위에서 떨어져 합체 */
+  merge: { key: number; node: string } | null;
 }) {
-  const stepMs = fast ? 140 : 210;
-  // 연출 중인 칸 번호(끝나면 null → 실제 위치)
-  const [step, setStep] = useState<{ key: number; i: number } | null>(null);
+  // 한 칸씩 점프: 판 상태의 마지막 이동(event.path)에서 바로 계산 — 새 이동이 온 그 화면부터 첫 칸에 있게
+  const ev = state.event;
+  const anim: YutAnim | null = ev && ev.path?.length && ev.moved?.length ? { key: ev.at, team: ev.team, moved: ev.moved, path: ev.path, stepMs: stepMsProp ?? (fast ? 170 : 260) } : null;
+  const stepMs = anim?.stepMs ?? (fast ? 170 : 260);
+  // 처음 화면을 열었을 때 이미 지난 이동은 다시 연출하지 않음(i = -1: 끝)
+  const [step, setStep] = useState<{ key: number; i: number }>(() => ({ key: anim?.key ?? 0, i: -1 }));
+  const animKey = anim?.key ?? 0;
+  const animLen = anim?.path.length ?? 0;
   useEffect(() => {
-    if (!anim || anim.path.length < 2) return;
+    if (!animKey || !animLen) return;
     let i = 0;
-    setStep({ key: anim.key, i });
+    setStep({ key: animKey, i });
     const t = window.setInterval(() => {
       i += 1;
-      if (i >= anim.path.length - 1) {
+      if (i >= animLen) {
         window.clearInterval(t);
-        setStep(null);
-      } else setStep({ key: anim.key, i });
+        setStep({ key: animKey, i: -1 });
+      } else setStep({ key: animKey, i });
     }, stepMs);
     return () => window.clearInterval(t);
-  }, [anim, stepMs]);
-  const walking = anim && step && step.key === anim.key ? anim.path[step.i] : null;
+  }, [animKey, animLen, stepMs]);
+  const walking = !anim ? null : step.key === anim.key ? (step.i < 0 ? null : anim.path[step.i]) : anim.path[0];
+  const walkIdx = !anim ? -1 : step.key === anim.key ? step.i : 0;
+  const hopping = (team: Team, i: number) => Boolean(walking && anim && anim.team === team && anim.moved.includes(i));
+  const merging = (p: { pos: string; top: boolean }) => Boolean(!walking && merge && merge.node === p.pos && p.top);
 
   const xy = (n: string) => NODE_XY[n === START || n === END ? "o0" : n] ?? [50, 50];
   const shown = (team: Team, i: number, pos: string) => (walking && anim && anim.team === team && anim.moved.includes(i) ? walking : pos);
@@ -123,7 +143,7 @@ export function YutBoard({
   return (
     <div
       data-yut-board
-      className={cn("relative mx-auto aspect-square w-full max-w-[min(92vw,560px)] select-none rounded-3xl border-4 border-[#3b2766] bg-[radial-gradient(circle_at_50%_45%,#2c1a4a,#140b24_70%)] shadow-[0_6px_0_#0a0614]", shake && "yut-shake")}
+      className={cn("relative mx-auto aspect-square w-full max-w-[min(100%,760px)] select-none rounded-3xl border-4 border-[#3b2766] bg-[radial-gradient(circle_at_50%_45%,#2c1a4a,#140b24_70%)] shadow-[0_6px_0_#0a0614]", impact && "yut-impact")}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
@@ -181,10 +201,16 @@ export function YutBoard({
             disabled={!can}
             onClick={() => onPiece(p.i)}
             aria-label={`${TEAM_NAME[p.team]} ${pieceName(names, p.team, p.i)} 말${p.count > 1 ? ` (${p.count}개 업힘)` : ""}`}
-            className={cn("yut-piece absolute grid size-[11.5%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full", can && "cursor-pointer", isSel || walking ? "z-20" : "z-10")}
+            className={cn("yut-piece absolute grid size-[12%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full", can && "cursor-pointer", isSel || walking ? "z-20" : "z-10")}
             style={{ left: `${x}%`, top: `${y - p.level * 3.2}%` }}
           >
-            <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className={cn("size-full", can && "yut-target", isSel && "scale-110")} />
+            <span
+              key={hopping(p.team, p.i) ? `hop-${anim?.key}-${walkIdx}` : merging(p) ? `merge-${merge?.key}` : "still"}
+              className={cn("grid size-full place-items-center", hopping(p.team, p.i) ? "yut-hop" : merging(p) ? "yut-merge" : "")}
+              style={{ ["--hop" as string]: `${stepMs}ms` }}
+            >
+              <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className={cn("size-full", can && "yut-target", isSel && "scale-110")} />
+            </span>
             {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="absolute -bottom-3.5 left-1/2 -translate-x-1/2" /> : null}
             {p.top && p.count > 1 ? (
               <span data-yut-stack className="absolute -right-1.5 -top-2 rounded-full border-2 border-[#0a0614] bg-[#ffcf4a] px-1.5 text-[11px] font-black leading-4 text-[#2a1400]">
@@ -195,36 +221,21 @@ export function YutBoard({
         );
       })}
 
-      {hit ? (
-        <span key={hit.key} data-yut-hit className="yut-hit pointer-events-none absolute z-40 grid size-[24%] place-items-center" style={{ left: `${xy(hit.node)[0]}%`, top: `${xy(hit.node)[1]}%` }}>
-          <svg viewBox="0 0 100 100" className="absolute inset-0 size-full" aria-hidden>
-            <polygon points="50,2 60,35 98,30 68,55 85,95 50,70 15,95 32,55 2,30 40,35" fill="#ffcf4a" stroke="#ff5d6c" strokeWidth="4" />
-          </svg>
-          <b className="relative text-lg font-black text-[#2a1400]">퍽!</b>
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-/** 던진 윷가락 4개(앞면 = 배 · 뒷면 = 등) · 세게 던질수록 높이 · 낙이면 판 밖으로 */
-export function YutSticks({ sticks, k, fast, power = 50, nak = false }: { sticks: boolean[]; k: number; fast: boolean; power?: number; nak?: boolean }) {
-  return (
-    <div
-      className="flex items-end justify-center gap-2"
-      style={{ ["--yut-throw" as string]: fast ? "0.45s" : "0.75s", ["--yut-h" as string]: `${-24 - power * 0.7}px`, ["--yut-spin" as string]: `${360 + Math.round(power * 5.4)}deg` }}
-    >
-      {sticks.map((up, i) => (
-        <span
-          key={`${k}-${i}`}
-          className={cn(nak ? "yut-nak" : "yut-stick", "relative h-16 w-4 rounded-full border-2 border-[#0a0614]", up ? "bg-[#f3dfb5]" : "bg-[#8a5a2b]")}
-          style={{ animationDelay: `${i * 0.04}s`, ["--yut-out" as string]: `${(i - 1.5) * 70}px` }}
-        >
-          {/* 빽도 표시 막대 */}
-          {i === 0 ? <span className="absolute left-1/2 top-2 size-1.5 -translate-x-1/2 rounded-full bg-[#ff5d6c]" /> : null}
-          {!up ? <span className="absolute inset-x-1 top-3 bottom-3 rounded-full border-x-2 border-[#5a3a1b]" /> : null}
-        </span>
-      ))}
+      {/* 칸마다 착지 먼지 */}
+      {walking ? <PixelBurst key={`dust-${anim?.key}-${walkIdx}`} x={xy(walking)[0]} y={xy(walking)[1] + 4} seed={(anim?.key ?? 0) + walkIdx * 31} colors={["#d9b980", "#a9844f", "#6e5232"]} count={7} spread={22} size={5} up={0.9} /> : null}
+      {burst ? <PixelBurst key={`burst-${burst.key}`} x={xy(burst.node)[0]} y={xy(burst.node)[1]} seed={burst.key} colors={burst.colors} count={burst.count ?? 18} spread={70} size={8} up={0.2} /> : null}
+      {knock
+        ? knock.items.map((k, i) => (
+            <span
+              key={`knock-${knock.key}-${i}`}
+              data-yut-knock
+              className="yut-knock pointer-events-none absolute z-30 grid size-[11.5%] place-items-center"
+              style={{ left: `${xy(k.node)[0]}%`, top: `${xy(k.node)[1]}%`, ["--kx" as string]: `${k.kx}px` }}
+            >
+              <YokaiToken face={k.face} team={k.team} className="size-full" />
+            </span>
+          ))
+        : null}
     </div>
   );
 }

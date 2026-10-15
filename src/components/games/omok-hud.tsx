@@ -5,6 +5,7 @@ import { StoneDot } from "@/components/games/omok-board";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { emoteLabel, emoteSrc, isOniEmote } from "@/lib/omok-emotes";
+import type { Watcher } from "@/lib/game-watch";
 
 /** 오니 이모티콘 그림(예전 글자 이모티콘이면 글자 그대로) */
 export function EmoteArt({ e, className }: { e: string; className?: string }) {
@@ -40,6 +41,8 @@ export type HudSeat = {
   result?: "win" | "lose" | null;
   /** 아직 아무도 안 앉은 자리 */
   empty?: boolean;
+  /** 나가서 빈 자리(「퇴장함」) */
+  gone?: boolean;
   /** 대기실 READY(undefined면 표시 안 함) */
   ready?: boolean;
   /** 돌을 둔 순간 요괴가 펄쩍 */
@@ -101,8 +104,12 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           )}
         >
           {seat.empty ? (
-            <span className="arcade-px arcade-blink grid size-full place-items-center text-2xl text-[#ffcf4a]">
+            <span data-omok-empty-seat className="arcade-px arcade-blink grid size-full place-items-center text-2xl text-[#ffcf4a]">
               ?
+            </span>
+          ) : seat.gone ? (
+            <span data-omok-gone className="grid size-full place-items-center bg-black/60 text-3xl grayscale">
+              🚪
             </span>
           ) : seat.yokai ? (
             // eslint-disable-next-line @next/next/no-img-element -- 요괴 픽셀 그림
@@ -152,8 +159,13 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
             ) : null}
           </div>
           <b className="max-w-full truncate text-[15px] leading-tight font-black text-white sm:text-base">
-            {seat.empty ? "빈자리" : seat.name}
+            {seat.empty ? "도전자 대기 중" : seat.name}
           </b>
+          {seat.gone ? (
+            <span className="rounded-md bg-[#ff5d6c] px-1.5 text-[11px] leading-5 font-black text-white">
+              🚪 퇴장함
+            </span>
+          ) : null}
           {!seat.empty && seat.name ? (
             <span data-omok-honor className="flex max-w-full flex-wrap gap-1 empty:hidden">
               <PotTitleBadge nickname={seat.name} max={1} yokai={false} className="!text-[10px]" />
@@ -418,74 +430,73 @@ export function BigWinCutIn({
 }
 
 /**
- * 관전석 줄(HUD와 판 사이 · 늘 같은 높이): 관전자 수 · 닉네임, 응원이 오면 크게 오니 이모티콘 + 닉네임.
- * 판은 가리지 않고, 화면에서 가장 잘 보이는 자리.
+ * 관전석(판 바로 위 · 판은 안 가림): 관전자 미니 픽셀 아바타 줄.
+ * 관전자가 응원 이모티콘을 누르면 그 사람 아바타 위로 1.5초 통통 튀며 떠오름.
  */
-export function CheerStrip({
+export function SpectatorBar({
   count,
-  names,
+  list,
   cheers,
   now,
   me,
 }: {
   count: number;
-  names: string[];
+  list: Watcher[];
   cheers: { n: string; e: string; at: number }[];
   now: number;
   me?: boolean;
 }) {
-  const live = cheers.filter((c) => now - c.at < 5000).slice(-4);
+  const live = cheers.filter((c) => now - c.at < 1600);
+  const popOf = (n: string) => [...live].reverse().find((c) => c.n === n) ?? null;
+  // 아바타 줄에 없는 사람(방금 들어옴 등)의 응원도 끝에 띄움
+  const strays = live.filter((c) => !list.some((w) => w.n === c.n)).slice(-2);
+  const guests = Math.max(0, count - list.length);
   return (
     <div
       data-omok-cheer-strip
-      className="flex min-h-[72px] items-center gap-2 overflow-hidden rounded-2xl border-2 border-[#6ad7ff]/40 bg-[#0d1a33]/70 px-2.5 py-1.5"
+      data-spectator-bar
+      className="flex min-h-[92px] items-end gap-2 overflow-x-auto overflow-y-visible rounded-2xl border-2 border-[#6ad7ff]/40 bg-[#0d1a33]/70 px-2.5 pt-9 pb-1.5 [scrollbar-width:none]"
     >
-      <span className="grid shrink-0 justify-items-center leading-tight">
+      <span className="grid shrink-0 justify-items-center self-center leading-tight">
         <span className="text-lg">👀</span>
-        <b className="text-xs font-black text-[#8eeaff]">
+        <b className="text-xs font-black whitespace-nowrap text-[#8eeaff]">
           관전 {count}
           {me ? "(나)" : ""}
         </b>
       </span>
-      {live.length ? (
-        <div
-          data-omok-cheers
-          className="flex min-w-0 flex-1 items-center justify-end gap-2"
-        >
-          {live.map((c) => (
-            <span
-              key={`${c.n}-${c.at}`}
-              data-omok-cheer
-              className="cheer-pop grid shrink-0 justify-items-center"
-            >
-              <EmoteArt
-                e={c.e}
-                className="size-12 drop-shadow-[0_3px_0_#0a0614] sm:size-14"
-              />
-              <span className="max-w-20 truncate rounded-full bg-[#0a0614] px-2 text-[11px] font-black text-[#8eeaff]">
-                {c.n}
+      {list.map((w) => {
+        const pop = popOf(w.n);
+        return (
+          <span key={w.n} data-omok-spectator={w.n} className="relative grid w-14 shrink-0 justify-items-center gap-0.5">
+            {pop ? (
+              <span key={pop.at} data-omok-cheer className="spec-pop pointer-events-none absolute -top-9 z-10">
+                <EmoteArt e={pop.e} className="size-11 drop-shadow-[0_3px_0_#0a0614]" />
               </span>
+            ) : null}
+            <span className={cn("grid size-10 place-items-center overflow-hidden rounded-lg border-2 bg-[#140b24]", pop ? "border-[#ffcf4a]" : "border-[#6ad7ff]/50")}>
+              {w.s ? (
+                // eslint-disable-next-line @next/next/no-img-element -- 관전자 대표 요괴(픽셀)
+                <img src={yokaiImage(w.s, w.st)} alt="" draggable={false} className="size-[90%] object-contain [image-rendering:pixelated]" />
+              ) : (
+                <span className="arcade-px text-xs text-[#8eeaff]">?</span>
+              )}
             </span>
-          ))}
-        </div>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-          {names.length ? (
-            names.slice(0, 6).map((n) => (
-              <span key={n} data-omok-spectator className="g-chip !text-white">
-                {n}
-              </span>
-            ))
-          ) : (
-            <span className="text-sm text-[#d6cdee]">
-              {count ? "손님이 관전 중이에요" : "응원이 오면 여기에 크게 떠요"}
-            </span>
-          )}
-          {names.length > 6 ? (
-            <span className="g-chip">+{names.length - 6}</span>
-          ) : null}
-        </div>
-      )}
+            <span className="max-w-full truncate text-[10px] font-black text-white">{w.n}</span>
+          </span>
+        );
+      })}
+      {strays.map((c) => (
+        <span key={`${c.n}-${c.at}`} className="relative grid w-14 shrink-0 justify-items-center">
+          <span className="spec-pop absolute -top-9">
+            <EmoteArt e={c.e} className="size-11" />
+          </span>
+          <span className="max-w-full truncate text-[10px] font-black text-[#8eeaff]">{c.n}</span>
+        </span>
+      ))}
+      {guests > 0 ? <span className="g-chip shrink-0 self-center">손님 {guests}</span> : null}
+      {!list.length && !guests && !strays.length ? (
+        <span className="self-center text-sm text-[#d6cdee]">관전자가 들어오면 여기에 요괴 아바타로 앉아요</span>
+      ) : null}
     </div>
   );
 }

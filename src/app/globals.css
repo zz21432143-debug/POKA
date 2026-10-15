@@ -2957,3 +2957,301 @@ img[src*="/yokai/"] {
     transition: none !important;
   }
 }
+
+/* 관전석: 관전자 아바타 위로 이모티콘이 1.5초 통통 */
+.spec-pop {
+  animation: spec-pop 1.5s ease-out both;
+}
+@keyframes spec-pop {
+  0% {
+    transform: translateY(14px) scale(0.3);
+    opacity: 0;
+  }
+  14% {
+    transform: translateY(-10px) scale(1.15);
+    opacity: 1;
+  }
+  28% {
+    transform: translateY(0) scale(1);
+  }
+  42% {
+    transform: translateY(-6px) scale(1.05);
+  }
+  56% {
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-8px) scale(0.9);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spec-pop {
+    animation-duration: 0.01s;
+  }
+}
+
+/* ───────── 윷놀이 연출 2: 던지기 · 착지 먼지 · 포물선 점프 · 넉백 · 도발 컷인 ───────── */
+/* 윷가락: 판 아래에서 솟구쳐 회전 → 멍석에 내리꽂힘(80% 지점 착지) */
+.yut-fly {
+  animation: yut-fly var(--fly, 0.9s) cubic-bezier(0.25, 0.7, 0.4, 1) both;
+}
+@keyframes yut-fly {
+  0% {
+    transform: translate(0, 230%) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  45% {
+    transform: translate(calc(var(--lx) * 0.55), calc(var(--peak) * -1)) rotate(calc(var(--rot) - 620deg));
+  }
+  78% {
+    transform: translate(var(--lx), var(--ly)) rotate(var(--rot));
+    animation-timing-function: ease-out;
+  }
+  86% {
+    transform: translate(var(--lx), calc(var(--ly) - 7px)) rotate(var(--rot));
+  }
+  100% {
+    transform: translate(var(--lx), var(--ly)) rotate(var(--rot));
+    opacity: 1;
+  }
+}
+/* 낙: 멍석을 넘어 판 밖으로 */
+.yut-fly-nak {
+  animation: yut-fly-nak var(--fly, 0.9s) cubic-bezier(0.3, 0.6, 0.5, 1) both;
+}
+@keyframes yut-fly-nak {
+  0% {
+    transform: translate(0, 230%) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    transform: translate(calc(var(--lx) * 0.8), calc(var(--peak) * -1)) rotate(calc(var(--rot) - 500deg));
+  }
+  100% {
+    transform: translate(calc(var(--lx) * 3.2), 260%) rotate(calc(var(--rot) + 400deg));
+    opacity: 0;
+  }
+}
+/* 픽셀 먼지(네모 조각 · 계단식 프레임) */
+.yut-dust {
+  animation: yut-dust var(--dur, 0.6s) steps(6, end) both;
+}
+@keyframes yut-dust {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.25);
+    opacity: 0;
+  }
+}
+/* 착지 화면 진동 0.15초 */
+.yut-impact {
+  animation: yut-impact 0.15s steps(3, end) 1;
+}
+@keyframes yut-impact {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-4px, 3px);
+  }
+  66% {
+    transform: translate(4px, -2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+/* 결과 네온 배너 */
+.yut-banner {
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 2px #0a0614;
+  text-shadow:
+    4px 4px 0 #0a0614,
+    0 0 14px currentColor,
+    0 0 30px currentColor;
+  animation: yut-banner 0.5s cubic-bezier(0.2, 1.7, 0.4, 1) both;
+}
+@keyframes yut-banner {
+  0% {
+    transform: scale(2.4);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  60% {
+    transform: scale(0.92);
+    opacity: 1;
+    filter: none;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* 말 이동: 칸마다 포물선 점프 + 찌그러짐(Squash & Stretch) */
+.yut-hop {
+  animation: yut-hop var(--hop, 0.26s) linear both;
+  transform-origin: 50% 100%;
+}
+@keyframes yut-hop {
+  0% {
+    transform: translateY(0) scale(1.18, 0.82);
+  }
+  18% {
+    transform: translateY(-18%) scale(0.86, 1.16);
+  }
+  50% {
+    transform: translateY(-62%) scale(0.94, 1.08) rotate(-6deg);
+  }
+  82% {
+    transform: translateY(-8%) scale(0.95, 1.06) rotate(3deg);
+  }
+  92% {
+    transform: translateY(0) scale(1.22, 0.78);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+/* 업기: 위에서 떨어져 탑 위에 착 */
+.yut-merge {
+  animation: yut-merge 0.42s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  transform-origin: 50% 100%;
+}
+@keyframes yut-merge {
+  0% {
+    transform: translateY(-80%) scale(0.9, 1.15);
+  }
+  60% {
+    transform: translateY(0) scale(1.25, 0.75);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+/* 잡힌 말: 빙글 돌며 판 밖으로 튕겨 나감 */
+.yut-knock {
+  animation: yut-knock 0.9s cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+@keyframes yut-knock {
+  0% {
+    transform: translate(-50%, -50%) rotate(0) scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(-50% + var(--kx) * 0.2), calc(-50% - 60%)) rotate(200deg) scale(1.15);
+  }
+  100% {
+    transform: translate(calc(-50% + var(--kx)), calc(-50% + 160%)) rotate(1080deg) scale(0.6);
+    opacity: 0;
+  }
+}
+/* 도발 컷인: 대각선으로 갈라진 화면 */
+.yut-cutin {
+  animation: yut-cutin-fade 2.1s ease both;
+}
+@keyframes yut-cutin-fade {
+  0%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.yut-cutin-a {
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 0 72%);
+  animation: yut-cutin-a 0.35s cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+.yut-cutin-b {
+  clip-path: polygon(0 74%, 100% 40%, 100% 100%, 0 100%);
+  animation: yut-cutin-b 0.35s 0.08s cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+@keyframes yut-cutin-a {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes yut-cutin-b {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.yut-cutin-hero {
+  animation: yut-cutin-hero 2s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  image-rendering: pixelated;
+}
+@keyframes yut-cutin-hero {
+  0% {
+    transform: translateX(-60%) scale(0.8);
+  }
+  18% {
+    transform: translateX(0) scale(1.08);
+  }
+  30%,
+  100% {
+    transform: translateX(4%) scale(1);
+  }
+}
+.yut-cutin-text {
+  animation: yut-cutin-text 2s ease both;
+}
+@keyframes yut-cutin-text {
+  0%,
+  15% {
+    transform: translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  28% {
+    transform: translateY(0) scale(1.08);
+    opacity: 1;
+  }
+  36%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* 윷 칭호(픽셀 배지: 각진 테두리 · 계단 그림자) */
+.yut-title {
+  border: 2px solid currentColor;
+  box-shadow:
+    2px 0 0 #0a0614,
+    0 2px 0 #0a0614,
+    2px 2px 0 #0a0614;
+  image-rendering: pixelated;
+}
+@media (prefers-reduced-motion: reduce) {
+  .yut-fly,
+  .yut-fly-nak,
+  .yut-dust,
+  .yut-impact,
+  .yut-banner,
+  .yut-hop,
+  .yut-merge,
+  .yut-knock,
+  .yut-cutin-a,
+  .yut-cutin-b,
+  .yut-cutin-hero,
+  .yut-cutin-text {
+    animation-duration: 0.01s !important;
+  }
+}

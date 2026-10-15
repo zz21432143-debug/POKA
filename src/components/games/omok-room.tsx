@@ -8,7 +8,7 @@ import { OmokBoard } from "@/components/games/omok-board";
 import {
   ArcadeBanner,
   BigWinCutIn,
-  CheerStrip,
+  SpectatorBar,
   EmoteArt,
   OmokHud,
   Spectators,
@@ -43,6 +43,7 @@ import {
   warnBeep,
 } from "@/lib/omok-sound";
 import type { OmokRecord, OmokView } from "@/lib/omok-server";
+import type { Watcher } from "@/lib/game-watch";
 
 const END_TEXT: Record<string, string> = {
   five: "5목 완성!",
@@ -50,6 +51,7 @@ const END_TEXT: Record<string, string> = {
   timeout: "시간 초과",
   draw: "무승부",
   "draw-agree": "합의 무승부",
+  leave: "퇴장 · 접속 끊김 기권패",
   cancel: "방이 닫혔어요",
 };
 
@@ -118,6 +120,7 @@ export function OmokRoom({
   const [watching, setWatching] = useState({
     count: initial.watchers ?? 0,
     names: initial.watcherNames ?? [],
+    list: initial.watcherList ?? [],
   });
   const [watchKey] = useState(() =>
     Math.random().toString(36).slice(2, 14).padEnd(10, "0"),
@@ -136,7 +139,11 @@ export function OmokRoom({
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.me || next.seat);
     if (next.watchers !== undefined)
-      setWatching({ count: next.watchers, names: next.watcherNames ?? [] });
+      setWatching({
+        count: next.watchers,
+        names: next.watcherNames ?? [],
+        list: next.watcherList ?? [],
+      });
     if (next.records) setRecords(next.records);
     setOffset(next.serverNow - Date.now());
     setView(next);
@@ -150,7 +157,8 @@ export function OmokRoom({
     const loop = async () => {
       tick += 1;
       // 4번에 1번 「보고 있어요」(관전자 = 관전자 수 · 대국자 = 자리 지킴, 오래 안 보이면 방 정리)
-      const watch = tick % 4 === 1 ? `&w=${watchKey}` : "";
+      const watch =
+        seatedRef.current || tick % 4 === 1 ? `&w=${watchKey}` : "";
       try {
         const res = await fetch(
           `/api/games/omok/${initial.id}?v=${versionRef.current}${watch}`,
@@ -162,12 +170,14 @@ export function OmokRoom({
             view?: OmokView;
             watchers?: number;
             watcherNames?: string[];
+            watcherList?: Watcher[];
           };
           if (alive && !json.same && json.view) receive(json.view);
           if (alive && json.same && json.watchers !== undefined)
             setWatching({
               count: json.watchers,
               names: json.watcherNames ?? [],
+              list: json.watcherList ?? [],
             });
         }
       } catch {
@@ -444,6 +454,31 @@ export function OmokRoom({
         ? view.guestReady
         : false;
   const spectator = !view.me && !view.seat;
+  // 두 자리가 찬 방에 들어온 사람은 자동으로 도전 줄(스스로 빠지면 다시 안 세움)
+  const autoQueued = useRef(false);
+  const canAutoQueue =
+    spectator &&
+    loggedIn &&
+    hasYokai &&
+    !view.queueMine &&
+    !view.nextId &&
+    view.endReason !== "cancel" &&
+    (view.status !== "waiting" || Boolean(view.guest));
+  useEffect(() => {
+    if (!canAutoQueue || autoQueued.current) return;
+    try {
+      if (window.sessionStorage.getItem(`omok-q-out:${view.id}`)) return;
+    } catch {
+      /* 저장소를 못 쓰면 그냥 진행 */
+    }
+    // 서버에 줄 서기 요청(응답이 오면 화면 갱신)
+    const t = window.setTimeout(() => {
+      autoQueued.current = true;
+      void act("queue-join");
+    }, 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 방마다 한 번만
+  }, [canAutoQueue, view.id]);
   const code = view.code ?? "";
 
   // 내 차례 10초 남으면 매초 삑
@@ -507,6 +542,12 @@ export function OmokRoom({
       jumpKey: jump[c],
       emote:
         plateEmote?.by === c ? { e: plateEmote.e, key: plateEmote.key } : null,
+      // 접속이 끊기거나 나가서 진 자리: 「퇴장함」
+      gone:
+        view.status === "done" &&
+        view.endReason === "leave" &&
+        Boolean(view.winner) &&
+        view.winner !== c,
     };
   };
   // 대기실: 흑 자리 = 방장 · 백 자리 = 손님(내가 손님이면 내 자리를 왼쪽에)
@@ -670,9 +711,9 @@ export function OmokRoom({
         <OmokHud left={hud.left} right={hud.right} />
 
         {/* 관전석 줄: 관전자 · 응원(판 바로 위, 판은 안 가림) */}
-        <CheerStrip
+        <SpectatorBar
           count={watching.count}
-          names={watching.names}
+          list={watching.list}
           cheers={view.cheers ?? []}
           now={now + offset}
           me={spectator && watching.count > 0}
@@ -1278,7 +1319,14 @@ export function OmokRoom({
                   type="button"
                   data-omok-queue-leave
                   disabled={busy}
-                  onClick={() => void act("queue-leave")}
+                  onClick={() => {
+                    try {
+                      window.sessionStorage.setItem(`omok-q-out:${view.id}`, "1");
+                    } catch {
+                      /* 이번만 */
+                    }
+                    void act("queue-leave");
+                  }}
                   className="arcade-btn btn-dark !min-h-10 text-sm"
                 >
                   줄에서 빠지기
@@ -1288,7 +1336,14 @@ export function OmokRoom({
                   type="button"
                   data-omok-queue-join
                   disabled={busy}
-                  onClick={() => void act("queue-join")}
+                  onClick={() => {
+                    try {
+                      window.sessionStorage.removeItem(`omok-q-out:${view.id}`);
+                    } catch {
+                      /* 이번만 */
+                    }
+                    void act("queue-join");
+                  }}
                   className="arcade-btn btn-gold !min-h-11 text-base"
                 >
                   🙋 다음 판 도전 줄 서기
