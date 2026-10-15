@@ -35,7 +35,7 @@ export default async function GamesPage() {
         </h1>
         <p className="arcade-kr text-lg text-white">요괴 게임방</p>
         <p className="text-xs text-zinc-300">
-          요괴들과 한 판! 지금은 마스터만 보이는 비공개 테스트예요.
+          요괴들과 한 판! 친구와 대전하거나 요괴와 연습해 보세요.
         </p>
         <p className="arcade-px arcade-blink text-[9px] text-[#ffe08a]">
           SELECT GAME

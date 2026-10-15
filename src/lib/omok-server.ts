@@ -17,13 +17,13 @@ import { gameRecord, recordGameResult } from "@/lib/game-stats";
  * 요괴 오목 친구 대전(서버가 차례 · 금수 · 승패 · 시간을 판정).
  * 방 = 방 코드(5글자) + 대기실(방장 자리 · 손님 자리 · 둘 다 READY면 시작) → 대국 → 결과.
  * 화면은 1초마다 version만 물어보고, 바뀌었을 때만 판 전체를 받음.
- * 비공개 기간: 로비 · 방 만들기 · AI 대전은 마스터만(GAMES_PUBLIC=1이면 모두). 방 링크 · 코드를 받은 회원은 착석, 누구나 관전.
+ * 공개(기본): 누구나 로비 · 방 만들기 · AI 대전. 다시 닫으려면 GAMES_PUBLIC=0(그때는 마스터만).
  * 요괴가 없으면 방을 만들거나 앉을 수 없음(요괴 고르기로).
  */
 export function gamesOpen(
   user: { isMaster?: boolean | null } | null | undefined,
 ) {
-  return Boolean(user?.isMaster) || process.env.GAMES_PUBLIC === "1";
+  return Boolean(user?.isMaster) || process.env.GAMES_PUBLIC !== "0";
 }
 
 /** 대기실은 마지막 움직임 뒤 60분이면 닫힘 */
