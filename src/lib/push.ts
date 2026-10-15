@@ -17,7 +17,8 @@ function configure() {
   const publicKey = vapidPublicKey();
   const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
   if (!publicKey || !privateKey) return false;
-  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:POKA4444444@gmail.com";
+  const subject =
+    process.env.VAPID_SUBJECT?.trim() || "mailto:POKA4444444@gmail.com";
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;
   return true;
@@ -30,13 +31,22 @@ export function pushEnabled() {
 export type PushPayload = { title: string; body: string; url: string };
 
 /** 브라우저 푸시 서비스 주소만 받습니다(아무 서버로나 요청이 가지 않게). */
-const PUSH_HOSTS = ["fcm.googleapis.com", "android.googleapis.com", "push.apple.com", "push.services.mozilla.com", "notify.windows.com"];
+const PUSH_HOSTS = [
+  "fcm.googleapis.com",
+  "android.googleapis.com",
+  "push.apple.com",
+  "push.services.mozilla.com",
+  "notify.windows.com",
+];
 
 export function isPushEndpoint(endpoint: string) {
   try {
     const url = new URL(endpoint);
     const host = url.hostname.toLowerCase();
-    return url.protocol === "https:" && PUSH_HOSTS.some((base) => host === base || host.endsWith(`.${base}`));
+    return (
+      url.protocol === "https:" &&
+      PUSH_HOSTS.some((base) => host === base || host.endsWith(`.${base}`))
+    );
   } catch {
     return false;
   }
@@ -45,7 +55,10 @@ export function isPushEndpoint(endpoint: string) {
 /** 그 지역 구독자 + "전국" 구독자에게 새 급구를 알립니다. */
 export async function notifyRegion(region: string, payload: PushPayload) {
   if (!configure()) return { sent: 0 };
-  const subs = await prisma.pushSubscription.findMany({ where: { region: { in: [region, "전국"] } }, take: 5000 });
+  const subs = await prisma.pushSubscription.findMany({
+    where: { region: { in: [region, "전국"] } },
+    take: 5000,
+  });
   return sendAll(subs, payload);
 }
 
@@ -53,7 +66,16 @@ export async function notifyRegion(region: string, payload: PushPayload) {
 export async function notifyAdmins(payload: PushPayload) {
   if (!configure()) return { sent: 0 };
   const subs = await prisma.pushSubscription.findMany({
-    where: { adminAlerts: true, user: { OR: [{ isAdmin: true }, { isMaster: true }, { role: { in: ["ADMIN", "MASTER"] } }] } },
+    where: {
+      adminAlerts: true,
+      user: {
+        OR: [
+          { isAdmin: true },
+          { isMaster: true },
+          { role: { in: ["ADMIN", "MASTER"] } },
+        ],
+      },
+    },
     take: 50,
   });
   return sendAll(subs, payload);
@@ -62,15 +84,23 @@ export async function notifyAdmins(payload: PushPayload) {
 /** 이 회원이 알림을 켠 기기(관리자 테스트 알림용) */
 export async function notifyUser(userId: string, payload: PushPayload) {
   if (!configure()) return { sent: 0, total: 0 };
-  const subs = await prisma.pushSubscription.findMany({ where: { userId }, take: 20 });
+  const subs = await prisma.pushSubscription.findMany({
+    where: { userId },
+    take: 20,
+  });
   return { ...(await sendAll(subs, payload)), total: subs.length };
 }
 
 /** 관리자 공지 알림: region이 없으면 급구 알림을 켠 모든 기기, 있으면 그 지역 + 전국 */
-export async function notifyBroadcast(region: string | null, payload: PushPayload) {
+export async function notifyBroadcast(
+  region: string | null,
+  payload: PushPayload,
+) {
   if (!configure()) return { sent: 0, total: 0 };
   const subs = await prisma.pushSubscription.findMany({
-    where: region ? { region: { in: [region, "전국"] } } : { region: { not: "" } },
+    where: region
+      ? { region: { in: [region, "전국"] } }
+      : { region: { not: "" } },
     take: 20000,
   });
   return { ...(await sendAll(subs, payload)), total: subs.length };
@@ -79,14 +109,30 @@ export async function notifyBroadcast(region: string | null, payload: PushPayloa
 /** 오늘의 퀴즈 알림을 켠 기기 */
 export async function notifyQuiz(payload: PushPayload) {
   if (!configure()) return { sent: 0, total: 0 };
-  const subs = await prisma.pushSubscription.findMany({ where: { quizAlerts: true }, take: 20000 });
+  const subs = await prisma.pushSubscription.findMany({
+    where: { quizAlerts: true },
+    take: 20000,
+  });
+  return { ...(await sendAll(subs, payload)), total: subs.length };
+}
+
+/** 출석 1등 알림(밤 12시)을 켠 기기 */
+export async function notifyAttend(payload: PushPayload) {
+  if (!configure()) return { sent: 0, total: 0 };
+  const subs = await prisma.pushSubscription.findMany({
+    where: { attendAlerts: true },
+    take: 20000,
+  });
   return { ...(await sendAll(subs, payload)), total: subs.length };
 }
 
 /** 요괴 마을 알림을 켠 이 회원의 기기 */
 export async function notifyYokaiUser(userId: string, payload: PushPayload) {
   if (!configure()) return { sent: 0 };
-  const subs = await prisma.pushSubscription.findMany({ where: { userId, yokaiAlerts: true }, take: 10 });
+  const subs = await prisma.pushSubscription.findMany({
+    where: { userId, yokaiAlerts: true },
+    take: 10,
+  });
   return sendAll(subs, payload);
 }
 
@@ -102,7 +148,10 @@ async function sendAll(subs: Sub[], payload: PushPayload) {
       subs.slice(i, i + 200).map(async (sub) => {
         try {
           await webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            {
+              endpoint: sub.endpoint,
+              keys: { p256dh: sub.p256dh, auth: sub.auth },
+            },
             JSON.stringify(payload),
             { TTL: 60 * 60 * 6 },
           );
@@ -114,6 +163,7 @@ async function sendAll(subs: Sub[], payload: PushPayload) {
       }),
     );
   }
-  if (gone.length) await prisma.pushSubscription.deleteMany({ where: { id: { in: gone } } });
+  if (gone.length)
+    await prisma.pushSubscription.deleteMany({ where: { id: { in: gone } } });
   return { sent };
 }

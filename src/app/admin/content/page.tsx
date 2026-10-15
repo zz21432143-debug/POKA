@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { ContentPlanPublisher, type PublishItem } from "@/components/admin/content-plan-publisher";
 import { CONTENT_PLAN, EXTRA_PLAN, scheduleSummary, type ScheduleRow } from "@/lib/content-plan";
 
@@ -138,9 +137,6 @@ export default async function AdminContentPage() {
           1주일 콘텐츠 14개를 POKA 계정으로 올립니다. 요일·시간에 맞춰 하나씩 올리거나, 준비된 글을 한 번에 올릴 수 있습니다.
           올리기 전에 제목과 본문을 고칠 수 있습니다. 〔 〕가 남아 있는 글은 실제 내용(사진·결과)을 채워야 올라갑니다.
         </p>
-        <div className="mt-2">
-          <AdminNav current="/admin/content" isMaster />
-        </div>
       </header>
       <ContentPlanPublisher items={items} />
     </div>

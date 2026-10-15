@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { loadSiteStats } from "@/lib/site-stats";
 import { SHARE_TOOLS, shareStats, type ShareTool } from "@/lib/share-stats";
 import { formatKstLabel, shiftDate, todayKstDate } from "@/lib/dates";
@@ -60,9 +59,6 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
           날짜는 한국 시간 기준입니다. 방문자는 같은 브라우저를 하루 1명으로 셉니다(검색 로봇 제외).
           {stats.totals.firstVisitDay ? ` 방문자 집계 시작일: ${formatKstLabel(stats.totals.firstVisitDay)}.` : " 방문자 집계는 이번 업데이트부터 시작됩니다."}
         </p>
-        <div className="mt-2">
-          <AdminNav current="/admin/stats" isMaster={user.isMaster} />
-        </div>
       </header>
 
       <section aria-label="요약" className="grid grid-cols-2 gap-2 lg:grid-cols-4">

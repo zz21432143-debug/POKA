@@ -137,13 +137,14 @@ export async function getHonorInfo(): Promise<HonorInfo> {
     keys.map(async (key) => {
       const def = HONOR_DEFS[key];
       // 오목은 게임 전적 랭킹(이번 달 · 5판 이상), 나머지는 /ranking 랭킹
-      const rows =
-        def.tab === "omok"
-          ? await import("@/lib/game-stats").then((m) => m.gameRanking("omok", "month", 3)).catch(() => [])
-          : await getRanking(def.tab, def.period).catch(() => []);
+      const isGame = def.tab === "omok" || def.tab === "alkkagi" || def.tab === "chess";
+      const rows = isGame
+        ? await import("@/lib/game-stats").then((m) => m.gameRanking(def.tab as "omok", "month", 1)).catch(() => [])
+        : await getRanking(def.tab as "level", def.period).catch(() => []);
       owners[key] = rows
         .filter((r) => !excluded.has(r.nickname) && r.score >= (HONOR_DEFS[key].minScore ?? 0))
-        .slice(0, config.honors[key].top)
+        // 미니게임은 1위 한 명만
+        .slice(0, isGame ? 1 : config.honors[key].top)
         .map((r) => r.nickname);
     }),
   );
@@ -257,5 +258,10 @@ export function clearPotTitleCache() {
   clearRankingCache();
   titleCache = null;
   configCache = null;
+  honorCache = null;
+}
+
+/** 칭호 계산 캐시 비우기(닉네임이 바뀌었을 때 등) */
+export function clearHonorCache() {
   honorCache = null;
 }

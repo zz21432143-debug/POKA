@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { ReportAdmin } from "@/components/admin/report-admin";
 import { SanctionAdmin } from "@/components/admin/sanction-admin";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { ForbiddenWordsAdmin } from "@/components/admin/forbidden-words-admin";
 import { SiteSettingsAdmin } from "@/components/admin/site-settings-admin";
 import { isStaff } from "@/lib/roles";
@@ -17,6 +16,52 @@ export const metadata: Metadata = { title: "관리자", robots: { index: false }
 
 export const dynamic = "force-dynamic";
 
+/** 관리 홈: 지금 할 일 · 메뉴 설명 */
+async function AdminHome({ isMaster }: { isMaster: boolean }) {
+  const dayStart = new Date(`${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date())}T00:00:00+09:00`);
+  const { badNicknames } = await import("@/lib/nickname-force");
+  const [pendingReports, restricted, signups, members, bad] = await Promise.all([
+    prisma.report.count({ where: { status: "pending" } }).catch(() => 0),
+    prisma.user.count({ where: { status: { in: ["SUSPENDED", "BANNED"] } } }).catch(() => 0),
+    prisma.user.count({ where: { createdAt: { gte: dayStart } } }).catch(() => 0),
+    prisma.user.count({ where: { withdrawnAt: null, isMaster: false } }).catch(() => 0),
+    isMaster ? badNicknames(100).catch(() => []) : Promise.resolve([]),
+  ]);
+  const cards = [
+    { label: "처리할 신고", value: pendingReports, href: "/admin?tab=reports", tone: pendingReports ? "text-rose-300" : "text-emerald-300" },
+    { label: "비속어 의심 닉네임", value: bad.length, href: "/admin/members#bad", tone: bad.length ? "text-rose-300" : "text-emerald-300", master: true },
+    { label: "오늘 가입", value: signups, href: "/admin/stats", tone: "text-sky-300" },
+    { label: "전체 회원", value: members, href: "/admin/members", tone: "text-[#e7c98a]", master: true },
+    { label: "정지 · 차단 중", value: restricted, href: "/admin?tab=sanctions", tone: "text-zinc-200" },
+  ].filter((c) => !c.master || isMaster);
+  return (
+    <div className="grid gap-4">
+      <header>
+        <h1 className="text-2xl font-semibold">🛠 관리 홈</h1>
+        <p className="mt-1 text-sm text-muted-foreground">위 메뉴는 하는 일별로 묶여 있어요. 숫자를 누르면 바로 그 화면으로 가요.</p>
+      </header>
+      <section aria-label="지금 할 일" className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {cards.map((c) => (
+          <Link key={c.label} href={c.href} data-admin-card className="grid gap-1 rounded-2xl border border-border bg-[#151213] p-3 hover:bg-muted">
+            <span className="text-xs text-muted-foreground">{c.label}</span>
+            <b className={`text-2xl font-black tabular-nums ${c.tone}`}>{c.value.toLocaleString()}</b>
+          </Link>
+        ))}
+      </section>
+      <section aria-label="메뉴 안내" className="grid gap-2 rounded-2xl border border-border bg-[#151213] p-4 text-sm">
+        <h2 className="text-base font-semibold">어디서 무엇을 하나요?</h2>
+        <ul className="grid gap-1.5 text-muted-foreground">
+          <li>👥 <b className="text-white">회원</b> — 회원 목록 · 검색 · 인증 뱃지 · <b className="text-white">닉네임 강제 변경</b>(회원 목록 · 닉네임), 정지 · 차단(제재), 신고 처리</li>
+          <li>📝 <b className="text-white">콘텐츠</b> — 공지 · 안내 글 발행, 오늘의 퀴즈, 배너, 금지어</li>
+          <li>🏆 <b className="text-white">랭킹 · 게임</b> — 랭킹 1위 칭호(오목 요괴 · 퀴즈 요괴 …) 켜기 · 이름, 랭킹 제외 회원, 요괴 마을 통계</li>
+          <li>📊 <b className="text-white">통계 · 감시</b> — 방문 · 가입 · 유입 경로, 오류 · 포인트 이상, 애드센스, 광고 문의</li>
+          <li>⚙️ <b className="text-white">사이트</b> — 사이트 문구 · 설정, 알림 보내기, 데이터 정리, 오픈 준비</li>
+        </ul>
+      </section>
+    </div>
+  );
+}
+
 export default async function AdminPage({
   searchParams,
 }: {
@@ -26,7 +71,7 @@ export default async function AdminPage({
   if (!user || !isStaff(user)) notFound();
   const { tab, q } = await searchParams;
   const active =
-    tab === "sanctions" ? "sanctions" : tab === "words" ? "words" : tab === "settings" ? "settings" : "reports";
+    tab === "sanctions" ? "sanctions" : tab === "words" ? "words" : tab === "settings" ? "settings" : tab === "reports" ? "reports" : "home";
   const query = (q ?? "").trim();
 
   const reports = await prisma.report.findMany({
@@ -74,31 +119,10 @@ export default async function AdminPage({
     active === "words" ? prisma.disabledBaseWord.findMany({ select: { word: true } }) : Promise.resolve([]),
   ]);
 
-  const currentHref =
-    active === "sanctions"
-      ? "/admin?tab=sanctions"
-      : active === "words"
-        ? "/admin?tab=words"
-        : active === "settings"
-          ? "/admin?tab=settings"
-          : "/admin?tab=reports";
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-semibold">관리자 페이지</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          관리자·마스터만 볼 수 있습니다. 신고·제재·금지어·사이트 문구를 여기서 바꿉니다.
-        </p>
-        <div className="mt-3">
-          <AdminNav current={currentHref} isMaster={user.isMaster} />
-        </div>
-        {user.isMaster ? (
-          <Link href="/admin/members" className="mt-2 inline-flex min-h-10 items-center text-sm text-primary">
-            인증 달기
-          </Link>
-        ) : null}
-      </header>
+      {active === "home" ? <AdminHome isMaster={Boolean(user.isMaster)} /> : null}
 
       {active === "reports" ? (
         <section>

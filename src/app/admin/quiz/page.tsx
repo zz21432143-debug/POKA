@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { QuizAdmin } from "@/components/admin/quiz-admin";
 
 export const metadata: Metadata = { title: "퀴즈 관리", robots: { index: false } };
@@ -19,9 +18,6 @@ export default async function AdminQuizPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           문제는 매일 자동으로 만들어집니다(푸시폴드 · 승률 · 족보 · 레인지 돌아가며). 오늘이나 앞으로의 날짜에 직접 문제를 넣으면 그날은 그 문제가 나가요. 이미 누가 답한 문제는 바꿀 수 없습니다.
         </p>
-        <div className="mt-2">
-          <AdminNav current="/admin/quiz" isMaster={user.isMaster} />
-        </div>
       </header>
       <QuizAdmin />
     </div>

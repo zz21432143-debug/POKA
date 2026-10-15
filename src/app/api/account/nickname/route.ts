@@ -64,6 +64,9 @@ export async function POST(request: Request) {
       },
     });
     await forgetTickerName(user.nickname);
+    // 사이트 곳곳에 남은 옛 닉네임도 새 닉네임으로
+    const { propagateNickname } = await import("@/lib/nickname-propagate");
+    await propagateNickname(user.id, user.nickname, next).catch(() => undefined);
     return NextResponse.json({ ok: true, nickname: next, usedFree });
   } catch (error) {
     if (error instanceof AccountRestrictedError) {

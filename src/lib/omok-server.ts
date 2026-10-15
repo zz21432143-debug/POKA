@@ -104,7 +104,13 @@ type QueueEntry = { id: string; n: string; at: number };
 function queueOf(row: { queueJson: string }): QueueEntry[] {
   try {
     const v = row.queueJson ? JSON.parse(row.queueJson) : [];
-    return Array.isArray(v) ? v.filter((q) => q && typeof q.id === "string" && typeof q.n === "string").slice(0, 10) : [];
+    return Array.isArray(v)
+      ? v
+          .filter(
+            (q) => q && typeof q.id === "string" && typeof q.n === "string",
+          )
+          .slice(0, 10)
+      : [];
   } catch {
     return [];
   }
@@ -209,7 +215,36 @@ export async function hasYokai(userId: string) {
 }
 
 /** 끝난 판이면 전적에 기록(한 판에 한 번 · 짧은 판은 game-stats가 뺌) */
+/** 판이 끝나면 도전 줄 1번에게 「도전 차례」 알림(한 판에 한 번) */
+async function notifyQueueHead(row: Row) {
+  if (row.status !== "done" || row.endReason === "cancel" || row.nextId) return;
+  const head = queueOf(row)[0];
+  if (!head) return;
+  const mark = await prisma.toolSaved
+    .createMany({
+      data: [
+        {
+          id: `qpush_${row.id}`,
+          ownerId: head.id,
+          kind: "omok-queue-push",
+          name: row.id,
+          dataJson: "{}",
+        },
+      ],
+      skipDuplicates: true,
+    })
+    .catch(() => ({ count: 0 }));
+  if (mark.count !== 1) return;
+  const { notifyUser } = await import("@/lib/push");
+  await notifyUser(head.id, {
+    title: "⚔️ 오목 도전 차례예요!",
+    body: "판이 끝났어요. 1분 안에 「지금 도전하기」를 눌러 주세요.",
+    url: `/games/omok/${row.id}`,
+  }).catch(() => undefined);
+}
+
 async function recordIfDone(row: Row) {
+  await notifyQueueHead(row).catch(() => undefined);
   if (
     row.status !== "done" ||
     !row.blackId ||
@@ -239,7 +274,11 @@ async function watchersOf(gameId: string) {
   const rows = await prisma.gameWatch
     .findMany({
       // 대국자 자리 신호(p:회원id)는 관전자 수에서 뺌
-      where: { gameId, seenAt: { gte: new Date(Date.now() - WATCH_MS) }, NOT: { viewer: { startsWith: "p:" } } },
+      where: {
+        gameId,
+        seenAt: { gte: new Date(Date.now() - WATCH_MS) },
+        NOT: { viewer: { startsWith: "p:" } },
+      },
       select: { nickname: true },
       take: 60,
     })
@@ -261,18 +300,57 @@ async function settle(row: Row): Promise<Row> {
   const now = Date.now();
   if (row.status === "waiting") {
     const seen = await prisma.gameWatch
-      .findMany({ where: { gameId: row.id, viewer: { in: [`p:${row.hostId}`, ...(row.guestId ? [`p:${row.guestId}`] : [])] } }, select: { viewer: true, seenAt: true } })
+      .findMany({
+        where: {
+          gameId: row.id,
+          viewer: {
+            in: [
+              `p:${row.hostId}`,
+              ...(row.guestId ? [`p:${row.guestId}`] : []),
+            ],
+          },
+        },
+        select: { viewer: true, seenAt: true },
+      })
       .catch(() => []);
-    const lastSeen = (uid: string) => seen.find((r) => r.viewer === `p:${uid}`)?.seenAt.getTime() ?? 0;
+    const lastSeen = (uid: string) =>
+      seen.find((r) => r.viewer === `p:${uid}`)?.seenAt.getTime() ?? 0;
     // 방장: 방을 만든 지 90초가 지났는데 90초 넘게 안 보이면 방 닫기
-    if (now - row.createdAt.getTime() > HOST_AWAY_MS && now - Math.max(lastSeen(row.hostId), row.createdAt.getTime()) > HOST_AWAY_MS) {
-      await prisma.omokGame.updateMany({ where: { id: row.id, status: "waiting" }, data: { status: "done", endReason: "cancel", version: { increment: 1 } } });
-      return (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row;
+    if (
+      now - row.createdAt.getTime() > HOST_AWAY_MS &&
+      now - Math.max(lastSeen(row.hostId), row.createdAt.getTime()) >
+        HOST_AWAY_MS
+    ) {
+      await prisma.omokGame.updateMany({
+        where: { id: row.id, status: "waiting" },
+        data: {
+          status: "done",
+          endReason: "cancel",
+          version: { increment: 1 },
+        },
+      });
+      return (
+        (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row
+      );
     }
     // 손님: 60초 넘게 안 보이면 자리에서 일어남(READY도 풀림)
-    if (row.guestId && now - Math.max(lastSeen(row.guestId), row.updatedAt.getTime()) > GUEST_AWAY_MS) {
-      await prisma.omokGame.updateMany({ where: { id: row.id, status: "waiting", guestId: row.guestId }, data: { guestId: null, guestReady: false, hostReady: false, version: { increment: 1 } } });
-      return (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row;
+    if (
+      row.guestId &&
+      now - Math.max(lastSeen(row.guestId), row.updatedAt.getTime()) >
+        GUEST_AWAY_MS
+    ) {
+      await prisma.omokGame.updateMany({
+        where: { id: row.id, status: "waiting", guestId: row.guestId },
+        data: {
+          guestId: null,
+          guestReady: false,
+          hostReady: false,
+          version: { increment: 1 },
+        },
+      });
+      return (
+        (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row
+      );
     }
   }
   if (
@@ -397,12 +475,24 @@ async function toView(
     emote,
     cheers: emoteState.cheers.filter((c) => Date.now() - c.at < 15_000),
     queue: queueOf(row).map((q) => q.n),
-    queueMine: viewerId ? queueOf(row).findIndex((q) => q.id === viewerId) + 1 : 0,
+    queueMine: viewerId
+      ? queueOf(row).findIndex((q) => q.id === viewerId) + 1
+      : 0,
     canChallenge: (() => {
-      if (row.status !== "done" || row.endReason === "cancel" || row.nextId || !viewerId) return false;
+      if (
+        row.status !== "done" ||
+        row.endReason === "cancel" ||
+        row.nextId ||
+        !viewerId
+      )
+        return false;
       if (viewerId === row.blackId || viewerId === row.whiteId) return false;
       const q = queueOf(row);
-      return !q.length || q[0].id === viewerId || Date.now() - row.updatedAt.getTime() > QUEUE_HEAD_MS;
+      return (
+        !q.length ||
+        q[0].id === viewerId ||
+        Date.now() - row.updatedAt.getTime() > QUEUE_HEAD_MS
+      );
     })(),
     isPrivate: row.isPrivate,
     nextId: row.nextId,
@@ -456,10 +546,20 @@ export async function omokState(
     viewerId &&
     [row.blackId, row.whiteId, row.hostId, row.guestId].includes(viewerId),
   );
-  if (watcher && isPlayer && viewerId && row.status !== "done" && /^[a-z0-9]{8,40}$/.test(watcher)) {
+  if (
+    watcher &&
+    isPlayer &&
+    viewerId &&
+    row.status !== "done" &&
+    /^[a-z0-9]{8,40}$/.test(watcher)
+  ) {
     const now = new Date();
     await prisma.gameWatch
-      .upsert({ where: { gameId_viewer: { gameId: id, viewer: `p:${viewerId}` } }, create: { gameId: id, viewer: `p:${viewerId}`, seenAt: now }, update: { seenAt: now } })
+      .upsert({
+        where: { gameId_viewer: { gameId: id, viewer: `p:${viewerId}` } },
+        create: { gameId: id, viewer: `p:${viewerId}`, seenAt: now },
+        update: { seenAt: now },
+      })
       .catch(() => undefined);
   }
   if (
@@ -534,13 +634,23 @@ export async function createOmok(
     select: { id: true },
   });
   if (open) {
-    await prisma.omokGame.update({ where: { id: open.id }, data: { isPrivate: Boolean(opts.isPrivate) } }).catch(() => undefined);
+    await prisma.omokGame
+      .update({
+        where: { id: open.id },
+        data: { isPrivate: Boolean(opts.isPrivate) },
+      })
+      .catch(() => undefined);
     return open;
   }
   return makeRoom({ hostId, isPrivate: Boolean(opts.isPrivate) });
 }
 
-async function makeRoom(data: { hostId: string; guestId?: string | null; isPrivate?: boolean; queueJson?: string }) {
+async function makeRoom(data: {
+  hostId: string;
+  guestId?: string | null;
+  isPrivate?: boolean;
+  queueJson?: string;
+}) {
   for (let i = 0; i < 8; i += 1) {
     const code = Array.from(
       { length: 5 },
@@ -904,47 +1014,115 @@ export async function omokAct(
   if (action === "exit") {
     // 나가기: 대기실 방장 = 방 닫기 · 손님 = 일어나기 · 대국 중 = 기권 · 그 밖엔 그냥 나감
     if (row.status === "waiting" && userId === row.hostId) {
-      await prisma.omokGame.updateMany({ where: { id, status: "waiting" }, data: { status: "done", endReason: "cancel", version: { increment: 1 } } });
+      await prisma.omokGame.updateMany({
+        where: { id, status: "waiting" },
+        data: {
+          status: "done",
+          endReason: "cancel",
+          version: { increment: 1 },
+        },
+      });
     } else if (row.status === "waiting" && userId === row.guestId) {
-      await prisma.omokGame.updateMany({ where: { id, status: "waiting", guestId: userId }, data: { guestId: null, guestReady: false, hostReady: false, version: { increment: 1 } } });
+      await prisma.omokGame.updateMany({
+        where: { id, status: "waiting", guestId: userId },
+        data: {
+          guestId: null,
+          guestReady: false,
+          hostReady: false,
+          version: { increment: 1 },
+        },
+      });
     } else if (row.status === "playing" && mine) {
-      await prisma.omokGame.updateMany({ where: { id, status: "playing" }, data: { status: "done", winner: mine === BLACK ? WHITE : BLACK, endReason: "resign", version: { increment: 1 } } });
+      await prisma.omokGame.updateMany({
+        where: { id, status: "playing" },
+        data: {
+          status: "done",
+          winner: mine === BLACK ? WHITE : BLACK,
+          endReason: "resign",
+          version: { increment: 1 },
+        },
+      });
     }
-    await prisma.gameWatch.deleteMany({ where: { gameId: id, viewer: `p:${userId}` } }).catch(() => undefined);
+    await prisma.gameWatch
+      .deleteMany({ where: { gameId: id, viewer: `p:${userId}` } })
+      .catch(() => undefined);
     return done();
   }
 
   if (action === "queue-join" || action === "queue-leave") {
     const q = queueOf(row);
     if (action === "queue-leave") {
-      await prisma.omokGame.update({ where: { id }, data: { queueJson: JSON.stringify(q.filter((e) => e.id !== userId)), version: { increment: 1 } } });
+      await prisma.omokGame.update({
+        where: { id },
+        data: {
+          queueJson: JSON.stringify(q.filter((e) => e.id !== userId)),
+          version: { increment: 1 },
+        },
+      });
       return done();
     }
-    if (mine || userId === row.hostId || userId === row.guestId) return fail("대국하는 사람은 줄을 설 수 없어요.", 409);
-    if (row.status === "waiting" || row.nextId) return fail("지금은 줄을 설 수 없어요.", 409);
+    if (mine || userId === row.hostId || userId === row.guestId)
+      return fail("대국하는 사람은 줄을 설 수 없어요.", 409);
+    if (row.status === "waiting" || row.nextId)
+      return fail("지금은 줄을 설 수 없어요.", 409);
     if (q.some((e) => e.id === userId)) return done();
     if (q.length >= 10) return fail("도전 줄이 가득 찼어요(10명).", 409);
     if (!(await hasYokai(userId))) return fail(NO_YOKAI, 403);
-    const me = await prisma.user.findUnique({ where: { id: userId }, select: { nickname: true } });
-    await prisma.omokGame.update({ where: { id }, data: { queueJson: JSON.stringify([...q, { id: userId, n: me?.nickname ?? "?", at: now.getTime() }]), version: { increment: 1 } } });
+    const me = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { nickname: true },
+    });
+    await prisma.omokGame.update({
+      where: { id },
+      data: {
+        queueJson: JSON.stringify([
+          ...q,
+          { id: userId, n: me?.nickname ?? "?", at: now.getTime() },
+        ]),
+        version: { increment: 1 },
+      },
+    });
     return done();
   }
 
   if (action === "challenge") {
     // 끝난 판의 관전자가 다음 판 도전: 이긴 사람(무승부면 흑)과 둘이 앉은 새 대기실
-    if (row.status !== "done" || row.endReason === "cancel" || !row.blackId || !row.whiteId) return fail("끝난 대국에서만 도전할 수 있어요.", 409);
-    if (userId === row.blackId || userId === row.whiteId) return fail("대국한 사람은 「한 판 더」를 눌러 주세요.", 409);
-    if (row.nextId) return fail("이미 다음 판이 열렸어요. 다음 판을 관전해 주세요.", 409);
+    if (
+      row.status !== "done" ||
+      row.endReason === "cancel" ||
+      !row.blackId ||
+      !row.whiteId
+    )
+      return fail("끝난 대국에서만 도전할 수 있어요.", 409);
+    if (userId === row.blackId || userId === row.whiteId)
+      return fail("대국한 사람은 「한 판 더」를 눌러 주세요.", 409);
+    if (row.nextId)
+      return fail("이미 다음 판이 열렸어요. 다음 판을 관전해 주세요.", 409);
     if (!(await hasYokai(userId))) return fail(NO_YOKAI, 403);
     const q = queueOf(row);
-    if (q.length && q[0].id !== userId && Date.now() - row.updatedAt.getTime() <= QUEUE_HEAD_MS) return fail(`도전 줄 순서예요. 지금은 ${q[0].n}님 차례예요.`, 409);
+    if (
+      q.length &&
+      q[0].id !== userId &&
+      Date.now() - row.updatedAt.getTime() <= QUEUE_HEAD_MS
+    )
+      return fail(`도전 줄 순서예요. 지금은 ${q[0].n}님 차례예요.`, 409);
     const stay = row.winner === WHITE ? row.whiteId : row.blackId;
     // 남은 줄은 다음 판으로 이어짐(나 · 남는 사람 빼고)
     const rest = q.filter((e) => e.id !== userId && e.id !== stay);
-    const next = await makeRoom({ hostId: stay, guestId: userId, isPrivate: row.isPrivate, queueJson: JSON.stringify(rest) });
-    const linked = await prisma.omokGame.updateMany({ where: { id, nextId: null }, data: { nextId: next.id, version: { increment: 1 } } });
+    const next = await makeRoom({
+      hostId: stay,
+      guestId: userId,
+      isPrivate: row.isPrivate,
+      queueJson: JSON.stringify(rest),
+    });
+    const linked = await prisma.omokGame.updateMany({
+      where: { id, nextId: null },
+      data: { nextId: next.id, version: { increment: 1 } },
+    });
     if (linked.count !== 1) {
-      await prisma.omokGame.delete({ where: { id: next.id } }).catch(() => undefined);
+      await prisma.omokGame
+        .delete({ where: { id: next.id } })
+        .catch(() => undefined);
       return fail("다른 사람이 먼저 도전했어요.", 409);
     }
     return done();
@@ -1045,7 +1223,12 @@ export async function omokAct(
     if (row.nextId) return done();
     // 다음 판: 같은 두 사람이 대기실에 앉은 채로(둘 다 READY 누르면 시작)
     const other = userId === row.blackId ? row.whiteId : row.blackId;
-    const next = await makeRoom({ hostId: userId, guestId: other, isPrivate: row.isPrivate, queueJson: row.queueJson });
+    const next = await makeRoom({
+      hostId: userId,
+      guestId: other,
+      isPrivate: row.isPrivate,
+      queueJson: row.queueJson,
+    });
     const linked = await prisma.omokGame.updateMany({
       where: { id, nextId: null },
       data: { nextId: next.id, version: { increment: 1 } },
@@ -1095,8 +1278,19 @@ export async function omokLobby(userId: string | null) {
       : Promise.resolve([]),
   ]);
   // 비어 있는 대기실은 여기서 정리(방장이 안 보이면 닫힘)
-  const settled = (await Promise.all(waiting.map((r) => settle(r).catch(() => r)))).filter((r) => r.status === "waiting");
-  const latest = await prisma.omokGame.findMany({ where: { status: "done", endReason: { not: "cancel" }, blackId: { not: null }, isPrivate: false }, orderBy: { updatedAt: "desc" }, take: 5 });
+  const settled = (
+    await Promise.all(waiting.map((r) => settle(r).catch(() => r)))
+  ).filter((r) => r.status === "waiting");
+  const latest = await prisma.omokGame.findMany({
+    where: {
+      status: "done",
+      endReason: { not: "cancel" },
+      blackId: { not: null },
+      isPrivate: false,
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 5,
+  });
   const card = async (row: Row) => ({
     id: row.id,
     code: row.code,

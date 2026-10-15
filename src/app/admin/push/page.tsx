@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { ALL_REGIONS, JOB_REGIONS } from "@/lib/job-status";
 import { pushEnabled } from "@/lib/push";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { PushAdminActions } from "@/components/admin/push-admin-actions";
 
 export const metadata: Metadata = { title: "알림 관리", robots: { index: false } };
@@ -50,9 +49,6 @@ export default async function AdminPushPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {pushEnabled() ? "휴대폰 알림이 켜져 있습니다." : "알림 키가 없어 휴대폰 알림이 꺼져 있습니다(Vercel 환경변수 확인)."} 급구를 올리면 그 지역 + 전국 알림을 켠 기기로 바로 갑니다.
         </p>
-        <div className="mt-2">
-          <AdminNav current="/admin/push" isMaster />
-        </div>
       </header>
 
       <section aria-label="요약" className="grid grid-cols-2 gap-2 lg:grid-cols-4">

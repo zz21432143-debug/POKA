@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { RARITY_LABEL, STAGE_EXP, YOKAI, YOKAI_ORDER, isSpecies, yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 
 export const metadata: Metadata = { title: "요괴 마을 통계", robots: { index: false } };
@@ -65,9 +64,6 @@ export default async function AdminYokaiPage() {
       <header>
         <h1 className="text-2xl font-semibold">요괴 마을 통계</h1>
         <p className="mt-1 text-sm text-muted-foreground">요괴를 얻는 기준 숫자는 src/lib/yokai-achieve.ts(NEED · 아홉 꼬리)에서 바꿉니다. 많이 막히는 요괴가 있으면 기준을 낮춰 주세요.</p>
-        <div className="mt-2">
-          <AdminNav current="/admin/yokai" isMaster={user.isMaster} />
-        </div>
       </header>
 
       <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">

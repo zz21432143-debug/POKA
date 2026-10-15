@@ -61,6 +61,7 @@ const FILES = [
   "prisma/migrations/20261106090000_omok_rooms/migration.sql",
   "prisma/migrations/20261107090000_omok_kick/migration.sql",
   "prisma/migrations/20261108090000_omok_queue_private/migration.sql",
+  "prisma/migrations/20261109090000_attend_alerts/migration.sql",
 ];
 
 function databaseUrl() {

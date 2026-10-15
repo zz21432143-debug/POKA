@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
 import { prisma } from "@/lib/db";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
 import { adsensePublisherId, adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
 
@@ -103,9 +102,6 @@ export default async function AdminAdsensePage() {
       <header>
         <h1 className="text-2xl font-semibold">애드센스 승인 점검</h1>
         <p className="mt-1 text-sm text-muted-foreground">구글 애드센스 심사에서 보는 것들을 한눈에 확인합니다. ⚠️ · ❌ 항목부터 채워 주세요.</p>
-        <div className="mt-2">
-          <AdminNav current="/admin/adsense" isMaster={user.isMaster} />
-        </div>
       </header>
 
       <section aria-label="승인 전 할 일" data-adsense-todo className={`${card} border-amber-500/50`}>

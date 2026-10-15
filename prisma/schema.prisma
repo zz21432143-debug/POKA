@@ -303,6 +303,8 @@ model PushSubscription {
   adminAlerts Boolean @default(false)
   /// 오늘의 퀴즈 알림(매일 아침 9시)
   quizAlerts Boolean @default(false)
+  /// 밤 12시 출석 1등 알림
+  attendAlerts Boolean @default(false)
   /// 요괴 마을 알림(요괴가 배고플 때 저녁 7시)
   yokaiAlerts Boolean @default(false)
   createdAt DateTime @default(now())

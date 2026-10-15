@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { cn } from "cn";
 import {
@@ -26,9 +27,12 @@ export async function GameStatsPanel({
       data-game-stats={game}
       className="arcade-panel grid gap-3 p-4"
     >
-      <h2 className="text-base font-black text-[#f3d9a4]">
-        🏆 {GAME_LABEL[game]} 전적 · 이번 달 랭킹
-      </h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-base font-black text-[#f3d9a4]">🏆 {GAME_LABEL[game]} 전적 · 이번 달 랭킹</h2>
+        <Link href={`/ranking?tab=game&game=${game}`} className="ml-auto text-sm font-bold text-[#ffcf4a]">
+          전체 랭킹 ›
+        </Link>
+      </div>
       {mine ? (
         <dl className="grid grid-cols-4 gap-2 text-center" data-game-record>
           {[

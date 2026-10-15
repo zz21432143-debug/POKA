@@ -17,6 +17,7 @@ import {
   nextStreakBonus,
 } from "@/lib/rewards";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
+import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
 export const metadata: Metadata = { title: "출석체크" };
 
@@ -33,18 +34,31 @@ export default async function AttendancePage() {
       <header>
         <h1 className="text-2xl font-semibold">출석체크</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          매일 0시(KST) 기준 출석 글이 하나 열립니다. 댓글을 남기면 출석 처리되며 레벨 EXP {ATTENDANCE_EXP} /
-          포인트 {ATTENDANCE_POINTS}가 지급됩니다. 출석 포인트는 글·댓글 하루 한도에 넣지 않습니다. 연속 출석
+          매일 0시(KST) 기준 출석 글이 하나 열립니다. 댓글을 남기면 출석
+          처리되며 레벨 EXP {ATTENDANCE_EXP} / 포인트 {ATTENDANCE_POINTS}가
+          지급됩니다. 출석 포인트는 글·댓글 하루 한도에 넣지 않습니다. 연속 출석
           보너스는 한도 밖에서 추가로 드립니다. 1일 1회.
-          <b className="mt-1 block text-[#f5d76e]">🥇 그날 1등 EXP +{EARLY_BIRD_EXP[0]} · 🥈 2등 +{EARLY_BIRD_EXP[1]} · 🥉 3등 +{EARLY_BIRD_EXP[2]} 추가!</b>
+          <b className="mt-1 block text-[#f5d76e]">
+            🥇 그날 1등 EXP +{EARLY_BIRD_EXP[0]} · 🥈 2등 +{EARLY_BIRD_EXP[1]} ·
+            🥉 3등 +{EARLY_BIRD_EXP[2]} 추가!
+          </b>
         </p>
       </header>
+      <PushAlertToggle
+        api="/api/attendance/alert"
+        label="🥇 밤 12시 출석 1등 알림"
+        onMessage="매일 밤 12시 출석 글이 열리면 알려 드릴게요. 1등을 노려 보세요!"
+        data="attend"
+      />
 
       {/* 휴대폰에서도 한 줄 3칸. 연속 출석을 가장 먼저 보이게 둡니다. */}
       <section className="grid grid-cols-3 gap-2">
         <Stat label="내 연속 출석" value={`${stats.myStreak}일`} highlight />
         <Stat label="오늘 출석" value={`${stats.todayCount}명`} />
-        <Stat label="오늘" value={formatKstLabel(stats.date).replace(/^\d+년\s*/, "")} />
+        <Stat
+          label="오늘"
+          value={formatKstLabel(stats.date).replace(/^\d+년\s*/, "")}
+        />
       </section>
 
       {next ? (
@@ -58,23 +72,30 @@ export default async function AttendancePage() {
           ) : (
             <>
               <strong className="text-[#e7c98a]">{next.label}</strong>까지{" "}
-              <strong className="text-white">{next.daysLeft}일</strong> 남았어요.
+              <strong className="text-white">{next.daysLeft}일</strong>{" "}
+              남았어요.
             </>
           )}{" "}
           보너스 +{next.points.toLocaleString()}P · EXP {next.exp}
-          {stats.myStreak === 0 && stats.lastAttendanceDate ? " (연속 기록이 끊겨 1일부터 다시 셉니다)" : ""}
+          {stats.myStreak === 0 && stats.lastAttendanceDate
+            ? " (연속 기록이 끊겨 1일부터 다시 셉니다)"
+            : ""}
         </p>
       ) : null}
 
       <section className="rounded-xl border border-emerald-500/25 bg-emerald-950/40 p-4">
         <h2 className="text-lg font-semibold">연속 출석 보너스</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          끊기지 않고 오면 아래 일차에 보너스 포인트와 EXP를 더 드립니다. {STREAK_REPEAT_AFTER}일 이후에는
-          7일 단위(35일, 42일…)마다 {STREAK_REPEAT_POINTS}P · EXP {STREAK_REPEAT_EXP}가 반복됩니다.
+          끊기지 않고 오면 아래 일차에 보너스 포인트와 EXP를 더 드립니다.{" "}
+          {STREAK_REPEAT_AFTER}일 이후에는 7일 단위(35일, 42일…)마다{" "}
+          {STREAK_REPEAT_POINTS}P · EXP {STREAK_REPEAT_EXP}가 반복됩니다.
         </p>
         <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {STREAK_MILESTONES.map((row) => (
-            <li key={row.day} className="rounded-xl border border-border bg-[#1a1617] px-3 py-2">
+            <li
+              key={row.day}
+              className="rounded-xl border border-border bg-[#1a1617] px-3 py-2"
+            >
               <p className="text-xs text-muted-foreground">{row.label}</p>
               <p className="mt-0.5 text-sm font-semibold">
                 +{row.points}P · EXP {row.exp}
@@ -86,7 +107,9 @@ export default async function AttendancePage() {
 
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-lg font-semibold">{stats.post.title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{stats.post.content}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {stats.post.content}
+        </p>
         <div className="mt-4">
           <CommentForm
             postId={stats.post.id}
@@ -116,7 +139,15 @@ export default async function AttendancePage() {
   );
 }
 
-function Stat({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div
       className={
@@ -126,7 +157,15 @@ function Stat({ label, value, highlight = false }: { label: string; value: strin
       }
     >
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={highlight ? "mt-1 text-lg font-bold text-[#e7c98a]" : "mt-1 text-lg font-semibold"}>{value}</p>
+      <p
+        className={
+          highlight
+            ? "mt-1 text-lg font-bold text-[#e7c98a]"
+            : "mt-1 text-lg font-semibold"
+        }
+      >
+        {value}
+      </p>
     </div>
   );
 }

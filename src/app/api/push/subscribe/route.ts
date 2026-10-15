@@ -48,9 +48,9 @@ export async function DELETE(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
   const endpoint = body.endpoint?.trim();
   if (!endpoint) return NextResponse.json({ error: "endpoint가 필요합니다." }, { status: 400 });
-  const row = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { adminAlerts: true, quizAlerts: true, yokaiAlerts: true } });
+  const row = await prisma.pushSubscription.findUnique({ where: { endpoint }, select: { adminAlerts: true, quizAlerts: true, yokaiAlerts: true, attendAlerts: true } });
   // 관리자 알림 · 퀴즈 알림을 켜 둔 기기는 지우지 않고 급구 지역만 비움
-  if (row?.adminAlerts || row?.quizAlerts || row?.yokaiAlerts) {
+  if (row?.adminAlerts || row?.quizAlerts || row?.yokaiAlerts || row?.attendAlerts) {
     await prisma.pushSubscription.update({ where: { endpoint }, data: { region: "" } });
     return NextResponse.json({ ok: true, keep: true });
   }

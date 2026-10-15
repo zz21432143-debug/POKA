@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { CleanupPanel } from "@/components/admin/cleanup-panel";
 import { countSeekingPosts, findUnusedImages } from "@/lib/data-cleanup";
 
@@ -18,9 +17,6 @@ export default async function AdminCleanupPage() {
       <header>
         <h1 className="text-2xl font-semibold">데이터 정리</h1>
         <p className="mt-1 text-sm text-muted-foreground">개인정보가 담긴 예전 글과 쓰이지 않는 사진을 지웁니다. 지운 것은 되돌릴 수 없어요.</p>
-        <div className="mt-2">
-          <AdminNav current="/admin/cleanup" isMaster />
-        </div>
       </header>
       <CleanupPanel seeking={seeking} images={unused.ids.length} imageBytes={unused.bytes} />
     </div>

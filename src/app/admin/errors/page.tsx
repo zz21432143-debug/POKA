@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
 import { prisma } from "@/lib/db";
-import { AdminNav } from "@/components/admin/admin-nav";
 import { listServerErrors } from "@/lib/error-watch";
 import { ensurePointLedger } from "@/lib/point-ledger";
 
@@ -45,9 +44,6 @@ export default async function AdminErrorsPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           서버 오류가 나면 여기에 쌓이고, 관리자 알림을 켠 기기로 알림이 가요(30분에 한 번까지). 포인트를 비정상적으로 많이 받은 회원도 함께 보여 줘요.
         </p>
-        <div className="mt-2">
-          <AdminNav current="/admin/errors" isMaster={user.isMaster} />
-        </div>
       </header>
 
       <section className="grid gap-2" data-admin-suspects>
