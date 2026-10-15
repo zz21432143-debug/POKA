@@ -27,6 +27,7 @@ export const QUICK_TEXTS = [
   { key: "q-wow", label: "헉!" },
   { key: "q-sad", label: "ㅠㅠ" },
   { key: "q-hurry", label: "빨리~" },
+  { key: "q-angry", label: "분노💢" },
 ] as const;
 export const isQuickText = (v: unknown) => typeof v === "string" && QUICK_TEXTS.some((q) => q.key === v);
 export const quickLabel = (key: string) => QUICK_TEXTS.find((q) => q.key === key)?.label ?? key;

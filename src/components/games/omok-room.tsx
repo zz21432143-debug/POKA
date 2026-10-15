@@ -769,6 +769,24 @@ export function OmokRoom({
             showNumbers={numbers}
           />
 
+          {/* 이모티콘 · 응원: 판 · 돌보다 위에 1.5초(수는 가리지 않게 위쪽) */}
+          {(() => {
+            const t = now + offset;
+            const list: { who: string; e: string; key: string }[] = [];
+            if (plateEmote && t - plateEmote.key < 1600) list.push({ who: info(plateEmote.by)?.nickname ?? "", e: plateEmote.e, key: `p${plateEmote.key}` });
+            for (const c of view.cheers ?? []) if (t - c.at < 1600) list.push({ who: c.n, e: c.e, key: `c${c.n}${c.at}` });
+            return list.length ? (
+              <div data-omok-emote-layer className="pointer-events-none absolute inset-x-0 top-[3%] z-[45] flex flex-wrap justify-center gap-2">
+                {list.slice(-4).map((b) => (
+                  <span key={b.key} data-omok-emote-bubble className="spec-pop grid justify-items-center">
+                    <EmoteArt e={b.e} className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16" />
+                    {b.who ? <span className="max-w-24 truncate border-2 border-[#0a0614] bg-[#6ad7ff] px-1.5 text-[10px] font-black text-[#0a0614]">{b.who}</span> : null}
+                  </span>
+                ))}
+              </div>
+            ) : null;
+          })()}
+
           {/* 대기실: 판 위에 방 코드 */}
           {waiting ? (
             <div

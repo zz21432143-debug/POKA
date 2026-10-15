@@ -650,10 +650,19 @@ export function YutRoom({
     const t = now + offset;
     const out: { who: string; e: string; at: number; color: string }[] = [];
     if (view.emote && t - view.emote.at < 1600) {
-      const seat = view.seats.find((x) => `${x.team}${x.idx}` === view.emote!.seat);
-      out.push({ who: seat?.player?.nickname ?? "?", e: view.emote.e, at: view.emote.at, color: seat ? TEAM_COLOR[seat.team] : "#6ad7ff" });
+      const seat = view.seats.find(
+        (x) => `${x.team}${x.idx}` === view.emote!.seat,
+      );
+      out.push({
+        who: seat?.player?.nickname ?? "?",
+        e: view.emote.e,
+        at: view.emote.at,
+        color: seat ? TEAM_COLOR[seat.team] : "#6ad7ff",
+      });
     }
-    for (const c of view.cheers) if (t - c.at < 1600) out.push({ who: c.n, e: c.e, at: c.at, color: "#6ad7ff" });
+    for (const c of view.cheers)
+      if (t - c.at < 1600)
+        out.push({ who: c.n, e: c.e, at: c.at, color: "#6ad7ff" });
     return out.slice(-4);
   })();
   const emoteOn = (seat: YutSeatView) =>
@@ -676,7 +685,10 @@ export function YutRoom({
         )}
       >
         {emoteOn(seat) ? (
-          <span key={view.emote!.at} className="absolute -top-1 -right-1 z-20 rounded-full bg-[#ffcf4a] px-1 text-[10px] font-black text-[#2a1400]">
+          <span
+            key={view.emote!.at}
+            className="absolute -top-1 -right-1 z-20 rounded-full bg-[#ffcf4a] px-1 text-[10px] font-black text-[#2a1400]"
+          >
             💬
           </span>
         ) : null}
@@ -742,14 +754,15 @@ export function YutRoom({
     return (
       <div
         data-yut-tray={team}
-        className="flex min-h-12 min-w-0 flex-1 items-center gap-1 overflow-x-auto rounded-lg px-1.5 py-1 [scrollbar-width:none]"
+        className="flex min-h-16 min-w-0 flex-wrap items-center gap-1.5 px-2 py-1.5"
         style={{
-          background: `${TEAM_COLOR[team]}1f`,
-          border: `2px solid ${TEAM_COLOR[team]}66`,
+          background: `linear-gradient(180deg, ${TEAM_COLOR[team]}26, #0a0614)`,
+          border: `2px solid ${TEAM_COLOR[team]}`,
+          boxShadow: "2px 2px 0 #0a0614",
         }}
       >
         <b
-          className="shrink-0 text-xs font-black"
+          className="w-9 shrink-0 text-sm font-black"
           style={{ color: TEAM_COLOR[team] }}
         >
           {TEAM_NAME[team]}
@@ -762,16 +775,16 @@ export function YutRoom({
             disabled={!canStart}
             onClick={() => startRep !== undefined && pickPiece(startRep)}
             className={cn(
-              "grid shrink-0 justify-items-center rounded-full",
-              canStart && "cursor-pointer",
-              canStart && selected === startRep && "scale-110",
+              "grid min-h-14 min-w-12 shrink-0 justify-items-center rounded-lg px-0.5",
+              canStart && "cursor-pointer hover:bg-[#ffcf4a]/15",
+              canStart && selected === startRep && "scale-110 bg-[#ffcf4a]/20",
             )}
             aria-label={`${TEAM_NAME[team]} 대기 말 내보내기`}
           >
             <YokaiToken
               face={pieceFace(faces, team, i)}
               team={team}
-              className={cn("size-7", canStart && "yut-target")}
+              className={cn("size-10", canStart && "yut-select-jump")}
             />
             <NameTag
               name={pieceName(names, team, i)}
@@ -936,7 +949,9 @@ export function YutRoom({
       {/* ───── 대기실 ───── */}
       {waiting ? (
         <section data-yut-waiting className="yut-hud grid gap-3 p-3">
-          <p className="text-center font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">WAITING ROOM · PRESS READY!</p>
+          <p className="text-center font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+            WAITING ROOM · PRESS READY!
+          </p>
           <div className="grid justify-items-center gap-1 text-center">
             <p className="text-sm font-bold text-[#d6cdee]">초대 코드</p>
             <p className="arcade-px neon-gold text-3xl tracking-[0.3em]">
@@ -1037,20 +1052,30 @@ export function YutRoom({
                                 type="button"
                                 data-yut-bot-remove={`${team}${seat.idx}`}
                                 disabled={busy}
-                                onClick={() => act("bot-remove", { team, idx: seat.idx })}
+                                onClick={() =>
+                                  act("bot-remove", { team, idx: seat.idx })
+                                }
                                 aria-label="요괴봇 빼기"
                                 className="grid min-h-9 place-items-center rounded-lg bg-white/10 px-2 text-xs font-black text-[#ff8f9a]"
                               >
                                 빼기
                               </button>
-                            ) : seat.bot && loggedIn && hasYokai && !view.isHost ? (
+                            ) : seat.bot &&
+                              loggedIn &&
+                              hasYokai &&
+                              !view.isHost ? (
                               <button
                                 type="button"
                                 data-yut-sit={`${team}${seat.idx}`}
                                 disabled={busy}
-                                onClick={() => act("sit", { team, idx: seat.idx })}
+                                onClick={() =>
+                                  act("sit", { team, idx: seat.idx })
+                                }
                                 className="grid min-h-9 place-items-center rounded-lg border-2 border-dashed px-2 text-xs font-black"
-                                style={{ borderColor: `${TEAM_COLOR[team]}aa`, color: TEAM_COLOR[team] }}
+                                style={{
+                                  borderColor: `${TEAM_COLOR[team]}aa`,
+                                  color: TEAM_COLOR[team],
+                                }}
                               >
                                 대신 앉기
                               </button>
@@ -1076,21 +1101,26 @@ export function YutRoom({
                               type="button"
                               data-yut-sit={`${team}${seat.idx}`}
                               disabled={busy}
-                              onClick={() => act("sit", { team, idx: seat.idx })}
+                              onClick={() =>
+                                act("sit", { team, idx: seat.idx })
+                              }
                               className="flex min-h-12 flex-1 items-center justify-center rounded-lg border-2 border-dashed font-black"
                               style={{
                                 borderColor: `${TEAM_COLOR[team]}aa`,
                                 color: TEAM_COLOR[team],
                               }}
                             >
-                              ＋ {view.mySeat ? "이 자리로 옮기기" : "여기 앉기"}
+                              ＋{" "}
+                              {view.mySeat ? "이 자리로 옮기기" : "여기 앉기"}
                             </button>
                             {view.isHost ? (
                               <button
                                 type="button"
                                 data-yut-bot-add={`${team}${seat.idx}`}
                                 disabled={busy}
-                                onClick={() => act("bot-add", { team, idx: seat.idx })}
+                                onClick={() =>
+                                  act("bot-add", { team, idx: seat.idx })
+                                }
                                 className="min-h-12 shrink-0 rounded-lg border-2 border-[#b77bff]/70 bg-[#b77bff]/15 px-2.5 text-sm font-black text-[#e7c4ff]"
                               >
                                 🤖 요괴봇
@@ -1193,11 +1223,15 @@ export function YutRoom({
               >
                 ▶ 게임 시작
                 {view.seats.some((x) => !x.player) ? (
-                  <span className="block text-sm">빈자리 {view.seats.filter((x) => !x.player).length}곳은 요괴봇이 채워요</span>
+                  <span className="block text-sm">
+                    빈자리 {view.seats.filter((x) => !x.player).length}곳은
+                    요괴봇이 채워요
+                  </span>
                 ) : null}
               </button>
               <p className="text-center text-xs text-[#d6cdee]">
-                사람은 모두 READY여야 시작돼요. 혼자서도 요괴봇과 한 판 할 수 있어요(봇이 낀 판은 전적 · 보상 없음).
+                사람은 모두 READY여야 시작돼요. 혼자서도 요괴봇과 한 판 할 수
+                있어요(봇이 낀 판은 전적 · 보상 없음).
               </p>
             </div>
           ) : null}
@@ -1207,7 +1241,7 @@ export function YutRoom({
       {/* ───── 판(크게) ───── */}
       {!waiting && s ? (
         <>
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:items-start">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
             {/* 왼쪽(PC): 판 · 대기 말 */}
             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
               <div className="relative min-w-0">
@@ -1232,6 +1266,8 @@ export function YutRoom({
                   knock={knock}
                   merge={merge}
                   kick={kick}
+                  bubbles={emoteBubbles}
+                  throwReady={canThrow && !throwFx}
                 />
                 {throwFx ? (
                   <YutThrowFx
@@ -1247,19 +1283,6 @@ export function YutRoom({
                       setImpact(true);
                     }}
                   />
-                ) : null}
-                {/* 이모티콘 · 응원: 판 맨 위 층에 1.5초 통통(말 · 연출보다 위) */}
-                {emoteBubbles.length ? (
-                  <div data-yut-emote-layer className="pointer-events-none absolute inset-x-0 top-[6%] z-[45] flex flex-wrap justify-center gap-2 px-2">
-                    {emoteBubbles.map((b) => (
-                      <span key={`${b.who}-${b.at}`} data-yut-emote-bubble className="spec-pop grid justify-items-center">
-                        <EmoteArt e={b.e} className="size-16 drop-shadow-[0_3px_0_#0a0614] sm:size-20" />
-                        <span className="max-w-24 truncate border-2 border-[#0a0614] px-1.5 text-[11px] font-black text-white shadow-[2px_2px_0_#0a0614]" style={{ background: b.color }}>
-                          {b.who}
-                        </span>
-                      </span>
-                    ))}
-                  </div>
                 ) : null}
                 {canThrow && !throwFx && !callout ? (
                   <p
@@ -1279,11 +1302,6 @@ export function YutRoom({
                     {callout.text}
                   </b>
                 ) : null}
-              </div>
-
-              <div className="flex gap-1.5">
-                {tray("A")}
-                {tray("B")}
               </div>
             </div>
             {/* 오른쪽(PC) · 아래(휴대폰): 팀 · 차례 · 이모티콘 · 관전석 · 도전 줄 */}
@@ -1314,12 +1332,13 @@ export function YutRoom({
 
               {/* 내 차례 · 남의 차례 */}
               {playing ? (
-                <section
-                  data-yut-action
-                  className="yut-hud grid gap-2 p-2.5"
-                >
+                <section data-yut-action className="yut-hud grid gap-2 p-2.5">
                   <p className="font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
-                    {myTurn ? (s.phase === "throw" ? "YOUR TURN · THROW!" : "YOUR TURN · MOVE!") : "PLAYER TURN"}
+                    {myTurn
+                      ? s.phase === "throw"
+                        ? "YOUR TURN · THROW!"
+                        : "YOUR TURN · MOVE!"
+                      : "PLAYER TURN"}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <b
@@ -1446,41 +1465,65 @@ export function YutRoom({
                 </section>
               ) : null}
 
+              {/* 말 대기소(홍 · 청): 출발 전 말 · 골인 — 여기서만 대기 말을 내보냄 */}
+              <section data-yut-docks className="yut-hud grid gap-1.5 p-2.5">
+                <p className="font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                  PIECE DOCK · 말 대기소
+                </p>
+                {tray("A")}
+                {tray("B")}
+              </section>
+
               {/* 이모티콘 · 응원 */}
               {loggedIn && view.status !== "done" ? (
-                <div className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
-                  {ONI_EMOTES.map((e) => (
-                    <button
-                      key={e.key}
-                      type="button"
-                      data-yut-emote={e.key}
-                      disabled={now < emoteWait}
-                      onClick={() => {
-                        setEmoteWait(Date.now() + 2500);
-                        void act(view.mySeat ? "emote" : "cheer", { e: e.key });
-                      }}
-                      className="grid size-11 shrink-0 place-items-center rounded-xl bg-black/35 hover:bg-white/10 disabled:opacity-40"
-                      aria-label={`${view.mySeat ? "이모티콘" : "응원"} ${e.label}`}
-                    >
-                      <EmoteArt e={e.key} className="size-9" />
-                    </button>
-                  ))}
-                  {QUICK_TEXTS.map((q) => (
-                    <button
-                      key={q.key}
-                      type="button"
-                      data-yut-quick={q.key}
-                      disabled={now < emoteWait}
-                      onClick={() => {
-                        setEmoteWait(Date.now() + 2500);
-                        void act(view.mySeat ? "emote" : "cheer", { e: q.key });
-                      }}
-                      className="grid min-h-11 shrink-0 place-items-center rounded-xl bg-black/35 px-2.5 text-sm font-black text-white hover:bg-white/10 disabled:opacity-40"
-                    >
-                      {q.label}
-                    </button>
-                  ))}
-                </div>
+                <section
+                  data-yut-emote-panel
+                  className="yut-hud grid gap-1.5 p-2.5"
+                >
+                  <p className="text-sm font-black text-[#ffe08a]">
+                    💬 {view.mySeat ? "이모티콘" : "응원 이모티콘"}{" "}
+                    <span className="text-xs font-bold text-[#d6cdee]">
+                      — 내 요괴 머리 위로 1.5초
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {ONI_EMOTES.map((e) => (
+                      <button
+                        key={e.key}
+                        type="button"
+                        data-yut-emote={e.key}
+                        disabled={now < emoteWait}
+                        onClick={() => {
+                          setEmoteWait(Date.now() + 2500);
+                          void act(view.mySeat ? "emote" : "cheer", {
+                            e: e.key,
+                          });
+                        }}
+                        className="grid size-11 shrink-0 place-items-center rounded-xl bg-black/35 hover:bg-white/10 disabled:opacity-40"
+                        aria-label={`${view.mySeat ? "이모티콘" : "응원"} ${e.label}`}
+                      >
+                        <EmoteArt e={e.key} className="size-9" />
+                      </button>
+                    ))}
+                    {QUICK_TEXTS.map((q) => (
+                      <button
+                        key={q.key}
+                        type="button"
+                        data-yut-quick={q.key}
+                        disabled={now < emoteWait}
+                        onClick={() => {
+                          setEmoteWait(Date.now() + 2500);
+                          void act(view.mySeat ? "emote" : "cheer", {
+                            e: q.key,
+                          });
+                        }}
+                        className="grid min-h-11 shrink-0 place-items-center rounded-xl bg-black/35 px-2.5 text-sm font-black text-white hover:bg-white/10 disabled:opacity-40"
+                      >
+                        {q.label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
               ) : null}
 
               {canThrow ? <div className="h-28 lg:hidden" aria-hidden /> : null}

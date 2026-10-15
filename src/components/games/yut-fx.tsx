@@ -65,7 +65,7 @@ export function YutThrowFx({
           <span
             key={`${at}-${i}`}
             data-yut-stick={up ? "flat" : "round"}
-            className={`${nak ? "yut-fly-nak" : "yut-fly"} absolute -mt-9 -ml-2 h-[72px] w-4 border-2 border-[#0a0614] ${up ? "bg-[#f3dfb5]" : "bg-[#8a5a2b]"}`}
+            className={`${nak ? "yut-fly-nak" : "yut-fly"} ${up ? "yut-stick-flat" : "yut-stick-round"} absolute -mt-11 -ml-2.5 h-[88px] w-5 border-[3px] border-[#2a1708]`}
             style={{
               ["--fly" as string]: `${fly}s`,
               ["--lx" as string]: `${layout[i].lx}px`,

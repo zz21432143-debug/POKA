@@ -3597,3 +3597,110 @@ img[src*="/yokai/"] {
     2px 2px 0 #0a0614,
     0 0 14px rgba(255, 207, 74, 0.6);
 }
+
+/* 윷 던지기 차례: 가운데 멍석이 은은히 빛남(누르면 던짐) */
+.yut-throw-mat {
+  border: 3px dashed rgba(255, 224, 138, 0.85);
+  background: radial-gradient(ellipse, rgba(255, 207, 74, 0.28), rgba(255, 207, 74, 0.05) 70%);
+  animation: yut-target 0.9s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .yut-throw-mat {
+    animation: none;
+  }
+}
+
+/* 윷가락: 16비트 픽셀 나무 — 앞면(배) 밝은 결 · 뒷면(등) 짙은 결 */
+.yut-stick-flat {
+  image-rendering: pixelated;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(120, 80, 30, 0.35) 7px 9px),
+    linear-gradient(90deg, #f6dfaa 0 30%, #ecc988 30% 70%, #d9ae6c 70% 100%);
+  box-shadow:
+    inset -3px 0 0 rgba(0, 0, 0, 0.18),
+    inset 3px 0 0 rgba(255, 255, 255, 0.35),
+    2px 2px 0 #0a0614;
+}
+.yut-stick-round {
+  image-rendering: pixelated;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 6px, rgba(40, 20, 5, 0.45) 6px 8px),
+    linear-gradient(90deg, #a8703a 0 30%, #8a5a2b 30% 70%, #6b4320 70% 100%);
+  box-shadow:
+    inset -3px 0 0 rgba(0, 0, 0, 0.3),
+    inset 3px 0 0 rgba(255, 220, 160, 0.25),
+    2px 2px 0 #0a0614;
+}
+
+/* ───────── 오목: 16비트 픽셀 원목판 · 착수 타격감 · 타겟 ───────── */
+.omok-frame[data-omok-skin="pixel-wood"] {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 2px, transparent 2px 10px),
+    linear-gradient(180deg, #6b3f1c, #4a2a10);
+  box-shadow:
+    inset 0 0 0 3px #2a1608,
+    inset 0 0 0 6px #b07a3e,
+    inset 0 0 0 8px #2a1608,
+    0 0 0 3px #0a0614,
+    0 0 0 5px #c9a25c,
+    0 8px 0 5px #1a0d05,
+    0 18px 36px rgba(0, 0, 0, 0.6);
+  image-rendering: pixelated;
+}
+.omok-frame[data-omok-skin="pixel-wood"] .omok-wood {
+  border-radius: 3px;
+  background:
+    repeating-radial-gradient(ellipse at 28% 18%, rgba(120, 70, 20, 0) 0 14px, rgba(120, 70, 20, 0.16) 14px 16px),
+    repeating-linear-gradient(91deg, rgba(110, 60, 15, 0.1) 0 2px, transparent 2px 7px),
+    linear-gradient(135deg, #e9b871, #d39b56 55%, #c0844a);
+  box-shadow:
+    inset 0 0 0 2px #7a4a1c,
+    inset 0 0 22px rgba(80, 40, 10, 0.5);
+}
+/* 돌: 위에서 포물선으로 떨어져 「딱」 */
+.omok-drop {
+  animation: omok-drop-arc 0.26s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+}
+@keyframes omok-drop-arc {
+  0% {
+    transform: translate(-50%, -190%) scale(1.25);
+    opacity: 0.6;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.08, 0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+/* 착수 순간 판 흔들림 0.1초 */
+.omok-impact {
+  animation: yut-impact 0.1s steps(2, end) 1;
+}
+/* 마우스 타겟: 네 모서리 픽셀 괄호가 반짝 */
+.omok-target {
+  background:
+    linear-gradient(#ffcf4a, #ffcf4a) top left / 34% 3px no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) top left / 3px 34% no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) top right / 34% 3px no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) top right / 3px 34% no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) bottom left / 34% 3px no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) bottom left / 3px 34% no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) bottom right / 34% 3px no-repeat,
+    linear-gradient(#ffcf4a, #ffcf4a) bottom right / 3px 34% no-repeat;
+  filter: drop-shadow(0 0 4px #ffcf4a);
+  animation: yut-target 0.6s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .omok-drop,
+  .omok-impact,
+  .omok-target {
+    animation: none;
+  }
+}
+
+/* 구글이 채울 광고가 없다고 알려 주면(승인 전 · 광고 없음) 빈 광고 칸을 통째로 숨김 */
+aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+  display: none;
+}

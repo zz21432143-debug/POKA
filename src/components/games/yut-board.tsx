@@ -5,6 +5,7 @@ import { cn } from "cn";
 import { BIG_NODES, END, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { PixelBurst } from "@/components/games/pixel-burst";
+import { EmoteArt } from "@/components/games/omok-hud";
 
 /** 지름길로 들어가는 칸(오른쪽 위 꼭짓점 · 왼쪽 위 꼭짓점 · 가운데 방) */
 export const SHORTCUT_NODES = ["o5", "o10", "c"];
@@ -94,6 +95,8 @@ export function YutBoard({
   knock,
   merge,
   kick,
+  bubbles = [],
+  throwReady = false,
 }: {
   state: YutState;
   faces: Record<Team, Face[]>;
@@ -122,6 +125,10 @@ export function YutBoard({
   merge: { key: number; node: string } | null;
   /** 잡기: 이 칸에 도착한 요괴가 드롭킥 */
   kick?: { key: number; node: string } | null;
+  /** 이모티콘: 보낸 사람(닉네임)의 말 머리 위 · 판에 말이 없으면 판 위쪽 */
+  bubbles?: { who: string; e: string; at: number; color: string }[];
+  /** 던지기 차례: 가운데 멍석을 누르면 던짐 */
+  throwReady?: boolean;
 }) {
   // 한 칸씩 점프: 판 상태의 마지막 이동(event.path)에서 바로 계산 — 새 이동이 온 그 화면부터 첫 칸에 있게
   const ev = state.event;
@@ -180,7 +187,7 @@ export function YutBoard({
       data-yut-board
       data-yut-skin="arcade-mat"
       className={cn(
-        "yut-wood @container relative mx-auto aspect-square w-full max-w-[min(100%,760px,calc(100dvh-170px))] select-none rounded-[18px] p-[3.2%]",
+        "yut-wood @container relative mx-auto aspect-square w-full max-w-[min(100%,980px,calc(100dvh-140px))] select-none rounded-[18px] p-[3.2%]",
         impact && "yut-impact",
       )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
@@ -232,7 +239,7 @@ export function YutBoard({
             data-yut-ghost={g.node}
             onClick={() => onGhost(g.ri)}
             aria-label={g.node === END ? `${g.label}로 골인` : `${g.label}로 여기 옮기기`}
-            className="yut-target absolute z-30 grid size-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/35 text-[11px] leading-tight font-black text-[#2a1400] [image-rendering:pixelated]"
+            className="yut-target absolute z-30 grid size-[16%] -translate-x-1/2 -translate-y-1/2 place-items-center border-[3px] border-dashed border-[#ffcf4a] bg-[#ffcf4a]/35 text-[11px] leading-tight font-black text-[#2a1400] [image-rendering:pixelated]"
             style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1] + (g.node === END ? 9 : 0)}%` }}
           >
             <span className="text-[#fff6dc] [text-shadow:1px_1px_0_#0a0614]">{g.node === END ? "골인!" : "여기"}</span>
@@ -295,6 +302,31 @@ export function YutBoard({
                 </span>
               ) : null}
             </button>
+          );
+        })}
+
+        {/* 가운데 던지기 멍석: 던지기 차례에만 · 누르면 던짐 */}
+        {throwReady ? (
+          <span data-yut-throw-mat aria-hidden className="yut-throw-mat pointer-events-none absolute top-1/2 left-1/2 z-[5] h-[30%] w-[52%] -translate-x-1/2 -translate-y-1/2 rounded-[50%]" />
+        ) : null}
+
+        {/* 이모티콘: 보낸 사람 말 머리 위(판에 없으면 위쪽 가운데) */}
+        {bubbles.map((bb) => {
+          const own = pieces.filter((p) => p.top && pieceName(names, p.team, p.i) === bb.who);
+          const at = own[0];
+          const pos = at ? xy(at.pos) : null;
+          return (
+            <span
+              key={`${bb.who}-${bb.at}`}
+              data-yut-emote-bubble
+              className="spec-pop pointer-events-none absolute z-[60] grid -translate-x-1/2 justify-items-center"
+              style={pos ? { left: `${pos[0]}%`, top: `${Math.max(0, pos[1] - 30 - (at?.level ?? 0) * 7.2)}%` } : { left: "50%", top: "4%" }}
+            >
+              <EmoteArt e={bb.e} className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16" />
+              <span className="max-w-24 truncate border-2 border-[#0a0614] px-1.5 text-[10px] font-black text-white shadow-[2px_2px_0_#0a0614]" style={{ background: bb.color }}>
+                {bb.who}
+              </span>
+            </span>
           );
         })}
 

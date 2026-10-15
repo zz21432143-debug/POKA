@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PixelBurst } from "@/components/games/pixel-burst";
 import { cn } from "cn";
 import { SIZE, STAR_POINTS, boardFrom, xyOf } from "@/lib/omok";
 
@@ -51,11 +52,25 @@ export function OmokBoard({
     return { p: y * SIZE + x, x: cx - rect.left, y: cy - rect.top };
   };
   const loupe = onTouchPlace && !disabled;
+  // 착수 순간: 판 0.1초 흔들림 + 나무 파편(새 돌이 놓였을 때만 · 처음 열 때는 없음)
+  const [impact, setImpact] = useState<{ key: number; p: number } | null>(null);
+  const prevLen = useRef(moves.length);
+  useEffect(() => {
+    const grew = moves.length > prevLen.current;
+    prevLen.current = moves.length;
+    if (!grew || last < 0) return;
+    setImpact({ key: moves.length, p: last });
+    const t = window.setTimeout(() => setImpact(null), 600);
+    return () => window.clearTimeout(t);
+  }, [moves.length, last]);
+  // PC: 마우스를 올린 칸에 반짝이는 픽셀 타겟
+  const [hover, setHover] = useState<number | null>(null);
 
   return (
     <div
       data-omok-board
-      className="omok-frame relative mx-auto w-full max-w-[min(760px,calc(100dvh-200px))] min-w-[280px] rounded-[14px] p-[2.2%]"
+      data-omok-skin="pixel-wood"
+      className={cn("omok-frame relative mx-auto w-full max-w-[min(760px,calc(100dvh-200px))] min-w-[280px] rounded-[14px] p-[2.2%]", impact && "omok-impact")}
     >
       <div
         role="grid"
@@ -69,7 +84,12 @@ export function OmokBoard({
           if (!loupe || e.pointerType === "mouse") return;
           setTouch(cellAt(e.currentTarget, e.clientX, e.clientY));
         }}
+        onPointerLeave={() => setHover(null)}
         onPointerMove={(e) => {
+          if (e.pointerType === "mouse" && !disabled && onPick) {
+            const hit = cellAt(e.currentTarget, e.clientX, e.clientY);
+            setHover(hit && board[hit.p] === 0 ? hit.p : null);
+          }
           if (!touch) return;
           setTouch(cellAt(e.currentTarget, e.clientX, e.clientY));
         }}
@@ -92,13 +112,15 @@ export function OmokBoard({
           aria-hidden
         >
           {Array.from({ length: SIZE }, (_, i) => (
-            <g
-              key={i}
-              stroke="#3b2510"
-              strokeWidth={i === 0 || i === SIZE - 1 ? 0.06 : 0.035}
-            >
-              <line x1={0.5} y1={i + 0.5} x2={SIZE - 0.5} y2={i + 0.5} />
-              <line x1={i + 0.5} y1={0.5} x2={i + 0.5} y2={SIZE - 0.5} />
+            <g key={i}>
+              <g stroke="rgba(255,236,190,.45)" strokeWidth={0.03}>
+                <line x1={0.5} y1={i + 0.55} x2={SIZE - 0.5} y2={i + 0.55} />
+                <line x1={i + 0.55} y1={0.5} x2={i + 0.55} y2={SIZE - 0.5} />
+              </g>
+              <g stroke="#2a1608" strokeWidth={i === 0 || i === SIZE - 1 ? 0.08 : 0.05}>
+                <line x1={0.5} y1={i + 0.5} x2={SIZE - 0.5} y2={i + 0.5} />
+                <line x1={i + 0.5} y1={0.5} x2={i + 0.5} y2={SIZE - 0.5} />
+              </g>
             </g>
           ))}
           {STAR_POINTS.map((p) => {
@@ -168,6 +190,20 @@ export function OmokBoard({
             </span>
           ) : null,
         )}
+
+        {/* 마우스 타겟(내 차례 · 빈 칸) */}
+        {hover !== null && !touch && !disabled && board[hover] === 0 ? (
+          <span
+            data-omok-target
+            aria-hidden
+            className="omok-target pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
+            style={{ ...pos(hover), width: `${CELL * 0.98}%`, height: `${CELL * 0.98}%` }}
+          />
+        ) : null}
+        {/* 착수 파편 */}
+        {impact ? (
+          <PixelBurst key={`stone-${impact.key}`} x={(xyOf(impact.p).x + 0.5) * CELL} y={(xyOf(impact.p).y + 0.5) * CELL} seed={impact.key * 7 + impact.p} colors={["#c08443", "#8a5a2b", "#f2c98a", "#3b2510"]} count={10} spread={26} size={4} up={0.3} />
+        ) : null}
 
         {/* 손가락 돋보기: 손가락에 가려진 자리를 위쪽에 크게 */}
         {touch ? (
