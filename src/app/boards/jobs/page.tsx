@@ -12,13 +12,14 @@ import { JOB_REGIONS, openJobWhere, parseJobRegion, regionWhere } from "@/lib/jo
 import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
+import { parseJobTagParam } from "@/lib/job-tags";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ region?: string; open?: string }>;
+type SearchParams = Promise<{ region?: string; open?: string; tag?: string }>;
 
 export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
   const region = parseJobRegion((await searchParams).region);
@@ -41,8 +42,9 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
   const params = await searchParams;
   const region = parseJobRegion(params.region);
   const openOnly = params.open === "1";
+  const tag = parseJobTagParam(params.tag);
   const [page, urgent] = await Promise.all([
-    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly, guest: !(await getCurrentUser().catch(() => null)) }).catch(() => ({
+    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly, tag, guest: !(await getCurrentUser().catch(() => null)) }).catch(() => ({
       jobs: [],
       total: 0,
       nextOffset: null,
@@ -121,9 +123,10 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold text-white">{region ? `${region} 공고` : "전체 공고"}</h2>
-        <JobFilters basePath="/boards/jobs" region={region} openOnly={openOnly} />
+        <JobFilters basePath="/boards/jobs" region={region} openOnly={openOnly} tag={tag} />
         <InfiniteJobList
-          key={`${region ?? "all"}-${openOnly}`}
+          key={`${region ?? "all"}-${openOnly}-${tag ?? ""}`}
+          tag={tag}
           feedKey="jobs"
           initialItems={page.jobs}
           initialTotal={page.total}

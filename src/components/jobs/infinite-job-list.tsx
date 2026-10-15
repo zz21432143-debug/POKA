@@ -20,6 +20,7 @@ export function InfiniteJobList({
   initialNextOffset,
   region = null,
   openOnly = false,
+  tag = null,
   emptyText,
   emptyAction,
 }: {
@@ -29,6 +30,7 @@ export function InfiniteJobList({
   initialNextOffset: number | null;
   region?: string | null;
   openOnly?: boolean;
+  tag?: string | null;
   emptyText?: string;
   emptyAction?: EmptyAction;
 }) {
@@ -47,6 +49,7 @@ export function InfiniteJobList({
       const params = new URLSearchParams({ key: feedKey, offset: String(nextOffset), limit: String(PAGE_SIZE) });
       if (region) params.set("region", region);
       if (openOnly) params.set("open", "1");
+      if (tag) params.set("tag", tag);
       const response = await fetch(`/api/feed?${params.toString()}`);
       const payload = (await response.json()) as FeedResponse;
       if (!response.ok) throw new Error(payload.error ?? "목록을 불러오지 못했습니다.");

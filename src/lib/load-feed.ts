@@ -93,6 +93,8 @@ export type JobPageOptions = {
   limit?: number;
   region?: JobRegion | null;
   openOnly?: boolean;
+  /** 근무 환경 칩으로 거르기(초보 가능 …) */
+  tag?: string | null;
   /** 비로그인이면 제목만(guestJobCard) */
   guest?: boolean;
 };
@@ -106,7 +108,11 @@ export async function loadJobPage(key: FeedKey, options: JobPageOptions = {}) {
   const limit = options.limit ?? PAGE_SIZE;
   const now = new Date();
   const today = todayKstDate();
-  const base: Prisma.PostWhereInput = { ...feedWhere(key), ...regionWhere(options.region ?? null) };
+  const base: Prisma.PostWhereInput = {
+    ...feedWhere(key),
+    ...regionWhere(options.region ?? null),
+    ...(options.tag ? { jobTags: { contains: options.tag } } : {}),
+  };
   const openWhere: Prisma.PostWhereInput = { AND: [base, openJobWhere(now, today)] };
   const closedWhere: Prisma.PostWhereInput = { AND: [base, closedJobWhere(now, today)] };
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { parseJobTagParam } from "@/lib/job-tags";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
@@ -16,7 +17,7 @@ import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ region?: string; open?: string }>;
+type SearchParams = Promise<{ region?: string; open?: string; tag?: string }>;
 
 export async function generateMetadata({
   params,
@@ -48,10 +49,11 @@ export default async function JobBoardPage({
   const query = await searchParams;
   const region = parseJobRegion(query.region);
   const openOnly = query.open === "1";
+  const tag = parseJobTagParam(query.tag);
   const feedKey = jobFeedKey(job.kind);
   // 비로그인은 제목만 보이게 조건·주소 등을 빼고 내려보냅니다.
   const guest = !(await getCurrentUser().catch(() => null));
-  const page = await loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly, guest });
+  const page = await loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly, tag, guest });
   const writeHref = `/boards/jobs/${kind}/write`;
 
   return (
@@ -72,9 +74,10 @@ export default async function JobBoardPage({
         </Link>
       </header>
       {job.kind === "URGENT" ? <RegionUrgentAlert /> : null}
-      <JobFilters basePath={`/boards/jobs/${kind}`} region={region} openOnly={openOnly} />
+      <JobFilters basePath={`/boards/jobs/${kind}`} region={region} openOnly={openOnly} tag={tag} />
       <InfiniteJobList
-        key={`${region ?? "all"}-${openOnly}`}
+        key={`${region ?? "all"}-${openOnly}-${tag ?? ""}`}
+        tag={tag}
         feedKey={feedKey}
         initialItems={page.jobs}
         initialTotal={page.total}

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { MapPinIcon } from "lucide-react";
 import { JOB_REGIONS, type JobRegion } from "@/lib/job-status";
 import { cn } from "cn";
+import { JOB_FILTER_TAGS } from "@/lib/job-tags";
 
-export function jobListHref(basePath: string, region: JobRegion | null, openOnly: boolean) {
+export function jobListHref(basePath: string, region: JobRegion | null, openOnly: boolean, tag: string | null = null) {
   const params = new URLSearchParams();
   if (region) params.set("region", region);
   if (openOnly) params.set("open", "1");
+  if (tag) params.set("tag", tag);
   const query = params.toString();
   return query ? `${basePath}?${query}` : basePath;
 }
@@ -16,10 +18,13 @@ export function JobFilters({
   basePath,
   region,
   openOnly,
+  tag = null,
 }: {
   basePath: string;
   region: JobRegion | null;
   openOnly: boolean;
+  /** 근무 환경 칩(초보 가능 …) */
+  tag?: string | null;
 }) {
   const chip =
     "touch-target inline-flex min-h-10 shrink-0 items-center rounded-full border px-3 text-[13px] font-semibold";
@@ -34,14 +39,14 @@ export function JobFilters({
             <MapPinIcon className="size-4" aria-hidden />
           </li>
           <li>
-            <Link href={jobListHref(basePath, null, openOnly)} className={cn(chip, region ? off : on)}>
+            <Link href={jobListHref(basePath, null, openOnly, tag)} className={cn(chip, region ? off : on)}>
               전국
             </Link>
           </li>
           {JOB_REGIONS.map((name) => (
             <li key={name}>
               <Link
-                href={jobListHref(basePath, name, openOnly)}
+                href={jobListHref(basePath, name, openOnly, tag)}
                 className={cn(chip, region === name ? on : off)}
                 aria-current={region === name ? "page" : undefined}
               >
@@ -51,8 +56,26 @@ export function JobFilters({
           ))}
         </ul>
       </nav>
+      {/* 근무 환경으로 골라 보기(다시 누르면 해제) */}
+      <nav aria-label="근무 환경 필터" className="card-scroller -mx-1 overflow-x-auto px-1">
+        <ul className="flex w-max gap-1.5 sm:w-auto sm:flex-wrap">
+          {JOB_FILTER_TAGS.map((name) => (
+            <li key={name}>
+              <Link
+                href={jobListHref(basePath, region, openOnly, tag === name ? null : name)}
+                data-job-tag-filter={name}
+                aria-pressed={tag === name}
+                className={cn(chip, "min-h-9 text-xs", tag === name ? on : off)}
+              >
+                {tag === name ? "✓ " : ""}
+                {name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
       <Link
-        href={jobListHref(basePath, region, !openOnly)}
+        href={jobListHref(basePath, region, !openOnly, tag)}
         role="switch"
         aria-checked={openOnly}
         className="touch-target inline-flex min-h-9 items-center gap-2 self-start text-sm font-semibold text-[#E5E7EB]"

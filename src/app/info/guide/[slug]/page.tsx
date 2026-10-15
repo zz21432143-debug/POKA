@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { GUIDE_ARTICLES, getGuideArticle } from "@/lib/info-pages";
+import { linkGuideTerms } from "@/lib/guide-links";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
 
@@ -65,7 +66,8 @@ export default async function GuideArticlePage({
         <p className="mt-2">{article.summary}</p>
       </header>
       <div className="ink-panel rounded-2xl px-4 py-5">
-        <p className="whitespace-pre-line text-base leading-7 text-[#E5E7EB]">{article.body}</p>
+        {/* 본문 용어는 관련 가이드로 이어짐(글마다 처음 나온 곳 하나) */}
+        <p className="whitespace-pre-line text-base leading-7 text-[#E5E7EB]">{linkGuideTerms(article.body, article.slug)}</p>
       </div>
       {article.tool ? (
         <Link

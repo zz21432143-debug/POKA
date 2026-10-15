@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { parseJobTagParam } from "@/lib/job-tags";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
       limit,
       region: parseJobRegion(url.searchParams.get("region")),
       openOnly: url.searchParams.get("open") === "1",
+      tag: parseJobTagParam(url.searchParams.get("tag")),
       // 비로그인은 제목만
       guest: !(await getCurrentUser().catch(() => null)),
     });

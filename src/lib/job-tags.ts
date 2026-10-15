@@ -27,3 +27,10 @@ export function parseJobTags(value: string | null | undefined): string[] {
   if (!value) return [];
   return value.split(",").map((v) => v.trim()).filter((v) => (JOB_TAGS as readonly string[]).includes(v));
 }
+
+/** 구인 목록에서 골라 볼 수 있는 칩(많이 찾는 것만) */
+export const JOB_FILTER_TAGS = ["초보 가능", "유급 교육", "야간 귀가 지원", "식사 제공", "역 근처", "주차 가능"] as const;
+export function parseJobTagParam(value: string | null | undefined): string | null {
+  const v = value?.trim() ?? "";
+  return (JOB_FILTER_TAGS as readonly string[]).includes(v) ? v : null;
+}
