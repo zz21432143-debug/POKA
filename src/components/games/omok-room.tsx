@@ -148,6 +148,8 @@ export function OmokRoom({
   }, []);
 
   function receive(next: OmokView) {
+    // 늦게 도착한 옛 상태(1초 확인 · 버튼 응답이 엇갈림)가 새 판을 덮으면 돌 소리 · 연출이 두 번 나므로 버림
+    if (next.version < versionRef.current) return;
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.me || next.seat);
     if (next.watchers !== undefined)

@@ -22,6 +22,7 @@ import {
   type YutKnock,
 } from "@/components/games/yut-board";
 import { YutCatchCutIn, YutThrowFx } from "@/components/games/yut-fx";
+import { YUT_TUTORIAL_KEY, YutTutorial } from "@/components/games/yut-tutorial";
 import {
   GameChampionBadge,
   PotTitleBadge,
@@ -94,6 +95,8 @@ export function YutRoom({
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sound, setSound] = useState(true);
+  // 하는 법 3장: 자리에 앉은 사람이 판을 처음 시작하면 한 번 자동으로
+  const [tutorial, setTutorial] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
   const [confirmSurrender, setConfirmSurrender] = useState(false);
@@ -241,6 +244,19 @@ export function YutRoom({
   }, [view.seats]);
 
   // 서버에서 받은 변화 → 던지기 · 한 칸씩 점프 · 도착하면 잡기(컷인 · 넉백) / 업기(합체) / 골인 · 결과
+  const seatedPlaying = view.status === "playing" && Boolean(view.mySeat);
+  useEffect(() => {
+    if (!seatedPlaying) return;
+    let seen = true;
+    try {
+      seen = window.localStorage.getItem(YUT_TUTORIAL_KEY) === "1";
+    } catch {
+      /* 못 읽으면 안 띄움 */
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 처음 한 번
+    if (!seen) setTutorial(true);
+  }, [seatedPlaying]);
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const before = prev.current;
@@ -958,6 +974,14 @@ export function YutRoom({
         >
           {sound ? "🔊" : "🔇"}
         </button>
+        <button
+          type="button"
+          data-yut-howto
+          onClick={() => setTutorial(true)}
+          className="arcade-btn btn-dark !min-h-9 shrink-0 px-2.5 text-sm"
+        >
+          ❔ 하는 법
+        </button>
         {playing && mySeatView && !mySeatView.left ? (
           <button
             type="button"
@@ -1619,6 +1643,7 @@ export function YutRoom({
           aria-hidden
         />
       ) : null}
+      {tutorial ? <YutTutorial onClose={() => setTutorial(false)} /> : null}
       {cutIn ? (
         <YutCatchCutIn
           key={cutIn.key}
