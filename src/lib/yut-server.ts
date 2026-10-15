@@ -1,5 +1,6 @@
 import { createHash, randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { roomTitle } from "@/lib/game-room";
 import { todayKstDate } from "@/lib/dates";
 import { profileYokai } from "@/lib/yokai-server";
 import { YOKAI_ORDER, type YokaiSpecies } from "@/lib/yokai";
@@ -10,19 +11,19 @@ import { applyMove, applyThrow, autoStep, newState, other, type Team, type YutSt
 
 /**
  * 요괴 윷놀이 방(1:1 ~ 4:4): 6자리 초대 코드 · 링크 → 대기실에서 A/B팀 자리 고르기 · 팀 섞기 · 레디 → 방장이 시작.
- * 차례: A팀 1번 → B팀 1번 → A팀 2번 …(팀원이 팀 말을 함께 씀). 한 동작 제한 시간(1:1 7초 ~ 4:4 5초),
+ * 차례: A팀 1번 → B팀 1번 → A팀 2번 …(팀원이 팀 말을 함께 씀). 한 동작 제한 시간 10초,
  * 넘기면 요괴 AI가 대신 던지고 움직임. 나간 사람 · 요괴 봇 자리도 AI가 이어서 둠(게임이 멈추지 않게).
  * 화면은 1초마다 version만 물어보고, 바뀌면 전체를 받음 — 시간이 된 AI 동작은 그때 서버가 처리.
  */
 export const YUT_MODES = [1, 2, 3, 4] as const;
 export type YutMode = (typeof YUT_MODES)[number];
 export const isYutMode = (v: unknown): v is YutMode => v === 1 || v === 2 || v === 3 || v === 4;
-/** 한 동작 제한 시간 */
-export const turnMs = (mode: number) => (mode >= 4 ? 5000 : mode === 3 ? 6000 : 7000);
+/** 한 동작 제한 시간(10초) */
+export const TURN_MS = 10_000;
 /** 팀 말 수(다인전은 3개로 빠르게) */
 export const piecesFor = (mode: number) => (mode >= 3 ? 3 : 4);
 /** 요괴 봇 · 나간 사람 동작 간격(다인전은 2배속) */
-const botMs = (mode: number) => (mode >= 2 ? 700 : 1100);
+const botMs = (mode: number) => (mode >= 2 ? 1000 : 1400);
 const ABSENT_MS = 15_000;
 const HOST_AWAY_MS = 90_000;
 const SEAT_AWAY_MS = 60_000;
@@ -88,7 +89,7 @@ export function currentSeat(seats: Seat[], s: YutState): Seat | null {
   return team[s.turnIdx[s.turnTeam] % team.length];
 }
 
-async function makeRoom(data: { hostId: string; mode: number; seatsJson: string; isPrivate: boolean }) {
+async function makeRoom(data: { hostId: string; mode: number; seatsJson: string; isPrivate: boolean; title?: string }) {
   for (let i = 0; i < 8; i += 1) {
     const code = Array.from({ length: 6 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
     const made = await prisma.yutGame.create({ data: { ...data, code }, select: { id: true } }).catch(() => null);
@@ -98,13 +99,13 @@ async function makeRoom(data: { hostId: string; mode: number; seatsJson: string;
 }
 
 /** 방 만들기(방장은 A팀 1번 자리) · 이미 기다리는 내 방이 있으면 그 방 */
-export async function createYut(hostId: string, mode: YutMode, isPrivate: boolean): Promise<{ id: string } | { error: string }> {
+export async function createYut(hostId: string, mode: YutMode, isPrivate: boolean, title = ""): Promise<{ id: string } | { error: string }> {
   if (!(await hasYokai(hostId))) return { error: NO_YOKAI };
   const open = await prisma.yutGame.findFirst({ where: { hostId, status: "waiting", updatedAt: { gte: new Date(Date.now() - WAIT_MS) } }, select: { id: true } });
   if (open) await prisma.yutGame.update({ where: { id: open.id }, data: { status: "done", endReason: "cancel", version: { increment: 1 } } }).catch(() => undefined);
   const seats = emptySeats(mode);
   seats[0].userId = hostId;
-  return makeRoom({ hostId, mode, seatsJson: JSON.stringify(seats), isPrivate });
+  return makeRoom({ hostId, mode, seatsJson: JSON.stringify(seats), isPrivate, title });
 }
 
 export async function yutRoomByCode(code: string) {
@@ -183,7 +184,7 @@ async function settle(row: Row): Promise<Row> {
   if (!s) return row;
   const seat = currentSeat(seats, s);
   const since = now - (row.turnAt?.getTime() ?? now);
-  let due = since > turnMs(row.mode) + 800;
+  let due = since > TURN_MS + 800;
   if (seat && (seat.bot || seat.left || !seat.userId) && since > botMs(row.mode)) due = true;
   if (!due && seat?.userId && since > 1500) {
     const seen = await lastSeenMap(row.id, [seat.userId]);
@@ -219,6 +220,8 @@ export type YutSeatView = { team: Team; idx: number; player: YutPlayer | null; r
 export type YutView = {
   id: string;
   code: string | null;
+  /** 방 제목(비면 「방장의 방」) */
+  title: string;
   mode: number;
   status: "waiting" | "playing" | "done";
   isHost: boolean;
@@ -278,6 +281,7 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
   return {
     id: row.id,
     code: row.code,
+    title: roomTitle(row.title, host),
     mode: row.mode,
     status: row.status as YutView["status"],
     isHost: viewerId === row.hostId,
@@ -290,7 +294,7 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
     turnSeat: cur ? { team: cur.team, idx: cur.idx } : null,
     myTurn: Boolean(row.status === "playing" && cur && viewerId && cur.userId === viewerId && !cur.left),
     turnAt: row.turnAt?.getTime() ?? null,
-    turnMs: turnMs(row.mode),
+    turnMs: TURN_MS,
     serverNow: Date.now(),
     version: row.version,
     winner: (row.winner as Team | "") ?? "",
@@ -336,7 +340,7 @@ export async function yutAct(
   id: string,
   userId: string,
   action: YutAction,
-  payload: { team?: unknown; idx?: unknown; ready?: unknown; mode?: unknown; bots?: unknown; ri?: unknown; pi?: unknown; e?: unknown; target?: unknown },
+  payload: { team?: unknown; idx?: unknown; ready?: unknown; mode?: unknown; bots?: unknown; ri?: unknown; pi?: unknown; e?: unknown; target?: unknown; power?: unknown },
 ): Promise<ActResult> {
   const found = await prisma.yutGame.findUnique({ where: { id } });
   if (!found) return { ok: false, error: "방을 찾을 수 없어요.", status: 404 };
@@ -436,7 +440,8 @@ export async function yutAct(
     if (notReady.length) return fail(`아직 준비 안 한 사람이 ${notReady.length}명 있어요.`, 409);
     const teamA = seats.filter((x) => x.team === "A" && x.userId).length;
     const teamB = seats.filter((x) => x.team === "B" && x.userId).length;
-    if (!bots && (teamA === 0 || teamB === 0)) return fail("두 팀 모두 사람이 있어야 해요.", 409);
+    // 혼자서는 못 함: 두 팀에 사람이 한 명 이상씩(봇은 빈자리 채우기만)
+    if (teamA === 0 || teamB === 0) return fail("홍팀 · 청팀에 사람이 한 명 이상씩 있어야 시작할 수 있어요.", 409);
     const next = seats.map((x) => (x.userId ? { ...x, ready: true } : { ...x, bot: true, ready: true, botYokai: YOKAI_ORDER[randomInt(YOKAI_ORDER.length)] }));
     const first: Team = randomInt(2) === 0 ? "A" : "B";
     const r = await prisma.yutGame.updateMany({
@@ -456,7 +461,8 @@ export async function yutAct(
     if (!cur || cur.userId !== userId) return fail("지금은 내 차례가 아니에요.", 409);
     if (action === "throw") {
       if (s.phase !== "throw") return fail("먼저 말을 움직여 주세요.", 409);
-      await saveState(row, applyThrow(s, Math.random, now), now);
+      const power = Number(payload.power);
+      await saveState(row, applyThrow(s, Math.random, now, Number.isFinite(power) ? power : undefined), now);
       return done();
     }
     const r = applyMove(s, Number(payload.ri), Number(payload.pi), now);
@@ -497,7 +503,7 @@ export async function yutAct(
     if (row.nextId) return done();
     // 같은 사람 · 같은 팀으로 새 대기실(봇 · 나간 사람 자리는 비움) — 누른 사람이 방장
     const next = seats.map((x) => ({ team: x.team, idx: x.idx, userId: x.bot || x.left ? null : x.userId, ready: false }));
-    const made = await makeRoom({ hostId: userId, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate });
+    const made = await makeRoom({ hostId: userId, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate, title: row.title });
     const linked = await prisma.yutGame.updateMany({ where: { id, nextId: null }, data: { nextId: made.id, version: { increment: 1 } } });
     if (linked.count !== 1) await prisma.yutGame.delete({ where: { id: made.id } }).catch(() => undefined);
     return done();
@@ -523,6 +529,7 @@ export async function yutLobby() {
     code: r.code,
     mode: r.mode,
     host: (await playerOf(r.hostId, cache))?.nickname ?? "?",
+    title: roomTitle(r.title, (await playerOf(r.hostId, cache))?.nickname ?? "?"),
     filled: seatsOf(r).filter((x) => x.userId).length,
     total: r.mode * 2,
     teamA: await names(r, "A"),

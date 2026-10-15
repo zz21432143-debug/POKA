@@ -8,6 +8,8 @@
  *       시발점·오피스텔·18시: 예외 처리
  */
 
+import { KO_NICK_WORDS, KO_POST_WORDS } from "@/lib/badwords-ko";
+
 export type ProfanityCategory = "abuse" | "adult" | "gambling" | "spam" | "hate" | "impersonation";
 
 export const PROFANITY_LABEL: Record<ProfanityCategory, string> = {
@@ -47,6 +49,10 @@ const SAFE_PHRASES = [
   "곱씹",
   "오피셜",
   "토토로",
+  "시바견",
+  "시바이누",
+  "노무사",
+  "도라이버",
 ];
 
 /**
@@ -97,6 +103,14 @@ const FIXED_PATTERNS: Partial<Record<ProfanityCategory, string[]>> = {
   spam: ["t\\.me\\/", "telegram\\.me", "bit\\.ly", "tinyurl\\.com", "han\\.gl", "me2\\.do", "vo\\.la", "url\\.kr"],
 };
 
+// 오픈소스 한국어 욕설 목록(글 · 댓글용으로 고른 것)을 욕설에 중복 없이 합침
+{
+  // 다른 분류에 이미 있는 말 · 숫자만 끼운 변형(씨1발 → 씨발은 글자 사이 우회로 이미 잡힘)은 빼고
+  const known = new Set(Object.values(BASE_WORDS).flat());
+  const fresh = KO_POST_WORDS.filter((w) => !known.has(w) && !known.has(w.replace(/[0-9]/g, "")) && !(/[0-9]/.test(w) && KO_POST_WORDS.includes(w.replace(/[0-9]/g, ""))));
+  BASE_WORDS.abuse = [...BASE_WORDS.abuse, ...new Set(fresh)];
+}
+
 export const PROFANITY_CATEGORIES = Object.keys(BASE_WORDS) as ProfanityCategory[];
 
 type Rule = { category: ProfanityCategory; pattern: RegExp };
@@ -114,6 +128,20 @@ function buildRules(disabled: ReadonlySet<string>): Rule[] {
 }
 
 const DEFAULT_RULES = buildRules(new Set());
+
+/** 닉네임 전용 엄격 목록(오픈소스 badwords-ko 전체) — 관리자가 끈 단어는 뺌 */
+function nickRule(disabled?: ReadonlySet<string>) {
+  const words = KO_NICK_WORDS.filter((w) => !disabled?.has(w));
+  return words.length ? rule([...words]) : null;
+}
+const DEFAULT_NICK_RULE = nickRule();
+let cachedNick: { key: string; rule: RegExp | null } = { key: "", rule: DEFAULT_NICK_RULE };
+function nickRuleFor(disabled?: ReadonlySet<string>) {
+  if (!disabled || disabled.size === 0) return DEFAULT_NICK_RULE;
+  const key = [...disabled].sort().join("\n");
+  if (cachedNick.key !== key) cachedNick = { key, rule: nickRule(disabled) };
+  return cachedNick.rule;
+}
 let cachedRules: { key: string; rules: Rule[] } = { key: "", rules: DEFAULT_RULES };
 
 /** 관리자가 끈 단어를 뺀 규칙(같은 목록이면 다시 만들지 않음) */
@@ -151,6 +179,12 @@ export function findProfanity(
     if (category === "impersonation" && !opts.nickname) continue;
     const found = normalized.match(pattern);
     if (found) return { category, match: found[0] };
+  }
+  if (opts.nickname) {
+    // 닉네임은 _ · 숫자로 끊어 쓰는 우회도 막음(씨_발, 개1새끼)
+    const nick = nickRuleFor(opts.disabled);
+    const found = nick && (normalized.match(nick) ?? normalized.replace(/[_0-9]/g, "").match(nick));
+    if (found) return { category: "abuse", match: found[0] };
   }
   return null;
 }

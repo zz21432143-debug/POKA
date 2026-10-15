@@ -2860,15 +2860,37 @@ img[src*="/yokai/"] {
     opacity: 0;
   }
   35% {
-    transform: translateY(-46px) rotate(320deg) scaleY(0.4);
+    transform: translateY(var(--yut-h, -46px)) rotate(calc(var(--yut-spin, 720deg) * 0.45)) scaleY(0.4);
     opacity: 1;
   }
   70% {
-    transform: translateY(-8px) rotate(640deg) scaleY(-0.6);
+    transform: translateY(-8px) rotate(calc(var(--yut-spin, 720deg) * 0.9)) scaleY(-0.6);
   }
   100% {
-    transform: translateY(0) rotate(720deg) scaleY(1);
+    transform: translateY(0) rotate(var(--yut-spin, 720deg)) scaleY(1);
   }
+}
+/* 낙: 윷가락이 판 밖으로 날아감 */
+.yut-nak {
+  animation: yut-nak var(--yut-throw, 0.7s) ease-in both;
+}
+@keyframes yut-nak {
+  0% {
+    transform: translate(0, 40px) rotate(0);
+    opacity: 0;
+  }
+  30% {
+    transform: translate(0, var(--yut-h, -46px)) rotate(200deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--yut-out, 80px), 120px) rotate(900deg);
+    opacity: 0;
+  }
+}
+/* 던지기 세기 게이지 */
+.yut-gauge-fill {
+  background: linear-gradient(90deg, #3ddc97, #ffcf4a 55%, #ff5d6c);
 }
 .yut-callout {
   animation: yut-callout 1.3s cubic-bezier(0.2, 1.6, 0.4, 1) both;
@@ -2926,6 +2948,7 @@ img[src*="/yokai/"] {
 @media (prefers-reduced-motion: reduce) {
   .yut-piece,
   .yut-stick,
+  .yut-nak,
   .yut-callout,
   .yut-hit,
   .yut-shake,

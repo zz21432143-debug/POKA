@@ -1,0 +1,3 @@
+-- 게임 방 제목(오목 · 윷놀이) — 추가만
+ALTER TABLE "OmokGame" ADD COLUMN IF NOT EXISTS "title" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "YutGame" ADD COLUMN IF NOT EXISTS "title" TEXT NOT NULL DEFAULT '';

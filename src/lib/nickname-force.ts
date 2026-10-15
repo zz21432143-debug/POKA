@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { nicknameError } from "@/lib/nickname";
+import { findForbiddenWord, loadDisabledBaseWords, loadForbiddenWords } from "@/lib/forbidden-words";
 import { findNicknameOwner } from "@/lib/nickname-lookup";
 
 /**
@@ -32,6 +33,7 @@ export async function forceNicknameChange(
   reason: ForceReason,
   actorId: string,
   ip: string,
+  opts: { to?: string; ticket?: boolean } = {},
 ) {
   const user = await prisma.user.findFirst({
     where: { nickname: targetNickname },
@@ -40,10 +42,19 @@ export async function forceNicknameChange(
   if (!user) return { ok: false as const, error: "회원을 찾을 수 없어요." };
   if (user.isMaster)
     return { ok: false as const, error: "마스터 계정은 바꿀 수 없어요." };
-  const to = await safeNickname();
+  // 관리자가 직접 정한 닉네임(규칙 · 중복 검사) · 비우면 바른닉네임○○○○
+  const wanted = opts.to?.trim().replace(/s+/g, "") ?? "";
+  if (wanted) {
+    const err = nicknameError(wanted);
+    if (err) return { ok: false as const, error: err };
+    if (await findNicknameOwner(wanted, user.id))
+      return { ok: false as const, error: "이미 쓰는 닉네임이에요." };
+  }
+  const to = wanted || (await safeNickname());
+  const ticket = opts.ticket !== false;
   await prisma.user.update({
     where: { id: user.id },
-    data: { nickname: to, nicknameTickets: { increment: 1 } },
+    data: { nickname: to, ...(ticket ? { nicknameTickets: { increment: 1 } } : {}) },
   });
   await prisma.toolSaved.create({
     data: {
@@ -71,10 +82,44 @@ export async function forceNicknameChange(
   const { notifyUser } = await import("@/lib/push");
   await notifyUser(user.id, {
     title: "닉네임이 변경되었어요",
-    body: `${FORCE_REASONS[reason]} 관련으로 닉네임이 「${to}」로 바뀌었어요. 닉네임 변경권 1장을 드렸어요.`,
+    body: `${FORCE_REASONS[reason]} 관련으로 닉네임이 「${to}」로 바뀌었어요.${ticket ? " 닉네임 변경권 1장을 드렸어요." : ""}`,
     url: "/account#nickname",
   }).catch(() => undefined);
   return { ok: true as const, from: user.nickname, to };
+}
+
+/** 닉네임 변경권 주기(마스터): 1~5장 · 기록 · 알림 */
+export async function grantNicknameTickets(
+  targetNickname: string,
+  count: number,
+  actorId: string,
+  ip: string,
+) {
+  const n = Math.max(1, Math.min(5, Math.floor(count)));
+  const user = await prisma.user.findFirst({
+    where: { nickname: targetNickname },
+    select: { id: true, nickname: true, nicknameTickets: true },
+  });
+  if (!user) return { ok: false as const, error: "회원을 찾을 수 없어요." };
+  const row = await prisma.user.update({
+    where: { id: user.id },
+    data: { nicknameTickets: { increment: n } },
+    select: { nicknameTickets: true },
+  });
+  const { writeAudit } = await import("@/lib/security");
+  await writeAudit({
+    kind: "nickname_ticket",
+    userId: actorId,
+    ip,
+    detail: `${user.nickname} 닉네임 변경권 +${n}장`,
+  }).catch(() => undefined);
+  const { notifyUser } = await import("@/lib/push");
+  await notifyUser(user.id, {
+    title: "닉네임 변경권을 받았어요",
+    body: `운영진이 닉네임 변경권 ${n}장을 드렸어요. 내 정보에서 닉네임을 바꿀 수 있어요.`,
+    url: "/account#nickname",
+  }).catch(() => undefined);
+  return { ok: true as const, tickets: row.nicknameTickets, added: n };
 }
 
 /** 아직 확인 안 한 강제 변경 안내(가장 최근) */
@@ -119,9 +164,10 @@ export async function badNicknames(limit = 50) {
     select: { nickname: true, level: true },
     take: 20000,
   });
+  const [disabled, words] = await Promise.all([loadDisabledBaseWords().catch(() => undefined), loadForbiddenWords().catch(() => [] as string[])]);
   const out: { nickname: string; level: number; reason: string }[] = [];
   for (const u of users) {
-    const err = nicknameError(u.nickname);
+    const err = nicknameError(u.nickname, disabled) ?? (findForbiddenWord(u.nickname, words) ? "금지어가 들어간 닉네임" : null);
     // 길이 · 글자 규칙은 예전 가입자일 수 있어 빼고, 비속어 · 사칭 · 금지어만
     if (err && !err.startsWith("닉네임은"))
       out.push({ nickname: u.nickname, level: u.level, reason: err });

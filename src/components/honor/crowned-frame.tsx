@@ -137,7 +137,7 @@ const HONOR_TONE = "border-sky-300/70 bg-gradient-to-r from-[#1e1b4b] to-[#3b076
  * 닉네임 옆 칭호들: 팟 계산 칭호(1~3위) + 랭킹 칭호(레벨 · 경험치 · 마크 · 출석 1위).
  * 목록에서는 max개까지만(기본 2). 관리자가 끈 칭호는 안 보임.
  */
-export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: string; className?: string; max?: number }) {
+export function PotTitleBadge({ nickname, className, max = 2, yokai = true }: { nickname: string; className?: string; max?: number; /** 대표 요괴 그림도(게임 화면처럼 요괴가 이미 보이면 끔) */ yokai?: boolean }) {
   const honors = useContext(HonorContext);
   const potInfo = useContext(PotTitleContext);
   const yokaiReps = useContext(YokaiRepContext);
@@ -165,7 +165,7 @@ export function PotTitleBadge({ nickname, className, max = 2 }: { nickname: stri
       {d.rank > 1 ? <span className="opacity-80">· {d.rank}위</span> : null}
     </TipBadge>
   ));
-  const rep = yokaiReps[nickname];
+  const rep = yokai ? yokaiReps[nickname] : undefined;
   return (
     <>
       {rep ? (

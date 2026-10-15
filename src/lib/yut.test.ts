@@ -77,4 +77,19 @@ describe("윷놀이 진행", () => {
     assert.equal(s.turnTeam, "B");
     assert.equal(s.event?.type, "skip");
   });
+  it("낙: 던지기가 없던 일 · 남은 결과 없으면 차례 넘김", () => {
+    const s = applyThrow(newState(2), seq([0.9, 0.1, 0.9, 0.9, 0.01]), 1, 80);
+    assert.equal(s.turnTeam, "B");
+    assert.equal(s.lastThrow?.value, 0);
+    assert.equal(s.lastThrow?.power, 80);
+    assert.ok(s.event?.nak);
+  });
+  it("한 칸씩: 밟고 간 칸 · 움직인 말", () => {
+    let s = applyThrow(newState(2), seq([0.1, 0.1, 0.9, 0.9, 0.9])); // 개
+    const r = applyMove(s, 0, 0);
+    assert.ok(r.ok);
+    s = r.state;
+    assert.deepEqual(s.event?.path, ["o1", "o2"]);
+    assert.deepEqual(s.event?.moved, [0]);
+  });
 });

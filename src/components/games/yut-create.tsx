@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "cn";
+import { RoomTitleInput } from "@/components/games/omok-create";
 
 const MODES = [
   { m: 1, label: "1:1", hint: "말 4개" },
@@ -18,8 +19,10 @@ export function YutCreate() {
   const [priv, setPriv] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
   return (
     <div className="grid gap-2">
+      <RoomTitleInput value={title} onChange={setTitle} />
       <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="인원">
         {MODES.map((x) => (
           <button
@@ -44,7 +47,7 @@ export function YutCreate() {
           setBusy(true);
           setError(null);
           try {
-            const res = await fetch("/api/games/yut", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, private: priv }) });
+            const res = await fetch("/api/games/yut", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, private: priv, title }) });
             const json = (await res.json()) as { id?: string; error?: string; code?: string };
             if (json.code === "NO_YOKAI") {
               router.push("/yokai?next=%2Fgames%2Fyut");

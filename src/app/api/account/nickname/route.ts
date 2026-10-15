@@ -3,9 +3,8 @@ import { forgetTickerName } from "@/lib/ticker";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { nicknameChangeBlocked } from "@/lib/nickname-change";
-import { nicknameError, normalizeNickname } from "@/lib/nickname";
-import { nicknameAvailability } from "@/lib/nickname-lookup";
-import { loadDisabledBaseWords } from "@/lib/forbidden-words";
+import { normalizeNickname } from "@/lib/nickname";
+import { nicknameAvailability, nicknameProblem } from "@/lib/nickname-lookup";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { publicErrorMessage } from "@/lib/public-error";
 
@@ -34,7 +33,7 @@ export async function POST(request: Request) {
     await assertAccountActive(user);
     const body = (await request.json().catch(() => ({}))) as { nickname?: string };
     const next = normalizeNickname(body.nickname ?? "");
-    const invalid = nicknameError(next, await loadDisabledBaseWords().catch(() => undefined));
+    const invalid = await nicknameProblem(next);
     if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
     if (next === user.nickname) {
       return NextResponse.json({ error: "지금과 같은 닉네임입니다." }, { status: 400 });

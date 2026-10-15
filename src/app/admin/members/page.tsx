@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { normalizeNickname } from "@/lib/nickname";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
-import { ForceNickname } from "@/components/admin/force-nickname";
+import { ForceNickname, GrantNickTicket } from "@/components/admin/force-nickname";
 import { badNicknames } from "@/lib/nickname-force";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -121,6 +121,7 @@ export default async function AdminMembersPage({ searchParams }: { searchParams:
                 <div className="flex flex-wrap items-center gap-2">
                   <VerifyToggle nickname={m.nickname} verified={m.isDealerVerified} />
                   <ForceNickname nickname={m.nickname} />
+                  <GrantNickTicket nickname={m.nickname} />
                   <Link href={`/admin?tab=sanctions&q=${encodeURIComponent(m.nickname)}`} className="inline-flex min-h-10 items-center rounded-lg border border-border px-3 text-xs font-bold">
                     제재
                   </Link>

@@ -5,7 +5,7 @@ import { forceNicknameChange, isForceReason } from "@/lib/nickname-force";
 
 export const dynamic = "force-dynamic";
 
-/** 닉네임 강제 변경(마스터만): { nickname, reason } → 바른닉네임1234 · 변경권 1장 · 알림 */
+/** 닉네임 강제 변경(마스터만): { nickname, reason, to?, ticket? } → 정한 닉네임(없으면 바른닉네임1234) · 변경권 1장 · 알림 */
 export async function POST(request: Request) {
   const viewer = await getCurrentUser().catch(() => null);
   if (!viewer?.isMaster)
@@ -16,6 +16,8 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     nickname?: unknown;
     reason?: unknown;
+    to?: unknown;
+    ticket?: unknown;
   };
   if (typeof body.nickname !== "string" || !isForceReason(body.reason))
     return NextResponse.json(
@@ -27,6 +29,7 @@ export async function POST(request: Request) {
     body.reason,
     viewer.id,
     clientIp(request),
+    { to: typeof body.to === "string" ? body.to : undefined, ticket: body.ticket !== false },
   );
   if (!result.ok)
     return NextResponse.json({ error: result.error }, { status: 400 });

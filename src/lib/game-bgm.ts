@@ -1,4 +1,8 @@
 import { audio } from "@/lib/omok-sound";
+import { PUNGMUL_STEP, PUNGMUL_STEPS, playPungmulStep } from "@/lib/game-bgm-pungmul";
+
+/** 곡: omok = 계면조 요괴 가락 · yut = 신나는 풍물놀이 */
+export type BgmTrack = "omok" | "yut";
 
 /**
  * 요괴 게임방 BGM(브라우저에서 바로 만들어 연주 · 파일 없음).
@@ -57,6 +61,7 @@ const MELODY = (
 const BASS = ["D2", "D2", "F2", "A2", "G2", "C3", "A2", "D2"];
 
 type Bgm = {
+  track: BgmTrack;
   timer: number;
   master: GainNode;
   drone: OscillatorNode[];
@@ -162,8 +167,9 @@ function playStep(
   }
 }
 
-export function startBgm() {
-  if (bgm) return;
+export function startBgm(track: BgmTrack = "omok") {
+  if (bgm?.track === track) return;
+  if (bgm) stopBgm();
   const a = audio();
   if (!a) return;
   const master = a.createGain();
@@ -176,9 +182,9 @@ export function startBgm() {
   lp.type = "lowpass";
   lp.frequency.value = 2400;
   const delay = a.createDelay();
-  delay.delayTime.value = EIGHTH * 3;
+  delay.delayTime.value = track === "yut" ? PUNGMUL_STEP * 3 : EIGHTH * 3;
   const fb = a.createGain();
-  fb.gain.value = 0.28;
+  fb.gain.value = track === "yut" ? 0.15 : 0.28;
   lead.connect(lp).connect(master);
   lp.connect(delay);
   delay.connect(fb).connect(delay);
@@ -190,7 +196,7 @@ export function startBgm() {
   padLp.type = "lowpass";
   padLp.frequency.value = 500;
   pad.connect(padLp).connect(master);
-  const drone = [N.D3, N.A3, N.D3 * 1.003].map((f) => {
+  const drone = (track === "omok" ? [N.D3, N.A3, N.D3 * 1.003] : []).map((f) => {
     const o = a.createOscillator();
     o.type = "sawtooth";
     o.frequency.value = f;
@@ -199,6 +205,7 @@ export function startBgm() {
     return o;
   });
   const b: Bgm = {
+    track,
     timer: 0,
     master,
     drone,
@@ -207,9 +214,15 @@ export function startBgm() {
   };
   b.timer = window.setInterval(() => {
     while (b.next < a.currentTime + 0.15) {
-      playStep(a, b, b.step, b.next, lead);
-      b.next += EIGHTH;
-      b.step = (b.step + 1) % 64;
+      if (track === "yut") {
+        playPungmulStep(a, b.master, lead, b.step, b.next);
+        b.next += PUNGMUL_STEP;
+        b.step = (b.step + 1) % PUNGMUL_STEPS;
+      } else {
+        playStep(a, b, b.step, b.next, lead);
+        b.next += EIGHTH;
+        b.step = (b.step + 1) % 64;
+      }
     }
   }, 30);
   bgm = b;

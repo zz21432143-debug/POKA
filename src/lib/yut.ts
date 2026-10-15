@@ -15,7 +15,7 @@ export const START = "start";
 export const END = "end";
 export const other = (t: Team): Team => (t === "A" ? "B" : "A");
 
-export const YUT_NAMES: Record<number, string> = { [-1]: "빽도", 1: "도", 2: "개", 3: "걸", 4: "윷", 5: "모" };
+export const YUT_NAMES: Record<number, string> = { [-1]: "빽도", 0: "낙", 1: "도", 2: "개", 3: "걸", 4: "윷", 5: "모" };
 
 const OUTER = [START, ...Array.from({ length: 19 }, (_, i) => `o${i + 1}`), END];
 const ROUTE_A = ["o5", "a1", "a2", "c", "a3", "a4", "o15", "o16", "o17", "o18", "o19", END];
@@ -95,8 +95,10 @@ export type YutState = {
   /** 남은 던지기 횟수 */
   throws: number;
   /** 마지막 던지기 · 일어난 일(화면 연출) */
-  lastThrow: { sticks: boolean[]; value: number; team: Team; at: number } | null;
-  event: { type: "move" | "capture" | "stack" | "finish" | "skip"; team: Team; from: string; to: string; count: number; at: number; captured?: number } | null;
+  /** value 0 = 낙(윷가락이 판 밖으로) · power = 던진 세기 0~100(연출만) */
+  lastThrow: { sticks: boolean[]; value: number; team: Team; at: number; power?: number } | null;
+  /** path = 밟고 간 칸(한 칸씩 연출) · moved = 움직인 말 번호 · nak = 낙으로 차례 넘김 */
+  event: { type: "move" | "capture" | "stack" | "finish" | "skip"; team: Team; from: string; to: string; count: number; at: number; captured?: number; path?: string[]; moved?: number[]; nak?: boolean } | null;
   winner: Team | null;
   /** 말을 움직인 횟수(짧은 판 판정) */
   movesMade: number;
@@ -127,11 +129,22 @@ export function hasAnyMove(s: YutState, team: Team) {
   return s.results.some((v) => movablePieces(s, team, v).length > 0);
 }
 
-/** 던지기 */
-export function applyThrow(s: YutState, rand: () => number = Math.random, now = Date.now()): YutState {
+/** 낙(윷가락이 판 밖으로 떨어짐) 확률 — 그 던지기는 없던 일 */
+export const NAK_RATE = 0.04;
+
+/** 던지기(power: 화면 게이지 세기 · 결과에는 영향 없음) */
+export function applyThrow(s: YutState, rand: () => number = Math.random, now = Date.now(), power?: number): YutState {
   if (s.winner || s.phase !== "throw" || s.throws <= 0) return s;
   const t = throwYut(rand);
-  const next: YutState = { ...s, results: [...s.results, t.value], lastThrow: { ...t, team: s.turnTeam, at: now }, throws: s.throws - 1 + (throwAgain(t.value) ? 1 : 0) };
+  const nak = rand() < NAK_RATE;
+  const pw = power === undefined ? undefined : Math.max(0, Math.min(100, Math.round(power)));
+  if (nak) {
+    const n: YutState = { ...s, lastThrow: { sticks: t.sticks, value: 0, team: s.turnTeam, at: now, power: pw }, throws: s.throws - 1 };
+    if (n.throws > 0) return n;
+    if (!n.results.length || !hasAnyMove({ ...n, phase: "move" }, n.turnTeam)) return endTurn({ ...n, results: [], event: { type: "skip", team: n.turnTeam, from: START, to: START, count: 0, at: now, nak: true } });
+    return { ...n, phase: "move" };
+  }
+  const next: YutState = { ...s, results: [...s.results, t.value], lastThrow: { ...t, team: s.turnTeam, at: now, power: pw }, throws: s.throws - 1 + (throwAgain(t.value) ? 1 : 0) };
   if (next.throws <= 0) {
     next.phase = "move";
     // 쓸 수 있는 결과가 하나도 없으면(예: 출발 전 말뿐인데 빽도) 차례 넘김
@@ -181,7 +194,7 @@ export function applyMove(s: YutState, ri: number, pieceIdx: number, now = Date.
     pieces,
     results,
     throws: s.throws + (captured ? 1 : 0),
-    event: { type, team, from, to, count: group.length, at: now, captured },
+    event: { type, team, from, to, count: group.length, at: now, captured, path: pathOf(from, value), moved: group },
     movesMade: s.movesMade + 1,
   };
   if (pieces[team].every((p) => p.pos === END)) return { ok: true, state: { ...next, winner: team, results: [], throws: 0 } };
@@ -242,7 +255,7 @@ export function bestMove(s: YutState): [number, number] | null {
 /** 지금 차례를 AI가 한 단계 진행(던지기 또는 움직이기) */
 export function autoStep(s: YutState, rand: () => number = Math.random, now = Date.now()): YutState {
   if (s.winner) return s;
-  if (s.phase === "throw") return applyThrow(s, rand, now);
+  if (s.phase === "throw") return applyThrow(s, rand, now, 30 + Math.floor(rand() * 60));
   const m = bestMove(s);
   if (!m) return endTurn(s);
   const r = applyMove(s, m[0], m[1], now);

@@ -9,8 +9,10 @@ export function OmokCreate() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [priv, setPriv] = useState(false);
+  const [title, setTitle] = useState("");
   return (
     <div className="grid gap-2">
+      <RoomTitleInput value={title} onChange={setTitle} />
       <button
         type="button"
         data-omok-create
@@ -22,7 +24,7 @@ export function OmokCreate() {
             const res = await fetch("/api/games/omok", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ private: priv }),
+              body: JSON.stringify({ private: priv, title }),
             });
             const json = (await res.json()) as {
               id?: string;
@@ -153,5 +155,22 @@ export function LobbyRefresh() {
       </span>{" "}
       새로고침
     </button>
+  );
+}
+
+/** 방 제목 입력(선택 · 20자) — 비우면 「내 닉네임의 방」 */
+export function RoomTitleInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-sm font-black text-white">🏷️ 방 제목 <span className="font-normal text-[#d6cdee]">(안 쓰면 「내 닉네임의 방」)</span></span>
+      <input
+        data-room-title
+        value={value}
+        maxLength={20}
+        onChange={(e) => onChange(e.target.value.slice(0, 20))}
+        placeholder="예) 초보 환영 · 한 판만!"
+        className="min-h-12 w-full rounded-xl border-2 border-white/20 bg-[#0d0818] px-3 text-base font-bold text-white placeholder:text-white/30 focus:border-[#ffcf4a]"
+      />
+    </label>
   );
 }

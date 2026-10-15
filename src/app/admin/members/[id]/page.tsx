@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
-import { ForceNickname } from "@/components/admin/force-nickname";
+import { ForceNickname, GrantNickTicket } from "@/components/admin/force-nickname";
 import { gameRecord, recordLine } from "@/lib/game-stats";
 import { profileYokai } from "@/lib/yokai-server";
 import { inviteStats } from "@/lib/invite";
@@ -88,6 +88,7 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
         <div data-member-actions className="flex flex-wrap items-center gap-2">
           <VerifyToggle nickname={u.nickname} verified={u.isDealerVerified} />
           <ForceNickname nickname={u.nickname} />
+          <GrantNickTicket nickname={u.nickname} />
           <Link href={`/admin?tab=sanctions&q=${encodeURIComponent(u.nickname)}`} className="inline-flex min-h-10 items-center rounded-lg border border-border px-3 text-xs font-bold">
             제재(정지 · 차단)
           </Link>

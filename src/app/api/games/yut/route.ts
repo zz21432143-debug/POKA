@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
+import { cleanRoomTitle } from "@/lib/game-room";
 import { NO_YOKAI, createYut, gamesOpenYut, isYutMode, yutLobby, yutRoomByCode } from "@/lib/yut-server";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,12 @@ export async function POST(request: Request) {
   const user = await getCurrentUser().catch(() => null);
   if (!user) return NextResponse.json({ error: "로그인해 주세요." }, { status: 401 });
   if (!gamesOpenYut(user)) return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
-  const body = (await request.json().catch(() => ({}))) as { mode?: unknown; private?: unknown };
+  const body = (await request.json().catch(() => ({}))) as { mode?: unknown; private?: unknown; title?: unknown };
+  const t = cleanRoomTitle(body.title);
+  if ("error" in t) return NextResponse.json({ error: t.error }, { status: 400 });
   const mode = Number(body.mode ?? 1);
   if (!isYutMode(mode)) return NextResponse.json({ error: "1:1 ~ 4:4 중에서 골라 주세요." }, { status: 400 });
-  const made = await createYut(user.id, mode, body.private === true);
+  const made = await createYut(user.id, mode, body.private === true, t.title);
   if ("error" in made) return NextResponse.json({ error: "함께할 요괴를 먼저 골라 주세요.", code: NO_YOKAI }, { status: 403, headers: NO_STORE });
   return NextResponse.json({ id: made.id }, { headers: NO_STORE });
 }

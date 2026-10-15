@@ -753,6 +753,8 @@ model YokaiOwned {
 /// endReason five · resign · timeout · draw · cancel. version은 수를 둘 때마다 +1(동시에 두기 막기 · 화면 새로 고침 판단)
 model OmokGame {
   id        String    @id @default(cuid())
+  /// 방 제목(비면 「방장의 방」)
+  title     String    @default("")
   /// 방 코드(친구에게 불러 주는 5글자)
   code       String?  @unique
   /// 대기실에 앉은 손님(시작 전) · 레디
@@ -834,6 +836,8 @@ model TrafficDaily {
 /// seatsJson [{team, idx, userId, ready, bot}] · stateJson 게임 상태(src/lib/yut.ts YutState)
 model YutGame {
   id         String    @id @default(cuid())
+  /// 방 제목(비면 「방장의 방」)
+  title      String    @default("")
   code       String?   @unique
   hostId     String
   mode       Int       @default(1)

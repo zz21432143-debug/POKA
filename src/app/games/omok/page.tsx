@@ -8,6 +8,7 @@ import {
   OmokCreate,
 } from "@/components/games/omok-create";
 import { StoneDot } from "@/components/games/omok-board";
+import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { getCurrentUser } from "@/lib/current-user";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
@@ -68,6 +69,63 @@ export default async function OmokLobbyPage() {
           15×15 · 흑이 먼저 · 정확히 5개 · 흑은 삼삼 금지
         </p>
       </header>
+
+      {/* 기다리는 방: 로비 맨 위에 크게 */}
+      <section
+        aria-label="기다리는 방"
+        data-omok-waiting-list
+        className="grid gap-3 rounded-3xl border-4 border-[#3ddc97] bg-[#0f2a22]/80 p-4 shadow-[0_0_24px_#3ddc9755]"
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-black text-[#3ddc97]">
+            🏮 기다리는 방{" "}
+            <span className="rounded-full bg-[#3ddc97] px-2.5 text-lg text-[#062a1b]">
+              {waiting.length}
+            </span>
+          </h2>
+          <LobbyRefresh />
+        </div>
+        {waiting.length ? (
+          <ul className="grid gap-2">
+            {waiting.map((g) => (
+              <li key={g.id}>
+                <Link
+                  href={`/games/omok/${g.id}`}
+                  data-omok-waiting-room
+                  className="grid gap-1.5 rounded-2xl border-2 border-[#3ddc97]/60 bg-black/40 p-3 transition hover:bg-[#3ddc97]/10"
+                >
+                  <span className="flex items-center gap-2">
+                    <b className="min-w-0 flex-1 truncate text-lg font-black text-white">
+                      {g.title}
+                    </b>
+                    <span className="arcade-px shrink-0 text-xs tracking-widest text-[#ffcf4a]">
+                      {g.code}
+                    </span>
+                  </span>
+                  <span className="flex flex-wrap items-center gap-1.5 text-sm text-[#d6cdee]">
+                    👑 <b className="text-white">{g.host}</b>
+                    <PotTitleBadge nickname={g.host} max={1} />
+                    {g.guest ? (
+                      <>
+                        <span>vs</span> <b className="text-white">{g.guest}</b>
+                      </>
+                    ) : null}
+                  </span>
+                  <span
+                    className={`grid min-h-11 place-items-center rounded-xl text-base font-black ${g.guest ? "bg-white/10 text-[#8eeaff]" : "bg-[#3ddc97] text-[#062a1b]"}`}
+                  >
+                    {g.guest ? "2/2 · 👀 관전하기" : "1/2 · ⚔️ 들어가서 대결!"}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-base font-bold text-[#c9f5e3]">
+            지금 기다리는 방이 없어요. 아래에서 방을 만들어 친구를 불러 보세요!
+          </p>
+        )}
+      </section>
 
       {/* 내 요괴 · 친구 대전 */}
       <section aria-label="친구 대전" className="arcade-panel grid gap-4 p-4">
@@ -142,42 +200,6 @@ export default async function OmokLobbyPage() {
         <GameStatsPanel game="omok" userId={user?.id ?? null} />
       ) : null}
 
-      <section
-        aria-label="기다리는 방"
-        data-omok-waiting-list
-        className="arcade-panel grid gap-2 p-4"
-      >
-        <div className="flex items-center gap-2">
-          <h2 className="arcade-kr text-xl text-white">🏮 기다리는 방</h2>
-          <LobbyRefresh />
-        </div>
-        {waiting.length ? (
-          <ul className="grid gap-2">
-            {waiting.map((g) => (
-              <li key={g.id}>
-                <Link
-                  href={`/games/omok/${g.id}`}
-                  className="flex min-h-14 items-center gap-3 rounded-xl bg-black/30 px-3 hover:bg-white/5"
-                >
-                  <span className="arcade-px text-sm tracking-widest text-[#ffcf4a]">
-                    {g.code}
-                  </span>
-                  <b className="min-w-0 truncate text-base text-white">
-                    {g.host}
-                  </b>
-                  <span className="ml-auto shrink-0 text-sm font-black text-[#3ddc97]">
-                    {g.guest ? "2/2 · 관전 ›" : "1/2 · 들어가기 ›"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-base text-[#d6cdee]">
-            지금 기다리는 방이 없어요. 방을 만들어 친구를 불러 보세요!
-          </p>
-        )}
-      </section>
 
       {/* 요괴 선택 */}
       <section

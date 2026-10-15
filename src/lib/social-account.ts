@@ -1,7 +1,7 @@
 import { socialRejoinBlockMessage } from "@/lib/account-delete";
 import { prisma } from "@/lib/db";
 import { nicknameError, normalizeNickname } from "@/lib/nickname";
-import { findNicknameOwner } from "@/lib/nickname-lookup";
+import { findNicknameOwner, nicknameProblem } from "@/lib/nickname-lookup";
 
 export type SocialProvider = "kakao" | "google";
 
@@ -20,7 +20,7 @@ function cleanEmail(raw: string | null | undefined) {
 
 export async function uniqueSocialNickname(base: string, fallback: string) {
   let cleaned = normalizeNickname(base).slice(0, 12);
-  if (nicknameError(cleaned)) cleaned = fallback;
+  if (nicknameError(cleaned) || (await nicknameProblem(cleaned).catch(() => null))) cleaned = fallback;
   let candidate = cleaned;
   let n = 1;
   while (await findNicknameOwner(candidate)) {

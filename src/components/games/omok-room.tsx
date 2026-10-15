@@ -328,10 +328,18 @@ export function OmokRoom({
         });
       }
     }
-    // 대국자는 「한 판 더」가 생기면 바로 다음 판(대기실)으로
-    if (view.nextId && view.me) router.replace(`/games/omok/${view.nextId}`);
   }, [view, offset, router]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // 다음 판이 열리면(한 판 더 · 도전 줄 자동 교대) 잠깐 결과를 보여 준 뒤 모두 다음 판으로 — 진 사람 · 관전자는 관전석
+  const nextAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (!view.nextId || view.status !== "done") return;
+    if (nextAt.current === null) nextAt.current = Date.now();
+    const wait = Math.max(0, nextAt.current + 5000 - Date.now());
+    const t = window.setTimeout(() => router.replace(`/games/omok/${view.nextId}`), wait);
+    return () => window.clearTimeout(t);
+  }, [view.nextId, view.status, router]);
 
   // 큰 글자 1.2초 · 컷인 1.8초 · 말풍선 4초
   useEffect(() => {
@@ -653,6 +661,12 @@ export function OmokRoom({
           ) : null}
         </div>
 
+        <h1
+          data-omok-title
+          className="flex items-center justify-center gap-2 truncate rounded-2xl border-2 border-[#ffcf4a]/60 bg-[#1a0f2e] px-3 py-2 text-center text-lg font-black text-[#ffe08a]"
+        >
+          🏮 <span className="truncate">{view.title}</span>
+        </h1>
         <OmokHud left={hud.left} right={hud.right} />
 
         {/* 관전석 줄: 관전자 · 응원(판 바로 위, 판은 안 가림) */}
@@ -940,12 +954,13 @@ export function OmokRoom({
                         : "⚔️ 다음 판 도전(승자와 대결)"}
                     </button>
                   ) : null}
-                  {!view.me && view.nextId ? (
+                  {view.nextId ? (
                     <Link
+                      data-omok-next
                       href={`/games/omok/${view.nextId}`}
                       className="arcade-btn btn-main grid place-items-center"
                     >
-                      👀 다음 판 관전
+                      ⏩ 곧 다음 판으로 이동해요 · 바로 가기
                     </Link>
                   ) : null}
                   <div className="grid grid-cols-2 gap-2">
@@ -1315,26 +1330,55 @@ export function OmokRoom({
           <h2 className="arcade-kr text-lg text-white">📜 전적</h2>
           {records?.h2h &&
           (records.h2h.a || records.h2h.b || records.h2h.draws) ? (
-            <p
+            <div
               data-omok-h2h
-              className="rounded-xl bg-black/30 px-3 py-2 text-sm font-bold text-[#d6cdee]"
+              className="grid gap-1.5 rounded-xl border-2 border-[#ffcf4a]/50 bg-black/40 px-3 py-2.5"
             >
-              ⚔️ 상대 전적 ·{" "}
-              <b className="text-white">
-                {(waiting ? view.host?.nickname : view.black?.nickname) ?? "?"}
-              </b>{" "}
-              <b className="text-[#ffcf4a]">{records.h2h.a}승</b> :{" "}
-              <b className="text-[#ffcf4a]">{records.h2h.b}승</b>{" "}
-              <b className="text-white">
-                {(waiting ? view.guest?.nickname : view.white?.nickname) ?? "?"}
-              </b>
-              {records.h2h.draws ? ` · 무 ${records.h2h.draws}` : ""}
-            </p>
+              <p className="text-center text-sm font-black text-[#ffcf4a]">
+                ⚔️ 두 사람 상대 전적 · {records.h2h.a + records.h2h.b + records.h2h.draws}판
+              </p>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                <span className="grid min-w-0 justify-items-center">
+                  <b
+                    className={cn(
+                      "text-4xl font-black leading-none",
+                      records.h2h.a > records.h2h.b ? "text-[#ffcf4a]" : "text-white/70",
+                    )}
+                  >
+                    {records.h2h.a}
+                  </b>
+                  <span className="max-w-full truncate text-sm font-black text-white">{(waiting ? view.host?.nickname : view.black?.nickname) ?? "?"}</span>
+                  <span className="text-xs font-bold text-[#d6cdee]">승</span>
+                </span>
+                <span className="text-2xl font-black text-[#d6cdee]">:</span>
+                <span className="grid min-w-0 justify-items-center">
+                  <b
+                    className={cn(
+                      "text-4xl font-black leading-none",
+                      records.h2h.b > records.h2h.a ? "text-[#ffcf4a]" : "text-white/70",
+                    )}
+                  >
+                    {records.h2h.b}
+                  </b>
+                  <span className="max-w-full truncate text-sm font-black text-white">{(waiting ? view.guest?.nickname : view.white?.nickname) ?? "?"}</span>
+                  <span className="text-xs font-bold text-[#d6cdee]">승</span>
+                </span>
+              </div>
+              {records.h2h.draws ? (
+                <p className="text-center text-xs font-bold text-[#d6cdee]">무승부 {records.h2h.draws}판</p>
+              ) : null}
+              <p className="text-center text-sm font-black text-white">
+                {records.h2h.a === records.h2h.b
+                  ? "팽팽해요!"
+                  : `${records.h2h.a > records.h2h.b ? ((waiting ? view.host?.nickname : view.black?.nickname) ?? "?") : ((waiting ? view.guest?.nickname : view.white?.nickname) ?? "?")}님이 ${Math.abs(records.h2h.a - records.h2h.b)}판 앞서요`}
+              </p>
+            </div>
           ) : view.guest || !waiting ? (
             <p data-omok-h2h className="text-sm text-[#d6cdee]">
               ⚔️ 두 사람은 첫 대결이에요!
             </p>
           ) : null}
+          <p className="text-xs font-black text-[#d6cdee]">각자 전체 전적</p>
           {(waiting
             ? [
                 {

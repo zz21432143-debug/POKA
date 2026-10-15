@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { CheerStrip, EmoteArt } from "@/components/games/omok-hud";
-import { TEAM_COLOR, TEAM_NAME, YokaiToken, YutBoard, YutSticks, pieceFace, yutName } from "@/components/games/yut-board";
+import { NameTag, TEAM_COLOR, TEAM_NAME, YokaiToken, YutBoard, YutSticks, pieceFace, pieceName, yutName, type YutAnim } from "@/components/games/yut-board";
+import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { WIN_REWARD } from "@/lib/game-config";
 import { ONI_EMOTES } from "@/lib/omok-emotes";
 import { bellSound, cutInSound, fightSound, omokSoundOn, readySound, resultSound, setOmokSound, stoneClick, warnBeep, yutThrowSound } from "@/lib/omok-sound";
@@ -29,7 +30,10 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
   const [confirmExit, setConfirmExit] = useState(false);
   const [ri, setRi] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [throwShow, setThrowShow] = useState<{ sticks: boolean[]; value: number; team: Team; key: number } | null>(null);
+  const [throwShow, setThrowShow] = useState<{ sticks: boolean[]; value: number; team: Team; key: number; power?: number } | null>(null);
+  const [anim, setAnim] = useState<YutAnim | null>(null);
+  /** 던지기 세기 게이지(누르면 출렁 → 한 번 더 누르면 던짐) */
+  const [gauge, setGauge] = useState<{ start: number; power: number } | null>(null);
   const [callout, setCallout] = useState<{ text: string; color: string; key: number } | null>(null);
   const [hit, setHit] = useState<{ node: string; key: number } | null>(null);
   const [shake, setShake] = useState(false);
@@ -93,6 +97,7 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
     prev.current = view;
     setSelected(null);
     setRi(0);
+    if (!view.myTurn || view.state?.phase !== "throw") setGauge(null);
     if (before.status === "waiting" && view.status === "playing") {
       fightSound();
       setCallout({ text: "윷놀이 시작!", color: "#ffcf4a", key: view.version });
@@ -106,20 +111,28 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
     if (s?.event && s.event.at !== b?.event?.at) {
       const e = s.event;
       const color = TEAM_COLOR[e.team];
-      if (e.type === "capture") {
-        cutInSound();
-        setHit({ node: e.to, key: e.at });
-        setShake(true);
-        setCallout({ text: `${TEAM_NAME[e.team]} 잡았다! 한 번 더!`, color, key: e.at });
-      } else if (e.type === "stack") {
-        stoneClick();
-        setCallout({ text: `업었다! ×${e.count}`, color, key: e.at });
-      } else if (e.type === "finish") {
-        bellSound();
-        setCallout({ text: e.count > 1 ? `${e.count}개 골인!` : "골인!", color, key: e.at });
-      } else if (e.type === "skip") {
-        setCallout({ text: "움직일 말이 없어요 · 차례 넘김", color: "#d6cdee", key: e.at });
-      } else stoneClick();
+      const path = e.path ?? [];
+      if (path.length && e.moved?.length) setAnim({ key: e.at, team: e.team, moved: e.moved, path });
+      // 한 칸씩 걸어가는 소리 · 도착하면 잡기 · 업기 · 골인
+      const stepMs = view.mode >= 2 ? 140 : 210;
+      path.slice(0, -1).forEach((_, i) => window.setTimeout(() => stoneClick(), i * stepMs));
+      const arrive = Math.max(0, path.length - 1) * stepMs + 60;
+      window.setTimeout(() => {
+        if (e.type === "capture") {
+          cutInSound();
+          setHit({ node: e.to, key: e.at });
+          setShake(true);
+          setCallout({ text: `${TEAM_NAME[e.team]} 잡았다! 한 번 더!`, color, key: e.at });
+        } else if (e.type === "stack") {
+          stoneClick();
+          setCallout({ text: `업었다! ×${e.count}`, color, key: e.at });
+        } else if (e.type === "finish") {
+          bellSound();
+          setCallout({ text: e.count > 1 ? `${e.count}개 골인!` : "골인!", color, key: e.at });
+        } else if (e.type === "skip") {
+          setCallout({ text: e.nak ? "낙! 윷이 판 밖으로 · 차례 넘김" : "움직일 말이 없어요 · 차례 넘김", color: "#d6cdee", key: e.at });
+        } else stoneClick();
+      }, e.type === "skip" ? 900 : arrive);
     }
     if (before.status !== "done" && view.status === "done" && view.endReason === "finish") {
       resultSound(Boolean(view.mySeat && view.winner === view.mySeat.team));
@@ -133,7 +146,7 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
   }, [view]);
   useEffect(() => {
     if (!throwShow) return;
-    const t = window.setTimeout(() => setThrowShow(null), fast ? 1100 : 1700);
+    const t = window.setTimeout(() => setThrowShow(null), fast ? 1200 : 1800);
     return () => window.clearTimeout(t);
   }, [throwShow, fast]);
   useEffect(() => {
@@ -150,6 +163,21 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
     return () => window.clearTimeout(t);
   }, [hit]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const gaugeStart = gauge?.start ?? null;
+  useEffect(() => {
+    if (gaugeStart === null) return;
+    let raf = 0;
+    const tick = () => {
+      // 0 → 100 → 0 (1.1초에 한 번 왕복)
+      const t = ((performance.now() - gaugeStart) % 1100) / 1100;
+      const power = Math.round((t < 0.5 ? t * 2 : 2 - t * 2) * 100);
+      setGauge((g) => (g ? { ...g, power } : g));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [gaugeStart]);
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(true);
@@ -194,6 +222,12 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
     for (const seat of [...view.seats].sort((a, b) => a.idx - b.idx)) out[seat.team].push(seat.player?.yokai ?? null);
     return out;
   }, [view.seats]);
+  const names = useMemo(() => {
+    const out: Record<Team, string[]> = { A: [], B: [] };
+    for (const seat of [...view.seats].sort((a, b) => a.idx - b.idx)) out[seat.team].push(seat.player?.nickname ?? "");
+    return out;
+  }, [view.seats]);
+  const canThrow = myTurn && s?.phase === "throw";
   const curValue = s && myTurn && s.phase === "move" ? s.results[Math.min(ri, s.results.length - 1)] : undefined;
   const movable = useMemo(() => (s && myTurn && curValue !== undefined ? movablePieces(s, s.turnTeam, curValue) : []), [s, myTurn, curValue]);
   const selPiece = selected !== null && s ? s.pieces[s.turnTeam][selected] : null;
@@ -233,6 +267,11 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
         <YokaiToken face={seat.player?.yokai ?? null} team={seat.team} className={cn("size-9 shrink-0", turn && "arcade-bob")} />
         <span className="grid min-w-0 leading-tight">
           <b className={cn("truncate text-sm font-black", seat.me ? "text-[#ffcf4a]" : "text-white")}>{seat.player?.nickname ?? "빈자리"}</b>
+          {seat.player && !seat.bot ? (
+            <span className="flex max-w-full gap-1 overflow-hidden empty:hidden">
+              <PotTitleBadge nickname={seat.player.nickname} max={1} yokai={false} className="!text-[10px]" />
+            </span>
+          ) : null}
           <span className="text-[11px] font-bold text-[#d6cdee]">{seat.left ? "🤖 나감 · AI 대신" : seat.bot ? "🤖 요괴봇" : seat.me ? "나" : turn ? "차례!" : ""}</span>
         </span>
         {turn ? (
@@ -266,7 +305,10 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
             className={cn("rounded-full", canStart && "cursor-pointer", canStart && selected === startRep && "scale-110")}
             aria-label={`${TEAM_NAME[team]} 대기 말 내보내기`}
           >
-            <YokaiToken face={pieceFace(faces, team, i)} team={team} className={cn("size-9", canStart && "yut-target")} />
+            <span className="grid justify-items-center gap-0.5">
+              <YokaiToken face={pieceFace(faces, team, i)} team={team} className={cn("size-9", canStart && "yut-target")} />
+              <NameTag name={pieceName(names, team, i)} team={team} />
+            </span>
           </button>
         ))}
         {!home.length ? <span className="text-xs text-[#d6cdee]">없음</span> : null}
@@ -304,6 +346,9 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
 
   return (
     <div className="grid gap-3">
+      <h1 data-yut-title className="flex items-center justify-center gap-2 truncate rounded-2xl border-2 border-[#ffcf4a]/60 bg-[#1a0f2e] px-3 py-2 text-center text-lg font-black text-[#ffe08a]">
+        🎲 <span className="truncate">{view.title}</span>
+      </h1>
       {/* 머리 */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="arcade-px neon-gold text-sm">YUT</span>
@@ -375,6 +420,9 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
                             <b className={cn("min-w-0 flex-1 truncate text-base font-black", seat.me ? "text-[#ffcf4a]" : "text-white")}>
                               {seat.player.nickname}
                               {seat.host ? " 👑" : ""}
+                              <span className="ml-1 inline-flex align-middle empty:hidden">
+                                <PotTitleBadge nickname={seat.player.nickname} max={1} yokai={false} className="!text-[10px]" />
+                              </span>
                             </b>
                             {seat.host ? null : seat.ready ? (
                               <span className="rounded-md bg-[#3ddc97] px-2 py-0.5 text-xs font-black text-[#062a1b]">READY</span>
@@ -448,7 +496,7 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
               <button type="button" data-yut-start disabled={busy} onClick={() => act("start", { bots })} className="arcade-btn btn-main min-h-16 text-2xl">
                 ▶ 게임 시작
               </button>
-              <p className="text-center text-xs text-[#d6cdee]">모든 자리가 차고 모두 READY면 시작할 수 있어요.</p>
+              <p className="text-center text-xs text-[#d6cdee]">모든 자리가 차고 모두 READY면 시작할 수 있어요. 혼자서는 못 하고, 홍팀 · 청팀에 사람이 한 명 이상씩 있어야 해요.</p>
             </div>
           ) : null}
         </section>
@@ -473,11 +521,14 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
           <CheerStrip count={watching.count} names={watching.names} cheers={view.cheers} now={now + offset} me={!view.mySeat} />
 
           <div className="relative">
-            <YutBoard state={s} faces={faces} fast={fast} movable={movable} selected={selected} ghost={ghost} onPiece={pickPiece} onGhost={() => selected !== null && act("move", { ri, pi: selected })} hit={hit} shake={shake} />
+            <YutBoard state={s} faces={faces} names={names} anim={anim} fast={fast} movable={movable} selected={selected} ghost={ghost} onPiece={pickPiece} onGhost={() => selected !== null && act("move", { ri, pi: selected })} hit={hit} shake={shake} />
             {throwShow ? (
               <div className="pointer-events-none absolute left-1/2 top-1/2 z-40 grid -translate-x-1/2 -translate-y-1/2 justify-items-center gap-2 rounded-2xl bg-[#0a0614]/80 px-6 py-4">
-                <YutSticks sticks={throwShow.sticks} k={throwShow.key} fast={fast} />
-                <b data-yut-throw-name className="arcade-kr arcade-pop text-4xl" style={{ color: TEAM_COLOR[throwShow.team], animationDelay: fast ? "0.35s" : "0.6s" }}>
+                <YutSticks sticks={throwShow.sticks} k={throwShow.key} fast={fast} power={throwShow.power} nak={throwShow.value === 0} />
+                {throwShow.power !== undefined ? (
+                  <span className="text-xs font-black text-[#d6cdee]">{throwShow.power >= 75 ? "💪 세게!" : throwShow.power <= 30 ? "🍃 살살~" : "👌 적당히"}</span>
+                ) : null}
+                <b data-yut-throw-name className="arcade-kr arcade-pop text-4xl" style={{ color: throwShow.value === 0 ? "#d6cdee" : TEAM_COLOR[throwShow.team], animationDelay: fast ? "0.35s" : "0.6s" }}>
                   {yutName(throwShow.value)}!
                 </b>
               </div>
@@ -506,9 +557,34 @@ export function YutRoom({ initial, loggedIn, hasYokai, shareUrl }: { initial: Yu
                 <span className={cn("ml-auto rounded-lg px-2 py-0.5 text-base font-black", left < 3000 ? "bg-[#ff5d6c] text-white" : "bg-black/40 text-white")}>{Math.ceil(left / 1000)}초</span>
               </div>
               {resultLine}
-              {myTurn && s.phase === "throw" ? (
-                <button type="button" data-yut-throw disabled={busy} onClick={() => act("throw")} className="arcade-btn btn-gold min-h-16 text-2xl">
+              {canThrow && gauge ? (
+                <div className="grid gap-2">
+                  <div data-yut-gauge className="relative h-7 overflow-hidden rounded-full border-2 border-white/30 bg-black/50">
+                    <span className="yut-gauge-fill absolute inset-y-0 left-0" style={{ width: `${gauge.power}%` }} />
+                    <span className="absolute inset-0 flex items-center justify-between px-3 text-xs font-black text-white [text-shadow:0_1px_0_#000]">
+                      <span>살살</span>
+                      <span>적당히</span>
+                      <span>세게!</span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    data-yut-throw-go
+                    disabled={busy}
+                    onClick={() => {
+                      const power = gauge.power;
+                      setGauge(null);
+                      void act("throw", { power });
+                    }}
+                    className="arcade-btn btn-main min-h-16 text-2xl"
+                  >
+                    🎯 지금 던져! ({gauge.power})
+                  </button>
+                </div>
+              ) : canThrow ? (
+                <button type="button" data-yut-throw disabled={busy} onClick={() => setGauge({ start: performance.now(), power: 0 })} className="arcade-btn btn-gold min-h-16 text-2xl">
                   🎲 윷 던지기!
+                  <span className="block text-sm">누른 뒤 게이지로 세기를 골라요</span>
                 </button>
               ) : null}
               {myTurn && s.phase === "move" ? (

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
+import { cleanRoomTitle } from "@/lib/game-room";
 import {
   NO_YOKAI,
   createOmok,
@@ -44,8 +45,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "로그인해 주세요." }, { status: 401 });
   if (!gamesOpen(user))
     return NextResponse.json({ error: "준비 중이에요." }, { status: 404 });
-  const body = (await request.json().catch(() => ({}))) as { private?: unknown };
-  const made = await createOmok(user.id, { isPrivate: body.private === true });
+  const body = (await request.json().catch(() => ({}))) as { private?: unknown; title?: unknown };
+  const t = cleanRoomTitle(body.title);
+  if ("error" in t) return NextResponse.json({ error: t.error }, { status: 400 });
+  const made = await createOmok(user.id, { isPrivate: body.private === true, title: t.title });
   if ("error" in made)
     return NextResponse.json(
       { error: "함께할 요괴를 먼저 골라 주세요.", code: NO_YOKAI },

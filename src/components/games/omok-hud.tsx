@@ -2,6 +2,7 @@
 
 import { cn } from "cn";
 import { StoneDot } from "@/components/games/omok-board";
+import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { emoteLabel, emoteSrc, isOniEmote } from "@/lib/omok-emotes";
 
@@ -153,6 +154,11 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           <b className="max-w-full truncate text-[15px] leading-tight font-black text-white sm:text-base">
             {seat.empty ? "빈자리" : seat.name}
           </b>
+          {!seat.empty && seat.name ? (
+            <span data-omok-honor className="flex max-w-full flex-wrap gap-1 empty:hidden">
+              <PotTitleBadge nickname={seat.name} max={1} yokai={false} className="!text-[10px]" />
+            </span>
+          ) : null}
           {seat.record ? (
             <span
               data-omok-record
@@ -407,40 +413,6 @@ export function BigWinCutIn({
           </p>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-/** 관전자 응원: 화면 오른쪽 위에 오니 이모티콘 + 닉네임(판은 가리지 않음) */
-export function CheerStack({
-  cheers,
-  now,
-}: {
-  cheers: { n: string; e: string; at: number }[];
-  now: number;
-}) {
-  const live = cheers.filter((c) => now - c.at < 4200).slice(-3);
-  if (!live.length) return null;
-  return (
-    <div
-      data-omok-cheers
-      className="pointer-events-none absolute top-0 right-0 z-40 flex flex-row-reverse items-start gap-1.5"
-    >
-      {live.map((c) => (
-        <span
-          key={`${c.n}-${c.at}`}
-          data-omok-cheer
-          className="cheer-pop grid justify-items-center gap-0.5"
-        >
-          <EmoteArt
-            e={c.e}
-            className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16"
-          />
-          <span className="max-w-20 truncate rounded-full bg-[#0a0614]/85 px-2 text-[11px] font-black text-[#8eeaff]">
-            {c.n}
-          </span>
-        </span>
-      ))}
     </div>
   );
 }
