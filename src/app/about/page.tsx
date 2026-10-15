@@ -61,7 +61,7 @@ export default function AboutPage() {
       <InfoSection title="콘텐츠 작성 원칙">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            딜러 가이드 {GUIDE_ARTICLES.length}편은 POKA 운영팀이 현장에서 자주 나오는 질문을 바탕으로 직접 씁니다. 글마다 작성자와 최종 수정일을 표시합니다.
+            딜러 가이드 {GUIDE_ARTICLES.length}편은 7년 넘게 딜러로 일하고 매장 운영 · 매니저를 맡아 온 운영자가 현장에서 자주 나오는 질문을 바탕으로 직접 씁니다. 글마다 작성자와 최종 수정일을 표시합니다.
           </li>
           <li>룰 설명은 국제 토너먼트 표준 룰(TDA)을 기준으로 하고, 매장 하우스 룰이 다를 수 있음을 함께 적습니다.</li>
           <li>급여 · 세금 계산은 참고용이며, 실제 적용은 근무 형태와 계약에 따라 달라질 수 있음을 안내합니다.</li>

@@ -7,7 +7,7 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "start",
     label: "입문",
     hint: "딜러를 처음 준비하는 사람",
-    slugs: ["how-to-become-dealer", "dealer-first-month", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings"],
+    slugs: ["how-to-become-dealer", "dealer-first-month", "holdem-dealer", "dealer-interview", "new-dealer-checklist", "dealer-dress-code", "dealer-glossary", "seats-and-button", "holdem-actions", "action-order", "hand-rankings", "dealer-dress-seasons", "dealer-guest-manners", "dealer-resume"],
   },
   {
     id: "skill",
@@ -19,13 +19,13 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "rules",
     label: "룰 · 토너먼트",
     hint: "TDA · 블라인드 · 분쟁 대처",
-    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist"],
+    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry"],
   },
   {
     id: "work",
     label: "근무 · 매장",
     hint: "급여 · 로테이션 · 건강 · 매장 운영",
-    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care"],
+    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers"],
   },
 ];
 
@@ -51,6 +51,8 @@ const TERM_LINKS: [string, string][] = [
   ["체인지", "chip-handling-pot"],
   ["앤티", "blinds-antes"],
   ["면접", "dealer-interview"],
+  ["리엔트리", "late-reg-reentry"],
+  ["이력서", "dealer-resume"],
   ["핸드리뷰", "reading-hand-reviews"],
   ["팟 오즈", "reading-hand-reviews"],
 ];

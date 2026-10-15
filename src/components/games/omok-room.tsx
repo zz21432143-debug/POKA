@@ -134,6 +134,10 @@ export function OmokRoom({
     Math.random().toString(36).slice(2, 14).padEnd(10, "0"),
   );
   const versionRef = useRef(initial.version);
+  // 내 수를 먼저 놓았다가 서버가 거절해 되돌릴 때(「물렀어요」 안내를 띄우지 않게)
+  const rollbackRef = useRef(false);
+  // 상대 차례(내가 앉아 있음)에는 더 자주 확인해 상대 수가 바로 보이게
+  const fastPollRef = useRef(false);
   const seatedRef = useRef(Boolean(initial.me || initial.seat));
   const prev = useRef(initial);
   const lastBeep = useRef(0);
@@ -191,7 +195,8 @@ export function OmokRoom({
       } catch {
         /* 다음에 다시 */
       }
-      if (alive) timer = window.setTimeout(loop, document.hidden ? 5000 : 1000);
+      if (alive)
+        timer = window.setTimeout(loop, document.hidden ? 5000 : fastPollRef.current ? 400 : 1000);
     };
     timer = window.setTimeout(loop, 700);
     return () => {
@@ -270,7 +275,9 @@ export function OmokRoom({
       lastCheer.at !== before.cheers?.[before.cheers.length - 1]?.at
     )
       cheerSound();
-    if (view.moves.length < before.moves.length && view.status === "playing") {
+    if (rollbackRef.current) {
+      rollbackRef.current = false;
+    } else if (view.moves.length < before.moves.length && view.status === "playing") {
       setNote("↩ 한 수 물렀어요");
       setPreview(null);
     }
@@ -398,6 +405,17 @@ export function OmokRoom({
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(true);
     setNote(null);
+    // 착수는 먼저 판에 놓아 두므로, 실패하면 서버 판(못 받으면 놓기 전 판)으로 되돌림
+    const snapshot = view;
+    const rollback = async () => {
+      if (action !== "move") return;
+      rollbackRef.current = true;
+      const fresh = await fetch(`/api/games/omok/${view.id}`, { cache: "no-store" })
+        .then((res) => res.json() as Promise<{ view?: OmokView }>)
+        .catch(() => ({}) as { view?: OmokView });
+      if (fresh.view) receive(fresh.view);
+      else setView(snapshot);
+    };
     try {
       const res = await fetch(`/api/games/omok/${view.id}`, {
         method: "POST",
@@ -421,7 +439,8 @@ export function OmokRoom({
         router.push(`/games/omok/${json.view.nextId}`);
       if (!res.ok) {
         setNote(json.error ?? "처리하지 못했어요.");
-        if (res.status === 409) {
+        if (action === "move") await rollback();
+        else if (res.status === 409) {
           const fresh = await fetch(`/api/games/omok/${view.id}`, {
             cache: "no-store",
           }).then((r) => r.json() as Promise<{ view?: OmokView }>);
@@ -430,9 +449,17 @@ export function OmokRoom({
       }
     } catch {
       setNote("연결이 끊겼어요. 잠시 뒤 다시 해 주세요.");
+      await rollback();
     } finally {
       setBusy(false);
     }
+  }
+
+  /** 내 수: AI 연습처럼 누르는 즉시 판에 놓고(소리 · 낙하 · 충격 · 요괴 점프) 서버에 보냄 */
+  function moveNow(p: number) {
+    setPreview(null);
+    setView((v) => (v.moves.includes(p) ? v : { ...v, moves: [...v.moves, p] }));
+    void act("move", { p });
   }
 
   async function copy(text: string, label: string) {
@@ -445,6 +472,10 @@ export function OmokRoom({
   const playing = view.status === "playing";
   const waiting = view.status === "waiting";
   const myTurn = playing && view.me !== 0 && turn === view.me;
+  const fastPoll = playing && view.me !== 0 && !myTurn;
+  useEffect(() => {
+    fastPollRef.current = fastPoll;
+  }, [fastPoll]);
   const forbidden = useMemo(
     () =>
       myTurn && view.me === BLACK ? forbiddenCells(boardFrom(view.moves)) : [],
@@ -525,7 +556,7 @@ export function OmokRoom({
       setNote("같은 곳을 한 번 더 누르거나 「착수」 버튼을 눌러요");
       return;
     }
-    void act("move", { p });
+    moveNow(p);
   }
 
   /** 휴대폰 돋보기로 맞추고 손을 떼면 바로 착수 */
@@ -542,7 +573,7 @@ export function OmokRoom({
     } catch {
       /* 진동 없는 기기 */
     }
-    void act("move", { p });
+    moveNow(p);
   }
 
   /* ── HUD 자리 ── */

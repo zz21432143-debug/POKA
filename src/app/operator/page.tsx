@@ -33,6 +33,13 @@ export default function OperatorPage() {
           <dd>ID {KAKAO_INQUIRY_ID}</dd>
         </dl>
       </InfoSection>
+      <InfoSection title="운영자 경력">
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>홀덤 딜러로 7년 넘게 근무했습니다. 지원 딜러 · 고정 딜러 · 대회 딜러를 모두 경험했습니다.</li>
+          <li>홀덤 매장을 직접 운영했고, 다른 매장에서 매니저로 오래 일하며 딜러 교육 · 로테이션 · 대회 진행을 맡았습니다.</li>
+          <li>딜러 가이드와 매장 관리 도구는 이 현장 경험을 바탕으로 직접 쓰고 만듭니다. (매장 이름은 공개하지 않습니다.)</li>
+        </ul>
+      </InfoSection>
       <InfoSection title="왜 만들었나요">
         <p>딜러 구인은 여러 단톡방에 흩어져 있고, 대회 날 매장은 타이머·교대표·좌석 배정을 각각 다른 도구로 챙겨야 했습니다.</p>
         <p>POKA는 구인부터 게임 현황판, 딜러 로테이션, 급여 계산까지 한곳에서 해결하도록 만들고 있습니다. 회원들이 남긴 건의사항으로 계속 고쳐 갑니다.</p>

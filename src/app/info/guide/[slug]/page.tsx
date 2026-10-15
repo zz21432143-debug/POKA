@@ -74,7 +74,7 @@ export default async function GuideArticlePage({
           <Link href="/operator" className="font-semibold text-[#e7c98a] hover:underline">
             POKA 운영팀
           </Link>{" "}
-          · 최종 수정 <time dateTime={updated}>{uy}년 {um}월 {ud}일</time> · 매장 하우스 룰이 있으면 그 룰이 우선입니다
+          (딜러 경력 7년+ · 매장 운영 · 매니저) · 최종 수정 <time dateTime={updated}>{uy}년 {um}월 {ud}일</time> · 매장 하우스 룰이 있으면 그 룰이 우선입니다
         </p>
       </header>
       <div className="ink-panel rounded-2xl px-4 py-5">
