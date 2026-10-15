@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
-import { buyBackground, chooseStarter, feedYokai, getYokai, markSeen, petYokai, setYokai, applyBackground } from "@/lib/yokai-server";
+import { applyBackground, buyBackground, buySnack, chooseStarter, feedYokai, getYokai, markSeen, petYokai, setYokai, yokaiPublic } from "@/lib/yokai-server";
 import { isBackground, isSpecies } from "@/lib/yokai";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
 
-/** 요괴 마을은 개발 중이라 마스터 계정만(다른 사람에겐 없는 주소처럼 404) */
+/** 로그인 회원(요괴 마을을 닫아 두면 마스터만 · 그 밖엔 없는 주소처럼 404) */
 async function master() {
   const user = await getCurrentUser().catch(() => null);
-  return user?.isMaster ? user : null;
+  if (!user) return null;
+  return yokaiPublic() || user.isMaster ? user : null;
 }
 
 export async function GET() {
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
   } else if (body.action === "feed") result = await feedYokai(user.id);
   else if (body.action === "pet") result = await petYokai(user.id);
   else if (body.action === "seen") result = await markSeen(user.id);
+  else if (body.action === "snack") result = await buySnack(user.id);
   else if (body.action === "buyBg" || body.action === "useBg") {
     const bg = (body as { bg?: unknown }).bg;
     if (!isBackground(bg)) return NextResponse.json({ error: "배경을 골라 주세요." }, { status: 400 });

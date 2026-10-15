@@ -22,8 +22,12 @@ import {
 } from "@/lib/yokai";
 import { arrivals, gumihoTails, progressLine, type OwnedStages, type YokaiStats } from "@/lib/yokai-achieve";
 
-/** 요괴 마을을 모두에게 공개했는지(공개 전에는 LIVE 공지 · 닉네임 옆 요괴를 안 보임) */
-export const yokaiPublic = () => process.env.YOKAI_PUBLIC === "1";
+/** 요괴 마을 공개 여부(기본 공개 · 급히 닫을 때 YOKAI_PUBLIC=0 → 마스터만) */
+export const yokaiPublic = () => process.env.YOKAI_PUBLIC !== "0";
+
+/** 간식: 포인트로 밥 한 번 더(하루 SNACK_MAX번) */
+export const SNACK_PRICE = 500;
+export const SNACK_MAX = 2;
 
 export type YokaiActive = {
   species: YokaiSpecies;
@@ -46,6 +50,8 @@ export type YokaiView = {
   owned: { species: YokaiSpecies; stage: number }[];
   main: YokaiSpecies;
   feeds: { used: number; allowed: number; sources: FeedSources };
+  /** 오늘 산 간식 · 하루 최대 · 값 */
+  snacks: { used: number; max: number; price: number };
   dex: YokaiSpecies[];
   /** 새로 찾아와서 아직 등장 알림을 안 본 요괴 */
   newcomers: YokaiSpecies[];
@@ -145,6 +151,7 @@ type OwnedRow = NonNullable<Awaited<ReturnType<typeof prisma.yokaiOwned.findFirs
 
 /** 날짜가 바뀌었으면 오늘 횟수는 0부터 */
 const fedToday = (pet: { day: string; fedToday: number }) => (pet.day === todayKstDate() ? pet.fedToday : 0);
+const snacksToday = (pet: { snackDay: string; snacksToday: number }) => (pet.snackDay === todayKstDate() ? pet.snacksToday : 0);
 const pettedToday = (o: OwnedRow) => (o.petDay === todayKstDate() ? o.pettedToday : 0);
 const ownedList = (userId: string) => prisma.yokaiOwned.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
 
@@ -179,6 +186,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
   }
   const [stats, sources] = await Promise.all([loadYokaiStats(userId), feedSources(userId)]);
   owned = await grantArrivals(userId, owned, stats);
+  await prisma.yokaiPet.update({ where: { userId }, data: { arrivalCheckedAt: new Date() } }).catch(() => undefined);
 
   const valid = owned.filter((o) => isSpecies(o.species));
   if (!valid.length) return null;
@@ -186,7 +194,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
   const species = activeRow.species as YokaiSpecies;
   const stage = stageForExp(activeRow.exp);
   const fullness = fullnessNow(activeRow.fullness, activeRow.fullnessAt);
-  const allowed = feedsAllowed(sources);
+  const allowed = feedsAllowed(sources) + snacksToday(pet);
   const used = fedToday(pet);
   const feedAt = nextFeedTime(fullness);
   const petAt = pettedToday(activeRow) < PET_MAX ? nextPetTime(activeRow.pettedAt) : null;
@@ -217,6 +225,7 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
     owned: valid.map((o) => ({ species: o.species as YokaiSpecies, stage: stageForExp(o.exp) })),
     main: isSpecies(pet.mainSpecies) && stages[pet.mainSpecies] ? pet.mainSpecies : species,
     feeds: { used, allowed, sources },
+    snacks: { used: snacksToday(pet), max: SNACK_MAX, price: SNACK_PRICE },
     dex,
     // 등장 알림은 낮은 등급부터 · 전설은 마지막에(가장 큰 연출)
     newcomers: dex.filter((s) => !seen.includes(s)).sort((x, y) => RARITY_ORDER.indexOf(YOKAI[x].rarity) - RARITY_ORDER.indexOf(YOKAI[y].rarity)),
@@ -291,7 +300,7 @@ export async function feedYokai(userId: string) {
   if (full) return { ok: false as const, error: `배불러서 안 먹어요. ${waitText(full, now)} 뒤에 다시 주세요.` };
   const sources = await feedSources(userId);
   const used = fedToday(pet);
-  if (used >= feedsAllowed(sources)) return { ok: false as const, error: "오늘 밥을 다 줬어요. 출석 · 퀴즈 · 글쓰기로 더 받을 수 있어요." };
+  if (used >= feedsAllowed(sources) + snacksToday(pet)) return { ok: false as const, error: "오늘 밥을 다 줬어요. 출석 · 퀴즈 · 글쓰기로 더 받을 수 있어요." };
   // 다른 탭에서 동시에 눌러도 한 번만(오늘 횟수가 그대로일 때만 바뀜)
   const counted = await prisma.yokaiPet.updateMany({ where: { id: pet.id, day: pet.day, fedToday: pet.fedToday }, data: { day: todayKstDate(), fedToday: used + 1 } });
   if (counted.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
@@ -369,21 +378,36 @@ export async function profileYokai(userId: string) {
   return { species, stage, name: YOKAI[species].name, stageName: YOKAI[species].stages[stage - 1], rarity: YOKAI[species].rarity, count };
 }
 
-/** 홈 · 내정보 알림용: 새로 찾아온 요괴 수 · 키우는 요괴가 배고픈지. 찾아오는 조건 검사는 회원마다 30분에 한 번 */
-const lastArrivalCheck = new Map<string, number>();
+/** 홈 · 내정보 알림용: 새로 찾아온 요괴 수 · 키우는 요괴가 배고픈지 · 아직 요괴가 없으면 초대. 조건 검사는 회원마다 30분에 한 번(DB에 시각) */
 export async function yokaiNudge(userId: string) {
   const pet = await prisma.yokaiPet.findUnique({ where: { userId } }).catch(() => null);
-  if (!pet) return null;
+  if (!pet) return { invite: true as const };
   let owned = await ownedList(userId);
-  const last = lastArrivalCheck.get(userId) ?? 0;
-  if (Date.now() - last > 30 * 60_000) {
-    lastArrivalCheck.set(userId, Date.now());
-    owned = await grantArrivals(userId, owned, await loadYokaiStats(userId)).catch(() => owned);
+  if (!pet.arrivalCheckedAt || Date.now() - pet.arrivalCheckedAt.getTime() > 30 * 60_000) {
+    // 먼저 시각을 찍어 동시에 여러 번 검사하지 않게
+    const claimed = await prisma.yokaiPet.updateMany({ where: { userId, arrivalCheckedAt: pet.arrivalCheckedAt }, data: { arrivalCheckedAt: new Date() } }).catch(() => ({ count: 0 }));
+    if (claimed.count === 1) owned = await grantArrivals(userId, owned, await loadYokaiStats(userId)).catch(() => owned);
   }
   const seen = parseList(pet.seenJson);
   const newcomers = owned.filter((o) => isSpecies(o.species) && !seen.includes(o.species as YokaiSpecies)).map((o) => o.species as YokaiSpecies);
   const active = owned.find((o) => o.species === pet.activeSpecies) ?? owned[0];
   if (!active || !isSpecies(active.species)) return null;
   const fullness = fullnessNow(active.fullness, active.fullnessAt);
-  return { newcomers, hungry: fullness < 30, species: active.species, stage: stageForExp(active.exp), name: YOKAI[active.species].name };
+  return { invite: false as const, newcomers, hungry: fullness < 30, species: active.species, stage: stageForExp(active.exp), name: YOKAI[active.species].name };
+}
+
+/** 간식 사기: 포인트로 오늘 밥 한 번 더(하루 SNACK_MAX번 · 동시에 눌러도 한 번씩) */
+export async function buySnack(userId: string) {
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
+  if (!pet) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
+  const count = snacksToday(pet);
+  if (count >= SNACK_MAX) return { ok: false as const, error: `간식은 하루 ${SNACK_MAX}번까지예요.` };
+  const counted = await prisma.yokaiPet.updateMany({ where: { id: pet.id, snackDay: pet.snackDay, snacksToday: pet.snacksToday }, data: { snackDay: todayKstDate(), snacksToday: count + 1 } });
+  if (counted.count !== 1) return { ok: false as const, error: "잠시 뒤에 다시 눌러 주세요." };
+  const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: SNACK_PRICE } }, data: { points: { decrement: SNACK_PRICE } } });
+  if (paid.count !== 1) {
+    await prisma.yokaiPet.update({ where: { id: pet.id }, data: { snacksToday: count } }).catch(() => undefined);
+    return { ok: false as const, error: `포인트가 모자라요(${SNACK_PRICE}P 필요).` };
+  }
+  return { ok: true as const };
 }

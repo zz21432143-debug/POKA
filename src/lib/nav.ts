@@ -86,6 +86,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문 · 현장 스케치", icon: "cloud" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/quiz", label: "오늘의 퀴즈", hint: "매일 한 문제 · 포인트", icon: "seal" },
+      { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
     ],
   },

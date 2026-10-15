@@ -22,7 +22,6 @@ export function AdminNav({
     ...(isMaster ? [{ href: "/admin/push", label: "알림 관리" }] : []),
     ...(isMaster ? [{ href: "/admin/cleanup", label: "데이터 정리" }] : []),
     ...(isMaster ? [{ href: "/admin/launch", label: "오픈 준비" }] : []),
-    ...(isMaster ? [{ href: "/yokai", label: "요괴 마을(개발 중)" }] : []),
   ];
   return (
     <nav className="flex flex-wrap gap-2">

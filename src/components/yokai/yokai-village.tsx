@@ -134,7 +134,6 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
       <header className="board-intro">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-black text-[#f3d9a4]">🏮 요괴 마을</h1>
-          <span className="rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-white">개발 중 · 마스터만 보여요</span>
         </div>
         <p className="mt-2">요괴를 키우고, 사이트 활동으로 새 요괴를 만나 보세요. 출석 · 퀴즈 · 글쓰기를 하면 밥이 늘어나요.</p>
       </header>
@@ -274,6 +273,18 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               <ul data-yokai-sources className="grid gap-1 rounded-xl bg-black/30 p-3 text-xs">
                 <li className="font-bold text-[#e7c98a]">오늘 밥 받는 법(밥 1번 = 경험치 +20 · 배부르면 쉬었다가)</li>
                 <li>✅ 기본 1번</li>
+                <li className="flex flex-wrap items-center gap-1.5">
+                  🍡 간식(포인트로 밥 1번 더) {yokai.snacks.used}/{yokai.snacks.max}
+                  <button
+                    type="button"
+                    data-yokai-snack
+                    disabled={busy || yokai.snacks.used >= yokai.snacks.max || yokai.points < yokai.snacks.price}
+                    onClick={() => void act({ action: "snack" })}
+                    className="min-h-8 rounded-lg border border-[#c9a25c]/50 px-2 text-[11px] font-black text-[#e7c98a] disabled:opacity-50"
+                  >
+                    {yokai.snacks.used >= yokai.snacks.max ? "오늘은 다 샀어요" : `${yokai.snacks.price}P에 사기`}
+                  </button>
+                </li>
                 <li>
                   {yokai.feeds.sources.attended ? "✅" : "⬜"} 출석체크{" "}
                   {!yokai.feeds.sources.attended ? (

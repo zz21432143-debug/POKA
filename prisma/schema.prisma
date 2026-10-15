@@ -706,6 +706,10 @@ model YokaiPet {
   /// 요괴 마을 배경: 가진 배경(JSON) · 쓰는 배경
   bgOwnedJson   String @default("[\"default\"]")
   bgActive      String @default("default")
+  /// 찾아오는 조건을 마지막으로 검사한 시각 · 간식(포인트로 산 밥) 날짜 · 오늘 산 수
+  arrivalCheckedAt DateTime?
+  snackDay      String @default("")
+  snacksToday   Int    @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }
