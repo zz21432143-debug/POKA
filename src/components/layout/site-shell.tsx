@@ -119,7 +119,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <ConnectedNickNotice />
       </Suspense>
       <ConnectedAdOff>
-      <div className="site-columns mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-5 px-4 py-5 sm:px-6">
+      <div className="site-columns mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-4 px-4 py-3 sm:px-5">
         <SidebarRail>
           <div className="wood-frame flex flex-col">
             <BoardNav />

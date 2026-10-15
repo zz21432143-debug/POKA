@@ -120,10 +120,10 @@ export default async function OmokLobbyPage() {
   );
 
   return (
-    <div className="mx-auto grid w-full max-w-[1400px] gap-4 pt-12 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
+    <div className="mx-auto grid w-full max-w-[1400px] gap-3 pt-11 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
       {/* ───── 왼쪽: 타이틀 · 기다리는 방 · 방 만들기 ───── */}
-      <div className="grid min-w-0 content-start gap-4">
-        <header className="arcade-panel flex flex-wrap items-center gap-3 px-4 py-4">
+      <div className="grid min-w-0 content-start gap-3">
+        <header className="arcade-panel flex flex-wrap items-center gap-2.5 px-3 py-2.5">
           <Link href="/games" className="inline-flex min-h-10 items-center text-sm font-black text-[#ffcf4a]">
             ← 게임방
           </Link>
@@ -145,7 +145,7 @@ export default async function OmokLobbyPage() {
         </header>
 
         {/* 기다리는 방(크게) */}
-        <section aria-label="기다리는 방" data-omok-waiting-list className="grid gap-3 rounded-3xl border-4 border-[#3ddc97] bg-[#0f2a22]/80 p-4 shadow-[0_0_24px_#3ddc9755]">
+        <section aria-label="기다리는 방" data-omok-waiting-list className="grid gap-2 rounded-3xl border-4 border-[#3ddc97] bg-[#0f2a22]/80 p-3 shadow-[0_0_24px_#3ddc9755]">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-black text-[#3ddc97]">
               🏮 기다리는 방 <span className="rounded-full bg-[#3ddc97] px-2.5 text-lg text-[#062a1b]">{waiting.length}</span>
@@ -156,7 +156,7 @@ export default async function OmokLobbyPage() {
             <ul className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0">
               {waiting.map((g) => (
                 <li key={g.id} className="w-[86%] shrink-0 snap-start md:w-auto">
-                  <Link href={`/games/omok/${g.id}`} data-omok-waiting-room className="grid gap-1.5 rounded-2xl border-2 border-[#3ddc97]/60 bg-black/40 p-3 transition hover:bg-[#3ddc97]/10">
+                  <Link href={`/games/omok/${g.id}`} data-omok-waiting-room className="grid gap-1 rounded-2xl border-2 border-[#3ddc97]/60 bg-black/40 p-2.5 transition hover:bg-[#3ddc97]/10">
                     <span className="flex items-center gap-2">
                       <b className="min-w-0 flex-1 truncate text-lg font-black text-white">{g.title}</b>
                       <span className="arcade-px shrink-0 text-xs tracking-widest text-[#ffcf4a]">{g.code}</span>
@@ -181,7 +181,7 @@ export default async function OmokLobbyPage() {
         </section>
 
         {/* 방 만들기 · 코드 입장(빠른 실행) */}
-        <section id="lobby-create" aria-label="방 만들기" className="arcade-panel grid scroll-mt-24 gap-4 p-4 md:grid-cols-2">
+        <section id="lobby-create" aria-label="방 만들기" className="arcade-panel grid scroll-mt-24 gap-3 p-3 md:grid-cols-2">
           <div className="grid content-start gap-2">
             <h2 className="text-xl font-black text-white">⚔️ 방 만들기</h2>
             {user ? (
@@ -207,7 +207,7 @@ export default async function OmokLobbyPage() {
       </div>
 
       {/* ───── 오른쪽: 내 요괴 · 연습 · 기록 탭 ───── */}
-      <div className="grid min-w-0 content-start gap-4">
+      <div className="grid min-w-0 content-start gap-3">
         <section aria-label="내 요괴" className="arcade-panel flex items-center gap-3 p-3">
           {yk ? (
             <>
@@ -234,7 +234,7 @@ export default async function OmokLobbyPage() {
           )}
         </section>
 
-        <section aria-label="요괴와 연습 대국" className="arcade-panel grid gap-2 p-3">
+        <section aria-label="요괴와 연습 대국" className="arcade-panel grid gap-1.5 p-2.5">
           <h2 className="text-lg font-black text-white">👹 AI 연습 대국</h2>
           <p className="text-xs text-[#d6cdee]">혼자서 요괴 AI와 둬요(전적에는 안 들어가요).</p>
           <div className="grid grid-cols-2 gap-2">

@@ -413,7 +413,7 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
 
 /* ───────── 동작 ───────── */
 
-export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave";
+export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave" | "bot-add" | "bot-remove";
 type ActResult = { ok: true; view: YutView } | { ok: false; error: string; status: number };
 
 export async function yutAct(
@@ -450,7 +450,7 @@ export async function yutAct(
     const target = seats.find((x) => x.team === team && x.idx === idx);
     if (!target) return fail("그 자리가 없어요.");
     if (target.userId && target.userId !== userId) return fail("이미 누가 앉은 자리예요.", 409);
-    const next = seats.map((x) => (x.userId === userId ? { ...x, userId: null, ready: false } : x)).map((x) => (x.team === team && x.idx === idx ? { ...x, userId, ready: false } : x));
+    const next = seats.map((x) => (x.userId === userId ? { ...x, userId: null, ready: false } : x)).map((x) => (x.team === team && x.idx === idx ? { ...x, userId, ready: false, bot: false, botYokai: undefined } : x));
     if (!(await saveSeats(next))) return fail("자리가 바뀌었어요. 다시 골라 주세요.", 409);
     return done();
   }
@@ -511,22 +511,29 @@ export async function yutAct(
     );
     return done();
   }
+  if (action === "bot-add" || action === "bot-remove") {
+    if (!isHost || row.status !== "waiting") return fail("방장만 요괴봇을 넣고 뺄 수 있어요.", 403);
+    const team = payload.team === "B" ? "B" : "A";
+    const idx = Number(payload.idx);
+    const target = seats.find((x) => x.team === team && x.idx === idx);
+    if (!target) return fail("그 자리가 없어요.");
+    if (target.userId) return fail("사람이 앉은 자리예요.", 409);
+    const next = seats.map((x) =>
+      x === target ? (action === "bot-add" ? { ...x, bot: true, ready: true, botYokai: YOKAI_ORDER[randomInt(YOKAI_ORDER.length)] } : { ...x, bot: false, ready: false, botYokai: undefined }) : x,
+    );
+    if (!(await saveSeats(next))) return fail("다시 해 주세요.", 409);
+    return done();
+  }
   if (action === "start") {
     if (!isHost || row.status !== "waiting") return fail("방장만 시작할 수 있어요.", 403);
-    const bots = payload.bots === true;
-    const empty = seats.filter((x) => !x.userId);
-    if (empty.length && !bots) return fail("빈자리가 있어요. 사람을 더 부르거나 「빈자리 요괴봇」을 켜 주세요.", 409);
     const notReady = seats.filter((x) => x.userId && x.userId !== row.hostId && !x.ready);
     if (notReady.length) return fail(`아직 준비 안 한 사람이 ${notReady.length}명 있어요.`, 409);
-    const teamA = seats.filter((x) => x.team === "A" && x.userId).length;
-    const teamB = seats.filter((x) => x.team === "B" && x.userId).length;
-    // 혼자서는 못 함: 두 팀에 사람이 한 명 이상씩(봇은 빈자리 채우기만)
-    if (teamA === 0 || teamB === 0) return fail("홍팀 · 청팀에 사람이 한 명 이상씩 있어야 시작할 수 있어요.", 409);
-    const next = seats.map((x) => (x.userId ? { ...x, ready: true } : { ...x, bot: true, ready: true, botYokai: YOKAI_ORDER[randomInt(YOKAI_ORDER.length)] }));
+    // 빈자리는 시작할 때 요괴봇이 자동으로 채움(혼자서도 봇과 한 판) — 봇이 낀 판은 전적 · 보상 없음
+    const next = seats.map((x) => (x.userId ? { ...x, bot: false, ready: true } : { ...x, bot: true, ready: true, botYokai: x.botYokai ?? YOKAI_ORDER[randomInt(YOKAI_ORDER.length)] }));
     const first: Team = randomInt(2) === 0 ? "A" : "B";
     const r = await prisma.yutGame.updateMany({
       where: { id, version: row.version, status: "waiting" },
-      data: { status: "playing", seatsJson: JSON.stringify(next), stateJson: JSON.stringify(newState(piecesFor(row.mode), first)), withBots: empty.length > 0, turnAt: new Date(now), version: { increment: 1 } },
+      data: { status: "playing", seatsJson: JSON.stringify(next), stateJson: JSON.stringify(newState(piecesFor(row.mode), first)), withBots: next.some((x) => x.bot), turnAt: new Date(now), version: { increment: 1 } },
     });
     if (r.count !== 1) return fail("다시 해 주세요.", 409);
     return done();

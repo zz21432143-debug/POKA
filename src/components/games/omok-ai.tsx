@@ -80,6 +80,8 @@ export function OmokAi({
     tip: string;
   } | null>(null);
   const [showResult, setShowResult] = useState(false);
+  /** 결과 화면 「다른 요괴」: 이 자리에서 바로 상대 고르기 */
+  const [picker, setPicker] = useState(false);
   const [jump, setJump] = useState<{ me: number; ai: number }>({
     me: 0,
     ai: 0,
@@ -435,13 +437,49 @@ export function OmokAi({
                   >
                     판 보기
                   </button>
-                  <Link
-                    href="/games/omok"
+                  <button
+                    type="button"
+                    data-omok-other
+                    onClick={() => setPicker(true)}
                     className="arcade-btn btn-dark grid place-items-center"
                   >
                     다른 요괴
-                  </Link>
+                  </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {picker ? (
+          <div
+            data-omok-picker
+            className="arcade-overlay absolute inset-0 z-30 grid place-items-center overflow-y-auto rounded-[14px] p-3 text-center"
+          >
+            <div className="grid w-full max-w-md gap-2">
+              <p className="arcade-kr text-xl text-white">👹 어떤 요괴와 둘까요?</p>
+              <div
+                className="grid grid-cols-2 gap-2"
+                // 같은 요괴를 고르면(주소가 같아 이동이 없으니) 바로 새 판
+                onClickCapture={(e) => {
+                  const card = (e.target as HTMLElement).closest("[data-omok-opponent]");
+                  if (card?.getAttribute("data-omok-opponent") === opp.species) {
+                    e.preventDefault();
+                    setPicker(false);
+                    start(human);
+                  }
+                }}
+              >
+                {OMOK_OPPONENTS.map((o, i) => (
+                  <OpponentCard key={o.species} index={i} href={`/games/omok/ai?vs=${i}`} />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setPicker(false)} className="arcade-btn btn-dark">
+                  닫기
+                </button>
+                <Link href="/games/omok" className="arcade-btn btn-dark grid place-items-center">
+                  오목 대기실로
+                </Link>
               </div>
             </div>
           </div>

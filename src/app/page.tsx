@@ -63,7 +63,7 @@ async function HomeFeedSections() {
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
-      <div data-home-latest-rank className="grid gap-3.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
+      <div data-home-latest-rank className="grid gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
         <Suspense fallback={<HomePanelFallback className="h-48" />}>
           <HomeRankings />
@@ -82,7 +82,7 @@ async function HomeFeedSections() {
  */
 export default async function HomePage() {
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex flex-col gap-2.5">
       <HomeHero />
       {/* 광고 구좌 1: 대문 바로 아래 가로 배너(휴대폰 · PC 반응형) */}
       <GoogleAdUnit placement="home-top" />
@@ -92,7 +92,7 @@ export default async function HomePage() {
         <HomeSummary />
       </Suspense>
       {/* 매일 할 일 묶음: 휴대폰은 미션 → 요괴 마을 → 퀴즈, PC는 왼쪽 요괴 마을 · 오른쪽 미션 + 퀴즈 */}
-      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-3.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
         <div className="lg:col-start-2 lg:row-start-1">
           <Suspense fallback={null}>
             <HomeMissions />
@@ -110,13 +110,13 @@ export default async function HomePage() {
         </div>
       </div>
       {/* 바로가기 두 줄을 한 줄로: 홀덤 공부 도구 · 매장 관리(PC는 나란히) */}
-      <div data-home-shortcuts className="grid gap-3.5 lg:grid-cols-2 lg:items-stretch">
+      <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-stretch">
         <HomeStudyTools />
         <HomeDealerTools />
       </div>
       <Suspense
         fallback={
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-2.5">
             <HomePanelFallback className="h-40" />
             <HomePanelFallback className="h-56" />
           </div>

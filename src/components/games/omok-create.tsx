@@ -11,7 +11,7 @@ export function OmokCreate() {
   const [priv, setPriv] = useState(false);
   const [title, setTitle] = useState("");
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-1.5">
       <RoomTitleInput value={title} onChange={setTitle} />
       <button
         type="button"
@@ -43,22 +43,15 @@ export function OmokCreate() {
             setBusy(false);
           }
         }}
-        className="arcade-btn btn-main min-h-14 w-full text-xl"
+        className="arcade-btn btn-main min-h-12 w-full text-lg"
       >
         {busy ? "방 만드는 중…" : priv ? "🔒 비공개 방 만들기" : "🏮 방 만들기"}
       </button>
-      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-black/30 px-3 text-sm font-bold text-white">
-        <input
-          type="checkbox"
-          data-omok-private
-          checked={priv}
-          onChange={(e) => setPriv(e.target.checked)}
-          className="size-5 accent-[#b77bff]"
-        />
-        🔒 비공개 방{" "}
-        <span className="font-normal text-[#d6cdee]">
-          — 로비 목록에 안 나오고 코드 · 링크로만 들어와요
-        </span>
+      {/* 비공개 방: 한 줄(체크 · 이름 · 짧은 설명) */}
+      <label className="flex min-h-10 cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-black/30 px-2.5 text-sm font-bold whitespace-nowrap text-white">
+        <input type="checkbox" data-omok-private checked={priv} onChange={(e) => setPriv(e.target.checked)} className="size-4 shrink-0 accent-[#b77bff]" />
+        <span className="shrink-0">🔒 비공개 방</span>
+        <span className="min-w-0 truncate text-xs font-normal text-[#d6cdee]">로비에 안 보이고 코드 · 링크로만</span>
       </label>
       {error ? (
         <p className="text-sm font-bold text-[#ff5d6c]">{error}</p>
@@ -76,7 +69,7 @@ export function OmokCodeEntry() {
   return (
     <form
       data-omok-code-form
-      className="grid gap-2"
+      className="grid gap-1.5"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -118,12 +111,12 @@ export function OmokCodeEntry() {
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="K7Q2P"
-          className="arcade-px min-h-14 w-full min-w-0 rounded-xl border-2 border-[#ffcf4a] bg-[#0d0818] px-3 text-center text-xl tracking-[0.25em] text-[#ffcf4a] placeholder:text-[#ffcf4a]/30"
+          className="arcade-px min-h-12 w-full min-w-0 rounded-xl border-2 border-[#ffcf4a] bg-[#0d0818] px-3 text-center text-xl tracking-[0.25em] text-[#ffcf4a] placeholder:text-[#ffcf4a]/30"
         />
         <button
           type="submit"
           disabled={busy || code.length !== 5}
-          className="arcade-btn btn-gold min-h-14 px-5 text-lg"
+          className="arcade-btn btn-gold min-h-12 px-5 text-lg"
         >
           입장
         </button>
@@ -169,7 +162,7 @@ export function RoomTitleInput({ value, onChange }: { value: string; onChange: (
         maxLength={20}
         onChange={(e) => onChange(e.target.value.slice(0, 20))}
         placeholder="예) 초보 환영 · 한 판만!"
-        className="min-h-12 w-full rounded-xl border-2 border-white/20 bg-[#0d0818] px-3 text-base font-bold text-white placeholder:text-white/30 focus:border-[#ffcf4a]"
+        className="min-h-10 w-full rounded-xl border-2 border-white/20 bg-[#0d0818] px-3 text-base font-bold text-white placeholder:text-white/30 focus:border-[#ffcf4a]"
       />
     </label>
   );

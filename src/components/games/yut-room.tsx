@@ -87,7 +87,6 @@ export function YutRoom({
   const [now, setNow] = useState(() => Date.now());
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [bots, setBots] = useState(false);
   const [sound, setSound] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [confirmExit, setConfirmExit] = useState(false);
@@ -646,6 +645,17 @@ export function YutRoom({
     ? movable.find((m) => s.pieces[s.turnTeam][m].pos === START)
     : undefined;
 
+  /** 판 위에 띄울 이모티콘(대국자) · 응원(관전자): 1.6초 안의 것만 */
+  const emoteBubbles = (() => {
+    const t = now + offset;
+    const out: { who: string; e: string; at: number; color: string }[] = [];
+    if (view.emote && t - view.emote.at < 1600) {
+      const seat = view.seats.find((x) => `${x.team}${x.idx}` === view.emote!.seat);
+      out.push({ who: seat?.player?.nickname ?? "?", e: view.emote.e, at: view.emote.at, color: seat ? TEAM_COLOR[seat.team] : "#6ad7ff" });
+    }
+    for (const c of view.cheers) if (t - c.at < 1600) out.push({ who: c.n, e: c.e, at: c.at, color: "#6ad7ff" });
+    return out.slice(-4);
+  })();
   const emoteOn = (seat: YutSeatView) =>
     view.emote &&
     view.emote.seat === `${seat.team}${seat.idx}` &&
@@ -666,14 +676,8 @@ export function YutRoom({
         )}
       >
         {emoteOn(seat) ? (
-          <span
-            key={view.emote!.at}
-            className="plate-emote absolute -top-12 left-1 z-20"
-          >
-            <EmoteArt
-              e={view.emote!.e}
-              className="size-12 drop-shadow-[0_3px_0_#0a0614]"
-            />
+          <span key={view.emote!.at} className="absolute -top-1 -right-1 z-20 rounded-full bg-[#ffcf4a] px-1 text-[10px] font-black text-[#2a1400]">
+            💬
           </span>
         ) : null}
         <YokaiToken
@@ -931,7 +935,8 @@ export function YutRoom({
 
       {/* ───── 대기실 ───── */}
       {waiting ? (
-        <section data-yut-waiting className="arcade-panel grid gap-4 p-4">
+        <section data-yut-waiting className="yut-hud grid gap-3 p-3">
+          <p className="text-center font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">WAITING ROOM · PRESS READY!</p>
           <div className="grid justify-items-center gap-1 text-center">
             <p className="text-sm font-bold text-[#d6cdee]">초대 코드</p>
             <p className="arcade-px neon-gold text-3xl tracking-[0.3em]">
@@ -960,10 +965,11 @@ export function YutRoom({
               <div
                 key={team}
                 data-yut-team={team}
-                className="grid content-start gap-2 rounded-2xl p-3"
+                className="grid content-start gap-2 p-2.5"
                 style={{
-                  background: `${TEAM_COLOR[team]}1a`,
-                  border: `2px solid ${TEAM_COLOR[team]}80`,
+                  background: `linear-gradient(180deg, ${TEAM_COLOR[team]}22, #0a0614)`,
+                  border: `3px solid ${TEAM_COLOR[team]}`,
+                  boxShadow: `0 0 0 3px #0a0614, 0 0 16px ${TEAM_COLOR[team]}66`,
                 }}
               >
                 <b
@@ -979,7 +985,7 @@ export function YutRoom({
                       <li
                         key={seat.idx}
                         data-yut-slot={`${team}${seat.idx}`}
-                        className="flex min-h-14 items-center gap-2 rounded-xl bg-black/35 px-2"
+                        className="yut-hud-chip flex min-h-14 items-center gap-2 border-2 border-white/10 px-2"
                       >
                         {seat.player ? (
                           <>
@@ -1013,7 +1019,11 @@ export function YutRoom({
                                 />
                               </span>
                             </span>
-                            {seat.host ? null : seat.ready ? (
+                            {seat.bot ? (
+                              <span className="rounded-md bg-[#b77bff]/30 px-2 py-0.5 text-xs font-black text-[#e7c4ff]">
+                                🤖 요괴봇
+                              </span>
+                            ) : seat.host ? null : seat.ready ? (
                               <span className="rounded-md bg-[#3ddc97] px-2 py-0.5 text-xs font-black text-[#062a1b]">
                                 READY
                               </span>
@@ -1022,7 +1032,30 @@ export function YutRoom({
                                 준비 중
                               </span>
                             )}
-                            {view.isHost && !seat.me ? (
+                            {seat.bot && view.isHost ? (
+                              <button
+                                type="button"
+                                data-yut-bot-remove={`${team}${seat.idx}`}
+                                disabled={busy}
+                                onClick={() => act("bot-remove", { team, idx: seat.idx })}
+                                aria-label="요괴봇 빼기"
+                                className="grid min-h-9 place-items-center rounded-lg bg-white/10 px-2 text-xs font-black text-[#ff8f9a]"
+                              >
+                                빼기
+                              </button>
+                            ) : seat.bot && loggedIn && hasYokai && !view.isHost ? (
+                              <button
+                                type="button"
+                                data-yut-sit={`${team}${seat.idx}`}
+                                disabled={busy}
+                                onClick={() => act("sit", { team, idx: seat.idx })}
+                                className="grid min-h-9 place-items-center rounded-lg border-2 border-dashed px-2 text-xs font-black"
+                                style={{ borderColor: `${TEAM_COLOR[team]}aa`, color: TEAM_COLOR[team] }}
+                              >
+                                대신 앉기
+                              </button>
+                            ) : null}
+                            {view.isHost && !seat.me && !seat.bot ? (
                               <button
                                 type="button"
                                 data-yut-kick
@@ -1038,19 +1071,32 @@ export function YutRoom({
                             ) : null}
                           </>
                         ) : loggedIn && hasYokai ? (
-                          <button
-                            type="button"
-                            data-yut-sit={`${team}${seat.idx}`}
-                            disabled={busy}
-                            onClick={() => act("sit", { team, idx: seat.idx })}
-                            className="flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-dashed font-black"
-                            style={{
-                              borderColor: `${TEAM_COLOR[team]}aa`,
-                              color: TEAM_COLOR[team],
-                            }}
-                          >
-                            ＋ {view.mySeat ? "이 자리로 옮기기" : "여기 앉기"}
-                          </button>
+                          <span className="flex w-full gap-1.5">
+                            <button
+                              type="button"
+                              data-yut-sit={`${team}${seat.idx}`}
+                              disabled={busy}
+                              onClick={() => act("sit", { team, idx: seat.idx })}
+                              className="flex min-h-12 flex-1 items-center justify-center rounded-lg border-2 border-dashed font-black"
+                              style={{
+                                borderColor: `${TEAM_COLOR[team]}aa`,
+                                color: TEAM_COLOR[team],
+                              }}
+                            >
+                              ＋ {view.mySeat ? "이 자리로 옮기기" : "여기 앉기"}
+                            </button>
+                            {view.isHost ? (
+                              <button
+                                type="button"
+                                data-yut-bot-add={`${team}${seat.idx}`}
+                                disabled={busy}
+                                onClick={() => act("bot-add", { team, idx: seat.idx })}
+                                className="min-h-12 shrink-0 rounded-lg border-2 border-[#b77bff]/70 bg-[#b77bff]/15 px-2.5 text-sm font-black text-[#e7c4ff]"
+                              >
+                                🤖 요괴봇
+                              </button>
+                            ) : null}
+                          </span>
                         ) : (
                           <span className="w-full text-center text-sm text-[#d6cdee]">
                             빈자리
@@ -1138,31 +1184,20 @@ export function YutRoom({
                   🔀 팀 섞기
                 </button>
               </div>
-              <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-black/30 px-3 text-sm font-bold text-white">
-                <input
-                  type="checkbox"
-                  data-yut-bots
-                  checked={bots}
-                  onChange={(e) => setBots(e.target.checked)}
-                  className="size-5 accent-[#b77bff]"
-                />
-                🤖 빈자리는 요괴봇으로{" "}
-                <span className="font-normal text-[#d6cdee]">
-                  — 봇이 끼면 전적 · 보상 없어요
-                </span>
-              </label>
               <button
                 type="button"
                 data-yut-start
                 disabled={busy}
-                onClick={() => act("start", { bots })}
+                onClick={() => act("start")}
                 className="arcade-btn btn-main min-h-16 text-2xl"
               >
                 ▶ 게임 시작
+                {view.seats.some((x) => !x.player) ? (
+                  <span className="block text-sm">빈자리 {view.seats.filter((x) => !x.player).length}곳은 요괴봇이 채워요</span>
+                ) : null}
               </button>
               <p className="text-center text-xs text-[#d6cdee]">
-                모든 자리가 차고 모두 READY면 시작할 수 있어요. 혼자서는 못
-                하고, 홍팀 · 청팀에 사람이 한 명 이상씩 있어야 해요.
+                사람은 모두 READY여야 시작돼요. 혼자서도 요괴봇과 한 판 할 수 있어요(봇이 낀 판은 전적 · 보상 없음).
               </p>
             </div>
           ) : null}
@@ -1212,6 +1247,19 @@ export function YutRoom({
                       setImpact(true);
                     }}
                   />
+                ) : null}
+                {/* 이모티콘 · 응원: 판 맨 위 층에 1.5초 통통(말 · 연출보다 위) */}
+                {emoteBubbles.length ? (
+                  <div data-yut-emote-layer className="pointer-events-none absolute inset-x-0 top-[6%] z-[45] flex flex-wrap justify-center gap-2 px-2">
+                    {emoteBubbles.map((b) => (
+                      <span key={`${b.who}-${b.at}`} data-yut-emote-bubble className="spec-pop grid justify-items-center">
+                        <EmoteArt e={b.e} className="size-16 drop-shadow-[0_3px_0_#0a0614] sm:size-20" />
+                        <span className="max-w-24 truncate border-2 border-[#0a0614] px-1.5 text-[11px] font-black text-white shadow-[2px_2px_0_#0a0614]" style={{ background: b.color }}>
+                          {b.who}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 ) : null}
                 {canThrow && !throwFx && !callout ? (
                   <p

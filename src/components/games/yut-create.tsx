@@ -21,7 +21,7 @@ export function YutCreate() {
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-1.5">
       <RoomTitleInput value={title} onChange={setTitle} />
       <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="인원">
         {MODES.map((x) => (
@@ -32,7 +32,7 @@ export function YutCreate() {
             aria-checked={mode === x.m}
             data-yut-create-mode={x.m}
             onClick={() => setMode(x.m)}
-            className={cn("grid min-h-16 place-items-center rounded-xl border-2 py-1 font-black", mode === x.m ? "border-[#ffcf4a] bg-[#ffcf4a] text-[#2a1400]" : "border-white/20 bg-black/40 text-white")}
+            className={cn("grid min-h-12 place-items-center rounded-xl border-2 py-0.5 font-black", mode === x.m ? "border-[#ffcf4a] bg-[#ffcf4a] text-[#2a1400]" : "border-white/20 bg-black/40 text-white")}
           >
             <span className="text-xl">{x.label}</span>
             <span className="text-[11px] opacity-80">{x.hint}</span>
@@ -60,13 +60,15 @@ export function YutCreate() {
             setBusy(false);
           }
         }}
-        className="arcade-btn btn-main min-h-14 w-full text-xl"
+        className="arcade-btn btn-main min-h-12 w-full text-lg"
       >
         {busy ? "방 만드는 중…" : `${priv ? "🔒 " : "🎲 "}${mode}:${mode} 방 만들기`}
       </button>
-      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl bg-black/30 px-3 text-sm font-bold text-white">
-        <input type="checkbox" checked={priv} onChange={(e) => setPriv(e.target.checked)} className="size-5 accent-[#b77bff]" />
-        🔒 비공개 방 <span className="font-normal text-[#d6cdee]">— 로비에 안 나오고 코드 · 링크로만</span>
+      {/* 비공개 방: 한 줄(체크 · 이름 · 짧은 설명) */}
+      <label className="flex min-h-10 cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-black/30 px-2.5 text-sm font-bold whitespace-nowrap text-white">
+        <input type="checkbox" data-yut-private checked={priv} onChange={(e) => setPriv(e.target.checked)} className="size-4 shrink-0 accent-[#b77bff]" />
+        <span className="shrink-0">🔒 비공개 방</span>
+        <span className="min-w-0 truncate text-xs font-normal text-[#d6cdee]">로비에 안 보이고 코드 · 링크로만</span>
       </label>
       {error ? <p className="text-sm font-bold text-[#ff5d6c]">{error}</p> : null}
     </div>
@@ -82,7 +84,7 @@ export function YutCodeEntry() {
   return (
     <form
       data-yut-code-form
-      className="grid gap-2"
+      className="grid gap-1.5"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -110,9 +112,9 @@ export function YutCodeEntry() {
           autoCapitalize="characters"
           autoComplete="off"
           placeholder="K7Q2PX"
-          className="arcade-px min-h-14 w-full min-w-0 rounded-xl border-2 border-[#ffcf4a] bg-[#0d0818] px-3 text-center text-xl tracking-[0.25em] text-[#ffcf4a] placeholder:text-[#ffcf4a]/30"
+          className="arcade-px min-h-12 w-full min-w-0 rounded-xl border-2 border-[#ffcf4a] bg-[#0d0818] px-3 text-center text-xl tracking-[0.25em] text-[#ffcf4a] placeholder:text-[#ffcf4a]/30"
         />
-        <button type="submit" disabled={busy || code.length !== 6} className="arcade-btn btn-gold min-h-14 px-5 text-lg">
+        <button type="submit" disabled={busy || code.length !== 6} className="arcade-btn btn-gold min-h-12 px-5 text-lg">
           입장
         </button>
       </div>
