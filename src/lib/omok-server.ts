@@ -11,7 +11,7 @@ import {
 } from "@/lib/omok";
 import { profileYokai } from "@/lib/yokai-server";
 import type { YokaiSpecies } from "@/lib/yokai";
-import { gameRecord, recordGameResult } from "@/lib/game-stats";
+import { gameRecord, headToHead, recordGameResult } from "@/lib/game-stats";
 
 /**
  * 요괴 오목 친구 대전(서버가 차례 · 금수 · 승패 · 시간을 판정).
@@ -38,10 +38,18 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const ROOM_CODE_RE = /^[A-HJKMNP-Z2-9]{5}$/;
 export const NO_YOKAI = "NO_YOKAI";
 
+/** 무승부 제안(상대가 받아야 무승부) · 사람마다 한 판에 3번 */
+export const DRAW_LIMIT = 3;
+type DrawState = {
+  offer: { by: Stone; at: number; len: number } | null;
+  used: Record<string, number>;
+  denied: { by: Stone; at: number } | null;
+};
 type UndoState = {
   ask: { by: Stone; at: number; len: number } | null;
   used: Record<string, number>;
   denied: { by: Stone; at: number } | null;
+  draw: DrawState;
 };
 function undoOf(row: { undoJson: string }): UndoState {
   try {
@@ -50,9 +58,29 @@ function undoOf(row: { undoJson: string }): UndoState {
       ask: v?.ask ?? null,
       used: v?.used ?? {},
       denied: v?.denied ?? null,
+      draw: {
+        offer: v?.draw?.offer ?? null,
+        used: v?.draw?.used ?? {},
+        denied: v?.draw?.denied ?? null,
+      },
     };
   } catch {
-    return { ask: null, used: {}, denied: null };
+    return {
+      ask: null,
+      used: {},
+      denied: null,
+      draw: { offer: null, used: {}, denied: null },
+    };
+  }
+}
+
+/** 방장이 내보낸 회원 */
+function kickedOf(row: { kickedJson: string }): string[] {
+  try {
+    const v = row.kickedJson ? JSON.parse(row.kickedJson) : [];
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
   }
 }
 
@@ -104,7 +132,19 @@ export type OmokView = {
     left: Record<1 | 2, number>;
   };
   /** 두 사람 전적(가끔만 같이 옴) */
-  records?: { black: OmokRecord | null; white: OmokRecord | null };
+  records?: {
+    black: OmokRecord | null;
+    white: OmokRecord | null;
+    /** 두 사람 상대 전적: black(대기실은 방장) 승 · white(손님) 승 · 무 */
+    h2h: { a: number; b: number; draws: number } | null;
+  };
+  /** 무승부 제안: 지금 제안한 사람 · 거절 · 남은 횟수 */
+  draw: {
+    offerBy: Stone;
+    deniedBy: Stone;
+    deniedAt: number;
+    left: Record<1 | 2, number>;
+  };
 };
 
 const movesOf = (row: Row) => {
@@ -255,8 +295,14 @@ async function toView(
     emote = null;
   }
   // 대기실 전적: 방장(흑 자리) · 손님(백 자리)로 보여 줌
-  const recA = withRecords ? await recordOf(row.blackId ?? row.hostId) : null;
-  const recB = withRecords ? await recordOf(row.whiteId ?? row.guestId) : null;
+  const idA = row.blackId ?? row.hostId;
+  const idB = row.whiteId ?? row.guestId;
+  const recA = withRecords ? await recordOf(idA) : null;
+  const recB = withRecords ? await recordOf(idB) : null;
+  const h2h =
+    withRecords && idA && idB
+      ? await headToHead("omok", idA, idB).catch(() => null)
+      : null;
   return {
     id: row.id,
     code: row.code,
@@ -301,7 +347,21 @@ async function toView(
         2: UNDO_LIMIT - (undo.used["2"] ?? 0),
       },
     },
-    ...(withRecords ? { records: { black: recA, white: recB } } : {}),
+    draw: {
+      offerBy:
+        row.status === "playing" &&
+        undo.draw.offer &&
+        undo.draw.offer.len === moves.length
+          ? undo.draw.offer.by
+          : 0,
+      deniedBy: undo.draw.denied?.by ?? 0,
+      deniedAt: undo.draw.denied?.at ?? 0,
+      left: {
+        1: DRAW_LIMIT - (undo.draw.used["1"] ?? 0),
+        2: DRAW_LIMIT - (undo.draw.used["2"] ?? 0),
+      },
+    },
+    ...(withRecords ? { records: { black: recA, white: recB, h2h } } : {}),
   };
 }
 
@@ -416,6 +476,7 @@ export type OmokAction =
   | "join"
   | "sit"
   | "leave"
+  | "kick"
   | "ready"
   | "move"
   | "resign"
@@ -424,7 +485,10 @@ export type OmokAction =
   | "rematch"
   | "undo-ask"
   | "undo-yes"
-  | "undo-no";
+  | "undo-no"
+  | "draw-offer"
+  | "draw-yes"
+  | "draw-no";
 type ActResult =
   { ok: true; view: OmokView } | { ok: false; error: string; status: number };
 
@@ -472,6 +536,11 @@ export async function omokAct(
       return fail("이미 시작했거나 끝난 대국이에요. 관전만 할 수 있어요.", 409);
     if (row.guestId)
       return fail("자리가 다 찼어요. 관전으로 볼 수 있어요.", 409);
+    if (kickedOf(row).includes(userId))
+      return fail(
+        "방장이 내보낸 방이라 다시 앉을 수 없어요. 관전만 할 수 있어요.",
+        403,
+      );
     if (!(await hasYokai(userId))) return fail(NO_YOKAI, 403);
     const sat = await prisma.omokGame.updateMany({
       where: { id, status: "waiting", guestId: null },
@@ -577,7 +646,11 @@ export async function omokAct(
         movesJson: JSON.stringify(result.moves),
         turnAt: now,
         version: { increment: 1 },
-        undoJson: JSON.stringify({ ...undoOf(row), ask: null }),
+        undoJson: JSON.stringify({
+          ...undoOf(row),
+          ask: null,
+          draw: { ...undoOf(row).draw, offer: null },
+        }),
         ...(finished
           ? {
               status: "done",
@@ -690,13 +763,103 @@ export async function omokAct(
         movesJson: JSON.stringify(moves.slice(0, cut)),
         turnAt: now,
         undoJson: JSON.stringify({
+          ...undo,
           ask: null,
           denied: null,
+          draw: { ...undo.draw, offer: null },
           used: {
             ...undo.used,
             [String(by)]: (undo.used[String(by)] ?? 0) + 1,
           },
         }),
+        version: { increment: 1 },
+      },
+    });
+    if (saved.count !== 1) return fail("판이 바뀌었어요. 다시 해 주세요.", 409);
+    return done();
+  }
+
+  if (action === "kick") {
+    if (userId !== row.hostId || row.status !== "waiting" || !row.guestId)
+      return fail("대기실의 방장만 손님을 내보낼 수 있어요.", 403);
+    const kicked = [...new Set([...kickedOf(row), row.guestId])].slice(-20);
+    await prisma.omokGame.updateMany({
+      where: { id, status: "waiting", guestId: row.guestId },
+      data: {
+        guestId: null,
+        guestReady: false,
+        hostReady: false,
+        kickedJson: JSON.stringify(kicked),
+        version: { increment: 1 },
+      },
+    });
+    return done();
+  }
+
+  if (action === "draw-offer") {
+    if (!mine) return fail("대국하는 사람만 무승부를 제안할 수 있어요.", 403);
+    if (row.status !== "playing")
+      return fail("진행 중인 대국이 아니에요.", 409);
+    const moves = movesOf(row);
+    const st = undoOf(row);
+    if ((st.draw.used[String(mine)] ?? 0) >= DRAW_LIMIT)
+      return fail(`무승부 제안은 한 판에 ${DRAW_LIMIT}번까지예요.`);
+    if (st.draw.offer && st.draw.offer.len === moves.length)
+      return fail("이미 무승부를 제안했어요. 상대 대답을 기다려 주세요.", 409);
+    const saved = await prisma.omokGame.updateMany({
+      where: { id, version: row.version, status: "playing" },
+      data: {
+        undoJson: JSON.stringify({
+          ...st,
+          draw: {
+            ...st.draw,
+            offer: { by: mine, at: now.getTime(), len: moves.length },
+            used: {
+              ...st.draw.used,
+              [String(mine)]: (st.draw.used[String(mine)] ?? 0) + 1,
+            },
+          },
+        }),
+        version: { increment: 1 },
+      },
+    });
+    if (saved.count !== 1) return fail("판이 바뀌었어요. 다시 해 주세요.", 409);
+    return done();
+  }
+
+  if (action === "draw-yes" || action === "draw-no") {
+    if (!mine) return fail("대국하는 사람만 대답할 수 있어요.", 403);
+    const moves = movesOf(row);
+    const st = undoOf(row);
+    const offer = st.draw.offer;
+    if (row.status !== "playing" || !offer || offer.len !== moves.length)
+      return fail("지금은 무승부 제안이 없어요.", 409);
+    if (offer.by === mine) return fail("상대가 대답할 차례예요.", 409);
+    if (action === "draw-no") {
+      await prisma.omokGame.updateMany({
+        where: { id, version: row.version },
+        data: {
+          undoJson: JSON.stringify({
+            ...st,
+            draw: {
+              ...st.draw,
+              offer: null,
+              denied: { by: offer.by, at: now.getTime() },
+            },
+          }),
+          version: { increment: 1 },
+        },
+      });
+      return done();
+    }
+    // 두 사람이 합의한 무승부
+    const saved = await prisma.omokGame.updateMany({
+      where: { id, version: row.version, status: "playing" },
+      data: {
+        status: "done",
+        winner: 0,
+        endReason: "draw-agree",
+        undoJson: JSON.stringify({ ...st, draw: { ...st.draw, offer: null } }),
         version: { increment: 1 },
       },
     });

@@ -17,6 +17,8 @@ export type HudSeat = {
   secondsLeft?: number | null;
   totalSeconds?: number;
   bubble?: { text: string; key: number | string } | null;
+  /** 대국 중 이모티콘: 판이 아니라 이 명판 위에 크게 */
+  emote?: { e: string; key: number | string } | null;
   result?: "win" | "lose" | null;
   /** 아직 아무도 안 앉은 자리 */
   empty?: boolean;
@@ -190,12 +192,24 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           WIN
         </span>
       ) : null}
+      {seat.emote ? (
+        <span
+          key={seat.emote.key}
+          data-omok-plate-emote
+          className="plate-emote pointer-events-none absolute inset-0 z-40 grid place-items-center"
+          aria-label={`이모티콘 ${seat.emote.e}`}
+        >
+          <span className="text-5xl drop-shadow-[0_3px_0_#0a0614] sm:text-6xl">
+            {seat.emote.e}
+          </span>
+        </span>
+      ) : null}
       {seat.bubble ? (
         <p
           key={seat.bubble.key}
           data-omok-bubble
           className={cn(
-            "omok-bubble-pop pointer-events-none absolute top-full z-40 mt-1.5 max-w-[170%] rounded-xl border-2 border-[#0a0614] bg-[#fff7e0] px-2.5 py-1 text-sm leading-snug font-black whitespace-nowrap text-[#2a1a10] shadow-[3px_3px_0_#0a0614]",
+            "omok-bubble-pop pointer-events-none absolute bottom-full z-40 mb-1.5 max-w-[170%] rounded-xl border-2 border-[#0a0614] bg-[#fff7e0] px-2.5 py-1 text-sm leading-snug font-black whitespace-nowrap text-[#2a1a10] shadow-[3px_3px_0_#0a0614]",
             right ? "right-1" : "left-1",
           )}
         >
@@ -312,6 +326,57 @@ export function Spectators({
         <span className="g-chip">+{names.length - 8}</span>
       ) : null}
       {guests > 0 ? <span className="g-chip">손님 {guests}</span> : null}
+    </div>
+  );
+}
+
+/** 5목! 화면을 덮는 큰 요괴 등장 + 훈수 */
+export function BigWinCutIn({
+  yokai,
+  title,
+  tip,
+  side,
+}: {
+  yokai: { species: YokaiSpecies; stage: number } | null;
+  title: string;
+  tip: string;
+  side: "left" | "right";
+}) {
+  return (
+    <div
+      data-omok-bigwin
+      className="bigwin pointer-events-none absolute inset-0 z-40 grid place-items-center overflow-hidden rounded-[14px]"
+    >
+      <div className="bigwin-rays" />
+      <div className="relative grid w-full justify-items-center gap-2 px-3 text-center">
+        <p className="arcade-kr neon-gold bigwin-title text-4xl sm:text-5xl">
+          {title}
+        </p>
+        {yokai ? (
+          <span
+            className={cn(
+              "grid w-[58%] max-w-[300px] place-items-center",
+              side === "right" && "-scale-x-100",
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- 이긴 요괴 */}
+            <img
+              src={yokaiImage(yokai.species, yokai.stage)}
+              alt=""
+              draggable={false}
+              className="bigwin-yokai w-full object-contain"
+            />
+          </span>
+        ) : null}
+        {tip ? (
+          <p className="bigwin-tip max-w-[92%] rounded-2xl border-[3px] border-[#0a0614] bg-[#fff7e0] px-4 py-2.5 text-base leading-snug font-black text-[#2a1a10] shadow-[4px_4px_0_#0a0614] sm:text-lg">
+            <span className="mr-1 rounded-md bg-[#7a1cff] px-1.5 py-0.5 text-xs text-white">
+              훈수
+            </span>
+            {tip}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

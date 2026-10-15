@@ -474,3 +474,34 @@ export function makesFour(moves: number[]) {
       count(b, x, y, -dx, -dy, c) + count(b, x, y, dx, dy, c) + 1 === 4,
   );
 }
+
+/**
+ * 5목 훈수: 이긴 줄 방향 · 진 쪽이 막을 수 있었는지(직전 판에 이긴 쪽 5목 자리가 몇 곳이었는지)로 한마디.
+ * 끝난 판 수 목록(마지막 수가 5목)을 받음.
+ */
+export function winTip(moves: number[]): { dir: string; tip: string } {
+  const line = findWinLine(moves);
+  if (!line) return { dir: "", tip: "" };
+  const a = xyOf(line[0]);
+  const b = xyOf(line[1]);
+  const dir = a.y === b.y ? "가로" : a.x === b.x ? "세로" : "대각선";
+  const before = boardFrom(moves.slice(0, -1));
+  const c = before[line[0]] || colorOfMove(moves.length - 1);
+  let threats = 0;
+  for (let p = 0; p < CELLS; p += 1) {
+    if (before[p] !== 0) continue;
+    before[p] = c;
+    if (fiveLine(before, p, c)) threats += 1;
+    before[p] = 0;
+  }
+  const n = moves.length;
+  let tip: string;
+  if (threats >= 2)
+    tip =
+      "양쪽이 뚫린 4는 막을 수 없어! 상대가 3을 만들었을 때 미리 막았어야지~";
+  else if (threats === 1) tip = "4목을 그냥 뒀네? 상대 4목은 무조건 막는 거야!";
+  else tip = "띈 모양까지 잘 봐야 해. 빈칸 하나 사이도 줄이야!";
+  if (dir === "대각선") tip = `대각선은 잘 안 보이지? ${tip}`;
+  if (n <= 15) tip = `속전속결 ${n}수! ${tip}`;
+  return { dir, tip };
+}

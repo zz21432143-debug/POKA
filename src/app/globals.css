@@ -2739,3 +2739,80 @@ img[src*="/yokai/"] {
     animation: none;
   }
 }
+/* 명판 위 이모티콘(판은 가리지 않음) */
+.plate-emote > span {
+  animation: plate-emote 2.6s ease both;
+}
+@keyframes plate-emote {
+  0% {
+    transform: scale(0.2) translateY(10px);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.25) translateY(-6px);
+    opacity: 1;
+  }
+  30%,
+  80% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9) translateY(-12px);
+    opacity: 0;
+  }
+}
+/* 5목! 큰 요괴 등장 */
+.bigwin {
+  background: radial-gradient(ellipse at center, rgba(60, 20, 90, 0.88), rgba(6, 2, 14, 0.95));
+  animation: bigwin-in 0.35s ease both;
+}
+@keyframes bigwin-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.bigwin-rays {
+  position: absolute;
+  inset: -40%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 207, 74, 0.22) 0 10deg, transparent 10deg 20deg);
+  animation: bigwin-rays 8s linear infinite;
+}
+@keyframes bigwin-rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.bigwin-title {
+  animation: arcade-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) 0.1s both;
+}
+.bigwin-yokai {
+  filter: drop-shadow(0 0 18px rgba(255, 220, 120, 0.8)) drop-shadow(5px 5px 0 #0a0614);
+  animation: bigwin-yokai 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) 0.25s both;
+}
+@keyframes bigwin-yokai {
+  from {
+    transform: scale(0.1) rotate(-25deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+.bigwin-tip {
+  animation: arcade-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) 0.9s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plate-emote > span,
+  .bigwin,
+  .bigwin-rays,
+  .bigwin-title,
+  .bigwin-yokai,
+  .bigwin-tip {
+    animation: none;
+  }
+}

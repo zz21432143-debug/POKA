@@ -757,6 +757,8 @@ model OmokGame {
   guestId    String?
   hostReady  Boolean  @default(false)
   guestReady Boolean  @default(false)
+  /// 방장이 내보낸 회원 id 목록(JSON)
+  kickedJson String   @default("")
   hostId    String
   blackId   String?
   whiteId   String?

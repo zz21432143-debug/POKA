@@ -231,3 +231,20 @@ describe("요괴 AI 강화(위협 읽기)", () => {
     assert.ok(wins >= 5, `구미호 ${wins}/6승`);
   });
 });
+
+describe("5목 훈수", () => {
+  it("방향 · 막을 수 있었는지", async () => {
+    const { winTip } = await import("./omok");
+    // 흑 가로 (3~7,7) · 백은 흩어 둠 → 마지막 흑 수 직전엔 열린 4(5목 자리 2곳)
+    const moves = [at(3, 7), at(0, 0), at(4, 7), at(0, 2), at(5, 7), at(0, 4), at(6, 7), at(0, 6), at(7, 7)];
+    const t = winTip(moves);
+    assert.equal(t.dir, "가로");
+    assert.match(t.tip, /양쪽이 뚫린 4/);
+    // 한쪽이 막힌 4(5목 자리 1곳): 백 (2,7)
+    const one = [at(3, 7), at(2, 7), at(4, 7), at(0, 2), at(5, 7), at(0, 4), at(6, 7), at(0, 6), at(7, 7)];
+    assert.match(winTip(one).tip, /4목을 그냥 뒀네/);
+    // 대각선
+    const diag = [at(3, 3), at(0, 14), at(4, 4), at(2, 14), at(5, 5), at(4, 14), at(6, 6), at(6, 14), at(7, 7)];
+    assert.equal(winTip(diag).dir, "대각선");
+  });
+});

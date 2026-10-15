@@ -3,7 +3,7 @@ import { todayKstDate } from "@/lib/dates";
 
 /**
  * 게임 전적 · 랭킹(오목 · 알까기 · 체스 공통). 친구 대전 결과만(서버가 판정한 판).
- * 지금은 만들어만 두고 숨김: GAME_STATS_PUBLIC=1이면 화면에 보이고, GAME_REWARDS=1이면 이긴 사람에게 보상.
+ * 전적 · 랭킹은 공개(GAME_STATS_PUBLIC=0이면 숨김) · 이긴 보상은 GAME_REWARDS=1일 때만.
  * 마스터는 /games/stats에서 미리 볼 수 있음(어디에도 링크 없음).
  */
 export type GameKind = "omok" | "alkkagi" | "chess";
@@ -31,7 +31,8 @@ export const WIN_REWARD = {
   perOpponentPerDay: 2,
 } as const;
 
-export const gameStatsVisible = () => process.env.GAME_STATS_PUBLIC === "1";
+/** 전적 · 랭킹 화면: 기본 공개(GAME_STATS_PUBLIC=0이면 숨김) */
+export const gameStatsVisible = () => process.env.GAME_STATS_PUBLIC !== "0";
 const rewardsOn = () => process.env.GAME_REWARDS === "1";
 
 /** 끝난 판 기록(한 판에 한 번 · 짧은 판 · 취소는 안 셈) */
@@ -225,4 +226,21 @@ export async function gameRanking(
       score: r.score,
       rate: r.rate,
     }));
+}
+
+/** 두 사람 상대 전적(a 승 · b 승 · 무) */
+export async function headToHead(game: GameKind, a: string, b: string) {
+  const pair = {
+    game,
+    OR: [
+      { playerAId: a, playerBId: b },
+      { playerAId: b, playerBId: a },
+    ],
+  };
+  const [aWins, bWins, all] = await Promise.all([
+    prisma.gameResult.count({ where: { ...pair, winnerId: a } }),
+    prisma.gameResult.count({ where: { ...pair, winnerId: b } }),
+    prisma.gameResult.count({ where: pair }),
+  ]);
+  return { a: aWins, b: bWins, draws: all - aWins - bWins };
 }

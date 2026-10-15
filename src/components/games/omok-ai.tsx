@@ -7,8 +7,7 @@ import { OmokBoard } from "@/components/games/omok-board";
 import {
   ArcadeBanner,
   OmokHud,
-  YokaiCutIn,
-  type CutInData,
+  BigWinCutIn,
 } from "@/components/games/omok-hud";
 import {
   BLACK,
@@ -19,6 +18,7 @@ import {
   forbiddenCells,
   makesFour,
   play,
+  winTip,
   type Stone,
 } from "@/lib/omok";
 import {
@@ -72,7 +72,13 @@ export function OmokAi({
     tone?: "gold" | "red" | "cyan";
     key: number;
   } | null>(null);
-  const [cutIn, setCutIn] = useState<CutInData | null>(null);
+  const [bigWin, setBigWin] = useState<{
+    key: number;
+    side: "left" | "right";
+    yokai: { species: YokaiSpecies; stage: number } | null;
+    title: string;
+    tip: string;
+  } | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [jump, setJump] = useState<{ me: number; ai: number }>({
     me: 0,
@@ -90,11 +96,6 @@ export function OmokAi({
     const t = window.setTimeout(() => setBanner(null), 1200);
     return () => window.clearTimeout(t);
   }, [banner]);
-  useEffect(() => {
-    if (!cutIn) return;
-    const t = window.setTimeout(() => setCutIn(null), 1800);
-    return () => window.clearTimeout(t);
-  }, [cutIn]);
   useEffect(() => {
     if (!aiSay && !meSay) return;
     const t = window.setTimeout(() => {
@@ -127,28 +128,34 @@ export function OmokAi({
     if (who === "ai") setAiSay({ text, key: seed.current });
     else setMeSay({ text, key: seed.current });
   }
-  function cut(who: "ai" | "me", text: string, tone: CutInData["tone"]) {
-    cutInSound();
-    setCutIn({
-      key: Date.now(),
-      side: who === "me" ? "left" : "right",
-      yokai: who === "me" ? me.yokai : oppYokai,
-      text,
-      tone,
-    });
-  }
-
-  function finish(w: Stone | "draw", byResign = false) {
+  /** 끝: 5목이면 이긴 요괴가 화면을 덮고 훈수 → 결과(기권 · 무승부는 바로 결과) */
+  function finish(w: Stone | "draw", byResign = false, finalMoves?: number[]) {
     setWinner(w);
     setResigned(byResign);
     setShowResult(false);
+    let wait = 300;
     if (w !== "draw") {
       const humanWon = w === human;
       resultSound(humanWon);
-      cut(humanWon ? "me" : "ai", line4(humanWon ? "me" : "ai", "win"), "gold");
       say(humanWon ? "ai" : "me", "lose");
+      if (finalMoves) {
+        const t = winTip(finalMoves);
+        cutInSound();
+        setBigWin({
+          key: Date.now(),
+          side: humanWon ? "left" : "right",
+          yokai: humanWon ? me.yokai : oppYokai,
+          title: t.dir ? `${t.dir} 5목!` : "5목 완성!",
+          // 요괴가 이기면 자기 대사 + 훈수, 내가 이기면 훈수만
+          tip: humanWon ? t.tip : `${line4("ai", "win")} ${t.tip}`,
+        });
+        wait = 3800;
+      }
     }
-    window.setTimeout(() => setShowResult(true), w === "draw" ? 300 : 1900);
+    window.setTimeout(() => {
+      setBigWin(null);
+      setShowResult(true);
+    }, wait);
   }
 
   function apply(p: number, by: "ai" | "me") {
@@ -164,10 +171,11 @@ export function OmokAi({
     setJump((j) => ({ ...j, [by]: Date.now() }));
     if (r.winner) {
       setLine(r.line);
-      finish(r.winner);
+      finish(r.winner, false, r.moves);
     } else if (r.draw) finish("draw");
     else if (makesFour(r.moves)) {
-      cut(by, line4(by, "four"), "red");
+      // 4목: 말풍선만(판은 가리지 않음)
+      say(by, "four");
       say(by === "ai" ? "me" : "ai", "danger");
     }
     return true;
@@ -236,7 +244,7 @@ export function OmokAi({
     setMoves(next);
     setPreview(null);
     setNote(null);
-    setBanner({ text: "UNDO", tone: "cyan", key: Date.now() });
+    setNote("↩ 한 수 물렀어요");
   }
 
   /* ── 돌 고르기(도전자 화면) ── */
@@ -339,7 +347,15 @@ export function OmokAi({
           onPick={pick}
           disabled={!myTurn}
         />
-        {cutIn ? <YokaiCutIn key={cutIn.key} data={cutIn} /> : null}
+        {bigWin ? (
+          <BigWinCutIn
+            key={bigWin.key}
+            yokai={bigWin.yokai}
+            title={bigWin.title}
+            tip={bigWin.tip}
+            side={bigWin.side}
+          />
+        ) : null}
         {banner ? (
           <ArcadeBanner
             key={banner.key}

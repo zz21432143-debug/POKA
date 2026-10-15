@@ -7,6 +7,7 @@ import { cn } from "cn";
 import { OmokBoard } from "@/components/games/omok-board";
 import {
   ArcadeBanner,
+  BigWinCutIn,
   OmokHud,
   Spectators,
   YokaiCutIn,
@@ -21,8 +22,10 @@ import {
   colorOfMove,
   forbiddenCells,
   makesFour,
+  winTip,
   type Stone,
 } from "@/lib/omok";
+import type { YokaiSpecies } from "@/lib/yokai";
 import { PLAYER_LINES, pickOmokLine } from "@/lib/omok-lines";
 import {
   bellSound,
@@ -43,6 +46,7 @@ const END_TEXT: Record<string, string> = {
   resign: "기권",
   timeout: "시간 초과",
   draw: "무승부",
+  "draw-agree": "합의 무승부",
   cancel: "방이 닫혔어요",
 };
 
@@ -83,6 +87,7 @@ export function OmokRoom({
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmResign, setConfirmResign] = useState(false);
+  const [confirmKick, setConfirmKick] = useState(false);
   const [say, setSay] = useState<Record<number, { text: string; key: number }>>(
     {},
   );
@@ -92,6 +97,18 @@ export function OmokRoom({
   const [copied, setCopied] = useState<string | null>(null);
   const [banner, setBanner] = useState<Banner | null>(null);
   const [cutIn, setCutIn] = useState<CutInData | null>(null);
+  const [bigWin, setBigWin] = useState<{
+    key: number;
+    side: "left" | "right";
+    yokai: { species: YokaiSpecies; stage: number } | null;
+    title: string;
+    tip: string;
+  } | null>(null);
+  const [plateEmote, setPlateEmote] = useState<{
+    by: Stone;
+    e: string;
+    key: number;
+  } | null>(null);
   const [showResult, setShowResult] = useState(initial.status === "done");
   const [jump, setJump] = useState<Record<number, number>>({});
   const [watching, setWatching] = useState({
@@ -217,21 +234,15 @@ export function OmokRoom({
         },
       });
     }
-    // 돌
+    // 돌: 소리 · 둔 사람 요괴 점프 · 4목이면 말풍선만(판은 가리지 않음)
     if (view.moves.length > before.moves.length) {
       stoneClick();
       setPreview(null);
       const by = colorOfMove(view.moves.length - 1);
       setJump((j) => ({ ...j, [by]: seed }));
       if (view.status === "playing" && makesFour(view.moves)) {
-        cut({
-          key: seed,
-          side: sideOf(by),
-          yokai: yokaiOf(by),
-          text: pickOmokLine(PLAYER_LINES.four, seed),
-          tone: "red",
-        });
         setSay({
+          [by]: { text: pickOmokLine(PLAYER_LINES.four, seed), key: seed },
           [by === BLACK ? WHITE : BLACK]: {
             text: pickOmokLine(PLAYER_LINES.danger, seed),
             key: seed + 1,
@@ -240,26 +251,15 @@ export function OmokRoom({
       }
     }
     if (view.moves.length < before.moves.length && view.status === "playing") {
-      setBanner({
-        text: "UNDO",
-        sub: "한 수 물렀어요",
-        tone: "cyan",
-        key: seed,
-      });
+      setNote("↩ 한 수 물렀어요");
       setPreview(null);
     }
-    // 끝
+    // 끝: 5목이면 큰 요괴가 화면을 덮고 훈수 → 결과
     if (view.status === "done" && before.status !== "done") {
       setShowResult(false);
+      let wait = 300;
       if (view.winner) {
         const loser = view.winner === BLACK ? WHITE : BLACK;
-        cut({
-          key: seed,
-          side: sideOf(view.winner),
-          yokai: yokaiOf(view.winner),
-          text: pickOmokLine(PLAYER_LINES.win, seed),
-          tone: "gold",
-        });
         setSay({
           [loser]: {
             text: pickOmokLine(PLAYER_LINES.lose, seed),
@@ -267,8 +267,23 @@ export function OmokRoom({
           },
         });
         resultSound(view.me ? view.winner === view.me : true);
+        if (view.endReason === "five") {
+          cutInSound();
+          const t = winTip(view.moves);
+          setBigWin({
+            key: seed,
+            side: sideOf(view.winner),
+            yokai: yokaiOf(view.winner),
+            title: t.dir ? `${t.dir} 5목!` : "5목 완성!",
+            tip: t.tip,
+          });
+          wait = 3800;
+        }
       }
-      window.setTimeout(() => setShowResult(true), view.winner ? 1900 : 300);
+      window.setTimeout(() => {
+        setBigWin(null);
+        setShowResult(true);
+      }, wait);
       if (!view.records)
         void fetch(`/api/games/omok/${view.id}?rec=1`, { cache: "no-store" })
           .then((r) => r.json() as Promise<{ view?: OmokView }>)
@@ -281,33 +296,35 @@ export function OmokRoom({
       view.undo.deniedBy === view.me
     )
       setNote("상대가 물리기를 거절했어요.");
-    // 이모티콘: 요괴와 함께 크게
+    if (
+      view.draw.deniedAt &&
+      view.draw.deniedAt !== before.draw?.deniedAt &&
+      view.draw.deniedBy === view.me
+    )
+      setNote("상대가 무승부를 거절했어요.");
+    // 이모티콘: 대기실은 요괴와 함께 크게(판에 돌이 없음) · 대국 중에는 보낸 사람 명판 위에(판은 가리지 않음)
     if (
       view.emote &&
       view.emote.at !== before.emote?.at &&
       Date.now() + offset - view.emote.at < 8000
     ) {
       const by = view.emote.by;
-      const inGame = view.status !== "waiting";
-      // 대기실: 흑 = 방장 · 백 = 손님
-      const yk = inGame
-        ? yokaiOf(by)
-        : by === BLACK
-          ? (view.host?.yokai ?? null)
-          : (view.guest?.yokai ?? null);
-      const mineSide = view.seat === "guest" ? WHITE : BLACK;
-      const side: "left" | "right" = inGame
-        ? sideOf(by)
-        : by === mineSide
-          ? "left"
-          : "right";
-      cut({
-        key: view.emote.at,
-        side,
-        yokai: yk,
-        emoji: view.emote.e,
-        tone: "blue",
-      });
+      if (view.status === "playing") {
+        setPlateEmote({ by, e: view.emote.e, key: view.emote.at });
+      } else {
+        const yk =
+          by === BLACK
+            ? (view.host?.yokai ?? null)
+            : (view.guest?.yokai ?? null);
+        const mineSide = view.seat === "guest" ? WHITE : BLACK;
+        cut({
+          key: view.emote.at,
+          side: by === mineSide ? "left" : "right",
+          yokai: yk,
+          emoji: view.emote.e,
+          tone: "blue",
+        });
+      }
     }
     // 대국자는 「한 판 더」가 생기면 바로 다음 판(대기실)으로
     if (view.nextId && view.me) router.replace(`/games/omok/${view.nextId}`);
@@ -325,6 +342,11 @@ export function OmokRoom({
     const t = window.setTimeout(() => setCutIn(null), 1800);
     return () => window.clearTimeout(t);
   }, [cutIn]);
+  useEffect(() => {
+    if (!plateEmote) return;
+    const t = window.setTimeout(() => setPlateEmote(null), 2600);
+    return () => window.clearTimeout(t);
+  }, [plateEmote]);
   useEffect(() => {
     if (!Object.keys(say).length) return;
     const t = window.setTimeout(() => setSay({}), 4000);
@@ -346,7 +368,9 @@ export function OmokRoom({
         code?: string;
       };
       if (json.code === "NO_YOKAI") {
-        router.push(`/yokai?next=${encodeURIComponent(`/games/omok/${view.id}`)}`);
+        router.push(
+          `/yokai?next=${encodeURIComponent(`/games/omok/${view.id}`)}`,
+        );
         return;
       }
       if (json.view) receive(json.view);
@@ -392,6 +416,10 @@ export function OmokRoom({
   const iAsked = Boolean(view.me && askBy === view.me);
   const theyAsked = Boolean(view.me && askBy && askBy !== view.me);
   const myUndoLeft = view.me ? view.undo.left[view.me as 1 | 2] : 0;
+  const drawBy = view.draw.offerBy;
+  const iOfferedDraw = Boolean(view.me && drawBy === view.me);
+  const theyOfferedDraw = Boolean(view.me && drawBy && drawBy !== view.me);
+  const myDrawLeft = view.me ? view.draw.left[view.me as 1 | 2] : 0;
   const iHaveMoved = Boolean(
     view.me && view.moves.some((_, i) => colorOfMove(i) === view.me),
   );
@@ -454,6 +482,8 @@ export function OmokRoom({
             : "lose"
           : null,
       jumpKey: jump[c],
+      emote:
+        plateEmote?.by === c ? { e: plateEmote.e, key: plateEmote.key } : null,
     };
   };
   // 대기실: 흑 자리 = 방장 · 백 자리 = 손님(내가 손님이면 내 자리를 왼쪽에)
@@ -617,6 +647,15 @@ export function OmokRoom({
           ) : null}
 
           {cutIn ? <YokaiCutIn key={cutIn.key} data={cutIn} /> : null}
+          {bigWin ? (
+            <BigWinCutIn
+              key={bigWin.key}
+              yokai={bigWin.yokai}
+              title={bigWin.title}
+              tip={bigWin.tip}
+              side={bigWin.side}
+            />
+          ) : null}
           {banner ? (
             <ArcadeBanner
               key={banner.key}
@@ -654,6 +693,39 @@ export function OmokRoom({
                   className="arcade-btn btn-dark"
                 >
                   거절
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {/* 무승부 제안 받음 */}
+          {theyOfferedDraw && !theyAsked ? (
+            <div
+              data-omok-draw-ask
+              className="arcade-overlay absolute inset-x-3 top-1/2 z-20 grid -translate-y-1/2 gap-3 rounded-2xl border-2 border-[#ffcf4a] p-4 text-center"
+            >
+              <p className="arcade-px neon-gold text-sm">DRAW?</p>
+              <p className="arcade-kr text-xl text-white">
+                상대가 무승부를 제안했어요
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  data-omok-draw-yes
+                  disabled={busy}
+                  onClick={() => void act("draw-yes")}
+                  className="arcade-btn btn-gold"
+                >
+                  🤝 무승부
+                </button>
+                <button
+                  type="button"
+                  data-omok-draw-no
+                  disabled={busy}
+                  onClick={() => void act("draw-no")}
+                  className="arcade-btn btn-dark"
+                >
+                  계속 둘래요
                 </button>
               </div>
             </div>
@@ -751,13 +823,15 @@ export function OmokRoom({
             )}
           >
             {note ??
-              (iAsked
-                ? "물리기 요청 중… 상대 대답을 기다려요"
-                : myTurn
-                  ? "▶ 내 차례! 같은 곳을 두 번 누르면 둬요"
-                  : view.me
-                    ? "상대 차례…"
-                    : `${turn === BLACK ? "흑" : "백"} 차례`)}
+              (iOfferedDraw
+                ? "무승부 제안 중… 상대 대답을 기다려요"
+                : iAsked
+                  ? "물리기 요청 중… 상대 대답을 기다려요"
+                  : myTurn
+                    ? "▶ 내 차례! 같은 곳을 두 번 누르면 둬요"
+                    : view.me
+                      ? "상대 차례…"
+                      : `${turn === BLACK ? "흑" : "백"} 차례`)}
           </p>
         ) : null}
 
@@ -825,7 +899,7 @@ export function OmokRoom({
         {/* ── 대국 조작: 물리기 · 기권 · 이모티콘 ── */}
         {view.me && playing ? (
           <div className="grid gap-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 data-omok-undo
@@ -835,7 +909,22 @@ export function OmokRoom({
                 onClick={() => void act("undo-ask")}
                 className="arcade-btn btn-dark"
               >
-                ↩ 물리기 ({myUndoLeft}번 남음)
+                ↩ 물리기 {myUndoLeft}
+              </button>
+              <button
+                type="button"
+                data-omok-draw
+                disabled={
+                  busy ||
+                  iOfferedDraw ||
+                  theyOfferedDraw ||
+                  theyAsked ||
+                  myDrawLeft <= 0
+                }
+                onClick={() => void act("draw-offer")}
+                className="arcade-btn btn-dark"
+              >
+                {iOfferedDraw ? "제안 중…" : "🤝 무승부"}
               </button>
               {confirmResign ? (
                 <button
@@ -845,7 +934,7 @@ export function OmokRoom({
                   onClick={() => void act("resign")}
                   className="arcade-btn btn-main"
                 >
-                  정말 기권할래요
+                  정말 기권
                 </button>
               ) : (
                 <button
@@ -938,6 +1027,31 @@ export function OmokRoom({
                 ✅ {copied}를 복사했어요!
               </p>
             ) : null}
+            {view.seat === "host" && view.guest ? (
+              confirmKick ? (
+                <button
+                  type="button"
+                  data-omok-kick-yes
+                  disabled={busy}
+                  onClick={() => {
+                    setConfirmKick(false);
+                    void act("kick");
+                  }}
+                  className="arcade-btn btn-main text-sm"
+                >
+                  정말 {view.guest.nickname}님 내보내기
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-omok-kick
+                  onClick={() => setConfirmKick(true)}
+                  className="arcade-btn btn-dark text-sm !text-[#ff9aa4]"
+                >
+                  🚪 손님 내보내기
+                </button>
+              )
+            ) : null}
             {view.seat === "host" ? (
               <button
                 type="button"
@@ -978,6 +1092,28 @@ export function OmokRoom({
 
         <section data-omok-records className="arcade-panel grid gap-2 p-4">
           <h2 className="arcade-kr text-lg text-white">📜 전적</h2>
+          {records?.h2h &&
+          (records.h2h.a || records.h2h.b || records.h2h.draws) ? (
+            <p
+              data-omok-h2h
+              className="rounded-xl bg-black/30 px-3 py-2 text-sm font-bold text-[#d6cdee]"
+            >
+              ⚔️ 상대 전적 ·{" "}
+              <b className="text-white">
+                {(waiting ? view.host?.nickname : view.black?.nickname) ?? "?"}
+              </b>{" "}
+              <b className="text-[#ffcf4a]">{records.h2h.a}승</b> :{" "}
+              <b className="text-[#ffcf4a]">{records.h2h.b}승</b>{" "}
+              <b className="text-white">
+                {(waiting ? view.guest?.nickname : view.white?.nickname) ?? "?"}
+              </b>
+              {records.h2h.draws ? ` · 무 ${records.h2h.draws}` : ""}
+            </p>
+          ) : view.guest || !waiting ? (
+            <p data-omok-h2h className="text-sm text-[#d6cdee]">
+              ⚔️ 두 사람은 첫 대결이에요!
+            </p>
+          ) : null}
           {(waiting
             ? [
                 {

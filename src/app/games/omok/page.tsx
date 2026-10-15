@@ -23,6 +23,7 @@ const END: Record<string, string> = {
   resign: "기권",
   timeout: "시간 초과",
   draw: "무승부",
+  "draw-agree": "합의 무승부",
 };
 
 /** 요괴 오목 로비: 방 만들기 · 코드로 입장 · 기다리는 방 · 요괴 연습 · 대국 중(관전) · 내 전적 · 최근 대국. 요괴가 없으면 요괴 고르기로 */
