@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "cn";
-import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_ORDER, waitText, yokaiImage, type YokaiRarity, type YokaiSpecies } from "@/lib/yokai";
+import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_BACKGROUNDS, YOKAI_ORDER, waitText, yokaiImage, type YokaiBackground, type YokaiRarity, type YokaiSpecies } from "@/lib/yokai";
 import type { YokaiView } from "@/lib/yokai-server";
 import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
@@ -46,10 +46,11 @@ const RARITY_TEXT: Record<YokaiRarity, string> = {
   legend: "text-[#f5d76e]",
 };
 
-/** 키우는 화면 · 등장 화면 배경: 전설은 전용(구미호 보름달 · 염라 업경대), 영웅은 은빛 */
-function stageBackground(species: YokaiSpecies) {
+/** 키우는 화면 · 등장 화면 배경: 전설은 전용(구미호 보름달 · 염라 업경대), 산 배경이 있으면 그것, 영웅은 은빛 */
+function stageBackground(species: YokaiSpecies, bg: YokaiBackground = "default") {
   if (species === "gumiho") return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
   if (species === "yeomra") return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
+  if (bg !== "default") return YOKAI_BACKGROUNDS[bg].css;
   if (YOKAI[species].rarity === "hero") return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
   return "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)";
 }
@@ -189,7 +190,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
       ) : (
         <>
           <section aria-label="내 요괴" data-yokai-home className="lounge-card grid gap-4 rounded-[1.35rem] p-4 md:grid-cols-[1.1fr_1fr] md:items-center">
-            <div className="relative grid aspect-square place-items-center overflow-hidden rounded-2xl border border-[#c9a25c]/30" style={{ background: stageBackground(a.species) }}>
+            <div className="relative grid aspect-square place-items-center overflow-hidden rounded-2xl border border-[#c9a25c]/30" style={{ background: stageBackground(a.species, yokai.bg.active) }}>
               <p data-yokai-mood className="absolute inset-x-3 top-3 z-10 rounded-xl border border-[#c9a25c]/30 bg-black/60 px-3 py-2 text-sm text-[#ece4d6]">
                 {yokai.mood}
               </p>
@@ -329,6 +330,38 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                 </button>
               ))}
             </div>
+          </section>
+
+          <section aria-label="마을 배경" data-yokai-bg-shop className="ink-panel grid gap-2 rounded-2xl p-4">
+            <h2 className="flex flex-wrap items-baseline gap-2 text-base font-black text-[#f3d9a4]">
+              마을 배경 <span className="text-sm text-zinc-400">포인트로 바로 사요 · 내 포인트 {yokai.points.toLocaleString()}P</span>
+            </h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {(Object.keys(YOKAI_BACKGROUNDS) as YokaiBackground[]).map((id) => {
+                const bg = YOKAI_BACKGROUNDS[id];
+                const owned = yokai.bg.owned.includes(id);
+                const using = yokai.bg.active === id;
+                return (
+                  <div key={id} data-yokai-bg={id} className={cn("grid gap-1.5 rounded-xl border p-1.5", using ? "border-[#e7c98a]" : "border-[#c9a25c]/25")}>
+                    <div className="aspect-[4/3] rounded-lg" style={{ background: bg.css }} />
+                    <div className="flex items-center gap-1 text-xs">
+                      <b className="text-white">{bg.name}</b>
+                      <span className="ml-auto text-zinc-400">{owned ? "가짐" : `${bg.price.toLocaleString()}P`}</span>
+                    </div>
+                    <button
+                      type="button"
+                      data-yokai-bg-action={owned ? "use" : "buy"}
+                      disabled={busy || using || (!owned && yokai.points < bg.price)}
+                      onClick={() => void act({ action: owned ? "useBg" : "buyBg", bg: id })}
+                      className={cn("min-h-9 rounded-lg text-xs font-black disabled:opacity-50", owned ? "border border-[#c9a25c]/50 text-[#e7c98a]" : "bg-[#7a1c22] text-white")}
+                    >
+                      {using ? "쓰는 중" : owned ? "쓰기" : yokai.points < bg.price ? "포인트 부족" : "사기"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-zinc-500">전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이 먼저 보여요.</p>
           </section>
 
           <section aria-label="진화 단계" data-yokai-evo className="ink-panel grid gap-2 rounded-2xl p-4">

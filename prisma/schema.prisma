@@ -703,6 +703,9 @@ model YokaiPet {
   activeSpecies String @default("")
   mainSpecies   String @default("")
   seenJson      String @default("[]")
+  /// 요괴 마을 배경: 가진 배경(JSON) · 쓰는 배경
+  bgOwnedJson   String @default("[\"default\"]")
+  bgActive      String @default("default")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 }

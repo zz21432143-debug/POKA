@@ -47,6 +47,8 @@ const FILES = [
   "prisma/migrations/20261024090000_yokai_pet/migration.sql",
   "prisma/migrations/20261025090000_yokai_owned/migration.sql",
   "prisma/migrations/20261026090000_yokai_alerts/migration.sql",
+  "prisma/migrations/20261027090000_exp_curve/migration.sql",
+  "prisma/migrations/20261027100000_yokai_bg/migration.sql",
 ];
 
 function databaseUrl() {

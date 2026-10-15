@@ -42,7 +42,8 @@ export const POST_POINTS: Record<BoardType, number> = {
 };
 
 export const ATTENDANCE_EXP = 100;
-export const ATTENDANCE_POINTS = 375;
+/** 출석 포인트(2026-10 조정: 375 → 150, 글 · 댓글 · 퀴즈 활동을 하는 회원이 더 받도록) */
+export const ATTENDANCE_POINTS = 150;
 export const COMMENT_EXP = 2;
 export const COMMENT_POINTS = 10;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;
@@ -51,14 +52,14 @@ export const LUCKY_ATTENDANCE_POINTS = 0;
 /** 30일 이후 매주 반복되는 연속 출석 보너스. */
 export const STREAK_REPEAT_AFTER = 30;
 export const STREAK_REPEAT_EVERY = 7;
-export const STREAK_REPEAT_POINTS = 150;
+export const STREAK_REPEAT_POINTS = 80;
 export const STREAK_REPEAT_EXP = 40;
 
 export const STREAK_MILESTONES = [
-  { day: 3, points: 50, exp: 20, label: "3일 연속" },
-  { day: 7, points: 150, exp: 50, label: "7일 연속" },
-  { day: 14, points: 300, exp: 80, label: "14일 연속" },
-  { day: 30, points: 750, exp: 150, label: "30일 연속" },
+  { day: 3, points: 30, exp: 20, label: "3일 연속" },
+  { day: 7, points: 100, exp: 50, label: "7일 연속" },
+  { day: 14, points: 200, exp: 80, label: "14일 연속" },
+  { day: 30, points: 400, exp: 150, label: "30일 연속" },
 ] as const;
 
 export type StreakBonus = { points: number; exp: number; label: string };

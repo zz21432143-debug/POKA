@@ -9,6 +9,7 @@ import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { HomeStudyTools } from "@/components/home/home-study-tools";
 import { HomeQuiz } from "@/components/home/home-quiz";
 import { YokaiNudge } from "@/components/yokai/yokai-nudge";
+import { HomeMissions } from "@/components/home/home-missions";
 import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
 import { todayKstDate } from "@/lib/dates";
@@ -83,6 +84,10 @@ export default async function HomePage() {
       </Suspense>
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
+      </Suspense>
+      {/* 오늘의 미션(로그인 회원) */}
+      <Suspense fallback={null}>
+        <HomeMissions />
       </Suspense>
       {/* 무료 홀덤 공부 도구(GTO · 승률 · ICM · 레인지 · 족보) */}
       <HomeStudyTools />

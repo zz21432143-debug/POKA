@@ -8,7 +8,7 @@ import { STUDY_ITEMS } from "@/lib/nav";
 export function StudyVisitPing() {
   const pathname = usePathname();
   useEffect(() => {
-    if (!STUDY_ITEMS.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))) return;
+    if (pathname !== "/study" && !STUDY_ITEMS.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))) return;
     const key = `poka-study-${new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)}`;
     try {
       if (window.localStorage.getItem(key)) return;

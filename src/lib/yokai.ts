@@ -159,3 +159,16 @@ export function moodLine(input: { name: string; fullness: number; affection: num
   if (input.affection >= 80) return "언제나 같이 있어 줘서 고마워요 💕";
   return "내일 또 놀아 줄 거죠?";
 }
+
+/** 요괴 마을 배경(포인트로 바로 사기 · 뽑기 없음). 전설 요괴는 전용 배경이 먼저 */
+export const YOKAI_BACKGROUNDS = {
+  default: { name: "등불 마당", price: 0, css: "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)" },
+  moon: { name: "달밤", price: 3000, css: "radial-gradient(circle at 78% 22%, #fff4cf 0 7%, rgba(255,244,207,.25) 8% 14%, transparent 22%), radial-gradient(circle at 50% 120%, #1d3a5c, transparent 60%), linear-gradient(#0b1630, #05070f)" },
+  blossom: { name: "벚꽃길", price: 3000, css: "radial-gradient(circle at 15% 20%, rgba(255,182,206,.55) 0 3%, transparent 4%), radial-gradient(circle at 70% 35%, rgba(255,182,206,.45) 0 2%, transparent 3%), radial-gradient(circle at 40% 12%, rgba(255,210,225,.5) 0 2.5%, transparent 3.5%), radial-gradient(circle at 85% 70%, rgba(255,182,206,.4) 0 2%, transparent 3%), linear-gradient(#3a1f2c, #160b12)" },
+  snow: { name: "설산", price: 3000, css: "radial-gradient(circle at 20% 30%, #fff 0 .8%, transparent 1.2%), radial-gradient(circle at 60% 18%, #fff 0 .7%, transparent 1.1%), radial-gradient(circle at 82% 45%, #fff 0 .9%, transparent 1.3%), radial-gradient(circle at 35% 60%, #fff 0 .6%, transparent 1%), linear-gradient(transparent 70%, rgba(230,240,255,.35)), linear-gradient(#1c2a3d, #0b111b)" },
+  maple: { name: "단풍 숲", price: 3000, css: "radial-gradient(circle at 20% 25%, rgba(230,90,40,.55) 0 3%, transparent 4%), radial-gradient(circle at 75% 20%, rgba(240,150,40,.5) 0 2.5%, transparent 3.5%), radial-gradient(circle at 55% 45%, rgba(200,60,30,.45) 0 2%, transparent 3%), linear-gradient(#3a1d0f, #140904)" },
+  lantern: { name: "등불 거리", price: 5000, css: "radial-gradient(circle at 12% 18%, rgba(255,120,60,.9) 0 3%, rgba(255,120,60,.25) 4% 8%, transparent 10%), radial-gradient(circle at 50% 10%, rgba(255,150,70,.9) 0 3%, rgba(255,150,70,.25) 4% 8%, transparent 10%), radial-gradient(circle at 88% 18%, rgba(255,120,60,.9) 0 3%, rgba(255,120,60,.25) 4% 8%, transparent 10%), linear-gradient(#2a0f0c, #0c0403)" },
+  galaxy: { name: "은하수", price: 8000, css: "radial-gradient(ellipse at 50% 40%, rgba(140,110,255,.35), transparent 55%), radial-gradient(circle at 25% 30%, #fff 0 .5%, transparent 1%), radial-gradient(circle at 70% 25%, #fff 0 .6%, transparent 1%), radial-gradient(circle at 45% 65%, #cfe3ff 0 .5%, transparent 1%), radial-gradient(circle at 85% 60%, #fff 0 .4%, transparent .9%), linear-gradient(135deg, #0a0820, #1a0f35 50%, #05040f)" },
+} as const;
+export type YokaiBackground = keyof typeof YOKAI_BACKGROUNDS;
+export const isBackground = (v: unknown): v is YokaiBackground => typeof v === "string" && v in YOKAI_BACKGROUNDS;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
-import { chooseStarter, feedYokai, getYokai, markSeen, petYokai, setYokai } from "@/lib/yokai-server";
-import { isSpecies } from "@/lib/yokai";
+import { buyBackground, chooseStarter, feedYokai, getYokai, markSeen, petYokai, setYokai, applyBackground } from "@/lib/yokai-server";
+import { isBackground, isSpecies } from "@/lib/yokai";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -30,6 +30,11 @@ export async function POST(request: Request) {
   } else if (body.action === "feed") result = await feedYokai(user.id);
   else if (body.action === "pet") result = await petYokai(user.id);
   else if (body.action === "seen") result = await markSeen(user.id);
+  else if (body.action === "buyBg" || body.action === "useBg") {
+    const bg = (body as { bg?: unknown }).bg;
+    if (!isBackground(bg)) return NextResponse.json({ error: "배경을 골라 주세요." }, { status: 400 });
+    result = body.action === "buyBg" ? await buyBackground(user.id, bg) : await applyBackground(user.id, bg);
+  }
   else return NextResponse.json({ error: "잘못된 요청이에요." }, { status: 400 });
   if (!result.ok) return NextResponse.json({ error: result.error, yokai: await getYokai(user.id) }, { status: 409, headers: NO_STORE });
   return NextResponse.json({ ok: true, evolved: result.evolved ?? null, yokai: await getYokai(user.id) }, { headers: NO_STORE });

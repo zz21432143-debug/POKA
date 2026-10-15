@@ -13,7 +13,10 @@ import {
   stageForExp,
   waitText,
   isSpecies,
+  isBackground,
   RARITY_ORDER,
+  YOKAI_BACKGROUNDS,
+  type YokaiBackground,
   type FeedSources,
   type YokaiSpecies,
 } from "@/lib/yokai";
@@ -50,6 +53,9 @@ export type YokaiView = {
   progress: Partial<Record<YokaiSpecies, string>>;
   tails: { label: string; done: boolean; progress: string }[];
   mood: string;
+  /** 내 포인트 · 마을 배경(가진 것 · 쓰는 것) */
+  points: number;
+  bg: { owned: YokaiBackground[]; active: YokaiBackground };
 };
 
 const FREE_BOARDS = ["FREE", "RULE_QA", "SKETCH"] as const;
@@ -217,7 +223,41 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
     progress,
     tails: gumihoTails(stats, stages),
     mood: moodLine({ name: YOKAI[species].name, fullness, affection: activeRow.affection, feedsLeft: Math.max(0, allowed - used), src: sources }),
+    points: (await prisma.user.findUnique({ where: { id: userId }, select: { points: true } }).catch(() => null))?.points ?? 0,
+    bg: bgState(pet),
   };
+}
+
+function bgState(pet: { bgOwnedJson: string; bgActive: string }) {
+  let owned: YokaiBackground[] = ["default"];
+  try {
+    const v = JSON.parse(pet.bgOwnedJson) as unknown;
+    if (Array.isArray(v)) owned = ["default", ...v.filter((x): x is YokaiBackground => isBackground(x) && x !== "default")];
+  } catch {
+    /* 기본만 */
+  }
+  return { owned, active: isBackground(pet.bgActive) && owned.includes(pet.bgActive) ? pet.bgActive : ("default" as YokaiBackground) };
+}
+
+/** 마을 배경 사기(포인트 바로 차감 · 이미 있으면 안 삼) */
+export async function buyBackground(userId: string, id: YokaiBackground) {
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
+  if (!pet) return { ok: false as const, error: "먼저 요괴를 골라 주세요." };
+  const state = bgState(pet);
+  if (state.owned.includes(id)) return { ok: false as const, error: "이미 가진 배경이에요." };
+  const price = YOKAI_BACKGROUNDS[id].price;
+  // 포인트가 모자라면 안 바뀜(동시에 눌러도 한 번만)
+  const paid = await prisma.user.updateMany({ where: { id: userId, points: { gte: price } }, data: { points: { decrement: price } } });
+  if (paid.count !== 1) return { ok: false as const, error: `포인트가 모자라요(${price.toLocaleString()}P 필요).` };
+  await prisma.yokaiPet.update({ where: { userId }, data: { bgOwnedJson: JSON.stringify([...state.owned, id]), bgActive: id } });
+  return { ok: true as const };
+}
+
+export async function applyBackground(userId: string, id: YokaiBackground) {
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } });
+  if (!pet || !bgState(pet).owned.includes(id)) return { ok: false as const, error: "아직 없는 배경이에요." };
+  await prisma.yokaiPet.update({ where: { userId }, data: { bgActive: id } });
+  return { ok: true as const };
 }
 
 /** 첫 요괴 고르기(이미 있으면 그대로 · 다시 고르기 없음) */

@@ -13,24 +13,34 @@ import {
 import { ATTENDANCE_POINTS, DAILY_POINT_CAP, MARK_PRICE_POINTS } from "./rewards";
 
 describe("activity levels", () => {
-  it("caps at 250 and treats 100 exp as one level", () => {
+  it("caps at 250 · 1~29레벨은 100, 높은 구간일수록 한 레벨에 더 많은 경험치", () => {
     assert.equal(MAX_LEVEL, 250);
     assert.equal(EXP_PER_LEVEL, 100);
     assert.equal(levelFromExp(0), 1);
     assert.equal(levelFromExp(99), 1);
     assert.equal(levelFromExp(100), 2);
-    assert.equal(levelFromExp(24900), 250);
+    assert.equal(requiredExpForLevel(30), 2900);
+    assert.equal(requiredExpForLevel(100), 13400);
+    assert.equal(requiredExpForLevel(150), 25900);
+    assert.equal(requiredExpForLevel(200), 43400);
+    assert.equal(levelFromExp(65900), 250);
+    assert.equal(levelFromExp(65899), 249);
     assert.equal(levelFromExp(999999), 250);
     assert.equal(requiredExpForLevel(1), 0);
-    assert.equal(requiredExpForLevel(250), 24900);
+    assert.equal(requiredExpForLevel(250), 65900);
+    // 구간 경계 앞뒤에서 레벨 ↔ 경험치가 서로 맞음
+    for (const lv of [29, 30, 31, 99, 100, 101, 149, 150, 199, 200, 249]) assert.equal(levelFromExp(requiredExpForLevel(lv)), lv);
     assert.equal(buildLevelRows().length, 250);
     assert.deepEqual(progressFromExp(1, 0), {
       currentLevelExp: 0,
       nextLevelExp: 100,
       progressPercent: 0,
     });
-    assert.equal(progressFromExp(250, 24900).progressPercent, 100);
-    assert.equal(progressFromExp(250, 24900).nextLevelExp, null);
+    assert.equal(progressFromExp(250, 65900).progressPercent, 100);
+    assert.equal(progressFromExp(250, 65900).nextLevelExp, null);
+    // 경험치 옮기기 마이그레이션: Lv120 · 50% → 18525
+    assert.equal(levelFromExp(18525), 120);
+    assert.equal(progressFromExp(120, 18525).progressPercent, 50);
   });
 
   it("names ranks by level band", () => {
@@ -50,10 +60,11 @@ describe("activity levels", () => {
     assert.equal(memberRankTitle({ level: 7 }), "연습 딜러");
   });
 
-  it("needs about eight attendance days for a 3000P mark", () => {
+  it("마크 3000P: 출석만이면 20일, 출석 + 활동 한도면 6일", () => {
     assert.equal(MARK_PRICE_POINTS, 3000);
     assert.equal(DAILY_POINT_CAP, 375);
-    assert.equal(ATTENDANCE_POINTS, 375);
-    assert.equal(Math.ceil(MARK_PRICE_POINTS / DAILY_POINT_CAP), 8);
+    assert.equal(ATTENDANCE_POINTS, 150);
+    assert.equal(Math.ceil(MARK_PRICE_POINTS / ATTENDANCE_POINTS), 20);
+    assert.equal(Math.ceil(MARK_PRICE_POINTS / (ATTENDANCE_POINTS + DAILY_POINT_CAP)), 6);
   });
 });

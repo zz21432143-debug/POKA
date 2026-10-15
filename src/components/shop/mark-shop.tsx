@@ -1,5 +1,6 @@
 "use client";
 
+import { ATTENDANCE_POINTS, DAILY_POINT_CAP, MARK_PRICE_POINTS } from "@/lib/rewards";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -164,7 +165,7 @@ function ShopBody({
           </p>
         </div>
         <p className="text-sm text-muted-foreground">
-          {rank ? `${rank} · ` : ""}Lv.{catalog.level} · 마크 3,000P · 하루 최대 375P
+          {rank ? `${rank} · ` : ""}Lv.{catalog.level} · 마크 {MARK_PRICE_POINTS.toLocaleString()}P · 출석 {ATTENDANCE_POINTS}P + 활동 하루 최대 {DAILY_POINT_CAP}P
           {catalog.equippedMarkId ? " · 착용 중" : ""}
         </p>
       </div>
