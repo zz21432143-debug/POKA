@@ -58,7 +58,7 @@ export const YOKAI = {
   eodukssini: { name: "어둑시니", rarity: "common", element: { label: "어둠", tone: "dark" }, intro: "바라볼수록 커지는 어둠의 요괴.", stages: ["그늘콩", "어둑이", "밤그림자", "거대암영", "심연의 어둑시니"], how: "핸드리뷰에 글을 쓰거나 투표를 10번 하면 찾아와요" },
   noejeongwi: { name: "뇌전귀", rarity: "common", element: { label: "번개", tone: "thunder" }, intro: "귀와 꼬리에 번개를 모으는 토끼 요괴.", stages: ["찌릿콩", "번개토끼", "뇌전수", "천둥귀왕", "천뢰신수"], how: "급구 공고에 지원하거나 급구를 올리면 찾아와요" },
   bulgasari: { name: "불가사리", rarity: "common", element: { label: "쇠", tone: "metal" }, intro: "쇳조각과 칩을 삼키며 자라는 별 모양 요괴.", stages: ["쇳가루", "쇠뭉치", "철갑별", "강철포식자", "불멸의 불가사리"], how: "팟 계산 연습을 50번 하면 찾아와요" },
-  hwaryong: { name: "화룡", rarity: "common", element: { label: "불", tone: "fire" }, intro: "불을 먹고 자라는 용. 분노할수록 더 뜨거워져요.", stages: ["불씨룡", "홍염룡", "작열룡", "폭염룡", "태양화룡"], how: "결과 이미지를 10번 공유하면 찾아와요" },
+  hwaryong: { name: "화룡", rarity: "common", element: { label: "불", tone: "fire" }, intro: "불을 먹고 자라는 용. 분노할수록 더 뜨거워져요.", stages: ["불씨룡", "홍염룡", "작열룡", "폭염룡", "태양화룡"], how: "결과 이미지를 10일 공유하면 찾아와요(하루 한 번 셈)" },
   bakjwigwi: { name: "박쥐귀", rarity: "common", element: { label: "밤", tone: "blood" }, intro: "붉은 달이 뜨는 밤에 깨어나는 박쥐 요괴.", stages: ["밤박쥐", "피빛박쥐", "야월귀", "혈월군주", "영원의 밤군주"], how: "새벽(0~5시)에 출석을 7번 하면 찾아와요" },
   deungbulgwi: { name: "등불귀", rarity: "common", element: { label: "빛", tone: "light" }, intro: "매장을 밝히는 한지 초롱 요괴. 혀를 쏙 내밀고 길을 비춰 줘요.", stages: ["반딧불령", "혼불등", "길잡이귀", "백귀등왕", "황천의 등불"], how: "매장 관리 도구(게임 현황판 · 딜러 로테이션)를 만들면 찾아와요" },
   // ── 희귀

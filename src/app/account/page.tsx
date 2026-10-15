@@ -40,7 +40,7 @@ export default async function AccountPage() {
           <section aria-label="내 랭킹" className="grid gap-2 rounded-2xl border border-[#c9a25c]/30 bg-black/30 p-3">
             <div className="flex items-center gap-2">
               <h2 className="text-base font-black text-[#e7c98a]">내 랭킹</h2>
-              <a href="/ranking" className="ml-auto text-xs font-bold text-[#c9a25c]">
+              <a href="/ranking" className="tap-pad relative ml-auto text-xs font-bold text-[#c9a25c]">
                 전체 랭킹 ›
               </a>
             </div>

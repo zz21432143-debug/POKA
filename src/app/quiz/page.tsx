@@ -53,7 +53,7 @@ export default async function QuizPage() {
         <div className="flex items-center gap-2">
           <h2 className="text-base font-black text-[#f3d9a4]">이번 달 퀴즈 랭킹</h2>
           <span className="text-xs text-zinc-400">1위(3문제 이상)는 🧩 「퀴즈 요괴」 칭호</span>
-          <Link href="/ranking?tab=quiz&period=month" className="ml-auto text-xs font-bold text-[#c9a25c]">
+          <Link href="/ranking?tab=quiz&period=month" className="tap-pad relative ml-auto text-xs font-bold text-[#c9a25c]">
             전체 ›
           </Link>
         </div>
@@ -65,7 +65,7 @@ export default async function QuizPage() {
                   {row.rank <= 3 ? <CrownIcon aria-hidden className="size-3.5 text-[#f5d76e]" /> : null}
                   {row.rank}
                 </span>
-                <Link href={`/u/${encodeURIComponent(row.nickname)}`} className="min-w-0 flex-1 truncate text-sm font-bold text-white">
+                <Link href={`/u/${encodeURIComponent(row.nickname)}`} className="flex min-h-10 min-w-0 flex-1 items-center truncate text-sm font-bold text-white">
                   {row.nickname}
                 </Link>
                 <span className="text-xs font-black text-[#e7c98a] tabular-nums">{row.score}문제</span>

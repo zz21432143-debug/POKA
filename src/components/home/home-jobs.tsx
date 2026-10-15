@@ -67,70 +67,99 @@ export function HomeJobs({ jobs }: { jobs: HomeApplyJob[] }) {
         <EmptyBoard
           text="지금 모집중인 지원 딜러 공고가 없습니다."
           framed={false}
-          action={{ href: "/boards/jobs/apply/write", label: "지원 딜러 구인 올리기" }}
+          action={{
+            href: "/boards/jobs/apply/write",
+            label: "지원 딜러 구인 올리기",
+          }}
         />
       ) : (
-        <ul className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
-          {jobs.map((job) => {
-            const pay = formatWon(job.jobPayAmount);
-            const travel = job.jobTravelPay ? formatWon(job.jobTravelPayAmount) || "지원" : null;
-            const tournament = job.jobKind === "TOURNAMENT";
-            const when = job.jobDateFlexible
-              ? tournament
-                ? "일정 추후 공지"
-                : "날짜 협의"
-              : eventsDateLabel(parseJobEvents(job.jobEvents)) || dateRange(job.jobWorkDate, job.jobEndDate);
-            return (
-              <li key={job.id}>
-                <Link
-                  href={`/posts/${job.id}`}
-                  className={cn(
-                    "touch-target flex h-full flex-col gap-2 rounded-xl border bg-[#141110] p-3 hover:border-[#c9a25c]/80 hover:bg-[#201915]",
-                    job.isPaid ? "border-[#c9a25c]/70" : "border-white/10",
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded-md bg-[#7a1c22] px-1.5 py-0.5 text-[11px] font-bold text-white">
-                      {titleRegion(job.jobLocation)}
-                    </span>
-                    <span
-                      className={cn(
-                        "rounded-md px-1.5 py-0.5 text-[11px] font-bold",
-                        tournament ? "bg-[#1f4e79] text-white" : "bg-white/10 text-[#E5E7EB]",
-                      )}
-                    >
-                      {tournament ? "대회" : "지원"}
-                    </span>
-                    {job.isPaid ? (
-                      <span className="inline-flex items-center gap-0.5 rounded-md bg-gradient-to-r from-[#e7c98a] to-[#c59b27] px-1.5 py-0.5 text-[11px] font-bold text-[#1d1611]">
-                        <CrownIcon className="size-3" />
-                        프리미엄
+        <>
+          <ul className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3 max-sm:[&>li:nth-child(n+4)]:hidden">
+            {jobs.map((job) => {
+              const pay = formatWon(job.jobPayAmount);
+              const travel = job.jobTravelPay
+                ? formatWon(job.jobTravelPayAmount) || "지원"
+                : null;
+              const tournament = job.jobKind === "TOURNAMENT";
+              const when = job.jobDateFlexible
+                ? tournament
+                  ? "일정 추후 공지"
+                  : "날짜 협의"
+                : eventsDateLabel(parseJobEvents(job.jobEvents)) ||
+                  dateRange(job.jobWorkDate, job.jobEndDate);
+              return (
+                <li key={job.id}>
+                  <Link
+                    href={`/posts/${job.id}`}
+                    className={cn(
+                      "touch-target flex h-full flex-col gap-2 rounded-xl border bg-[#141110] p-3 hover:border-[#c9a25c]/80 hover:bg-[#201915]",
+                      job.isPaid ? "border-[#c9a25c]/70" : "border-white/10",
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-md bg-[#7a1c22] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                        {titleRegion(job.jobLocation)}
                       </span>
-                    ) : null}
-                    <span className="ml-auto text-[11px] text-[#9CA3AF]">{formatRelativeKst(job.createdAt)}</span>
-                  </div>
-                  <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
-                    {job.jobCompanyName || job.title}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-semibold">
-                    {pay ? (
-                      <span className="rounded-full bg-[#c9a25c] px-2 py-0.5 text-[#1d1611]">시급 {pay}</span>
-                    ) : null}
-                    {when ? <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">{when}</span> : null}
-                    {job.jobGuaranteedHours ? (
-                      <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">
-                        보장 {job.jobGuaranteedHours}
+                      <span
+                        className={cn(
+                          "rounded-md px-1.5 py-0.5 text-[11px] font-bold",
+                          tournament
+                            ? "bg-[#1f4e79] text-white"
+                            : "bg-white/10 text-[#E5E7EB]",
+                        )}
+                      >
+                        {tournament ? "대회" : "지원"}
                       </span>
-                    ) : null}
-                    {travel ? (
-                      <span className="rounded-full border border-emerald-600/60 px-2 py-0.5 text-emerald-300">차비 {travel}</span>
-                    ) : null}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                      {job.isPaid ? (
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-gradient-to-r from-[#e7c98a] to-[#c59b27] px-1.5 py-0.5 text-[11px] font-bold text-[#1d1611]">
+                          <CrownIcon className="size-3" />
+                          프리미엄
+                        </span>
+                      ) : null}
+                      <span className="ml-auto text-[11px] text-[#9CA3AF]">
+                        {formatRelativeKst(job.createdAt)}
+                      </span>
+                    </div>
+                    <p className="line-clamp-2 text-[15px] font-bold leading-snug text-white">
+                      {job.jobCompanyName || job.title}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-semibold">
+                      {pay ? (
+                        <span className="rounded-full bg-[#c9a25c] px-2 py-0.5 text-[#1d1611]">
+                          시급 {pay}
+                        </span>
+                      ) : null}
+                      {when ? (
+                        <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">
+                          {when}
+                        </span>
+                      ) : null}
+                      {job.jobGuaranteedHours ? (
+                        <span className="rounded-full border border-white/20 px-2 py-0.5 text-[#E5E7EB]">
+                          보장 {job.jobGuaranteedHours}
+                        </span>
+                      ) : null}
+                      {travel ? (
+                        <span className="rounded-full border border-emerald-600/60 px-2 py-0.5 text-emerald-300">
+                          차비 {travel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {jobs.length > 3 ? (
+            <Link
+              href={"/boards/jobs/apply?open=1"}
+              data-mobile-more
+              className="flex min-h-11 items-center justify-center border-t border-border text-sm font-bold text-[#e7c98a] sm:hidden"
+            >
+              공고 {jobs.length - 3}개 더 보기 ›
+            </Link>
+          ) : null}
+        </>
       )}
 
       <div className="grid grid-cols-2 border-t border-white/10">

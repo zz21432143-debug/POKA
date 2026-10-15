@@ -141,7 +141,7 @@ export function progressLine(species: YokaiSpecies, s: YokaiStats, o: OwnedStage
     case "eodukssini": return pct(s.handActs, NEED.eodukssini, "번");
     case "noejeongwi": return pct(s.urgentActs, NEED.noejeongwi, "번");
     case "bulgasari": return pct(s.drillRuns, NEED.bulgasari, "번");
-    case "hwaryong": return pct(s.shares, NEED.hwaryong, "번");
+    case "hwaryong": return pct(s.shares, NEED.hwaryong, "일");
     case "bakjwigwi": return pct(s.dawnAttend, NEED.bakjwigwi, "번");
     case "deungbulgwi": return pct(s.storeTools, NEED.deungbulgwi, "번");
     case "keunnuni": return `지금 연속 ${s.quizStreak}일 / ${NEED.keunnuni}일`;

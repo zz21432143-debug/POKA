@@ -158,6 +158,8 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
   /** 반응 대사 번호(누를 때마다 다른 대사) */
   const reactionSeq = useRef(0);
   const [confirmMain, setConfirmMain] = useState<YokaiSpecies | null>(null);
+  /** 사기 전에 마을에 깔아 보는 배경 */
+  const [previewBg, setPreviewBg] = useState<YokaiBackground | null>(null);
   /** 방금 한 행동의 반응(말풍선 대사 · 효과) · 몇 초 뒤 사라짐 */
   const [reaction, setReaction] = useState<{
     kind: "fed" | "pet" | "shower" | "bond";
@@ -355,9 +357,48 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
             <div
               className="relative grid aspect-square place-items-center overflow-hidden md:aspect-auto md:min-h-[440px]"
               style={{
-                background: stageBackground(v.species, yokai.bg.active),
+                background: stageBackground(
+                  v.species,
+                  previewBg ?? yokai.bg.active,
+                ),
               }}
             >
+              {previewBg ? (
+                <div
+                  data-yokai-bg-preview
+                  className="absolute inset-x-3 bottom-[4.4rem] z-30 flex flex-wrap items-center gap-2 rounded-xl border border-[#f5d76e]/50 bg-black/75 px-3 py-2 text-xs font-bold text-[#f6efe2] backdrop-blur-sm"
+                >
+                  <span>👀 미리보기 · {YOKAI_BACKGROUNDS[previewBg].name}</span>
+                  <span className="ml-auto flex gap-1.5">
+                    <button
+                      type="button"
+                      data-yokai-bg-preview-buy
+                      disabled={
+                        busy ||
+                        yokai.points < YOKAI_BACKGROUNDS[previewBg].price
+                      }
+                      onClick={async () => {
+                        const id = previewBg;
+                        setPreviewBg(null);
+                        await act({ action: "buyBg", bg: id });
+                      }}
+                      className="min-h-9 rounded-lg bg-[#7a1c22] px-3 font-black text-white disabled:opacity-50"
+                    >
+                      {yokai.points < YOKAI_BACKGROUNDS[previewBg].price
+                        ? "포인트 부족"
+                        : `${YOKAI_BACKGROUNDS[previewBg].price.toLocaleString()}P 사기`}
+                    </button>
+                    <button
+                      type="button"
+                      data-yokai-bg-preview-close
+                      onClick={() => setPreviewBg(null)}
+                      className="min-h-9 rounded-lg border border-white/25 px-3"
+                    >
+                      닫기
+                    </button>
+                  </span>
+                </div>
+              ) : null}
               {/* 말풍선: 요괴 대사(방금 한 행동이 있으면 그 반응) */}
               <div className="absolute inset-x-4 top-4 z-20 flex justify-center">
                 <p
@@ -819,8 +860,21 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                         using ? "border-[#e7c98a]" : "border-[#c9a25c]/25",
                       )}
                     >
-                      <div
-                        className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-lg"
+                      <button
+                        type="button"
+                        data-yokai-bg-thumb={id}
+                        aria-label={`${bg.name} 미리보기`}
+                        disabled={soon}
+                        onClick={() => {
+                          setPreviewBg(owned || using ? null : id);
+                          if (owned && !using)
+                            void act({ action: "useBg", bg: id });
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className={cn(
+                          "relative grid aspect-[4/3] place-items-center overflow-hidden rounded-lg",
+                          previewBg === id && "ring-2 ring-[#f5d76e]",
+                        )}
                         style={{ background: bgCss(id) }}
                       >
                         {soon ? (
@@ -828,7 +882,7 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
                             🎨 새 그림 준비 중
                           </span>
                         ) : null}
-                      </div>
+                      </button>
                       <div className="flex items-center gap-1 text-xs">
                         <b className="text-white">{bg.name}</b>
                         <span className="ml-auto text-zinc-400">
@@ -877,8 +931,9 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               )}
             </div>
             <p className="text-[11px] text-zinc-500">
-              새 도트 배경 6종! 사면 바로 마을에 깔려요. 전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이
-              먼저 보여요.
+              새 도트 배경 6종! 그림을 누르면 내 요괴 뒤에 미리 깔아 볼 수
+              있어요. 전설 요괴(구미호 · 염라대왕)를 키울 때는 전용 배경이 먼저
+              보여요.
             </p>
           </section>
 

@@ -689,7 +689,7 @@ export default async function PostDetailPage({
         <section aria-label="이 게시판 다른 글" data-related-posts className="grid gap-2">
           <div className="flex items-center gap-2 px-1">
             <h2 className="text-base font-black text-[#f3d9a4]">{freeFamily ? "자유게시판" : (BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시판")} 다른 글</h2>
-            <Link href={listHref} className="ml-auto text-xs font-bold text-[#c9a25c]">
+            <Link href={listHref} className="tap-pad relative ml-auto text-xs font-bold text-[#c9a25c]">
               목록 전체 ›
             </Link>
           </div>

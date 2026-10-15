@@ -552,7 +552,7 @@ export function HandEditor() {
         </div>
         <button
           type="button"
-          className="mt-3 text-xs text-muted-foreground underline"
+          className="mt-2 inline-flex min-h-10 items-center text-xs text-muted-foreground underline"
           onClick={() => setShowExtra((value) => !value)}
         >
           {showExtra ? "추가 옵션 닫기" : "승자 · 팟 직접 입력"}

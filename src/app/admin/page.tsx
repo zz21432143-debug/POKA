@@ -94,7 +94,7 @@ export default async function AdminPage({
           <AdminNav current={currentHref} isMaster={user.isMaster} />
         </div>
         {user.isMaster ? (
-          <Link href="/admin/members" className="mt-2 inline-flex text-sm text-primary">
+          <Link href="/admin/members" className="mt-2 inline-flex min-h-10 items-center text-sm text-primary">
             인증 달기
           </Link>
         ) : null}

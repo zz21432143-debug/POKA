@@ -44,7 +44,7 @@ export async function HomeRankings() {
                     <CrownedFrame nickname={row.nickname} aura={auraClassForSrc(row.markUrl)}>
                       <MarkImage src={row.markUrl} alt="" size={28} />
                     </CrownedFrame>
-                    <Link href={`/u/${encodeURIComponent(row.nickname)}`} className="flex min-w-0 flex-1 items-center gap-1">
+                    <Link href={`/u/${encodeURIComponent(row.nickname)}`} className="flex min-h-10 min-w-0 flex-1 items-center gap-1">
                       <span className="truncate text-sm font-bold text-white">{row.nickname}</span>
                       <PotTitleBadge nickname={row.nickname} max={1} className="max-lg:hidden" />
                     </Link>

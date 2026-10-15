@@ -31,7 +31,7 @@ export async function HonorShelf({ userId, nickname, mine }: { userId: string; n
     <section aria-label="칭호" data-honor-shelf className="grid gap-2 rounded-2xl border border-[#c9a25c]/30 bg-black/30 p-3">
       <div className="flex items-center gap-2">
         <h2 className="text-base font-black text-[#e7c98a]">{mine ? "내 칭호" : "칭호"}</h2>
-        <Link href="/ranking" className="ml-auto text-xs font-bold text-[#c9a25c]">
+        <Link href="/ranking" className="tap-pad relative ml-auto text-xs font-bold text-[#c9a25c]">
           칭호 모두 보기 ›
         </Link>
       </div>

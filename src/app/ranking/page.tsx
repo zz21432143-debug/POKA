@@ -167,7 +167,7 @@ export default async function RankingPage({
             <Link
               key={k}
               href={`/ranking?tab=${tab}&period=all&chg=${k}`}
-              className={cn("rounded-full border px-2.5 py-1 font-bold", chg === k ? "border-[#c9a25c] bg-[#c9a25c]/20 text-white" : "border-white/15 text-zinc-400")}
+              className={cn("inline-flex min-h-9 items-center rounded-full border px-3 font-bold", chg === k ? "border-[#c9a25c] bg-[#c9a25c]/20 text-white" : "border-white/15 text-zinc-400")}
             >
               {k === "week" ? "이번 주 시작보다" : "이번 달 시작보다"}
             </Link>

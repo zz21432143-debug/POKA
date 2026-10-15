@@ -11,7 +11,13 @@ export type HomeUrgentJob = {
   jobPayAmount: string | null;
 };
 
-export function HomeUrgentJobs({ jobs, region = null }: { jobs: HomeUrgentJob[]; region?: string | null }) {
+export function HomeUrgentJobs({
+  jobs,
+  region = null,
+}: {
+  jobs: HomeUrgentJob[];
+  region?: string | null;
+}) {
   const listHref = region
     ? `/boards/jobs/urgent?region=${encodeURIComponent(region)}&open=1`
     : "/boards/jobs/urgent?open=1";
@@ -37,32 +43,47 @@ export function HomeUrgentJobs({ jobs, region = null }: { jobs: HomeUrgentJob[];
           </Link>
         </div>
       ) : (
-        <ul className="divide-y divide-border">
-          {jobs.map((job) => (
-            <li key={job.id}>
-              <Link
-                href={`/posts/${job.id}`}
-                className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 text-[#E5E7EB] hover:bg-white/[0.07] hover:text-white"
-              >
-                <span className="shrink-0 rounded-full bg-[#8B2222] px-2 py-0.5 text-[11px] font-bold text-white">
-                  급구
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold leading-snug">{job.title}</span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                    {[
-                      job.jobLocation,
-                      job.jobWorkDate,
-                      formatWon(job.jobPayAmount) ? `시급 ${formatWon(job.jobPayAmount)}` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+        <>
+          <ul className="divide-y divide-border max-sm:[&>li:nth-child(n+4)]:hidden">
+            {jobs.map((job) => (
+              <li key={job.id}>
+                <Link
+                  href={`/posts/${job.id}`}
+                  className="touch-target flex min-h-14 items-center gap-3 px-4 py-3 text-[#E5E7EB] hover:bg-white/[0.07] hover:text-white"
+                >
+                  <span className="shrink-0 rounded-full bg-[#8B2222] px-2 py-0.5 text-[11px] font-bold text-white">
+                    급구
                   </span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-bold leading-snug">
+                      {job.title}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      {[
+                        job.jobLocation,
+                        job.jobWorkDate,
+                        formatWon(job.jobPayAmount)
+                          ? `시급 ${formatWon(job.jobPayAmount)}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {jobs.length > 3 ? (
+            <Link
+              href={listHref}
+              data-mobile-more
+              className="flex min-h-11 items-center justify-center border-t border-border text-sm font-bold text-[#e7c98a] sm:hidden"
+            >
+              급구 {jobs.length - 3}개 더 보기 ›
+            </Link>
+          ) : null}
+        </>
       )}
     </section>
   );
