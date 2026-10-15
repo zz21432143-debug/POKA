@@ -24,9 +24,9 @@ export const HONOR_DEFS: Record<HonorKey, { icon: string; name: string; desc: st
   monthExp: { icon: "🌙", name: "이달의 귀신", desc: "이번 달 경험치 1위", tab: "level", period: "month" },
   attendance: { icon: "📅", name: "개근 도깨비", desc: "이번 달 출석 1위", tab: "attendance", period: "month" },
   quiz: { icon: "🧩", name: "퀴즈 요괴", desc: "이번 달 퀴즈 1위(3문제 이상)", tab: "quiz", period: "month", minScore: 3 },
-  omok: { icon: "⚫", name: "오목 요괴", desc: "이번 달 오목 랭킹 1위(5판 이상)", tab: "omok", period: "month" },
-  yut: { icon: "🎲", name: "윷놀이 요괴", desc: "이번 달 윷놀이 랭킹 1위(5판 이상)", tab: "yut", period: "month" },
-  chess: { icon: "♟️", name: "체스 요괴", desc: "이번 달 체스 랭킹 1위(5판 이상)", tab: "chess", period: "month" },
+  omok: { icon: "⚫", name: "오목 요괴", desc: "이번 달 오목 랭킹 1위(3판 이상)", tab: "omok", period: "month" },
+  yut: { icon: "🎲", name: "윷놀이 요괴", desc: "이번 달 윷놀이 랭킹 1위(3판 이상)", tab: "yut", period: "month" },
+  chess: { icon: "♟️", name: "체스 요괴", desc: "이번 달 체스 랭킹 1위(3판 이상)", tab: "chess", period: "month" },
 };
 /** top: 1이면 1위만, 3이면 1~3위까지(이름 뒤에 · 2위처럼 붙음) */
 export type HonorSetting = { enabled: boolean; name: string; top: 1 | 3 };

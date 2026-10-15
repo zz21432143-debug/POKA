@@ -521,6 +521,10 @@ model SiteSetting {
   inquirySeenAt    DateTime?
   /// 팟 계산 칭호 설정 JSON(켜기/끄기 · 이름 · 기준 난이도 · 기간 · 제외 회원)
   potTitleJson     String?
+  /// 끈 광고 구좌 목록 JSON ["home-top", ...]
+  adsOffJson       String?
+  /// 게임 승리 보상(관리자 조정) JSON { points, exp, affection, perDay, perOpponentPerDay }
+  gameRewardJson   String?
   updatedAt        DateTime @updatedAt
 }
 

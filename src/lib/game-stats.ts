@@ -22,7 +22,7 @@ export const MIN_COUNTED_MOVES: Record<GameKind, number> = {
   chess: 10,
 };
 /** 랭킹에 오르는 최소 판 수 */
-export const RANK_MIN_GAMES = 5;
+export const RANK_MIN_GAMES = 3;
 /** 보상(켜졌을 때): 이긴 사람 · 하루 횟수 · 같은 상대 하루 횟수 */
 import { WIN_REWARD } from "@/lib/game-config";
 export { WIN_REWARD };
@@ -88,13 +88,13 @@ async function rewardWin(game: GameKind, winnerId: string, loserId: string) {
       where: { game, winnerId, loserId, createdAt: { gte: since } },
     }),
   ]);
-  if (today > WIN_REWARD.perDay || vsSame > WIN_REWARD.perOpponentPerDay)
-    return;
+  const R = await import("@/lib/game-reward").then((m) => m.loadWinReward()).catch(() => WIN_REWARD);
+  if (today > R.perDay || vsSame > R.perOpponentPerDay) return;
   const { grantRewards } = await import("@/lib/exp");
-  await grantRewards(winnerId, WIN_REWARD.exp, WIN_REWARD.points);
+  await grantRewards(winnerId, R.exp, R.points);
   // 대표 요괴 친밀도도
   const { addMainAffection } = await import("@/lib/yokai-server");
-  await addMainAffection(winnerId, WIN_REWARD.affection).catch(() => undefined);
+  await addMainAffection(winnerId, R.affection).catch(() => undefined);
 }
 
 export type GameRecord = {
@@ -162,7 +162,7 @@ export type GameRankRow = {
 };
 
 /**
- * 랭킹: 점수 = 승 3 · 무 1(기간 안 · 5판 이상). 같으면 승률 → 먼저 이긴 사람.
+ * 랭킹: 점수 = 승 3 · 무 1(기간 안 · 3판 이상). 같으면 승률 → 먼저 이긴 사람.
  * period: "month"(이번 달 KST) · "all"
  */
 export async function gameRanking(

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { adsensePublisherId, adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
 import { cn } from "@/lib/utils";
+import { useAdOff } from "@/components/ads/ad-toggle";
 
 declare global {
   interface Window {
@@ -15,6 +16,8 @@ const SIZE: Record<AdSensePlacement, string> = {
   "post-bottom": "min-h-[90px] w-full",
   "board-bottom": "min-h-[100px] w-full",
   "home-bottom": "min-h-[100px] w-full",
+  // 메인 상단: 휴대폰 320x100 · PC 가로 배너(반응형)
+  "home-top": "min-h-[100px] w-full",
   "home-mid": "min-h-[100px] w-full",
   "post-mid": "min-h-[100px] w-full",
   infeed: "min-h-[90px] w-full",
@@ -54,7 +57,8 @@ export function GoogleAdUnit({
   const client = adsensePublisherId();
   const unit = adsenseSlotId(placement);
   const ref = useRef<HTMLModElement>(null);
-  const show = useMedia(media);
+  const off = useAdOff(placement);
+  const show = useMedia(media) && !off;
 
   useEffect(() => {
     if (!client || !unit || !show) return;

@@ -106,7 +106,10 @@ export function QuizCard({
             {result.correct ? "정답이에요! 🎉" : `아쉬워요 — 정답은 「${quiz.choices[result.answer]}」`}
             {result.gained > 0 ? <span className="ml-2 text-sm text-[#f5d76e]">+{result.gained}P</span> : null}
           </p>
-          <p className="text-sm leading-6 text-[#ece4d6]">{result.explanation}</p>
+          <div data-quiz-explain className="rounded-lg border-l-4 border-[#f5d76e] bg-[#f5d76e]/10 px-3 py-2">
+            <p className="text-xs font-black text-[#f5d76e]">💡 해설</p>
+            <p className="text-sm leading-6 text-[#ece4d6]">{result.explanation}</p>
+          </div>
           <p className="text-xs text-zinc-400">
             {total ? `회원 ${total.toLocaleString()}명이 풀었어요` : "아직 푼 회원이 없어요 — 첫 정답자가 되어 보세요"}
             {loggedIn && result.streak > 0 ? ` · 연속 정답 ${result.streak}일째(7일마다 보너스 +30P)` : ""}

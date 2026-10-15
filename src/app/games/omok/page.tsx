@@ -8,9 +8,10 @@ import { LobbyTabs, RulesButton } from "@/components/games/lobby-ui";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { getCurrentUser } from "@/lib/current-user";
+import { loadWinReward } from "@/lib/game-reward";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
 import { gamesOpen, omokLobby } from "@/lib/omok-server";
-import { WIN_REWARD, gameRecord, gameStatsVisible, recordLine, rewardsOn } from "@/lib/game-stats";
+import { gameRecord, gameStatsVisible, recordLine, rewardsOn } from "@/lib/game-stats";
 import { profileYokai } from "@/lib/yokai-server";
 import { yokaiImage } from "@/lib/yokai";
 
@@ -40,6 +41,7 @@ export default async function OmokLobbyPage() {
   const yk = user ? await profileYokai(user.id).catch(() => null) : null;
   if (user && !yk) redirect("/yokai?next=%2Fgames%2Fomok");
   const [{ waiting, live, recent, latest }, mine] = await Promise.all([omokLobby(user?.id ?? null), user ? gameRecord(user.id, "omok").catch(() => null) : Promise.resolve(null)]);
+  const WIN_REWARD = await loadWinReward();
 
   const latestList = latest.length ? (
     <ul data-omok-latest className="grid gap-1.5">
@@ -81,6 +83,7 @@ export default async function OmokLobbyPage() {
       {live.map((g) => (
         <li key={g.id}>
           <Link href={`/games/omok/${g.id}`} className="flex min-h-11 items-center gap-1.5 rounded-lg bg-black/30 px-2.5 text-sm hover:bg-white/5">
+            <b className="min-w-0 max-w-[40%] shrink-0 truncate text-[#ffe08a]">{g.title}</b>
             <StoneDot color={1} />
             <b className="min-w-0 truncate text-white">{g.black}</b>
             <span className="vs-badge text-[9px]">VS</span>
@@ -117,7 +120,7 @@ export default async function OmokLobbyPage() {
   );
 
   return (
-    <div className="mx-auto grid w-full max-w-[1400px] gap-4 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
+    <div className="mx-auto grid w-full max-w-[1400px] gap-4 pt-12 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
       {/* ───── 왼쪽: 타이틀 · 기다리는 방 · 방 만들기 ───── */}
       <div className="grid min-w-0 content-start gap-4">
         <header className="arcade-panel flex flex-wrap items-center gap-3 px-4 py-4">
@@ -150,9 +153,9 @@ export default async function OmokLobbyPage() {
             <LobbyRefresh />
           </div>
           {waiting.length ? (
-            <ul className="grid gap-2 md:grid-cols-2">
+            <ul className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0">
               {waiting.map((g) => (
-                <li key={g.id}>
+                <li key={g.id} className="w-[86%] shrink-0 snap-start md:w-auto">
                   <Link href={`/games/omok/${g.id}`} data-omok-waiting-room className="grid gap-1.5 rounded-2xl border-2 border-[#3ddc97]/60 bg-black/40 p-3 transition hover:bg-[#3ddc97]/10">
                     <span className="flex items-center gap-2">
                       <b className="min-w-0 flex-1 truncate text-lg font-black text-white">{g.title}</b>
@@ -178,7 +181,7 @@ export default async function OmokLobbyPage() {
         </section>
 
         {/* 방 만들기 · 코드 입장(빠른 실행) */}
-        <section aria-label="방 만들기" className="arcade-panel grid gap-4 p-4 md:grid-cols-2">
+        <section id="lobby-create" aria-label="방 만들기" className="arcade-panel grid scroll-mt-24 gap-4 p-4 md:grid-cols-2">
           <div className="grid content-start gap-2">
             <h2 className="text-xl font-black text-white">⚔️ 방 만들기</h2>
             {user ? (
@@ -189,7 +192,7 @@ export default async function OmokLobbyPage() {
               </Link>
             )}
           </div>
-          <div className="grid content-start gap-2 md:border-l md:border-white/10 md:pl-4">
+          <div id="lobby-code" className="grid scroll-mt-24 content-start gap-2 md:border-l md:border-white/10 md:pl-4">
             <OmokCodeEntry />
             {rewardsOn() ? (
               <p data-omok-reward className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a]">
@@ -250,6 +253,17 @@ export default async function OmokLobbyPage() {
           ]}
         />
       </div>
+
+      {/* 휴대폰: 아래 고정 바(방 만들기 · 코드 입장) */}
+      <div className="h-20 lg:hidden" aria-hidden />
+      <nav data-lobby-bottom-bar aria-label="빠른 실행" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 gap-2 border-t-4 border-[#ffcf4a] bg-[#140d24]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <a href="#lobby-create" className="arcade-btn btn-main grid min-h-14 place-items-center text-lg">
+          ⚔️ 방 만들기
+        </a>
+        <a href="#lobby-code" className="arcade-btn btn-gold grid min-h-14 place-items-center text-lg">
+          🔑 코드 입장
+        </a>
+      </nav>
     </div>
   );
 }

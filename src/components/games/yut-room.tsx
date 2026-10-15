@@ -23,7 +23,8 @@ import {
   GameChampionBadge,
   PotTitleBadge,
 } from "@/components/honor/crowned-frame";
-import { WIN_REWARD } from "@/lib/game-config";
+import { WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
+import type { WinReward } from "@/lib/game-reward";
 import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
 import {
   bellSound,
@@ -70,13 +71,17 @@ export function YutRoom({
   loggedIn,
   hasYokai,
   shareUrl,
+  reward,
 }: {
   initial: YutView;
   loggedIn: boolean;
   hasYokai: boolean;
   shareUrl: string;
+  /** 승리 보상(관리자 조정값) */
+  reward?: WinReward;
 }) {
   const router = useRouter();
+  const WIN_REWARD = reward ?? DEFAULT_REWARD;
   const [view, setView] = useState(initial);
   const [offset, setOffset] = useState(() => initial.serverNow - Date.now());
   const [now, setNow] = useState(() => Date.now());
@@ -398,6 +403,14 @@ export function YutRoom({
   }, [gaugeStart]);
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
+    // 휴대폰 손맛: 던지기 0.1초 · 말 옮기기 짧게 진동
+    if (action === "throw" || action === "move") {
+      try {
+        navigator.vibrate?.(action === "throw" ? 100 : 30);
+      } catch {
+        /* 진동 없는 기기 */
+      }
+    }
     setBusy(true);
     setNote(null);
     try {
@@ -1270,47 +1283,55 @@ export function YutRoom({
                       {Math.ceil(left / 1000)}초
                     </span>
                   </div>
-                  {canThrow && gauge ? (
-                    <div className="grid gap-2">
-                      <div
-                        data-yut-gauge
-                        className="relative h-7 overflow-hidden rounded-full border-2 border-white/30 bg-black/50"
-                      >
-                        <span
-                          className="yut-gauge-fill absolute inset-y-0 left-0"
-                          style={{ width: `${gauge.power}%` }}
-                        />
-                        <span className="absolute inset-0 flex items-center justify-between px-3 text-xs font-black text-white [text-shadow:0_1px_0_#000]">
-                          <span>살살</span>
-                          <span>적당히</span>
-                          <span>세게!</span>
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        data-yut-throw-go
-                        disabled={busy}
-                        onClick={() => throwNow(gauge.power)}
-                        className="arcade-btn btn-main min-h-14 text-2xl"
-                      >
-                        🎯 지금 던져! ({gauge.power})
-                      </button>
-                    </div>
-                  ) : canThrow ? (
-                    <button
-                      type="button"
-                      data-yut-throw
-                      disabled={busy}
-                      onClick={() =>
-                        setGauge({ start: performance.now(), power: 0 })
-                      }
-                      className="arcade-btn btn-gold min-h-14 text-2xl"
+                  {canThrow ? (
+                    // 휴대폰: 화면 아래에 크게 고정(엄지로 바로) · PC: 이 칸 안
+                    <div
+                      data-yut-throw-bar
+                      className="max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-t-4 max-lg:border-[#ffcf4a] max-lg:bg-[#140d24]/95 max-lg:p-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
                     >
-                      🎲 윷 던지기!
-                      <span className="block text-xs">
-                        누른 뒤 게이지로 세기 · 스페이스바는 바로 던지기
-                      </span>
-                    </button>
+                      {gauge ? (
+                        <div className="grid gap-2">
+                          <div
+                            data-yut-gauge
+                            className="relative h-7 overflow-hidden rounded-full border-2 border-white/30 bg-black/50"
+                          >
+                            <span
+                              className="yut-gauge-fill absolute inset-y-0 left-0"
+                              style={{ width: `${gauge.power}%` }}
+                            />
+                            <span className="absolute inset-0 flex items-center justify-between px-3 text-xs font-black text-white [text-shadow:0_1px_0_#000]">
+                              <span>살살</span>
+                              <span>적당히</span>
+                              <span>세게!</span>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            data-yut-throw-go
+                            disabled={busy}
+                            onClick={() => throwNow(gauge.power)}
+                            className="arcade-btn btn-main min-h-14 w-full text-2xl max-lg:min-h-20 max-lg:text-3xl"
+                          >
+                            🎯 지금 던져! ({gauge.power})
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          data-yut-throw
+                          disabled={busy}
+                          onClick={() =>
+                            setGauge({ start: performance.now(), power: 0 })
+                          }
+                          className="arcade-btn btn-gold min-h-14 w-full text-2xl max-lg:min-h-20 max-lg:text-3xl"
+                        >
+                          🎲 윷 던지기!
+                          <span className="block text-xs">
+                            누른 뒤 게이지로 세기 · 스페이스바는 바로 던지기
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   ) : null}
                   {myTurn && s.phase === "move" ? (
                     <div className="grid gap-2">
@@ -1382,6 +1403,7 @@ export function YutRoom({
                 </div>
               ) : null}
 
+              {canThrow ? <div className="h-28 lg:hidden" aria-hidden /> : null}
               <SpectatorBar
                 count={watching.count}
                 list={watching.list}

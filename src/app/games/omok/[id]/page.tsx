@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OmokRoom } from "@/components/games/omok-room";
 import { getCurrentUser } from "@/lib/current-user";
 import { gamesOpen, hasYokai, omokState } from "@/lib/omok-server";
 import { siteUrl } from "@/lib/site";
+import { loadWinReward } from "@/lib/game-reward";
 
 export const metadata: Metadata = {
   title: "요괴 오목 대국",
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
+/** 판 화면: 두 손가락 확대 · 두 번 탭 확대 막기(판이 흔들리지 않게) */
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
 
 /** 친구 대전 방: 링크 · 코드를 받은 사람은 착석(요괴 필요), 누구나 관전(비공개 기간에도 링크로는 열림) */
 export default async function OmokRoomPage({
@@ -45,6 +48,7 @@ export default async function OmokRoomPage({
         loggedIn={Boolean(user)}
         hasYokai={yokai}
         shareUrl={`${siteUrl()}/games/omok/${id}`}
+        reward={await loadWinReward()}
       />
     </div>
   );

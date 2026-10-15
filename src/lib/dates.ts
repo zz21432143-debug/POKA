@@ -51,3 +51,8 @@ export function formatRelativeKst(iso: string) {
   if (days < 14) return `${days}일 전`;
   return formatKstLabel(iso.slice(0, 10));
 }
+
+/** 지금 시각(ms) — 서버 화면에서 쓰는 용도(렌더 중 Date.now 직접 호출 대신) */
+export function nowMs() {
+  return Date.now();
+}

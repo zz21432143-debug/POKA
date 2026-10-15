@@ -18,7 +18,7 @@ export function NickNotice({
     <div
       role="alert"
       data-nick-notice
-      className="mx-auto mt-3 w-[calc(100%-1.5rem)] max-w-[1320px] rounded-2xl border-2 border-rose-400/70 bg-[#2a0f14] p-4 text-sm text-white shadow-lg"
+      className="mx-auto mt-3 w-[calc(100%-1.5rem)] max-w-[1560px] rounded-2xl border-2 border-rose-400/70 bg-[#2a0f14] p-4 text-sm text-white shadow-lg"
     >
       <p className="text-base font-black text-rose-200">
         ⚠️ 닉네임이 변경되었어요

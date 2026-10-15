@@ -143,11 +143,11 @@ function PosterCard({ poster, focusable }: { poster: HomePoster; focusable: bool
         // 빈 구좌: 자리 번호 · 구좌마다 다른 문구(같은 포스터 반복처럼 안 보이게)
         <>
           <span className="absolute inset-x-0 top-0 bg-black/75 px-2 py-1 text-center text-[11px] font-black tracking-wide text-[#f3d9a4] sm:text-xs">
-            {poster.slot}번 구좌 · 비어 있음
+            {poster.slot}번 · POKA 메인 홍보 구좌
           </span>
           <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pt-6 pb-2 text-center text-[11px] leading-tight font-bold text-white sm:text-xs">
             {VACANT_LINES[(poster.slot - 1) % VACANT_LINES.length]}
-            <span className="mt-0.5 block text-[#f3d9a4]">홍보 신청 →</span>
+            <span className="mt-1 inline-block rounded-full bg-[#c9a25c] px-2 py-0.5 font-black text-[#1d1611]">POKA 메인 홍보 구좌 신청하기 ▶</span>
           </span>
         </>
       ) : (

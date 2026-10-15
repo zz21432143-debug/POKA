@@ -28,7 +28,8 @@ import {
 } from "@/lib/omok";
 import type { YokaiSpecies } from "@/lib/yokai";
 import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
-import { WIN_REWARD } from "@/lib/game-config";
+import { WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
+import type { WinReward } from "@/lib/game-reward";
 import { PLAYER_LINES, pickOmokLine, yokaiVoice } from "@/lib/omok-lines";
 import {
   bellSound,
@@ -77,13 +78,17 @@ export function OmokRoom({
   loggedIn,
   hasYokai,
   shareUrl,
+  reward,
 }: {
   initial: OmokView;
   loggedIn: boolean;
   hasYokai: boolean;
   shareUrl: string;
+  /** 승리 보상(관리자 조정값) */
+  reward?: WinReward;
 }) {
   const router = useRouter();
+  const WIN_REWARD = reward ?? DEFAULT_REWARD;
   const [view, setView] = useState(initial);
   const [records, setRecords] = useState(initial.records ?? null);
   const [offset, setOffset] = useState(() => initial.serverNow - Date.now());
@@ -506,6 +511,23 @@ export function OmokRoom({
     void act("move", { p });
   }
 
+  /** 휴대폰 돋보기로 맞추고 손을 떼면 바로 착수 */
+  function placeNow(p: number) {
+    if (!myTurn || busy || theyAsked) return;
+    if (boardFrom(view.moves)[p] !== 0) return;
+    if (forbidden.includes(p)) {
+      setNote("흑은 삼삼(열린 3이 두 줄)에 둘 수 없어요.");
+      return;
+    }
+    setPreview(null);
+    try {
+      navigator.vibrate?.(30);
+    } catch {
+      /* 진동 없는 기기 */
+    }
+    void act("move", { p });
+  }
+
   /* ── HUD 자리 ── */
   const info = (c: Stone) => (c === BLACK ? view.black : view.white);
   const recOf = (c: Stone) =>
@@ -742,6 +764,7 @@ export function OmokRoom({
             preview={preview}
             previewColor={view.me === WHITE ? 2 : 1}
             onPick={pick}
+            onTouchPlace={placeNow}
             disabled={!myTurn || busy || theyAsked}
             showNumbers={numbers}
           />

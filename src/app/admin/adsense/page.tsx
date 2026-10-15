@@ -1,3 +1,5 @@
+import { AdToggles } from "@/components/admin/ad-toggles";
+import { getSiteSettings } from "@/lib/site-settings";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { readFile } from "node:fs/promises";
@@ -18,6 +20,7 @@ const PLACEMENTS: { key: AdSensePlacement; label: string; env: string }[] = [
   { key: "post-bottom", label: "글 아래", env: "NEXT_PUBLIC_ADSENSE_SLOT_POST_BOTTOM" },
   { key: "sidebar", label: "PC 왼쪽 사이드", env: "NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR" },
   { key: "home-mid", label: "홈 중간", env: "NEXT_PUBLIC_ADSENSE_SLOT_HOME_MID" },
+  { key: "home-top", label: "홈 상단(대문 아래)", env: "NEXT_PUBLIC_ADSENSE_SLOT_HOME_TOP" },
   { key: "home-bottom", label: "홈 하단", env: "NEXT_PUBLIC_ADSENSE_SLOT_HOME_BOTTOM" },
   { key: "post-top", label: "글 위", env: "NEXT_PUBLIC_ADSENSE_SLOT_POST_TOP" },
   { key: "post-mid", label: "긴 글 중간", env: "NEXT_PUBLIC_ADSENSE_SLOT_POST_MID" },
@@ -97,12 +100,22 @@ export default async function AdminAdsensePage() {
     .sort((a, b) => b.n - a.n);
 
   const card = "rounded-2xl border border-border bg-card p-3 sm:p-4";
+  const viewer = await getCurrentUser().catch(() => null);
+  const adsOff = (await getSiteSettings().catch(() => null))?.adsOff ?? [];
   return (
     <div className="flex flex-col gap-4">
       <header>
         <h1 className="text-2xl font-semibold">애드센스 승인 점검</h1>
         <p className="mt-1 text-sm text-muted-foreground">구글 애드센스 심사에서 보는 것들을 한눈에 확인합니다. ⚠️ · ❌ 항목부터 채워 주세요.</p>
       </header>
+
+      {viewer?.isMaster ? (
+        <section aria-label="광고 구좌 켜기 끄기" data-ad-toggles className={card}>
+          <h2 className="text-lg font-semibold">🔌 광고 구좌 켜기 · 끄기</h2>
+          <p className="mb-2 text-sm text-muted-foreground">구좌별로 바로 끄고 켤 수 있어요. 자체 배너 · 홍보 자리는 「배너」 메뉴에서 등록해요.</p>
+          <AdToggles slots={[...slots.map((x) => ({ key: x.key, label: x.label, set: x.set })), { key: "sidebar", label: "PC 왼쪽 사이드(중복 표시용)", set: false }].filter((x, i, arr) => arr.findIndex((y) => y.key === x.key) === i)} off={adsOff} />
+        </section>
+      ) : null}
 
       <section aria-label="승인 전 할 일" data-adsense-todo className={`${card} border-amber-500/50`}>
         <h2 className="text-lg font-semibold">{todos.length ? `📝 승인 전 할 일 ${todos.length}가지` : "🎉 준비 끝 — 애드센스에서 검토 요청을 해 보세요"}</h2>

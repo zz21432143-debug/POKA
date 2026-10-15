@@ -3334,3 +3334,75 @@ img[src*="/yokai/"] {
     animation: none !important;
   }
 }
+
+/* 맨 위 공지 띠: 다음 공지로 넘어갈 때 아래에서 쓱 */
+.notice-roll {
+  animation: notice-roll 0.45s ease-out both;
+}
+@keyframes notice-roll {
+  from {
+    transform: translateY(70%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice-roll {
+    animation: none;
+  }
+}
+
+/* 요괴 마을: 배고플 때 「밥 주기」 버튼 반짝 */
+.yokai-feed-glow {
+  animation: yokai-feed-glow 1.2s ease-in-out infinite alternate;
+}
+@keyframes yokai-feed-glow {
+  from {
+    box-shadow: 0 0 0 0 #ffd23f00;
+  }
+  to {
+    box-shadow: 0 0 0 3px #ffd23f, 0 0 22px #ff8a00;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yokai-feed-glow {
+    animation: none;
+    box-shadow: 0 0 0 3px #ffd23f;
+  }
+}
+
+/* 5목: 이긴 돌마다 레트로 픽셀 불꽃 고리 */
+.omok-win::after {
+  content: "";
+  position: absolute;
+  inset: -26%;
+  border-radius: 50%;
+  border: 3px dashed #ff7a1a;
+  box-shadow:
+    0 0 10px #ff5a00,
+    inset 0 0 8px #ffcf4a;
+  animation: omok-fire 0.6s steps(4, end) infinite;
+  pointer-events: none;
+}
+@keyframes omok-fire {
+  0% {
+    transform: rotate(0deg) scale(1);
+    border-color: #ff7a1a;
+  }
+  50% {
+    transform: rotate(45deg) scale(1.08);
+    border-color: #ffcf4a;
+  }
+  100% {
+    transform: rotate(90deg) scale(1);
+    border-color: #ff3b1a;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .omok-win::after {
+    animation: none;
+  }
+}

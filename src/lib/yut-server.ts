@@ -6,7 +6,7 @@ import { todayKstDate } from "@/lib/dates";
 import { profileYokai } from "@/lib/yokai-server";
 import { YOKAI_ORDER, type YokaiSpecies } from "@/lib/yokai";
 import { isGameEmote } from "@/lib/omok-emotes";
-import { WIN_REWARD } from "@/lib/game-config";
+import { loadWinReward } from "@/lib/game-reward";
 import { MIN_COUNTED_MOVES } from "@/lib/game-stats";
 import { applyMove, applyThrow, autoStep, newState, other, type Team, type YutState } from "@/lib/yut";
 
@@ -153,6 +153,7 @@ async function recordYut(row: Row, s: YutState) {
   const since = new Date(`${todayKstDate()}T00:00:00+09:00`);
   const { grantRewards } = await import("@/lib/exp");
   const { addMainAffection } = await import("@/lib/yokai-server");
+  const WIN_REWARD = await loadWinReward();
   for (const x of seats) {
     if (x.team !== s.winner || !x.userId) continue;
     const [today, sameRoster] = await Promise.all([

@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
+import { loadWinReward } from "@/lib/game-reward";
 import { getCurrentUser } from "@/lib/current-user";
 import {
   GAME_LABEL,
   MIN_COUNTED_MOVES,
-  WIN_REWARD,
   gameStatsVisible,
   type GameKind,
 } from "@/lib/game-stats";
@@ -20,6 +20,7 @@ export const dynamic = "force-dynamic";
 /** 마스터 전용 미리보기(어디에도 링크 없음): 공개 전 전적 · 랭킹이 어떻게 보이는지 */
 export default async function GameStatsPreviewPage() {
   const user = await getCurrentUser().catch(() => null);
+  const WIN_REWARD = await loadWinReward();
   if (!user?.isMaster) notFound();
   const games = Object.keys(GAME_LABEL) as GameKind[];
   return (

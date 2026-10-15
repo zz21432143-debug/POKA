@@ -69,6 +69,8 @@ async function HomeFeedSections() {
           <HomeRankings />
         </Suspense>
       </div>
+      {/* 광고 구좌 2: 랭킹 · 커뮤니티 아래 피드 사이 */}
+      <GoogleAdUnit placement="infeed" />
       <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
     </>
   );
@@ -82,6 +84,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-3.5">
       <HomeHero />
+      {/* 광고 구좌 1: 대문 바로 아래 가로 배너(휴대폰 · PC 반응형) */}
+      <GoogleAdUnit placement="home-top" />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
       <Suspense fallback={<HomePanelFallback className="h-16" />}>

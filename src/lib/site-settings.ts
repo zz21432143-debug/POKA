@@ -11,13 +11,25 @@ export type PublicSiteSettings = {
   noticeBanner: string | null;
   footerEmail: string;
   kakaoChannelUrl: string | null;
+  /** 관리자가 끈 광고 구좌 */
+  adsOff: string[];
 };
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   noticeBanner: null,
   footerEmail: publicContactEmail(),
   kakaoChannelUrl: KAKAO_INQUIRY_URL,
+  adsOff: [],
 };
+
+export function parseAdsOff(json: string | null | undefined): string[] {
+  try {
+    const v = json ? JSON.parse(json) : [];
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 50) : [];
+  } catch {
+    return [];
+  }
+}
 
 async function loadSiteSettings(): Promise<PublicSiteSettings> {
   try {
@@ -27,6 +39,7 @@ async function loadSiteSettings(): Promise<PublicSiteSettings> {
       noticeBanner: row.noticeBanner?.trim() || null,
       footerEmail: publicContactEmail(row.footerEmail),
       kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
+      adsOff: parseAdsOff(row.adsOffJson),
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;

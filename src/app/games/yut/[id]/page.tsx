@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { YutRoom } from "@/components/games/yut-room";
@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { profileYokai } from "@/lib/yokai-server";
 import { yutState } from "@/lib/yut-server";
 import { siteUrl } from "@/lib/site";
+import { loadWinReward } from "@/lib/game-reward";
 
 export const metadata: Metadata = {
   title: "요괴 윷놀이",
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
+/** 판 화면: 두 손가락 확대 · 두 번 탭 확대 막기(판이 흔들리지 않게) */
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
 
 /** 윷놀이 방: 링크 · 코드를 받은 사람은 자리에 앉고(요괴 필요), 누구나 관전 */
 export default async function YutRoomPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +30,8 @@ export default async function YutRoomPage({ params }: { params: Promise<{ id: st
       <Link href="/games/yut" className="inline-flex min-h-10 w-fit items-center text-sm font-black text-[#ffcf4a]">
         ← 요괴 윷놀이
       </Link>
-      <YutRoom initial={state.view} loggedIn={Boolean(user)} hasYokai={yokai} shareUrl={`${siteUrl()}/games/yut/${id}`} />
+      <YutRoom initial={state.view} loggedIn={Boolean(user)} hasYokai={yokai} shareUrl={`${siteUrl()}/games/yut/${id}`}
+        reward={await loadWinReward()} />
     </div>
   );
 }

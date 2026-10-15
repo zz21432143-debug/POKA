@@ -111,11 +111,24 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
         )}
       >
         <div
+          data-omok-portrait={seat.color === 1 ? "b" : seat.color === 2 ? "w" : ""}
           className={cn(
             "hud-portrait relative size-14 shrink-0 overflow-hidden sm:size-16",
             seat.active && "arcade-bob",
+            // 같은 요괴끼리 붙어도 구별: 흑 = 검은 픽셀 테두리 · 백 = 흰 픽셀 테두리
+            seat.color === 1 && "!border-[#0a0a0a] shadow-[0_0_0_3px_#0a0a0a,0_0_0_5px_#ffcf4a]",
+            seat.color === 2 && "!border-[#ffffff] shadow-[0_0_0_3px_#f4f1ea,0_0_0_5px_#0a0614]",
           )}
         >
+          {seat.color ? (
+            <span
+              aria-hidden
+              className={cn(
+                "absolute inset-x-0 bottom-0 z-10 h-[22%] border-t-2",
+                seat.color === 1 ? "border-[#ffcf4a] bg-[#0a0a0a]" : "border-[#0a0614] bg-[#f4f1ea]",
+              )}
+            />
+          ) : null}
           {seat.empty ? (
             <span data-omok-empty-seat className="arcade-px arcade-blink grid size-full place-items-center text-2xl text-[#ffcf4a]">
               ?
@@ -411,9 +424,10 @@ export function BigWinCutIn({
     >
       <div className="bigwin-rays" />
       <div className="relative grid w-full justify-items-center gap-2 px-3 text-center">
-        <p className="arcade-kr neon-gold bigwin-title text-4xl sm:text-5xl">
-          {title}
+        <p data-omok-victory className="arcade-px neon-gold bigwin-title text-4xl sm:text-6xl">
+          VICTORY!
         </p>
+        <p className="arcade-kr bigwin-title text-2xl text-white sm:text-3xl">{title}</p>
         {yokai ? (
           <span
             className={cn(

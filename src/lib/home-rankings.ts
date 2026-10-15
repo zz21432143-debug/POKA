@@ -44,7 +44,7 @@ export async function getHomeRankings(): Promise<HomeRankBoard[]> {
   return boards;
 }
 
-/** 오목: 이번 달 랭킹(승 3점 · 무 1점 · 5판 이상) */
+/** 오목: 이번 달 랭킹(승 3점 · 무 1점 · 3판 이상) */
 async function omokBoard(): Promise<HomeRankBoard> {
   const { gameRanking } = await import("@/lib/game-stats");
   const rows = (await gameRanking("omok", "month", TOP)).slice(0, TOP);

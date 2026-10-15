@@ -115,12 +115,15 @@ function Bar({
         <span>{label}</span>
         <span className="tabular-nums">{right ?? `${value} / ${max}`}</span>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+      <div className="h-3 overflow-hidden rounded-full border border-white/15 bg-[#0b0712]">
         <div
+          data-yokai-gauge
           className="h-full rounded-full transition-[width] duration-500"
           style={{
             width: `${Math.min(100, (value / max) * 100)}%`,
             background: color,
+            // 고대비 네온: 바 색으로 빛나게
+            boxShadow: "0 0 10px var(--glow, #fff6), inset 0 1px 0 rgba(255,255,255,.45)",
           }}
         />
       </div>
@@ -605,21 +608,21 @@ export function YokaiVillage({
                   label="🍙 포만감"
                   value={v.fullness}
                   max={100}
-                  color="linear-gradient(90deg,#d9822b,#f0b45a)"
+                  color="linear-gradient(90deg,#ff8a00,#ffd23f)"
                   right={`${v.fullness} · ${v.fullness < 20 ? "배고파요" : v.fullness >= 80 ? "배불러요" : "적당해요"}`}
                 />
                 <Bar
                   label="🛁 청결도"
                   value={v.clean}
                   max={100}
-                  color="linear-gradient(90deg,#3b9fd8,#8fd8ff)"
+                  color="linear-gradient(90deg,#00b7ff,#7df9ff)"
                   right={`${v.clean} · ${v.clean < 30 ? "꼬질꼬질" : v.clean >= 70 ? "반짝반짝" : "보통"}${v.clean >= CLEAN_BONUS_AT ? ` · 밥 +${CLEAN_BONUS_EXP}` : ""}`}
                 />
                 <Bar
                   label="💕 친밀도"
                   value={v.affection}
                   max={100}
-                  color="linear-gradient(90deg,#d84f7a,#f39ab5)"
+                  color="linear-gradient(90deg,#ff2e88,#ff9ed2)"
                   right={`${v.affection} · ${v.bond}${v.nextBond ? ` · ${v.nextBond.name}까지 ${v.nextBond.left} (+${v.nextBond.points}P)` : " · 최고 단계"}`}
                 />
                 {v.next ? (
@@ -710,6 +713,8 @@ export function YokaiVillage({
                     }
                     className={cn(
                       "grid min-h-[86px] place-items-center content-center gap-0.5 rounded-2xl border px-1 py-2 text-center transition active:scale-[0.97] disabled:opacity-45",
+                      // 밥 줄 수 있고 배가 고프면(포만감 50 미만) 반짝반짝
+                      b.key === "feed" && !viewingOther && !b.off && !b.wait && (v?.fullness ?? 100) < 50 && "yokai-feed-glow",
                       b.primary
                         ? "border-[#b33] bg-[#7a1c22] text-white hover:bg-[#93242c]"
                         : "border-[#c9a25c]/40 bg-black/40 text-white hover:border-[#c9a25c]",
@@ -1047,6 +1052,11 @@ export function YokaiVillage({
                       dexPick === s && "ring-2 ring-[#e7c98a]",
                     )}
                   >
+                    {!have ? (
+                      <span aria-hidden className="pointer-events-none absolute inset-x-0 top-[22%] z-10 text-center text-2xl font-black text-[#c9a25c] [text-shadow:0_0_8px_#c9a25c]">
+                        ?
+                      </span>
+                    ) : null}
                     {/* eslint-disable-next-line @next/next/no-img-element -- 못 만난 요괴는 실루엣 */}
                     <img
                       src={yokaiImage(s, 1)}

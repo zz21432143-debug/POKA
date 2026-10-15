@@ -16,6 +16,9 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
 import { SidebarRail } from "@/components/layout/sidebar-rail";
+import { AdOffProvider } from "@/components/ads/ad-toggle";
+import { getLatestNotices } from "@/lib/notices";
+import { nowMs } from "@/lib/dates";
 import { VisitBeacon } from "@/components/analytics/visit-beacon";
 import { HideOnGames } from "@/components/layout/route-hide";
 import { SourceBeacon } from "@/components/analytics/source-beacon";
@@ -50,8 +53,18 @@ async function ConnectedNickNotice() {
 }
 
 async function ConnectedNotice() {
+  const [settings, notices] = await Promise.all([getSiteSettings().catch(() => null), getLatestNotices().catch(() => [])]);
+  // 최근 2주 공지는 띠에서 돌려 보여 줌(말머리 태그 포함)
+  const recent = notices
+    .filter((n) => nowMs() - new Date(n.createdAt).getTime() < 14 * 86_400_000)
+    .map((n) => ({ text: n.title, href: `/posts/${n.id}` }));
+  return <SiteNoticeBanner text={settings?.noticeBanner} items={recent} />;
+}
+
+/** 관리자가 끈 광고 구좌를 광고 칸에 알려 줌 */
+async function ConnectedAdOff({ children }: { children: ReactNode }) {
   const settings = await getSiteSettings().catch(() => null);
-  return <SiteNoticeBanner text={settings?.noticeBanner} />;
+  return <AdOffProvider off={settings?.adsOff ?? []}>{children}</AdOffProvider>;
 }
 
 async function ConnectedSidebarSponsor() {
@@ -97,13 +110,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </HideOnGames>
       <VisitBeacon />
       <SourceBeacon />
-      <Suspense fallback={null}>
-        <ConnectedNotice />
-      </Suspense>
+      <HideOnGames>
+        <Suspense fallback={null}>
+          <ConnectedNotice />
+        </Suspense>
+      </HideOnGames>
       <Suspense fallback={null}>
         <ConnectedNickNotice />
       </Suspense>
-      <div className="site-columns mx-auto flex w-full max-w-[1320px] flex-1 items-start gap-5 px-3 py-5 sm:px-6">
+      <ConnectedAdOff>
+      <div className="site-columns mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-5 px-4 py-5 sm:px-6">
         <SidebarRail>
           <div className="wood-frame flex flex-col">
             <BoardNav />
@@ -124,6 +140,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </Suspense>
         </main>
       </div>
+      </ConnectedAdOff>
       <Suspense fallback={<SiteFooterFallback />}>
         <SiteFooter />
       </Suspense>
