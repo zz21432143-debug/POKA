@@ -4,6 +4,7 @@ import { JOB_REGIONS } from "@/lib/job-status";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { sitemapEntries } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
+import { latestJobPerAuthor, postIsThin } from "@/lib/seo-quality";
 
 export const revalidate = 3600;
 
@@ -17,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  let jobs: { id: string; updatedAt: Date }[] = [];
+  let jobs: { id: string; updatedAt: Date; authorId: string | null; jobKind: string | null }[] = [];
   try {
     jobs = await prisma.post.findMany({
       where: {
@@ -29,13 +30,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       orderBy: { createdAt: "desc" },
       take: 5000,
-      select: { id: true, updatedAt: true },
+      select: { id: true, updatedAt: true, authorId: true, jobKind: true },
     });
   } catch {
     // DB에 못 붙는 빌드·장애 때도 고정 주소는 내보냅니다. 1시간 뒤 다시 채워집니다.
     jobs = [];
   }
-  const jobPosts: MetadataRoute.Sitemap = jobs.map((post) => ({
+  const jobPosts: MetadataRoute.Sitemap = latestJobPerAuthor(jobs).map((post) => ({
     url: `${base}/posts/${post.id}`,
     lastModified: post.updatedAt,
     changeFrequency: "weekly",
@@ -43,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // 공지·자유·핸드리뷰·TDA 등 누구나 읽는 글(비밀글·익명 후기 제외)
-  let posts: { id: string; updatedAt: Date; boardType: string }[] = [];
+  let posts: { id: string; updatedAt: Date; boardType: string; title: string; content: string | null }[] = [];
   try {
     posts = await prisma.post.findMany({
       where: {
@@ -55,12 +56,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       orderBy: { createdAt: "desc" },
       take: 5000,
-      select: { id: true, updatedAt: true, boardType: true },
+      select: { id: true, updatedAt: true, boardType: true, title: true, content: true },
     });
   } catch {
     posts = [];
   }
-  const boardPosts: MetadataRoute.Sitemap = posts.map((post) => ({
+  const boardPosts: MetadataRoute.Sitemap = posts.filter((post) => !postIsThin(post)).map((post) => ({
     url: `${base}/posts/${post.id}`,
     lastModified: post.updatedAt,
     changeFrequency: "weekly",

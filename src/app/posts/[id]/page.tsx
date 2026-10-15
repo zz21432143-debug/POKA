@@ -30,6 +30,8 @@ import { TdaViewer } from "@/components/tda/tda-viewer";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { PushSentNotice } from "@/components/jobs/urgent-reach";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
+import { JobRegionInfo } from "@/components/jobs/job-region-info";
+import { postIsThin } from "@/lib/seo-quality";
 import { adsenseSlotId, splitForMidAd } from "@/lib/adsense";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
@@ -100,6 +102,8 @@ export async function generateMetadata({
         jobWorkDate: true,
         jobWorkHours: true,
         content: true,
+        authorId: true,
+        createdAt: true,
       },
     })
     .catch(() => null);
@@ -107,8 +111,18 @@ export async function generateMetadata({
   const board = BOARD_LABELS[post.boardType as BoardTypeKey] ?? "게시글";
   if (post.boardType === "JOBS" && post.jobKind) {
     const kindLabel = JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL];
+    // 같은 사람이 같은 분류로 더 최근에 올린 공고가 있으면 이 글은 검색 제외(지점만 바꾼 비슷한 글 정리)
+    const newer = post.authorId
+      ? await prisma.post
+          .findFirst({
+            where: { boardType: "JOBS", hidden: false, authorId: post.authorId, jobKind: post.jobKind, createdAt: { gt: post.createdAt } },
+            select: { id: true },
+          })
+          .catch(() => null)
+      : null;
     return {
       alternates: { canonical: `/posts/${id}` },
+      ...(newer ? { robots: { index: false, follow: true } } : {}),
       title: `${post.title} · ${kindLabel}`,
       // 근무 조건은 공개, 연락처는 로그인 후
       description: [
@@ -136,6 +150,8 @@ export async function generateMetadata({
   const title = `${post.title} · ${board}`;
   return {
     alternates: { canonical: `/posts/${id}` },
+    // 짧은 글(인사 · 한 줄) · 욕설 글은 검색 제외(글은 그대로 보임)
+    ...(postIsThin(post) ? { robots: { index: false, follow: true } } : {}),
     title,
     description,
     openGraph: { type: "article", title, description, url: `/posts/${id}` },
@@ -211,7 +227,10 @@ export default async function PostDetailPage({
     isAdmin: Boolean(viewer?.isAdmin),
     unlocked,
   });
-  const canRead = canReveal && (!guest || officialOpen);
+  // 비회원도 글 본문 · 댓글은 읽을 수 있음(쓰기 · 투표 · 구인 글 상세와 연락처는 로그인 뒤)
+  const canRead = canReveal && (!guest || officialOpen || post.boardType !== "JOBS");
+  // 짧은 글 · 욕설 글에는 광고를 달지 않음(애드센스: 내용 없는 페이지 광고 금지)
+  const adsOk = canRead && !postIsThin(post);
   const status = post.boardType === "JOBS" ? jobStatus(post) : null;
   const expiresOn = status === "open" ? jobExpiresOn(post) : null;
   const staff = Boolean(viewer && isStaff(viewer));
@@ -388,7 +407,7 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
-      {guest && !officialOpen ? (
+      {guest && !canRead ? (
         <div className="article-body">
           {isJobPost ? (
             <>
@@ -577,7 +596,7 @@ export default async function PostDetailPage({
       ) : post.content ? (
         (() => {
           // 긴 글은 가운데 문단 사이에 광고 하나(구글 · 단위가 없으면 그냥 한 덩어리)
-          const halves = adsenseSlotId("post-mid") ? splitForMidAd(post.content) : null;
+          const halves = adsOk && adsenseSlotId("post-mid") ? splitForMidAd(post.content) : null;
           return halves ? (
             <>
               <div className="article-copy">
@@ -600,6 +619,16 @@ export default async function PostDetailPage({
         </div>
       ) : null}
 
+      {/* 구인 글: 지역 공고 수 · 시급 평균 · 실수령 예시 · 지원 전 체크리스트(비회원에게도) */}
+      {isJobPost ? (
+        <div className="px-4 pb-2 sm:px-6">
+          <JobRegionInfo
+            region={titleRegion(post.jobLocation)}
+            kindLabel={JOB_KIND_LABEL[post.jobKind as keyof typeof JOB_KIND_LABEL] ?? "구인"}
+          />
+        </div>
+      ) : null}
+
       {canRead && viewer ? (
         <div className="article-votes">
           <div className="vote-bar">
@@ -615,7 +644,7 @@ export default async function PostDetailPage({
       ) : null}
 
       {/* 본문 바로 아래 광고(가장 많이 보는 자리) */}
-      {canRead ? <GoogleAdUnit placement="post-top" /> : null}
+      {adsOk ? <GoogleAdUnit placement="post-top" /> : null}
 
       {canRead ? (
       <section className="article-comments">
@@ -717,7 +746,7 @@ export default async function PostDetailPage({
         <BackToList href={listHref} className="w-full justify-center sm:w-auto sm:min-w-48" />
       </div>
 
-      {canRead ? (
+      {adsOk ? (
         <>
           <GoogleAdUnit placement="post-bottom" />
         </>

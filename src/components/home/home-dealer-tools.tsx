@@ -5,7 +5,7 @@ import { BrandIcon } from "@/components/brand/brand-icon";
 const TOOLS = [
   { href: "/tools/rotation", icon: "chips" as const, title: "딜러 로테이션", body: "교대 시간표 자동 · 단톡방 이미지 · TV 화면" },
   { href: "/tools/seat-draw", icon: "cards" as const, title: "싯드로우", body: "칩 균형 맞춰 좌석 배정 · 이미지 · 인쇄" },
-  { href: "/tools/board", icon: "lantern" as const, title: "게임 현황판", body: "블라인드 · 남은 시간 · 인원 · 상금을 TV에" },
+  { href: "/tools/board", icon: "lantern" as const, title: "게임 현황판", body: "블라인드 · 남은 시간 · 인원을 TV에 크게" },
   { href: "/tools/pay", icon: "coin" as const, title: "급여 계산기", body: "근무 시간 → 3.3% · 4대보험 · 실수령" },
 ];
 

@@ -1,3 +1,5 @@
+import { LONG_GUIDES } from "@/lib/guide-articles-long";
+
 export type InfoArticle = {
   title: string;
   body: string;
@@ -10,7 +12,7 @@ export type GuideArticle = InfoArticle & {
   tool?: { href: string; label: string };
 };
 
-export const GUIDE_ARTICLES: GuideArticle[] = [
+const BASE_GUIDES: GuideArticle[] = [
   {
     slug: "holdem-dealer",
     title: "홀덤 딜러가 하는 일",
@@ -320,6 +322,9 @@ DAY 2·파이널처럼 여러 날 진행하는 대회는 다음 날 좌석을 �
 • 급구로 올리면 그 지역 알림을 켠 딜러에게 바로 알림이 갑니다.`,
   },
 ];
+
+/** 짧은 기본 가이드 + 딜러 실무 긴 글 */
+export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES, ...LONG_GUIDES];
 
 export function getGuideArticle(slug: string) {
   return GUIDE_ARTICLES.find((row) => row.slug === slug) ?? null;
