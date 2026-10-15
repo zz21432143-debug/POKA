@@ -571,6 +571,7 @@ export async function yokaiHome(userId: string) {
     clean: cleanNow(active.clean, active.cleanAt),
     affection: active.affection,
     bond: bondName(active.affection),
+    nextBond: nextBond(active.affection),
     next: nextStageProgress(active.exp),
     feedsLeft: Math.max(0, allowed - fedToday(pet)),
     // 배부름 · 밥 쿨타임(모든 요괴 함께) 중 늦은 쪽

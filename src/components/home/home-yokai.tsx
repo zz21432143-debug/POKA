@@ -191,6 +191,9 @@ export async function HomeYokai() {
                 친밀도{" "}
                 <span className="tabular-nums">
                   {y.affection}/100 · {y.bond}
+                  {y.nextBond
+                    ? ` · ${y.nextBond.name}까지 ${y.nextBond.left}`
+                    : ""}
                 </span>
               </span>
               {bar(y.affection, 100, "#e86a8a")}
