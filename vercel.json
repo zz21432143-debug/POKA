@@ -1,5 +1,14 @@
 {
   "framework": "nextjs",
   "buildCommand": "node scripts/apply-schema.cjs && prisma generate && next build",
-  "crons": [{ "path": "/api/cron/quiz-push", "schedule": "0 0 * * *" }]
+  "crons": [
+    {
+      "path": "/api/cron/quiz-push",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/yokai-push",
+      "schedule": "0 10 * * *"
+    }
+  ]
 }

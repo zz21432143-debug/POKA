@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "cn";
 import { RARITY_LABEL, STARTERS, YOKAI, YOKAI_ORDER, waitText, yokaiImage, type YokaiRarity, type YokaiSpecies } from "@/lib/yokai";
 import type { YokaiView } from "@/lib/yokai-server";
+import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
 const TONE: Record<string, string> = {
   fire: "bg-[#5a1a14] text-[#ffb199]",
@@ -299,6 +300,8 @@ export function YokaiVillage({ initial }: { initial: YokaiView | null }) {
               </ul>
             </div>
           </section>
+
+          <PushAlertToggle api="/api/yokai/alert" label="요괴가 배고프면 알림(저녁 7시)" onMessage="요괴가 배고플 때 저녁 7시에 알려 드릴게요." data="yokai" />
 
           <section aria-label="내 요괴들" data-yokai-owned className="ink-panel grid gap-2 rounded-2xl p-4">
             <h2 className="text-base font-black text-[#f3d9a4]">

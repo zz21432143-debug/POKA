@@ -19,13 +19,13 @@ describe("요괴 마을 계산", () => {
 
   it("경험치로 단계가 정해지고 5단계에서 멈춤", () => {
     assert.equal(stageForExp(0), 1);
-    assert.equal(stageForExp(99), 1);
-    assert.equal(stageForExp(100), 2);
-    assert.equal(stageForExp(699), 3);
-    assert.equal(stageForExp(1500), 5);
+    assert.equal(stageForExp(149), 1);
+    assert.equal(stageForExp(150), 2);
+    assert.equal(stageForExp(1199), 3);
+    assert.equal(stageForExp(2500), 5);
     assert.equal(stageForExp(99999), 5);
-    assert.deepEqual(nextStageProgress(150), { stage: 2, have: 50, need: 200, to: 300 });
-    assert.equal(nextStageProgress(1500), null);
+    assert.deepEqual(nextStageProgress(200), { stage: 2, have: 50, need: 350, to: 500 });
+    assert.equal(nextStageProgress(2500), null);
   });
 
   it("포만감은 시간이 지나면 줄지만 0 밑으로 안 내려감", () => {
@@ -62,6 +62,8 @@ describe("요괴가 찾아오는 조건", () => {
 
   it("활동 기록만큼 찾아옴(박쥐귀 새벽 출석 7번 · 해태 TDA 10번 · 설녀 출석 30일)", () => {
     const got = arrivals({ ...ZERO, dawnAttend: 7, tdaCorrect: 10, attendDays: 30 }, { ingeo: 1 });
+    assert.equal(arrivals({ ...ZERO, pointsEarned: 19999 }, {}).length, 0);
+    assert.deepEqual(arrivals({ ...ZERO, pointsEarned: 20000 }, {}), ["tamrang"]);
     assert.deepEqual(got.sort(), ["bakjwigwi", "haetae", "seolnyeo"]);
     assert.equal(arrivals({ ...ZERO, dawnAttend: 6 }, {}).length, 0);
   });
@@ -82,11 +84,11 @@ describe("요괴가 찾아오는 조건", () => {
   });
 
   it("구미호: 아홉 꼬리를 다 모아야 찾아옴", () => {
-    const full: YokaiStats = { ...ZERO, attendDays: 30, quizCorrect: 30, drillRuns: 50, handActs: 10, freeActs: 30, monthlyHonors: 1, level: 20 };
-    const owned = { dokkaebi: 3, ingeo: 3, samdugumi: 3, nudeogi: 1, samagwi: 1, eodukssini: 1, noejeongwi: 1, bulgasari: 1, hwaryong: 1, bakjwigwi: 1 } as const;
+    const full: YokaiStats = { ...ZERO, attendDays: 60, quizCorrect: 50, drillRuns: 100, handActs: 20, freeActs: 50, monthlyHonors: 1, level: 60 };
+    const owned = { dokkaebi: 3, ingeo: 3, samdugumi: 3, nudeogi: 1, samagwi: 1, eodukssini: 1, noejeongwi: 1, bulgasari: 1, hwaryong: 1, bakjwigwi: 1, deungbulgwi: 1, keunnuni: 1, seolnyeo: 1, tamrang: 1, yacha: 1 } as const;
     assert.equal(gumihoTails(full, owned).filter((t) => t.done).length, 9);
     assert.ok(meets("gumiho", full, owned));
-    assert.equal(gumihoTails({ ...full, level: 19 }, owned).filter((t) => t.done).length, 8);
-    assert.ok(!meets("gumiho", { ...full, level: 19 }, owned));
+    assert.equal(gumihoTails({ ...full, level: 59 }, owned).filter((t) => t.done).length, 8);
+    assert.ok(!meets("gumiho", { ...full, level: 59 }, owned));
   });
 });

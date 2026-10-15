@@ -8,6 +8,7 @@ import { GrowthHomePanel } from "@/components/home/growth-home-panel";
 import { HomeDealerTools } from "@/components/home/home-dealer-tools";
 import { HomeStudyTools } from "@/components/home/home-study-tools";
 import { HomeQuiz } from "@/components/home/home-quiz";
+import { YokaiNudge } from "@/components/yokai/yokai-nudge";
 import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
 import { todayKstDate } from "@/lib/dates";
@@ -76,6 +77,10 @@ export default async function HomePage() {
       <HomeHero />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
+      {/* 요괴 마을: 새 요괴 · 배고픔 알림(공개 전에는 마스터만) */}
+      <Suspense fallback={null}>
+        <YokaiNudge />
+      </Suspense>
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
       </Suspense>

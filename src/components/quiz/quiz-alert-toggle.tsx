@@ -6,6 +6,11 @@ import { ensurePushSubscription, pushSupported } from "@/lib/push-client";
 
 /** 매일 아침 9시 「오늘의 퀴즈」 알림 받기(이 기기) */
 export function QuizAlertToggle() {
+  return <PushAlertToggle api="/api/quiz/alert" label="매일 아침 9시 퀴즈 알림" onMessage="매일 아침 9시에 오늘의 퀴즈를 알려 드릴게요." data="quiz" />;
+}
+
+/** 이 기기로 알림 받기(켜기 · 끄기) 공용: api는 GET ?endpoint · POST { subscription } · DELETE { endpoint } */
+export function PushAlertToggle({ api, label, onMessage, data }: { api: string; label: string; onMessage: string; data: string }) {
   const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
   const [state, setState] = useState<"loading" | "unsupported" | "on" | "off">("loading");
   const [busy, setBusy] = useState(false);
@@ -23,7 +28,7 @@ export function QuizAlertToggle() {
       .then((reg) => reg.pushManager.getSubscription())
       .then(async (sub) => {
         if (!sub) return false;
-        const res = await fetch(`/api/quiz/alert?endpoint=${encodeURIComponent(sub.endpoint)}`);
+        const res = await fetch(`${api}?endpoint=${encodeURIComponent(sub.endpoint)}`);
         return Boolean(((await res.json()) as { on?: boolean }).on);
       })
       .then((on) => alive && setState(on ? "on" : "off"))
@@ -31,7 +36,7 @@ export function QuizAlertToggle() {
     return () => {
       alive = false;
     };
-  }, [pushKey]);
+  }, [pushKey, api]);
 
   async function toggle() {
     setBusy(true);
@@ -40,7 +45,7 @@ export function QuizAlertToggle() {
       if (state === "on") {
         const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
         if (sub) {
-          const res = await fetch("/api/quiz/alert", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+          const res = await fetch(api, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
           const data = (await res.json().catch(() => ({}))) as { keep?: boolean };
           // 급구 · 관리자 알림도 받는 기기면 브라우저 구독은 남겨 둠
           if (!data.keep) await sub.unsubscribe();
@@ -51,11 +56,11 @@ export function QuizAlertToggle() {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") throw new Error("브라우저(또는 앱) 알림 권한을 허용해 주세요.");
       const sub = await ensurePushSubscription(pushKey);
-      const res = await fetch("/api/quiz/alert", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subscription: sub.toJSON() }) });
+      const res = await fetch(api, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subscription: sub.toJSON() }) });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "알림 등록에 실패했어요.");
       setState("on");
-      setMessage("매일 아침 9시에 오늘의 퀴즈를 알려 드릴게요.");
+      setMessage(onMessage);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "알림 설정에 실패했어요.");
     } finally {
@@ -65,9 +70,9 @@ export function QuizAlertToggle() {
 
   if (state === "loading") return null;
   return (
-    <div data-quiz-alert className="ink-panel flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3 text-sm">
+    <div data-quiz-alert={data === "quiz" ? "" : undefined} data-push-alert={data} className="ink-panel flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3 text-sm">
       <BellRingIcon className="size-4 shrink-0 text-[#c9a25c]" aria-hidden />
-      <span className="font-bold text-[#E5E7EB]">매일 아침 9시 퀴즈 알림</span>
+      <span className="font-bold text-[#E5E7EB]">{label}</span>
       {state === "unsupported" ? (
         <span className="text-xs text-zinc-400">이 브라우저는 알림을 지원하지 않아요. 아이폰은 POKA 앱(홈 화면에 추가)으로 열어 주세요.</span>
       ) : (

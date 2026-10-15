@@ -29,40 +29,44 @@ export type YokaiStats = {
 export type OwnedStages = Partial<Record<YokaiSpecies, number>>;
 
 export const NEED = {
-  nudeogi: 10,
-  samagwi: 30,
-  eodukssini: 5,
+  // 일반: 활동 시작 후 며칠 ~ 2주
+  nudeogi: 20,
+  samagwi: 50,
+  eodukssini: 10,
   noejeongwi: 1,
-  bulgasari: 20,
-  hwaryong: 5,
+  bulgasari: 50,
+  hwaryong: 10,
   bakjwigwi: 7,
   deungbulgwi: 1,
-  keunnuni: 7,
+  // 희귀: 3주 ~ 2달
+  keunnuni: 14,
   seolnyeo: 30,
-  tamrang: 2000,
-  yacha: 10,
-  gangcheori: 20,
-  sinroksu: 30,
+  tamrang: 20000,
+  yacha: 3,
+  gangcheori: 40,
+  sinroksu: 50,
   horibyeonggwi: 10,
+  // 영웅: 2 ~ 4달
   sacheonwang: 3,
-  tengu: 30,
+  tengu: 50,
   amseokgwi: 100,
   haetae: 10,
+  // 전설 염라대왕: 영웅 1 + 희귀 4
   yeomraHero: 1,
   yeomraRare: 4,
 } as const;
 
 /** 구미호 「아홉 꼬리의 시련」 */
 export const TAILS: { label: string; done: (s: YokaiStats, o: OwnedStages) => boolean; progress: (s: YokaiStats, o: OwnedStages) => string }[] = [
-  { label: "출석 30일", done: (s) => s.attendDays >= 30, progress: (s) => `${Math.min(s.attendDays, 30)}/30` },
-  { label: "퀴즈 30문제 정답", done: (s) => s.quizCorrect >= 30, progress: (s) => `${Math.min(s.quizCorrect, 30)}/30` },
-  { label: "팟 계산 연습 50번", done: (s) => s.drillRuns >= 50, progress: (s) => `${Math.min(s.drillRuns, 50)}/50` },
-  { label: "핸드리뷰 글 · 투표 10번", done: (s) => s.handActs >= 10, progress: (s) => `${Math.min(s.handActs, 10)}/10` },
-  { label: "자유게시판 글 · 댓글 30개", done: (s) => s.freeActs >= 30, progress: (s) => `${Math.min(s.freeActs, 30)}/30` },
+  { label: "출석 60일", done: (s) => s.attendDays >= 60, progress: (s) => `${Math.min(s.attendDays, 60)}/60` },
+  { label: "퀴즈 50문제 정답(그날 푼 것)", done: (s) => s.quizCorrect >= 50, progress: (s) => `${Math.min(s.quizCorrect, 50)}/50` },
+  { label: "팟 계산 연습 100번", done: (s) => s.drillRuns >= 100, progress: (s) => `${Math.min(s.drillRuns, 100)}/100` },
+  { label: "핸드리뷰 글 · 투표 20번", done: (s) => s.handActs >= 20, progress: (s) => `${Math.min(s.handActs, 20)}/20` },
+  { label: "자유게시판 글 · 댓글 50개", done: (s) => s.freeActs >= 50, progress: (s) => `${Math.min(s.freeActs, 50)}/50` },
   { label: "요괴 3종을 3단계까지", done: (_, o) => stagedCount(o, 3) >= 3, progress: (_, o) => `${Math.min(stagedCount(o, 3), 3)}/3` },
-  { label: "도감 10종", done: (_, o) => ownedCount(o) >= 10, progress: (_, o) => `${Math.min(ownedCount(o), 10)}/10` },
+  { label: "도감 15종", done: (_, o) => ownedCount(o) >= 15, progress: (_, o) => `${Math.min(ownedCount(o), 15)}/15` },
   { label: "월간 칭호 1번", done: (s) => s.monthlyHonors >= 1, progress: (s) => `${Math.min(s.monthlyHonors, 1)}/1` },
-  { label: "레벨 20", done: (s) => s.level >= 20, progress: (s) => `Lv.${s.level}/20` },
+  { label: "레벨 60", done: (s) => s.level >= 60, progress: (s) => `Lv.${s.level}/60` },
 ];
 
 const ownedCount = (o: OwnedStages) => Object.keys(o).length;

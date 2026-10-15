@@ -6,6 +6,7 @@ import { replaceToLogin } from "@/lib/history-redirect";
 import { logoutAllAction } from "@/lib/logout-action";
 import { HonorShelf } from "@/components/user/honor-shelf";
 import { ProfileYokai } from "@/components/yokai/profile-yokai";
+import { YokaiNudge } from "@/components/yokai/yokai-nudge";
 import { MyRankList } from "@/components/user/my-rank-list";
 import { getMyRanks } from "@/lib/my-rank";
 
@@ -32,6 +33,7 @@ export default async function AccountPage() {
       </header>
       {/* 내 칭호 · 내 랭킹 */}
       <div id="my-honor" className="grid scroll-mt-24 gap-2">
+        <YokaiNudge />
         <ProfileYokai userId={user.id} viewerIsMaster={Boolean(user.isMaster)} />
         <HonorShelf userId={user.id} nickname={user.nickname} mine />
         {ranks ? (

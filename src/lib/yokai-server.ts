@@ -89,8 +89,9 @@ export async function loadYokaiStats(userId: string): Promise<YokaiStats> {
       safe(prisma.toolSaved.count({ where: { ownerId: userId, kind: "share-user" } })),
       safe(prisma.gameBoard.count({ where: { ownerId: userId } })),
       safe(prisma.rotationMeta.count({ where: { ownerId: userId } })),
-      safe(prisma.quizAnswer.count({ where: { userId, correct: true } })),
-      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND q.kind = 'tda'`),
+      // 그날 푼 정답만(지난 문제를 몰아 풀어도 안 셈 · 퀴즈 랭킹과 같은 기준)
+      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day`),
+      safe(prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM "QuizAnswer" a JOIN "DailyQuiz" q ON q.id = a."quizId" WHERE a."userId" = ${userId} AND a.correct = true AND q.kind = 'tda' AND to_char(a."createdAt" + interval '9 hours', 'YYYY-MM-DD') = q.day`),
       safe(
         import("@/lib/point-ledger")
           .then((m) => m.ensurePointLedger())
@@ -114,7 +115,7 @@ export async function loadYokaiStats(userId: string): Promise<YokaiStats> {
     shares: num(shares),
     storeTools: num(boards) + num(rotations),
     quizStreak: num(streak),
-    quizCorrect: num(quizCorrect),
+    quizCorrect: countOf(quizCorrect),
     tdaCorrect: countOf(tda),
     pointsEarned: countOf(points),
     weeklyRank: weekly?.rank ?? null,
@@ -326,4 +327,23 @@ export async function profileYokai(userId: string) {
   ]);
   const stage = stageForExp(row?.exp ?? 0);
   return { species, stage, name: YOKAI[species].name, stageName: YOKAI[species].stages[stage - 1], rarity: YOKAI[species].rarity, count };
+}
+
+/** 홈 · 내정보 알림용: 새로 찾아온 요괴 수 · 키우는 요괴가 배고픈지. 찾아오는 조건 검사는 회원마다 30분에 한 번 */
+const lastArrivalCheck = new Map<string, number>();
+export async function yokaiNudge(userId: string) {
+  const pet = await prisma.yokaiPet.findUnique({ where: { userId } }).catch(() => null);
+  if (!pet) return null;
+  let owned = await ownedList(userId);
+  const last = lastArrivalCheck.get(userId) ?? 0;
+  if (Date.now() - last > 30 * 60_000) {
+    lastArrivalCheck.set(userId, Date.now());
+    owned = await grantArrivals(userId, owned, await loadYokaiStats(userId)).catch(() => owned);
+  }
+  const seen = parseList(pet.seenJson);
+  const newcomers = owned.filter((o) => isSpecies(o.species) && !seen.includes(o.species as YokaiSpecies)).map((o) => o.species as YokaiSpecies);
+  const active = owned.find((o) => o.species === pet.activeSpecies) ?? owned[0];
+  if (!active || !isSpecies(active.species)) return null;
+  const fullness = fullnessNow(active.fullness, active.fullnessAt);
+  return { newcomers, hungry: fullness < 30, species: active.species, stage: stageForExp(active.exp), name: YOKAI[active.species].name };
 }
