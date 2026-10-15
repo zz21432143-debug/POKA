@@ -3,6 +3,21 @@
 import { cn } from "cn";
 import { StoneDot } from "@/components/games/omok-board";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
+import { emoteLabel, emoteSrc, isOniEmote } from "@/lib/omok-emotes";
+
+/** 오니 이모티콘 그림(예전 글자 이모티콘이면 글자 그대로) */
+export function EmoteArt({ e, className }: { e: string; className?: string }) {
+  if (!isOniEmote(e)) return <span className={className}>{e}</span>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- 오니 이모티콘
+    <img
+      src={emoteSrc(e)}
+      alt={emoteLabel(e)}
+      draggable={false}
+      className={cn("object-contain", className)}
+    />
+  );
+}
 
 export type HudSeat = {
   name: string;
@@ -197,10 +212,13 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           key={seat.emote.key}
           data-omok-plate-emote
           className="plate-emote pointer-events-none absolute inset-0 z-40 grid place-items-center"
-          aria-label={`이모티콘 ${seat.emote.e}`}
+          aria-label={`이모티콘 ${emoteLabel(seat.emote.e)}`}
         >
-          <span className="text-5xl drop-shadow-[0_3px_0_#0a0614] sm:text-6xl">
-            {seat.emote.e}
+          <span className="drop-shadow-[0_3px_0_#0a0614]">
+            <EmoteArt
+              e={seat.emote.e}
+              className="size-24 text-5xl sm:size-28"
+            />
           </span>
         </span>
       ) : null}
@@ -292,7 +310,9 @@ export function YokaiCutIn({ data }: { data: CutInData }) {
       ) : null}
       <div className="cutin-text" data-side={data.side}>
         {data.emoji ? (
-          <span className="cutin-emoji">{data.emoji}</span>
+          <span className="cutin-emoji">
+            <EmoteArt e={data.emoji} className="size-[1.6em]" />
+          </span>
         ) : (
           data.text
         )}
@@ -377,6 +397,40 @@ export function BigWinCutIn({
           </p>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/** 관전자 응원: 화면 오른쪽 위에 오니 이모티콘 + 닉네임(판은 가리지 않음) */
+export function CheerStack({
+  cheers,
+  now,
+}: {
+  cheers: { n: string; e: string; at: number }[];
+  now: number;
+}) {
+  const live = cheers.filter((c) => now - c.at < 4200).slice(-3);
+  if (!live.length) return null;
+  return (
+    <div
+      data-omok-cheers
+      className="pointer-events-none absolute top-0 right-0 z-40 flex flex-row-reverse items-start gap-1.5"
+    >
+      {live.map((c) => (
+        <span
+          key={`${c.n}-${c.at}`}
+          data-omok-cheer
+          className="cheer-pop grid justify-items-center gap-0.5"
+        >
+          <EmoteArt
+            e={c.e}
+            className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16"
+          />
+          <span className="max-w-20 truncate rounded-full bg-[#0a0614]/85 px-2 text-[11px] font-black text-[#8eeaff]">
+            {c.n}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

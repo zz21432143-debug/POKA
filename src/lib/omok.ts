@@ -476,32 +476,65 @@ export function makesFour(moves: number[]) {
 }
 
 /**
- * 5목 훈수: 이긴 줄 방향 · 진 쪽이 막을 수 있었는지(직전 판에 이긴 쪽 5목 자리가 몇 곳이었는지)로 한마디.
- * 끝난 판 수 목록(마지막 수가 5목)을 받음.
+ * 5목 훈수: 이긴 줄 방향 · 진 쪽이 막을 수 있었는지(직전 판에 이긴 쪽 5목 자리가 몇 곳이었는지) ·
+ * 흑이 삼삼 금수 때문에 못 막았는지 · 판 길이로 한마디(같은 상황도 여러 말투 중 하나).
  */
-export function winTip(moves: number[]): { dir: string; tip: string } {
+export function winTip(moves: number[]): {
+  dir: string;
+  tip: string;
+  kind: "open4" | "missed" | "forbidden" | "hidden" | "";
+} {
   const line = findWinLine(moves);
-  if (!line) return { dir: "", tip: "" };
+  if (!line) return { dir: "", tip: "", kind: "" };
   const a = xyOf(line[0]);
   const b = xyOf(line[1]);
   const dir = a.y === b.y ? "가로" : a.x === b.x ? "세로" : "대각선";
+  const last = moves[moves.length - 1];
   const before = boardFrom(moves.slice(0, -1));
-  const c = before[line[0]] || colorOfMove(moves.length - 1);
-  let threats = 0;
+  const c = colorOfMove(moves.length - 1);
+  const spots: number[] = [];
   for (let p = 0; p < CELLS; p += 1) {
     if (before[p] !== 0) continue;
     before[p] = c;
-    if (fiveLine(before, p, c)) threats += 1;
+    if (fiveLine(before, p, c)) spots.push(p);
     before[p] = 0;
   }
   const n = moves.length;
+  const pick = (list: string[]) => list[n % list.length];
+  let kind: "open4" | "missed" | "forbidden" | "hidden";
   let tip: string;
-  if (threats >= 2)
-    tip =
-      "양쪽이 뚫린 4는 막을 수 없어! 상대가 3을 만들었을 때 미리 막았어야지~";
-  else if (threats === 1) tip = "4목을 그냥 뒀네? 상대 4목은 무조건 막는 거야!";
-  else tip = "띈 모양까지 잘 봐야 해. 빈칸 하나 사이도 줄이야!";
-  if (dir === "대각선") tip = `대각선은 잘 안 보이지? ${tip}`;
+  if (c === WHITE && spots.length === 1 && isDoubleThree(before, last)) {
+    kind = "forbidden";
+    tip = pick([
+      "흑은 삼삼 자리에 못 두잖아? 그 자리를 노린 거지~",
+      "금수 자리로 몰아넣었지! 흑은 막을 수가 없었어.",
+      "삼삼 금지를 이용한 함정이야. 흑일 땐 금수 자리를 조심해!",
+    ]);
+  } else if (spots.length >= 2) {
+    kind = "open4";
+    tip = pick([
+      "양쪽이 뚫린 4는 막을 수 없어! 상대가 3을 만들었을 때 미리 막았어야지~",
+      "열린 3을 그냥 두면 이렇게 돼. 3일 때 한쪽을 막아!",
+      "두 군데를 동시에 노렸지! 한 수로는 못 막아.",
+    ]);
+  } else if (spots.length === 1) {
+    kind = "missed";
+    tip = pick([
+      "4목을 그냥 뒀네? 상대 4목은 무조건 막는 거야!",
+      "네 개가 줄 선 걸 못 봤구나~ 4목은 1순위로 막자!",
+      "공격보다 수비! 상대 4목부터 확인하는 습관을 들여 봐.",
+    ]);
+  } else {
+    kind = "hidden";
+    tip = pick([
+      "띈 모양까지 잘 봐야 해. 빈칸 하나 사이도 줄이야!",
+      "숨은 줄은 잘 안 보이지? 판 전체를 한 번 훑어 봐.",
+      "마지막 한 수가 두 줄을 동시에 만들었어. 교차점을 조심해!",
+    ]);
+  }
+  if (dir === "대각선" && kind !== "forbidden")
+    tip = `대각선은 잘 안 보이지? ${tip}`;
   if (n <= 15) tip = `속전속결 ${n}수! ${tip}`;
-  return { dir, tip };
+  else if (n >= 80) tip = `${n}수 대접전! ${tip}`;
+  return { dir, tip, kind };
 }

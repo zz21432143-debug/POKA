@@ -8,6 +8,8 @@ import { OmokBoard } from "@/components/games/omok-board";
 import {
   ArcadeBanner,
   BigWinCutIn,
+  CheerStack,
+  EmoteArt,
   OmokHud,
   Spectators,
   YokaiCutIn,
@@ -26,7 +28,9 @@ import {
   type Stone,
 } from "@/lib/omok";
 import type { YokaiSpecies } from "@/lib/yokai";
-import { PLAYER_LINES, pickOmokLine } from "@/lib/omok-lines";
+import { ONI_EMOTES } from "@/lib/omok-emotes";
+import { WIN_REWARD } from "@/lib/game-config";
+import { PLAYER_LINES, pickOmokLine, yokaiVoice } from "@/lib/omok-lines";
 import {
   bellSound,
   cutInSound,
@@ -40,7 +44,6 @@ import {
 } from "@/lib/omok-sound";
 import type { OmokRecord, OmokView } from "@/lib/omok-server";
 
-const EMOTES = ["👍", "😮", "😈", "🔥", "😭", "🙏"];
 const END_TEXT: Record<string, string> = {
   five: "5목 완성!",
   resign: "기권",
@@ -50,10 +53,10 @@ const END_TEXT: Record<string, string> = {
   cancel: "방이 닫혔어요",
 };
 
-/** 「3승 1패 1기권」(패에는 기권 빼고) */
+/** 「3승 1패」(기권도 패) · 무승부가 있으면 「1무」 */
 export function recordText(r: OmokRecord | null | undefined) {
   if (!r) return null;
-  return `${r.wins}승 ${r.losses - r.resigns}패${r.resigns ? ` ${r.resigns}기권` : ""}${r.draws ? ` ${r.draws}무` : ""}`;
+  return `${r.wins}승 ${r.losses}패${r.draws ? ` ${r.draws}무` : ""}`;
 }
 
 type Banner = {
@@ -275,7 +278,7 @@ export function OmokRoom({
             side: sideOf(view.winner),
             yokai: yokaiOf(view.winner),
             title: t.dir ? `${t.dir} 5목!` : "5목 완성!",
-            tip: t.tip,
+            tip: yokaiVoice(yokaiOf(view.winner)?.species, t.tip),
           });
           wait = 3800;
         }
@@ -536,25 +539,32 @@ export function OmokRoom({
   const winnerInfo = view.winner ? info(view.winner) : null;
   const inviteText = `${view.host?.nickname ?? ""}님이 POKA 요괴 오목 한 판 하재요! 🏮\n방 코드: ${code}`;
 
-  const emoteRow = (
-    <div className="flex justify-center gap-1.5" aria-label="이모티콘 보내기">
-      {EMOTES.map((e) => (
+  /** 오니 이모티콘 버튼(대국자 = emote · 관전자 = cheer) */
+  const stickerRow = (action: "emote" | "cheer") => (
+    <div
+      className="grid grid-cols-5 justify-items-center gap-1.5 sm:grid-cols-9"
+      aria-label={action === "emote" ? "이모티콘 보내기" : "응원 보내기"}
+    >
+      {ONI_EMOTES.map((em) => (
         <button
-          key={e}
+          key={em.key}
           type="button"
-          data-omok-emote={e}
+          data-omok-emote={action === "emote" ? em.key : undefined}
+          data-omok-cheer-btn={action === "cheer" ? em.key : undefined}
           disabled={emoteWait > now}
           onClick={() => {
-            setEmoteWait(Date.now() + 3000);
-            void act("emote", { e });
+            setEmoteWait(Date.now() + (action === "emote" ? 3000 : 2500));
+            void act(action, { e: em.key });
           }}
-          className="arcade-btn btn-dark grid size-12 !min-h-0 place-items-center text-2xl"
+          aria-label={em.label}
+          className="arcade-btn btn-dark grid size-14 !min-h-0 place-items-center p-0.5"
         >
-          {e}
+          <EmoteArt e={em.key} className="size-full" />
         </button>
       ))}
     </div>
   );
+  const emoteRow = stickerRow("emote");
 
   return (
     <div
@@ -562,7 +572,8 @@ export function OmokRoom({
       className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start"
     >
       {/* ── 왼쪽(휴대폰은 위): HUD · 판 · 조작 ── */}
-      <div className="grid gap-2.5">
+      <div className="relative grid gap-2.5">
+        <CheerStack cheers={view.cheers ?? []} now={now + offset} />
         <div className="flex flex-wrap items-center gap-2">
           {code ? (
             <button
@@ -763,6 +774,21 @@ export function OmokRoom({
                   {winnerInfo ? `${winnerInfo.nickname} 승리 · ` : ""}
                   {END_TEXT[view.endReason] ?? ""}
                 </p>
+                {view.me &&
+                view.winner === view.me &&
+                view.moves.length >= 9 ? (
+                  <p
+                    data-omok-win-reward
+                    className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a]"
+                  >
+                    🎁 승리 보상 +{WIN_REWARD.points}P · EXP {WIN_REWARD.exp} ·
+                    요괴 친밀도 +{WIN_REWARD.affection}
+                    <span className="block text-xs font-bold text-[#d6cdee]">
+                      하루 {WIN_REWARD.perDay}판 · 같은 상대{" "}
+                      {WIN_REWARD.perOpponentPerDay}판까지
+                    </span>
+                  </p>
+                ) : null}
                 <div className="mt-1 grid w-full max-w-xs gap-2">
                   {view.me && view.endReason !== "cancel" ? (
                     <button
@@ -833,6 +859,25 @@ export function OmokRoom({
                       ? "상대 차례…"
                       : `${turn === BLACK ? "흑" : "백"} 차례`)}
           </p>
+        ) : null}
+
+        {/* ── 관전자 응원 ── */}
+        {spectator && view.status !== "done" ? (
+          <div data-omok-cheer-box className="arcade-panel grid gap-2 p-3">
+            <p className="text-center text-base font-black text-white">
+              📣 오니 이모티콘으로 응원하기
+            </p>
+            {loggedIn ? (
+              stickerRow("cheer")
+            ) : (
+              <Link
+                href={`/login?next=${encodeURIComponent(`/games/omok/${view.id}`)}`}
+                className="text-center text-sm font-bold text-[#8eeaff] underline"
+              >
+                로그인하면 응원할 수 있어요
+              </Link>
+            )}
+          </div>
         ) : null}
 
         {/* ── 대기실 조작 ── */}
@@ -1077,6 +1122,23 @@ export function OmokRoom({
 
         <section data-omok-watch-panel className="arcade-panel grid gap-2 p-4">
           <h2 className="arcade-kr text-lg text-white">👀 관전석</h2>
+          {view.cheers?.length ? (
+            <ul data-omok-cheer-log className="grid gap-1">
+              {view.cheers
+                .slice(-5)
+                .reverse()
+                .map((c) => (
+                  <li
+                    key={`${c.n}-${c.at}`}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <EmoteArt e={c.e} className="size-8" />
+                    <b className="min-w-0 truncate text-white">{c.n}</b>
+                    <span className="text-[#d6cdee]">님의 응원</span>
+                  </li>
+                ))}
+            </ul>
+          ) : null}
           {watching.count ? (
             <Spectators
               count={watching.count}

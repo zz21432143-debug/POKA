@@ -25,6 +25,7 @@ import {
   OMOK_OPPONENTS,
   PLAYER_LINES,
   pickOmokLine,
+  yokaiVoice,
   type OmokLineKind,
 } from "@/lib/omok-lines";
 import {
@@ -147,7 +148,9 @@ export function OmokAi({
           yokai: humanWon ? me.yokai : oppYokai,
           title: t.dir ? `${t.dir} 5목!` : "5목 완성!",
           // 요괴가 이기면 자기 대사 + 훈수, 내가 이기면 훈수만
-          tip: humanWon ? t.tip : `${line4("ai", "win")} ${t.tip}`,
+          tip: humanWon
+            ? yokaiVoice(me.yokai?.species, t.tip)
+            : `${line4("ai", "win")} ${t.tip}`,
         });
         wait = 3800;
       }

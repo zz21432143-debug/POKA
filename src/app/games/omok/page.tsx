@@ -8,7 +8,14 @@ import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { getCurrentUser } from "@/lib/current-user";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
 import { gamesOpen, omokLobby } from "@/lib/omok-server";
-import { gameRecord, gameStatsVisible, recordLine } from "@/lib/game-stats";
+import {
+  WIN_REWARD,
+  gameRecord,
+  gameStatsVisible,
+  opponentRecords,
+  recordLine,
+  rewardsOn,
+} from "@/lib/game-stats";
 import { profileYokai } from "@/lib/yokai-server";
 import { yokaiImage } from "@/lib/yokai";
 
@@ -32,11 +39,14 @@ export default async function OmokLobbyPage() {
   if (!gamesOpen(user)) notFound();
   const yk = user ? await profileYokai(user.id).catch(() => null) : null;
   if (user && !yk) redirect("/yokai?next=%2Fgames%2Fomok");
-  const [{ waiting, live, recent }, mine] = await Promise.all([
+  const [{ waiting, live, recent }, mine, opponents] = await Promise.all([
     omokLobby(user?.id ?? null),
     user
       ? gameRecord(user.id, "omok").catch(() => null)
       : Promise.resolve(null),
+    user
+      ? opponentRecords(user.id, "omok", 8).catch(() => [])
+      : Promise.resolve([]),
   ]);
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
@@ -101,6 +111,16 @@ export default async function OmokLobbyPage() {
             방을 만들면 오목판 앞에서 기다려요. 방 코드를 알려 주면 친구가 앉고,
             둘 다 READY를 누르면 시작!
           </p>
+          {rewardsOn() ? (
+            <p
+              data-omok-reward
+              className="mt-1 w-fit rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a]"
+            >
+              🎁 이기면 +{WIN_REWARD.points}P · EXP {WIN_REWARD.exp} · 요괴
+              친밀도 +{WIN_REWARD.affection} (하루 {WIN_REWARD.perDay}판 · 같은
+              상대 {WIN_REWARD.perOpponentPerDay}판)
+            </p>
+          ) : null}
         </div>
         {user ? (
           <OmokCreate />
@@ -117,9 +137,38 @@ export default async function OmokLobbyPage() {
         </div>
       </section>
 
-      {/* 전적 · 랭킹: 공개 전에는 숨김(GAME_STATS_PUBLIC=1이면 보임) */}
+      {/* 전적 · 랭킹(GAME_STATS_PUBLIC=0이면 숨김) */}
       {gameStatsVisible() ? (
         <GameStatsPanel game="omok" userId={user?.id ?? null} />
+      ) : null}
+
+      {/* 상대별 전적 */}
+      {opponents.length ? (
+        <section
+          aria-label="상대별 전적"
+          data-omok-opponents
+          className="arcade-panel grid gap-2 p-4"
+        >
+          <h2 className="arcade-kr text-xl text-white">⚔️ 상대별 전적</h2>
+          <ul className="grid gap-1.5">
+            {opponents.map((o) => (
+              <li
+                key={o.nickname}
+                className="flex min-h-11 items-center gap-2 rounded-xl bg-black/30 px-3"
+              >
+                <b className="min-w-0 truncate text-base text-white">
+                  vs {o.nickname}
+                </b>
+                <span className="ml-auto shrink-0 text-base font-black text-[#ffcf4a] tabular-nums">
+                  {o.wins}승 {o.losses}패{o.draws ? ` ${o.draws}무` : ""}
+                </span>
+                <span className="w-12 shrink-0 text-right text-xs font-bold text-[#d6cdee]">
+                  {o.games ? Math.round((o.wins / o.games) * 100) : 0}%
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {waiting.length ? (

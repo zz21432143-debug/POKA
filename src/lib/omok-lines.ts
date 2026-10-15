@@ -105,3 +105,26 @@ export const PLAYER_LINES: Record<Exclude<OmokLineKind, "think">, string[]> = {
 export function pickOmokLine(list: string[], seed: number) {
   return list[Math.abs(Math.floor(seed)) % list.length] ?? "";
 }
+
+/** 훈수에 요괴 말투(앞 · 뒤 한마디) */
+const VOICE: Partial<Record<YokaiSpecies, [string, string]>> = {
+  dokkaebi: ["히히! ", " 뚝딱!"],
+  ingeo: ["뻐끔뻐끔~ ", " 물결처럼 흘러가는 거야."],
+  samdugumi: ["세 머리가 다 봤어! ", ""],
+  gumiho: ["후후~ ", " 홀렸지?"],
+  yeomra: ["판결한다. ", " 명부에 적어 두겠다."],
+  tengu: ["흠. ", " 수행이 부족하군."],
+  haetae: ["정의의 판정! ", ""],
+  hwaryong: ["크아앙! ", " 불타오르네!"],
+  seolnyeo: ["차갑게 말하자면, ", ""],
+  bakjwigwi: ["끼익~ ", " 밤엔 내가 최강이야."],
+  noejeongwi: ["찌릿! ", ""],
+  bulgasari: ["와구와구! ", " 다 먹어 버렸다!"],
+};
+export function yokaiVoice(
+  species: YokaiSpecies | null | undefined,
+  tip: string,
+) {
+  const v = species ? VOICE[species] : undefined;
+  return v ? `${v[0]}${tip}${v[1]}` : tip;
+}

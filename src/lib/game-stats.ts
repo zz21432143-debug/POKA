@@ -3,7 +3,7 @@ import { todayKstDate } from "@/lib/dates";
 
 /**
  * 게임 전적 · 랭킹(오목 · 알까기 · 체스 공통). 친구 대전 결과만(서버가 판정한 판).
- * 전적 · 랭킹은 공개(GAME_STATS_PUBLIC=0이면 숨김) · 이긴 보상은 GAME_REWARDS=1일 때만.
+ * 전적 · 랭킹 공개(GAME_STATS_PUBLIC=0이면 숨김) · 이긴 보상 켜짐(GAME_REWARDS=0이면 끔). 기권은 그냥 패.
  * 마스터는 /games/stats에서 미리 볼 수 있음(어디에도 링크 없음).
  */
 export type GameKind = "omok" | "alkkagi" | "chess";
@@ -24,16 +24,13 @@ export const MIN_COUNTED_MOVES: Record<GameKind, number> = {
 /** 랭킹에 오르는 최소 판 수 */
 export const RANK_MIN_GAMES = 5;
 /** 보상(켜졌을 때): 이긴 사람 · 하루 횟수 · 같은 상대 하루 횟수 */
-export const WIN_REWARD = {
-  points: 30,
-  exp: 20,
-  perDay: 5,
-  perOpponentPerDay: 2,
-} as const;
+import { WIN_REWARD } from "@/lib/game-config";
+export { WIN_REWARD };
 
 /** 전적 · 랭킹 화면: 기본 공개(GAME_STATS_PUBLIC=0이면 숨김) */
 export const gameStatsVisible = () => process.env.GAME_STATS_PUBLIC !== "0";
-const rewardsOn = () => process.env.GAME_REWARDS === "1";
+/** 이긴 보상: 기본 켜짐(GAME_REWARDS=0이면 끔) */
+export const rewardsOn = () => process.env.GAME_REWARDS !== "0";
 
 /** 끝난 판 기록(한 판에 한 번 · 짧은 판 · 취소는 안 셈) */
 export async function recordGameResult(r: {
@@ -95,6 +92,9 @@ async function rewardWin(game: GameKind, winnerId: string, loserId: string) {
     return;
   const { grantRewards } = await import("@/lib/exp");
   await grantRewards(winnerId, WIN_REWARD.exp, WIN_REWARD.points);
+  // 대표 요괴 친밀도도
+  const { addMainAffection } = await import("@/lib/yokai-server");
+  await addMainAffection(winnerId, WIN_REWARD.affection).catch(() => undefined);
 }
 
 export type GameRecord = {
@@ -109,11 +109,9 @@ export type GameRecord = {
   streak: number;
 };
 
-/** 「12승 3패 1기권」(패에는 기권 빼고) */
-export function recordLine(
-  r: Pick<GameRecord, "wins" | "losses" | "resigns" | "draws">,
-) {
-  return `${r.wins}승 ${r.losses - r.resigns}패${r.resigns ? ` ${r.resigns}기권` : ""}${r.draws ? ` ${r.draws}무` : ""}`;
+/** 「12승 3패」(기권도 패) · 무승부가 있으면 「1무」 */
+export function recordLine(r: Pick<GameRecord, "wins" | "losses" | "draws">) {
+  return `${r.wins}승 ${r.losses}패${r.draws ? ` ${r.draws}무` : ""}`;
 }
 
 /** 내 전적(승 · 패 · 무 · 승률 · 지금 연승) */
@@ -243,4 +241,42 @@ export async function headToHead(game: GameKind, a: string, b: string) {
     prisma.gameResult.count({ where: pair }),
   ]);
   return { a: aWins, b: bWins, draws: all - aWins - bWins };
+}
+
+/** 상대별 전적: 내가 둔 상대마다 승 · 패 · 무(많이 둔 순) */
+export async function opponentRecords(
+  userId: string,
+  game: GameKind,
+  limit = 10,
+) {
+  const rows = await prisma.$queryRaw<
+    {
+      opp: string;
+      nickname: string;
+      wins: number;
+      losses: number;
+      draws: number;
+      games: number;
+    }[]
+  >`
+    SELECT o.opp, u.nickname,
+      COUNT(*) FILTER (WHERE r."winnerId" = ${userId})::int AS wins,
+      COUNT(*) FILTER (WHERE r."loserId" = ${userId})::int AS losses,
+      COUNT(*) FILTER (WHERE r.draw)::int AS draws,
+      COUNT(*)::int AS games
+    FROM "GameResult" r
+    CROSS JOIN LATERAL (SELECT CASE WHEN r."playerAId" = ${userId} THEN r."playerBId" ELSE r."playerAId" END AS opp) o
+    JOIN "User" u ON u.id = o.opp
+    WHERE r.game = ${game} AND (r."playerAId" = ${userId} OR r."playerBId" = ${userId}) AND u."withdrawnAt" IS NULL
+    GROUP BY o.opp, u.nickname
+    ORDER BY games DESC, MAX(r."createdAt") DESC
+    LIMIT ${limit}
+  `.catch(() => []);
+  return rows.map((r) => ({
+    nickname: r.nickname,
+    wins: r.wins,
+    losses: r.losses,
+    draws: r.draws,
+    games: r.games,
+  }));
 }

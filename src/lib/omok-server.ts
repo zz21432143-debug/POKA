@@ -11,6 +11,7 @@ import {
 } from "@/lib/omok";
 import { profileYokai } from "@/lib/yokai-server";
 import type { YokaiSpecies } from "@/lib/yokai";
+import { isOniEmote } from "@/lib/omok-emotes";
 import { gameRecord, headToHead, recordGameResult } from "@/lib/game-stats";
 
 /**
@@ -30,7 +31,8 @@ export function gamesOpen(
 const WAIT_MS = 60 * 60_000;
 /** 시간 초과 판정 여유(네트워크) */
 const GRACE_MS = 3_000;
-export const OMOK_EMOTES = ["👍", "😮", "😈", "🔥", "😭", "🙏"] as const;
+/** 대국자 이모티콘 · 관전자 응원 = 오니 이모티콘 */
+export { ONI_EMOTES as OMOK_EMOTES } from "@/lib/omok-emotes";
 /** 한 판에 물리기 요청 횟수(사람마다) */
 export const UNDO_LIMIT = 3;
 /** 방 코드: 헷갈리는 글자(0 O 1 I L) 뺀 5글자 */
@@ -71,6 +73,29 @@ function undoOf(row: { undoJson: string }): UndoState {
       denied: null,
       draw: { offer: null, used: {}, denied: null },
     };
+  }
+}
+
+type Cheer = { n: string; e: string; at: number };
+/** 이모티콘 칸(JSON): 대국자 마지막 이모티콘 + 관전자 응원(최근 15초 · 8개) */
+function emoteStateOf(row: { emoteJson: string }): {
+  last: { by: Stone; e: string; at: number } | null;
+  cheers: Cheer[];
+} {
+  try {
+    const v = row.emoteJson ? JSON.parse(row.emoteJson) : null;
+    const last =
+      v && typeof v.e === "string" && typeof v.at === "number"
+        ? { by: v.by as Stone, e: v.e as string, at: v.at as number }
+        : null;
+    const cheers = Array.isArray(v?.cheers)
+      ? (v.cheers as Cheer[]).filter(
+          (c) => c && typeof c.n === "string" && typeof c.e === "string",
+        )
+      : [];
+    return { last, cheers };
+  } catch {
+    return { last: null, cheers: [] };
   }
 }
 
@@ -119,6 +144,8 @@ export type OmokView = {
   me: Stone;
   isHost: boolean;
   emote: { by: Stone; e: string; at: number } | null;
+  /** 관전자 응원(최근 것) */
+  cheers: Cheer[];
   nextId: string | null;
   line: number[] | null;
   /** 관전자: 로그인한 사람 닉네임 · 손님 수 */
@@ -288,12 +315,8 @@ async function toView(
     player(row.blackId, cache),
     player(row.whiteId, cache),
   ]);
-  let emote: OmokView["emote"] = null;
-  try {
-    emote = row.emoteJson ? JSON.parse(row.emoteJson) : null;
-  } catch {
-    emote = null;
-  }
+  const emoteState = emoteStateOf(row);
+  const emote = emoteState.last;
   // 대기실 전적: 방장(흑 자리) · 손님(백 자리)로 보여 줌
   const idA = row.blackId ?? row.hostId;
   const idB = row.whiteId ?? row.guestId;
@@ -333,6 +356,7 @@ async function toView(
           : 0,
     isHost: Boolean(viewerId && viewerId === row.hostId),
     emote,
+    cheers: emoteState.cheers.filter((c) => Date.now() - c.at < 15_000),
     nextId: row.nextId,
     line: row.winner && row.endReason === "five" ? findWinLine(moves) : null,
     undo: {
@@ -477,6 +501,7 @@ export type OmokAction =
   | "sit"
   | "leave"
   | "kick"
+  | "cheer"
   | "ready"
   | "move"
   | "resign"
@@ -693,12 +718,18 @@ export async function omokAct(
         : 0);
     if (!seat) return fail("대국하는 사람만 보낼 수 있어요.", 403);
     const e = String(payload.e ?? "");
-    if (!(OMOK_EMOTES as readonly string[]).includes(e))
-      return fail("보낼 수 없는 이모티콘이에요.");
+    if (!isOniEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
     await prisma.omokGame.update({
       where: { id },
       data: {
-        emoteJson: JSON.stringify({ by: seat, e, at: now.getTime() }),
+        emoteJson: JSON.stringify({
+          by: seat,
+          e,
+          at: now.getTime(),
+          cheers: emoteStateOf(row).cheers.filter(
+            (c) => now.getTime() - c.at < 15_000,
+          ),
+        }),
         version: { increment: 1 },
       },
     });
@@ -776,6 +807,35 @@ export async function omokAct(
       },
     });
     if (saved.count !== 1) return fail("판이 바뀌었어요. 다시 해 주세요.", 409);
+    return done();
+  }
+
+  if (action === "cheer") {
+    // 관전자 응원(로그인 · 대국자가 아닌 사람) · 같은 사람은 2.5초에 한 번
+    if (mine || userId === row.hostId || userId === row.guestId)
+      return fail("대국하는 사람은 이모티콘 버튼을 써 주세요.", 403);
+    if (row.status === "done") return fail("끝난 대국이에요.", 409);
+    const e = String(payload.e ?? "");
+    if (!isOniEmote(e)) return fail("보낼 수 없는 이모티콘이에요.");
+    const me = await prisma.user
+      .findUnique({ where: { id: userId }, select: { nickname: true } })
+      .catch(() => null);
+    if (!me) return fail("로그인해 주세요.", 401);
+    const st = emoteStateOf(row);
+    const t = now.getTime();
+    if (st.cheers.some((c) => c.n === me.nickname && t - c.at < 2500))
+      return done();
+    const cheers = [
+      ...st.cheers.filter((c) => t - c.at < 15_000),
+      { n: me.nickname, e, at: t },
+    ].slice(-8);
+    await prisma.omokGame.update({
+      where: { id },
+      data: {
+        emoteJson: JSON.stringify({ ...(st.last ?? {}), cheers }),
+        version: { increment: 1 },
+      },
+    });
     return done();
   }
 
