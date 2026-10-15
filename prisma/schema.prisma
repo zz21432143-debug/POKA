@@ -156,6 +156,8 @@ model Post {
   viewCount          Int       @default(0)
   authorIp           String?
   isAttendanceThread Boolean   @default(false)
+  /// 게시판 「중요」 고정 시각(관리자 지정 · 없으면 고정 안 됨)
+  pinnedAt           DateTime?
   attendanceDate     String?   @unique
   jobKind            JobKind?
   jobLocation        String?

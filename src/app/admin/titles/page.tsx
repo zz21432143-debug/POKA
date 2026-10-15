@@ -17,7 +17,7 @@ export default async function AdminTitlesPage() {
       <header>
         <h1 className="text-2xl font-semibold">칭호 관리</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          딜러 연습장 「팟 계산」 랭킹 1~3위가 닉네임 옆에 칭호를 받습니다. 칭호 이름 · 기준 난이도 · 기간을 정하고, 부정 기록은 지우거나 칭호에서 뺄 수 있습니다.
+          「팟 계산」 랭킹 1~3위가 닉네임 옆에 칭호를 받습니다. 칭호 이름 · 기준 난이도 · 기간을 정하고, 부정 기록은 지우거나 칭호에서 뺄 수 있습니다.
           {user.isMaster ? "" : " (설정 변경과 기록 삭제는 마스터 계정만 할 수 있습니다.)"}
         </p>
         <div className="mt-2">

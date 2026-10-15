@@ -101,7 +101,7 @@ export default function PushFoldPage() {
       <nav aria-label="함께 쓰면 좋은 도구" className="flex flex-wrap gap-2">
         {[
           { href: "/info/icm", label: "ICM 계산기" },
-          { href: "/tools/practice", label: "딜러 연습장(팟 계산)" },
+          { href: "/tools/practice", label: "팟 계산 연습" },
           { href: "/boards/hand-review", label: "핸드리뷰 투표" },
           { href: "/info/guide/tournament-terms", label: "토너먼트 용어 정리" },
         ].map((link) => (

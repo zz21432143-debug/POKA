@@ -144,7 +144,7 @@ export default async function RankingPage({
             {item.label}
           </Link>
         ))}
-        {/* 팟 계산 랭킹은 딜러 연습장에서(난이도별 기록) */}
+        {/* 팟 계산 랭킹은 팟 계산 화면에서(난이도별 기록) */}
         <Link href="/tools/practice" className="rank-tab">
           팟 계산 랭킹 ›
         </Link>

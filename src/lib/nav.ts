@@ -52,7 +52,7 @@ export const STUDY_ITEMS: SidebarItem[] = [
   { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
   { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
   { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
-  { href: "/tools/practice", label: "딜러 연습장", hint: "팟 계산 · 사이드팟 · 랭킹", icon: "chips" },
+  { href: "/tools/practice", label: "팟 계산", hint: "팟 계산 랭킹 · 사이드팟", icon: "chips", badge: "HOT" },
   { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
 ];
 

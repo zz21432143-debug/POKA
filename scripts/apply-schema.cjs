@@ -53,6 +53,7 @@ const FILES = [
   "prisma/migrations/20261029090000_yokai_clean/migration.sql",
   "prisma/migrations/20261030090000_yokai_shared_cooldown/migration.sql",
   "prisma/migrations/20261031090000_yokai_was_main/migration.sql",
+  "prisma/migrations/20261101090000_post_pin/migration.sql",
 ];
 
 function databaseUrl() {

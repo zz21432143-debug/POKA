@@ -36,7 +36,7 @@ type Board = Record<string, { top: Row[]; best: Row | null }>;
 type Titles = { enabled: boolean; names: Record<1 | 2 | 3, string>; difficulty: Difficulty; period: "all" | "month" };
 type BoardPayload = { board?: Board; titles?: Titles; error?: string };
 
-/** 딜러 연습장: 팟 계산(연습 + 바로 아래 랭킹) · 사이드팟 계산기(실전) */
+/** 팟 계산: 팟 계산 연습(+ 바로 아래 랭킹) · 사이드팟 계산기(실전) */
 export function DealerPractice() {
   const [tab, setTab] = useState<"drill" | "calc">("drill");
   const [board, setBoard] = useState<Board | null>(null);
@@ -64,7 +64,7 @@ export function DealerPractice() {
 
   return (
     <div className="grid gap-3 text-white">
-      <nav role="tablist" aria-label="딜러 연습장" className="grid grid-cols-2 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
+      <nav role="tablist" aria-label="팟 계산" className="grid grid-cols-2 gap-1 rounded-2xl border border-white/15 bg-zinc-950 p-1">
         {(
           [
             ["drill", "팟 계산"],

@@ -48,6 +48,7 @@ import { canBumpNow, nextBumpAt } from "@/lib/job-bump";
 import { jobExpiresOn, jobStatus } from "@/lib/job-status";
 import { titleRegion } from "@/lib/jobs";
 import { isStaff } from "@/lib/roles";
+import { PinToggle } from "@/components/posts/pin-toggle";
 import { loginHref } from "@/lib/login-path";
 import { eventJsonLd, jobPostingJsonLd, jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
@@ -449,6 +450,7 @@ export default async function PostDetailPage({
       ) : null}
       {expiresOn ? <p className="text-xs text-[#9CA3AF]">자동 마감 예정일 {expiresOn}</p> : null}
       {post.jobKind && staff ? <PremiumToggle postId={post.id} isPaid={post.isPaid} /> : null}
+      {staff && !post.jobKind ? <PinToggle postId={post.id} pinned={Boolean(post.pinnedAt)} /> : null}
       {isJobPost && !isJobOwner && status === "open" ? (
         <ApplyPanel
           postId={post.id}

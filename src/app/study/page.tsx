@@ -7,7 +7,7 @@ import { StudyAd } from "@/components/ads/board-bottom-ad";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
-  "직접 계산하고 검증한 무료 홀덤 공부 도구 모음. 포지션별 GTO 푸시폴드 차트, 승률 계산기, ICM 딜 계산기, 핸드 레인지 순위, 족보 순위, 딜러 연습장까지 로그인 없이.";
+  "직접 계산하고 검증한 무료 홀덤 공부 도구 모음. 포지션별 GTO 푸시폴드 차트, 승률 계산기, ICM 딜 계산기, 핸드 레인지 순위, 족보 순위, 팟 계산까지 로그인 없이.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -22,7 +22,7 @@ const CARDS = [
   { href: "/info/icm", icon: PieChartIcon, title: "ICM 계산기", body: "총상금 · 비율로 파이널 딜 금액을 공정하게. 이미 지급된 순위는 자동으로 빼요." },
   { href: "/community/hand-ranges", icon: BarChart3Icon, title: "핸드 레인지 순위", body: "169개 시작 패 강한 순서. 상대 수별 순위, 상위 10 · 15 · 20% 범위." },
   { href: "/community/hand-rankings", icon: ListOrderedIcon, title: "족보 순위", body: "카드 그림으로 보는 족보 10가지, 헷갈리는 상황, 실제 확률." },
-  { href: "/tools/practice", icon: TargetIcon, title: "딜러 연습장", body: "사이드팟 계산기와 팟 계산 연습 · 난이도별 랭킹(회원)." },
+  { href: "/tools/practice", icon: TargetIcon, title: "팟 계산", body: "사이드팟 계산기와 팟 계산 연습 · 난이도별 랭킹(회원)." },
   { href: "/info/guide", icon: GraduationCapIcon, title: "딜러 가이드", body: "자리 · 블라인드 · 액션 순서 · 쇼다운 · 시급 · 복장 등 18편." },
 ] as const;
 

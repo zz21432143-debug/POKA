@@ -2248,3 +2248,7 @@ select {
   position: absolute;
   inset: -8px -6px;
 }
+
+.nav-hot-badge {
+  background: linear-gradient(90deg, #e8590c, #f59f00);
+}

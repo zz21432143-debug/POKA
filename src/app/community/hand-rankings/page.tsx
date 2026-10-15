@@ -153,7 +153,7 @@ export default function HandRankingsPage() {
         {[
           { href: "/community/equity", label: "승률 계산기" },
           { href: "/info/push-fold", label: "GTO 푸시폴드 차트" },
-          { href: "/tools/practice", label: "딜러 연습장" },
+          { href: "/tools/practice", label: "팟 계산" },
           { href: "/info/guide/showdown", label: "쇼다운 순서" },
         ].map((link) => (
           <Link key={link.href} href={link.href} className="inline-flex min-h-10 items-center rounded-full border border-white/15 px-3.5 text-sm font-bold text-[#d1c7b5] hover:border-[#c9a25c] hover:text-white">
