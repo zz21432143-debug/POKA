@@ -101,6 +101,7 @@ export async function generateMetadata({
         jobPayAmount: true,
         jobWorkDate: true,
         jobWorkHours: true,
+        jobTags: true,
         content: true,
         authorId: true,
         createdAt: true,
@@ -130,6 +131,7 @@ export async function generateMetadata({
         post.jobPayType && post.jobPayAmount ? `${post.jobPayType} ${post.jobPayAmount}` : null,
         post.jobWorkDate ? `근무일 ${post.jobWorkDate}` : null,
         post.jobWorkHours ? `${post.jobWorkHours}` : null,
+        post.jobTags ? post.jobTags.split(",").join(" · ") : null,
         "연락처는 POKA 로그인 후 확인",
       ]
         .filter(Boolean)

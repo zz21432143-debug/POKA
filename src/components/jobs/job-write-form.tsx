@@ -19,6 +19,7 @@ import { ChevronDownIcon, ClipboardPasteIcon, SparklesIcon } from "lucide-react"
 import { TAX_OPTIONS, needsTax } from "@/lib/job-tax";
 import { UrgentReach } from "@/components/jobs/urgent-reach";
 import { cn } from "cn";
+import { JOB_TAGS } from "@/lib/job-tags";
 
 export type JobFormValues = {
   jobLocation: string;
@@ -48,6 +49,8 @@ export type JobFormValues = {
   /** 3.3% 공제 여부: "공제" | "없음" | ""(아직 안 고름) */
   jobTaxDeduction: string;
   jobDressCode: string;
+  /** 근무 환경 칩 */
+  jobTags: string[];
   jobApplyMethod: string;
   jobApplyValue: string;
   content: string;
@@ -61,6 +64,7 @@ const EMPTY: JobFormValues = {
   jobSchedule: "",
   jobWorkHours: "",
   jobBenefits: "",
+  jobTags: [],
   jobExperience: "",
   jobContact: "",
   jobWorkDate: "",
@@ -779,12 +783,39 @@ export function JobWriteForm({
         </div>
       </section>
 
+      {jobKind !== "SEEKING" ? (
+        <section className={PANEL} aria-label="근무 환경" data-job-tags-picker>
+          <StepTitle n={3} title="근무 환경" hint="해당하는 것을 눌러 주세요 · 공고에 칩으로 보여요(선택)" />
+          <div className="flex flex-wrap gap-1.5">
+            {JOB_TAGS.map((tag) => {
+              const on = form.jobTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  aria-pressed={on}
+                  data-job-tag={tag}
+                  onClick={() => set("jobTags", on ? form.jobTags.filter((t) => t !== tag) : [...form.jobTags, tag])}
+                  className={cn(
+                    "min-h-10 rounded-full border px-3 text-sm font-semibold transition-colors",
+                    on ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]" : "border-[#5a4a38] bg-[#0f0c0a] text-[#e8dcc8] hover:border-[#c9a25c]",
+                  )}
+                >
+                  {on ? "✓ " : ""}
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
       <section className={PANEL} aria-label="상세 내용">
         <div className="grid gap-2">
           <Label htmlFor="job-content" className="sr-only">
             상세 내용
           </Label>
-          <StepTitle n={3} title={<>상세 내용 <Required /></>} hint="카톡 공고를 붙여넣었다면 원문이 들어가 있습니다" />
+          <StepTitle n={jobKind !== "SEEKING" ? 4 : 3} title={<>상세 내용 <Required /></>} hint="카톡 공고를 붙여넣었다면 원문이 들어가 있습니다" />
           <Textarea
             id="job-content"
             className="write-body-input min-h-56 border-[#6b5a45] bg-[#0f0c0a] text-base leading-relaxed text-white"

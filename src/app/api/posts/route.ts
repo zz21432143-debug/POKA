@@ -1,4 +1,5 @@
 import { NextResponse, after } from "next/server";
+import { plainPostText } from "@/lib/seo-quality";
 import { pingIndexNow, shouldPingIndexNow } from "@/lib/indexnow";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
@@ -97,6 +98,10 @@ export async function POST(request: Request) {
     }
     // 공식 문서(공지 · TDA 룰)는 길 수 있어 넉넉하게
     const maxContent = boardType === "TDA" || boardType === "NOTICE" ? 300_000 : 30_000;
+    // 자유게시판 · 질문 · 건의: 한두 글자 글은 막음(내용 없는 글이 쌓이면 검색 · 광고 심사에서 사이트 평가가 떨어짐)
+    if (["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && plainPostText(content).replace(/\s/g, "").length < 10) {
+      return NextResponse.json({ error: "본문을 조금 더 자세히 써 주세요(10자 이상)." }, { status: 400 });
+    }
     if (title.length > 120 || content.length > maxContent) {
       return NextResponse.json({ error: `제목은 120자, 본문은 ${maxContent.toLocaleString()}자까지 쓸 수 있습니다.` }, { status: 400 });
     }
@@ -249,6 +254,7 @@ export async function POST(request: Request) {
         jobLodgingNote: jobData?.jobLodgingNote ?? null,
         jobSnacks: jobData?.jobSnacks ?? false,
         jobDressCode: jobData?.jobDressCode ?? null,
+        jobTags: jobData?.jobTags ?? null,
         jobApplyMethod: jobData?.jobApplyMethod ?? null,
         eventDate: typeof body.eventDate === "string" ? body.eventDate : null,
         eventEndDate: typeof body.eventEndDate === "string" ? body.eventEndDate : null,

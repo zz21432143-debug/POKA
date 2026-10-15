@@ -2,6 +2,7 @@ import type { JobKind } from "@/generated/prisma/enums";
 import { buildJobTitle } from "@/lib/jobs";
 import { checkJobContact } from "@/lib/contact";
 import { needsTax, parseTax } from "@/lib/job-tax";
+import { normalizeJobTags } from "@/lib/job-tags";
 import {
   eventsDateLabel,
   eventsHeadcountTotal,
@@ -58,6 +59,7 @@ export function jobFieldsFromBody(body: Record<string, unknown>, jobKind: JobKin
     jobSchedule: schedule,
     jobWorkHours: str("jobWorkHours"),
     jobBenefits: str("jobBenefits"),
+    jobTags: jobKind === "SEEKING" ? null : normalizeJobTags(body.jobTags),
     jobExperience: str("jobExperience"),
     jobContact: contact.ok ? contact.value : str("jobContact"),
     contactError: contact.ok ? null : contact.error,

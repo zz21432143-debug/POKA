@@ -4,6 +4,7 @@ import { todayKstDate } from "@/lib/dates";
 import { taxLabel } from "@/lib/job-tax";
 import { eventsDateLabel, groupDateLabel, groupJobEvents, parseJobEvents } from "@/lib/job-events";
 import { cn } from "cn";
+import { parseJobTags } from "@/lib/job-tags";
 
 export type JobFactsPost = {
   jobKind: string | null;
@@ -35,6 +36,8 @@ export type JobFactsPost = {
   /** 숙소 제공(대회 딜러) */
   jobLodging?: boolean;
   jobLodgingNote?: string | null;
+  /** 근무 환경 칩 */
+  jobTags?: string | null;
 };
 
 /** 근무 날짜. 여러 날이면 "10/31~11/1" 범위로 보여 줍니다. */
@@ -215,6 +218,15 @@ export function JobFacts({ job }: { job: JobFactsPost }) {
             </div>
           ))}
         </dl>
+      ) : null}
+      {parseJobTags(job.jobTags).length ? (
+        <ul aria-label="근무 환경" data-job-tags className="flex flex-wrap gap-1.5">
+          {parseJobTags(job.jobTags).map((tag) => (
+            <li key={tag} className="rounded-full border border-[#c9a25c]/50 bg-[#241b14] px-2.5 py-1 text-sm font-semibold text-[#f3d9a4]">
+              ✓ {tag}
+            </li>
+          ))}
+        </ul>
       ) : null}
       {rest.length > 0 ? (
         <dl className="divide-y divide-white/10 rounded-lg bg-black/25">

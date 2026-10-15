@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { parseJobTags } from "@/lib/job-tags";
 import { notFound } from "next/navigation";
 import { JobWriteForm } from "@/components/jobs/job-write-form";
 import { getCurrentUser } from "@/lib/current-user";
@@ -135,6 +136,7 @@ export default async function EditJobPage({
           jobLodgingNote: post.jobLodgingNote ?? "",
           jobSnacks: post.jobSnacks,
           jobDressCode: post.jobDressCode ?? "",
+          jobTags: parseJobTags(post.jobTags),
           jobApplyMethod: post.jobApplyMethod ?? "",
           content: post.content,
         }}

@@ -177,6 +177,10 @@ export function BoardWriteForm({
             onChange={(e) => setContent(e.target.value)}
           />
         )}
+        {/* 자유 · 질문 · 건의: 10자 이상(한두 글자 글 방지) */}
+        {["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && content.trim().length > 0 && content.replace(/\s+/g, "").length < 10 ? (
+          <p data-write-min-hint className="text-xs text-[#e7c98a]">본문을 조금 더 자세히 써 주세요 · 10자 이상 ({content.replace(/\s+/g, "").length}/10)</p>
+        ) : null}
       </div>
       {photoBoard ? <PostPhotoPicker value={photos} onChange={setPhotos} /> : null}
       {boardType === "SUGGESTION" ? (

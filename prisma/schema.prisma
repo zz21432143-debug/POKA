@@ -196,6 +196,8 @@ model Post {
   jobLodgingNote     String?
   jobSnacks          Boolean   @default(false)
   jobDressCode       String?
+  /// 근무 환경 칩(「,」로 이음): 초보 가능 · 유급 교육 …
+  jobTags            String?
   jobApplyMethod     String?
   jobApplyValue      String?
   /// Dealer / Floor / Chips / 기타 스태프 (콤마)
