@@ -19,6 +19,7 @@ import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { FreePromoBanner } from "@/components/ads/free-promo-banner";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { HomeHero } from "@/components/home/home-hero";
+import { HomeBoardNav } from "@/components/home/home-board-nav";
 import { HomeGuides } from "@/components/home/home-guides";
 import { UrgentAlertPrompt } from "@/components/jobs/urgent-alert-prompt";
 import { FREE_PROMO } from "@/lib/free-promo";
@@ -64,7 +65,7 @@ async function HomeFeedSections() {
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
-      <div data-home-latest-rank className="grid gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
+      <div id="home-latest" data-home-latest-rank className="grid scroll-mt-24 gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
         <Suspense fallback={<HomePanelFallback className="h-48" />}>
           <HomeRankings />
@@ -85,6 +86,10 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-2.5">
       <HomeHero />
+      {/* 게시판 바로가기(홈 아래쪽까지 내려가지 않아도) */}
+      <Suspense fallback={<HomePanelFallback className="h-10" />}>
+        <HomeBoardNav />
+      </Suspense>
       {/* 광고 구좌 1: 대문 바로 아래 가로 배너(휴대폰 · PC 반응형) */}
       <GoogleAdUnit placement="home-top" />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}

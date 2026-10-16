@@ -191,7 +191,7 @@ export function TdaViewer({
 
       {!loggedIn ? (
         <p className="ink-panel rounded-xl px-4 py-3 text-sm text-[#c9c0b2]">
-          조항 제목만 보입니다. 본문 전체는{" "}
+          조항 제목만 보입니다. 본문 전체 · PDF 다운로드는{" "}
           <Link href={loginHref("/boards/tda")} className="font-bold text-[#e7c98a] underline">
             로그인
           </Link>{" "}
@@ -217,6 +217,26 @@ export function TdaViewer({
                       수정
                     </Link>
                     <DeletePostButton postId={s.id} />
+                  </div>
+                ) : null}
+                {loggedIn ? (
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <a
+                      href={s.pdfUrl}
+                      download={`${s.title.replace(/[\\/:*?"<>|]/g, " ").trim() || "TDA 룰"}.pdf`}
+                      data-tda-download
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border-2 border-[#5aa9ff] bg-[#123a66] px-4 text-sm font-black text-white hover:bg-[#1a4a80]"
+                    >
+                      ⬇ PDF 다운로드
+                    </a>
+                    <a
+                      href={s.pdfUrl}
+                      target="_blank"
+                      rel="noopener"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/20 px-3 text-sm font-bold text-[#d6e8ff] hover:bg-white/10"
+                    >
+                      새 창으로 열기(인쇄)
+                    </a>
                   </div>
                 ) : null}
                 <PdfDocViewer url={s.pdfUrl} title={s.title} />

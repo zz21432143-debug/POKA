@@ -23,6 +23,7 @@ import { JobEventList, JobFacts } from "@/components/jobs/job-facts";
 import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { PostPhotos } from "@/components/posts/post-photos";
 import { LinkifiedText } from "@/components/posts/linkified-text";
+import { JobScheduleText } from "@/components/jobs/job-schedule-text";
 import { canManagePost } from "@/lib/post-manage";
 import { PostManageBar } from "@/components/posts/post-manage-bar";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
@@ -594,7 +595,7 @@ export default async function PostDetailPage({
         <section aria-label="상세 내용" className="rounded-xl border border-[#4a3f33] bg-[#17120f] p-3 sm:p-4">
           <p className="mb-2 text-sm font-bold text-[#e7c98a]">상세 내용</p>
           <div className="article-copy">
-            <LinkifiedText text={post.content} />
+            <JobScheduleText text={post.content} />
           </div>
         </section>
       ) : post.content ? (

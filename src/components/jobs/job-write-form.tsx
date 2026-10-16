@@ -194,6 +194,8 @@ export function JobWriteForm({
   const [error, setError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // 고칠 때: 저장하면서 맨 위로 끌어올리기(글을 지우고 다시 올리지 않아도 최신으로)
+  const [bumpOnSave, setBumpOnSave] = useState(true);
 
   function set<K extends keyof JobFormValues>(key: K, value: JobFormValues[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -390,6 +392,10 @@ export function JobWriteForm({
       });
       const payload = (await response.json()) as { id?: string; error?: string; pushSent?: number };
       if (!response.ok || !payload.id) throw new Error(payload.error ?? "저장에 실패했습니다.");
+      if (postId && bumpOnSave) {
+        // 끌어올리기(작성자는 하루 한 번 · 운영진은 언제든) — 안 돼도 저장은 됨
+        await fetch(`/api/posts/${postId}/bump`, { method: "POST" }).catch(() => undefined);
+      }
       // 급구면 "알림 N명에게 보냈어요"를 글 위에 띄웁니다.
       const pushed = payload.pushSent == null ? "" : `?pushed=${payload.pushSent}`;
       router.replace(`/posts/${payload.id}${pushed}`);
@@ -827,8 +833,16 @@ export function JobWriteForm({
       </section>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {postId ? (
+        <label data-job-bump-on-save className="flex min-h-11 items-center gap-2 rounded-xl border border-[#c9a25c]/40 bg-black/30 px-3 text-sm font-bold">
+          <span className="touch-check">
+            <input type="checkbox" checked={bumpOnSave} onChange={(e) => setBumpOnSave(e.target.checked)} />
+          </span>
+          저장하면서 목록 맨 위로 올리기(끌어올리기 · 하루 한 번)
+        </label>
+      ) : null}
       <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
-        {pending ? "저장 중…" : postId ? "수정" : "등록"}
+        {pending ? "저장 중…" : postId ? (bumpOnSave ? "수정하고 맨 위로" : "수정") : "등록"}
       </Button>
     </div>
   );
