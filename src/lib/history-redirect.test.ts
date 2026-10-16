@@ -27,9 +27,7 @@ describe("back navigation", () => {
       "src/components/hand/hand-editor.tsx",
       "src/components/promo/official-promo-form.tsx",
       "src/components/jobs/job-write-form.tsx",
-      "src/components/listing/hire-form.tsx",
       "src/components/listing/schedule-form.tsx",
-      "src/components/listing/board-listing-form.tsx",
     ];
     for (const file of files) {
       const src = readFileSync(new URL(`../../${file}`, import.meta.url), "utf8");

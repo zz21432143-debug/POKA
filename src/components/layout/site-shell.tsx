@@ -23,10 +23,22 @@ import { VisitBeacon } from "@/components/analytics/visit-beacon";
 import { HideOnGames } from "@/components/layout/route-hide";
 import { SourceBeacon } from "@/components/analytics/source-beacon";
 
+/** 공지 띠 내용: 관리자 문구 + 최근 2주 공지 */
+async function noticeStrip() {
+  const [settings, notices] = await Promise.all([getSiteSettings().catch(() => null), getLatestNotices().catch(() => [])]);
+  const recent = notices
+    .filter((n) => nowMs() - new Date(n.createdAt).getTime() < 14 * 86_400_000)
+    .map((n) => ({ text: n.title, href: `/posts/${n.id}` }));
+  return { banner: settings?.noticeBanner?.trim() || null, recent };
+}
+
 async function ConnectedTicker() {
-  const events = await getCachedTickerEvents().catch(() => []);
+  const [events, strip] = await Promise.all([getCachedTickerEvents().catch(() => []), noticeStrip()]);
   return (
     <LedTicker
+      // 휴대폰: 공지 띠를 따로 두지 않고 여기 섞음 · 앱 받기는 왼쪽 작은 버튼
+      notices={[...(strip.banner ? [{ text: strip.banner }] : []), ...strip.recent]}
+      leading={<InstallPwaButton variant="chip" />}
       items={events.map((event) => ({
         id: event.id,
         message: event.message,
@@ -54,15 +66,15 @@ async function ConnectedNickNotice() {
   return <NickNotice from={notice.from} to={notice.to} reason={notice.reason} />;
 }
 
+/** PC · 태블릿 공지 띠(휴대폰은 위 전광판에 섞여 나와서 숨김) */
 async function ConnectedNotice() {
-  const [settings, notices] = await Promise.all([getSiteSettings().catch(() => null), getLatestNotices().catch(() => [])]);
-  // 최근 2주 공지는 띠에서 돌려 보여 줌(말머리 태그 포함)
-  const recent = notices
-    .filter((n) => nowMs() - new Date(n.createdAt).getTime() < 14 * 86_400_000)
-    .map((n) => ({ text: n.title, href: `/posts/${n.id}` }));
-  // 공지가 있으면 앱 받기는 공지 띠 안 작은 버튼으로(휴대폰 첫 화면 띠를 하나로) · 없으면 앱 받기 띠
-  if (!settings?.noticeBanner?.trim() && !recent.length) return <InstallPwaButton variant="strip" />;
-  return <SiteNoticeBanner text={settings?.noticeBanner} items={recent} leading={<InstallPwaButton variant="chip" />} />;
+  const { banner, recent } = await noticeStrip();
+  if (!banner && !recent.length) return <div className="hidden sm:block"><InstallPwaButton variant="strip" /></div>;
+  return (
+    <div className="hidden sm:block">
+      <SiteNoticeBanner text={banner} items={recent} leading={<InstallPwaButton variant="chip" />} />
+    </div>
+  );
 }
 
 /** 관리자가 끈 광고 구좌를 광고 칸에 알려 줌 */

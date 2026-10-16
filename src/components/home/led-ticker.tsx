@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronsUpIcon } from "lucide-react";
 
@@ -22,11 +22,30 @@ export type TickerItem = {
 const isHonorNews = (message: string) => /칭호를 받았습니다/.test(message);
 const HONOR_CLASS = "font-black text-[#f5d76e] drop-shadow-[0_0_6px_rgba(245,215,110,0.55)] md:text-base";
 
-export function LedTicker({ items }: { items: TickerItem[] }) {
-  const source =
+/** 휴대폰(640px 아래)인지 — 휴대폰은 공지 띠를 따로 두지 않고 전광판에 섞어 보여 줌 */
+function useNarrow() {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia("(max-width: 639px)");
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(max-width: 639px)").matches,
+    () => false,
+  );
+}
+
+export function LedTicker({ items, notices = [], leading = null }: { items: TickerItem[]; /** 공지(휴대폰에서만 소식 사이사이에) */ notices?: { text: string; href?: string }[]; /** 휴대폰 왼쪽(앱 받기) */ leading?: ReactNode }) {
+  const narrow = useNarrow();
+  const news: TickerItem[] =
     items.length > 0
       ? items
       : [{ id: "empty", message: "POKA 소식 — 글 작성 · 레벨업 · 마크 구매가 여기 나옵니다", href: "/" }];
+  // 휴대폰: 공지를 소식 두 개마다 하나씩 끼움(맨 앞은 공지)
+  const notes: TickerItem[] = narrow ? notices.map((n, k) => ({ id: `notice-${k}`, message: `📢 ${n.text}`, href: n.href ?? "/" })) : [];
+  const source: TickerItem[] = notes.length
+    ? news.reduce<TickerItem[]>((out, it, k) => (k % 2 === 0 ? [...out, notes[(k / 2) % notes.length], it] : [...out, it]), [])
+    : news;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const current = source[index % source.length];
@@ -51,6 +70,7 @@ export function LedTicker({ items }: { items: TickerItem[] }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
+      {leading ? <div className="flex shrink-0 items-center pl-2 sm:hidden">{leading}</div> : null}
       <div className="flex shrink-0 items-center pr-2 pl-2">
         <span className="live-glow rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide text-white">LIVE</span>
       </div>

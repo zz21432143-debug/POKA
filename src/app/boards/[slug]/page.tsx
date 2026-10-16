@@ -144,19 +144,24 @@ export default async function BoardPage({
           ) : null}
         </div>
         {canWrite || !("masterOnly" in board && board.masterOnly) ? (
-          <Link
-            href={
-              FREE_TABS.some((tab) => tab.slug === canonical)
-                ? "/boards/free/write"
-                : board.writeHref
-            }
-            className={cn(
-              buttonVariants({ size: "touch" }),
-              "relative z-10 inline-flex w-full shrink-0 sm:w-auto",
-            )}
-          >
-            {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
-          </Link>
+          <>
+            {/* PC · 태블릿: 소개 칸 오른쪽 버튼 */}
+            <Link
+              href={FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref}
+              className={cn(buttonVariants({ size: "touch" }), "relative z-10 hidden shrink-0 sm:inline-flex")}
+            >
+              {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
+            </Link>
+            {/* 휴대폰: 오른쪽 아래 떠 있는 둥근 버튼(아래 메뉴 바로 위) */}
+            <Link
+              href={FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref}
+              data-write-fab
+              aria-label={calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
+              className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 inline-flex h-13 items-center gap-1.5 rounded-full bg-[#9b1c1c] px-5 text-[15px] font-black text-white shadow-[0_6px_18px_rgba(0,0,0,.55)] ring-2 ring-[#ffcf4a]/60 sm:hidden"
+            >
+              ✏️ {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
+            </Link>
+          </>
         ) : null}
       </header>
 
