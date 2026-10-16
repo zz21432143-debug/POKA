@@ -432,7 +432,13 @@ export function YutBoard({
                   <YokaiToken face={pieceFace(faces, p.team, p.i)} team={p.team} className="size-full" />
                 </span>
               ) : null}
-              {can && p.top && !isSel && guide === "pick" ? (
+              {can && p.top && !isSel && guide === "pick" && y - 12.4 - p.level * 7.2 < 4 ? (
+                // 맨 윗줄: 위로 올리면 판 밖으로 나가서 이름표 아래에(▲) — 옆 칸 말과도 안 겹침
+                <span data-yut-tap data-yut-tap-side aria-hidden className="yut-select-arrow pointer-events-none absolute top-[142%] left-1/2 grid -translate-x-1/2 justify-items-center">
+                  <span className="text-[clamp(11px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▲</span>
+                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-sans font-black text-[clamp(11px,1.9cqw,12px)] leading-[1.6] whitespace-nowrap text-[#04263a] shadow-[2px_2px_0_#0a0614]">누르기</b>
+                </span>
+              ) : can && p.top && !isSel && guide === "pick" ? (
                 <span data-yut-tap aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[40%] left-1/2 grid -translate-x-1/2 justify-items-center">
                   <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-sans font-black text-[clamp(11px,1.9cqw,12px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">누르기</b>
                   <span className="text-[clamp(11px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▼</span>

@@ -13,6 +13,8 @@ const kstDateOf = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toIS
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { recentAdminPointLogs } from "@/lib/admin-points";
+import { listRefundRequests, refundableItems } from "@/lib/refund-requests";
+import { RefundRequestBox } from "@/components/user/refund-request-box";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,8 @@ export default async function MemberPage({
   const villageChief = (await villageChiefIds([user.id])).has(user.id);
   // 내 프로필: 운영자 지급 · 회수 · 환불 기록(본인에게만)
   const adminLogs = mine ? await recentAdminPointLogs(10, user.id) : [];
+  // 내 프로필: 최근 7일 안에 산 상품 환불 요청
+  const [refundItems, myRequests] = mine ? await Promise.all([refundableItems(user.id), listRefundRequests({ userId: user.id, limit: 10 })]) : [[], []];
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -77,6 +81,7 @@ export default async function MemberPage({
       />
       <ProfileYokai userId={user.id} viewerIsMaster={Boolean(viewer?.isMaster)} />
       <HonorShelf userId={user.id} nickname={user.nickname} mine={mine} />
+      {mine ? <RefundRequestBox items={refundItems} requests={myRequests.map((r) => ({ id: r.id, at: r.at, name: r.name, reason: r.reason, status: r.status, note: r.note }))} /> : null}
       {adminLogs.length ? (
         <section data-my-point-logs className="rounded-2xl border border-border bg-card p-3">
           <p className="text-sm font-semibold">🎁 운영자 포인트 내역 <span className="text-xs font-normal text-muted-foreground">(나만 보여요)</span></p>

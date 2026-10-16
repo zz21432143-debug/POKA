@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { nowMs } from "@/lib/dates";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { normalizeNickname } from "@/lib/nickname";
 import { ADMIN_POINT_LIMIT, cosmeticRefundFor, recentAdminPointLogs, refundAmountFor } from "@/lib/admin-points";
 import { BulkGrantForm, PointGrantForm, MarkRefundButton } from "@/components/admin/points-admin";
+import { RefundRequestsAdmin } from "@/components/admin/refund-requests-admin";
+import { listRefundRequests } from "@/lib/refund-requests";
 
 export const metadata: Metadata = { title: "포인트 · 마크 환불", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -49,6 +52,14 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
     ? await Promise.all(picked.ownedCosmetics.map(async (o) => ({ ...o, refund: await cosmeticRefundFor(picked.id, o.cosmetic) })))
     : [];
   const logs = await recentAdminPointLogs(40, picked?.id);
+  const pendingRequests = await listRefundRequests({ pendingOnly: true, limit: 50 });
+  // 엑셀 받기: 이번 달 · 지난달
+  const ym = (offset: number) => {
+    const d = new Date(nowMs() + 9 * 3600_000);
+    d.setUTCDate(1);
+    d.setUTCMonth(d.getUTCMonth() + offset);
+    return d.toISOString().slice(0, 7);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,6 +69,20 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
           회원을 찾아 포인트를 지급하거나 회수하고, 가진 마크를 환불합니다. 한 번에 {ADMIN_POINT_LIMIT.toLocaleString()}P까지 · 사유는 꼭 적어 주세요(아래 기록에 남고 회원에게 알림이 가요).
         </p>
       </header>
+
+      {pendingRequests.length ? <RefundRequestsAdmin requests={pendingRequests.map((r) => ({ id: r.id, at: r.at, nickname: r.nickname, userId: r.userId, kind: r.kind, name: r.name, reason: r.reason }))} /> : null}
+
+      <div data-points-export className="flex flex-wrap items-center gap-1.5 text-sm">
+        <span className="font-semibold">📥 기록 엑셀로 받기:</span>
+        {[0, -1].map((o) => (
+          <a key={o} href={`/api/admin/points/export?month=${ym(o)}`} className="rounded-full border border-border px-3 py-1 text-xs font-bold">
+            {Number(ym(o).slice(5))}월
+          </a>
+        ))}
+        <a href="/api/admin/points/export" className="rounded-full border border-border px-3 py-1 text-xs font-bold">
+          최근 90일
+        </a>
+      </div>
 
       <BulkGrantForm />
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { clientIp } from "@/lib/request";
 import { ADMIN_POINT_LIMIT, cosmeticRefundFor, refundAmountFor } from "@/lib/admin-points";
+import { parseRequest } from "@/lib/refund-requests";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +13,36 @@ export const dynamic = "force-dynamic";
  * - { action: "refund", userId, markId, amount?, reason } — 마크를 회수하고 포인트를 돌려줌(착용 중이면 벗김)
  * - { action: "refund-cosmetic", userId, cosmeticId, amount?, reason } — 프레임 · 이펙트 환불
  * - { action: "bulk", nicknames: "a, b\nc", amount(+), reason } — 여러 명에게 한꺼번에 지급(최대 100명)
+ * - { action: "request", requestId, approve: true | false, note? } — 회원 환불 요청 승인(바로 환불) · 거절
  * 모든 처리는 AuditLog에 남습니다.
  */
+type Body = { action?: string; userId?: string; markId?: string; cosmeticId?: string; amount?: unknown; reason?: string; requestId?: string; approve?: boolean; note?: string };
+
 export async function POST(request: Request) {
   const { user, error } = await requireAdmin();
   if (error) return error;
   if (!user.isMaster) return NextResponse.json({ error: "마스터 계정만 포인트를 지급 · 환불할 수 있어요." }, { status: 403 });
-  const body = (await request.json().catch(() => ({}))) as { action?: string; userId?: string; markId?: string; amount?: unknown; reason?: string };
+  const body = (await request.json().catch(() => ({}))) as Body;
+  if (body.action !== "request") return handle(request, body, user);
+  // 회원 환불 요청 처리
+  const row = body.requestId ? await prisma.auditLog.findUnique({ where: { id: body.requestId } }) : null;
+  const req = row && row.kind === "refund-request" ? parseRequest(row) : null;
+  if (!row || !req) return NextResponse.json({ error: "없는 요청이에요." }, { status: 404 });
+  if (req.status !== "pending") return NextResponse.json({ error: "이미 처리한 요청이에요." }, { status: 409 });
+  const note = (body.note ?? "").trim().slice(0, 200);
+  const save = (status: "approved" | "rejected") =>
+    prisma.auditLog.update({ where: { id: row.id }, data: { detail: JSON.stringify({ kind: req.kind, itemId: req.itemId, name: req.name, reason: req.reason, status, note, by: user.nickname }) } });
+  if (!body.approve) {
+    await save("rejected");
+    await notify(req.userId, `[${req.name}] 환불 요청이 거절됐어요`, note || "운영 기준에 맞지 않아요");
+    return NextResponse.json({ ok: true, status: "rejected" });
+  }
+  const res = await handle(request, { action: req.kind === "mark" ? "refund" : "refund-cosmetic", userId: req.userId, markId: req.itemId, cosmeticId: req.itemId, reason: `회원 요청: ${req.reason}`.slice(0, 200) }, user);
+  if (res.ok) await save("approved");
+  return res;
+}
+
+async function handle(request: Request, body: Body, user: { nickname: string }) {
   const reason = (body.reason ?? "").trim().slice(0, 200);
   if (body.action === "bulk") return bulkGrant(body as { nicknames?: string; amount?: unknown }, reason, user.nickname, clientIp(request));
   if (!body.userId) return NextResponse.json({ error: "회원을 골라 주세요." }, { status: 400 });
@@ -75,7 +99,7 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "refund-cosmetic") {
-    const cosmeticId = (body as { cosmeticId?: string }).cosmeticId;
+    const cosmeticId = body.cosmeticId;
     if (!cosmeticId) return NextResponse.json({ error: "환불할 상품을 골라 주세요." }, { status: 400 });
     const owned = await prisma.userCosmetic.findUnique({ where: { userId_cosmeticId: { userId: target.id, cosmeticId } }, include: { cosmetic: true } });
     if (!owned) return NextResponse.json({ error: "이 회원이 가진 상품이 아니에요." }, { status: 404 });
