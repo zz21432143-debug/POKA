@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { isLockedRewardSlug } from "@/lib/yokai-catalog";
 import { publicErrorMessage } from "@/lib/public-error";
+import { markPriceFor } from "@/lib/yokai-marks";
 
 export async function POST(
   _request: Request,
@@ -27,18 +28,19 @@ export async function POST(
     if (owned) {
       return NextResponse.json({ error: "이미 보유한 마크입니다." }, { status: 409 });
     }
-    const fresh = await prisma.user.findUnique({ where: { id: user.id } });
-    if (!fresh || fresh.points < mark.pricePoints) {
+    // 그 요괴를 키우고 있으면 요괴 마을 마크 반값
+    const pets = await prisma.yokaiOwned.findMany({ where: { userId: user.id }, select: { species: true } }).catch(() => []);
+    const price = markPriceFor(mark.slug, mark.pricePoints, new Set(pets.map((p) => p.species)));
+    // 포인트 확인과 차감을 한 번에(동시에 두 번 눌러도 마이너스가 되지 않게)
+    const paid = await prisma.$transaction(async (tx) => {
+      const r = await tx.user.updateMany({ where: { id: user.id, points: { gte: price } }, data: { points: { decrement: price } } });
+      if (r.count !== 1) return false;
+      await tx.userMark.create({ data: { userId: user.id, markId: id } });
+      return true;
+    });
+    if (!paid) {
       return NextResponse.json({ error: "포인트가 부족합니다." }, { status: 400 });
     }
-
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: user.id },
-        data: { points: { decrement: mark.pricePoints } },
-      }),
-      prisma.userMark.create({ data: { userId: user.id, markId: id } }),
-    ]);
 
     const { pushTicker } = await import("@/lib/ticker");
     await pushTicker({
@@ -47,7 +49,7 @@ export async function POST(
       href: "/shop",
     });
 
-    return NextResponse.json({ ok: true, spent: mark.pricePoints });
+    return NextResponse.json({ ok: true, spent: price });
   } catch (error) {
     const message = publicErrorMessage(error, "구매에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });

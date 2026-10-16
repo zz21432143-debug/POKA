@@ -14,6 +14,7 @@ import {
   KOREAN_LEGEND_MARKS,
   LOGO_MARKS,
   VILLAGE_COMMON_MARKS,
+  VILLAGE_HERO_MARKS,
   VILLAGE_RARE_MARKS,
   YOKAI_MARKS,
   isLegendSlug,
@@ -62,6 +63,10 @@ export function YokaiPointShop({
     () => mergeFrom(VILLAGE_RARE_MARKS, catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
   );
+  const villageHero = useMemo(
+    () => mergeFrom(VILLAGE_HERO_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
   const logos = useMemo(
     () => mergeFrom(LOGO_MARKS, catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
@@ -87,8 +92,8 @@ export function YokaiPointShop({
     [catalog, demoOwned, demoEquipped],
   );
   const preview =
-    [...logos, ...regular, ...villageCommon, ...villageRare, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
-  const inventory = [...rewards, ...kings, ...logos, ...legends, ...villageRare, ...villageCommon, ...regular].filter((mark) => mark.owned);
+    [...logos, ...regular, ...villageCommon, ...villageRare, ...villageHero, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
+  const inventory = [...rewards, ...kings, ...logos, ...legends, ...villageHero, ...villageRare, ...villageCommon, ...regular].filter((mark) => mark.owned);
   const others = (catalog?.marks ?? []).filter(
     (mark) =>
       !isYokaiSlug(mark.slug) &&
@@ -216,6 +221,13 @@ export function YokaiPointShop({
             </span>
             <strong>{nickname}</strong>
           </div>
+          <p data-mark-preview-inline className="flex items-center gap-1.5 rounded-lg bg-black/30 px-2 py-1.5 text-xs text-zinc-300">
+            <span className="text-zinc-500">게시판에선</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview.imageUrl} alt="" width={20} height={20} className="size-5 rounded-full" />
+            <b className="text-white">{nickname}</b>
+            <span className="text-zinc-500">· 댓글 · 랭킹에도 이렇게 보여요</span>
+          </p>
           <p className="yokai-preview-name">
             {preview.name} · {markPriceTag(preview)}
             {preview.equipped ? " · 착용 중" : preview.owned ? " · 보유 중" : ""}
@@ -283,6 +295,16 @@ export function YokaiPointShop({
             <MarkGrid
               title="요괴 마을 · 희귀"
               marks={villageRare}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
+            <MarkGrid
+              title="요괴 마을 · 영웅 · 전설"
+              marks={villageHero}
               points={points}
               pending={pending}
               selected={selected}
@@ -465,6 +487,7 @@ function toCard(mark: MarkCatalogItem): CardMark {
     name: mark.name,
     imageUrl: mark.imageUrl,
     pricePoints: mark.pricePoints,
+    ...(mark.basePrice ? { basePrice: mark.basePrice } : {}),
     owned: mark.owned,
     equipped: mark.equipped,
   };

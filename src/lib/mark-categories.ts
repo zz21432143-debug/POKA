@@ -20,6 +20,8 @@ export type MarkCatalogItem = {
   name: string;
   imageUrl: string;
   pricePoints: number;
+  /** 할인 전 값(내 요괴 반값일 때만) */
+  basePrice?: number;
   minLevel: number;
   category: MarkCategoryId;
   owned: boolean;

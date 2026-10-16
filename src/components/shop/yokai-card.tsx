@@ -9,6 +9,8 @@ export type CardMark = {
   name: string;
   imageUrl: string;
   pricePoints: number;
+  /** 할인 전 값(내 요괴 반값) */
+  basePrice?: number;
   owned: boolean;
   equipped: boolean;
 };
@@ -44,7 +46,17 @@ export function YokaiOfferCard({
           dimmed={dimUnowned && !mark.owned}
         />
         <h3>{mark.name}</h3>
-        <p className="yokai-price">{markPriceTag(mark)}</p>
+        <p className="yokai-price">
+          {mark.basePrice && !mark.owned ? (
+            <>
+              <s className="mr-1 text-xs text-zinc-500">{mark.basePrice.toLocaleString()}</s>
+              {markPriceTag(mark)}
+              <span data-mark-discount className="ml-1 rounded bg-emerald-500/20 px-1 text-[11px] font-black text-emerald-300">내 요괴 반값</span>
+            </>
+          ) : (
+            markPriceTag(mark)
+          )}
+        </p>
         <div className="yokai-actions">
           <CardButton
             mark={mark}

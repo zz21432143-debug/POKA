@@ -23,6 +23,9 @@ export async function GET(request: Request) {
   // 매달 초: 지난달 오목 · 윷 랭킹 1~3위 포인트(달마다 한 번)
   const { payMonthlyGameRewards } = await import("@/lib/game-stats");
   await payMonthlyGameRewards(today).catch(() => undefined);
+  // 월말 3일 전: 랭킹 1~5위에게 알림
+  const { remindMonthEnd } = await import("@/lib/game-stats");
+  await remindMonthEnd(today).catch(() => undefined);
   const target = shiftDate(today, NOTICE_DAYS);
   const rows = await prisma.post.findMany({
     where: {

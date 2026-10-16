@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { publicMarkUrl } from "@/lib/mark-assets";
 import { ensureYokaiMarks } from "@/lib/ensure-yokai-marks";
+import { markPriceFor } from "@/lib/yokai-marks";
 import {
   type CosmeticCatalogItem,
   type MarkCatalog,
@@ -47,13 +48,15 @@ export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
       await syncRewardMarks(userId, user.level).catch(() => undefined);
     }
   }
-  const [marks, cosmetics, dbUser, owned, ownedCosmetics] = await Promise.all([
+  const [marks, cosmetics, dbUser, owned, ownedCosmetics, pets] = await Promise.all([
     prisma.mark.findMany({ orderBy: [{ category: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),
     prisma.profileCosmetic.findMany({ orderBy: [{ kind: "asc" }, { pricePoints: "asc" }, { name: "asc" }] }),
     userId ? prisma.user.findUnique({ where: { id: userId } }) : Promise.resolve(null),
     userId ? prisma.userMark.findMany({ where: { userId } }) : Promise.resolve([]),
     userId ? prisma.userCosmetic.findMany({ where: { userId } }) : Promise.resolve([]),
+    userId ? prisma.yokaiOwned.findMany({ where: { userId }, select: { species: true } }).catch(() => []) : Promise.resolve([]),
   ]);
+  const species = new Set(pets.map((p) => p.species));
   const ownedIds = new Set(owned.map((row) => row.markId));
   const ownedCosmeticIds = new Set(ownedCosmetics.map((row) => row.cosmeticId));
   return {
@@ -71,7 +74,8 @@ export async function getMarkCatalog(userId?: string): Promise<MarkCatalog> {
       slug: mark.slug,
       name: mark.name,
       imageUrl: publicMarkUrl(mark.imageUrl, mark.slug),
-      pricePoints: mark.pricePoints,
+      pricePoints: markPriceFor(mark.slug, mark.pricePoints, species),
+      ...(markPriceFor(mark.slug, mark.pricePoints, species) < mark.pricePoints ? { basePrice: mark.pricePoints } : {}),
       minLevel: mark.minLevel,
       category: mark.category as MarkCategoryId,
       owned: ownedIds.has(mark.id),

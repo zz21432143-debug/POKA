@@ -292,6 +292,34 @@ export async function payMonthlyGameRewards(today = todayKstDate()) {
   return paid;
 }
 
+/** 월말 3일 전: 이번 달 오목 · 윷 랭킹 1~5위에게 「3위 안이면 보상」 알림(달마다 한 번) */
+export async function remindMonthEnd(today = todayKstDate()) {
+  const [y, m, d] = today.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  if (lastDay - d !== 3) return 0;
+  const month = today.slice(0, 7);
+  const { notifyUser } = await import("@/lib/push");
+  let sent = 0;
+  for (const game of ["omok", "yut"] as const) {
+    const rows = await gameRanking(game, "month", 5, month);
+    if (!rows.length) continue;
+    const mark = await prisma.toolSaved
+      .createMany({ data: [{ id: `gamerankremind_${game}_${month}`, ownerId: "site", kind: "game-month-remind", name: month, dataJson: "{}" }], skipDuplicates: true })
+      .catch(() => ({ count: 0 }));
+    if (mark.count !== 1) continue;
+    const third = rows[2]?.score ?? 0;
+    for (const r of rows) {
+      const reward = MONTH_RANK_REWARD[r.rank - 1];
+      const body = reward
+        ? `지금 ${r.rank}위(${r.score}점)! 월말까지 지키면 ${reward}P를 받아요. 3일 남았어요.`
+        : `지금 ${r.rank}위 · 3위까지 ${Math.max(1, third - r.score + 1)}점! 월말 1~3위는 650 · 390 · 260P예요.`;
+      const res = await notifyUser(r.userId, { title: `🏆 이번 달 ${GAME_LABEL[game]} 랭킹`, body, url: game === "omok" ? "/games/omok" : "/games/yut" }).catch(() => ({ sent: 0 }));
+      sent += res.sent ?? 0;
+    }
+  }
+  return sent;
+}
+
 /** 두 사람 상대 전적(a 승 · b 승 · 무) */
 export async function headToHead(game: GameKind, a: string, b: string) {
   const pair = {

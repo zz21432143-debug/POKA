@@ -8,7 +8,7 @@ import {
   levelRewardSlugs,
 } from "./yokai-achievements";
 import { pickUnusedKingSlug } from "./yokai-kings";
-import { isYokaiSlug, LEGEND_MARK_PRICE, REGULAR_MARK_PRICE, YOKAI_MARKS, KOREAN_LEGEND_MARKS, VILLAGE_COMMON_MARKS, VILLAGE_RARE_MARKS } from "./yokai-marks";
+import { isYokaiSlug, LEGEND_MARK_PRICE, REGULAR_MARK_PRICE, YOKAI_MARKS, KOREAN_LEGEND_MARKS, VILLAGE_COMMON_MARKS, VILLAGE_RARE_MARKS, VILLAGE_HERO_MARKS, markPriceFor } from "./yokai-marks";
 import { markPriceTag } from "./yokai-catalog";
 
 describe("yokai rewards", () => {
@@ -27,6 +27,10 @@ describe("yokai rewards", () => {
     assert.equal(YOKAI_MARKS.every((mark) => mark.pricePoints === REGULAR_MARK_PRICE), true);
     assert.equal([...VILLAGE_COMMON_MARKS, ...VILLAGE_RARE_MARKS].every((mark) => mark.pricePoints === REGULAR_MARK_PRICE), true);
     assert.equal(VILLAGE_COMMON_MARKS.length + VILLAGE_RARE_MARKS.length, 16);
+    assert.equal(VILLAGE_HERO_MARKS.every((mark) => mark.pricePoints === LEGEND_MARK_PRICE), true);
+    assert.equal(markPriceFor("village-gumiho", 5000, new Set(["gumiho"])), 2500);
+    assert.equal(markPriceFor("village-gumiho", 5000, new Set(["tengu"])), 5000);
+    assert.equal(markPriceFor("yokai-fox", 3000, new Set(["gumiho"])), 3000);
     assert.equal(KOREAN_LEGEND_MARKS.every((mark) => mark.pricePoints === LEGEND_MARK_PRICE), true);
     assert.equal(markPriceTag({ slug: "yokai-oni", pricePoints: 3000 }), `${(3000).toLocaleString()} P`);
     assert.equal(markPriceTag({ slug: "yokai-gumiho", pricePoints: 0 }), "구매 불가 / 비매품");

@@ -860,7 +860,7 @@ export async function omokAct(
         version: { increment: 1 },
       },
     });
-    // 둘 다 READY면 시작(흑백 무작위)
+    // 둘 다 READY면 시작(흑백 무작위 · 한 판 더로 이어진 판이면 지난 판과 흑백을 바꿈)
     const fresh = await prisma.omokGame.findUnique({ where: { id } });
     if (
       fresh &&
@@ -869,7 +869,14 @@ export async function omokAct(
       fresh.hostReady &&
       fresh.guestReady
     ) {
-      const hostBlack = randomInt(2) === 0;
+      const prevGame = await prisma.omokGame
+        .findFirst({ where: { nextId: id }, select: { blackId: true, whiteId: true } })
+        .catch(() => null);
+      const samePair =
+        prevGame &&
+        [prevGame.blackId, prevGame.whiteId].includes(fresh.hostId) &&
+        [prevGame.blackId, prevGame.whiteId].includes(fresh.guestId);
+      const hostBlack = samePair ? prevGame.whiteId === fresh.hostId : randomInt(2) === 0;
       await prisma.omokGame.updateMany({
         where: {
           id,
