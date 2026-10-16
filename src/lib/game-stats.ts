@@ -333,7 +333,17 @@ export async function monthRecord(userId: string, game: GameKind) {
   ]);
   const draws = Math.max(0, games - wins - losses);
   const row = ranking.find((r) => r.userId === userId);
-  return { wins, losses, draws, games, score: rankScore({ wins, losses, draws }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games) };
+  // 판마다 점수 흐름(+3 · +1 · -1, 0 아래로는 안 내려감) — 최근 30판
+  const list = await prisma.gameResult
+    .findMany({ where: mineWhere, orderBy: { createdAt: "asc" }, select: { winnerId: true, loserId: true }, take: 300 })
+    .catch(() => []);
+  const trend: number[] = [];
+  let acc = 0;
+  for (const g of list) {
+    acc = Math.max(0, acc + (g.winnerId === userId ? RANK_POINTS.win : g.loserId === userId ? RANK_POINTS.loss : RANK_POINTS.draw));
+    trend.push(acc);
+  }
+  return { wins, losses, draws, games, score: rankScore({ wins, losses, draws }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games), trend: trend.slice(-30) };
 }
 
 /** 두 사람 상대 전적(a 승 · b 승 · 무) */

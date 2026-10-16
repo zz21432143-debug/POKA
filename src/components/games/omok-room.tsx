@@ -1189,6 +1189,7 @@ export function OmokRoom({
                           `📊 ${view.moves.length}수${sec ? ` · ⏱ ${Math.floor(sec / 60)}분 ${sec % 60}초` : ""}`,
                           "같이 두기 👉 https://pokerwiki.co.kr/games/omok",
                         ].join("\n");
+                        void fetch("/api/games/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game: "omok" }) }).catch(() => undefined);
                         if (navigator.share) void navigator.share({ text }).catch(() => undefined);
                         else
                           void navigator.clipboard

@@ -1097,6 +1097,9 @@ export async function omokAct(
         version: { increment: 1 },
       },
     });
+    // 관전 응원 보상(하루 한 번 EXP)
+    const { rewardCheer } = await import("@/lib/cheer-reward");
+    await rewardCheer(userId).catch(() => undefined);
     return done();
   }
 

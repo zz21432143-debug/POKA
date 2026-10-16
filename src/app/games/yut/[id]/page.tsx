@@ -8,7 +8,28 @@ import { yutState } from "@/lib/yut-server";
 import { siteUrl } from "@/lib/site";
 import { loadWinReward } from "@/lib/game-reward";
 
-export const metadata: Metadata = {
+/** 카톡 · 메신저 미리보기: 「○○님의 요괴 윷놀이 방 — 1:1」 · 빈자리 · 방 코드 */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { prisma } = await import("@/lib/db");
+  const row = /^[a-z0-9]{10,40}$/i.test(id)
+    ? await prisma.yutGame.findUnique({ where: { id }, select: { hostId: true, code: true, status: true, mode: true, seatsJson: true } }).catch(() => null)
+    : null;
+  const host = row ? await prisma.user.findUnique({ where: { id: row.hostId }, select: { nickname: true } }).catch(() => null) : null;
+  if (!row || !host) return metadata;
+  let empty = 0;
+  try {
+    empty = (JSON.parse(row.seatsJson) as { userId?: string | null; bot?: boolean }[]).filter((x) => !x.userId && !x.bot).length;
+  } catch {
+    /* 자리 수를 못 읽으면 빼고 */
+  }
+  const mode = `${row.mode}:${row.mode}`;
+  const title = row.status === "playing" ? `${host.nickname}님의 요괴 윷놀이(${mode}) — 지금 진행 중! 관전하러 와요` : `${host.nickname}님의 요괴 윷놀이 방(${mode}) — 한 판 하자!`;
+  const description = `${row.code ? `방 코드 ${row.code} · ` : ""}${row.status === "waiting" && empty ? `빈자리 ${empty}개 · ` : ""}링크를 누르면 홍팀 · 청팀 자리에 바로 앉을 수 있어요.`;
+  return { ...metadata, title, description, openGraph: { ...metadata.openGraph, title, description } };
+}
+
+const metadata: Metadata = {
   title: "요괴 윷놀이",
   description: "POKA 요괴 윷놀이 — 초대 링크로 들어와 홍팀 · 청팀 자리에 앉으세요!",
   robots: { index: false, follow: false },

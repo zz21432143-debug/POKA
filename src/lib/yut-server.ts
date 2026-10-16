@@ -613,6 +613,9 @@ export async function yutAct(
     if (em.cheers.some((c) => c.n === me.nickname && now - c.at < 2500)) return done();
     const cheers = [...em.cheers.filter((c) => now - c.at < 15_000), { n: me.nickname, e, at: now }].slice(-8);
     await prisma.yutGame.update({ where: { id }, data: { emoteJson: JSON.stringify({ ...em, cheers }), version: { increment: 1 } } });
+    // 관전 응원 보상(하루 한 번 EXP)
+    const { rewardCheer } = await import("@/lib/cheer-reward");
+    await rewardCheer(userId).catch(() => undefined);
     return done();
   }
   if (action === "surrender" || action === "surrender-cancel") {

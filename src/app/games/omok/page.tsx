@@ -146,6 +146,15 @@ export default async function OmokLobbyPage() {
           </RulesButton>
         </header>
         {user ? <MonthRecordBar userId={user.id} game="omok" /> : null}
+        {/* 빠른 대전: 기다리는 공개방에 바로 앉고 없으면 방을 만들어 줌 */}
+        <Link
+          href={user ? "/games/omok/quick" : "/login?next=/games/omok/quick"}
+          prefetch={false}
+          data-quick-match
+          className="arcade-btn btn-gold grid min-h-14 place-items-center text-lg"
+        >
+          ⚡ 빠른 대전 — 기다리는 방에 바로 앉기
+        </Link>
 
         {/* 기다리는 방(크게) */}
         <section aria-label="기다리는 방" data-omok-waiting-list className="grid gap-2 rounded-3xl border-4 border-[#3ddc97] bg-[#0f2a22]/80 p-3 shadow-[0_0_24px_#3ddc9755]">

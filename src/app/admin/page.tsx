@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 async function AdminHome({ isMaster }: { isMaster: boolean }) {
   const dayStart = new Date(`${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date())}T00:00:00+09:00`);
   const { badNicknames } = await import("@/lib/nickname-force");
-  const [pendingReports, restricted, signups, members, bad, errors7] = await Promise.all([
+  const [pendingReports, restricted, signups, members, bad, errors7, shares7] = await Promise.all([
     prisma.report.count({ where: { status: "pending" } }).catch(() => 0),
     prisma.user.count({ where: { status: { in: ["SUSPENDED", "BANNED"] } } }).catch(() => 0),
     prisma.user.count({ where: { createdAt: { gte: dayStart } } }).catch(() => 0),
@@ -28,6 +28,8 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
     isMaster ? badNicknames(100).catch(() => []) : Promise.resolve([]),
     // 최근 7일 서버 오류(같은 오류는 10분에 한 번만 기록됨)
     prisma.toolSaved.count({ where: { kind: "server-error", createdAt: { gte: new Date(dayStart.getTime() - 6 * 86_400_000) } } }).catch(() => 0),
+    // 최근 7일 게임 결과 공유(오목 · 윷 「📤 공유」)
+    prisma.toolSaved.count({ where: { kind: "game-share", createdAt: { gte: new Date(dayStart.getTime() - 6 * 86_400_000) } } }).catch(() => 0),
   ]);
   const cards = [
     { label: "처리할 신고", value: pendingReports, href: "/admin?tab=reports", tone: pendingReports ? "text-rose-300" : "text-emerald-300" },
@@ -36,6 +38,7 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
     { label: "전체 회원", value: members, href: "/admin/members", tone: "text-[#e7c98a]", master: true },
     { label: "정지 · 차단 중", value: restricted, href: "/admin?tab=sanctions", tone: "text-zinc-200" },
     { label: "최근 7일 서버 오류", value: errors7, href: "/admin/errors", tone: errors7 ? "text-amber-300" : "text-emerald-300" },
+    { label: "최근 7일 게임 결과 공유", value: shares7, href: "/admin/stats", tone: "text-sky-300" },
   ].filter((c) => !c.master || isMaster);
   return (
     <div className="grid gap-4">
