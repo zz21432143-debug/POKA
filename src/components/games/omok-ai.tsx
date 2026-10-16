@@ -1,5 +1,7 @@
 "use client";
 
+import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
+
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
@@ -268,6 +270,10 @@ export function OmokAi({
   if (!human) {
     return (
       <div data-omok-ai-pick className="arcade-panel grid gap-4 p-5">
+        <FullscreenPrompt />
+        <div className="flex justify-end">
+          <FullscreenButton />
+        </div>
         <p className="arcade-px neon-gold text-center text-sm">CHALLENGER</p>
         <div className="grid justify-items-center gap-2 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 상대 요괴 */}
@@ -321,6 +327,10 @@ export function OmokAi({
     winner === "draw" ? "DRAW" : humanWon ? "YOU WIN!" : "YOU LOSE";
   return (
     <div data-omok-ai className="grid gap-2.5">
+      <FullscreenPrompt />
+      <div className="flex justify-end">
+        <FullscreenButton />
+      </div>
       <OmokHud
         left={{
           name: me.nickname,

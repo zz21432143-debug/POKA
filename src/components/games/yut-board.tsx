@@ -331,7 +331,7 @@ export function YutBoard({
               {guide === "pick" ? (
                 <>
                   <span className="grid size-[1.5em] place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">1</span>
-                  반짝이는 내 말{startPick !== null ? " 또는 「새 말」" : ""}을 누르세요
+                  반짝이는 내 말{startPick !== null ? " 또는 오른쪽 「🐾 새 말」" : ""}을 누르세요
                 </>
               ) : (
                 <>
@@ -341,22 +341,6 @@ export function YutBoard({
               )}
             </p>
           </div>
-        ) : null}
-        {/* 출발 모서리: 대기 말 내보내기(판에서 바로) */}
-        {guide && startPick !== null ? (
-          <button
-            type="button"
-            data-yut-new-piece
-            onClick={() => onPiece(startPick)}
-            className={cn(
-              "absolute z-[35] grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-lg border-[3px] border-[#0a0614] px-1.5 py-1 text-[clamp(9px,2.2cqw,14px)] leading-tight font-black shadow-[3px_3px_0_#0a0614]",
-              selected === startPick ? "bg-[#6ad7ff] text-[#04263a]" : "yut-select-jump bg-[#ffcf4a] text-[#2a1400]",
-            )}
-            style={{ left: `${NODE_XY.o0[0] - 16}%`, top: `${NODE_XY.o0[1]}%` }}
-          >
-            <span>🐾 새 말</span>
-            <span className="text-[0.8em]">{selected === startPick ? "골랐어요" : "내보내기"}</span>
-          </button>
         ) : null}
         {/* 골인: GOAL! + 금빛 파편 */}
         {goal ? (

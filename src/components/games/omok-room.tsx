@@ -1,5 +1,7 @@
 "use client";
 
+import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -770,9 +772,11 @@ export function OmokRoom({
       data-omok-room={view.status}
       className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start"
     >
+      <FullscreenPrompt />
       {/* ── 왼쪽(휴대폰은 위): HUD · 판 · 조작 ── */}
       <div className="relative grid gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
+          <FullscreenButton />
           {(() => {
             // 나가기: 대국 중 = 기권 · 방장 대기실 = 방 닫기 · 손님 = 일어나기 · 그 밖 = 로비로
             const risky =

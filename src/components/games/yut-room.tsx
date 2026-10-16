@@ -1,5 +1,7 @@
 "use client";
 
+import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
+
 import { nowMs } from "@/lib/dates";
 /** 게이지 없이 던질 때 세기(60~89) — 렌더 밖에서만 부름 */
 const randomPower = () => 60 + Math.floor(Math.random() * 30);
@@ -943,6 +945,7 @@ export function YutRoom({
 
   return (
     <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
+      <FullscreenPrompt />
       {/* 머리(한 줄) */}
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <h1
@@ -975,6 +978,7 @@ export function YutRoom({
         >
           {sound ? "🔊" : "🔇"}
         </button>
+        <FullscreenButton />
         <button
           type="button"
           data-yut-howto
@@ -1624,13 +1628,35 @@ export function YutRoom({
               ) : null}
 
               {canThrow ? <div className="h-28 lg:hidden" aria-hidden /> : null}
-              <SpectatorBar
-                count={watching.count}
-                list={watching.list}
-                cheers={view.cheers}
-                now={now + offset}
-                me={!view.mySeat}
-              />
+              {/* 관전자 칸 · 그 왼쪽에 「새 말 내보내기」(내 차례 · 대기 말이 있을 때) */}
+              <div className="flex min-w-0 items-stretch gap-2">
+                {moving && !busy && startRep !== undefined ? (
+                  <button
+                    type="button"
+                    data-yut-new-piece
+                    onClick={() => pickPiece(startRep)}
+                    className={cn(
+                      "grid w-24 shrink-0 place-items-center rounded-2xl border-[3px] border-[#0a0614] px-1.5 py-2 text-center text-sm leading-tight font-black shadow-[3px_3px_0_#0a0614]",
+                      selected === startRep ? "bg-[#6ad7ff] text-[#04263a]" : "yut-select-jump bg-[#ffcf4a] text-[#2a1400]",
+                    )}
+                  >
+                    <span className="text-xl" aria-hidden>
+                      🐾
+                    </span>
+                    <span>새 말</span>
+                    <span className="text-[11px]">{selected === startRep ? "골랐어요" : "내보내기"}</span>
+                  </button>
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <SpectatorBar
+                    count={watching.count}
+                    list={watching.list}
+                    cheers={view.cheers}
+                    now={now + offset}
+                    me={!view.mySeat}
+                  />
+                </div>
+              </div>
               {queuePanel}
             </div>
           </div>
