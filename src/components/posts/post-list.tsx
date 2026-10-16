@@ -234,7 +234,7 @@ function BoardSheet({
                   <span className="board-stat-label">조회</span>
                   {post.viewCount ?? 0}
                 </span>
-                <span className="board-stat">
+                <span className={cn("board-stat", !post.upvoteCount && "board-stat-zero")}>
                   <span className="board-stat-label">추천</span>
                   {post.upvoteCount}
                 </span>

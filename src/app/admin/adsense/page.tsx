@@ -232,14 +232,12 @@ export default async function AdminAdsensePage() {
         </div>
       </section>
 
-      <section aria-label="자동 광고 제외" className={card}>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Mark ok={false} warn /> 자동 광고를 켠다면: 업무 화면 제외(직접)
-        </h2>
-        <p className="mt-1 text-sm">
+      <details aria-label="자동 광고 제외" className={card}>
+        <summary className="cursor-pointer text-sm font-semibold text-muted-foreground">자동 광고를 켤 때만: 업무 화면 제외 방법(눌러서 보기)</summary>
+        <p className="mt-2 text-sm">
           애드센스 → 광고 → 사이트 → 자동 광고 → <b>페이지 제외</b>에 <code>pokerwiki.co.kr/r/*</code>, <code>/g/*</code>, <code>/tools/*</code>를 넣어 TV 교대표 · 현황판 위에 광고가 뜨지 않게 해 주세요.
         </p>
-      </section>
+      </details>
     </div>
   );
 }

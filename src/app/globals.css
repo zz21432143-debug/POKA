@@ -519,6 +519,19 @@ select {
   animation: led-roll-in 320ms cubic-bezier(0.22, 0.8, 0.3, 1) 200ms both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .led-roll-in,
+  .led-roll-out,
+  .led-roll-hint,
+  .notice-roll {
+    animation: none !important;
+  }
+
+  .led-roll-out {
+    opacity: 0;
+  }
+}
+
 .led-roll-out {
   animation: led-roll-out 220ms ease-in both;
 }
@@ -1712,6 +1725,11 @@ select {
 
   .board-row {
     column-gap: 0.55rem;
+  }
+
+  /* 휴대폰: 추천 0은 숨김(한 줄에 들어가게) */
+  .board-stat-zero {
+    display: none;
   }
 
   /* 휴대폰: 게시판 맨 위 소개 칸은 작게(목록이 첫 화면에 더 보이게) */

@@ -251,6 +251,20 @@ export function ApplyChat({
         </button>
       ) : null}
       {loggedIn ? <FirstTip /> : null}
+      {loggedIn ? (
+        <button
+          type="button"
+          data-chat-fab
+          onClick={() => {
+            const box = document.querySelector<HTMLTextAreaElement>("[data-chat-composer] textarea");
+            box?.scrollIntoView({ behavior: "smooth", block: "center" });
+            window.setTimeout(() => box?.focus(), 350);
+          }}
+          className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 inline-flex h-13 items-center gap-1.5 rounded-full bg-[#fee500] px-5 text-[15px] font-black text-[#1d1d1d] shadow-[0_6px_18px_rgba(0,0,0,.55)] ring-2 ring-black/20 sm:hidden"
+        >
+          ✏️ 공고 올리기
+        </button>
+      ) : null}
       <Composer
         kind={kind}
         slug={slug}
