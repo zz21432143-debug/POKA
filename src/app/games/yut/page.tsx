@@ -116,7 +116,7 @@ export default async function YutLobbyPage() {
             </ul>
           </RulesButton>
         </header>
-        <OnlineNow />
+        <OnlineNow game="yut" />
         {user ? <MonthRecordBar userId={user.id} game="yut" /> : null}
         {/* 빠른 대전: 기다리는 공개방에 바로 앉고 없으면 방을 만들어 줌 */}
         <Link

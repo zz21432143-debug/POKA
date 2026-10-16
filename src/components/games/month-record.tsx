@@ -1,17 +1,22 @@
 import Link from "next/link";
-import { MONTH_RANK_REWARD, monthRecord, type GameKind } from "@/lib/game-stats";
+import { MONTH_RANK_REWARD, monthRecord, todayHighlight, type GameKind } from "@/lib/game-stats";
 import { playersOnline } from "@/lib/game-watch";
 import { GameAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
 /** 로비 위: 지금 게임방에 있는 사람 수 · 상대 찾기 알림 켜기 */
-export async function OnlineNow() {
-  const n = await playersOnline().catch(() => 0);
+export async function OnlineNow({ game }: { game: "omok" | "yut" }) {
+  const [n, hi] = await Promise.all([playersOnline(game).catch(() => 0), todayHighlight(game).catch(() => null)]);
   return (
     <div data-online-now={n} className="flex flex-wrap items-center gap-2 text-sm font-bold">
       <span className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-[#3ddc97]">
         <span className="size-2 animate-pulse rounded-full bg-[#3ddc97]" aria-hidden />
-        {n ? `지금 게임방에 ${n}명` : "지금 들어오면 첫 번째!"}
+        {n ? `지금 ${game === "omok" ? "오목" : "윷놀이"} 방에 ${n}명` : "지금 들어오면 첫 번째!"}
       </span>
+      {hi ? (
+        <span data-today-highlight className="rounded-full bg-black/40 px-3 py-1 text-xs text-[#ffe08a]">
+          🔥 오늘 {hi.games}판 · 최장 {hi.longest.moves}{game === "omok" ? "수" : "번 이동"} — {hi.longest.label}
+        </span>
+      ) : null}
       <span className="ml-auto">
         <GameAlertToggle />
       </span>

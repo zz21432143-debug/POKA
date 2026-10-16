@@ -94,6 +94,8 @@ export function YutRoom({
   const [view, setView] = useState(initial);
   const [offset, setOffset] = useState(() => initial.serverNow - Date.now());
   const [now, setNow] = useState(() => Date.now());
+  // 이 방에 들어온 시각(혼자 오래 기다리면 요괴봇으로 시작 권하기)
+  const [enteredAt] = useState(() => Date.now());
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sound, setSound] = useState(true);
@@ -1327,6 +1329,11 @@ export function YutRoom({
                   🔀 팀 섞기
                 </button>
               </div>
+              {humans < 2 && now - enteredAt > 60_000 ? (
+                <p data-yut-bot-suggest className="animate-pulse rounded-xl bg-[#ffcf4a]/15 px-3 py-2 text-center text-sm font-black text-[#ffe08a]">
+                  🤖 아직 아무도 안 왔어요 · 아래 「게임 시작」을 누르면 요괴봇이 빈자리를 채워 바로 시작해요
+                </p>
+              ) : null}
               <button
                 type="button"
                 data-yut-start

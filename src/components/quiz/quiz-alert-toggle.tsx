@@ -14,6 +14,33 @@ export function GameAlertToggle() {
   return <PushAlertToggle api="/api/games/alert" label="상대 찾을 때 알림(하루 2번까지)" onMessage="누가 오목 · 윷 방을 열면 알려 드릴게요(하루 2번까지)." data="game" />;
 }
 
+/** 알림을 못 켜는 브라우저: 아이폰이면 「홈 화면에 추가」 단계별 안내 */
+function IosPushGuide() {
+  const [ios, setIos] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 기기 종류는 화면이 뜬 뒤에만 알 수 있음
+    setIos(/iPhone|iPad|iPod/.test(navigator.userAgent));
+  }, []);
+  if (!ios) return <span className="text-xs text-zinc-400">이 브라우저는 알림을 지원하지 않아요. 크롬 · 삼성 인터넷에서 열어 주세요.</span>;
+  return (
+    <details data-ios-push-guide className="text-xs text-zinc-300">
+      <summary className="cursor-pointer font-bold text-[#ffe08a]">📱 아이폰은 이렇게 하면 알림을 받을 수 있어요</summary>
+      <ol className="mt-1.5 grid list-decimal gap-1 pl-5 leading-relaxed">
+        <li>
+          사파리 아래쪽 <b className="text-white">공유 버튼(네모에 위 화살표 ⬆️)</b>을 눌러요.
+        </li>
+        <li>
+          메뉴를 내려서 <b className="text-white">「홈 화면에 추가」</b>를 눌러요.
+        </li>
+        <li>
+          홈 화면에 생긴 <b className="text-white">POKA 아이콘</b>으로 다시 열어요.
+        </li>
+        <li>여기서 알림 켜기를 누르고 「허용」을 눌러요. (iOS 16.4 이상)</li>
+      </ol>
+    </details>
+  );
+}
+
 /** 이 기기로 알림 받기(켜기 · 끄기) 공용: api는 GET ?endpoint · POST { subscription } · DELETE { endpoint } */
 export function PushAlertToggle({ api, label, onMessage, data }: { api: string; label: string; onMessage: string; data: string }) {
   const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
@@ -79,7 +106,7 @@ export function PushAlertToggle({ api, label, onMessage, data }: { api: string; 
       <BellRingIcon className="size-4 shrink-0 text-[#c9a25c]" aria-hidden />
       <span className="font-bold text-[#E5E7EB]">{label}</span>
       {state === "unsupported" ? (
-        <span className="text-xs text-zinc-400">이 브라우저는 알림을 지원하지 않아요. 아이폰은 POKA 앱(홈 화면에 추가)으로 열어 주세요.</span>
+        <IosPushGuide />
       ) : (
         <button
           type="button"

@@ -101,6 +101,8 @@ export function OmokRoom({
   const [records, setRecords] = useState(initial.records ?? null);
   const [offset, setOffset] = useState(() => initial.serverNow - Date.now());
   const [now, setNow] = useState(() => Date.now());
+  // 이 방에 들어온 시각(혼자 오래 기다리면 AI 연습 권하기)
+  const [enteredAt] = useState(() => Date.now());
   const [preview, setPreview] = useState<number | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1030,6 +1032,18 @@ export function OmokRoom({
                   <p className="arcade-px arcade-blink text-[11px] text-[#ffcf4a]">
                     WAITING FOR 2P
                   </p>
+                ) : null}
+                {!view.guest && view.isHost && now - enteredAt > 60_000 ? (
+                  <a
+                    href="/games/omok/ai"
+                    target="_blank"
+                    rel="noopener"
+                    data-omok-wait-ai
+                    className="arcade-btn btn-dark mt-1 grid !min-h-10 place-items-center px-3 text-sm"
+                  >
+                    🤖 기다리는 동안 요괴 AI랑 연습(새 창)
+                    <span className="block text-[11px] font-bold text-[#d6cdee]">이 방은 열어 둔 채로 · 상대가 오면 소리로 알려요</span>
+                  </a>
                 ) : null}
               </div>
             </div>

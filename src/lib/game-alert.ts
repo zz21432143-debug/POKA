@@ -29,7 +29,7 @@ export async function alertWaitingRoom(game: "omok" | "yut", roomId: string, hos
   const r = await notifyGameAlert(hostId, {
     title: `🏮 지금 ${label} 상대를 찾고 있어요`,
     body: `${host?.nickname ?? "누군가"}님이 방을 열었어요. 눌러서 바로 한 판!`,
-    url: `/games/${game}/${roomId}?from=push`,
+    url: `/games/${game}/${roomId}?from=push-game`,
   }).catch(() => ({ sent: 0 }));
   return r.sent ?? 0;
 }

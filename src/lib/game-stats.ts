@@ -346,6 +346,32 @@ export async function monthRecord(userId: string, game: GameKind) {
   return { wins, losses, draws, games, score: rankScore({ wins, losses, draws }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games), trend: trend.slice(-30) };
 }
 
+/** 로비 하이라이트: 오늘 둔 판 수 · 가장 긴 판(수 · 두 사람/이긴 사람) */
+export async function todayHighlight(game: GameKind) {
+  const since = new Date(`${todayKstDate()}T00:00:00+09:00`);
+  const rows = await prisma.gameResult
+    .findMany({ where: { game, createdAt: { gte: since } }, select: { gameId: true, playerAId: true, playerBId: true, winnerId: true, moves: true } })
+    .catch(() => []);
+  if (!rows.length) return null;
+  // 윷은 사람마다 한 줄(gameId = 판:사람) → 판으로 묶음
+  const games = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const key = game === "yut" ? r.gameId.split(":")[0] : r.gameId;
+    games.set(key, [...(games.get(key) ?? []), r]);
+  }
+  const longest = [...games.values()].sort((a, b) => b[0].moves - a[0].moves)[0];
+  const ids = game === "yut" ? longest.filter((r) => r.winnerId).map((r) => r.playerAId) : [longest[0].playerAId, longest[0].playerBId];
+  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, nickname: true } }).catch(() => []);
+  const name = (id: string) => users.find((u) => u.id === id)?.nickname ?? "?";
+  return {
+    games: games.size,
+    longest: {
+      moves: longest[0].moves,
+      label: game === "yut" ? `${ids.map(name).join(", ")} 승리` : `${name(ids[0])} vs ${name(ids[1])}`,
+    },
+  };
+}
+
 /** 두 사람 상대 전적(a 승 · b 승 · 무) */
 export async function headToHead(game: GameKind, a: string, b: string) {
   const pair = {

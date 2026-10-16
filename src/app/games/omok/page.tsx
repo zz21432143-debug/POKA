@@ -145,7 +145,7 @@ export default async function OmokLobbyPage() {
             </ul>
           </RulesButton>
         </header>
-        <OnlineNow />
+        <OnlineNow game="omok" />
         {user ? <MonthRecordBar userId={user.id} game="omok" /> : null}
         {/* 빠른 대전: 기다리는 공개방에 바로 앉고 없으면 방을 만들어 줌 */}
         <Link
