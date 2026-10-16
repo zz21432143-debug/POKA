@@ -393,7 +393,7 @@ function ChatBubble({ m, mine, today, loggedIn, slug, always, onEdited, onLogo }
               ) : null}
             </span>
           </div>
-          <span className="shrink-0 pb-0.5 text-[10px] text-[#3b4a5c]">
+          <span className="shrink-0 pb-0.5 text-[11px] text-[#3b4a5c]">
             {m.bumped ? "끌올 " : ""}
             {kst(m.at, { hour: "numeric", minute: "2-digit" })}
           </span>

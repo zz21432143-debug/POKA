@@ -35,8 +35,8 @@ export async function HomeSummary() {
         {items.map((it) => (
           <li key={it.href}>
             <Link href={it.href} className="touch-target flex min-h-14 flex-col items-center justify-center rounded-xl bg-black/35 px-1.5 hover:bg-black/55 sm:min-w-28 sm:px-3">
-              <span className="flex items-center gap-1 text-[11px] font-bold text-[#a89880]">
-                <it.icon className="size-3.5" />
+              <span className="flex items-center gap-1 text-[12px] font-bold whitespace-nowrap text-[#b9aa92] sm:text-[11px]">
+                <it.icon className="hidden size-3.5 sm:block" />
                 {it.label}
               </span>
               <span className={`text-xl leading-tight font-black tabular-nums ${it.tone}`}>{it.value}</span>

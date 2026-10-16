@@ -1584,8 +1584,9 @@ select {
 }
 
 @media (max-width: 760px) {
+  /* 휴대폰: 칸 이름 줄은 숨김(한 글이 두 줄 카드라 필요 없음) */
   .board-head {
-    display: block;
+    display: none;
     padding-top: 0.65rem;
     padding-bottom: 0.65rem;
   }

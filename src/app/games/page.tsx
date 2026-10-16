@@ -44,7 +44,7 @@ export default async function GamesPage() {
         <p className="text-xs text-zinc-300">
           요괴들과 한 판! 친구와 대전하거나 요괴와 연습해 보세요.
         </p>
-        <p className="arcade-px arcade-blink text-[9px] text-[#ffe08a]">
+        <p className="arcade-px arcade-blink text-xs text-[#ffe08a]">
           게임을 골라요
         </p>
       </header>

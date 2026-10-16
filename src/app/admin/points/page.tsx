@@ -82,6 +82,9 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
         <a href="/api/admin/points/export" className="rounded-full border border-border px-3 py-1 text-xs font-bold">
           최근 90일
         </a>
+        <a href={`/api/admin/points/export?month=${ym(0)}&buys=1`} className="rounded-full border border-primary/50 px-3 py-1 text-xs font-bold">
+          이번 달 + 회원 구매
+        </a>
       </div>
 
       <BulkGrantForm />

@@ -26,6 +26,13 @@ export async function GET(request: Request) {
   // 월말 3일 전: 랭킹 1~5위에게 알림
   const { remindMonthEnd } = await import("@/lib/game-stats");
   await remindMonthEnd(today).catch(() => undefined);
+  // 광고가 잘 안 채워지는 자리가 있으면 운영자에게 하루 한 번 알림
+  const { lowFillPlacements } = await import("@/lib/ad-fill");
+  const low = await lowFillPlacements(Date.now()).catch(() => []);
+  if (low.length) {
+    const { notifyAdmins } = await import("@/lib/push");
+    await notifyAdmins({ title: `⚠️ 광고가 잘 안 채워지는 자리 ${low.length}곳`, body: low.map((r) => `${r.label} ${r.rate}%`).join(" · "), url: "/admin/adsense" }).catch(() => undefined);
+  }
   const target = shiftDate(today, NOTICE_DAYS);
   const rows = await prisma.post.findMany({
     where: {

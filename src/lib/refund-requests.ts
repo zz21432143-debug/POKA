@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 export const REFUND_REQUEST_DAYS = 7;
 /** 한 사람이 동시에 걸어 둘 수 있는 요청 수 */
 export const REFUND_REQUEST_MAX = 3;
+/** 30일 동안 걸 수 있는 요청 수(자주 사고 무르는 것 막기) */
+export const REFUND_REQUEST_MONTHLY = 3;
 
 export type RefundRequest = {
   id: string;

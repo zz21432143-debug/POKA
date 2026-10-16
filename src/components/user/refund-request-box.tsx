@@ -34,7 +34,7 @@ export function RefundRequestBox({ items, requests }: { items: Item[]; requests:
   return (
     <section data-refund-request className="grid gap-2 rounded-2xl border border-border bg-card p-3">
       <p className="text-sm font-semibold">
-        🔁 마크 환불 요청 <span className="text-xs font-normal text-muted-foreground">(산 지 7일 안 된 마크 · 프레임 · 이펙트)</span>
+        🔁 마크 환불 요청 <span className="text-xs font-normal text-muted-foreground">(산 지 7일 안 된 마크 · 프레임 · 이펙트 · 30일에 3번까지)</span>
       </p>
       {items.length ? (
         <div className="grid gap-1.5">

@@ -68,7 +68,7 @@ function isActive(href: string, pathname: string, tab: string | null) {
   return true;
 }
 
-export function AdminNav({ isMaster }: { isMaster?: boolean; current?: string }) {
+export function AdminNav({ isMaster, badges = {} }: { isMaster?: boolean; current?: string; badges?: Record<string, number> }) {
   const pathname = usePathname() ?? "";
   const tab = useSearchParams()?.get("tab") ?? null;
   return (
@@ -91,6 +91,11 @@ export function AdminNav({ isMaster }: { isMaster?: boolean; current?: string })
                 )}
               >
                 {i.label}
+                {badges[i.href] ? (
+                  <span data-admin-badge={i.href} className="ml-1.5 grid min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[11px] font-black text-white">
+                    {badges[i.href]}
+                  </span>
+                ) : null}
               </Link>
             ))}
           </div>

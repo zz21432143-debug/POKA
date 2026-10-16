@@ -84,7 +84,7 @@ function GamesSlide() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(10,6,20,.82)_0%,rgba(10,6,20,.35)_30%,transparent_45%,transparent_70%,rgba(10,6,20,.55)_100%)]" />
       <div className="pointer-events-none relative z-[2] flex h-full flex-col justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
         <div className="grid max-w-[13rem] gap-1 sm:max-w-[17rem]">
-          <p className="w-fit rounded-full bg-black/60 px-2 text-[10px] font-black tracking-[0.2em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">
+          <p className="w-fit rounded-full bg-black/60 px-2 text-[11px] font-black tracking-[0.12em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">
             <span className="sm:hidden">{fresh ? "요괴 마을 · 새로 열림" : "요괴 마을 · 인기"}</span>
             <span className="hidden sm:inline">{fresh ? "POKA · 새로 열림" : "POKA · 요괴 마을 인기"}</span>
           </p>
@@ -94,7 +94,7 @@ function GamesSlide() {
             <span className="block text-xs font-bold text-[#f3e8ff] sm:text-sm">요괴 키우고 ·<br />요괴 오락실에서 윷놀이 · 오목 한 판</span>
           </h2>
         </div>
-        <div className="pointer-events-auto flex w-fit flex-wrap gap-1.5 pr-12 sm:pr-0">
+        <div className="pointer-events-auto flex w-fit flex-wrap gap-1.5 pr-6 sm:pr-0">
           <Link href="/yokai" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10 bg-[#ffcf4a] px-2.5 text-xs font-black text-[#2a1400] shadow-[2px_2px_0_#0a0614] sm:px-3 sm:text-sm">
             <LampIcon aria-hidden className="mr-1 size-3.5" />
             요괴 마을 가기
@@ -132,7 +132,7 @@ async function HeroLive() {
   return (
     <p
       data-hero-live
-      className={`pointer-events-none absolute top-3 right-3 z-[2] items-center ${live.games ? "flex" : "hidden sm:flex"} gap-1.5 rounded-full border border-[#ffcf4a]/50 bg-black/65 px-2.5 py-1 text-[10px] font-black text-[#ffe08a] sm:top-4 sm:right-5 sm:text-xs`}
+      className={`pointer-events-none absolute top-3 right-3 z-[2] items-center ${live.games ? "flex" : "hidden sm:flex"} gap-1.5 rounded-full border border-[#ffcf4a]/50 bg-black/65 px-2.5 py-1 text-[11px] font-black text-[#ffe08a] sm:top-4 sm:right-5 sm:text-xs`}
     >
       {live.pets ? <span className="hidden sm:inline"><FlameIcon aria-hidden className="mr-0.5 inline size-3.5" />요괴 키우는 회원 {live.pets.toLocaleString("ko-KR")}명</span> : null}
       {live.pets && live.games ? <span aria-hidden className="hidden text-white/40 sm:inline">·</span> : null}

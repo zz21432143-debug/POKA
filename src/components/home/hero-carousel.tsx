@@ -61,7 +61,7 @@ export function HeroCarousel({ slides }: { slides: { key: string; label: string;
         ))}
       </div>
       {n > 1 ? (
-        <div className="absolute right-3 bottom-2 z-10 flex gap-1.5">
+        <div data-hero-dots className="absolute top-1/2 right-1 z-10 flex -translate-y-1/2 flex-col sm:top-auto sm:right-3 sm:bottom-2 sm:translate-y-0 sm:flex-row sm:gap-1.5">
           {slides.map((s, k) => (
             <button
               key={s.key}
@@ -71,7 +71,7 @@ export function HeroCarousel({ slides }: { slides: { key: string; label: string;
               onClick={() => setI(k)}
               className="grid size-8 place-items-center"
             >
-              <span className={cn("block h-2 rounded-full transition-all", k === i ? "w-5 bg-[#ffcf4a]" : "w-2 bg-white/50")} />
+              <span className={cn("block rounded-full transition-all", k === i ? "h-5 w-2 bg-[#ffcf4a] sm:h-2 sm:w-5" : "size-2 bg-white/60")} />
             </button>
           ))}
         </div>
