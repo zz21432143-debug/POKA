@@ -14,6 +14,8 @@ export function MyJobRefresh({
   status,
   openSlotCount,
   bumpedAt,
+  company = null,
+  logoUrl = null,
 }: {
   id: string;
   title: string;
@@ -21,12 +23,41 @@ export function MyJobRefresh({
   status: string;
   openSlotCount: number;
   bumpedAt: string;
+  company?: string | null;
+  logoUrl?: string | null;
 }) {
   const router = useRouter();
   const [text, setText] = useState(content);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const changed = text.trim() !== content.trim();
+  const [logo, setLogo] = useState(logoUrl);
+  async function pickLogo(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNote("사진 파일을 골라 주세요.");
+      return;
+    }
+    setBusy(true);
+    const form = new FormData();
+    form.append("file", file);
+    const up = await fetch("/api/uploads/image", { method: "POST", body: form }).catch(() => null);
+    const uj = (await up?.json().catch(() => null)) as { url?: string; error?: string } | null;
+    if (!up?.ok || !uj?.url) {
+      setBusy(false);
+      setNote(uj?.error ?? "사진을 올리지 못했어요.");
+      return;
+    }
+    const r = await fetch("/api/jobs/store-logo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: id, url: uj.url }) }).catch(() => null);
+    const j = (await r?.json().catch(() => null)) as { error?: string } | null;
+    setBusy(false);
+    if (!r?.ok) {
+      setNote(j?.error ?? "로고를 저장하지 못했어요.");
+      return;
+    }
+    setLogo(uj.url);
+    setNote("✅ 매장 로고를 붙였어요. 오픈채팅 말풍선 옆에 이 로고가 보여요.");
+  }
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
   const slots = slotsFromText(text, today).filter((s) => s.date >= today);
   // 줄 끝에 「마감」을 붙이거나 떼기
@@ -59,6 +90,14 @@ export function MyJobRefresh({
           {title}
         </Link>
       </div>
+      {company ? (
+        <label data-store-logo className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-2.5 text-xs font-bold text-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {logo ? <img src={logo} alt="" width={32} height={32} className="size-8 rounded-xl bg-white object-cover" /> : <span className="grid size-8 place-items-center rounded-xl bg-white/10">🏪</span>}
+          {logo ? `${company} 로고 바꾸기` : `${company} 로고 올리기(오픈채팅 말풍선 옆에 보여요)`}
+          <input type="file" accept="image/*" className="sr-only" onChange={(e) => void pickLogo(e.target.files?.[0])} />
+        </label>
+      ) : null}
       <p className="text-xs text-[#c9c0b2]">
         지금 열린 빈자리 <b className="text-[#ffcf4a]">{openSlotCount}곳</b> · 마지막으로 올린 때 {new Date(bumpedAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
       </p>

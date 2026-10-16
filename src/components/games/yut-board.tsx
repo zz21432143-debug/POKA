@@ -98,7 +98,6 @@ export function YutBoard({
   bubbles = [],
   throwReady = false,
   guide = null,
-  startPick = null,
   lite = false,
 }: {
   state: YutState;
@@ -333,7 +332,7 @@ export function YutBoard({
         <div
           data-yut-goal
           aria-label={`골인 — 홍팀 ${state.pieces.A.filter((p) => p.pos === END).length}/${state.pieces.A.length} · 청팀 ${state.pieces.B.filter((p) => p.pos === END).length}/${state.pieces.B.length}`}
-          className="yut-goal-gate absolute flex h-[11%] w-[50%] -translate-x-1/2 -translate-y-1/2 items-center gap-[3%] rounded-[14px] border-[3px] border-[#0a0614] px-[3%] py-[1%]"
+          className={cn("yut-goal-gate absolute flex h-[11%] w-[50%] -translate-x-1/2 -translate-y-1/2 items-center gap-[3%] rounded-[14px] border-[3px] border-[#0a0614] px-[3%] py-[1%]", goal && "yut-goal-flash")}
           style={{ left: `${GOAL_XY[0]}%`, top: `${GOAL_XY[1]}%` }}
         >
           <span aria-hidden className="yut-goal-flag grid aspect-square h-[78%] shrink-0 place-items-center rounded-[10px] border-2 border-[#0a0614] text-[clamp(14px,4cqw,26px)]">
@@ -357,29 +356,11 @@ export function YutBoard({
             ))}
           </span>
         </div>
-        {/* 단계 안내: ① 말 고르기 → ② 노란 칸 누르기 */}
-        {guide ? (
-          <div data-yut-guide={guide} className="pointer-events-none absolute top-[1.5%] left-1/2 z-[55] -translate-x-1/2">
-            <p className="yut-guide-pill flex items-center gap-1.5 rounded-full border-[3px] border-[#0a0614] bg-[#ffcf4a] px-3 py-1 text-[clamp(11px,2.6cqw,17px)] font-black whitespace-nowrap text-[#2a1400] shadow-[3px_3px_0_#0a0614]">
-              {guide === "pick" ? (
-                <>
-                  <span className="grid size-[1.5em] place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">1</span>
-                  반짝이는 내 말{startPick !== null ? " 또는 오른쪽 「🐾 새 말」" : ""}을 누르세요
-                </>
-              ) : (
-                <>
-                  <span className="grid size-[1.5em] place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">2</span>
-                  노란 점선 칸(갈 곳)을 누르세요
-                </>
-              )}
-            </p>
-          </div>
-        ) : null}
         {/* 골인: 골인! + 금빛 파편 */}
         {goal ? (
           <>
-            <b key={`goal-${goal}`} data-yut-goal-pop aria-hidden className="yut-goal-pop pointer-events-none absolute z-[46] -translate-x-1/2 font-sans font-black text-[clamp(14px,5cqw,34px)] text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614,0_0_14px_#fff]" style={{ left: `${GOAL_XY[0] - 6}%`, top: `${GOAL_XY[1] - 16}%` }}>
-              골인!
+            <b key={`goal-${goal}`} data-yut-goal-pop aria-hidden className="yut-goal-pop pointer-events-none absolute z-[46] -translate-x-1/2 font-sans font-black text-[clamp(14px,5cqw,34px)] text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614,0_0_14px_#fff]" style={{ left: `${GOAL_XY[0]}%`, top: `${GOAL_XY[1] - 18}%` }}>
+              {ev?.team ? `${TEAM_NAME[ev.team]} ${state.pieces[ev.team].filter((p) => p.pos === END).length}/${state.pieces[ev.team].length} 골인!` : "골인!"}
             </b>
             <PixelBurst key={`goal-bits-${goal}`} x={GOAL_XY[0]} y={GOAL_XY[1]} seed={goal} colors={["#ffcf4a", "#fff6dc", "#ff5d6c", "#6ad7ff"]} count={26} spread={80} size={7} up={0.6} />
           </>

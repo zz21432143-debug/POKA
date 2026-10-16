@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { jobFieldsFromBody } from "@/lib/job-fields";
-import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
+import { ForbiddenWordError, assertNoForbiddenWords, assertNoForbiddenWordsInJob } from "@/lib/forbidden-words";
 import { HoldemOnlyError, assertHoldemOnly, normalizeHandTitle } from "@/lib/holdem-only";
 import { canManagePost, manageDeniedMessage } from "@/lib/post-manage";
 import { fileIdFromUrl } from "@/lib/uploads";
@@ -130,7 +130,7 @@ export async function PATCH(
     // 수정할 때도 새로 쓸 때와 같은 금지어 검사를 합니다.
     const nextContent = typeof body.content === "string" ? body.content : post.content;
     assertHoldemOnly(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
-    await assertNoForbiddenWords(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
+    await assertNoForbiddenWordsInJob(jobData.title, nextContent, jobData.jobLocation, jobData.jobCompanyName);
     const updated = await prisma.post.update({
       where: { id },
       data: {

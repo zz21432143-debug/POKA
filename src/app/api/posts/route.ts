@@ -10,7 +10,7 @@ import { canWriteBoard, writeDeniedMessage } from "@/lib/permissions";
 import { clientIp } from "@/lib/request";
 import { POST_EXP, POST_POINTS } from "@/lib/rewards";
 import { CoolDownError, assertWriteCooldown } from "@/lib/security";
-import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
+import { ForbiddenWordError, assertNoForbiddenWords, assertNoForbiddenWordsInJob } from "@/lib/forbidden-words";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
 import { isStaff } from "@/lib/roles";
 import { hashPassword } from "@/lib/password";
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
       jobData?.jobCompanyName,
       typeof body.promoLocation === "string" ? body.promoLocation : null,
     );
-    await assertNoForbiddenWords(
+    await (boardType === "JOBS" ? assertNoForbiddenWordsInJob : assertNoForbiddenWords)(
       title,
       content,
       jobData?.jobLocation,

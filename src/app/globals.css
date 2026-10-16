@@ -3817,6 +3817,24 @@ aside[aria-label="광고"]:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
 .yut-goal-gate::after {
   bottom: 2px;
 }
+/* 골인 순간: 골인 문이 통 튀며 번쩍 */
+.yut-goal-flash {
+  animation: yut-goal-flash 0.5s ease-out 3;
+}
+@keyframes yut-goal-flash {
+  0% {
+    scale: 1;
+    filter: brightness(1);
+  }
+  40% {
+    scale: 1.08;
+    filter: brightness(1.35);
+  }
+  100% {
+    scale: 1;
+    filter: brightness(1);
+  }
+}
 .yut-goal-flag {
   background: repeating-conic-gradient(#fff6dc 0 25%, #ffcf4a 0 50%) 0 0 / 8px 8px;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
@@ -4123,9 +4141,19 @@ aside[aria-label="광고"]:not(:has(ins.adsbygoogle[data-ad-status="filled"])) {
     position: sticky;
     top: 8px;
   }
+  /* 안내 줄(판 위) 높이만큼 판을 줄여 아래 골인 문까지 한 화면에 */
   .yut-main [data-yut-board] {
-    width: calc(100dvh - 16px) !important;
+    width: calc(100dvh - 54px) !important;
     max-width: none !important;
+  }
+  .yut-main [data-yut-guide-row] {
+    min-height: 34px;
+    margin-bottom: 4px;
+  }
+  .yut-main [data-yut-guide-row] > * {
+    font-size: 12.5px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
   }
   .yut-main > .yut-side {
     display: grid !important;

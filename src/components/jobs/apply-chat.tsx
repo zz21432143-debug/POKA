@@ -91,19 +91,23 @@ export function ApplyChat({
     toBottom();
   }, []);
 
-  // 30초마다 새 공고(올리기 · 끌어올리기) — 맨 아래에 붙이고 「새 공고 ○개」
+  // 새 공고(올리기 · 끌어올리기)를 맨 아래에 — mine: 내가 방금 보낸 것이면 바로 내려가 보여 줌
+  const pullNew = async (mine = false) => {
+    const last = messages[messages.length - 1]?.at ?? new Date(Date.now() - 86_400_000).toISOString();
+    const r = await fetch(`/api/jobs/chat?after=${encodeURIComponent(last)}${q}`, { cache: "no-store" }).catch(() => null);
+    const j = (await r?.json().catch(() => null)) as { messages?: ChatMessage[] } | null;
+    const add = j?.messages ?? [];
+    if (!add.length) return;
+    setMessages((old) => [...old.filter((x) => !add.some((a) => a.id === x.id)), ...add]);
+    if (mine) window.setTimeout(() => toBottom(true), 50);
+    else setFresh((n) => n + add.filter((a) => !messages.some((x) => x.id === a.id)).length);
+  };
   useEffect(() => {
-    const t = window.setInterval(async () => {
-      if (document.hidden) return;
-      const last = messages[messages.length - 1]?.at ?? new Date(Date.now() - 86_400_000).toISOString();
-      const r = await fetch(`/api/jobs/chat?after=${encodeURIComponent(last)}${q}`, { cache: "no-store" }).catch(() => null);
-      const j = (await r?.json().catch(() => null)) as { messages?: ChatMessage[] } | null;
-      const add = (j?.messages ?? []).filter((m) => !messages.some((x) => x.id === m.id));
-      if (!add.length) return;
-      setMessages((old) => [...old.filter((x) => !add.some((a) => a.id === x.id)), ...add]);
-      setFresh((n) => n + add.length);
+    const t = window.setInterval(() => {
+      if (!document.hidden) void pullNew();
     }, 30_000);
     return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 공고 확인은 목록이 바뀔 때마다 다시 잡음
   }, [messages, q]);
 
   async function loadOlder() {
@@ -156,7 +160,17 @@ export function ApplyChat({
               {r.label}
             </p>
           ) : (
-            <ChatBubble key={r.m.id} m={r.m} mine={Boolean(myNickname && r.m.author?.nickname === myNickname)} today={today} loggedIn={loggedIn} />
+            <ChatBubble
+              key={r.m.id}
+              m={r.m}
+              mine={Boolean(myNickname && r.m.author?.nickname === myNickname)}
+              today={today}
+              loggedIn={loggedIn}
+              onEdited={(id, text) => {
+                setMessages((old) => old.map((x) => (x.id === id ? { ...x, text } : x)));
+                void pullNew(true);
+              }}
+            />
           ),
         )}
         <div ref={bottomRef} />
@@ -174,12 +188,36 @@ export function ApplyChat({
           ⬇ 새 공고 {fresh}개
         </button>
       ) : null}
-      <Composer loggedIn={loggedIn} defaultRegion={region} onSent={() => router.refresh()} />
+      <Composer
+        loggedIn={loggedIn}
+        defaultRegion={region}
+        onSent={() => {
+          void pullNew(true);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }
 
-function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean }) {
+function ChatBubble({ m, mine, today, loggedIn, onEdited }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean; onEdited: (id: string, text: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(m.text);
+  const [saving, setSaving] = useState(false);
+  const [editNote, setEditNote] = useState<string | null>(null);
+  async function saveEdit() {
+    setSaving(true);
+    setEditNote(null);
+    const r = await fetch(`/api/posts/${m.id}/refresh`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: draft }) }).catch(() => null);
+    const j = (await r?.json().catch(() => null)) as { error?: string; bumped?: boolean } | null;
+    setSaving(false);
+    if (!r?.ok) {
+      setEditNote(j?.error ?? "갱신하지 못했어요.");
+      return;
+    }
+    setEditing(false);
+    onEdited(m.id, draft);
+  }
   const phone = m.contact ?? m.text.match(PHONE)?.[0] ?? null;
   // 긴 공고는 12줄까지만 · 같은 매장 이전 공고는 접어 둠
   const lineCount = m.text.split(/\r?\n/).length;
@@ -198,7 +236,7 @@ function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolea
     <div data-chat-msg={m.id} className={cn("flex items-start gap-2", mine && "flex-row-reverse")}>
       {!mine ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={m.author?.markUrl ?? "/marks/default.svg"} alt="" width={36} height={36} className="mt-0.5 size-9 shrink-0 rounded-2xl bg-white object-cover" />
+        <img src={m.logoUrl ?? m.author?.markUrl ?? "/marks/default.svg"} alt={m.logoUrl ? `${m.company ?? "매장"} 로고` : ""} width={36} height={36} className="mt-0.5 size-9 shrink-0 rounded-2xl bg-white object-cover" />
       ) : null}
       <div className={cn("grid min-w-0 max-w-[82%] gap-0.5", mine && "justify-items-end")}>
         {!mine ? (
@@ -234,7 +272,12 @@ function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolea
               <Link href={`/posts/${m.id}`} className="rounded-full bg-black/5 px-2.5 py-1 text-xs font-bold text-[#1d2733]">
                 공고 보기
               </Link>
-              {loggedIn && phone && m.status === "open" ? (
+              {mine ? (
+                <button type="button" data-chat-edit onClick={() => setEditing((v) => !v)} className="rounded-full bg-[#1d2733] px-2.5 py-1 text-xs font-bold text-white">
+                  ✏ 붙여넣고 갱신
+                </button>
+              ) : null}
+              {loggedIn && phone && m.status === "open" && !mine ? (
                 <a href={`sms:${phone.replace(/[^\d]/g, "")}?&body=${smsBody}`} data-chat-sms className="rounded-full bg-[#1d2733] px-2.5 py-1 text-xs font-bold text-white">
                   ✉ 문자 지원
                 </a>
@@ -246,6 +289,20 @@ function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolea
             {kst(m.at, { hour: "numeric", minute: "2-digit" })}
           </span>
         </div>
+        {editing ? (
+          <div data-chat-edit-box className="grid w-full gap-1.5 rounded-2xl bg-white p-2 shadow-sm">
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={8} aria-label="새 일정 붙여넣기" className="w-full rounded-xl border border-black/15 bg-[#f2f4f6] p-2 text-sm text-[#1d1d1d]" />
+            <div className="flex items-center gap-2">
+              <button type="button" data-chat-edit-save disabled={saving || draft.trim().length < 5} onClick={() => void saveEdit()} className="rounded-full bg-[#fee500] px-3 py-1.5 text-xs font-black text-[#1d1d1d] disabled:opacity-50">
+                {saving ? "갱신 중…" : "갱신하고 맨 아래로"}
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className="text-xs font-bold text-[#3b4a5c]">
+                취소
+              </button>
+              {editNote ? <span className="text-xs font-bold text-[#b3261e]">{editNote}</span> : null}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

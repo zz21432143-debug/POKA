@@ -76,3 +76,14 @@ describe("닉네임 금지어(들어가기만 해도 막음)", () => {
     for (const n of ["딜러민수", "홀덤조아", "Ace_7", "바다카라멜"]) assert.equal(findForbiddenInNickname(n, words), null, n);
   });
 });
+
+describe("구인 글 허용 단어", () => {
+  it("「자지」는 구인에서만 빼고 다른 곳은 그대로", async () => {
+    const { JOB_ALLOWED_WORDS } = await import("./forbidden-words");
+    const words = ["자지", "금지어"];
+    const jobWords = words.filter((w) => !JOB_ALLOWED_WORDS.has(w));
+    assert.equal(findForbiddenWord("성함,경력,성별 문자지원", jobWords), null);
+    assert.equal(findForbiddenWord("금지어 들어감", jobWords), "금지어");
+    assert.equal(findForbiddenWord("성별 문자지원", words), "자지");
+  });
+});

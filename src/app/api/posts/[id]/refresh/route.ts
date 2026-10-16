@@ -1,7 +1,7 @@
 import { after, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
-import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
+import { ForbiddenWordError, assertNoForbiddenWordsInJob } from "@/lib/forbidden-words";
 import { canBumpNow } from "@/lib/job-bump";
 import { isStaff } from "@/lib/roles";
 import { todayKstDate } from "@/lib/dates";
@@ -23,7 +23,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (content.length < 5) return NextResponse.json({ error: "새 일정을 붙여넣어 주세요." }, { status: 400 });
   if (content.length > 30_000) return NextResponse.json({ error: "본문은 30,000자까지 쓸 수 있어요." }, { status: 400 });
   try {
-    await assertNoForbiddenWords(post.title, content);
+    await assertNoForbiddenWordsInJob(post.title, content);
   } catch (error) {
     if (error instanceof ForbiddenWordError) return NextResponse.json({ error: error.message }, { status: 400 });
     throw error;

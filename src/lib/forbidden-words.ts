@@ -101,10 +101,28 @@ export function clearForbiddenWordsCache() {
 
 /** 기본 금지어(욕설·음란·도박·스팸·혐오) + 관리자가 추가한 금지어를 모두 검사합니다. */
 export async function assertNoForbiddenWords(...parts: Array<string | null | undefined>) {
+  await checkForbidden(parts, null);
+}
+
+/**
+ * 구인 · 지원 글에서는 막지 않는 단어: 「문자지원」 · 「남자지원」처럼 공고에 늘 나오는 말이라서.
+ * 다른 게시판 · 댓글 · 닉네임은 그대로 막습니다.
+ */
+export const JOB_ALLOWED_WORDS: ReadonlySet<string> = new Set(["자지"]);
+
+/** 구인 게시판(공고 · 지원 메시지)용 금지어 검사 */
+export async function assertNoForbiddenWordsInJob(...parts: Array<string | null | undefined>) {
+  await checkForbidden(parts, JOB_ALLOWED_WORDS);
+}
+
+const squash = (w: string) => w.normalize("NFC").toLowerCase().replace(/\s+/g, "");
+
+async function checkForbidden(parts: Array<string | null | undefined>, allowed: ReadonlySet<string> | null) {
   const text = parts.filter(Boolean).join("\n");
-  const builtin = findProfanity(text, { disabled: await loadDisabledBaseWords() });
+  const disabled = await loadDisabledBaseWords();
+  const builtin = findProfanity(text, { disabled: allowed ? new Set([...disabled, ...allowed]) : disabled });
   if (builtin) throw new ForbiddenWordError(builtin.match, PROFANITY_LABEL[builtin.category]);
   const words = await loadForbiddenWords();
-  const hit = findForbiddenWord(text, words);
+  const hit = findForbiddenWord(text, allowed ? words.filter((w) => !allowed.has(squash(w))) : words);
   if (hit) throw new ForbiddenWordError(hit);
 }

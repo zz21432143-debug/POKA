@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { jobStatus } from "@/lib/job-status";
 import { assertAccountActive, AccountRestrictedError } from "@/lib/account-restriction";
-import { ForbiddenWordError, assertNoForbiddenWords } from "@/lib/forbidden-words";
+import { ForbiddenWordError, assertNoForbiddenWordsInJob } from "@/lib/forbidden-words";
 import { publicErrorMessage } from "@/lib/public-error";
 
 const MAX_MESSAGE = 500;
@@ -48,7 +48,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
     const body = (await request.json().catch(() => ({}))) as { message?: unknown };
     const message = typeof body.message === "string" ? body.message.trim().slice(0, MAX_MESSAGE) : "";
-    await assertNoForbiddenWords(message);
+    await assertNoForbiddenWordsInJob(message);
     const existing = await prisma.jobApplication.findUnique({
       where: { postId_applicantId: { postId: id, applicantId: user.id } },
       select: { id: true },

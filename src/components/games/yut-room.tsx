@@ -1453,6 +1453,19 @@ export function YutRoom({
           <div data-land-snap className="yut-main grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
             {/* 왼쪽(PC): 판 · 대기 말 */}
             <div className="yut-left grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
+              {/* 차례 · 단계 안내: 판 바로 위 한 줄(판 위에 겹쳐 칸을 가리지 않게) */}
+              <div data-yut-guide-row className="flex min-h-9 items-center justify-center">
+                {moving && !busy ? (
+                  <p data-yut-guide={selected === null ? "pick" : "dest"} className="yut-guide-pill flex items-center gap-1.5 rounded-full border-[3px] border-[#0a0614] bg-[#ffcf4a] px-3 py-1 text-[clamp(12px,3.4vw,16px)] font-black text-[#2a1400] shadow-[3px_3px_0_#0a0614]">
+                    <span className="grid size-[1.5em] shrink-0 place-items-center rounded-full bg-[#0a0614] text-[#ffcf4a]">{selected === null ? "1" : "2"}</span>
+                    {selected === null ? `반짝이는 내 말${startRep !== undefined ? " 또는 「🐾 새 말」" : ""}을 누르세요` : "노란 점선 칸(갈 곳)을 누르세요"}
+                  </p>
+                ) : canThrow ? (
+                  <p className="text-sm font-black text-[#ffe08a]">🎲 내 차례! 아래 「윷 던지기」를 누르세요</p>
+                ) : s && playing ? (
+                  <p className="text-sm font-bold text-[#d6cdee]">{TEAM_NAME[s.turnTeam]} 차례…</p>
+                ) : null}
+              </div>
               <div className="relative min-w-0">
                 <YutBoard
                   state={s}

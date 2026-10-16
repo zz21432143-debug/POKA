@@ -7,6 +7,7 @@ import { nowMs, todayKstDate } from "@/lib/dates";
 import { jobStatus } from "@/lib/job-status";
 import { openSlots } from "@/lib/job-slots";
 import { isStaff } from "@/lib/roles";
+import { storeLogos, storeLogoId } from "@/lib/job-chat";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "내 구인 공고 · 붙여넣고 갱신", robots: { index: false, follow: false } };
@@ -57,6 +58,7 @@ export default async function MyJobsPage() {
     })
     .catch(() => []);
   const today = todayKstDate();
+  const logos = await storeLogos(rows.map((p) => ({ authorId: user.id, company: p.jobCompanyName })));
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-3" data-my-jobs>
       <header className="board-intro">
@@ -82,6 +84,8 @@ export default async function MyJobsPage() {
               status={status}
               openSlotCount={slots.length}
               bumpedAt={p.bumpedAt.toISOString()}
+              company={p.jobCompanyName}
+              logoUrl={p.jobCompanyName ? (logos.get(storeLogoId(user.id, p.jobCompanyName)) ?? null) : null}
             />
           );
         })
