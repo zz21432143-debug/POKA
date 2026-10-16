@@ -98,6 +98,15 @@ export function ApplyChat({
   myNickname: string | null;
 }) {
   const [onlyMine, setOnlyMine] = useState(false);
+  // 입력창이 화면에 보이면 떠 있는 「공고 올리기」는 숨김
+  const [composerSeen, setComposerSeen] = useState(false);
+  useEffect(() => {
+    const el = document.querySelector("[data-chat-composer]");
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setComposerSeen(e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const router = useRouter();
   const [messages, setMessages] = useState(initial);
   const [moreBusy, setMoreBusy] = useState(false);
@@ -251,7 +260,7 @@ export function ApplyChat({
         </button>
       ) : null}
       {loggedIn ? <FirstTip /> : null}
-      {loggedIn ? (
+      {loggedIn && !composerSeen ? (
         <button
           type="button"
           data-chat-fab

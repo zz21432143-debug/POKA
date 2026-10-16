@@ -154,12 +154,16 @@ export default async function BoardPage({
             </Link>
             {/* 휴대폰: 오른쪽 아래 떠 있는 둥근 버튼(아래 메뉴 바로 위) */}
             <Link
-              href={FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref}
-              data-write-fab
-              aria-label={calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
+              href={
+                viewer
+                  ? FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref
+                  : `/login?next=${encodeURIComponent(FREE_TABS.some((tab) => tab.slug === canonical) ? "/boards/free/write" : board.writeHref)}`
+              }
+              data-write-fab={viewer ? "write" : "login"}
+              aria-label={viewer ? (calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기") : "로그인하고 글쓰기"}
               className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-40 inline-flex h-13 items-center gap-1.5 rounded-full bg-[#9b1c1c] px-5 text-[15px] font-black text-white shadow-[0_6px_18px_rgba(0,0,0,.55)] ring-2 ring-[#ffcf4a]/60 sm:hidden"
             >
-              ✏️ {calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기"}
+              ✏️ {viewer ? (calendar ? "일정 등록" : gallery ? "홍보 등록" : "글쓰기") : "로그인하고 글쓰기"}
             </Link>
           </>
         ) : null}
@@ -235,6 +239,7 @@ export default async function BoardPage({
         </>
       )}
       <BoardBottomAd />
+      {canWrite || !("masterOnly" in board && board.masterOnly) ? <div aria-hidden data-fab-spacer className="h-16 sm:hidden" /> : null}
     </div>
   );
 }
