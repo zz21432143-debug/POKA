@@ -9,7 +9,7 @@ import { isGameEmote } from "@/lib/omok-emotes";
 import { loadWinReward } from "@/lib/game-reward";
 import { MIN_COUNTED_MOVES } from "@/lib/game-stats";
 import { askRematch, declineRematch, readRematch, rematchView, type RematchView } from "@/lib/game-rematch";
-import { applyMove, applyThrow, autoStep, newState, other, type Team, type YutState } from "@/lib/yut";
+import { applyMove, applyThrow, autoStep, easyStep, newState, other, type Team, type YutState } from "@/lib/yut";
 
 /**
  * 요괴 윷놀이 방(1:1 ~ 4:4): 6자리 초대 코드 · 링크 → 대기실에서 A/B팀 자리 고르기 · 팀 섞기 · 레디 → 방장이 시작.
@@ -34,7 +34,7 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const YUT_CODE_RE = /^[A-HJKMNP-Z2-9]{6}$/;
 export const NO_YOKAI = "NO_YOKAI";
 
-export type Seat = { team: Team; idx: number; userId: string | null; ready: boolean; bot?: boolean; left?: boolean; botYokai?: YokaiSpecies; surrender?: boolean };
+export type Seat = { team: Team; idx: number; userId: string | null; ready: boolean; bot?: boolean; left?: boolean; botYokai?: YokaiSpecies; surrender?: boolean; /** 자리비움: 서버가 대신 둠 */ auto?: boolean; /** 쉬운 요괴봇(방 설정 · 모든 자리에 같이 저장) */ botEasy?: boolean };
 type Row = NonNullable<Awaited<ReturnType<typeof prisma.yutGame.findUnique>>>;
 type Cheer = { n: string; e: string; at: number };
 
@@ -267,7 +267,7 @@ async function settle(row: Row): Promise<Row> {
   if (!s) return row;
   if (row.mode >= 2) {
     // 팀전: 접속이 끊긴 사람 자리는 요괴 AI가 이어서(그 사람 차례마다 시간을 다 기다리지 않게)
-    const humans = seats.filter((x) => x.userId && !x.bot && !x.left);
+    const humans = seats.filter((x) => x.userId && !x.bot && !x.left && !x.auto);
     const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
     const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
     const goneIds = new Set(humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS).map((x) => x.userId));
@@ -280,7 +280,7 @@ async function settle(row: Row): Promise<Row> {
     }
   }
   if (row.mode === 1 && !row.withBots) {
-    const humans = seats.filter((x) => x.userId && !x.bot);
+    const humans = seats.filter((x) => x.userId && !x.bot && !x.auto);
     const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
     const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
     const goneSeats = humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
@@ -299,13 +299,13 @@ async function settle(row: Row): Promise<Row> {
   const seat = currentSeat(seats, s);
   const since = now - (row.turnAt?.getTime() ?? now);
   let due = since > TURN_MS + 800;
-  if (seat && (seat.bot || seat.left || !seat.userId) && since > botMs(row.mode)) due = true;
+  if (seat && (seat.bot || seat.left || seat.auto || !seat.userId) && since > botMs(row.mode)) due = true;
   if (!due && seat?.userId && since > 1500) {
     const seen = await lastSeenMap(row.id, [seat.userId]);
     if (now - (seen.get(seat.userId) ?? 0) > ABSENT_MS) due = true;
   }
   if (!due) return row;
-  const next = autoStep(s, Math.random, now);
+  const next = seat?.bot && seat.botEasy ? easyStep(s, Math.random, now) : autoStep(s, Math.random, now);
   return saveState(row, next, now, { auto: true });
 }
 
@@ -333,7 +333,7 @@ async function saveState(row: Row, s: YutState, now: number, _meta: { auto?: boo
 /* ───────── 화면에 보낼 모양 ───────── */
 
 export type YutPlayer = { nickname: string; yokai: { species: YokaiSpecies; stage: number } | null };
-export type YutSeatView = { team: Team; idx: number; player: YutPlayer | null; ready: boolean; bot: boolean; left: boolean; me: boolean; host: boolean; surrender: boolean };
+export type YutSeatView = { team: Team; idx: number; player: YutPlayer | null; ready: boolean; bot: boolean; left: boolean; me: boolean; host: boolean; surrender: boolean; auto: boolean };
 export type YutView = {
   id: string;
   code: string | null;
@@ -344,6 +344,8 @@ export type YutView = {
   isHost: boolean;
   isPrivate: boolean;
   withBots: boolean;
+  /** 쉬운 요괴봇 */
+  botEasy: boolean;
   host: string;
   seats: YutSeatView[];
   mySeat: { team: Team; idx: number } | null;
@@ -396,6 +398,7 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
       me: Boolean(viewerId && x.userId === viewerId),
       host: Boolean(x.userId && x.userId === row.hostId),
       surrender: Boolean(x.surrender),
+      auto: Boolean(x.auto),
     })),
   );
   const mine = seats.find((x) => viewerId && x.userId === viewerId);
@@ -425,6 +428,7 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
     endReason: row.endReason,
     emote: em.last,
     cheers: em.cheers.filter((c) => Date.now() - c.at < 15_000),
+    botEasy: seatsOf(row).some((x) => x.botEasy),
     nextId: row.nextId,
     rematch: row.status === "done" && !row.nextId && row.mode === 1 && !row.withBots ? rematchView(await readRematch("yut", row.id), viewerId) : null,
     queue: queueOf(row).map((e) => e.n),
@@ -467,14 +471,14 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
 
 /* ───────── 동작 ───────── */
 
-export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "rematch-no" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave" | "bot-add" | "bot-remove";
+export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "rematch-no" | "auto" | "bot-level" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave" | "bot-add" | "bot-remove";
 type ActResult = { ok: true; view: YutView } | { ok: false; error: string; status: number };
 
 export async function yutAct(
   id: string,
   userId: string,
   action: YutAction,
-  payload: { team?: unknown; idx?: unknown; ready?: unknown; mode?: unknown; bots?: unknown; ri?: unknown; pi?: unknown; e?: unknown; target?: unknown; power?: unknown },
+  payload: { team?: unknown; idx?: unknown; ready?: unknown; mode?: unknown; bots?: unknown; ri?: unknown; pi?: unknown; e?: unknown; target?: unknown; power?: unknown; on?: unknown; easy?: unknown },
 ): Promise<ActResult> {
   const found = await prisma.yutGame.findUnique({ where: { id } });
   if (!found) return { ok: false, error: "방을 찾을 수 없어요.", status: 404 };
@@ -563,6 +567,23 @@ export async function yutAct(
       seats.map((x) => (x === t ? { ...x, userId: null, ready: false } : x)),
       { kickedJson: JSON.stringify(kicked) },
     );
+    return done();
+  }
+  if (action === "auto") {
+    // 자리비움: 켜면 내 차례를 서버가 대신(보통 요괴봇처럼) · 접속이 끊겨도 기권 처리 안 함
+    if (row.status !== "playing" || !mine) return fail("판에 앉은 사람만 자동을 켤 수 있어요.", 409);
+    const on = payload.on !== false;
+    const r = await prisma.yutGame.updateMany({
+      where: { id, version: row.version, status: "playing" },
+      data: { seatsJson: JSON.stringify(seats.map((x) => (x.userId === userId ? { ...x, auto: on } : x))), version: { increment: 1 } },
+    });
+    if (r.count !== 1) return fail("판이 바뀌었어요. 다시 눌러 주세요.", 409);
+    return done();
+  }
+  if (action === "bot-level") {
+    if (!isHost || row.status !== "waiting") return fail("방장만 요괴봇 난이도를 바꿀 수 있어요.", 403);
+    const easy = payload.easy === true;
+    if (!(await saveSeats(seats.map((x) => ({ ...x, botEasy: easy }))))) return fail("다시 해 주세요.", 409);
     return done();
   }
   if (action === "bot-add" || action === "bot-remove") {

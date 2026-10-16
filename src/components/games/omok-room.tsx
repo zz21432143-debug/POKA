@@ -245,6 +245,14 @@ export function OmokRoom({
     if (view.status === "waiting") {
       if (view.guest && !before.guest) {
         bellSound();
+        // 다른 창(요괴 AI 연습)에 「상대가 왔어요」 알리기
+        try {
+          const ch = new BroadcastChannel("poka-omok");
+          ch.postMessage({ type: "guest", room: view.id, name: view.guest.nickname });
+          ch.close();
+        } catch {
+          /* 지원 안 하는 브라우저 */
+        }
         cut({
           key: seed,
           side: view.seat === "guest" ? "left" : "right",
@@ -1413,7 +1421,12 @@ export function OmokRoom({
         {/* ── 대국 조작: 물리기 · 기권 · 이모티콘 ── */}
         {view.me && playing ? (
           <div className="grid gap-2">
-            <div className="grid grid-cols-3 gap-2">
+            {view.me && view.auto?.[view.me] ? (
+              <p data-omok-auto-note className="rounded-xl bg-[#ffcf4a]/15 px-3 py-2 text-center text-sm font-black text-[#ffe08a]">
+                🤖 자리비움 중 — 요괴 AI(도깨비)가 대신 두고 있어요. 돌아오면 「자동 중 · 끄기」를 누르세요
+              </p>
+            ) : null}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <button
                 type="button"
                 data-omok-undo
@@ -1439,6 +1452,16 @@ export function OmokRoom({
                 className="arcade-btn btn-dark"
               >
                 {iOfferedDraw ? "제안 중…" : "🤝 무승부"}
+              </button>
+              <button
+                type="button"
+                data-omok-auto={view.me && view.auto?.[view.me] ? "on" : "off"}
+                aria-pressed={Boolean(view.me && view.auto?.[view.me])}
+                disabled={busy}
+                onClick={() => void act("auto", { on: !(view.me && view.auto?.[view.me]) })}
+                className={cn("arcade-btn", view.me && view.auto?.[view.me] ? "btn-gold" : "btn-dark")}
+              >
+                {view.me && view.auto?.[view.me] ? "🤖 자동 중 · 끄기" : "🤖 자동(자리비움)"}
               </button>
               {confirmResign ? (
                 <button

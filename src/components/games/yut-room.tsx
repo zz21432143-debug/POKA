@@ -133,6 +133,31 @@ export function YutRoom({
   const [kick, setKick] = useState<{ key: number; node: string } | null>(null);
   const [stepMs, setStepMs] = useState(initial.mode >= 3 ? 160 : 260);
   const [showResult, setShowResult] = useState(initial.status === "done");
+  // 가벼운 효과: auto(자동 판단) · on · off(이 기기에 저장)
+  const [lite, setLite] = useState(false);
+  const [litePref, setLitePref] = useState<"auto" | "on" | "off">("auto");
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem("poka-yut-lite");
+      if (v === "on" || v === "off") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장소는 화면이 뜬 뒤에만 읽을 수 있음
+        setLitePref(v);
+        setLite(v === "on");
+      }
+    } catch {
+      /* 못 읽으면 자동 */
+    }
+  }, []);
+  const toggleLite = () => {
+    const next = !lite;
+    setLite(next);
+    setLitePref(next ? "on" : "off");
+    try {
+      window.localStorage.setItem("poka-yut-lite", next ? "on" : "off");
+    } catch {
+      /* 저장 못 해도 이번엔 적용 */
+    }
+  };
   // 끝난 판: 방을 나간 사람(서버가 1초마다 알려 줌)
   const [away, setAway] = useState<{ names: string[]; all: boolean }>({ names: [], all: false });
   // 결과 화면에서 떠나면(로비 · 다른 메뉴 · 창 닫기) 다른 사람에게 바로 「나갔어요」가 보이게
@@ -545,6 +570,31 @@ export function YutRoom({
   const playing = view.status === "playing";
   const myTeam = view.mySeat?.team ?? null;
   const mySeatView = view.seats.find((x) => x.me) ?? null;
+  // 3개 이상 업힌 말이 있으면(불길 연출) — 휴대폰이 버거우면 효과를 가볍게
+  const hotStack = s
+    ? (["A", "B"] as const).some((t) => {
+        const c = new Map<string, number>();
+        for (const p of s.pieces[t]) if (p.pos !== START && p.pos !== END) c.set(p.pos, (c.get(p.pos) ?? 0) + 1);
+        return Math.max(0, ...c.values()) >= 3;
+      })
+    : false;
+  useEffect(() => {
+    // 저장된 설정이 없을 때만: 2초 동안 화면 프레임을 재서 초당 40 미만이면 가벼운 효과
+    if (!hotStack || litePref !== "auto" || lite) return;
+    let n = 0;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = () => {
+      n += 1;
+      if (performance.now() - t0 < 2000) raf = requestAnimationFrame(tick);
+      else if (n / 2 < 40) {
+        setLite(true);
+        setNote("휴대폰이 버거워해서 불길 효과를 가볍게 바꿨어요 · 위쪽 「✨ 효과」 버튼으로 바꿀 수 있어요");
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [hotStack, litePref, lite]);
   const myTurn = view.myTurn && Boolean(s);
   const canThrow = myTurn && s?.phase === "throw";
   const moving = Boolean(s && myTurn && s.phase === "move");
@@ -1009,12 +1059,35 @@ export function YutRoom({
         <FullscreenButton landscape />
         <button
           type="button"
+          data-yut-lite={lite ? "on" : "off"}
+          aria-pressed={!lite}
+          onClick={toggleLite}
+          title="불길 · 반짝임 효과(휴대폰이 느리면 끄세요)"
+          className="arcade-btn btn-dark !min-h-9 shrink-0 px-2.5 text-sm"
+        >
+          {lite ? "✨ 효과 끔" : "✨ 효과"}
+        </button>
+        <button
+          type="button"
           data-yut-howto
           onClick={() => setTutorial(true)}
           className="arcade-btn btn-dark !min-h-9 shrink-0 px-2.5 text-sm"
         >
           ❔ 하는 법
         </button>
+        {playing && mySeatView && !mySeatView.left ? (
+          <button
+            type="button"
+            data-yut-auto={mySeatView.auto ? "on" : "off"}
+            aria-pressed={mySeatView.auto}
+            title="자리비움: 켜 두면 내 차례를 요괴봇처럼 대신 던지고 움직여요"
+            disabled={busy}
+            onClick={() => void act("auto", { on: !mySeatView.auto })}
+            className={cn("arcade-btn !min-h-9 shrink-0 px-2.5 text-sm", mySeatView.auto ? "btn-gold" : "btn-dark")}
+          >
+            {mySeatView.auto ? "🤖 자동 중(끄기)" : "🤖 자동"}
+          </button>
+        ) : null}
         {playing && mySeatView && !mySeatView.left ? (
           <button
             type="button"
@@ -1334,6 +1407,17 @@ export function YutRoom({
                   🤖 아직 아무도 안 왔어요 · 아래 「게임 시작」을 누르면 요괴봇이 빈자리를 채워 바로 시작해요
                 </p>
               ) : null}
+              {view.isHost ? (
+                <button
+                  type="button"
+                  data-yut-bot-level={view.botEasy ? "easy" : "normal"}
+                  disabled={busy}
+                  onClick={() => act("bot-level", { easy: !view.botEasy })}
+                  className="arcade-btn btn-dark !min-h-10 text-sm"
+                >
+                  🤖 요괴봇 난이도: {view.botEasy ? "쉬움(아무 말이나 움직임)" : "보통(잡기 · 업기 노림)"} · 눌러서 바꾸기
+                </button>
+              ) : null}
               <button
                 type="button"
                 data-yut-start
@@ -1373,6 +1457,7 @@ export function YutRoom({
                   fast={fast}
                   movable={movable}
                   guide={moving && !busy ? (selected === null ? "pick" : "dest") : null}
+                  lite={lite}
                   startPick={startRep ?? null}
                   selected={selected}
                   ghosts={ghosts}

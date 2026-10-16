@@ -10,6 +10,9 @@ const GAP_MS = 60 * 60_000;
  * 하루 2번 · 1시간에 한 번까지만(알림 피로 막기).
  */
 export async function alertWaitingRoom(game: "omok" | "yut", roomId: string, hostId: string) {
+  // 밤 11시 ~ 아침 9시(KST)엔 보내지 않음
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", hour12: false }).format(new Date()));
+  if (hour >= 23 || hour < 9) return 0;
   const day = todayKstDate();
   const [sentToday, last] = await Promise.all([
     prisma.toolSaved.count({ where: { kind: "game-alert-sent", name: day } }).catch(() => DAY_MAX),

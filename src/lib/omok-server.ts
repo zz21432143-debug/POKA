@@ -6,6 +6,7 @@ import {
   BLACK,
   TURN_SECONDS,
   WHITE,
+  aiMove,
   colorOfMove,
   findWinLine,
   play,
@@ -181,6 +182,8 @@ export type OmokView = {
   rematch: RematchView;
   /** 끝난 판: 걸린 시간(초) */
   durationSec: number | null;
+  /** 자리비움(자동) 켠 돌 */
+  auto: Record<1 | 2, boolean>;
   line: number[] | null;
   /** 관전자: 로그인한 사람 닉네임 · 손님 수 */
   watchers?: number;
@@ -317,6 +320,20 @@ async function rivalAway(row: Row, userId: string) {
   return !seen || Date.now() - seen.seenAt.getTime() > RIVAL_AWAY_MS;
 }
 
+/** 자리비움(자동) 상태 */
+function autoOf(row: { autoJson: string }): Record<1 | 2, boolean> {
+  try {
+    const v = JSON.parse(row.autoJson || "{}") as Record<string, unknown>;
+    return { 1: v["1"] === true, 2: v["2"] === true };
+  } catch {
+    return { 1: false, 2: false };
+  }
+}
+/** 자동 차례: 이만큼 기다렸다가 둠(사람이 보기에 너무 빠르지 않게) */
+const AUTO_MS = 1200;
+/** 같은 판에서 자동 수를 두는 중(겹쳐 두지 않게) */
+const autoBusy = new Set<string>();
+
 /** 시간 초과 · 비어 있는 대기실 정리(볼 때마다 · 원자적으로) */
 async function settle(row: Row): Promise<Row> {
   const now = Date.now();
@@ -390,7 +407,10 @@ async function settle(row: Row): Promise<Row> {
       .catch(() => null);
     if (seen) {
       const since = row.turnAt?.getTime() ?? row.updatedAt.getTime();
+      const auto = autoOf(row);
       const gone = (uid: string) => {
+        // 자리비움(자동)을 켠 사람은 접속이 끊겨도 기권패 아님
+        if ((uid === row.blackId && auto[1]) || (uid === row.whiteId && auto[2])) return false;
         const t = seen.find((r) => r.viewer === `p:${uid}`)?.seenAt.getTime();
         // 시작 뒤 한 번도 신호가 없으면 시작 시각부터 셈
         return now - Math.max(t ?? 0, Math.min(since, now)) > PLAYER_GONE_MS;
@@ -406,6 +426,21 @@ async function settle(row: Row): Promise<Row> {
         await recordIfDone(fresh);
         return (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? fresh;
       }
+    }
+  }
+  // 자리비움(자동) 차례: 요괴 AI(도깨비)가 대신 한 수
+  if (row.status === "playing" && row.blackId && row.whiteId && row.turnAt && !autoBusy.has(row.id)) {
+    const moves = movesOf(row);
+    const turn = colorOfMove(moves.length);
+    if (turn && autoOf(row)[turn] && now - row.turnAt.getTime() > AUTO_MS) {
+      autoBusy.add(row.id);
+      try {
+        const p = aiMove(moves, 1);
+        if (p >= 0) await omokAct(row.id, turn === BLACK ? row.blackId : row.whiteId, "move", { p });
+      } finally {
+        autoBusy.delete(row.id);
+      }
+      return (await prisma.omokGame.findUnique({ where: { id: row.id } })) ?? row;
     }
   }
   if (
@@ -552,6 +587,7 @@ async function toView(
     })(),
     isPrivate: row.isPrivate,
     nextId: row.nextId,
+    auto: autoOf(row),
     durationSec:
       row.status === "done" && row.startedAt
         ? Math.max(0, Math.round(((row.turnAt ?? row.updatedAt).getTime() - row.startedAt.getTime()) / 1000))
@@ -770,6 +806,7 @@ export type OmokAction =
   | "emote"
   | "rematch"
   | "rematch-no"
+  | "auto"
   | "undo-ask"
   | "undo-yes"
   | "undo-no"
@@ -783,7 +820,7 @@ export async function omokAct(
   id: string,
   userId: string,
   action: OmokAction,
-  payload: { p?: unknown; e?: unknown; ready?: unknown },
+  payload: { p?: unknown; e?: unknown; ready?: unknown; on?: unknown },
 ): Promise<ActResult> {
   const found = await prisma.omokGame.findUnique({ where: { id } });
   if (!found)
@@ -1356,6 +1393,17 @@ export async function omokAct(
       await prisma.omokGame
         .delete({ where: { id: next.id } })
         .catch(() => undefined);
+    return done();
+  }
+
+  if (action === "auto") {
+    // 자리비움: 켜면 내 차례를 요괴 AI가 대신(실수 많은 도깨비) · 접속이 끊겨도 기권패 아님
+    if (!mine || row.status !== "playing") return fail("대국 중인 사람만 자동을 켤 수 있어요.", 409);
+    const on = payload.on !== false;
+    await prisma.omokGame.updateMany({
+      where: { id, status: "playing" },
+      data: { autoJson: JSON.stringify({ ...autoOf(row), [mine]: on }), version: { increment: 1 } },
+    });
     return done();
   }
 

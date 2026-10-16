@@ -9,6 +9,7 @@ import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { getCurrentUser } from "@/lib/current-user";
 import { MonthRecordBar, OnlineNow } from "@/components/games/month-record";
+import { LobbyFirstGuide } from "@/components/games/lobby-first-guide";
 import { loadWinReward } from "@/lib/game-reward";
 import { OMOK_OPPONENTS } from "@/lib/omok-lines";
 import { gamesOpen, omokLobby } from "@/lib/omok-server";
@@ -145,6 +146,7 @@ export default async function OmokLobbyPage() {
             </ul>
           </RulesButton>
         </header>
+        <LobbyFirstGuide game="omok" />
         <OnlineNow game="omok" />
         {user ? <MonthRecordBar userId={user.id} game="omok" /> : null}
         {/* 빠른 대전: 기다리는 공개방에 바로 앉고 없으면 방을 만들어 줌 */}

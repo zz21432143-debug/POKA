@@ -56,6 +56,20 @@ export function OmokAi({
   const opp = OMOK_OPPONENTS[opponentIndex] ?? OMOK_OPPONENTS[0];
   const oppYokai = { species: opp.species, stage: opp.stage };
   const [human, setHuman] = useState<Stone | 0>(0);
+  // 다른 창의 내 대기실에 상대가 오면 띠로 알림
+  const [arrived, setArrived] = useState<{ room: string; name: string } | null>(null);
+  useEffect(() => {
+    let ch: BroadcastChannel | null = null;
+    try {
+      ch = new BroadcastChannel("poka-omok");
+      ch.onmessage = (e: MessageEvent<{ type?: string; room?: string; name?: string }>) => {
+        if (e.data?.type === "guest" && e.data.room) setArrived({ room: e.data.room, name: e.data.name ?? "상대" });
+      };
+    } catch {
+      /* 지원 안 하는 브라우저 */
+    }
+    return () => ch?.close();
+  }, []);
   // 지난번에 고른 돌(이 기기에 기억)
   const [lastPick, setLastPick] = useState<Stone | 0>(0);
   useEffect(() => {
@@ -285,9 +299,20 @@ export function OmokAi({
   }
 
   /* ── 돌 고르기(도전자 화면) ── */
+  // 다른 창의 내 대기실에 상대가 왔을 때(돌 고르는 화면 · 대국 화면 공통)
+  const arrivedBanner = arrived ? (
+    <a
+      href={`/games/omok/${arrived.room}`}
+      data-omok-ai-arrived
+      className="arcade-btn btn-gold sticky top-2 z-30 grid min-h-12 place-items-center text-base"
+    >
+      🔔 {arrived.name}님이 내 방에 왔어요! 눌러서 돌아가기
+    </a>
+  ) : null;
   if (!human) {
     return (
       <div data-omok-ai-pick className="arcade-panel grid gap-4 p-5">
+        {arrivedBanner}
         <FullscreenPrompt />
         <div className="flex justify-end">
           <FullscreenButton />
@@ -353,6 +378,7 @@ export function OmokAi({
     winner === "draw" ? "DRAW" : humanWon ? "YOU WIN!" : "YOU LOSE";
   return (
     <div data-omok-ai data-game-land className="omok-ai-root grid gap-2.5">
+      {arrivedBanner}
       <FullscreenPrompt />
       <div className="flex justify-end">
         <FullscreenButton />

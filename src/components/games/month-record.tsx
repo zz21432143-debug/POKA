@@ -17,6 +17,11 @@ export async function OnlineNow({ game }: { game: "omok" | "yut" }) {
           🔥 오늘 {hi.games}판 · 최장 {hi.longest.moves}{game === "omok" ? "수" : "번 이동"} — {hi.longest.label}
         </span>
       ) : null}
+      {hi?.streak ? (
+        <span data-today-streak className="rounded-full bg-black/40 px-3 py-1 text-xs text-[#ffb4b4]">
+          ⚡ 오늘 최다 연승 {hi.streak.name} {hi.streak.n}연승
+        </span>
+      ) : null}
       <span className="ml-auto">
         <GameAlertToggle />
       </span>

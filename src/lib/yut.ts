@@ -285,6 +285,18 @@ export function autoStep(s: YutState, rand: () => number = Math.random, now = Da
   return r.ok ? r.state : endTurn(s);
 }
 
+/** 쉬운 요괴봇: 던지기는 같고, 움직일 땐 아무 말이나(잡기 · 업기를 노리지 않음) */
+export function easyStep(s: YutState, rand: () => number = Math.random, now = Date.now()): YutState {
+  if (s.winner) return s;
+  if (s.phase === "throw") return applyThrow(s, rand, now, 30 + Math.floor(rand() * 60));
+  const opts: [number, number][] = [];
+  s.results.forEach((v, ri) => movablePieces(s, s.turnTeam, v).forEach((pi) => opts.push([ri, pi])));
+  if (!opts.length) return endTurn(s);
+  const [ri, pi] = opts[Math.floor(rand() * opts.length)];
+  const r = applyMove(s, ri, pi, now);
+  return r.ok ? r.state : endTurn(s);
+}
+
 /** 판 그림 좌표(0~100) — 출발 모서리 아래 골인 칸 자리를 남기려고 판을 위로 조금 올림 */
 const BX_L = 12;
 const BX_R = 88;

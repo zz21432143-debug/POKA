@@ -13,7 +13,7 @@ const ACTIONS: OmokAction[] = ["join", "sit", "leave", "kick",
   "exit",
   "challenge",
   "queue-join",
-  "queue-leave", "cheer", "ready", "move", "resign", "cancel", "emote", "rematch", "rematch-no", "undo-ask", "undo-yes", "undo-no", "draw-offer", "draw-yes", "draw-no"];
+  "queue-leave", "cheer", "ready", "move", "resign", "cancel", "emote", "rematch", "rematch-no", "auto", "undo-ask", "undo-yes", "undo-no", "draw-offer", "draw-yes", "draw-no"];
 
 /** 대국 상태(누구나 관전) · ?v=버전이 같으면 { same: true }만 */
 export async function GET(

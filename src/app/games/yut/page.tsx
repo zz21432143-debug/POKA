@@ -8,6 +8,7 @@ import { LobbyTabs, RulesButton } from "@/components/games/lobby-ui";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { getCurrentUser } from "@/lib/current-user";
 import { MonthRecordBar, OnlineNow } from "@/components/games/month-record";
+import { LobbyFirstGuide } from "@/components/games/lobby-first-guide";
 import { loadWinReward } from "@/lib/game-reward";
 import { gameRecord, gameStatsVisible, recordLine, rewardsOn } from "@/lib/game-stats";
 import { gamesOpenYut, yutLobby } from "@/lib/yut-server";
@@ -116,6 +117,7 @@ export default async function YutLobbyPage() {
             </ul>
           </RulesButton>
         </header>
+        <LobbyFirstGuide game="yut" />
         <OnlineNow game="yut" />
         {user ? <MonthRecordBar userId={user.id} game="yut" /> : null}
         {/* 빠른 대전: 기다리는 공개방에 바로 앉고 없으면 방을 만들어 줌 */}

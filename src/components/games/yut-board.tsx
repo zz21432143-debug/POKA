@@ -99,6 +99,7 @@ export function YutBoard({
   throwReady = false,
   guide = null,
   startPick = null,
+  lite = false,
 }: {
   state: YutState;
   faces: Record<Team, Face[]>;
@@ -135,6 +136,8 @@ export function YutBoard({
   guide?: "pick" | "dest" | null;
   /** 출발 전 말(대기 말) 중 고를 수 있는 하나 — 출발 모서리 「새 말」 버튼 */
   startPick?: number | null;
+  /** 가벼운 효과(휴대폰이 버거울 때) */
+  lite?: boolean;
 }) {
   // 한 칸씩 점프: 판 상태의 마지막 이동(event.path)에서 바로 계산 — 새 이동이 온 그 화면부터 첫 칸에 있게
   const ev = state.event;
@@ -190,7 +193,8 @@ export function YutBoard({
   const frameFlames = (() => {
     if (!fireLevel) return [] as { left: number; top: number; size: number; delay: number }[];
     // 나무 테두리 안쪽(판 밖으로 삐져나가지 않게)
-    const per = fireLevel === 2 ? 10 : 7;
+    // 한 변에 3업 4개 · 4업 6개(휴대폰에서 불꽃이 많으면 화면이 끊김)
+    const per = fireLevel === 2 ? 6 : 4;
     const E = 1.7;
     const out: { left: number; top: number; size: number; delay: number }[] = [];
     for (let k = 0; k < per; k += 1) {
@@ -246,6 +250,7 @@ export function YutBoard({
         impact && "yut-impact",
         fireLevel === 1 && "yut-fire-frame-1",
         blaze && "yut-blaze",
+        lite && "yut-lite",
       )}
       style={{ ["--yut-speed" as string]: `${stepMs * 0.9}ms` }}
       onClick={(e) => {
@@ -267,7 +272,7 @@ export function YutBoard({
               style={{
                 left: `${f.left}%`,
                 top: `${f.top}%`,
-                fontSize: `calc(${fireLevel === 2 ? "clamp(22px, 6cqw, 50px)" : "clamp(18px, 4.6cqw, 36px)"} * ${f.size})`,
+                fontSize: `calc(${fireLevel === 2 ? "clamp(26px, 7.4cqw, 58px)" : "clamp(22px, 6cqw, 44px)"} * ${f.size})`,
                 animationDelay: `${f.delay}ms`,
               }}
             >

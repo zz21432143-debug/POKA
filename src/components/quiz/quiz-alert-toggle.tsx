@@ -11,7 +11,7 @@ export function QuizAlertToggle() {
 
 /** 게임방: 누가 상대를 찾을 때 알림(하루 2번까지 · 이 기기) */
 export function GameAlertToggle() {
-  return <PushAlertToggle api="/api/games/alert" label="상대 찾을 때 알림(하루 2번까지)" onMessage="누가 오목 · 윷 방을 열면 알려 드릴게요(하루 2번까지)." data="game" />;
+  return <PushAlertToggle api="/api/games/alert" label="상대 찾을 때 알림(하루 2번 · 밤엔 안 옴)" onMessage="누가 오목 · 윷 방을 열면 알려 드릴게요(하루 2번까지 · 밤 11시~아침 9시엔 안 보내요)." data="game" />;
 }
 
 /** 알림을 못 켜는 브라우저: 아이폰이면 「홈 화면에 추가」 단계별 안내 */

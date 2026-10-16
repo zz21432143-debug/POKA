@@ -360,8 +360,22 @@ export async function todayHighlight(game: GameKind) {
     games.set(key, [...(games.get(key) ?? []), r]);
   }
   const longest = [...games.values()].sort((a, b) => b[0].moves - a[0].moves)[0];
+  // 오늘 최다 연승(2연승 이상)
+  const ordered = await prisma.gameResult
+    .findMany({ where: { game, createdAt: { gte: since }, winnerId: { not: null } }, orderBy: { createdAt: "asc" }, select: { winnerId: true, loserId: true } })
+    .catch(() => []);
+  const run = new Map<string, number>();
+  let best: { id: string; n: number } | null = null;
+  for (const r of ordered) {
+    if (r.winnerId) {
+      const n = (run.get(r.winnerId) ?? 0) + 1;
+      run.set(r.winnerId, n);
+      if (n >= 2 && (!best || n > best.n)) best = { id: r.winnerId, n };
+    }
+    if (r.loserId) run.set(r.loserId, 0);
+  }
   const ids = game === "yut" ? longest.filter((r) => r.winnerId).map((r) => r.playerAId) : [longest[0].playerAId, longest[0].playerBId];
-  const users = await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, nickname: true } }).catch(() => []);
+  const users = await prisma.user.findMany({ where: { id: { in: [...ids, ...(best ? [best.id] : [])] } }, select: { id: true, nickname: true } }).catch(() => []);
   const name = (id: string) => users.find((u) => u.id === id)?.nickname ?? "?";
   return {
     games: games.size,
@@ -369,6 +383,7 @@ export async function todayHighlight(game: GameKind) {
       moves: longest[0].moves,
       label: game === "yut" ? `${ids.map(name).join(", ")} 승리` : `${name(ids[0])} vs ${name(ids[1])}`,
     },
+    streak: best ? { name: name(best.id), n: best.n } : null,
   };
 }
 

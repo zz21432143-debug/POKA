@@ -793,6 +793,8 @@ model OmokGame {
   nextId    String?
   /// 대국을 시작한 시각(결과 화면 걸린 시간)
   startedAt DateTime?
+  /// 자리비움(자동): {"1": true, "2": false}
+  autoJson  String    @default("")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
