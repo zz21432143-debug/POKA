@@ -11,6 +11,8 @@ import { HomeQuiz } from "@/components/home/home-quiz";
 import { HomeYokai } from "@/components/home/home-yokai";
 import { HomeMissions } from "@/components/home/home-missions";
 import { HomeRankings } from "@/components/home/home-rankings";
+import { HomeTabs } from "@/components/home/home-tabs";
+import Link from "@/components/ui/link";
 import { HomeSummary } from "@/components/home/home-summary";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
@@ -67,9 +69,7 @@ async function HomeFeedSections() {
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
       <div id="home-latest" data-home-latest-rank className="grid scroll-mt-24 gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
-        <Suspense fallback={<HomePanelFallback className="h-48" />}>
-          <HomeRankings />
-        </Suspense>
+        <HomeStudyTools />
       </div>
       {/* 광고 구좌 2: 랭킹 · 커뮤니티 아래 피드 사이 */}
       <GoogleAdUnit placement="infeed" />
@@ -86,9 +86,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col gap-2.5">
       <HomeHero />
-      {/* 게시판 바로가기(홈 아래쪽까지 내려가지 않아도) */}
-      {/* 왼쪽: 게시판 바로가기 + 오늘 요약 · 오른쪽: 세로 요괴 카드(PC) */}
-      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:items-stretch">
+      {/* 위쪽: 왼쪽 = 게시판 바로가기 · 오늘 요약 · 매장 관리(메인 중심) / 오른쪽 = 퀴즈 · 미션 · 랭킹 · 게임방 탭 상자 */}
+      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="grid min-w-0 content-start gap-2.5">
           <Suspense fallback={<HomePanelFallback className="h-10" />}>
             <HomeBoardNav />
@@ -96,29 +95,64 @@ export default async function HomePage() {
           <Suspense fallback={<HomePanelFallback className="h-16" />}>
             <HomeSummary />
           </Suspense>
+          <HomeDealerTools />
         </div>
-        <Suspense fallback={null}>
-          <HomeYokai />
-        </Suspense>
+        {/* PC: 왼쪽 높이에 맞추고 길면 상자 안에서 스크롤 · 휴대폰: 아래에 그대로 */}
+        <div className="relative min-w-0">
+          <HomeTabs
+            tabs={[
+              {
+                key: "quiz",
+                label: "🎯 퀴즈",
+                node: (
+                  <Suspense fallback={<HomePanelFallback className="h-40" />}>
+                    <HomeQuiz />
+                  </Suspense>
+                ),
+              },
+              {
+                key: "mission",
+                label: "✅ 미션",
+                node: (
+                  <Suspense fallback={null}>
+                    <HomeMissions />
+                  </Suspense>
+                ),
+              },
+              {
+                key: "rank",
+                label: "🏆 랭킹",
+                node: (
+                  <Suspense fallback={<HomePanelFallback className="h-48" />}>
+                    <HomeRankings />
+                  </Suspense>
+                ),
+              },
+              {
+                key: "games",
+                label: "🎮 게임방",
+                node: (
+                  <div data-home-games className="grid gap-2 p-3">
+                    <Suspense fallback={null}>
+                      <HomeYokai />
+                    </Suspense>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link href="/games/yut" className="grid min-h-12 place-items-center rounded-xl border border-[#ffcf4a]/50 bg-black/30 text-sm font-black text-[#ffe08a]">🎲 윷놀이</Link>
+                      <Link href="/games/omok" className="grid min-h-12 place-items-center rounded-xl border border-[#ffcf4a]/50 bg-black/30 text-sm font-black text-[#ffe08a]">⚫ 오목</Link>
+                      <Link href="/yokai" className="grid min-h-11 place-items-center rounded-xl border border-[#c9a25c]/30 bg-black/30 text-xs font-bold text-[#e7c98a]">🏮 요괴 마을</Link>
+                      <Link href="/games" className="grid min-h-11 place-items-center rounded-xl border border-[#c9a25c]/30 bg-black/30 text-xs font-bold text-[#e7c98a]">요괴 오락실 전체</Link>
+                    </div>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
       </div>
-      {/* 광고 구좌 1: 대문 아래 가로 배너(휴대폰 · PC 반응형) */}
+      {/* 광고 구좌 1: 가로 배너(휴대폰 · PC 반응형) */}
       <GoogleAdUnit placement="home-top" />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
-      {/* 매일 할 일: 오늘의 미션 · 오늘의 퀴즈(PC는 나란히, 높이는 각자) */}
-      <div data-home-daily className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
-        <Suspense fallback={null}>
-          <HomeMissions />
-        </Suspense>
-        <Suspense fallback={<HomePanelFallback className="h-40" />}>
-          <HomeQuiz />
-        </Suspense>
-      </div>
-      {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히) — 구인 공고 바로 위 */}
-      <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
-        <HomeDealerTools />
-        <HomeStudyTools />
-      </div>
       <Suspense
         fallback={
           <div className="flex flex-col gap-2.5">
