@@ -1784,6 +1784,30 @@ export function YutRoom({
                         <span>🎲 윷·모 {s.stats!.big[team]}번</span>
                       </p>
                     ))}
+                    <button
+                      type="button"
+                      data-yut-share
+                      onClick={() => {
+                        const st = s.stats!;
+                        const names = (t: "A" | "B") => view.seats.filter((x) => x.team === t && x.player).map((x) => x.player!.nickname).join(", ");
+                        const sec = st.endAt ? Math.round((st.endAt - st.startAt) / 1000) : 0;
+                        const text = [
+                          `🎲 POKA 요괴 윷놀이 — ${view.winner ? `${TEAM_NAME[view.winner]}(${names(view.winner)}) 승리!` : "한 판 끝"}`,
+                          ...(["A", "B"] as const).map((t) => `${TEAM_NAME[t]} ${names(t)} · 잡기 ${st.catches[t]} · 최대 ${st.maxStack[t]}업 · 윷·모 ${st.big[t]}번`),
+                          sec ? `⏱ ${Math.floor(sec / 60)}분 ${sec % 60}초` : "",
+                          "같이 하기 👉 https://pokerwiki.co.kr/games/yut",
+                        ].filter(Boolean).join("\n");
+                        if (navigator.share) void navigator.share({ text }).catch(() => undefined);
+                        else
+                          void navigator.clipboard
+                            ?.writeText(text)
+                            .then(() => setNote("결과를 복사했어요. 오픈채팅에 붙여 넣어 보세요!"))
+                            .catch(() => setNote("복사하지 못했어요."));
+                      }}
+                      className="arcade-btn btn-dark mt-1 !min-h-9 text-xs"
+                    >
+                      📤 결과 공유
+                    </button>
                   </div>
                 ) : null}
                 {view.mySeat && !view.withBots && view.winner ? (

@@ -22,6 +22,7 @@ import {
 import {
   BLACK,
   TURN_SECONDS,
+  UNDO_LIMIT,
   WHITE,
   boardFrom,
   colorOfMove,
@@ -1165,6 +1166,19 @@ export function OmokRoom({
                       {WIN_REWARD.perOpponentPerDay}판까지
                     </span>
                   </p>
+                ) : null}
+                {view.moves.length && view.endReason !== "cancel" ? (
+                  <div data-omok-summary className="flex flex-wrap justify-center gap-x-3 rounded-xl bg-black/35 px-3 py-1.5 text-xs font-bold text-white">
+                    <span>📊 {view.moves.length}수</span>
+                    {view.durationSec ? (
+                      <span>
+                        ⏱ {Math.floor(view.durationSec / 60)}분 {view.durationSec % 60}초
+                      </span>
+                    ) : null}
+                    <span>
+                      ↩ 물리기 흑 {UNDO_LIMIT - view.undo.left[1]} · 백 {UNDO_LIMIT - view.undo.left[2]}
+                    </span>
+                  </div>
                 ) : null}
                 {view.me && view.moves.length >= 9 && view.endReason !== "cancel" ? (
                   <p

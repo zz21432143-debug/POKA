@@ -45,6 +45,8 @@ export default async function MemberPage({
   // 이번 주 급상승 회원이면 배지(주간 한정)
   const weekly = await getWeeklyRiser().catch(() => null);
   const riser = weekly && weekly.nickname === user.nickname ? { label: weekly.label, change: weekly.change } : null;
+  const { villageChiefIds } = await import("@/lib/village-collection");
+  const villageChief = (await villageChiefIds([user.id])).has(user.id);
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -67,6 +69,7 @@ export default async function MemberPage({
           isAdmin: user.isAdmin,
           isMaster: user.isMaster,
           attendanceStreak: user.attendanceStreak,
+          villageChief,
         }}
       />
       <ProfileYokai userId={user.id} viewerIsMaster={Boolean(viewer?.isMaster)} />

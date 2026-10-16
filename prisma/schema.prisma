@@ -789,6 +789,8 @@ model OmokGame {
   undoJson  String    @default("")
   /// 「한 판 더」로 만든 다음 판
   nextId    String?
+  /// 대국을 시작한 시각(결과 화면 걸린 시간)
+  startedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 

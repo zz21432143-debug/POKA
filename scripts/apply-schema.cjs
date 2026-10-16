@@ -71,6 +71,7 @@ const FILES = [
   "prisma/migrations/20261126090000_schedule_post_cleanup/migration.sql",
   "prisma/migrations/20261128090000_points_boost/migration.sql",
   "prisma/migrations/20261129090000_points_text/migration.sql",
+  "prisma/migrations/20261130090000_omok_started_at/migration.sql",
 ];
 
 function databaseUrl() {

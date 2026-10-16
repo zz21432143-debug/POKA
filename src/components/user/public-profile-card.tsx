@@ -16,6 +16,8 @@ export type PublicProfile = {
   isAdmin: boolean;
   isMaster: boolean;
   attendanceStreak: number;
+  /** 요괴 마을 도감을 다 모은 회원 */
+  villageChief?: boolean;
 };
 
 /** sparkle: 오늘 칭호를 받은 날이면 마크가 반짝임 + 안내 */
@@ -51,6 +53,11 @@ export function PublicProfileCard({
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold">{user.nickname}</p>
           {user.isMaster ? <p className="mt-0.5 text-xs font-bold text-amber-700">운영자</p> : null}
+          {user.villageChief ? (
+            <p data-village-chief className="mt-0.5 inline-flex rounded-full bg-gradient-to-r from-[#ff5a5a]/25 via-[#ffd23a]/25 to-[#b06aff]/25 px-2 py-0.5 text-xs font-black text-[#ffe08a]">
+              👑 요괴 마을 촌장
+            </p>
+          ) : null}
           {rank ? <p className="mt-0.5 text-xs font-semibold text-emerald-300">{rank}</p> : null}
           {sparkle ? <p className="mt-0.5 text-[11px] font-black text-[#f5d76e]">✨ 오늘 칭호를 받았어요!</p> : null}
           {riser ? (

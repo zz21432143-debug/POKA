@@ -37,7 +37,8 @@ const GRACE_MS = 3_000;
 /** 대국자 이모티콘 · 관전자 응원 = 오니 이모티콘 */
 export { ONI_EMOTES as OMOK_EMOTES } from "@/lib/omok-emotes";
 /** 한 판에 물리기 요청 횟수(사람마다) */
-export const UNDO_LIMIT = 3;
+import { UNDO_LIMIT } from "@/lib/omok";
+export { UNDO_LIMIT };
 /** 방 코드: 헷갈리는 글자(0 O 1 I L) 뺀 5글자 */
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const ROOM_CODE_RE = /^[A-HJKMNP-Z2-9]{5}$/;
@@ -178,6 +179,8 @@ export type OmokView = {
   nextId: string | null;
   /** 「한 판 더」 신청(누가 · 내가 했는지 · 거절됐는지) */
   rematch: RematchView;
+  /** 끝난 판: 걸린 시간(초) */
+  durationSec: number | null;
   line: number[] | null;
   /** 관전자: 로그인한 사람 닉네임 · 손님 수 */
   watchers?: number;
@@ -549,6 +552,10 @@ async function toView(
     })(),
     isPrivate: row.isPrivate,
     nextId: row.nextId,
+    durationSec:
+      row.status === "done" && row.startedAt
+        ? Math.max(0, Math.round(((row.turnAt ?? row.updatedAt).getTime() - row.startedAt.getTime()) / 1000))
+        : null,
     rematch:
       row.status === "done" && !row.nextId && row.endReason !== "cancel"
         ? rematchView(await readRematch("omok", row.id), viewerId)
@@ -890,6 +897,7 @@ export async function omokAct(
           blackId: hostBlack ? fresh.hostId : fresh.guestId,
           whiteId: hostBlack ? fresh.guestId : fresh.hostId,
           turnAt: new Date(),
+          startedAt: new Date(),
           version: { increment: 1 },
         },
       });

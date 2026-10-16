@@ -1,6 +1,20 @@
 import { prisma } from "@/lib/db";
 import { VILLAGE_ALL_MARKS, VILLAGE_CHIEF_MARK, VILLAGE_COLLECTION_STEPS } from "@/lib/yokai-marks";
 
+/** 이 회원들 중 「요괴 마을 촌장」(도감 완성) */
+export async function villageChiefIds(userIds: string[]) {
+  if (!userIds.length) return new Set<string>();
+  const rows = await prisma.userMark
+    .findMany({ where: { userId: { in: userIds }, mark: { slug: VILLAGE_CHIEF_MARK.slug } }, select: { userId: true } })
+    .catch(() => []);
+  return new Set(rows.map((r) => r.userId));
+}
+
+/** 요괴 마을 도감: 모은 수(요괴 마을 화면 바로가기) */
+export async function villageCollectedCount(userId: string) {
+  return prisma.userMark.count({ where: { userId, mark: { slug: { in: VILLAGE_ALL_MARKS.map((m) => m.slug) } } } }).catch(() => 0);
+}
+
 /**
  * 요괴 마을 도감: 마크를 살 때마다 모은 수를 세어 단계 보상(단계마다 한 번).
  * 마지막 단계는 비매품 「요괴 마을 촌장」 마크도 줌.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -47,7 +47,24 @@ export function YokaiPointShop({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [tab, setTab] = useState<ShopTab>("shop");
-  const [filter, setFilter] = useState<ShopFilter>("all");
+  const [filter, setFilterState] = useState<ShopFilter>("all");
+  const setFilter = (f: ShopFilter) => {
+    setFilterState(f);
+    try {
+      window.localStorage.setItem("poka-shop-filter", f);
+    } catch {
+      /* 못 써도 그대로 */
+    }
+  };
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem("poka-shop-filter");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장소는 화면이 뜬 뒤에만 읽을 수 있음
+      if (v && SHOP_FILTERS.some((f) => f.key === v)) setFilterState(v as ShopFilter);
+    } catch {
+      /* 못 읽으면 전체 */
+    }
+  }, []);
   const [collectNote, setCollectNote] = useState<string | null>(null);
   const loggedIn = Boolean(catalog?.loggedIn);
   const points = loggedIn ? (catalog?.points ?? 0) : demoPoints;

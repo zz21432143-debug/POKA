@@ -47,7 +47,11 @@ export default async function YokaiPage({
   if (!yokaiPublic() && !user?.isMaster && !(user && returnTo)) notFound();
   if (user)
     return (
-      <YokaiVillage initial={await getYokai(user.id)} returnTo={returnTo} />
+      <YokaiVillage
+        initial={await getYokai(user.id)}
+        returnTo={returnTo}
+        markCollection={await import("@/lib/village-collection").then((m) => m.villageCollectedCount(user.id)).catch(() => 0)}
+      />
     );
   return (
     <div className="flex flex-col gap-4" data-yokai-guest>

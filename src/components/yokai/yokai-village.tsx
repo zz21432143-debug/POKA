@@ -1,5 +1,7 @@
 "use client";
 
+import { VILLAGE_ALL_MARKS } from "@/lib/yokai-marks";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createPortal } from "react-dom";
@@ -151,9 +153,12 @@ function useNow() {
 export function YokaiVillage({
   initial,
   returnTo,
+  markCollection = 0,
 }: {
   initial: YokaiView | null;
   /** 첫 요괴를 고르면 돌아갈 곳(게임방 등) */ returnTo?: string | null;
+  /** 요괴 마을 마크 도감 모은 수 */
+  markCollection?: number;
 }) {
   const [yokai, setYokai] = useState<YokaiView | null>(initial);
   const [pick, setPick] = useState<YokaiSpecies | null>(null);
@@ -747,6 +752,17 @@ export function YokaiVillage({
               {note ? (
                 <p className="text-sm font-bold text-rose-300">{note}</p>
               ) : null}
+
+              <Link
+                href="/shop"
+                data-yokai-mark-collection={markCollection}
+                className="flex min-h-11 items-center gap-2 rounded-xl border border-[#c9a25c]/40 bg-black/30 px-3 text-sm font-bold text-[#ffe08a]"
+              >
+                📖 요괴 마크 도감 {markCollection}/{VILLAGE_ALL_MARKS.length}
+                <span className="ml-auto text-xs text-zinc-400">
+                  {markCollection >= VILLAGE_ALL_MARKS.length ? "👑 촌장 달성!" : "다 모으면 촌장 마크 →"}
+                </span>
+              </Link>
 
               <details
                 data-yokai-sources

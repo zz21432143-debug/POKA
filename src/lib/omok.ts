@@ -10,6 +10,8 @@ export const BLACK = 1 as const;
 export const WHITE = 2 as const;
 /** 한 수 제한 시간(초) — 친구 대전 */
 export const TURN_SECONDS = 60;
+/** 물리기: 한 사람이 한 판에 쓸 수 있는 횟수 */
+export const UNDO_LIMIT = 3;
 /** 화점(별) */
 export const STAR_POINTS = [
   3 * SIZE + 3,

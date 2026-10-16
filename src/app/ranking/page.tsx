@@ -59,6 +59,8 @@ async function GameRanking({
       })
     : [];
   const by = new Map(users.map((u) => [u.nickname, u]));
+  const { villageChiefIds } = await import("@/lib/village-collection");
+  const chiefs = await villageChiefIds(rows.map((r) => r.userId));
   return (
     <>
       <p className="yokai-note">
@@ -112,6 +114,11 @@ async function GameRanking({
                   <span className="inline-flex flex-wrap items-center gap-1">
                     {row.nickname}
                     <PotTitleBadge nickname={row.nickname} max={3} />
+                    {chiefs.has(row.userId) ? (
+                      <span data-village-chief title="요괴 마을 촌장(도감 완성)" className="rounded-full bg-[#ffd23a]/20 px-1.5 text-[11px] font-black text-[#ffe08a]">
+                        👑 촌장
+                      </span>
+                    ) : null}
                   </span>
                   <span className="rank-lv">
                     {row.wins}승 {row.losses}패
