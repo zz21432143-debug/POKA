@@ -175,6 +175,8 @@ export function YutRoom({
   );
   const versionRef = useRef(initial.version);
   const seatedRef = useRef(Boolean(initial.mySeat));
+  // 판 상태(끝난 판은 천천히 확인 — 서버 사용량 줄이기)
+  const statusRef = useRef(initial.status);
   const prev = useRef(initial);
   const lastBeep = useRef(0);
   const timers = useRef<number[]>([]);
@@ -209,6 +211,7 @@ export function YutRoom({
     if (alias !== undefined && next.state && e) next = { ...next, state: { ...next.state, event: { ...e, at: alias } } };
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.mySeat);
+    statusRef.current = next.status;
     if (next.watchers !== undefined)
       setWatching({
         count: next.watchers,
@@ -224,7 +227,11 @@ export function YutRoom({
     let alive = true;
     let timer = 0;
     let tick = 0;
+    let inFlight = false;
     const loop = async () => {
+      // 돌아올 때(wake)와 겹쳐 두 번 돌지 않게
+      if (inFlight) return;
+      inFlight = true;
       tick += 1;
       const watch = seatedRef.current || tick % 2 === 1 ? `&w=${watchKey}` : "";
       try {
@@ -253,13 +260,26 @@ export function YutRoom({
       } catch {
         /* 다음에 다시 */
       }
-      // 자리에 앉은 사람 1초 / 관전자 2초(서버 사용량 줄이기)
-      if (alive) timer = window.setTimeout(loop, document.hidden ? 5000 : seatedRef.current ? 1000 : 2000);
+      inFlight = false;
+      if (!alive) return;
+      // 서버 사용량 줄이기: 자리에 앉은 사람 1.2초 · 관전 2.5초 · 끝난 판 3초(대국자) / 10초(관전)
+      // 다른 탭을 보면: 대국자 15초(자리 지킴만) · 관전자는 멈췄다가 돌아오면 바로
+      const seated = seatedRef.current;
+      if (document.hidden && !seated) return;
+      const done = statusRef.current === "done";
+      timer = window.setTimeout(loop, document.hidden ? 15_000 : done ? (seated ? 3000 : 10_000) : seated ? 1200 : 2500);
     };
+    const wake = () => {
+      if (document.hidden) return;
+      window.clearTimeout(timer);
+      void loop();
+    };
+    document.addEventListener("visibilitychange", wake);
     timer = window.setTimeout(loop, 600);
     return () => {
       alive = false;
       window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", wake);
     };
   }, [initial.id, watchKey]);
 

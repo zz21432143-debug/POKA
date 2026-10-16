@@ -18,7 +18,10 @@ export function NewSlotsPill({ region, since }: { region: string | null; since: 
       const j = (await r?.json().catch(() => null)) as { count?: number } | null;
       if (alive && typeof j?.count === "number") setCount(j.count);
     };
-    const t = window.setInterval(() => void check(), 45_000);
+    const t = window.setInterval(() => {
+      // 화면을 안 보면 쉼 · 90초마다(서버 사용량 줄이기)
+      if (!document.hidden) void check();
+    }, 90_000);
     return () => {
       alive = false;
       window.clearInterval(t);

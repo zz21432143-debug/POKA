@@ -150,6 +150,8 @@ export function OmokRoom({
   // 상대 차례(내가 앉아 있음)에는 더 자주 확인해 상대 수가 바로 보이게
   const fastPollRef = useRef(false);
   const seatedRef = useRef(Boolean(initial.me || initial.seat));
+  // 판 상태(끝난 판은 천천히 확인 — 서버 사용량 줄이기)
+  const statusRef = useRef(initial.status);
   const prev = useRef(initial);
   const lastBeep = useRef(0);
 
@@ -163,6 +165,7 @@ export function OmokRoom({
     if (next.version < versionRef.current) return;
     versionRef.current = next.version;
     seatedRef.current = Boolean(next.me || next.seat);
+    statusRef.current = next.status;
     if (next.watchers !== undefined)
       setWatching({
         count: next.watchers,
@@ -179,7 +182,11 @@ export function OmokRoom({
     let alive = true;
     let timer = 0;
     let tick = 0;
+    let inFlight = false;
     const loop = async () => {
+      // 돌아올 때(wake)와 겹쳐 두 번 돌지 않게
+      if (inFlight) return;
+      inFlight = true;
       tick += 1;
       // 4번에 1번 「보고 있어요」(관전자 = 관전자 수 · 대국자 = 자리 지킴, 오래 안 보이면 방 정리)
       const watch =
@@ -210,14 +217,29 @@ export function OmokRoom({
       } catch {
         /* 다음에 다시 */
       }
-      if (alive)
-        // 대국자: 상대 차례 0.4초 · 내 차례 1초 / 관전자: 2초(서버 사용량 줄이기)
-        timer = window.setTimeout(loop, document.hidden ? 5000 : fastPollRef.current ? 400 : seatedRef.current ? 1000 : 2000);
+      inFlight = false;
+      if (!alive) return;
+      // 서버 사용량 줄이기: 상대 차례 0.8초 · 내 차례 2초 · 관전 2.5초 · 끝난 판 3초(대국자 다시하기) / 10초(관전)
+      // 다른 탭을 보면: 대국자 15초(자리 지킴만) · 관전자는 멈췄다가 돌아오면 바로
+      const seated = seatedRef.current;
+      if (document.hidden && !seated) {
+        return;
+      }
+      const done = statusRef.current === "done";
+      const wait = document.hidden ? 15_000 : done ? (seated ? 3000 : 10_000) : fastPollRef.current ? 800 : seated ? 2000 : 2500;
+      timer = window.setTimeout(loop, wait);
     };
+    const wake = () => {
+      if (document.hidden) return;
+      window.clearTimeout(timer);
+      void loop();
+    };
+    document.addEventListener("visibilitychange", wake);
     timer = window.setTimeout(loop, 700);
     return () => {
       alive = false;
       window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", wake);
     };
   }, [initial.id, watchKey]);
 

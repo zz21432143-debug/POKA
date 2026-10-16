@@ -21,10 +21,13 @@ export function VersionRefresh() {
   useEffect(() => {
     if (BUILD_ID === "dev") return;
     let stale = false;
+    let lastAsk = 0;
     const safePage = () => !/\/(write|edit)(\/|$)|^\/admin|^\/account/.test(window.location.pathname);
     const check = async () => {
       if (document.hidden) return;
-      if (!stale) {
+      // 탭을 오갈 때마다 묻지 않게 2분에 한 번까지만(서버 사용량 줄이기)
+      if (!stale && Date.now() - lastAsk > 120_000) {
+        lastAsk = Date.now();
         const res = await fetch("/api/version", { cache: "no-store" }).catch(() => null);
         const json = res?.ok ? ((await res.json().catch(() => null)) as { build?: string } | null) : null;
         if (json?.build && json.build !== BUILD_ID) stale = true;

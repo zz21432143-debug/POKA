@@ -37,13 +37,38 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // 그림 · 글꼴 등 정적 파일: 하루 동안 브라우저에 저장(다시 받지 않아 전송량 · 요청 수 줄임), 그 뒤 1주일은 쓰면서 새로 확인
       {
         source: "/images/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=3600, must-revalidate" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
       {
         source: "/brand/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=3600, must-revalidate" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/yokai/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/marks/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/banners/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/theme/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/vendor/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/ads/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
       {
         source: "/sw.js",
@@ -54,7 +79,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/icons/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=3600, must-revalidate" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
       {
         // 교대표 보기(/r/…)는 공유 탭 TV 미리보기에서 우리 사이트 안에만 띄울 수 있게(SAMEORIGIN), 나머지는 막음
