@@ -37,6 +37,12 @@ export async function watchersWithFaces(gameId: string) {
 }
 
 /** 이 방에 누가 있는지(대국자 · 관전자 신호 아무거나) — 0명이면 방을 닫음 */
+/** 지금(30초 안) 오목 · 윷 방에 있는 사람 수(대국자 + 관전자) */
+export async function playersOnline() {
+  const rows = await prisma.$queryRaw<{ n: number }[]>`SELECT COUNT(DISTINCT viewer)::int AS n FROM "GameWatch" WHERE "seenAt" >= ${new Date(Date.now() - 30_000)}`.catch(() => [{ n: 0 }]);
+  return rows[0]?.n ?? 0;
+}
+
 export async function anyoneHere(gameId: string, withinMs: number) {
   const n = await prisma.gameWatch.count({ where: { gameId, seenAt: { gte: new Date(Date.now() - withinMs) } } }).catch(() => 1);
   return n > 0;

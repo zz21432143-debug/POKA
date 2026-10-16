@@ -87,6 +87,7 @@ export async function DELETE(request: Request) {
       adminAlerts: true,
       yokaiAlerts: true,
       quizAlerts: true,
+      gameAlerts: true,
     },
   });
   if (
@@ -94,7 +95,8 @@ export async function DELETE(request: Request) {
     !row.region &&
     !row.adminAlerts &&
     !row.yokaiAlerts &&
-    !row.quizAlerts
+    !row.quizAlerts &&
+    !row.gameAlerts
   ) {
     await prisma.pushSubscription.deleteMany({ where: { endpoint } });
     return NextResponse.json({ ok: true, keep: false });

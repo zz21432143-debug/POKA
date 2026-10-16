@@ -1639,7 +1639,7 @@ export function YutRoom({
                   <p className="text-sm font-black text-[#ffe08a]">
                     💬 {view.mySeat ? "이모티콘" : "응원 이모티콘"}{" "}
                     <span className="text-xs font-bold text-[#d6cdee]">
-                      — 내 요괴 머리 위로 1.5초
+                      — {view.mySeat ? "내 요괴 머리 위로 1.5초" : "🎁 응원하면 하루 한 번 EXP +5"}
                     </span>
                   </p>
                   <div className="flex flex-wrap gap-1">
@@ -1795,7 +1795,7 @@ export function YutRoom({
                           `🎲 POKA 요괴 윷놀이 — ${view.winner ? `${TEAM_NAME[view.winner]}(${names(view.winner)}) 승리!` : "한 판 끝"}`,
                           ...(["A", "B"] as const).map((t) => `${TEAM_NAME[t]} ${names(t)} · 잡기 ${st.catches[t]} · 최대 ${st.maxStack[t]}업 · 윷·모 ${st.big[t]}번`),
                           sec ? `⏱ ${Math.floor(sec / 60)}분 ${sec % 60}초` : "",
-                          "같이 하기 👉 https://pokerwiki.co.kr/games/yut",
+                          "같이 하기 👉 https://pokerwiki.co.kr/games/yut?from=game-share",
                         ].filter(Boolean).join("\n");
                         void fetch("/api/games/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game: "yut" }) }).catch(() => undefined);
                         if (navigator.share) void navigator.share({ text }).catch(() => undefined);

@@ -716,7 +716,20 @@ export async function createOmok(
       .catch(() => undefined);
     return open;
   }
-  return makeRoom({ hostId, isPrivate: Boolean(opts.isPrivate), title: opts.title ?? "" });
+  const made = await makeRoom({ hostId, isPrivate: Boolean(opts.isPrivate), title: opts.title ?? "" });
+  if (!opts.isPrivate && "id" in made) {
+    // 응답을 보낸 뒤 「상대 찾는 중」 알림(켠 기기만 · 하루 2번)
+    try {
+      const { after } = await import("next/server");
+      after(async () => {
+        const { alertWaitingRoom } = await import("@/lib/game-alert");
+        await alertWaitingRoom("omok", made.id, hostId).catch(() => undefined);
+      });
+    } catch {
+      /* 요청 밖이면 알림 없이 */
+    }
+  }
+  return made;
 }
 
 async function makeRoom(data: {

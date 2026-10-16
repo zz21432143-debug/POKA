@@ -13,6 +13,8 @@ export const SOURCE_LABEL: Record<string, string> = {
   board: "📺 게임 현황판 QR",
   rotation: "🔁 교대표 QR",
   share: "🖼️ 공유 이미지 QR",
+  "game-share": "🎮 게임 결과 공유",
+  "game-invite": "🎮 게임방 초대 링크",
   push: "🔔 푸시 알림",
   google: "구글",
   naver: "네이버",

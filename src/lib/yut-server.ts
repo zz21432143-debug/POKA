@@ -118,7 +118,20 @@ export async function createYut(hostId: string, mode: YutMode, isPrivate: boolea
   if (open) await prisma.yutGame.update({ where: { id: open.id }, data: { status: "done", endReason: "cancel", version: { increment: 1 } } }).catch(() => undefined);
   const seats = emptySeats(mode);
   seats[0].userId = hostId;
-  return makeRoom({ hostId, mode, seatsJson: JSON.stringify(seats), isPrivate, title });
+  const made = await makeRoom({ hostId, mode, seatsJson: JSON.stringify(seats), isPrivate, title });
+  if (!isPrivate && "id" in made) {
+    // 응답을 보낸 뒤 「상대 찾는 중」 알림(켠 기기만 · 하루 2번)
+    try {
+      const { after } = await import("next/server");
+      after(async () => {
+        const { alertWaitingRoom } = await import("@/lib/game-alert");
+        await alertWaitingRoom("yut", made.id, hostId).catch(() => undefined);
+      });
+    } catch {
+      /* 요청 밖이면 알림 없이 */
+    }
+  }
+  return made;
 }
 
 export async function yutRoomByCode(code: string) {

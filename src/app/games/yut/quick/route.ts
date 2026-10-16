@@ -18,11 +18,16 @@ export async function GET(request: Request) {
     .findMany({
       where: { status: "waiting", isPrivate: false, hostId: { not: user.id }, updatedAt: { gte: new Date(Date.now() - 30 * 60_000) } },
       orderBy: { updatedAt: "desc" },
-      take: 8,
-      select: { id: true, seatsJson: true },
+      take: 12,
+      select: { id: true, seatsJson: true, hostId: true },
     })
     .catch(() => []);
-  for (const room of rooms) {
+  // 이번 달 랭킹 점수가 나와 비슷한 방장부터
+  const { gameRanking } = await import("@/lib/game-stats");
+  const scores = new Map((await gameRanking("yut", "month", 1000).catch(() => [])).map((r) => [r.userId, r.score]));
+  const mine = scores.get(user.id) ?? 0;
+  rooms.sort((a, b) => Math.abs((scores.get(a.hostId) ?? 0) - mine) - Math.abs((scores.get(b.hostId) ?? 0) - mine));
+  for (const room of rooms.slice(0, 8)) {
     let seats: { team: "A" | "B"; idx: number; userId?: string | null; bot?: boolean }[] = [];
     try {
       seats = JSON.parse(room.seatsJson);

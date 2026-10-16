@@ -18,11 +18,16 @@ export async function GET(request: Request) {
     .findMany({
       where: { status: "waiting", isPrivate: false, guestId: null, hostId: { not: user.id }, updatedAt: { gte: new Date(Date.now() - 30 * 60_000) } },
       orderBy: { updatedAt: "desc" },
-      take: 5,
-      select: { id: true },
+      take: 12,
+      select: { id: true, hostId: true },
     })
     .catch(() => []);
-  for (const room of rooms) {
+  // 이번 달 랭킹 점수가 나와 비슷한 방장부터(한쪽이 일방적으로 지는 판 줄이기)
+  const { gameRanking } = await import("@/lib/game-stats");
+  const scores = new Map((await gameRanking("omok", "month", 1000).catch(() => [])).map((r) => [r.userId, r.score]));
+  const mine = scores.get(user.id) ?? 0;
+  rooms.sort((a, b) => Math.abs((scores.get(a.hostId) ?? 0) - mine) - Math.abs((scores.get(b.hostId) ?? 0) - mine));
+  for (const room of rooms.slice(0, 5)) {
     // 앉기(방장이 떠난 방은 정리되며 실패 → 다음 방)
     const r = await omokAct(room.id, user.id, "sit", {}).catch(() => null);
     if (r?.ok && (r.view.seat === "guest" || r.view.seat === "host")) return go(`/games/omok/${room.id}`);

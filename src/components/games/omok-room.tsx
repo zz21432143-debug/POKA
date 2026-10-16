@@ -1187,7 +1187,7 @@ export function OmokRoom({
                           `⚫⚪ POKA 요괴 오목 — ${view.black?.nickname ?? "흑"} vs ${view.white?.nickname ?? "백"}`,
                           winnerInfo ? `🏆 ${winnerInfo.nickname} 승리! (${END_TEXT[view.endReason] ?? ""})` : "🤝 무승부",
                           `📊 ${view.moves.length}수${sec ? ` · ⏱ ${Math.floor(sec / 60)}분 ${sec % 60}초` : ""}`,
-                          "같이 두기 👉 https://pokerwiki.co.kr/games/omok",
+                          "같이 두기 👉 https://pokerwiki.co.kr/games/omok?from=game-share",
                         ].join("\n");
                         void fetch("/api/games/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ game: "omok" }) }).catch(() => undefined);
                         if (navigator.share) void navigator.share({ text }).catch(() => undefined);
@@ -1746,7 +1746,7 @@ export function OmokRoom({
             <p className="-mt-1 text-xs leading-relaxed text-[#d6cdee]">
               {emoteAction === "emote"
                 ? "누르면 판 위 내 쪽에 크게 떠요"
-                : "누르면 판 위쪽 가운데에 내 이름과 함께 크게 떠요"}
+                : "누르면 판 위쪽 가운데에 내 이름과 함께 크게 떠요 · 🎁 응원하면 하루 한 번 EXP +5"}
             </p>
             {emoteAction === "cheer" && !loggedIn ? (
               <Link

@@ -9,6 +9,11 @@ export function QuizAlertToggle() {
   return <PushAlertToggle api="/api/quiz/alert" label="매일 아침 9시 퀴즈 알림" onMessage="매일 아침 9시에 오늘의 퀴즈를 알려 드릴게요." data="quiz" />;
 }
 
+/** 게임방: 누가 상대를 찾을 때 알림(하루 2번까지 · 이 기기) */
+export function GameAlertToggle() {
+  return <PushAlertToggle api="/api/games/alert" label="상대 찾을 때 알림(하루 2번까지)" onMessage="누가 오목 · 윷 방을 열면 알려 드릴게요(하루 2번까지)." data="game" />;
+}
+
 /** 이 기기로 알림 받기(켜기 · 끄기) 공용: api는 GET ?endpoint · POST { subscription } · DELETE { endpoint } */
 export function PushAlertToggle({ api, label, onMessage, data }: { api: string; label: string; onMessage: string; data: string }) {
   const pushKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";

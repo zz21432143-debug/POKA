@@ -67,7 +67,7 @@ export default async function OmokRoomPage({
         initial={state.view}
         loggedIn={Boolean(user)}
         hasYokai={yokai}
-        shareUrl={`${siteUrl()}/games/omok/${id}`}
+        shareUrl={`${siteUrl()}/games/omok/${id}?from=game-invite`}
         reward={await loadWinReward()}
       />
     </div>

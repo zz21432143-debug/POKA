@@ -309,6 +309,8 @@ model PushSubscription {
   attendAlerts Boolean @default(false)
   /// 요괴 마을 알림(요괴가 배고플 때 저녁 7시)
   yokaiAlerts Boolean @default(false)
+  /// 게임방: 누가 상대를 찾을 때(하루 2번까지)
+  gameAlerts Boolean @default(false)
   createdAt DateTime @default(now())
 
   @@index([region])
