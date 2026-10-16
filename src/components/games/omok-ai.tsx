@@ -56,6 +56,24 @@ export function OmokAi({
   const opp = OMOK_OPPONENTS[opponentIndex] ?? OMOK_OPPONENTS[0];
   const oppYokai = { species: opp.species, stage: opp.stage };
   const [human, setHuman] = useState<Stone | 0>(0);
+  // 지난번에 고른 돌(이 기기에 기억)
+  const [lastPick, setLastPick] = useState<Stone | 0>(0);
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem("poka-omok-ai-stone");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장소는 화면이 뜬 뒤에만 읽을 수 있음
+      if (v === "1" || v === "2") setLastPick(Number(v) as Stone);
+    } catch {
+      /* 못 읽으면 표시 안 함 */
+    }
+  }, []);
+  const rememberPick = (c: Stone) => {
+    try {
+      window.localStorage.setItem("poka-omok-ai-stone", String(c));
+    } catch {
+      /* 못 써도 진행 */
+    }
+  };
   const [moves, setMoves] = useState<number[]>([]);
   const [preview, setPreview] = useState<number | null>(null);
   const [line, setLine] = useState<number[] | null>(null);
@@ -301,18 +319,26 @@ export function OmokAi({
           <button
             type="button"
             data-omok-start="b"
-            onClick={() => start(BLACK)}
-            className="arcade-btn min-h-16 bg-gradient-to-b from-[#4a4a4a] to-[#050505] text-lg text-white"
+            onClick={() => {
+              rememberPick(BLACK);
+              start(BLACK);
+            }}
+            className={cn("arcade-btn relative min-h-16 bg-gradient-to-b from-[#4a4a4a] to-[#050505] text-lg text-white", lastPick === BLACK && "ring-4 ring-[#ffcf4a]")}
           >
             ⚫ 흑 · 먼저
+            {lastPick === BLACK ? <span data-omok-last-pick className="absolute -top-2 right-2 rounded-full bg-[#ffcf4a] px-1.5 text-[10px] font-black text-[#2a1400]">지난번</span> : null}
           </button>
           <button
             type="button"
             data-omok-start="w"
-            onClick={() => start(WHITE)}
-            className="arcade-btn min-h-16 bg-gradient-to-b from-white to-[#cfc6b4] text-lg text-black"
+            onClick={() => {
+              rememberPick(WHITE);
+              start(WHITE);
+            }}
+            className={cn("arcade-btn relative min-h-16 bg-gradient-to-b from-white to-[#cfc6b4] text-lg text-black", lastPick === WHITE && "ring-4 ring-[#ffcf4a]")}
           >
             ⚪ 백 · 나중
+            {lastPick === WHITE ? <span data-omok-last-pick className="absolute -top-2 right-2 rounded-full bg-[#ffcf4a] px-1.5 text-[10px] font-black text-[#2a1400]">지난번</span> : null}
           </button>
         </div>
         <p className="text-center text-sm text-[#d6cdee]">

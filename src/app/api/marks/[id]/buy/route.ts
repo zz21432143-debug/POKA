@@ -49,7 +49,10 @@ export async function POST(
       href: "/shop",
     });
 
-    return NextResponse.json({ ok: true, spent: price });
+    // 요괴 마을 도감 단계 보상
+    const { checkVillageCollection } = await import("@/lib/village-collection");
+    const collection = await checkVillageCollection(user.id).catch(() => null);
+    return NextResponse.json({ ok: true, spent: price, collection: collection?.got ?? [] });
   } catch (error) {
     const message = publicErrorMessage(error, "구매에 실패했습니다.");
     return NextResponse.json({ error: message }, { status: 500 });

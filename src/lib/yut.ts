@@ -106,7 +106,12 @@ export type YutState = {
   winner: Team | null;
   /** 말을 움직인 횟수(짧은 판 판정) */
   movesMade: number;
+  /** 한 판 요약(결과 화면): 잡은 말 · 가장 많이 업은 수 · 윷/모 · 시작/끝 시각 */
+  stats?: YutStats;
 };
+export type YutStats = { catches: Record<Team, number>; maxStack: Record<Team, number>; big: Record<Team, number>; startAt: number; endAt?: number };
+const statsOf = (s: YutState, now: number): YutStats =>
+  s.stats ?? { catches: { A: 0, B: 0 }, maxStack: { A: 1, B: 1 }, big: { A: 0, B: 0 }, startAt: now };
 
 export function newState(piecesPerTeam: number, first: Team = "A"): YutState {
   const mk = () => Array.from({ length: piecesPerTeam }, () => ({ pos: START }));
@@ -148,7 +153,9 @@ export function applyThrow(s: YutState, rand: () => number = Math.random, now = 
     if (!n.results.length || !hasAnyMove({ ...n, phase: "move" }, n.turnTeam)) return endTurn({ ...n, results: [], event: { type: "skip", team: n.turnTeam, from: START, to: START, count: 0, at: now, nak: true } });
     return { ...n, phase: "move" };
   }
-  const next: YutState = { ...s, results: [...s.results, t.value], lastThrow: { ...t, team: s.turnTeam, at: now, power: pw }, throws: s.throws - 1 + (throwAgain(t.value) ? 1 : 0) };
+  const st0 = statsOf(s, now);
+  const stats = throwAgain(t.value) ? { ...st0, big: { ...st0.big, [s.turnTeam]: st0.big[s.turnTeam] + 1 } } : st0;
+  const next: YutState = { ...s, stats, results: [...s.results, t.value], lastThrow: { ...t, team: s.turnTeam, at: now, power: pw }, throws: s.throws - 1 + (throwAgain(t.value) ? 1 : 0) };
   if (next.throws <= 0) {
     next.phase = "move";
     // 쓸 수 있는 결과가 하나도 없으면(예: 출발 전 말뿐인데 빽도) 차례 넘김
@@ -193,15 +200,23 @@ export function applyMove(s: YutState, ri: number, pieceIdx: number, now = Date.
     else if (pieces[team].filter((p) => p.pos === to).length > group.length) type = "stack";
   }
   const results = s.results.filter((_, i) => i !== ri);
+  const st0 = statsOf(s, now);
+  const stackNow = to === END ? group.length : pieces[team].filter((p) => p.pos === to).length;
+  const stats: YutStats = {
+    ...st0,
+    catches: { ...st0.catches, [team]: st0.catches[team] + captured },
+    maxStack: { ...st0.maxStack, [team]: Math.max(st0.maxStack[team], stackNow) },
+  };
   let next: YutState = {
     ...s,
+    stats,
     pieces,
     results,
     throws: s.throws + (captured ? 1 : 0),
     event: { type, team, from, to, count: group.length, at: now, captured, path: pathOf(from, value), moved: group },
     movesMade: s.movesMade + 1,
   };
-  if (pieces[team].every((p) => p.pos === END)) return { ok: true, state: { ...next, winner: team, results: [], throws: 0 } };
+  if (pieces[team].every((p) => p.pos === END)) return { ok: true, state: { ...next, winner: team, results: [], throws: 0, stats: { ...stats, endAt: now } } };
   // 잡으면 한 번 더 던지기 → 남은 결과는 그다음에
   if (next.throws > 0) next = { ...next, phase: "throw" };
   else if (!results.length || !hasAnyMove(next, team)) next = endTurn(next);

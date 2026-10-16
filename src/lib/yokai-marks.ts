@@ -77,10 +77,24 @@ export const VILLAGE_HERO_MARKS: YokaiMarkDef[] = [
   { slug: "village-yeomra", name: "염라대왕", imageUrl: "/marks/yokai/village-yeomra.png", pricePoints: LEGEND_MARK_PRICE },
 ];
 
+/** 요괴 마을 마크 전부(도감) */
+export const VILLAGE_ALL_MARKS: YokaiMarkDef[] = [...VILLAGE_COMMON_MARKS, ...VILLAGE_RARE_MARKS, ...VILLAGE_HERO_MARKS];
+/** 도감 완성 보상 마크(비매품) */
+export const VILLAGE_CHIEF_MARK: YokaiMarkDef = { slug: "village-chief", name: "요괴 마을 촌장", imageUrl: "/marks/yokai/village-chief.png", pricePoints: 0 };
+/** 도감 단계 보상: 모은 수 → 포인트(마지막 단계는 촌장 마크도) */
+export const VILLAGE_COLLECTION_STEPS = [
+  { at: 8, points: 300 },
+  { at: 16, points: 700 },
+  { at: VILLAGE_ALL_MARKS.length, points: 1500, mark: true },
+] as const;
+export function isChiefSlug(slug: string) {
+  return slug === VILLAGE_CHIEF_MARK.slug;
+}
+
 /** 그 요괴를 키우고 있으면 요괴 마을 마크 반값 */
 export const OWN_YOKAI_DISCOUNT = 0.5;
 export function villageSpecies(slug: string) {
-  return slug.startsWith("village-") ? slug.slice("village-".length) : null;
+  return slug.startsWith("village-") && slug !== "village-chief" ? slug.slice("village-".length) : null;
 }
 export function markPriceFor(slug: string, base: number, ownedSpecies: Set<string>) {
   const species = villageSpecies(slug);

@@ -115,6 +115,6 @@ function CardButton({
     );
   }
   return (
-    <span className="yokai-owned">{offer === "ranking" ? "랭킹 보상" : "비매품"}</span>
+    <span className="yokai-owned">{offer === "ranking" ? "랭킹 보상" : offer === "collection" ? "도감 완성 보상" : "비매품"}</span>
   );
 }

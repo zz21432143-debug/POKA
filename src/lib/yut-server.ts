@@ -273,7 +273,7 @@ async function settle(row: Row): Promise<Row> {
     const goneSeats = humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
     if (goneSeats.length === 1 && row.mode === 1) {
       const winner = other(goneSeats[0].team);
-      const ended: YutState = { ...s, winner, results: [], throws: 0 };
+      const ended: YutState = { ...s, winner, results: [], throws: 0, stats: s.stats ? { ...s.stats, endAt: Date.now() } : s.stats };
       const r = await prisma.yutGame.updateMany({
         where: { id: row.id, version: row.version, status: "playing" },
         data: { status: "done", winner, endReason: "leave", stateJson: JSON.stringify(ended), version: { increment: 1 } },
@@ -625,7 +625,7 @@ export async function yutAct(
     const team = next.filter((x) => x.team === mine.team && x.userId && !x.bot && !x.left);
     if (flag && team.every((x) => x.surrender)) {
       const winner = other(mine.team);
-      const ended: YutState = { ...st, winner, results: [], throws: 0 };
+      const ended: YutState = { ...st, winner, results: [], throws: 0, stats: st.stats ? { ...st.stats, endAt: Date.now() } : st.stats };
       const r = await prisma.yutGame.updateMany({
         where: { id, version: row.version, status: "playing" },
         data: { status: "done", winner, endReason: "resign", seatsJson: JSON.stringify(next), stateJson: JSON.stringify(ended), version: { increment: 1 } },
@@ -648,7 +648,7 @@ export async function yutAct(
       const st = stateOf(row);
       if (st) {
         const winner = other(mine.team);
-        const ended: YutState = { ...st, winner, results: [], throws: 0 };
+        const ended: YutState = { ...st, winner, results: [], throws: 0, stats: st.stats ? { ...st.stats, endAt: Date.now() } : st.stats };
         const r = await prisma.yutGame.updateMany({ where: { id, version: row.version, status: "playing" }, data: { status: "done", winner, endReason: "leave", stateJson: JSON.stringify(ended), version: { increment: 1 } } });
         const fresh = await prisma.yutGame.findUnique({ where: { id } });
         if (r.count === 1 && fresh) await afterDone(fresh, ended);

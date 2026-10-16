@@ -13,6 +13,9 @@ import { markPriceTag } from "@/lib/yokai-catalog";
 import {
   KOREAN_LEGEND_MARKS,
   LOGO_MARKS,
+  VILLAGE_ALL_MARKS,
+  VILLAGE_CHIEF_MARK,
+  VILLAGE_COLLECTION_STEPS,
   VILLAGE_COMMON_MARKS,
   VILLAGE_HERO_MARKS,
   VILLAGE_RARE_MARKS,
@@ -44,6 +47,8 @@ export function YokaiPointShop({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [tab, setTab] = useState<ShopTab>("shop");
+  const [filter, setFilter] = useState<ShopFilter>("all");
+  const [collectNote, setCollectNote] = useState<string | null>(null);
   const loggedIn = Boolean(catalog?.loggedIn);
   const points = loggedIn ? (catalog?.points ?? 0) : demoPoints;
 
@@ -65,6 +70,10 @@ export function YokaiPointShop({
   );
   const villageHero = useMemo(
     () => mergeFrom(VILLAGE_HERO_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
+  const chief = useMemo(
+    () => mergeFrom([VILLAGE_CHIEF_MARK], catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
   );
   const logos = useMemo(
@@ -92,8 +101,20 @@ export function YokaiPointShop({
     [catalog, demoOwned, demoEquipped],
   );
   const preview =
-    [...logos, ...regular, ...villageCommon, ...villageRare, ...villageHero, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
-  const inventory = [...rewards, ...kings, ...logos, ...legends, ...villageHero, ...villageRare, ...villageCommon, ...regular].filter((mark) => mark.owned);
+    [...logos, ...regular, ...villageCommon, ...villageRare, ...villageHero, ...legends, ...chief, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
+  const villageOwned = [...villageCommon, ...villageRare, ...villageHero].filter((m) => m.owned).length;
+  const villageTotal = VILLAGE_ALL_MARKS.length;
+  const pick = (list: CardMark[]) =>
+    filter === "all"
+      ? list
+      : list.filter((m) =>
+          filter === "affordable"
+            ? !m.owned && m.pricePoints > 0 && m.pricePoints <= points
+            : filter === "discount"
+              ? !m.owned && Boolean(m.basePrice)
+              : !m.owned,
+        );
+  const inventory = [...chief, ...rewards, ...kings, ...logos, ...legends, ...villageHero, ...villageRare, ...villageCommon, ...regular].filter((mark) => mark.owned);
   const others = (catalog?.marks ?? []).filter(
     (mark) =>
       !isYokaiSlug(mark.slug) &&
@@ -126,8 +147,15 @@ export function YokaiPointShop({
     setPending(mark.id + "buy");
     try {
       const response = await fetch(`/api/marks/${mark.id}/buy`, { method: "POST" });
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: string; collection?: { at: number; points: number; mark: boolean }[] };
       if (!response.ok) throw new Error(payload.error ?? "구매에 실패했습니다.");
+      const step = payload.collection?.[payload.collection.length - 1];
+      if (step)
+        setCollectNote(
+          step.mark
+            ? `👑 요괴 마을 도감 완성! +${step.points}P와 「요괴 마을 촌장」 마크를 받았어요.`
+            : `📖 요괴 마을 도감 ${step.at}종 달성! +${step.points}P`,
+        );
       await reload();
       setSelected(mark.slug);
       router.refresh();
@@ -262,9 +290,48 @@ export function YokaiPointShop({
 
         {tab === "shop" ? (
           <>
+            <div data-shop-filter role="radiogroup" aria-label="마크 보기" className="flex flex-wrap gap-1.5">
+              {SHOP_FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={filter === f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={cn(
+                    "inline-flex min-h-9 items-center rounded-full border px-3 text-sm font-semibold",
+                    filter === f.key ? "border-[#c9a25c] bg-[#c9a25c]/20 text-[#ffe08a]" : "border-white/15 text-zinc-300",
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <section data-village-collection={`${villageOwned}/${villageTotal}`} className="yokai-block grid gap-2" aria-label="요괴 마을 도감">
+              <div className="flex items-center gap-2">
+                <h2>📖 요괴 마을 도감</h2>
+                <span className="ml-auto text-sm font-black tabular-nums text-[#ffe08a]">
+                  {villageOwned} / {villageTotal}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-gradient-to-r from-[#c9a25c] to-[#ffe08a]" style={{ width: `${(villageOwned / villageTotal) * 100}%` }} />
+              </div>
+              <ul className="flex flex-wrap gap-1.5 text-xs">
+                {VILLAGE_COLLECTION_STEPS.map((s) => (
+                  <li
+                    key={s.at}
+                    className={cn("rounded-full border px-2.5 py-1 font-bold", villageOwned >= s.at ? "border-emerald-500/50 bg-emerald-950/40 text-emerald-200" : "border-white/15 text-zinc-400")}
+                  >
+                    {villageOwned >= s.at ? "✅" : "⬜"} {s.at}종 · +{s.points}P{"mark" in s && s.mark ? " · 👑 촌장 마크" : ""}
+                  </li>
+                ))}
+              </ul>
+              {collectNote ? <p className="text-sm font-black text-emerald-300">{collectNote}</p> : null}
+            </section>
             <MarkGrid
               title="로고 마크"
-              marks={logos}
+              marks={pick(logos)}
               points={points}
               pending={pending}
               selected={selected}
@@ -274,7 +341,7 @@ export function YokaiPointShop({
             />
             <MarkGrid
               title="일반 마크"
-              marks={regular}
+              marks={pick(regular)}
               points={points}
               pending={pending}
               selected={selected}
@@ -284,7 +351,7 @@ export function YokaiPointShop({
             />
             <MarkGrid
               title="요괴 마을 · 일반"
-              marks={villageCommon}
+              marks={pick(villageCommon)}
               points={points}
               pending={pending}
               selected={selected}
@@ -294,7 +361,7 @@ export function YokaiPointShop({
             />
             <MarkGrid
               title="요괴 마을 · 희귀"
-              marks={villageRare}
+              marks={pick(villageRare)}
               points={points}
               pending={pending}
               selected={selected}
@@ -304,7 +371,7 @@ export function YokaiPointShop({
             />
             <MarkGrid
               title="요괴 마을 · 영웅 · 전설"
-              marks={villageHero}
+              marks={pick(villageHero)}
               points={points}
               pending={pending}
               selected={selected}
@@ -314,7 +381,7 @@ export function YokaiPointShop({
             />
             <MarkGrid
               title="한국 전설"
-              marks={legends}
+              marks={pick(legends)}
               points={points}
               pending={pending}
               selected={selected}
@@ -328,6 +395,7 @@ export function YokaiPointShop({
         {tab === "rewards" ? (
           <>
             <p className="yokai-note">보상 마크는 살 수 없고, 레벨을 올리거나 랭킹에 들면 받습니다.</p>
+            <MarkGrid title="요괴 마을 도감 완성" marks={chief} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
             <MarkGrid title="레벨 보상" marks={rewards} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
             <MarkGrid title="랭킹 보상" marks={kings} points={points} pending={pending} selected={selected} onSelect={setSelected} onEquip={equip} />
           </>
@@ -415,6 +483,13 @@ export function YokaiPointShop({
 }
 
 type ShopTab = "shop" | "rewards" | "inventory" | "extra";
+type ShopFilter = "all" | "affordable" | "discount" | "missing";
+const SHOP_FILTERS: { key: ShopFilter; label: string }[] = [
+  { key: "all", label: "전체" },
+  { key: "affordable", label: "지금 살 수 있는 것" },
+  { key: "discount", label: "내 요괴 반값" },
+  { key: "missing", label: "안 가진 것" },
+];
 
 function MarkGrid({
   title,
@@ -435,6 +510,7 @@ function MarkGrid({
   onBuy?: (mark: CardMark) => void;
   onEquip: (mark: CardMark) => void;
 }) {
+  if (!marks.length) return null;
   return (
     <section className="yokai-block" aria-label={title}>
       <h2>{title}</h2>

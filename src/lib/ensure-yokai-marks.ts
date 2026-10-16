@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { CATALOG_MARKS } from "@/lib/yokai-catalog";
 
-const CATALOG_VERSION = 7;
+const CATALOG_VERSION = 8;
 let ensuredVersion = 0;
 let ensured: Promise<void> | null = null;
 

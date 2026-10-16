@@ -1766,6 +1766,26 @@ export function YutRoom({
                     요괴봇이 낀 판이라 전적 · 보상은 없어요.
                   </p>
                 ) : null}
+                {s?.stats ? (
+                  <div data-yut-summary className="grid w-full gap-1 rounded-xl bg-black/35 px-3 py-2 text-xs">
+                    <p className="flex items-center justify-between font-black text-[#ffe08a]">
+                      <span>📊 한 판 요약</span>
+                      {s.stats.endAt ? (
+                        <span className="tabular-nums text-[#d6cdee]">
+                          ⏱ {Math.floor((s.stats.endAt - s.stats.startAt) / 60000)}분 {Math.round(((s.stats.endAt - s.stats.startAt) % 60000) / 1000)}초
+                        </span>
+                      ) : null}
+                    </p>
+                    {(["A", "B"] as const).map((team) => (
+                      <p key={team} className="flex flex-wrap gap-x-2 font-bold text-white">
+                        <b style={{ color: TEAM_COLOR[team] }}>{TEAM_NAME[team]}</b>
+                        <span>🎯 잡기 {s.stats!.catches[team]}</span>
+                        <span>🔥 최대 {s.stats!.maxStack[team]}업</span>
+                        <span>🎲 윷·모 {s.stats!.big[team]}번</span>
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
                 {view.mySeat && !view.withBots && view.winner ? (
                   <p
                     data-yut-rank-delta
