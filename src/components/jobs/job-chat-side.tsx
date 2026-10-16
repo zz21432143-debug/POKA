@@ -45,6 +45,11 @@ export async function JobChatSide({ region, slug, loggedIn }: { region: JobRegio
         ) : (
           <p className="mt-2 text-xs text-zinc-400">다가오는 빈자리가 아직 없어요.</p>
         )}
+        {todayCount === 0 ? (
+          <Link href="/boards/jobs/available" data-side-alert className="mt-2 block rounded-xl bg-[#fee500] px-2 py-2 text-center text-sm font-black text-[#1d1d1d]">
+            🔔 빈자리 생기면 알림 받기
+          </Link>
+        ) : null}
         <Link href={`/boards/jobs/slots${q ? `?${q}` : ""}`} className="mt-2 block text-center text-xs font-bold text-[#e7c98a] underline">
           날짜별로 전부 보기
         </Link>

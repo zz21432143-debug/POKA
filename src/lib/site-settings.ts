@@ -13,6 +13,8 @@ export type PublicSiteSettings = {
   kakaoChannelUrl: string | null;
   /** 관리자가 끈 광고 구좌 */
   adsOff: string[];
+  /** 관리자 화면에서 넣은 광고 단위 ID */
+  adsSlots: Record<string, string>;
 };
 
 export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
@@ -20,7 +22,22 @@ export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   footerEmail: publicContactEmail(),
   kakaoChannelUrl: KAKAO_INQUIRY_URL,
   adsOff: [],
+  adsSlots: {},
 };
+
+export function parseAdsSlots(json: string | null | undefined): Record<string, string> {
+  try {
+    const v = json ? (JSON.parse(json) as unknown) : {};
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    const out: Record<string, string> = {};
+    for (const [k, id] of Object.entries(v as Record<string, unknown>)) {
+      if (/^[a-z0-9-]{1,24}$/.test(k) && typeof id === "string" && /^\d{6,20}$/.test(id)) out[k] = id;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
 
 export function parseAdsOff(json: string | null | undefined): string[] {
   try {
@@ -40,13 +57,14 @@ async function loadSiteSettings(): Promise<PublicSiteSettings> {
       footerEmail: publicContactEmail(row.footerEmail),
       kakaoChannelUrl: kakaoInquiryHref(row.kakaoChannelUrl),
       adsOff: parseAdsOff(row.adsOffJson),
+      adsSlots: parseAdsSlots(row.adsSlotsJson),
     };
   } catch {
     return DEFAULT_SITE_SETTINGS;
   }
 }
 
-const cachedSiteSettings = unstable_cache(loadSiteSettings, ["poka-site-settings"], { revalidate: 60 });
+const cachedSiteSettings = unstable_cache(loadSiteSettings, ["poka-site-settings"], { revalidate: 60, tags: ["site-settings"] });
 
 export async function getSiteSettings(): Promise<PublicSiteSettings> {
   return ttlCache(SITE_SETTINGS_CACHE_KEY, 20_000, () => cachedSiteSettings());

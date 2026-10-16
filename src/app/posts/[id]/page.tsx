@@ -35,6 +35,7 @@ import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { JobRegionInfo } from "@/components/jobs/job-region-info";
 import { postIsThin } from "@/lib/seo-quality";
 import { adsenseSlotId, splitForMidAd } from "@/lib/adsense";
+import { getSiteSettings } from "@/lib/site-settings";
 import { commentRewardLine } from "@/lib/rewards";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -236,6 +237,7 @@ export default async function PostDetailPage({
   const canRead = canReveal && (!guest || officialOpen || post.boardType !== "JOBS");
   // 짧은 글 · 욕설 글에는 광고를 달지 않음(애드센스: 내용 없는 페이지 광고 금지)
   const adsOk = canRead && !postIsThin(post);
+  const adSlots = adsOk ? ((await getSiteSettings().catch(() => null))?.adsSlots ?? {}) : {};
   const status = post.boardType === "JOBS" ? jobStatus(post) : null;
   const expiresOn = status === "open" ? jobExpiresOn(post) : null;
   const staff = Boolean(viewer && isStaff(viewer));
@@ -602,7 +604,7 @@ export default async function PostDetailPage({
       ) : post.content ? (
         (() => {
           // 긴 글은 가운데 문단 사이에 광고 하나(구글 · 단위가 없으면 그냥 한 덩어리)
-          const halves = adsOk && adsenseSlotId("post-mid") ? splitForMidAd(post.content) : null;
+          const halves = adsOk && adsenseSlotId("post-mid", adSlots) ? splitForMidAd(post.content) : null;
           return halves ? (
             <>
               <div className="article-copy">

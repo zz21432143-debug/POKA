@@ -529,6 +529,8 @@ model SiteSetting {
   potTitleJson     String?
   /// 끈 광고 구좌 목록 JSON ["home-top", ...]
   adsOffJson       String?
+  /// 관리자 화면에서 넣은 광고 단위 ID { 자리: 숫자 ID, default: 빈 자리 모두 }
+  adsSlotsJson     String?
   /// 게임 승리 보상(관리자 조정) JSON { points, exp, affection, perDay, perOpponentPerDay }
   gameRewardJson   String?
   updatedAt        DateTime @updatedAt

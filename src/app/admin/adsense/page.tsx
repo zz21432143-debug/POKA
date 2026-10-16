@@ -1,5 +1,5 @@
-import { AdToggles } from "@/components/admin/ad-toggles";
-import { getSiteSettings } from "@/lib/site-settings";
+import { AdSlotsAdmin } from "@/components/admin/ad-slots-admin";
+import { parseAdsOff, parseAdsSlots } from "@/lib/site-settings";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { readFile } from "node:fs/promises";
@@ -9,7 +9,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { isStaff } from "@/lib/roles";
 import { prisma } from "@/lib/db";
 import { BOARD_LABELS, type BoardTypeKey } from "@/lib/boards";
-import { adsensePublisherId, adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
+import { adsensePublisherId, adsenseSlotId, slotDigits, type AdSensePlacement } from "@/lib/adsense";
 
 export const metadata: Metadata = { title: "애드센스 승인 점검", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -81,7 +81,14 @@ export default async function AdminAdsensePage() {
   const pub = adsensePublisherId();
   const pubDigits = pub?.replace("ca-pub-", "") ?? "";
   const adsTxtOk = Boolean(pubDigits) && adsTxt.includes(`pub-${pubDigits}`);
-  const slots = PLACEMENTS.map((p) => ({ ...p, set: Boolean(adsenseSlotId(p.key)) && Boolean(process.env[p.env]?.trim()) }));
+  // 광고 단위 ID: 관리자 화면에서 넣은 값(바로 읽음) → 환경변수 → 기본 ID
+  const settingRow = await prisma.siteSetting.findUnique({ where: { id: "default" }, select: { adsSlotsJson: true, adsOffJson: true } }).catch(() => null);
+  const savedSlots = parseAdsSlots(settingRow?.adsSlotsJson);
+  const adsOff = parseAdsOff(settingRow?.adsOffJson);
+  const slots = PLACEMENTS.map((p) => {
+    const used = adsenseSlotId(p.key, savedSlots);
+    return { ...p, saved: savedSlots[p.key] ?? "", envId: slotDigits(process.env[p.env]), used, set: Boolean(used) };
+  });
   const slotCount = slots.filter((s) => s.set).length;
 
   // 승인 전 할 일: 부족한 것부터 짚어 줌
@@ -94,7 +101,7 @@ export default async function AdminAdsensePage() {
   }
   if (recent < RECENT_MIN) todos.push({ text: `최근 30일 새 글이 ${recent}개예요. 일주일에 3~4개씩 꾸준히 올리면 「살아 있는 사이트」로 보여요.`, href: "/boards/free/write", action: "자유게시판에 쓰기" });
   if (!adsTxtOk) todos.push({ text: "ads.txt에 게시자 ID를 넣어 주세요(public/ads.txt)." });
-  if (slotCount === 0) todos.push({ text: "승인 메일을 받으면: 광고 단위 3개(게시판 하단 · 글 아래 · PC 사이드)를 만들고 Vercel에 ID를 넣어 주세요." });
+  if (slotCount === 0) todos.push({ text: "승인 메일을 받으면: 애드센스에서 디스플레이 광고 단위를 하나 만들고, 아래 「광고 자리」의 기본 ID 칸에 붙여넣어 주세요." });
   // 글 수 표: 자유게시판 말머리(질문 · 현장 스케치)는 자유게시판에 합쳐서
   const boardRows = [
     { key: "FREE", label: "자유게시판(말머리 포함)", n: countOf([...FREE_FAMILY]) },
@@ -105,7 +112,6 @@ export default async function AdminAdsensePage() {
 
   const card = "rounded-2xl border border-border bg-card p-3 sm:p-4";
   const viewer = await getCurrentUser().catch(() => null);
-  const adsOff = (await getSiteSettings().catch(() => null))?.adsOff ?? [];
   return (
     <div className="flex flex-col gap-4">
       <header>
@@ -114,10 +120,19 @@ export default async function AdminAdsensePage() {
       </header>
 
       {viewer?.isMaster ? (
-        <section aria-label="광고 구좌 켜기 끄기" data-ad-toggles className={card}>
-          <h2 className="text-lg font-semibold">🔌 광고 구좌 켜기 · 끄기</h2>
-          <p className="mb-2 text-sm text-muted-foreground">구좌별로 바로 끄고 켤 수 있어요. 자체 배너 · 홍보 자리는 「배너」 메뉴에서 등록해요.</p>
-          <AdToggles slots={[...slots.map((x) => ({ key: x.key, label: x.label, set: x.set })), { key: "sidebar", label: "PC 왼쪽 사이드(중복 표시용)", set: false }].filter((x, i, arr) => arr.findIndex((y) => y.key === x.key) === i)} off={adsOff} />
+        <section aria-label="광고 자리" data-ad-toggles className={card}>
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Mark ok={slotCount === PLACEMENTS.length} warn={slotCount > 0} /> 🔌 광고 자리 {slotCount}/{PLACEMENTS.length} 사용 가능
+          </h2>
+          <p className="mb-2 text-sm text-muted-foreground">
+            자리마다 사용 가능 여부를 보고, 광고 단위 ID를 붙여넣고 켜고 끌 수 있어요. 다시 배포할 필요 없이 1분 안에 반영돼요. 자체 배너 · 홍보 자리는 「배너」 메뉴에서 등록해요.
+          </p>
+          <AdSlotsAdmin
+            client={pub}
+            defaultSaved={savedSlots.default ?? ""}
+            off={adsOff}
+            rows={slots.map((s) => ({ key: s.key, label: s.label, saved: s.saved, env: s.envId, used: s.used }))}
+          />
         </section>
       ) : null}
 
@@ -190,22 +205,6 @@ export default async function AdminAdsensePage() {
           )}
           <span className="block text-xs text-muted-foreground">정상인데 애드센스에 「찾을 수 없음」이면 구글이 다시 읽을 때까지(며칠~2주) 기다리면 돼요.</span>
         </p>
-      </section>
-
-      <section aria-label="광고 단위" data-adsense-slots className={card}>
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Mark ok={slotCount >= 3} warn={slotCount > 0} /> 광고 단위 ID {slotCount}/{PLACEMENTS.length}
-        </h2>
-        <p className="mt-1 text-xs text-muted-foreground">승인 후 애드센스 → 광고 → 광고 단위 기준에서 「디스플레이 광고」를 만들고, Vercel → Settings → Environment Variables에 숫자 ID를 넣은 뒤 다시 배포하세요. 위 3개만 넣어도 충분해요.</p>
-        <ul className="mt-2 grid gap-1 text-sm">
-          {slots.map((s) => (
-            <li key={s.key} className="flex flex-wrap items-center gap-2 rounded-lg bg-background px-2 py-1.5">
-              <span>{s.set ? "✅" : "⬜"}</span>
-              <span className="min-w-0 flex-1">{s.label}</span>
-              <code className="text-xs text-muted-foreground">{s.env}</code>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section aria-label="자동 광고 제외" className={card}>

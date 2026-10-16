@@ -36,6 +36,8 @@ export async function POST(
       const r = await tx.user.updateMany({ where: { id: user.id, points: { gte: price } }, data: { points: { decrement: price } } });
       if (r.count !== 1) return false;
       await tx.userMark.create({ data: { userId: user.id, markId: id } });
+      // 산 값 기록 — 운영자 환불 때 기본 금액(반값으로 산 경우까지 정확히)
+      await tx.auditLog.create({ data: { kind: "mark-buy", userId: user.id, ip: "-", detail: `${id}:${price}` } });
       return true;
     });
     if (!paid) {

@@ -225,6 +225,7 @@ export function ApplyChat({
               today={today}
               loggedIn={loggedIn}
               slug={slug}
+              always={!DATED.includes(kind)}
               onLogo={(id, url) => setMessages((old) => old.map((x) => (x.id === id ? { ...x, logoUrl: url } : x)))}
               onEdited={(id, text) => {
                 setMessages((old) => old.map((x) => (x.id === id ? { ...x, text } : x)));
@@ -249,6 +250,7 @@ export function ApplyChat({
           ⬇ 새 공고 {fresh}개
         </button>
       ) : null}
+      {loggedIn ? <FirstTip /> : null}
       <Composer
         kind={kind}
         slug={slug}
@@ -263,7 +265,7 @@ export function ApplyChat({
   );
 }
 
-function ChatBubble({ m, mine, today, loggedIn, slug, onEdited, onLogo }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean; slug: string; onEdited: (id: string, text: string) => void; onLogo: (id: string, url: string | null) => void }) {
+function ChatBubble({ m, mine, today, loggedIn, slug, always, onEdited, onLogo }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean; slug: string; always: boolean; onEdited: (id: string, text: string) => void; onLogo: (id: string, url: string | null) => void }) {
   const [editing, setEditing] = useState(false);
   const [logoBusy, setLogoBusy] = useState(false);
   // 매장 로고: 그림 올리기 → 이 매장 공고 말풍선 옆에(다른 사람 화면)
@@ -334,7 +336,11 @@ function ChatBubble({ m, mine, today, loggedIn, slug, onEdited, onLogo }: { m: C
         ) : null}
         <div className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
           <div className={cn("relative min-w-0 rounded-2xl px-3 py-2 text-[14px] leading-relaxed text-[#1d1d1d] shadow-sm", mine ? "rounded-tr-sm bg-[#fee500]" : "rounded-tl-sm bg-white")}>
-            {m.status === "closed" ? <span className="mb-1 inline-block rounded bg-zinc-300 px-1.5 text-[11px] font-black text-zinc-700">마감</span> : null}
+            {m.status === "closed" ? (
+              <span className="mb-1 inline-block rounded bg-zinc-300 px-1.5 text-[11px] font-black text-zinc-700">마감</span>
+            ) : always ? (
+              <span data-chat-always className="mb-1 inline-block rounded bg-[#e8f5e9] px-1.5 text-[11px] font-black text-[#1b5e20]">상시 모집</span>
+            ) : null}
             <Body text={shown} today={today} />
             {long ? (
               <button type="button" data-chat-more onClick={() => setOpen(true)} className="mt-0.5 text-xs font-bold text-[#0b57d0]">
@@ -408,6 +414,45 @@ function ChatBubble({ m, mine, today, loggedIn, slug, onEdited, onLogo }: { m: C
         ) : null}
         {!editing && editNote ? <span className="text-xs font-bold text-[#1d2733]">{editNote}</span> : null}
       </div>
+    </div>
+  );
+}
+
+/** 처음 온 사람에게 한 번: 올리는 법 3단계(닫으면 다시 안 보임) */
+function FirstTip() {
+  const KEY = "poka-job-chat-tip-v1";
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 「닫음」은 브라우저에서만 읽을 수 있음
+      setShow(!localStorage.getItem(KEY));
+    } catch {
+      /* 저장소를 못 쓰면 안 보여 줌 */
+    }
+  }, []);
+  if (!show) return null;
+  return (
+    <div data-chat-tip className="flex items-start gap-2 border-t border-black/10 bg-[#fff8c4] px-3 py-2 text-[12.5px] text-[#1d1d1d]">
+      <span className="grid flex-1 gap-0.5">
+        <b>처음이세요? 공고 올리는 법</b>
+        <span>① 카톡 공고를 길게 눌러 복사 → ② 아래 칸에 그대로 붙여넣기 → ③ 노란 ➤ 보내기</span>
+        <span className="text-[#5a4a00]">날짜 줄 · 시급 · 연락처는 자동으로 읽어요. 일정이 바뀌면 내 말풍선 「붙여넣고 갱신」.</span>
+      </span>
+      <button
+        type="button"
+        aria-label="안내 닫기"
+        onClick={() => {
+          setShow(false);
+          try {
+            localStorage.setItem(KEY, "1");
+          } catch {
+            /* 무시 */
+          }
+        }}
+        className="shrink-0 rounded-full bg-black/10 px-2 py-0.5 text-xs font-bold"
+      >
+        닫기
+      </button>
     </div>
   );
 }

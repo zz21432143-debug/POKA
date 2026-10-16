@@ -43,7 +43,12 @@ export function slotDigits(raw: string | undefined): string {
   return raw?.match(/\d{6,}/)?.[0] ?? "";
 }
 
-export function adsenseSlotId(placement: AdSensePlacement): string {
+/** 관리자 화면에서 넣은 광고 단위 ID({ 자리: ID, default: 빈 자리 모두 }) */
+export type SavedAdSlots = Record<string, string>;
+
+export function adsenseSlotId(placement: AdSensePlacement, saved?: SavedAdSlots | null): string {
+  const mine = slotDigits(saved?.[placement]);
+  if (mine) return mine;
   const byPlacement = {
     "post-top": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_TOP,
     "post-bottom": process.env.NEXT_PUBLIC_ADSENSE_SLOT_POST_BOTTOM,
@@ -61,7 +66,7 @@ export function adsenseSlotId(placement: AdSensePlacement): string {
   // 값에 data-ad-slot="…" 통째로 넣어도 숫자만 씀
   const slot = slotDigits(byPlacement);
   if (slot) return slot;
-  return slotDigits(process.env.NEXT_PUBLIC_ADSENSE_SLOT_A);
+  return slotDigits(saved?.default) || slotDigits(process.env.NEXT_PUBLIC_ADSENSE_SLOT_A);
 }
 
 export const GOOGLE_REMNANT_MOCKS: Record<

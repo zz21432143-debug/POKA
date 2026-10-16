@@ -68,7 +68,11 @@ async function ConnectedNotice() {
 /** 관리자가 끈 광고 구좌를 광고 칸에 알려 줌 */
 async function ConnectedAdOff({ children }: { children: ReactNode }) {
   const settings = await getSiteSettings().catch(() => null);
-  return <AdOffProvider off={settings?.adsOff ?? []}>{children}</AdOffProvider>;
+  return (
+    <AdOffProvider off={settings?.adsOff ?? []} slots={settings?.adsSlots ?? {}}>
+      {children}
+    </AdOffProvider>
+  );
 }
 
 async function ConnectedSidebarSponsor() {

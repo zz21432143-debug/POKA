@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
-import { adsensePublisherId, adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
+import { adsensePublisherId, type AdSensePlacement } from "@/lib/adsense";
 import { cn } from "@/lib/utils";
-import { useAdOff } from "@/components/ads/ad-toggle";
+import { useAdOff, useAdSlot } from "@/components/ads/ad-toggle";
 
 declare global {
   interface Window {
@@ -55,7 +55,7 @@ export function GoogleAdUnit({
   fallback?: ReactNode;
 }) {
   const client = adsensePublisherId();
-  const unit = adsenseSlotId(placement);
+  const unit = useAdSlot(placement);
   const ref = useRef<HTMLModElement>(null);
   const off = useAdOff(placement);
   const show = useMedia(media) && !off;

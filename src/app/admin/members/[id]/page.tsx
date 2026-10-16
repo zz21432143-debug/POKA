@@ -106,7 +106,17 @@ export default async function AdminMemberDetail({ params }: { params: Promise<{ 
             <Row k="가입" v={`${dt(u.createdAt)} · IP ${u.signupIp ?? "-"}`} />
             <Row k="최근 접속" v={dt(u.lastLoginAt)} />
             <Row k="레벨" v={`Lv.${u.level} · EXP ${u.exp.toLocaleString()}`} />
-            <Row k="포인트" v={`${u.points.toLocaleString()}P`} />
+            <Row
+              k="포인트"
+              v={
+                <>
+                  {u.points.toLocaleString()}P{" "}
+                  <a href={`/admin/points?q=${encodeURIComponent(u.nickname)}&u=${u.id}`} className="ml-1 text-xs font-bold text-[#e7c98a] underline">
+                    지급 · 마크 환불
+                  </a>
+                </>
+              }
+            />
             <Row k="닉네임" v={`바꾼 횟수 ${u.nicknameChangeCount} · 변경권 ${u.nicknameTickets}장`} />
             <Row k="상태" v={u.status === "ACTIVE" ? "정상" : `${u.status === "BANNED" ? "차단" : "정지"}${u.suspendedUntil ? ` (~${dt(u.suspendedUntil)})` : ""} · ${u.banReason ?? ""}`} />
           </dl>

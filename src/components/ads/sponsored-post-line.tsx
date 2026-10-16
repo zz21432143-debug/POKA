@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
-import { adsenseSlotId } from "@/lib/adsense";
+import { AdIfSlot } from "@/components/ads/ad-toggle";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { sizedImage } from "@/lib/image-url";
 
@@ -12,11 +12,12 @@ export function SponsoredPostLine({ unit }: { unit: DirectCreative | null }) {
   const fill = pickFill(unit, "hide");
   if (fill.kind !== "direct") {
     // 직판 광고가 없으면 구글 광고(목록 사이) — 광고 단위가 안 정해졌으면 칸을 남기지 않음
-    if (!adsenseSlotId("infeed")) return null;
     return (
-      <li className="board-sponsor list-none px-2 py-2 sm:px-3">
-        <GoogleAdUnit placement="infeed" />
-      </li>
+      <AdIfSlot placement="infeed">
+        <li className="board-sponsor list-none px-2 py-2 sm:px-3">
+          <GoogleAdUnit placement="infeed" />
+        </li>
+      </AdIfSlot>
     );
   }
   const creative = fill.creative;

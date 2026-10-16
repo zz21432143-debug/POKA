@@ -13,6 +13,7 @@ export const ADMIN_GROUPS: { title: string; icon: string; items: Item[] }[] = [
     icon: "👥",
     items: [
       { href: "/admin/members", label: "회원 목록 · 닉네임", master: true },
+      { href: "/admin/points", label: "포인트 지급 · 마크 환불", master: true },
       { href: "/admin?tab=sanctions", label: "제재(정지 · 차단)" },
       { href: "/admin?tab=reports", label: "신고 처리" },
     ],
