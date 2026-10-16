@@ -11,7 +11,10 @@ export const revalidate = 3600;
 /** 검색 유입 대부분이 구인 공고라 지역별 목록과 공고 상세를 함께 올립니다. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const regions: MetadataRoute.Sitemap = JOB_REGIONS.map((region) => ({
+  // 지역 페이지: 지금 모집 중인 공고가 있는 지역만(빈 지역은 「크롤링됨 - 색인 안 됨」이 되어 사이트 평가만 깎음)
+  const { openJobsInRegion } = await import("@/lib/job-region-seo");
+  const counts = await Promise.all(JOB_REGIONS.map((region) => openJobsInRegion(region)));
+  const regions: MetadataRoute.Sitemap = JOB_REGIONS.filter((_, i) => counts[i] > 0).map((region) => ({
     url: `${base}/jobs/${encodeURIComponent(region)}`,
     changeFrequency: "daily",
     priority: 0.7,

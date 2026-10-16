@@ -21,11 +21,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!region) return { title: "구인구직" };
   const title = `${region} 홀덤 딜러 구인 · 급구 대타`;
   const description = `${region} 홀덤펍 지원 딜러 구인, 급구·대타, 대회 딜러, 고정 직원 공고를 한곳에서. 앱에서 ${region} 급구 알림을 켜면 새 급구를 바로 받아요.`;
+  // 지금 모집 중인 공고가 없으면 검색 색인에서 빼기(공고가 생기면 다시 들어감)
+  const { openJobsInRegion } = await import("@/lib/job-region-seo");
+  const open = await openJobsInRegion(region);
   return {
     title,
     description,
     alternates: { canonical: `/jobs/${region}` },
     openGraph: { title, description, url: `/jobs/${region}` },
+    ...(open === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
