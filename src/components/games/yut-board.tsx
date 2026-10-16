@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
-import { BIG_NODES, END, GOAL_XY, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
+import { BIG_NODES, BX_L, BX_R, BY_B, BY_T, END, GOAL_XY, NODE_XY, START, YUT_NAMES, type Team, type YutState } from "@/lib/yut";
 import { yokaiImage, type YokaiSpecies } from "@/lib/yokai";
 import { PixelBurst } from "@/components/games/pixel-burst";
 import { EmoteArt } from "@/components/games/omok-hud";
@@ -293,8 +293,8 @@ export function YutBoard({
           <path d={`M ${NODE_XY.o0[0]} ${NODE_XY.o0[1] + 4} Q ${NODE_XY.o0[0]} ${GOAL_XY[1]} ${GOAL_XY[0] + 25} ${GOAL_XY[1]}`} fill="none" stroke="#4a2c14" strokeWidth={2.6} strokeLinecap="round" />
           <path d={`M ${NODE_XY.o0[0]} ${NODE_XY.o0[1] + 4} Q ${NODE_XY.o0[0]} ${GOAL_XY[1]} ${GOAL_XY[0] + 25} ${GOAL_XY[1]}`} fill="none" stroke="#ffcf4a" strokeWidth={1.1} strokeDasharray="1.2 0.8" strokeLinecap="round" />
           <path d={`M ${GOAL_XY[0] + 27.5} ${GOAL_XY[1] - 1.8} L ${GOAL_XY[0] + 24.6} ${GOAL_XY[1]} L ${GOAL_XY[0] + 27.5} ${GOAL_XY[1] + 1.8}`} fill="none" stroke="#ffcf4a" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
-          {/* 모서리 장식: 전통 구름 문양(판 네 귀퉁이) */}
-          {([[3, 3, 0], [97, 3, 90], [97, 86, 180], [3, 86, 270]] as const).map(([x, y, r]) => (
+          {/* 모서리 장식: 전통 구름 문양 — 네 꼭짓점 발판을 바깥에서 감쌈 */}
+          {([[BX_L - 6.6, BY_T - 6.6, 0], [BX_R + 6.6, BY_T - 6.6, 90], [BX_R + 6.6, BY_B + 6.6, 180], [BX_L - 6.6, BY_B + 6.6, 270]] as const).map(([x, y, r]) => (
             <g key={`orn-${x}-${y}`} transform={`translate(${x} ${y}) rotate(${r})`} opacity={0.55}>
               <path d="M0 7 Q0 0 7 0" fill="none" stroke="#7a4a1c" strokeWidth={0.9} />
               <path d="M1.8 7 Q1.8 1.8 7 1.8" fill="none" stroke="#c9944c" strokeWidth={0.5} />

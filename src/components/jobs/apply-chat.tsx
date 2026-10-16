@@ -103,6 +103,11 @@ export function ApplyChat({
   const [moreBusy, setMoreBusy] = useState(false);
   const [noMore, setNoMore] = useState(initial.length < 30);
   const [fresh, setFresh] = useState(0);
+  // 새 공고가 오면 탭 제목에 숫자(다른 탭을 보고 있어도 알 수 있게)
+  useEffect(() => {
+    const base = document.title.replace(/^\(\d+\) /, "");
+    document.title = fresh ? `(${fresh}) ${base}` : base;
+  }, [fresh]);
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const today = todayKst();
@@ -184,7 +189,7 @@ export function ApplyChat({
               {onlyMine ? "✓ 내 공고만" : "내 공고만"}
             </button>
           ) : null}
-          {kind === "APPLY" ? (
+          {DATED.includes(kind) ? (
             <Link href={region ? `/boards/jobs/slots?region=${encodeURIComponent(region)}` : "/boards/jobs/slots"} className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-black text-[#1d2733]">
               📅 날짜별로 보기
             </Link>
@@ -318,7 +323,7 @@ function ChatBubble({ m, mine, today, loggedIn, slug, onEdited, onLogo }: { m: C
     <div data-chat-msg={m.id} className={cn("flex items-start gap-2", mine && "flex-row-reverse")}>
       {!mine ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={m.logoUrl ?? m.author?.markUrl ?? "/marks/default.svg"} alt={m.logoUrl ? `${m.company ?? "매장"} 로고` : ""} width={36} height={36} className="mt-0.5 size-9 shrink-0 rounded-2xl bg-white object-cover" />
+        <img src={m.logoUrl ?? m.author?.markUrl ?? "/marks/default.svg"} alt={m.logoUrl ? `${m.company ?? "매장"} 로고` : ""} onError={(e) => { const img = e.currentTarget; if (!img.src.endsWith("/marks/default.svg")) img.src = "/marks/default.svg"; }} width={36} height={36} className="mt-0.5 size-9 shrink-0 rounded-2xl bg-white object-cover" />
       ) : null}
       <div className={cn("grid min-w-0 max-w-[82%] gap-0.5", mine && "justify-items-end")}>
         {!mine ? (

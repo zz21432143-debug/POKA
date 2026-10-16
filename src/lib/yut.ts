@@ -297,24 +297,25 @@ export function easyStep(s: YutState, rand: () => number = Math.random, now = Da
   return r.ok ? r.state : endTurn(s);
 }
 
-/** 판 그림 좌표(0~100) — 정사각형 판(74×74)을 위쪽에 두고 아래 가운데에 골인 문 자리 */
-const BX_L = 13;
-const BX_R = 87;
-const BY_T = 3;
-const BY_B = 77;
+/** 판 그림 좌표(0~100) — 네 꼭짓점을 판 모서리 장식에 맞추고, 바로 아래 가운데에 골인 문 */
+export const BX_L = 7.5;
+export const BX_R = 92.5;
+export const BY_T = 7.5;
+export const BY_B = 80;
 export const NODE_XY: Record<string, [number, number]> = (() => {
   const xy: Record<string, [number, number]> = {};
-  const step = (BX_R - BX_L) / 5;
+  const sx = (BX_R - BX_L) / 5;
+  const sy = (BY_B - BY_T) / 5;
   xy.o0 = [BX_R, BY_B];
-  for (let k = 1; k <= 4; k += 1) xy[`o${k}`] = [BX_R, BY_B - step * k];
+  for (let k = 1; k <= 4; k += 1) xy[`o${k}`] = [BX_R, BY_B - sy * k];
   xy.o5 = [BX_R, BY_T];
-  for (let k = 1; k <= 4; k += 1) xy[`o${5 + k}`] = [BX_R - step * k, BY_T];
+  for (let k = 1; k <= 4; k += 1) xy[`o${5 + k}`] = [BX_R - sx * k, BY_T];
   xy.o10 = [BX_L, BY_T];
-  for (let k = 1; k <= 4; k += 1) xy[`o${10 + k}`] = [BX_L, BY_T + step * k];
+  for (let k = 1; k <= 4; k += 1) xy[`o${10 + k}`] = [BX_L, BY_T + sy * k];
   xy.o15 = [BX_L, BY_B];
-  for (let k = 1; k <= 4; k += 1) xy[`o${15 + k}`] = [BX_L + step * k, BY_B];
+  for (let k = 1; k <= 4; k += 1) xy[`o${15 + k}`] = [BX_L + sx * k, BY_B];
   const lerp = (a: [number, number], b: [number, number], t: number): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  // 「방」은 판 정사각형의 한가운데(두 대각선이 곧게 만나는 곳)
+  // 「방」은 판의 한가운데(두 대각선이 곧게 만나는 곳)
   xy.c = [(BX_L + BX_R) / 2, (BY_T + BY_B) / 2];
   xy.a1 = lerp(xy.o5, xy.c, 1 / 3);
   xy.a2 = lerp(xy.o5, xy.c, 2 / 3);
@@ -328,4 +329,4 @@ export const NODE_XY: Record<string, [number, number]> = (() => {
 })();
 export const BIG_NODES = ["o0", "o5", "o10", "o15", "c"];
 /** 골인 문(판 아래 가운데) */
-export const GOAL_XY: [number, number] = [50, 92.5];
+export const GOAL_XY: [number, number] = [50, 91.5];

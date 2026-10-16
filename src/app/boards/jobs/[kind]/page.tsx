@@ -16,6 +16,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import { ApplyChat } from "@/components/jobs/apply-chat";
 import { loadApplyChat } from "@/lib/job-chat";
+import { JobChatSide } from "@/components/jobs/job-chat-side";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,8 @@ export default async function JobBoardPage({
       </header>
       {job.kind === "URGENT" ? <RegionUrgentAlert /> : null}
       {chat ? (
-        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-3">
+        <div className="mx-auto grid w-full max-w-[720px] items-start gap-4 xl:max-w-[1016px] xl:grid-cols-[minmax(0,720px)_280px]">
+        <div className="flex min-w-0 flex-col gap-3">
           <nav aria-label="지역" className="card-scroller -mx-1 overflow-x-auto px-1">
             <ul className="flex w-max gap-1.5">
               {[null, ...JOB_REGIONS].map((r) => (
@@ -112,6 +114,8 @@ export default async function JobBoardPage({
           <Link href={writeHref} className="self-center text-sm font-bold text-zinc-400 underline">
             양식으로 자세히 쓰기({job.cta})
           </Link>
+        </div>
+        <JobChatSide region={region} slug={slug} loggedIn={!guest} />
         </div>
       ) : null}
       {chat ? null : <JobFilters basePath={`/boards/jobs/${kind}`} region={region} openOnly={openOnly} tag={tag} />}
