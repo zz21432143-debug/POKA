@@ -1713,7 +1713,7 @@ export function YutRoom({
       {view.status === "done" && showResult ? (
         <div
           data-yut-result-overlay
-          className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4"
+          className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 [align-items:safe_center]"
         >
           <div className="arcade-panel arcade-pop grid w-full max-w-sm justify-items-center gap-3 p-5 text-center">
             {ended && view.winner ? (
@@ -1752,7 +1752,7 @@ export function YutRoom({
                 {won && !view.withBots ? (
                   <p
                     data-yut-reward
-                    className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a]"
+                    className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a] max-sm:order-1 max-sm:py-1 max-sm:text-xs"
                   >
                     🎁 +{WIN_REWARD.points}P · EXP {WIN_REWARD.exp} · 요괴
                     친밀도 +{WIN_REWARD.affection}
@@ -1767,7 +1767,7 @@ export function YutRoom({
                   </p>
                 ) : null}
                 {s?.stats ? (
-                  <div data-yut-summary className="grid w-full gap-1 rounded-xl bg-black/35 px-3 py-2 text-xs">
+                  <div data-yut-summary className="grid w-full gap-1 rounded-xl bg-black/35 px-3 py-2 text-xs max-sm:order-1">
                     <p className="flex items-center justify-between font-black text-[#ffe08a]">
                       <span>📊 한 판 요약</span>
                       {s.stats.endAt ? (
@@ -1814,7 +1814,7 @@ export function YutRoom({
                   <p
                     data-yut-rank-delta
                     className={cn(
-                      "rounded-xl px-3 py-1.5 text-sm font-black",
+                      "rounded-xl px-3 py-1.5 text-sm font-black max-sm:order-1 max-sm:py-1 max-sm:text-xs",
                       won ? "bg-emerald-400/15 text-emerald-200" : "bg-rose-400/15 text-rose-200",
                     )}
                   >
@@ -1898,7 +1898,7 @@ export function YutRoom({
       ) : null}
 
       {confirmSurrender ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 [align-items:safe_center]">
           <div
             data-yut-surrender-box
             className="arcade-panel grid w-full max-w-xs gap-3 p-5 text-center"
@@ -1948,7 +1948,7 @@ export function YutRoom({
       ) : null}
 
       {confirmExit ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto overscroll-contain bg-black/70 p-4 [align-items:safe_center]">
           <div className="arcade-panel grid w-full max-w-xs gap-3 p-5 text-center">
             <b className="text-lg font-black text-white">
               {waiting

@@ -285,7 +285,7 @@ export async function payMonthlyGameRewards(today = todayKstDate()) {
     await pushTicker({
       kind: `GAMERANK:${game}:${month}`,
       message: `🏆 ${Number(month.slice(5))}월 ${GAME_LABEL[game]} 랭킹 ${rows.map((r) => `${r.rank}위 ${r.nickname}`).join(" · ")} — 축하해요!`,
-      href: "/ranking",
+      href: `/ranking?tab=game&game=${game}`,
     }).catch(() => undefined);
     paid.push(game);
   }
@@ -318,6 +318,22 @@ export async function remindMonthEnd(today = todayKstDate()) {
     }
   }
   return sent;
+}
+
+/** 이번 달 내 기록(로비 · 랭킹): 승 · 패 · 무 · 점수 · 순위(3판 이상일 때) */
+export async function monthRecord(userId: string, game: GameKind) {
+  const month = todayKstDate().slice(0, 7);
+  const start = new Date(`${month}-01T00:00:00+09:00`);
+  const mineWhere = { game, createdAt: { gte: start }, OR: [{ playerAId: userId }, { playerBId: userId }] };
+  const [wins, losses, games, ranking] = await Promise.all([
+    prisma.gameResult.count({ where: { game, createdAt: { gte: start }, winnerId: userId } }),
+    prisma.gameResult.count({ where: { game, createdAt: { gte: start }, loserId: userId } }),
+    prisma.gameResult.count({ where: mineWhere }),
+    gameRanking(game, "month", 1000, month),
+  ]);
+  const draws = Math.max(0, games - wins - losses);
+  const row = ranking.find((r) => r.userId === userId);
+  return { wins, losses, draws, games, score: rankScore({ wins, losses, draws }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games) };
 }
 
 /** 두 사람 상대 전적(a 승 · b 승 · 무) */

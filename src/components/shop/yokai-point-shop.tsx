@@ -344,6 +344,24 @@ export function YokaiPointShop({
                   </li>
                 ))}
               </ul>
+              {(() => {
+                const next = VILLAGE_COLLECTION_STEPS.find((s) => villageOwned < s.at);
+                if (!next) return null;
+                const left = next.at - villageOwned;
+                return (
+                  <p
+                    data-village-next={left}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1.5 text-sm font-black",
+                      left === 1 ? "animate-pulse bg-[#ffd23a]/20 text-[#ffe08a]" : "text-zinc-300",
+                    )}
+                  >
+                    {left === 1
+                      ? `✨ 1개만 더 모으면 +${next.points}P${"mark" in next && next.mark ? " · 👑 촌장 마크" : ""}!`
+                      : `다음 보상까지 ${left}개 (+${next.points}P)`}
+                  </p>
+                );
+              })()}
               {collectNote ? <p className="text-sm font-black text-emerald-300">{collectNote}</p> : null}
             </section>
             <MarkGrid

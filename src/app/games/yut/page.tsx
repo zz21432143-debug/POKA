@@ -7,6 +7,7 @@ import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { LobbyTabs, RulesButton } from "@/components/games/lobby-ui";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { getCurrentUser } from "@/lib/current-user";
+import { MonthRecordBar } from "@/components/games/month-record";
 import { loadWinReward } from "@/lib/game-reward";
 import { gameRecord, gameStatsVisible, recordLine, rewardsOn } from "@/lib/game-stats";
 import { gamesOpenYut, yutLobby } from "@/lib/yut-server";
@@ -115,6 +116,7 @@ export default async function YutLobbyPage() {
             </ul>
           </RulesButton>
         </header>
+        {user ? <MonthRecordBar userId={user.id} game="yut" /> : null}
 
         <section aria-label="기다리는 방" data-yut-waiting-list className="grid gap-2 rounded-3xl border-4 border-[#3ddc97] bg-[#0f2a22]/80 p-3 shadow-[0_0_24px_#3ddc9755]">
           <div className="flex items-center gap-2">

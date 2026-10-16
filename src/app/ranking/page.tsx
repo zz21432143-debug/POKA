@@ -46,7 +46,10 @@ async function GameRanking({
   period: "month" | "all";
   viewer: string | null;
 }) {
-  const rows = await gameRanking(game, period, 50).catch(() => []);
+  // 50위까지 보여 주고, 내가 그 밖이면 맨 아래에 「나」
+  const all = await gameRanking(game, period, 1000).catch(() => []);
+  const rows = all.slice(0, 50);
+  const meRow = viewer ? all.find((r) => r.nickname === viewer) : undefined;
   const users = rows.length
     ? await prisma.user.findMany({
         where: { nickname: { in: rows.map((r) => r.nickname) } },
@@ -131,6 +134,21 @@ async function GameRanking({
           })}
         </ol>
       )}
+      {viewer && (!meRow || meRow.rank > 50) ? (
+        <p data-game-rank-me className="rank-row is-me flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold">
+          <span className="text-[#ffe08a]">나</span>
+          <span className="min-w-0 flex-1 truncate">{viewer}</span>
+          {meRow ? (
+            <span>
+              {meRow.rank}위 · {meRow.score}점 · {meRow.wins}승 {meRow.losses}패
+            </span>
+          ) : (
+            <span className="text-xs text-zinc-400">
+              {period === "month" ? "이번 달" : "전체"} {RANK_MIN_GAMES}판 이상 두면 랭킹에 올라요
+            </span>
+          )}
+        </p>
+      ) : null}
     </>
   );
 }

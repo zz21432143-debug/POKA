@@ -943,7 +943,7 @@ export function OmokRoom({
           {waiting ? (
             <div
               data-omok-waiting
-              className="arcade-overlay absolute inset-0 z-20 grid place-items-center rounded-[14px] p-4 text-center"
+              className="arcade-overlay absolute inset-0 z-20 grid justify-items-center overflow-y-auto overscroll-contain rounded-[14px] p-4 text-center [align-items:safe_center]"
             >
               <div className="grid justify-items-center gap-2">
                 {/* 착석 · READY 버튼(판 한가운데 · 가장 잘 보이게) */}
@@ -1124,7 +1124,7 @@ export function OmokRoom({
           {view.status === "done" && showResult ? (
             <div
               data-omok-result
-              className="arcade-overlay absolute inset-0 z-20 grid place-items-center rounded-[14px] p-4 text-center"
+              className="arcade-overlay absolute inset-0 z-20 grid justify-items-center overflow-y-auto overscroll-contain rounded-[14px] p-4 text-center [align-items:safe_center]"
             >
               <div className="grid w-full justify-items-center gap-2.5">
                 {winnerInfo?.yokai ? (
@@ -1157,7 +1157,7 @@ export function OmokRoom({
                 view.moves.length >= 9 ? (
                   <p
                     data-omok-win-reward
-                    className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a]"
+                    className="rounded-xl bg-[#ffcf4a]/15 px-3 py-1.5 text-sm font-black text-[#ffcf4a] max-sm:order-1 max-sm:py-1 max-sm:text-xs"
                   >
                     🎁 승리 보상 +{WIN_REWARD.points}P · EXP {WIN_REWARD.exp} ·
                     요괴 친밀도 +{WIN_REWARD.affection}
@@ -1168,7 +1168,7 @@ export function OmokRoom({
                   </p>
                 ) : null}
                 {view.moves.length && view.endReason !== "cancel" ? (
-                  <div data-omok-summary className="flex flex-wrap justify-center gap-x-3 rounded-xl bg-black/35 px-3 py-1.5 text-xs font-bold text-white">
+                  <div data-omok-summary className="flex flex-wrap items-center justify-center gap-x-3 rounded-xl bg-black/35 px-3 py-1.5 text-xs font-bold text-white max-sm:order-1">
                     <span>📊 {view.moves.length}수</span>
                     {view.durationSec ? (
                       <span>
@@ -1178,13 +1178,35 @@ export function OmokRoom({
                     <span>
                       ↩ 물리기 흑 {UNDO_LIMIT - view.undo.left[1]} · 백 {UNDO_LIMIT - view.undo.left[2]}
                     </span>
+                    <button
+                      type="button"
+                      data-omok-share
+                      onClick={() => {
+                        const sec = view.durationSec ?? 0;
+                        const text = [
+                          `⚫⚪ POKA 요괴 오목 — ${view.black?.nickname ?? "흑"} vs ${view.white?.nickname ?? "백"}`,
+                          winnerInfo ? `🏆 ${winnerInfo.nickname} 승리! (${END_TEXT[view.endReason] ?? ""})` : "🤝 무승부",
+                          `📊 ${view.moves.length}수${sec ? ` · ⏱ ${Math.floor(sec / 60)}분 ${sec % 60}초` : ""}`,
+                          "같이 두기 👉 https://pokerwiki.co.kr/games/omok",
+                        ].join("\n");
+                        if (navigator.share) void navigator.share({ text }).catch(() => undefined);
+                        else
+                          void navigator.clipboard
+                            ?.writeText(text)
+                            .then(() => setNote("결과를 복사했어요. 오픈채팅에 붙여 넣어 보세요!"))
+                            .catch(() => setNote("복사하지 못했어요."));
+                      }}
+                      className="rounded-lg bg-white/15 px-2 py-1 text-[11px] font-black text-white hover:bg-white/25"
+                    >
+                      📤 공유
+                    </button>
                   </div>
                 ) : null}
                 {view.me && view.moves.length >= 9 && view.endReason !== "cancel" ? (
                   <p
                     data-omok-rank-delta
                     className={cn(
-                      "rounded-xl px-3 py-1.5 text-sm font-black",
+                      "rounded-xl px-3 py-1.5 text-sm font-black max-sm:order-1 max-sm:py-1 max-sm:text-xs",
                       view.winner === view.me ? "bg-emerald-400/15 text-emerald-200" : view.winner ? "bg-rose-400/15 text-rose-200" : "bg-white/10 text-white",
                     )}
                   >
