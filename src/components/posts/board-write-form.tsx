@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { StickySubmit } from "@/components/ui/sticky-submit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +40,60 @@ export function BoardWriteForm({
   const [pending, setPending] = useState(false);
   const [isPrivate, setIsPrivate] = useState(boardType === "SUGGESTION");
   const [password, setPassword] = useState("");
+
+  // 임시 저장: 쓰다가 나가거나 뒤로가기를 눌러도 다음에 들어오면 그대로(등록하면 지움)
+  const draftKey = `poka-draft-${initialBoardType}`;
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const loaded = useRef(false);
+  useEffect(() => {
+    if (loaded.current) return;
+    loaded.current = true;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      const d = raw ? (JSON.parse(raw) as { title?: string; content?: string; boardType?: BoardType }) : null;
+      if (d && (d.title || d.content)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장된 임시 글은 브라우저에서만 읽을 수 있음
+        setTitle(d.title ?? "");
+        setContent(d.content ?? "");
+        if (d.boardType && categories?.some((c) => c.boardType === d.boardType)) setBoardType(d.boardType);
+        setDraftLoaded(true);
+      }
+    } catch {
+      /* 저장소를 못 쓰면 건너뜀 */
+    }
+  }, [draftKey, categories]);
+  useEffect(() => {
+    if (!loaded.current) return;
+    const t = window.setTimeout(() => {
+      try {
+        if (title.trim() || content.trim()) {
+          localStorage.setItem(draftKey, JSON.stringify({ title, content, boardType, at: Date.now() }));
+          setDraftSaved(true);
+        } else localStorage.removeItem(draftKey);
+      } catch {
+        /* 무시 */
+      }
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [draftKey, title, content, boardType]);
+  // 창을 닫거나 새로고침할 때: 쓰던 글이 있으면 한 번 묻기
+  useEffect(() => {
+    const dirty = Boolean(title.trim() || content.trim()) && !pending;
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [title, content, pending]);
+  function clearDraft() {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      /* 무시 */
+    }
+  }
 
   async function submit() {
     // 자유 · 질문 · 건의: 본문 10자 이상(공백 빼고)
@@ -79,6 +134,7 @@ export function BoardWriteForm({
           /* 못 써도 글은 올라감 */
         }
       }
+      clearDraft();
       router.replace(`/posts/${payload.id}`);
       router.refresh();
     } catch (err) {
@@ -89,6 +145,23 @@ export function BoardWriteForm({
 
   return (
     <div className="ink-panel flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
+      {draftLoaded ? (
+        <p data-draft-loaded className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm">
+          📝 쓰다 만 글을 불러왔어요.
+          <button
+            type="button"
+            className="ml-auto rounded-full border border-border px-2.5 py-0.5 text-xs font-bold"
+            onClick={() => {
+              clearDraft();
+              setTitle("");
+              setContent("");
+              setDraftLoaded(false);
+            }}
+          >
+            지우고 새로 쓰기
+          </button>
+        </p>
+      ) : null}
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
         {hint} · 작성 {postRewardLine(boardType)}
       </p>
@@ -225,12 +298,12 @@ export function BoardWriteForm({
         </fieldset>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      {/* 휴대폰: 화면 아래에 붙어 있어 글을 쓰다 바로 누를 수 있음 */}
-      <div data-write-submit className="sticky bottom-0 z-30 -mx-4 border-t border-[#c9a25c]/30 bg-[#120d0a]/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
-        <Button type="button" size="touch" disabled={pending} onClick={submit} className="w-full sm:w-auto">
+      <StickySubmit>
+        {draftSaved ? <span data-draft-saved className="text-center text-[11px] text-muted-foreground sm:hidden">✓ 쓰던 글은 자동으로 임시 저장돼요</span> : null}
+        <Button type="button" size="touch" disabled={pending} onClick={submit}>
           {pending ? "등록 중…" : "등록"}
         </Button>
-      </div>
+      </StickySubmit>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { StickySubmit } from "@/components/ui/sticky-submit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -593,9 +594,11 @@ export function HandEditor() {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <Button type="button" size="touch" disabled={pending} onClick={submit} className="w-full sm:w-auto">
-        {pending ? "등록 중…" : "핸드리뷰 등록"}
-      </Button>
+      <StickySubmit>
+        <Button type="button" size="touch" disabled={pending} onClick={submit} className="w-full sm:w-auto">
+          {pending ? "등록 중…" : "핸드리뷰 등록"}
+        </Button>
+      </StickySubmit>
     </div>
   );
 }

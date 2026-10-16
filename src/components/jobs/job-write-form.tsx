@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SlotPreview } from "@/components/jobs/slot-preview";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { StickySubmit } from "@/components/ui/sticky-submit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -843,9 +844,11 @@ export function JobWriteForm({
           저장하면서 목록 맨 위로 올리기(끌어올리기 · 하루 한 번)
         </label>
       ) : null}
-      <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
-        {pending ? "저장 중…" : postId ? (bumpOnSave ? "수정하고 맨 위로" : "수정") : "등록"}
-      </Button>
+      <StickySubmit>
+        <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
+          {pending ? "저장 중…" : postId ? (bumpOnSave ? "수정하고 맨 위로" : "수정") : "등록"}
+        </Button>
+      </StickySubmit>
     </div>
   );
 }

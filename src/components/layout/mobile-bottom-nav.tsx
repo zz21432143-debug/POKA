@@ -24,7 +24,7 @@ const ICONS = {
 export function MobileBottomNav() {
   const pathname = usePathname();
   // 글쓰기 화면은 키보드가 올라오면 아래 메뉴가 입력칸을 가려서 숨김(「등록」 버튼이 아래에 붙음)
-  if (/\/write(\/|$)/.test(pathname ?? "")) return null;
+  if (/\/(write|edit)(\/|$)/.test(pathname ?? "")) return null;
 
   return (
     <nav

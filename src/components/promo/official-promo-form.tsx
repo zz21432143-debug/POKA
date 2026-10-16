@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { StickySubmit } from "@/components/ui/sticky-submit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,9 +92,11 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
         <Textarea id="content" className="write-body-input" value={content} onChange={(e) => setContent(e.target.value)} />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
-        {pending ? "등록 중…" : "공식 홍보 등록"}
-      </Button>
+      <StickySubmit>
+        <Button type="button" size="touch" disabled={pending} onClick={() => void submit()}>
+          {pending ? "등록 중…" : "공식 홍보 등록"}
+        </Button>
+      </StickySubmit>
     </div>
   );
 }

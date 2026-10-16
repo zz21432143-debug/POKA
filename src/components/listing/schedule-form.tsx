@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipboardPasteIcon, ImageUpIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StickySubmit } from "@/components/ui/sticky-submit";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -332,9 +333,11 @@ export function ScheduleForm({
         <Textarea id="content" className="write-body-input" value={content} onChange={(e) => setContent(e.target.value)} />
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="button" size="touch" disabled={pending || busy} onClick={() => void submit()}>
-        {pending ? "저장 중…" : postId ? "수정 저장" : "캘린더에 등록"}
-      </Button>
+      <StickySubmit>
+        <Button type="button" size="touch" disabled={pending || busy} onClick={() => void submit()}>
+          {pending ? "저장 중…" : postId ? "수정 저장" : "캘린더에 등록"}
+        </Button>
+      </StickySubmit>
     </div>
   );
 }
