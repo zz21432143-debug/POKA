@@ -1,6 +1,16 @@
 import Link from "next/link";
-import { BellIcon, BriefcaseIcon, CalendarDaysIcon, ChevronRightIcon, FlameIcon } from "lucide-react";
+import { BellIcon, BriefcaseIcon, CalendarCheckIcon, CalendarDaysIcon, ChevronRightIcon, FlameIcon } from "lucide-react";
 import { getHomeCounts } from "@/lib/home-data";
+import { ttlCache } from "@/lib/ttl-cache";
+
+/** 오늘 날짜 빈자리 수(1분 캐시) */
+function todaySlotCount() {
+  return ttlCache("home-today-slots", 60_000, async () => {
+    const { loadJobBoard } = await import("@/lib/job-board");
+    const b = await loadJobBoard(null);
+    return b.slots.filter((s) => s.date === b.today).length;
+  });
+}
 
 /** "11/28" · "11/28~11/29" */
 function shortDate(start: string | null, end: string | null) {
@@ -11,19 +21,20 @@ function shortDate(start: string | null, end: string | null) {
 
 /** 홈 오늘 요약 한 줄: 모집 중 · 급구 · 이번 주 대회 + 최신 공지 */
 export async function HomeSummary() {
-  const counts = await getHomeCounts().catch(() => null);
+  const [counts, todaySlots] = await Promise.all([getHomeCounts().catch(() => null), todaySlotCount().catch(() => 0)]);
   if (!counts) return null;
   const items = [
+    { href: "/boards/jobs/slots?d=today", icon: CalendarCheckIcon, label: "오늘 빈자리", value: todaySlots, tone: "text-[#ffcf4a]" },
     { href: "/boards/jobs", icon: BriefcaseIcon, label: "모집 중", value: counts.jobs, tone: "text-[#f3d9a4]" },
     { href: "/boards/jobs/urgent", icon: FlameIcon, label: "급구", value: counts.urgent, tone: "text-rose-300" },
     { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-sky-200" },
   ];
   return (
     <section aria-label="오늘 요약" className="lounge-card grid gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5">
-      <ul className="grid grid-cols-3 gap-1.5">
+      <ul className="grid grid-cols-4 gap-1.5">
         {items.map((it) => (
           <li key={it.href}>
-            <Link href={it.href} className="touch-target flex min-h-14 flex-col items-center justify-center rounded-xl bg-black/35 px-3 hover:bg-black/55 sm:min-w-28">
+            <Link href={it.href} className="touch-target flex min-h-14 flex-col items-center justify-center rounded-xl bg-black/35 px-1.5 hover:bg-black/55 sm:min-w-28 sm:px-3">
               <span className="flex items-center gap-1 text-[11px] font-bold text-[#a89880]">
                 <it.icon className="size-3.5" />
                 {it.label}

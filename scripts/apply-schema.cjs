@@ -75,6 +75,7 @@ const FILES = [
   "prisma/migrations/20261201090000_game_alerts/migration.sql",
   "prisma/migrations/20261202090000_omok_auto/migration.sql",
   "prisma/migrations/20261203090000_arcade_rename/migration.sql",
+  "prisma/migrations/20261204090000_forbidden_spaced/migration.sql",
 ];
 
 function databaseUrl() {

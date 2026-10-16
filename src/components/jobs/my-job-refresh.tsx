@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "cn";
+import { slotsFromText } from "@/lib/job-slots";
 
 /** 내 공고 한 장: 지금 빈자리 수 · 카톡 일정 붙여넣기 → 갱신하고 맨 위로 */
 export function MyJobRefresh({
@@ -26,6 +27,15 @@ export function MyJobRefresh({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const changed = text.trim() !== content.trim();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+  const slots = slotsFromText(text, today).filter((s) => s.date >= today);
+  // 줄 끝에 「마감」을 붙이거나 떼기
+  const toggleClosed = (line: number) => {
+    const rows = text.split(/\r?\n/);
+    const cur = rows[line] ?? "";
+    rows[line] = /\s*마감\s*$/.test(cur) ? cur.replace(/\s*마감\s*$/, "") : `${cur.trimEnd()} 마감`;
+    setText(rows.join("\n"));
+  };
   async function save() {
     setBusy(true);
     setNote(null);
@@ -52,6 +62,25 @@ export function MyJobRefresh({
       <p className="text-xs text-[#c9c0b2]">
         지금 열린 빈자리 <b className="text-[#ffcf4a]">{openSlotCount}곳</b> · 마지막으로 올린 때 {new Date(bumpedAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
       </p>
+      {slots.length ? (
+        <ul data-my-job-slots className="grid gap-1">
+          {slots.map((s) => (
+            <li key={`${s.line}-${s.date}`} className="flex items-center gap-2 rounded-lg bg-black/30 px-2.5 py-1.5 text-sm">
+              <span className={cn("min-w-0 flex-1 truncate", s.closed ? "text-zinc-500 line-through" : "text-white")}>
+                {Number(s.date.slice(5, 7))}/{Number(s.date.slice(8))} {s.time ?? ""} {s.count ?? ""} {s.branch ? `· ${s.branch}` : ""}
+              </span>
+              <button
+                type="button"
+                data-slot-close={s.line}
+                onClick={() => typeof s.line === "number" && toggleClosed(s.line)}
+                className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-black", s.closed ? "bg-white/15 text-white" : "bg-[#7a1c22] text-white")}
+              >
+                {s.closed ? "다시 열기" : "마감"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}

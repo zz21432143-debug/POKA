@@ -15,6 +15,8 @@ export type SlotLine = {
   /** 지점 · 행사 이름(「• 잠실 방이점」 줄) */
   branch: string | null;
   closed: boolean;
+  /** 본문의 몇 번째 줄(0부터) — 본문에서 읽은 줄만 */
+  line?: number;
 };
 
 const BRANCH_MARK = /^[•·\-▶■◆★▪●○◎※]+\s*/;
@@ -43,7 +45,9 @@ export function readTime(rest: string): string | null {
 export function slotsFromText(text: string, today: string): SlotLine[] {
   const out: SlotLine[] = [];
   let branch: string | null = null;
-  for (const raw of text.split(/\r?\n/)) {
+  const lines = text.split(/\r?\n/);
+  for (let li = 0; li < lines.length; li++) {
+    const raw = lines[li];
     const line = raw.trim();
     if (!line) continue;
     const date = lineDate(line, today);
@@ -62,6 +66,7 @@ export function slotsFromText(text: string, today: string): SlotLine[] {
       count: count ? `${count[1]}명` : null,
       branch,
       closed: /마감|완료|구인\s*끝|full/i.test(rest),
+      line: li,
     });
   }
   return out;

@@ -19,11 +19,18 @@ export class ForbiddenWordError extends Error {
   }
 }
 
+/** 「자 지」 · 「보 지」처럼 글자 사이를 띄운 짧은 단어(띄운 걸 빼면 3글자 이하) */
+export function isSpacedShortWord(word: string) {
+  return /\s/.test(word.trim()) && word.replace(/\s+/g, "").length <= 3;
+}
+
 export function findForbiddenWord(text: string, words: string[]): string | null {
   const haystack = text.normalize("NFC").toLowerCase();
   for (const word of words) {
     const needle = word.normalize("NFC").trim().toLowerCase();
     if (needle.length < 2) continue;
+    // 띄어 쓴 두 글자(「자 지」)는 「이상자 지원」 같은 정상 문장까지 막으므로 건너뜀
+    if (isSpacedShortWord(needle)) continue;
     if (haystack.includes(needle)) return word.trim();
   }
   return null;

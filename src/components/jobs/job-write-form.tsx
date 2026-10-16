@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SlotPreview } from "@/components/jobs/slot-preview";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -829,6 +830,7 @@ export function JobWriteForm({
             value={form.content}
             onChange={(event) => set("content", event.target.value)}
           />
+          {jobKind === "APPLY" || jobKind === "URGENT" || jobKind === "TOURNAMENT" ? <SlotPreview text={form.content} /> : null}
         </div>
       </section>
 

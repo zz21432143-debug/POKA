@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSpacedShortWord } from "@/lib/forbidden-words";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { clearForbiddenWordsCache } from "@/lib/forbidden-words";
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
   const word = body.word?.trim() ?? "";
   if (word.length < 2) {
     return NextResponse.json({ error: "금지어는 두 글자 이상이어야 합니다." }, { status: 400 });
+  }
+  if (isSpacedShortWord(word)) {
+    return NextResponse.json({ error: "「자 지」처럼 띄어 쓴 짧은 단어는 「이상자 지원」 같은 정상 문장까지 막아서 넣을 수 없어요. 띄우지 않고 넣어 주세요." }, { status: 400 });
   }
   try {
     const row = await prisma.forbiddenWord.create({ data: { word } });

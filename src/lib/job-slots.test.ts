@@ -26,7 +26,7 @@ describe("job slots", () => {
   it("splits a Kakao job post into slots with branches", () => {
     const s = slotsFromText(KAKAO, "2026-10-16");
     assert.equal(s.length, 4);
-    assert.deepEqual(s[0], { date: "2026-10-18", time: "14:00", count: "2명", branch: "잠실 방이점", closed: false });
+    assert.deepEqual(s[0], { date: "2026-10-18", time: "14:00", count: "2명", branch: "잠실 방이점", closed: false, line: 3 });
     assert.equal(s[2].branch, "하남 미사점");
     assert.equal(s[2].closed, true);
     assert.equal(s[3].count, "3명");
