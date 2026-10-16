@@ -12,6 +12,8 @@ export type AdSlotRow = {
   env: string;
   /** 실제로 쓰이는 ID(저장값 → 환경변수 → 기본 ID) */
   used: string;
+  /** 최근 7일 실제 노출(채워짐 · 빈칸) */
+  fill: { filled: number; unfilled: number } | null;
 };
 
 /** 광고 자리마다: 사용 가능 여부 · 단위 ID 붙여넣기 · 켜기/끄기 — 다시 배포할 필요 없음(1분 안에 반영) */
@@ -108,6 +110,19 @@ export function AdSlotsAdmin({ rows, off, defaultSaved, client }: { rows: AdSlot
                 {r.key}
                 {from ? ` · ${from} ${r.used}` : ""}
               </span>
+              {r.used ? (
+                <span data-ad-fill={r.key} className="text-xs">
+                  최근 7일 실제 노출:{" "}
+                  {r.fill && r.fill.filled + r.fill.unfilled > 0 ? (
+                    <>
+                      <b className="text-emerald-300">채워짐 {r.fill.filled}</b> · <b className="text-amber-300">빈칸 {r.fill.unfilled}</b>{" "}
+                      <span className="text-muted-foreground">({Math.round((r.fill.filled / (r.fill.filled + r.fill.unfilled)) * 100)}%)</span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">아직 기록 없음(승인 전이거나 방문 전)</span>
+                  )}
+                </span>
+              ) : null}
               {msg?.key === r.key ? <p className={`text-xs font-bold ${msg.bad ? "text-red-300" : "text-emerald-300"}`}>{msg.text}</p> : null}
             </li>
           );

@@ -70,7 +70,36 @@ export function GoogleAdUnit({
     } catch {
       /* AdSense 스크립트가 아직 없어도 레이아웃은 유지 */
     }
-  }, [client, unit, show]);
+    // 실제로 채워졌는지(data-ad-status) 자리마다 하루 한 번만 알려 줌 — 관리 화면 「실제 노출」
+    const el = ref.current;
+    const key = `poka-ad-fill-${placement}-${new Date().toISOString().slice(0, 10)}`;
+    try {
+      if (localStorage.getItem(key)) return;
+    } catch {
+      return;
+    }
+    const report = () => {
+      const status = el.getAttribute("data-ad-status");
+      if (status !== "filled" && status !== "unfilled") return false;
+      try {
+        localStorage.setItem(key, "1");
+      } catch {
+        /* 무시 */
+      }
+      void fetch("/api/ads/fill", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ placement, filled: status === "filled" }), keepalive: true }).catch(() => undefined);
+      return true;
+    };
+    if (report()) return;
+    const mo = new MutationObserver(() => {
+      if (report()) mo.disconnect();
+    });
+    mo.observe(el, { attributes: true, attributeFilter: ["data-ad-status"] });
+    const stop = window.setTimeout(() => mo.disconnect(), 30_000);
+    return () => {
+      mo.disconnect();
+      window.clearTimeout(stop);
+    };
+  }, [client, unit, show, placement]);
 
   const frame = cn(
     "overflow-hidden rounded-xl border border-[#3a332c] bg-[#1C1819]",

@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { normalizeNickname } from "@/lib/nickname";
-import { ADMIN_POINT_LIMIT, recentAdminPointLogs, refundAmountFor } from "@/lib/admin-points";
-import { PointGrantForm, MarkRefundButton } from "@/components/admin/points-admin";
+import { ADMIN_POINT_LIMIT, cosmeticRefundFor, recentAdminPointLogs, refundAmountFor } from "@/lib/admin-points";
+import { BulkGrantForm, PointGrantForm, MarkRefundButton } from "@/components/admin/points-admin";
 
 export const metadata: Metadata = { title: "포인트 · 마크 환불", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -29,11 +29,24 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
   const picked = sp.u
     ? await prisma.user.findUnique({
         where: { id: sp.u },
-        select: { id: true, nickname: true, level: true, points: true, equippedMarkId: true, ownedMarks: { orderBy: { purchasedAt: "desc" }, include: { mark: true } } },
+        select: {
+          id: true,
+          nickname: true,
+          level: true,
+          points: true,
+          equippedMarkId: true,
+          equippedFrameId: true,
+          equippedEffectId: true,
+          ownedMarks: { orderBy: { purchasedAt: "desc" }, include: { mark: true } },
+          ownedCosmetics: { orderBy: { purchasedAt: "desc" }, include: { cosmetic: true } },
+        },
       })
     : null;
   const marks = picked
     ? await Promise.all(picked.ownedMarks.map(async (o) => ({ ...o, refund: await refundAmountFor(picked.id, o.mark) })))
+    : [];
+  const cosmetics = picked
+    ? await Promise.all(picked.ownedCosmetics.map(async (o) => ({ ...o, refund: await cosmeticRefundFor(picked.id, o.cosmetic) })))
     : [];
   const logs = await recentAdminPointLogs(40, picked?.id);
 
@@ -45,6 +58,8 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
           회원을 찾아 포인트를 지급하거나 회수하고, 가진 마크를 환불합니다. 한 번에 {ADMIN_POINT_LIMIT.toLocaleString()}P까지 · 사유는 꼭 적어 주세요(아래 기록에 남고 회원에게 알림이 가요).
         </p>
       </header>
+
+      <BulkGrantForm />
 
       <form className="flex gap-2" action="/admin/points">
         <input name="q" defaultValue={q} placeholder="닉네임 또는 이메일" className="min-h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm" />
@@ -104,6 +119,27 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
               <p className="text-sm text-muted-foreground">가진 마크가 없어요.</p>
             )}
           </div>
+          <div>
+            <p className="mb-1.5 text-sm font-semibold">가진 프레임 · 이펙트 {cosmetics.length}개</p>
+            {cosmetics.length ? (
+              <ul className="grid gap-1.5">
+                {cosmetics.map((o) => (
+                  <li key={o.cosmeticId} className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-2 py-1.5">
+                    <span className="min-w-0 flex-1 text-sm">
+                      <b>{o.cosmetic.name}</b> <span className="text-xs text-muted-foreground">{o.cosmetic.kind === "FRAME" ? "프레임" : "이펙트"}</span>
+                      {picked.equippedFrameId === o.cosmeticId || picked.equippedEffectId === o.cosmeticId ? <span className="ml-1 rounded bg-primary/20 px-1 text-[11px]">착용 중</span> : null}
+                      <span className="block text-xs text-muted-foreground">
+                        {fmt(o.purchasedAt)} · 상점가 {o.cosmetic.pricePoints.toLocaleString()}P{o.refund.known ? "" : " (산 값 기록 없음 → 상점가)"}
+                      </span>
+                    </span>
+                    <MarkRefundButton kind="cosmetic" userId={picked.id} markId={o.cosmeticId} markName={o.cosmetic.name} defaultAmount={o.refund.amount} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">가진 프레임 · 이펙트가 없어요.</p>
+            )}
+          </div>
         </section>
       ) : null}
 
@@ -116,7 +152,7 @@ export default async function AdminPointsPage({ searchParams }: { searchParams: 
                 <span className="text-xs text-muted-foreground">{fmt(l.at)}</span>
                 <b>{l.targetNickname ?? "(탈퇴)"}</b>
                 <span className={l.amount >= 0 ? "text-emerald-400" : "text-red-400"}>
-                  {l.kind === "admin-mark-refund" ? `마크 환불 [${l.mark ?? ""}] +` : l.amount > 0 ? "+" : ""}
+                  {l.kind === "admin-mark-refund" ? `마크 환불 [${l.mark ?? ""}] +` : l.kind === "admin-cosmetic-refund" ? `상품 환불 [${l.mark ?? ""}] +` : l.amount > 0 ? "+" : ""}
                   {l.amount.toLocaleString()}P
                 </span>
                 <span className="text-muted-foreground">· {l.reason} · {l.by}</span>

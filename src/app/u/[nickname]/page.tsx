@@ -12,6 +12,7 @@ import { getWeeklyRiser } from "@/lib/home-rankings";
 const kstDateOf = (iso: string) => new Date(Date.parse(iso) + 9 * 3600_000).toISOString().slice(0, 10);
 import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
+import { recentAdminPointLogs } from "@/lib/admin-points";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,8 @@ export default async function MemberPage({
   const riser = weekly && weekly.nickname === user.nickname ? { label: weekly.label, change: weekly.change } : null;
   const { villageChiefIds } = await import("@/lib/village-collection");
   const villageChief = (await villageChiefIds([user.id])).has(user.id);
+  // 내 프로필: 운영자 지급 · 회수 · 환불 기록(본인에게만)
+  const adminLogs = mine ? await recentAdminPointLogs(10, user.id) : [];
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -74,6 +77,23 @@ export default async function MemberPage({
       />
       <ProfileYokai userId={user.id} viewerIsMaster={Boolean(viewer?.isMaster)} />
       <HonorShelf userId={user.id} nickname={user.nickname} mine={mine} />
+      {adminLogs.length ? (
+        <section data-my-point-logs className="rounded-2xl border border-border bg-card p-3">
+          <p className="text-sm font-semibold">🎁 운영자 포인트 내역 <span className="text-xs font-normal text-muted-foreground">(나만 보여요)</span></p>
+          <ul className="mt-2 grid gap-1 text-sm">
+            {adminLogs.map((l) => (
+              <li key={l.id} className="flex flex-wrap gap-x-2 border-b border-border/50 py-1">
+                <span className="text-xs text-muted-foreground">{new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit" }).format(new Date(l.at))}</span>
+                <b className={l.amount >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {l.kind === "admin-points" ? (l.amount > 0 ? "지급 +" : "회수 ") : `환불 [${l.mark ?? ""}] +`}
+                  {l.amount.toLocaleString()}P
+                </b>
+                <span className="text-muted-foreground">{l.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <div className="flex flex-col gap-2">
         <Link
           href={`/u/${encodeURIComponent(user.nickname)}/posts`}

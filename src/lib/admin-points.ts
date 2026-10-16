@@ -7,7 +7,7 @@ export const ADMIN_POINT_LIMIT = 100_000;
 export type AdminPointLog = {
   id: string;
   at: string;
-  kind: "admin-points" | "admin-mark-refund";
+  kind: "admin-points" | "admin-mark-refund" | "admin-cosmetic-refund";
   targetNickname: string | null;
   by: string;
   amount: number;
@@ -26,10 +26,21 @@ export async function refundAmountFor(userId: string, mark: { id: string; slug: 
   return { amount: mark.pricePoints, known: false };
 }
 
+/** 프레임 · 이펙트 환불 기본 금액: 산 기록 → 상점 가격 */
+export async function cosmeticRefundFor(userId: string, c: { id: string; pricePoints: number }) {
+  const log = await prisma.auditLog
+    .findFirst({ where: { kind: "cosmetic-buy", userId, detail: { startsWith: `${c.id}:` } }, orderBy: { createdAt: "desc" }, select: { detail: true } })
+    .catch(() => null);
+  const paid = Number(log?.detail?.split(":")[1]);
+  return Number.isFinite(paid) && paid >= 0 ? { amount: paid, known: true } : { amount: Math.max(0, c.pricePoints), known: false };
+}
+
+export const ADMIN_LOG_KINDS = ["admin-points", "admin-mark-refund", "admin-cosmetic-refund"];
+
 /** 최근 운영자 포인트 · 환불 기록 */
 export async function recentAdminPointLogs(limit = 30, userId?: string): Promise<AdminPointLog[]> {
   const rows = await prisma.auditLog
-    .findMany({ where: { kind: { in: ["admin-points", "admin-mark-refund"] }, ...(userId ? { userId } : {}) }, orderBy: { createdAt: "desc" }, take: limit })
+    .findMany({ where: { kind: { in: ADMIN_LOG_KINDS }, ...(userId ? { userId } : {}) }, orderBy: { createdAt: "desc" }, take: limit })
     .catch(() => []);
   const ids = [...new Set(rows.map((r) => r.userId).filter((v): v is string => Boolean(v)))];
   const users = ids.length ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, nickname: true } }).catch(() => []) : [];

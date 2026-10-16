@@ -90,6 +90,12 @@ export default async function AdminAdsensePage() {
     return { ...p, saved: savedSlots[p.key] ?? "", envId: slotDigits(process.env[p.env]), used, set: Boolean(used) };
   });
   const slotCount = slots.filter((s) => s.set).length;
+  // 최근 7일 실제 노출(브라우저가 알려 준 채움 · 빈칸)
+  const fillSince = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(daysAgo(6));
+  const fillRows = await prisma
+    .$queryRaw<{ placement: string; filled: number; unfilled: number }[]>`SELECT "placement", SUM("filled")::int AS "filled", SUM("unfilled")::int AS "unfilled" FROM "AdFillStat" WHERE "day" >= ${fillSince} GROUP BY "placement"`
+    .catch(() => []);
+  const fill = new Map(fillRows.map((r) => [r.placement, { filled: r.filled, unfilled: r.unfilled }]));
 
   // 승인 전 할 일: 부족한 것부터 짚어 줌
   const countOf = (types: readonly string[]) => byBoard.filter((b) => types.includes(b.boardType)).reduce((sum, b) => sum + b._count._all, 0);
@@ -131,7 +137,7 @@ export default async function AdminAdsensePage() {
             client={pub}
             defaultSaved={savedSlots.default ?? ""}
             off={adsOff}
-            rows={slots.map((s) => ({ key: s.key, label: s.label, saved: s.saved, env: s.envId, used: s.used }))}
+            rows={slots.map((s) => ({ key: s.key, label: s.label, saved: s.saved, env: s.envId, used: s.used, fill: fill.get(s.key) ?? null }))}
           />
         </section>
       ) : null}

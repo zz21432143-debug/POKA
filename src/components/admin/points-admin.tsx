@@ -54,8 +54,60 @@ export function PointGrantForm({ userId, nickname }: { userId: string; nickname:
   );
 }
 
+/** 여러 명에게 한꺼번에 지급(이벤트 당첨자 등) */
+export function BulkGrantForm() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [names, setNames] = useState("");
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const list = [...new Set(names.split(/[\n,]+/).map((s) => s.trim().replace(/^@/, "")).filter(Boolean))];
+  const n = Math.trunc(Number(amount));
+  if (!open) {
+    return (
+      <button type="button" data-bulk-open onClick={() => setOpen(true)} className="self-start rounded-full border border-border px-3 py-1.5 text-sm font-bold">
+        👥 여러 명에게 한꺼번에 지급
+      </button>
+    );
+  }
+  async function submit() {
+    if (!window.confirm(`${list.length}명에게 ${n.toLocaleString()}P씩 지급할까요?\n사유: ${reason}`)) return;
+    setBusy(true);
+    setNote(null);
+    const r = await fetch("/api/admin/points", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "bulk", nicknames: names, amount: n, reason }) }).catch(() => null);
+    const j = (await r?.json().catch(() => null)) as { error?: string; granted?: string[]; missing?: string[] } | null;
+    setBusy(false);
+    if (!r?.ok) {
+      setNote(j?.error ?? "처리하지 못했어요.");
+      return;
+    }
+    setNote(`✅ ${j?.granted?.length ?? 0}명 지급${j?.missing?.length ? ` · 못 찾은 닉네임: ${j.missing.join(", ")}` : ""}`);
+    if (!j?.missing?.length) setNames("");
+    router.refresh();
+  }
+  return (
+    <section data-bulk-grant className="grid gap-1.5 rounded-xl border border-border bg-card p-3">
+      <p className="text-sm font-semibold">👥 여러 명에게 한꺼번에 지급 <span className="text-xs font-normal text-muted-foreground">(최대 100명 · 줄바꿈이나 쉼표로 구분)</span></p>
+      <textarea value={names} onChange={(e) => setNames(e.target.value)} rows={4} placeholder={"닉네임1\n닉네임2, 닉네임3"} aria-label="닉네임 목록" className="rounded-lg border border-border bg-background p-2 text-sm" />
+      <div className="flex flex-wrap gap-1.5">
+        <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" placeholder="1인당 포인트" aria-label="1인당 포인트" className="min-h-10 w-32 rounded-lg border border-border bg-background px-2 text-sm" />
+        <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="사유(예: 10월 이벤트 당첨)" aria-label="일괄 사유" className="min-h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-2 text-sm" />
+        <button type="button" data-bulk-go disabled={busy || !list.length || !n || reason.trim().length < 2} onClick={() => void submit()} className="min-h-10 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-50">
+          {busy ? "처리 중…" : `${list.length}명 지급`}
+        </button>
+        <button type="button" onClick={() => setOpen(false)} className="text-xs text-muted-foreground">
+          닫기
+        </button>
+      </div>
+      {note ? <p data-bulk-note className="text-xs font-bold">{note}</p> : null}
+    </section>
+  );
+}
+
 /** 마크 환불: 마크 회수 + 포인트 돌려줌 */
-export function MarkRefundButton({ userId, markId, markName, defaultAmount }: { userId: string; markId: string; markName: string; defaultAmount: number }) {
+export function MarkRefundButton({ kind = "mark", userId, markId, markName, defaultAmount }: { kind?: "mark" | "cosmetic"; userId: string; markId: string; markName: string; defaultAmount: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(String(defaultAmount));
@@ -71,10 +123,10 @@ export function MarkRefundButton({ userId, markId, markName, defaultAmount }: { 
   }
   async function submit() {
     const n = Math.trunc(Number(amount));
-    if (!window.confirm(`[${markName}] 마크를 회수하고 ${n.toLocaleString()}P를 돌려줄까요?`)) return;
+    if (!window.confirm(`[${markName}] ${kind === "mark" ? "마크" : "상품"}를 회수하고 ${n.toLocaleString()}P를 돌려줄까요?`)) return;
     setBusy(true);
     setNote(null);
-    const r = await post({ action: "refund", userId, markId, amount: n, reason });
+    const r = await post(kind === "mark" ? { action: "refund", userId, markId, amount: n, reason } : { action: "refund-cosmetic", userId, cosmeticId: markId, amount: n, reason });
     setBusy(false);
     if (!r.ok) {
       setNote(r.error);

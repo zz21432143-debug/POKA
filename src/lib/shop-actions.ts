@@ -25,6 +25,8 @@ export async function buyCosmetic(userId: string, cosmeticId: string) {
       });
       if (paid.count === 0) return false;
       await tx.userCosmetic.create({ data: { userId, cosmeticId } });
+      // 산 값 기록 — 운영자 환불 때 기본 금액
+      await tx.auditLog.create({ data: { kind: "cosmetic-buy", userId, ip: "-", detail: `${cosmeticId}:${cosmetic.pricePoints}` } });
       return true;
     })
     .catch(() => false);

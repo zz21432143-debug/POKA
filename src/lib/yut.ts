@@ -300,7 +300,7 @@ export function easyStep(s: YutState, rand: () => number = Math.random, now = Da
 /** 판 그림 좌표(0~100) — 네 꼭짓점을 판 모서리 장식에 맞추고, 바로 아래 가운데에 골인 문 */
 export const BX_L = 7.5;
 export const BX_R = 92.5;
-export const BY_T = 7.5;
+export const BY_T = 11;
 export const BY_B = 80;
 export const NODE_XY: Record<string, [number, number]> = (() => {
   const xy: Record<string, [number, number]> = {};
