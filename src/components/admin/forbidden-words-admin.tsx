@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export type ForbiddenWordRow = { id: string; word: string };
+export type ForbiddenWordRow = { id: string; word: string; jobAllowed?: boolean };
 export type BaseWordGroup = { category: string; label: string; words: string[] };
 
 const CHIP = "inline-flex min-h-9 items-center gap-1 rounded-full border px-3 text-sm transition-colors";
@@ -26,6 +26,26 @@ export function ForbiddenWordsAdmin({
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [off, setOff] = useState(() => new Set(disabled));
+  const [jobOk, setJobOk] = useState(() => new Set(words.filter((w) => w.jobAllowed).map((w) => w.id)));
+
+  // 구인 게시판에서는 허용(「문자지원」처럼 공고에 늘 나오는 말 속 단어)
+  async function toggleJob(id: string) {
+    const allow = !jobOk.has(id);
+    const next = new Set(jobOk);
+    if (allow) next.add(id);
+    else next.delete(id);
+    setJobOk(next);
+    setMessage(null);
+    const response = await fetch("/api/admin/forbidden-words", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, jobAllowed: allow }),
+    }).catch(() => null);
+    if (!response?.ok) {
+      setJobOk(jobOk);
+      setMessage("바꾸지 못했습니다. 다시 시도해 주세요.");
+    }
+  }
 
   const baseTotal = base.reduce((sum, group) => sum + group.words.length, 0);
 
@@ -95,7 +115,8 @@ export function ForbiddenWordsAdmin({
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
 
       <section className="rounded-xl border border-border bg-card p-3">
-        <p className="mb-2 text-sm font-semibold">직접 추가한 금지어 {words.length}개</p>
+        <p className="text-sm font-semibold">직접 추가한 금지어 {words.length}개</p>
+        <p className="mb-2 text-xs text-muted-foreground">「구인 허용」을 누르면 구인 게시판(공고 · 지원 메시지)에서는 막지 않습니다. 다른 게시판 · 댓글 · 닉네임은 그대로 막습니다.</p>
         {words.length === 0 ? (
           <p className="text-sm text-muted-foreground">아직 없습니다. 위에서 추가하면 여기에 쌓입니다.</p>
         ) : (
@@ -104,6 +125,15 @@ export function ForbiddenWordsAdmin({
               <li key={row.id}>
                 <span className={cn(CHIP, "border-primary/40 bg-primary/10 pr-1")}>
                   {row.word}
+                  <button
+                    type="button"
+                    data-job-allow={row.id}
+                    onClick={() => void toggleJob(row.id)}
+                    aria-pressed={jobOk.has(row.id)}
+                    className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold", jobOk.has(row.id) ? "bg-emerald-500/20 text-emerald-500" : "bg-muted text-muted-foreground")}
+                  >
+                    {jobOk.has(row.id) ? "구인 허용 ✓" : "구인 허용"}
+                  </button>
                   <button
                     type="button"
                     disabled={pending}

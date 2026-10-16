@@ -52,6 +52,20 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ ok: true, word, enabled: body.enabled });
 }
 
+/** 구인 글에서는 허용 켜기 · 끄기: { id, jobAllowed } */
+export async function PUT(request: Request) {
+  const { error } = await requireAdmin();
+  if (error) return error;
+  const body = (await request.json().catch(() => ({}))) as { id?: string; jobAllowed?: boolean };
+  if (!body.id || typeof body.jobAllowed !== "boolean") {
+    return NextResponse.json({ error: "id · jobAllowed가 필요합니다." }, { status: 400 });
+  }
+  const row = await prisma.forbiddenWord.update({ where: { id: body.id }, data: { jobAllowed: body.jobAllowed } }).catch(() => null);
+  if (!row) return NextResponse.json({ error: "없는 금지어입니다." }, { status: 404 });
+  clearForbiddenWordsCache();
+  return NextResponse.json({ ok: true, word: row });
+}
+
 export async function DELETE(request: Request) {
   const { error } = await requireAdmin();
   if (error) return error;

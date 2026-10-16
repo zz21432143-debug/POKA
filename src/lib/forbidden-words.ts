@@ -4,6 +4,7 @@ import { PROFANITY_LABEL, findProfanity } from "@/lib/profanity";
 
 export const FORBIDDEN_CACHE_KEY = "forbidden-words";
 const DISABLED_CACHE_KEY = "forbidden-words-disabled";
+const JOB_ALLOWED_CACHE_KEY = "forbidden-words-job-allowed";
 
 export class ForbiddenWordError extends Error {
   word: string;
@@ -94,9 +95,18 @@ export async function loadDisabledBaseWords(): Promise<ReadonlySet<string>> {
   });
 }
 
+/** 운영자가 「구인에서는 허용」으로 켠 금지어 */
+export async function loadJobAllowedWords(): Promise<ReadonlySet<string>> {
+  return ttlCache(JOB_ALLOWED_CACHE_KEY, 30_000, async () => {
+    const rows = await prisma.forbiddenWord.findMany({ where: { jobAllowed: true }, select: { word: true } }).catch(() => []);
+    return new Set(rows.map((row) => squash(row.word)));
+  });
+}
+
 export function clearForbiddenWordsCache() {
   ttlCacheClear(FORBIDDEN_CACHE_KEY);
   ttlCacheClear(DISABLED_CACHE_KEY);
+  ttlCacheClear(JOB_ALLOWED_CACHE_KEY);
 }
 
 /** 기본 금지어(욕설·음란·도박·스팸·혐오) + 관리자가 추가한 금지어를 모두 검사합니다. */
@@ -112,7 +122,8 @@ export const JOB_ALLOWED_WORDS: ReadonlySet<string> = new Set(["자지"]);
 
 /** 구인 게시판(공고 · 지원 메시지)용 금지어 검사 */
 export async function assertNoForbiddenWordsInJob(...parts: Array<string | null | undefined>) {
-  await checkForbidden(parts, JOB_ALLOWED_WORDS);
+  const extra = await loadJobAllowedWords();
+  await checkForbidden(parts, new Set([...JOB_ALLOWED_WORDS, ...extra]));
 }
 
 const squash = (w: string) => w.normalize("NFC").toLowerCase().replace(/\s+/g, "");

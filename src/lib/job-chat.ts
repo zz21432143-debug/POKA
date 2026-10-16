@@ -3,9 +3,10 @@ import { AUTHOR_SELECT } from "@/components/user/user-badge";
 import { displayMarkSrc } from "@/lib/mark-assets";
 import { regionWhere, type JobRegion } from "@/lib/job-status";
 import { openSlots } from "@/lib/job-slots";
+import type { JobKind } from "@/generated/prisma/enums";
 
 /**
- * 지원 딜러 「오픈채팅」: 공고 한 개 = 말풍선 한 개. 올리거나 끌어올린 순서(최신이 맨 아래).
+ * 구인 「오픈채팅」(지원 딜러 · 대회 · 급구 · 고정 · 팀 모두): 공고 한 개 = 말풍선 한 개. 올리거나 끌어올린 순서(최신이 맨 아래).
  * 비로그인은 앞 몇 줄만(연락처 · 조건은 로그인 후 — 기존 공고 목록과 같은 기준).
  */
 export type ChatMessage = {
@@ -58,13 +59,13 @@ function preview(text: string) {
   return lines.slice(0, 4).join("\n").replace(PHONE, "010-****-****");
 }
 
-export async function loadApplyChat(opts: { region: JobRegion | null; before?: Date | null; after?: Date | null; guest: boolean; limit?: number }) {
+export async function loadApplyChat(opts: { kind?: JobKind; region: JobRegion | null; before?: Date | null; after?: Date | null; guest: boolean; limit?: number }) {
   const limit = Math.min(opts.limit ?? 30, 60);
   const rows = await prisma.post
     .findMany({
       where: {
         AND: [
-          { boardType: "JOBS", jobKind: "APPLY", hidden: false, isAttendanceThread: false },
+          { boardType: "JOBS", jobKind: opts.kind ?? "APPLY", hidden: false, isAttendanceThread: false },
           regionWhere(opts.region),
           opts.before ? { bumpedAt: { lt: opts.before } } : {},
           opts.after ? { bumpedAt: { gt: opts.after } } : {},

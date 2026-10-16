@@ -510,9 +510,11 @@ model LevelExp {
 }
 
 model ForbiddenWord {
-  id        String   @id @default(cuid())
-  word      String   @unique
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  word       String   @unique
+  /// 구인 게시판(공고 · 지원 메시지)에서는 막지 않음(예: 「문자지원」 속 「자지」)
+  jobAllowed Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
 
 /// 단일 행(id = default)으로 운영 문구를 저장합니다.

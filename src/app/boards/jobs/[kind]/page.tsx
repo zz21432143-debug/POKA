@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { jobFeedKey, PAGE_SIZE } from "@/lib/feed";
 import { JOB_REGIONS, parseJobRegion } from "@/lib/job-status";
 import { loadJobPage } from "@/lib/load-feed";
-import { resolveJobKind } from "@/lib/nav";
+import { JOB_KINDS, resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
@@ -56,11 +56,12 @@ export default async function JobBoardPage({
   // 비로그인은 제목만 보이게 조건·주소 등을 빼고 내려보냅니다.
   const viewer = await getCurrentUser().catch(() => null);
   const guest = !viewer;
-  // 지원 딜러 구인: 카카오톡 오픈채팅처럼(공고 = 말풍선 · 최신이 맨 아래 · 붙여넣어 바로 올리기) — ?view=list 면 예전 목록
-  const chat = job.kind === "APPLY" && query.view !== "list";
+  // 모든 구인: 카카오톡 오픈채팅처럼(공고 = 말풍선 · 최신이 맨 아래 · 붙여넣어 바로 올리기) — ?view=list 면 예전 목록
+  const chat = query.view !== "list";
+  const slug = Object.entries(JOB_KINDS).find(([, v]) => v.kind === job.kind)?.[0] ?? kind;
   const [page, chatMessages] = await Promise.all([
     chat ? Promise.resolve({ jobs: [], total: 0, nextOffset: null }) : loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly, tag, guest }),
-    chat ? loadApplyChat({ region, guest }) : Promise.resolve([]),
+    chat ? loadApplyChat({ kind: job.kind, region, guest }) : Promise.resolve([]),
   ]);
   const writeHref = `/boards/jobs/${kind}/write`;
 
@@ -89,13 +90,13 @@ export default async function JobBoardPage({
       </header>
       {job.kind === "URGENT" ? <RegionUrgentAlert /> : null}
       {chat ? (
-        <>
+        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-3">
           <nav aria-label="지역" className="card-scroller -mx-1 overflow-x-auto px-1">
             <ul className="flex w-max gap-1.5">
               {[null, ...JOB_REGIONS].map((r) => (
                 <li key={r ?? "all"}>
                   <Link
-                    href={r ? `/boards/jobs/apply?region=${encodeURIComponent(r)}` : "/boards/jobs/apply"}
+                    href={r ? `/boards/jobs/${slug}?region=${encodeURIComponent(r)}` : `/boards/jobs/${slug}`}
                     className={cn("touch-target inline-flex min-h-9 items-center rounded-full border px-3 text-sm font-bold", (r ?? null) === region ? "border-[#fee500] bg-[#fee500] text-[#1d1d1d]" : "border-white/15 text-zinc-300")}
                   >
                     {r ?? "전국"}
@@ -104,11 +105,14 @@ export default async function JobBoardPage({
               ))}
             </ul>
           </nav>
-          <ApplyChat key={region ?? "all"} initial={chatMessages} region={region} loggedIn={!guest} myNickname={viewer?.nickname ?? null} />
-          <Link href={`/boards/jobs/apply?view=list${region ? `&region=${encodeURIComponent(region)}` : ""}`} className="self-center text-sm font-bold text-[#e7c98a] underline">
+          <ApplyChat key={`${slug}-${region ?? "all"}`} kind={job.kind} slug={slug} title={job.title} initial={chatMessages} region={region} loggedIn={!guest} myNickname={viewer?.nickname ?? null} />
+          <Link href={`/boards/jobs/${slug}?view=list${region ? `&region=${encodeURIComponent(region)}` : ""}`} className="self-center text-sm font-bold text-[#e7c98a] underline">
             예전처럼 목록으로 보기
           </Link>
-        </>
+          <Link href={writeHref} className="self-center text-sm font-bold text-zinc-400 underline">
+            양식으로 자세히 쓰기({job.cta})
+          </Link>
+        </div>
       ) : null}
       {chat ? null : <JobFilters basePath={`/boards/jobs/${kind}`} region={region} openOnly={openOnly} tag={tag} />}
       {chat ? null : <InfiniteJobList

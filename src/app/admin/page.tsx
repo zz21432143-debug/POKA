@@ -192,7 +192,7 @@ export default async function AdminPage({
             누르면 끄고 켤 수 있습니다. 바꾸면 바로 반영됩니다.
           </p>
           <ForbiddenWordsAdmin
-            words={words.map((row) => ({ id: row.id, word: row.word }))}
+            words={words.map((row) => ({ id: row.id, word: row.word, jobAllowed: row.jobAllowed }))}
             base={[
               ...PROFANITY_CATEGORIES.map((category) => ({
                 category,
