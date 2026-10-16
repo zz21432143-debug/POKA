@@ -10,43 +10,9 @@ import { MyHomeRank } from "@/components/home/my-home-rank";
 const CROWN = ["text-[#f5d76e]", "text-[#d1d5db]", "text-[#e0a36a]"];
 
 /** 홈: 레벨 · 마크 · 팟 계산 랭킹(PC 5위까지 · 휴대폰 3위까지) */
-export async function HomeRankings({ compact = false }: { compact?: boolean } = {}) {
+export async function HomeRankings() {
   const [boards, riser] = await Promise.all([getHomeRankings().catch(() => []), getWeeklyRiser().catch(() => null)]);
   if (boards.length === 0) return null;
-  // 홈 탭 상자용: 랭킹마다 1~3위 한 줄씩만(스크롤 없이 상자에 들어가게)
-  if (compact)
-    return (
-      <section aria-label="랭킹" data-home-rankings="compact" className="grid gap-1.5 p-3">
-        {boards.map((board) => (
-          <Link key={board.key} href={board.href} data-rank-board={board.key} className="grid gap-0.5 rounded-xl border border-[#c9a25c]/25 bg-black/30 px-2.5 py-1.5 hover:border-[#c9a25c]">
-            <span className="flex items-center gap-1 text-[12.5px] font-black text-[#e7c98a]">
-              {board.title}
-              <ChevronRightIcon className="ml-auto size-3.5 text-[#c9a25c]" />
-            </span>
-            {board.rows.length === 0 ? (
-              <span className="text-[11.5px] text-zinc-400">아직 기록 없음 · 첫 1위 도전!</span>
-            ) : (
-              <span className="flex min-w-0 gap-2 text-[12px] font-bold text-white">
-                {board.rows.slice(0, 3).map((row) => (
-                  <span key={row.nickname} className="flex min-w-0 items-center gap-0.5">
-                    <CrownIcon aria-hidden className={cn("size-3 shrink-0", CROWN[row.rank - 1])} />
-                    <span className="truncate">{row.nickname}</span>
-                  </span>
-                ))}
-              </span>
-            )}
-          </Link>
-        ))}
-        {riser ? (
-          <Link href={`/u/${encodeURIComponent(riser.nickname)}`} data-weekly-riser className="truncate rounded-xl border border-orange-500/40 bg-orange-500/10 px-2.5 py-1.5 text-[12px]">
-            <b className="text-orange-300">🔥 급상승</b> <span className="font-bold text-white">{riser.nickname}</span> <b className="text-emerald-400">▲{riser.change}</b>
-          </Link>
-        ) : null}
-        <Link href="/ranking" className="text-center text-xs font-bold text-[#e7c98a] underline">
-          전체 랭킹 보기
-        </Link>
-      </section>
-    );
   return (
     <section aria-label="랭킹" data-home-rankings className="lounge-card grid gap-2 rounded-[1.35rem] p-3 sm:p-4">
       <div className="flex items-center gap-2">
