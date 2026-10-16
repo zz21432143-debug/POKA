@@ -87,7 +87,7 @@ export default async function HomePage() {
     <div className="flex flex-col gap-2.5">
       <HomeHero />
       {/* 위쪽: 왼쪽 = 게시판 바로가기 · 오늘 요약 · 매장 관리(메인 중심) / 오른쪽 = 퀴즈 · 미션 · 랭킹 · 게임방 탭 상자 */}
-      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_21rem]">
+      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_17.5rem] xl:grid-cols-[minmax(0,1fr)_21rem]">
         <div className="grid min-w-0 content-start gap-2.5">
           <Suspense fallback={<HomePanelFallback className="h-10" />}>
             <HomeBoardNav />
@@ -124,7 +124,7 @@ export default async function HomePage() {
                 label: "🏆 랭킹",
                 node: (
                   <Suspense fallback={<HomePanelFallback className="h-48" />}>
-                    <HomeRankings />
+                    <HomeRankings compact />
                   </Suspense>
                 ),
               },

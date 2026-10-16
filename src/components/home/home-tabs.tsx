@@ -52,7 +52,7 @@ export function HomeTabs({ tabs }: { tabs: Tab[] }) {
           role="tabpanel"
           hidden={cur !== t.key}
           // 안쪽 칸은 테두리 · 배경을 빼서 상자 안에 그대로 들어가게 · 길면 상자 안에서 스크롤
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain [&>*]:!rounded-none [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:!rounded-none [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
         >
           {t.node}
         </div>
