@@ -22,7 +22,7 @@ export default async function AdminErrorsPage() {
   const user = await getCurrentUser();
   if (!user || !isStaff(user)) notFound();
   await ensurePointLedger().catch(() => undefined);
-  const [errors, gains] = await Promise.all([
+  const [errors, gains, lags] = await Promise.all([
     listServerErrors(100),
     prisma.$queryRaw<GainRow[]>`
       SELECT l."userId", COALESCE(u.nickname, '(탈퇴)') AS nickname, SUM(l.delta) AS total, COUNT(*) AS n,
@@ -33,6 +33,8 @@ export default async function AdminErrorsPage() {
       ORDER BY total DESC
       LIMIT 20
     `.catch(() => [] as GainRow[]),
+    // 게임 렉 신고(최근 30개)
+    prisma.toolSaved.findMany({ where: { kind: "lag-report" }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, createdAt: true, dataJson: true } }).catch(() => []),
   ]);
   const suspects = gains.filter((g) => Number(g.total) > SUSPECT_DAY || Number(g.n) > SUSPECT_COUNT);
   const day = (iso: string) => new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
@@ -87,6 +89,37 @@ export default async function AdminErrorsPage() {
         </div>
       </section>
 
+      <section id="lag" className="grid gap-2" data-admin-lag-list>
+        <h2 className="text-lg font-semibold">🐢 게임 렉 신고 (최근 30개)</h2>
+        {lags.length ? (
+          <ul className="grid gap-1.5">
+            {lags.map((l) => {
+              let d: { game?: string; fps?: number; lite?: boolean; w?: number; h?: number; dpr?: number; ua?: string; nick?: string | null; path?: string } = {};
+              try {
+                d = JSON.parse(l.dataJson);
+              } catch {
+                /* 깨진 기록은 빈칸 */
+              }
+              return (
+                <li key={l.id} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="tabular-nums">{day(l.createdAt.toISOString())}</span>
+                    <span className="rounded bg-white/10 px-1.5">{d.game === "yut" ? "윷놀이" : "오목"}</span>
+                    <span className={Number(d.fps) < 30 ? "font-bold text-rose-300" : "text-emerald-300"}>{d.fps ?? "?"}fps</span>
+                    <span>{d.w}×{d.h} · 배율 {d.dpr}</span>
+                    {d.lite ? <span>가벼운 효과</span> : null}
+                    <span>{d.nick ?? "손님"}</span>
+                    <span className="font-mono">{d.path}</span>
+                  </div>
+                  <p className="mt-1 break-all font-mono text-[11px] text-zinc-400">{d.ua}</p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">✅ 들어온 렉 신고가 없어요.</p>
+        )}
+      </section>
       <section className="grid gap-2" data-admin-error-list>
         <h2 className="text-base font-bold">
           서버 오류 <span className="text-sm font-normal text-muted-foreground">최근 30일 · 같은 오류는 10분에 한 번만 기록</span>

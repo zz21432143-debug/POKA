@@ -11,7 +11,7 @@ export default function OmokJoinPage() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 pt-12">
       <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
-        <p className="arcade-px neon-gold text-xl">YOKAI OMOK</p>
+        <p className="arcade-px neon-gold text-xl">요괴 오목</p>
         <h1 className="arcade-kr text-2xl text-white">코드로 입장</h1>
         <p className="text-base text-[#d6cdee]">
           친구에게 받은 5글자 방 코드를 넣어 주세요.

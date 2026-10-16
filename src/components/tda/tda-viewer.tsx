@@ -250,6 +250,13 @@ export function TdaViewer({
                   actions={
                     canManage ? (
                       <>
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-black/15 bg-white px-2.5 text-xs font-bold text-[#333] shadow-sm hover:bg-black/5"
+                        >
+                          🖨 인쇄 · PDF로 저장
+                        </button>
                         <Link
                           href={`/posts/${s.id}/edit`}
                           className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-black/15 bg-white px-2.5 text-xs font-bold text-[#333] shadow-sm hover:bg-black/5"
@@ -259,6 +266,15 @@ export function TdaViewer({
                         </Link>
                         <DeletePostButton postId={s.id} tone="paper" className="min-h-9 px-2.5 text-xs" />
                       </>
+                    ) : loggedIn ? (
+                      <button
+                        type="button"
+                        data-tda-print
+                        onClick={() => window.print()}
+                        className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-black/15 bg-white px-2.5 text-xs font-bold text-[#333] shadow-sm hover:bg-black/5"
+                      >
+                        🖨 인쇄 · PDF로 저장
+                      </button>
                     ) : undefined
                   }
                 />

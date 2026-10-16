@@ -16,6 +16,7 @@ import { parseJobTagParam } from "@/lib/job-tags";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
+import { RegionSummary } from "@/components/jobs/region-summary";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,28 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
           </Link>
         </div>
       </header>
+
+      {region ? <RegionSummary region={region} /> : null}
+      {/* 날짜별 빈자리 보드(지원 딜러 · 급구 · 대회) · 내 공고 한 번에 갱신 */}
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+        <Link
+          href={region ? `/boards/jobs/slots?region=${encodeURIComponent(region)}` : "/boards/jobs/slots"}
+          data-jobs-slots-link
+          className="flex min-h-14 items-center gap-2.5 rounded-2xl border-2 border-[#ffcf4a]/70 bg-gradient-to-r from-[#3a2a0c] to-[#1d1611] px-4 hover:border-[#ffcf4a]"
+        >
+          <span className="text-2xl" aria-hidden>
+            📅
+          </span>
+          <span className="min-w-0 flex-1">
+            <b className="block text-base text-white">날짜별 빈자리 보기</b>
+            <span className="block truncate text-xs text-[#e7c98a]">지원 딜러 · 급구 · 대회 — 쉬는 날 일할 곳을 바로</span>
+          </span>
+          <span className="text-[#ffcf4a]">›</span>
+        </Link>
+        <Link href="/boards/jobs/mine" className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-white/15 bg-black/30 px-4 text-sm font-bold text-white hover:bg-white/5">
+          📋 내 공고 붙여넣고 갱신
+        </Link>
+      </div>
 
       <nav aria-label="구인구직 분류" className="card-scroller -mx-1 overflow-x-auto px-1">
         <ul className="flex w-max gap-2 sm:w-auto sm:flex-wrap">

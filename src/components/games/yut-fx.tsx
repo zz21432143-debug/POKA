@@ -142,7 +142,7 @@ export function YutCatchCutIn({
             ) : null}
             <b className="max-w-36 truncate rounded-sm border-2 border-[#0a0614] bg-[#0a0614]/80 px-2 text-sm font-black text-white">{heroName}</b>
           </div>
-          <b className="yut-cutin-ko self-center font-[family-name:var(--font-arcade)] text-2xl text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614] sm:text-3xl">CATCH!</b>
+          <b className="yut-cutin-ko self-center font-sans font-black text-2xl text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614] sm:text-3xl">잡았다!</b>
           {/* 잡힌 말: 누운 모습 크게 + 닉네임 */}
           <div className={`grid gap-x-2 gap-y-2.5 ${victims.length > 2 ? "grid-cols-2" : "grid-cols-1"}`}>
             {victims.slice(0, 4).map((v, i) => (

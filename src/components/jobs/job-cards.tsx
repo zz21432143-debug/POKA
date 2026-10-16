@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatWon } from "@/lib/jobs";
 import { CrownIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JobEventList, JobTagList, jobTags } from "@/components/jobs/job-facts";
@@ -74,6 +75,17 @@ export function JobCards({
               <p className={cn("mt-2 text-lg font-bold", closed ? "text-[#c9c0b2] line-through decoration-1" : "text-white")}>
                 {job.title}
               </p>
+              {(job.jobKind === "FIXED" || job.jobKind === "TEAM") && (job.jobPayAmount || job.jobLocation) ? (
+                <p data-job-card-pay className="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm">
+                  {job.jobPayAmount ? (
+                    <b className="text-base font-black text-[#ffcf4a]">
+                      {job.jobPayType ?? "급여"} {formatWon(job.jobPayAmount)}
+                    </b>
+                  ) : null}
+                  {job.jobLocation ? <span className="text-[#c9c0b2]">📍 {job.jobLocation}</span> : null}
+                  {job.jobWorkHours ? <span className="text-[#c9c0b2]">🕒 {job.jobWorkHours}</span> : null}
+                </p>
+              ) : null}
               <JobEventList job={job} compact />
               <JobTagList tags={jobTags(job)} />
             </Link>

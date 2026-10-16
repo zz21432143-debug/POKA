@@ -5,7 +5,7 @@ import { YUT_STEP, YUT_STEPS, playYutStep } from "@/lib/game-bgm-yut";
 export type BgmTrack = "omok" | "yut";
 
 /**
- * 요괴 게임방 BGM(브라우저에서 바로 만들어 연주 · 파일 없음).
+ * 요괴 오락실 BGM(브라우저에서 바로 만들어 연주 · 파일 없음).
  * 계면조 느낌 5음(레 · 파 · 솔 · 라 · 도) 가락 + 장구(덩 · 기덕) + 낮은 지속음 + 메아리 — 으스스하지만 신나는 오락실 국악풍.
  * 8마디(8분음표 64칸)를 계속 반복. 끄면 localStorage에 기억.
  */

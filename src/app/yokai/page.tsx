@@ -40,7 +40,7 @@ export default async function YokaiPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const user = await getCurrentUser().catch(() => null);
-  // 게임방에서 요괴를 고르러 온 경우: 게임방 링크를 받은 회원은 요괴 마을이 닫혀 있어도 고를 수 있게
+  // 오락실에서 요괴를 고르러 온 경우: 오락실 링크를 받은 회원은 요괴 마을이 닫혀 있어도 고를 수 있게
   const { next } = await searchParams;
   const returnTo =
     next && next.startsWith("/games") ? safeNextPath(next) : null;
@@ -111,9 +111,9 @@ export default async function YokaiPage({
           쓰다듬기와 하루 첫 인사로 친밀도가 오르고, {BOND_TIERS.map((t) => `${t.at} ${t.name}`).join(" → ")} 순으로 관계가 깊어집니다.
           단계에 오를 때마다 포인트 보상이 있습니다.
         </p>
-        <h3 className="text-base font-black text-white">요괴 게임방</h3>
+        <h3 className="text-base font-black text-white">요괴 오락실</h3>
         <p>
-          키운 요괴는 요괴 게임방의 윷놀이 · 오목에서 내 말과 내 캐릭터가 됩니다. 친구를 방 코드로 불러 한 판 하거나 요괴 AI와 연습할 수 있습니다.
+          키운 요괴는 요괴 오락실의 윷놀이 · 오목에서 내 말과 내 캐릭터가 됩니다. 친구를 방 코드로 불러 한 판 하거나 요괴 AI와 연습할 수 있습니다.
         </p>
       </section>
       <section data-yokai-dex-guide className="ink-panel grid gap-2 rounded-2xl p-4">

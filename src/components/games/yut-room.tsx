@@ -1,5 +1,7 @@
 "use client";
 
+import { LagReportButton } from "@/components/games/lag-report";
+
 import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
 
 import { nowMs } from "@/lib/dates";
@@ -865,7 +867,9 @@ export function YutRoom({
             {seat.player?.nickname ?? "빈자리"}
           </b>
           <span className="flex min-w-0 items-center gap-1 overflow-hidden text-[10px] font-bold text-[#d6cdee]">
-            {seat.surrender ? (
+            {seat.auto && playing ? (
+              <span data-yut-seat-auto className="text-[#ffe08a]">🤖 자리비움</span>
+            ) : seat.surrender ? (
               "🏳️ 기권 원함"
             ) : seat.left ? (
               "🤖 나감 · AI"
@@ -1067,6 +1071,7 @@ export function YutRoom({
         >
           {lite ? "✨ 효과 끔" : "✨ 효과"}
         </button>
+        <LagReportButton game="yut" lite={lite} />
         <button
           type="button"
           data-yut-howto
@@ -1137,8 +1142,8 @@ export function YutRoom({
       {/* ───── 대기실 ───── */}
       {waiting ? (
         <section data-yut-waiting className="yut-hud grid gap-3 p-3">
-          <p className="text-center font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
-            WAITING ROOM · PRESS READY!
+          <p className="text-center font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+            대기실 · 준비를 눌러요!
           </p>
           <div className="grid justify-items-center gap-1 text-center">
             <p className="text-sm font-bold text-[#d6cdee]">초대 코드</p>
@@ -1228,7 +1233,7 @@ export function YutRoom({
                               </span>
                             ) : seat.host ? null : seat.ready ? (
                               <span className="rounded-md bg-[#3ddc97] px-2 py-0.5 text-xs font-black text-[#062a1b]">
-                                READY
+                                준비
                               </span>
                             ) : (
                               <span className="rounded-md bg-white/10 px-2 py-0.5 text-xs font-bold text-[#d6cdee]">
@@ -1355,7 +1360,7 @@ export function YutRoom({
                   mySeatView?.ready ? "btn-dark" : "btn-green",
                 )}
               >
-                {mySeatView?.ready ? "준비 취소" : "READY!"}
+                {mySeatView?.ready ? "준비 취소" : "준비!"}
               </button>
               <button
                 type="button"
@@ -1504,9 +1509,9 @@ export function YutRoom({
                 {canThrow && !throwFx && !callout && !winding ? (
                   <p
                     data-yut-press
-                    className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-[family-name:var(--font-arcade)] text-[clamp(9px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
+                    className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-sans font-black text-[clamp(9px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
                   >
-                    PRESS SPACE OR TOUCH TO THROW!
+                    눌러서 윷을 던져요!
                   </p>
                 ) : null}
                 {!throwFx && callout ? (
@@ -1553,12 +1558,12 @@ export function YutRoom({
               {/* 내 차례 · 남의 차례 */}
               {playing ? (
                 <section data-yut-action className="yut-hud grid gap-2 p-2.5">
-                  <p className="font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                  <p className="font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
                     {myTurn
                       ? s.phase === "throw"
-                        ? "YOUR TURN · THROW!"
-                        : "YOUR TURN · MOVE!"
-                      : "PLAYER TURN"}
+                        ? "내 차례 · 윷 던지기!"
+                        : "내 차례 · 말 움직이기!"
+                      : "상대 차례"}
                   </p>
                   <div className="flex flex-wrap items-center gap-2">
                     <b
@@ -1685,8 +1690,8 @@ export function YutRoom({
 
               {/* 말 대기소(홍 · 청): 출발 전 말 · 골인 — 여기서만 대기 말을 내보냄 */}
               <section data-yut-docks className="yut-hud grid gap-1.5 p-2.5">
-                <p className="font-[family-name:var(--font-arcade)] text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
-                  PIECE DOCK · 말 대기소
+                <p className="font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                  말 대기소
                 </p>
                 {tray("A")}
                 {tray("B")}
@@ -1811,7 +1816,7 @@ export function YutRoom({
             {ended && view.winner ? (
               <>
                 <p className="arcade-px neon-gold text-xl">
-                  {view.mySeat ? (won ? "YOU WIN!" : "YOU LOSE") : "GAME SET"}
+                  {view.mySeat ? (won ? "승리!" : "패배") : "게임 끝"}
                 </p>
                 <b
                   className="arcade-kr text-3xl"

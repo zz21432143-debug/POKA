@@ -67,7 +67,7 @@ async function GameRanking({
   return (
     <>
       <p className="yokai-note">
-        {GAME_LABEL[game]} 친구 대전 결과예요. 승 +3점 · 무 +1점 · 패 -1점(기권 · 나가기도 패) ·{" "}
+        {GAME_LABEL[game]} 친구 대전 결과예요. 승 +3점 · 무 +1점 · 패 -1점(기권 · 나가기도 패 · 자리비움 자동을 쓴 판은 이겨도 +1.5점) ·{" "}
         {period === "month" ? "이번 달" : "전체"} {RANK_MIN_GAMES}판 이상 둔
         회원만 올라가요. 이번 달 1위는 「{GAME_LABEL[game]} 요괴」 칭호 · 월말 1~3위는 650 · 390 · 260P!
       </p>

@@ -244,13 +244,13 @@ export function OmokAi({
     setMeSay(null);
     readySound();
     setBanner({
-      text: "READY",
+      text: "준비",
       sub: color === BLACK ? "내가 흑 · 먼저 둬요" : "내가 백 · 요괴가 먼저",
       key: seed.current,
     });
     window.setTimeout(() => {
       fightSound();
-      setBanner({ text: "FIGHT!", tone: "red", key: seed.current + 1 });
+      setBanner({ text: "시작!", tone: "red", key: seed.current + 1 });
     }, 900);
   }
 
@@ -317,7 +317,7 @@ export function OmokAi({
         <div className="flex justify-end">
           <FullscreenButton />
         </div>
-        <p className="arcade-px neon-gold text-center text-sm">CHALLENGER</p>
+        <p className="arcade-px neon-gold text-center text-sm">도전자</p>
         <div className="grid justify-items-center gap-2 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- 상대 요괴 */}
           <img
@@ -375,7 +375,7 @@ export function OmokAi({
 
   const humanWon = winner !== null && winner !== "draw" && winner === human;
   const resultTitle =
-    winner === "draw" ? "DRAW" : humanWon ? "YOU WIN!" : "YOU LOSE";
+    winner === "draw" ? "무승부" : humanWon ? "승리!" : "패배";
   return (
     <div data-omok-ai data-game-land className="omok-ai-root grid gap-2.5">
       {arrivedBanner}

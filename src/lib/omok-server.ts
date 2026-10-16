@@ -289,7 +289,8 @@ async function recordIfDone(row: Row) {
         : row.winner === WHITE
           ? row.whiteId
           : null,
-    reason: row.endReason,
+    // 자리비움(자동)을 쓴 판은 표시(랭킹에서 이긴 점수 절반)
+    reason: autoRaw(row).used ? `${row.endReason}#auto` : row.endReason,
     moves: movesOf(row).length,
   }).catch(() => undefined);
 }
@@ -320,15 +321,22 @@ async function rivalAway(row: Row, userId: string) {
   return !seen || Date.now() - seen.seenAt.getTime() > RIVAL_AWAY_MS;
 }
 
-/** 자리비움(자동) 상태 */
-function autoOf(row: { autoJson: string }): Record<1 | 2, boolean> {
+/** 자리비움(자동) 원본: {"1": 켬, "2": 켬, "1at": 켠 시각, "2at", "used": 이 판에서 한 번이라도 켬} */
+function autoRaw(row: { autoJson: string }): Record<string, unknown> {
   try {
-    const v = JSON.parse(row.autoJson || "{}") as Record<string, unknown>;
-    return { 1: v["1"] === true, 2: v["2"] === true };
+    const v = JSON.parse(row.autoJson || "{}");
+    return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
   } catch {
-    return { 1: false, 2: false };
+    return {};
   }
 }
+/** 자리비움(자동) 상태 */
+function autoOf(row: { autoJson: string }): Record<1 | 2, boolean> {
+  const v = autoRaw(row);
+  return { 1: v["1"] === true, 2: v["2"] === true };
+}
+/** 자동을 켠 채 이만큼 화면에 안 돌아오면 기권패(상대가 끝없이 기다리지 않게) */
+const AUTO_LIMIT_MS = 10 * 60_000;
 /** 자동 차례: 이만큼 기다렸다가 둠(사람이 보기에 너무 빠르지 않게) */
 const AUTO_MS = 1200;
 /** 같은 판에서 자동 수를 두는 중(겹쳐 두지 않게) */
@@ -408,10 +416,12 @@ async function settle(row: Row): Promise<Row> {
     if (seen) {
       const since = row.turnAt?.getTime() ?? row.updatedAt.getTime();
       const auto = autoOf(row);
+      const raw = autoRaw(row);
       const gone = (uid: string) => {
-        // 자리비움(자동)을 켠 사람은 접속이 끊겨도 기권패 아님
-        if ((uid === row.blackId && auto[1]) || (uid === row.whiteId && auto[2])) return false;
         const t = seen.find((r) => r.viewer === `p:${uid}`)?.seenAt.getTime();
+        // 자리비움(자동): 바로 기권패는 아니고, 켠 채 10분 넘게 화면에 안 돌아오면 기권패
+        const color = uid === row.blackId ? 1 : 2;
+        if (auto[color]) return now - Math.max(t ?? 0, Number(raw[`${color}at`] ?? 0)) > AUTO_LIMIT_MS;
         // 시작 뒤 한 번도 신호가 없으면 시작 시각부터 셈
         return now - Math.max(t ?? 0, Math.min(since, now)) > PLAYER_GONE_MS;
       };
@@ -1402,7 +1412,10 @@ export async function omokAct(
     const on = payload.on !== false;
     await prisma.omokGame.updateMany({
       where: { id, status: "playing" },
-      data: { autoJson: JSON.stringify({ ...autoOf(row), [mine]: on }), version: { increment: 1 } },
+      data: {
+        autoJson: JSON.stringify({ ...autoRaw(row), [mine]: on, [`${mine}at`]: on ? Date.now() : 0, used: Boolean(autoRaw(row).used) || on }),
+        version: { increment: 1 },
+      },
     });
     return done();
   }

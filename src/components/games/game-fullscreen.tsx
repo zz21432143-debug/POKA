@@ -83,7 +83,7 @@ function useLandscapeSnap() {
 const PROMPT_KEY = "poka-game-fullscreen-asked";
 
 /**
- * 게임방에 들어오면 한 번(이 탭에서) 전체화면을 권함.
+ * 오락실에 들어오면 한 번(이 탭에서) 전체화면을 권함.
  * 전체화면을 지원하지 않는 아이폰은 「홈 화면에 추가」 안내로 대신함.
  */
 export function FullscreenPrompt({ landscape = false }: { landscape?: boolean }) {

@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -22,7 +24,7 @@ export function NoticeTag({ tag }: { tag: string }) {
 export type RollingNoticeItem = { text: string; href?: string };
 
 /** 맨 위 공지 띠: 관리자 문구 + 최근 공지(말머리 태그)를 5초마다 돌려 보여 줌 */
-export function SiteNoticeBanner({ text, items = [] }: { text: string | null | undefined; items?: RollingNoticeItem[] }) {
+export function SiteNoticeBanner({ text, items = [], leading = null }: { text: string | null | undefined; items?: RollingNoticeItem[]; /** 같은 줄 왼쪽(휴대폰: 앱 받기) */ leading?: React.ReactNode }) {
   const list: RollingNoticeItem[] = [...(text?.trim() ? [{ text: text.trim() }] : []), ...items];
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -47,6 +49,7 @@ export function SiteNoticeBanner({ text, items = [] }: { text: string | null | u
   return (
     <div data-rolling-notice className="border-b border-amber-500/30 bg-amber-950/40">
       <div key={i} className="notice-roll mx-auto flex max-w-[1560px] items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-amber-200 sm:px-5">
+        {leading}
         {cur.href ? (
           <Link href={cur.href} className="flex min-h-9 min-w-0 items-center gap-2 hover:underline">
             {body}

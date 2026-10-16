@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { canBumpNow, nextBumpAt } from "@/lib/job-bump";
@@ -32,6 +32,10 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
       );
     }
     const updated = await prisma.post.update({ where: { id }, data: { bumpedAt: new Date() } });
+    after(async () => {
+      const { notifySlotWatchers } = await import("@/lib/job-board");
+      await notifySlotWatchers(id).catch(() => undefined);
+    });
     return NextResponse.json({ ok: true, bumpedAt: updated.bumpedAt.toISOString() });
   } catch (error) {
     const message = publicErrorMessage(error, "처리에 실패했습니다.");

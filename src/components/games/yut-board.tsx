@@ -211,7 +211,7 @@ export function YutBoard({
   const firstEvAt = useRef(ev?.at ?? 0);
   const douseKey = ev?.type === "capture" && (ev.captured ?? 0) >= 3 && ev.at !== firstEvAt.current ? ev.at : 0;
   const [douse, setDouse] = useState<{ key: number; node: string } | null>(null);
-  // 골인: 말이 골인 칸에 닿는 순간(한 칸씩 점프가 끝난 뒤) GOAL! + 금빛 파편
+  // 골인: 말이 골인 칸에 닿는 순간(한 칸씩 점프가 끝난 뒤) 골인! + 금빛 파편
   const goalKey = ev?.type === "finish" && ev.at !== firstEvAt.current ? ev.at : 0;
   const [goal, setGoal] = useState<number | null>(null);
   useEffect(() => {
@@ -347,11 +347,11 @@ export function YutBoard({
             </p>
           </div>
         ) : null}
-        {/* 골인: GOAL! + 금빛 파편 */}
+        {/* 골인: 골인! + 금빛 파편 */}
         {goal ? (
           <>
-            <b key={`goal-${goal}`} data-yut-goal-pop aria-hidden className="yut-goal-pop pointer-events-none absolute z-[46] -translate-x-1/2 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614,0_0_14px_#fff]" style={{ left: `${GOAL_XY[0] - 6}%`, top: `${GOAL_XY[1] - 16}%` }}>
-              GOAL!
+            <b key={`goal-${goal}`} data-yut-goal-pop aria-hidden className="yut-goal-pop pointer-events-none absolute z-[46] -translate-x-1/2 font-sans font-black text-[clamp(14px,5cqw,34px)] text-[#ffcf4a] [text-shadow:3px_3px_0_#0a0614,0_0_14px_#fff]" style={{ left: `${GOAL_XY[0] - 6}%`, top: `${GOAL_XY[1] - 16}%` }}>
+              골인!
             </b>
             <PixelBurst key={`goal-bits-${goal}`} x={GOAL_XY[0]} y={GOAL_XY[1]} seed={goal} colors={["#ffcf4a", "#fff6dc", "#ff5d6c", "#6ad7ff"]} count={26} spread={80} size={7} up={0.6} />
           </>
@@ -425,20 +425,20 @@ export function YutBoard({
               ) : null}
               {can && p.top && !isSel && guide === "pick" ? (
                 <span data-yut-tap aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[40%] left-1/2 grid -translate-x-1/2 justify-items-center">
-                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-[family-name:var(--font-arcade)] text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">TAP</b>
+                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-sans font-black text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">누르기</b>
                   <span className="text-[clamp(10px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
-              {/* 고른 말: 머리 위 SELECT! 노란 픽셀 손가락 화살표 */}
+              {/* 고른 말: 머리 위 고르기! 노란 픽셀 손가락 화살표 */}
               {isSel && p.top ? (
                 <span data-yut-select-arrow aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[46%] left-1/2 grid -translate-x-1/2 justify-items-center">
-                  <b className="border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-[family-name:var(--font-arcade)] text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">SELECT!</b>
+                  <b className="border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">고르기!</b>
                   <span className="text-[clamp(12px,3cqw,20px)] leading-none text-[#ffcf4a] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
               {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="!absolute -bottom-[32%] left-1/2 -translate-x-1/2" /> : null}
               {p.top && p.count > 1 ? (
-                <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-[family-name:var(--font-arcade)] text-[clamp(7px,1.5cqw,11px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
+                <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(7px,1.5cqw,11px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
                   ×{p.count}
                 </span>
               ) : null}
@@ -474,10 +474,10 @@ export function YutBoard({
         {/* 칸마다 착지 먼지 */}
         {walking ? <PixelBurst key={`dust-${anim?.key}-${walkIdx}`} x={xy(walking)[0]} y={xy(walking)[1] + 2} seed={(anim?.key ?? 0) + walkIdx * 31} colors={["#d9b980", "#a9844f", "#6e5232"]} count={8} spread={24} size={5} up={0.9} /> : null}
         {burst ? <PixelBurst key={`burst-${burst.key}`} x={xy(burst.node)[0]} y={xy(burst.node)[1]} seed={burst.key} colors={burst.colors} count={burst.count ?? 18} spread={70} size={8} up={0.2} /> : null}
-        {/* 잡힌 요괴: 드롭킥에 맞고 빙글빙글 화면 밖으로 + K.O.! */}
+        {/* 잡힌 요괴: 드롭킥에 맞고 빙글빙글 화면 밖으로 + 잡았다! */}
         {knock?.items.length ? (
-          <b key={`ko-${knock.key}`} data-yut-ko className="yut-ko pointer-events-none absolute z-40 font-[family-name:var(--font-arcade)] text-[clamp(14px,5cqw,34px)] text-[#ff3b4e] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]" style={{ left: `${xy(knock.items[0].node)[0]}%`, top: `${xy(knock.items[0].node)[1] - 12}%` }}>
-            K.O.!
+          <b key={`ko-${knock.key}`} data-yut-ko className="yut-ko pointer-events-none absolute z-40 font-sans font-black text-[clamp(14px,5cqw,34px)] text-[#ff3b4e] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]" style={{ left: `${xy(knock.items[0].node)[0]}%`, top: `${xy(knock.items[0].node)[1] - 12}%` }}>
+            잡았다!
           </b>
         ) : null}
         {knock

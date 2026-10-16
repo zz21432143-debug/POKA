@@ -29,7 +29,7 @@ export default async function GameStatsPreviewPage() {
         href="/games"
         className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]"
       >
-        ← 요괴 게임방
+        ← 요괴 오락실
       </Link>
       <header className="ink-panel grid gap-1 rounded-2xl p-4 text-sm text-[#d1c7b5]">
         <h1 className="text-lg font-black text-[#f3d9a4]">

@@ -37,7 +37,7 @@ export default async function AccountPage() {
         <ProfileYokai userId={user.id} viewerIsMaster={Boolean(user.isMaster)} />
         <HonorShelf userId={user.id} nickname={user.nickname} mine />
         <a href="/games" data-account-games className="flex min-h-12 items-center gap-2 rounded-2xl border border-sky-400/40 bg-sky-500/10 px-3 text-sm font-black text-sky-200">
-          🎮 요괴 게임방
+          🎮 요괴 오락실
           <span className="ml-auto text-xs font-bold text-sky-300">요괴 오목 · 친구 대전 ›</span>
         </a>
         <a href="/invite" data-account-invite className="flex min-h-12 items-center gap-2 rounded-2xl border border-[#FEE500]/40 bg-[#FEE500]/10 px-3 text-sm font-black text-[#fff3a8]">

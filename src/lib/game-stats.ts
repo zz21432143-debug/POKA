@@ -136,7 +136,7 @@ export async function gameRecord(
     prisma.gameResult.count({ where: { game, winnerId: userId } }),
     prisma.gameResult.count({ where: { game, loserId: userId } }),
     prisma.gameResult.count({
-      where: { game, loserId: userId, reason: "resign" },
+      where: { game, loserId: userId, reason: { startsWith: "resign" } },
     }),
     prisma.gameResult.count({ where }),
     prisma.gameResult.findMany({
@@ -165,8 +165,10 @@ export async function gameRecord(
 
 /** 랭킹 점수: 승 3 · 무 1 · 패 -1(0점 아래로는 안 내려감) — 져도 많이 둘수록 손해가 크지 않게 */
 export const RANK_POINTS = { win: 3, draw: 1, loss: -1 } as const;
-export function rankScore(r: { wins: number; draws: number; losses: number }) {
-  return Math.max(0, r.wins * RANK_POINTS.win + r.draws * RANK_POINTS.draw + r.losses * RANK_POINTS.loss);
+/** autoWins: 자리비움(자동)을 쓴 판에서 이긴 수 — 이긴 점수를 절반만 */
+export function rankScore(r: { wins: number; draws: number; losses: number; autoWins?: number }) {
+  const auto = Math.min(r.autoWins ?? 0, r.wins);
+  return Math.max(0, Math.round(r.wins * RANK_POINTS.win - auto * (RANK_POINTS.win / 2) + r.draws * RANK_POINTS.draw + r.losses * RANK_POINTS.loss));
 }
 
 export type GameRankRow = {
@@ -204,18 +206,20 @@ export async function gameRanking(
       wins: number;
       losses: number;
       draws: number;
+      autoWins: number;
       first: Date;
     }[]
   >`
     WITH p AS (
-      SELECT "playerAId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
+      SELECT "playerAId" AS uid, "winnerId", "loserId", draw, reason, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
       UNION ALL
-      SELECT "playerBId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
+      SELECT "playerBId" AS uid, "winnerId", "loserId", draw, reason, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
     )
     SELECT u.id, u.nickname,
       COUNT(*) FILTER (WHERE p."winnerId" = p.uid)::int AS wins,
       COUNT(*) FILTER (WHERE p."loserId" = p.uid)::int AS losses,
       COUNT(*) FILTER (WHERE p.draw)::int AS draws,
+      COUNT(*) FILTER (WHERE p."winnerId" = p.uid AND p.reason LIKE '%#auto%')::int AS "autoWins",
       MIN(p."createdAt") FILTER (WHERE p."winnerId" = p.uid) AS first
     FROM p JOIN "User" u ON u.id = p.uid
     WHERE u."withdrawnAt" IS NULL
@@ -325,25 +329,26 @@ export async function monthRecord(userId: string, game: GameKind) {
   const month = todayKstDate().slice(0, 7);
   const start = new Date(`${month}-01T00:00:00+09:00`);
   const mineWhere = { game, createdAt: { gte: start }, OR: [{ playerAId: userId }, { playerBId: userId }] };
-  const [wins, losses, games, ranking] = await Promise.all([
+  const [wins, losses, games, ranking, autoWins] = await Promise.all([
     prisma.gameResult.count({ where: { game, createdAt: { gte: start }, winnerId: userId } }),
     prisma.gameResult.count({ where: { game, createdAt: { gte: start }, loserId: userId } }),
     prisma.gameResult.count({ where: mineWhere }),
     gameRanking(game, "month", 1000, month),
+    prisma.gameResult.count({ where: { game, createdAt: { gte: start }, winnerId: userId, reason: { contains: "#auto" } } }),
   ]);
   const draws = Math.max(0, games - wins - losses);
   const row = ranking.find((r) => r.userId === userId);
   // 판마다 점수 흐름(+3 · +1 · -1, 0 아래로는 안 내려감) — 최근 30판
   const list = await prisma.gameResult
-    .findMany({ where: mineWhere, orderBy: { createdAt: "asc" }, select: { winnerId: true, loserId: true }, take: 300 })
+    .findMany({ where: mineWhere, orderBy: { createdAt: "asc" }, select: { winnerId: true, loserId: true, reason: true }, take: 300 })
     .catch(() => []);
   const trend: number[] = [];
   let acc = 0;
   for (const g of list) {
-    acc = Math.max(0, acc + (g.winnerId === userId ? RANK_POINTS.win : g.loserId === userId ? RANK_POINTS.loss : RANK_POINTS.draw));
+    acc = Math.max(0, acc + (g.winnerId === userId ? (g.reason.includes("#auto") ? RANK_POINTS.win / 2 : RANK_POINTS.win) : g.loserId === userId ? RANK_POINTS.loss : RANK_POINTS.draw));
     trend.push(acc);
   }
-  return { wins, losses, draws, games, score: rankScore({ wins, losses, draws }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games), trend: trend.slice(-30) };
+  return { wins, losses, draws, games, score: rankScore({ wins, losses, draws, autoWins }), rank: row?.rank ?? null, ranked: ranking.length, need: Math.max(0, RANK_MIN_GAMES - games), trend: trend.slice(-30) };
 }
 
 /** 로비 하이라이트: 오늘 둔 판 수 · 가장 긴 판(수 · 두 사람/이긴 사람) */

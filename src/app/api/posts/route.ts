@@ -324,6 +324,13 @@ export async function POST(request: Request) {
 
     // 검색엔진에 새 글 알림(응답을 보낸 뒤 처리)
     if (shouldPingIndexNow(post)) after(() => pingIndexNow([`/posts/${post.id}`]));
+    // 새 빈자리: 그 지역 · 날짜에 「가능」을 등록한 딜러에게 알림(응답 뒤에)
+    if (jobKind === "APPLY" || jobKind === "URGENT" || jobKind === "TOURNAMENT") {
+      after(async () => {
+        const { notifySlotWatchers } = await import("@/lib/job-board");
+        await notifySlotWatchers(post.id).catch(() => undefined);
+      });
+    }
 
     return NextResponse.json({
       id: post.id,

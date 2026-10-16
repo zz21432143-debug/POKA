@@ -14,7 +14,7 @@ const parse = <T,>(json: string | null | undefined, d: T): T => {
 };
 
 /**
- * 게임방 관리(마스터):
+ * 오락실 관리(마스터):
  * - { action: "close", game: "omok" | "yut", id } → 방 강제 닫기(전적 · 보상 없이)
  * - { action: "kick", game, id, userId } → 대기실에서 내보내기(다시 못 앉음)
  * - { action: "reward", reward: { points, exp, affection, perDay, perOpponentPerDay } } → 승리 보상 조정

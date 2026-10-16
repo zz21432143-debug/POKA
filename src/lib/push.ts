@@ -116,7 +116,7 @@ export async function notifyQuiz(payload: PushPayload) {
   return { ...(await sendAll(subs, payload)), total: subs.length };
 }
 
-/** 게임방 상대 찾기 알림을 켠 기기(방장 본인 기기는 빼고) */
+/** 오락실 상대 찾기 알림을 켠 기기(방장 본인 기기는 빼고) */
 export async function notifyGameAlert(exceptUserId: string, payload: PushPayload) {
   if (!configure()) return { sent: 0, total: 0 };
   const subs = await prisma.pushSubscription.findMany({

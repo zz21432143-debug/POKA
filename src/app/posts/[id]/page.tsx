@@ -24,6 +24,7 @@ import { ContactReveal } from "@/components/jobs/contact-reveal";
 import { PostPhotos } from "@/components/posts/post-photos";
 import { LinkifiedText } from "@/components/posts/linkified-text";
 import { JobScheduleText } from "@/components/jobs/job-schedule-text";
+import { RelatedGuides } from "@/components/posts/related-guides";
 import { canManagePost } from "@/lib/post-manage";
 import { PostManageBar } from "@/components/posts/post-manage-bar";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
@@ -747,6 +748,10 @@ export default async function PostDetailPage({
         </section>
       ) : null}
 
+      {/* 정보 글(질문 · 자유 · 공지 · 핸드리뷰) → 관련 딜러 가이드(서로 이어서 검색 노출) */}
+      {!post.jobKind && ["RULE_QA", "FREE", "NOTICE", "HAND_REVIEW"].includes(post.boardType) && (post.content?.length ?? 0) > 200 ? (
+        <RelatedGuides title={post.title} content={post.content ?? ""} />
+      ) : null}
       <div className="flex justify-center">
         <BackToList href={listHref} className="w-full justify-center sm:w-auto sm:min-w-48" />
       </div>

@@ -3,7 +3,7 @@ import { MONTH_RANK_REWARD, monthRecord, todayHighlight, type GameKind } from "@
 import { playersOnline } from "@/lib/game-watch";
 import { GameAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
-/** 로비 위: 지금 게임방에 있는 사람 수 · 상대 찾기 알림 켜기 */
+/** 로비 위: 지금 오락실에 있는 사람 수 · 상대 찾기 알림 켜기 */
 export async function OnlineNow({ game }: { game: "omok" | "yut" }) {
   const [n, hi] = await Promise.all([playersOnline(game).catch(() => 0), todayHighlight(game).catch(() => null)]);
   return (

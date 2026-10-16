@@ -40,7 +40,7 @@ export function YutTutorial({ onClose }: { onClose: () => void }) {
   return createPortal(
     <div data-yut-tutorial className="fixed inset-0 z-[90] grid place-items-center bg-[#0a0614]/60 px-4" role="dialog" aria-modal="true" aria-label="윷놀이 하는 법">
       <div className="yut-cutin-card grid w-full max-w-sm gap-3 rounded-2xl border-4 border-[#0a0614] bg-[#1a0f2e] p-5 text-center shadow-[6px_6px_0_#0a0614]">
-        <p className="font-[family-name:var(--font-arcade)] text-[10px] tracking-widest text-[#6ad7ff]">HOW TO PLAY · {i + 1}/{STEPS.length}</p>
+        <p className="font-sans font-black text-[10px] tracking-widest text-[#6ad7ff]">HOW TO PLAY · {i + 1}/{STEPS.length}</p>
         <span className="text-5xl" aria-hidden>
           {step.icon}
         </span>

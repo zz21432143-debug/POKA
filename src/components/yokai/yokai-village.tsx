@@ -156,7 +156,7 @@ export function YokaiVillage({
   markCollection = 0,
 }: {
   initial: YokaiView | null;
-  /** 첫 요괴를 고르면 돌아갈 곳(게임방 등) */ returnTo?: string | null;
+  /** 첫 요괴를 고르면 돌아갈 곳(오락실 등) */ returnTo?: string | null;
   /** 요괴 마을 마크 도감 모은 수 */
   markCollection?: number;
 }) {
@@ -225,7 +225,7 @@ export function YokaiVillage({
       if (json.yokai !== undefined) setYokai(json.yokai ?? null);
       if (!res.ok) throw new Error(json.error ?? "잠시 뒤에 다시 해 주세요.");
       if (json.evolved) setEvolved(json.evolved);
-      // 게임방에서 요괴를 고르러 왔으면 고른 뒤 바로 돌아감
+      // 오락실에서 요괴를 고르러 왔으면 고른 뒤 바로 돌아감
       if (body.action === "choose" && returnTo) {
         window.location.href = returnTo;
         return;
@@ -326,7 +326,7 @@ export function YokaiVillage({
               data-yokai-need
               className="rounded-xl border-2 border-[#ffd54a] bg-[#ffd54a]/15 px-3 py-2 text-sm font-black text-[#ffe9a3]"
             >
-              🎮 요괴 게임방은 함께할 요괴가 있어야 들어갈 수 있어요! 요괴를
+              🎮 요괴 오락실은 함께할 요괴가 있어야 들어갈 수 있어요! 요괴를
               고르면 바로 돌아가요.
             </p>
           ) : null}

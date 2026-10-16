@@ -56,5 +56,28 @@ export async function GET(request: Request) {
     }).catch(() => ({ sent: 0 }));
     sent += r.sent ?? 0;
   }
-  return NextResponse.json({ ok: true, target, due: due.length, sent });
+  // 본문 날짜가 전부 지난 공고: 기간 마감 처리 · 작성자에게 알림(한 번)
+  const { slotsForPost, openSlots } = await import("@/lib/job-slots");
+  const { addDays } = await import("@/lib/job-events");
+  const dated = await prisma.post.findMany({
+    where: { AND: [{ boardType: "JOBS", hidden: false, jobKind: { in: ["APPLY", "URGENT"] }, jobAlwaysOpen: false, authorId: { not: null } }, openJobWhere(new Date(), today)] },
+    select: { id: true, title: true, authorId: true, content: true, jobEvents: true, jobWorkDate: true, jobWorkHours: true, jobHeadcount: true },
+    take: 2000,
+  });
+  let closed = 0;
+  for (const p of dated) {
+    if (!slotsForPost(p, today).length || openSlots(p, today).length) continue;
+    await prisma.post.update({ where: { id: p.id }, data: { jobDeadline: addDays(today, -1) } }).catch(() => undefined);
+    closed += 1;
+    const mark = await prisma.toolSaved
+      .createMany({ data: [{ id: `autoclose_${p.id}_${today}`, ownerId: p.authorId!, kind: "job-autoclose", name: today, dataJson: "{}" }], skipDuplicates: true })
+      .catch(() => ({ count: 0 }));
+    if (mark.count !== 1) continue;
+    await notifyUser(p.authorId!, {
+      title: "📅 공고 일정이 모두 지나 마감했어요",
+      body: `「${p.title.slice(0, 36)}」 · 새 일정을 붙여넣으면 바로 다시 열리고 맨 위로 올라가요.`,
+      url: "/boards/jobs/mine",
+    }).catch(() => undefined);
+  }
+  return NextResponse.json({ ok: true, target, due: due.length, sent, closed });
 }

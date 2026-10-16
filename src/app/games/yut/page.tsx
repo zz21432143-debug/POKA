@@ -18,7 +18,7 @@ import { yokaiImage } from "@/lib/yokai";
 export const metadata: Metadata = {
   title: "요괴 윷놀이",
   robots: { index: false, follow: false },
-  openGraph: { title: "요괴 윷놀이", description: "POKA 요괴 게임방: 1:1 ~ 4:4 팀전 · 요괴봇", url: "/games/yut", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
+  openGraph: { title: "요괴 윷놀이", description: "POKA 요괴 오락실: 1:1 ~ 4:4 팀전 · 요괴봇", url: "/games/yut", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
 };
 export const dynamic = "force-dynamic";
 
@@ -87,11 +87,11 @@ export default async function YutLobbyPage() {
       <div className="grid min-w-0 content-start gap-3">
         <header className="arcade-panel flex flex-wrap items-center gap-2.5 px-3 py-2.5">
           <Link href="/games" className="inline-flex min-h-10 items-center text-sm font-black text-[#ffcf4a]">
-            ← 게임방
+            ← 오락실
           </Link>
           <div className="grid min-w-0 flex-1">
-            <p className="arcade-px neon-purple text-[10px]">POKA ARCADE</p>
-            <h1 className="arcade-px neon-gold text-2xl leading-snug sm:text-3xl">YOKAI YUT</h1>
+            <p className="arcade-px neon-purple text-[10px]">POKA 오락실</p>
+            <h1 className="arcade-px neon-gold text-2xl leading-snug sm:text-3xl">요괴 윷놀이</h1>
             <p className="text-sm text-[#d6cdee]">요괴 윷놀이 · 홍팀 vs 청팀 · 1:1 ~ 4:4</p>
           </div>
           <RulesButton title="요괴 윷놀이 규칙">

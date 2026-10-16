@@ -14,7 +14,7 @@ export function isGameRoom(pathname: string) {
 /**
  * 왼쪽 메뉴(PC):
  * - 보통 화면: 그대로
- * - 요괴 게임방 로비: 아이콘만 남기고 접힘(◀ / ▶ 로 펼치기 · 기억함) → 게임 화면이 넓어짐
+ * - 요괴 오락실 로비: 아이콘만 남기고 접힘(◀ / ▶ 로 펼치기 · 기억함) → 게임 화면이 넓어짐
  * - 실제 판(방 · AI 대국): 완전히 숨김(몰입 모드)
  */
 export function SidebarRail({ children }: { children: ReactNode }) {

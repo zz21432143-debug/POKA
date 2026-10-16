@@ -1,4 +1,4 @@
-/** 게임방 이모티콘 = POKA 오니 이모티콘(대국자 · 관전자 응원 공통) */
+/** 오락실 이모티콘 = POKA 오니 이모티콘(대국자 · 관전자 응원 공통) */
 export const ONI_EMOTES = [
   { key: "good", label: "최고" },
   { key: "wow", label: "우와" },

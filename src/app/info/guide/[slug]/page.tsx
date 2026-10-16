@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OperatorPosts } from "@/components/posts/operator-posts";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { GUIDE_ARTICLES, GUIDE_UPDATED_DEFAULT, getGuideArticle } from "@/lib/info-pages";
@@ -101,6 +102,7 @@ export default async function GuideArticlePage({
           ))}
         </ul>
       </section>
+      <OperatorPosts />
       <nav className="flex flex-wrap justify-between gap-3 text-sm font-semibold">
         {prev ? (
           <Link href={`/info/guide/${prev.slug}`} className="inline-flex min-h-11 items-center text-primary">

@@ -32,7 +32,7 @@ export const ADMIN_GROUPS: { title: string; icon: string; items: Item[] }[] = [
     icon: "🏆",
     items: [
       { href: "/admin/titles", label: "칭호 · 랭킹 설정" },
-      { href: "/admin/games", label: "게임방 관리 · 보상", master: true },
+      { href: "/admin/games", label: "오락실 관리 · 보상", master: true },
       { href: "/admin/yokai", label: "요괴 마을 통계" },
     ],
   },

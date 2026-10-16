@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CircleIcon, DicesIcon, FlameIcon, LampIcon } from "lucide-react";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { POKA_FEATURES, POKA_TAGLINE } from "@/lib/brand-copy";
@@ -27,7 +28,7 @@ export function HomeHero() {
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,#0b0706_30%,rgba(11,7,6,.85)_52%,rgba(11,7,6,.15)_100%)]" />
       <div className="relative grid gap-2.5 px-4 py-4 sm:gap-3 sm:px-6 sm:py-6">
-        <p className="hidden text-[11px] font-black tracking-[0.3em] text-[#c9a25c] sm:block">HOLDEM COMMUNITY · POKA</p>
+        <p className="hidden text-[11px] font-black tracking-[0.3em] text-[#c9a25c] sm:block">홀덤 커뮤니티 · POKA</p>
         <h1 className="max-w-[17rem] text-[1.2rem] leading-snug font-black text-white sm:max-w-md sm:text-[1.9rem]">{POKA_TAGLINE}</h1>
         <ul className="flex max-w-md flex-wrap gap-1.5">
           {POKA_FEATURES.map((f) => (
@@ -42,11 +43,11 @@ export function HomeHero() {
     </section>
   );
   if (!games) return main;
-  // 롤링: ① 요괴 마을 · 요괴 게임방(메인) ② 딜러 구인구직 · 매장 관리
+  // 롤링: ① 요괴 마을 · 요괴 오락실(메인) ② 딜러 구인구직 · 매장 관리
   return (
     <HeroCarousel
       slides={[
-        { key: "games", label: "요괴 마을 · 요괴 게임방", node: <GamesSlide />, ms: 10000 },
+        { key: "games", label: "요괴 마을 · 요괴 오락실", node: <GamesSlide />, ms: 10000 },
         { key: "main", label: "구인구직 · 매장 관리", node: main },
       ]}
     />
@@ -57,11 +58,11 @@ export function HomeHero() {
 const NEW_OPEN_UNTIL = Date.parse("2026-11-07T00:00:00+09:00");
 const isNewOpen = () => Date.now() < NEW_OPEN_UNTIL;
 
-/** 대문 첫 장: 요괴 마을(메인) + 요괴 게임방(윷놀이 · 오목) 오픈 — 그림 가운데 「요괴마을」 간판이 보이게 */
+/** 대문 첫 장: 요괴 마을(메인) + 요괴 오락실(윷놀이 · 오목) 오픈 — 그림 가운데 「요괴마을」 간판이 보이게 */
 function GamesSlide() {
   const fresh = isNewOpen();
   return (
-    <section aria-label="요괴 마을 · 요괴 게임방" data-hero-yokai className="relative h-full min-h-[200px] overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/50 bg-[#140b24] sm:min-h-[210px]">
+    <section aria-label="요괴 마을 · 요괴 오락실" data-hero-yokai className="relative h-full min-h-[200px] overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/50 bg-[#140b24] sm:min-h-[210px]">
       {/* eslint-disable-next-line @next/next/no-img-element -- 대문 그림(요괴 마을) */}
       <img
         src="/images/hero/yokai-village.webp"
@@ -84,24 +85,27 @@ function GamesSlide() {
       <div className="pointer-events-none relative z-[2] flex h-full flex-col justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
         <div className="grid max-w-[13rem] gap-1 sm:max-w-[17rem]">
           <p className="w-fit rounded-full bg-black/60 px-2 text-[10px] font-black tracking-[0.2em] text-[#ffcf4a] sm:bg-transparent sm:px-0 sm:text-[11px] sm:tracking-[0.25em]">
-            <span className="sm:hidden">{fresh ? "🏮 요괴 마을 · NEW OPEN" : "🔥 요괴 마을 · 인기"}</span>
-            <span className="hidden sm:inline">{fresh ? "POKA · NEW OPEN" : "POKA · 요괴 마을 인기"}</span>
+            <span className="sm:hidden">{fresh ? "요괴 마을 · 새로 열림" : "요괴 마을 · 인기"}</span>
+            <span className="hidden sm:inline">{fresh ? "POKA · 새로 열림" : "POKA · 요괴 마을 인기"}</span>
           </p>
           {/* 휴대폰은 그림 가운데 「요괴마을」 간판을 가리지 않게 글씨는 숨김 */}
           <h2 className="hidden text-2xl leading-tight font-black text-white [text-shadow:2px_2px_0_#0a0614] sm:block">
             {fresh ? "요괴 마을 오픈!" : "요괴 마을에 놀러 와요!"}
-            <span className="block text-xs font-bold text-[#f3e8ff] sm:text-sm">요괴 키우고 ·<br />요괴 게임방에서 윷놀이 · 오목 한 판</span>
+            <span className="block text-xs font-bold text-[#f3e8ff] sm:text-sm">요괴 키우고 ·<br />요괴 오락실에서 윷놀이 · 오목 한 판</span>
           </h2>
         </div>
         <div className="pointer-events-auto flex w-fit flex-wrap gap-1.5 pr-12 sm:pr-0">
           <Link href="/yokai" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10 bg-[#ffcf4a] px-2.5 text-xs font-black text-[#2a1400] shadow-[2px_2px_0_#0a0614] sm:px-3 sm:text-sm">
-            🏮 요괴 마을 가기
+            <LampIcon aria-hidden className="mr-1 size-3.5" />
+            요괴 마을 가기
           </Link>
           <Link href="/games/yut" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10/80 bg-black/60 px-2.5 text-xs font-black text-[#ffe08a] sm:px-3 sm:text-sm">
-            🎲 윷놀이
+            <DicesIcon aria-hidden className="mr-1 size-3.5" />
+            윷놀이
           </Link>
           <Link href="/games/omok" className="touch-target inline-flex min-h-9 items-center rounded-full border-2 border-[#ffcf4a] sm:min-h-10/80 bg-black/60 px-2.5 text-xs font-black text-[#ffe08a] sm:px-3 sm:text-sm">
-            ⚫ 오목
+            <CircleIcon aria-hidden className="mr-1 size-3.5 fill-current" />
+            오목
           </Link>
         </div>
       </div>
@@ -109,7 +113,7 @@ function GamesSlide() {
   );
 }
 
-/** 대문 오른쪽 위 작은 실시간 숫자: 요괴 키우는 회원 · 지금 진행 중인 게임방 판 수(1분마다 새로) */
+/** 대문 오른쪽 위 작은 실시간 숫자: 요괴 키우는 회원 · 지금 진행 중인 오락실 판 수(1분마다 새로) */
 let liveCache: { at: number; pets: number; games: number } | null = null;
 async function heroLive() {
   if (liveCache && Date.now() - liveCache.at < 60_000) return liveCache;
@@ -130,7 +134,7 @@ async function HeroLive() {
       data-hero-live
       className={`pointer-events-none absolute top-3 right-3 z-[2] items-center ${live.games ? "flex" : "hidden sm:flex"} gap-1.5 rounded-full border border-[#ffcf4a]/50 bg-black/65 px-2.5 py-1 text-[10px] font-black text-[#ffe08a] sm:top-4 sm:right-5 sm:text-xs`}
     >
-      {live.pets ? <span className="hidden sm:inline">🏮 요괴 키우는 회원 {live.pets.toLocaleString("ko-KR")}명</span> : null}
+      {live.pets ? <span className="hidden sm:inline"><FlameIcon aria-hidden className="mr-0.5 inline size-3.5" />요괴 키우는 회원 {live.pets.toLocaleString("ko-KR")}명</span> : null}
       {live.pets && live.games ? <span aria-hidden className="hidden text-white/40 sm:inline">·</span> : null}
       {live.games ? (
         <span className="flex items-center gap-1">

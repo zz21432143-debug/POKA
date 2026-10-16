@@ -36,7 +36,7 @@ const metadata: Metadata = {
   openGraph: {
     title: "요괴 윷놀이 — 한 판 하자!",
     description: "POKA 요괴 윷놀이 — 초대 링크로 들어와 홍팀 · 청팀 자리에 앉으세요!",
-    images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 게임방" }],
+    images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 오락실" }],
   },
 };
 export const dynamic = "force-dynamic";

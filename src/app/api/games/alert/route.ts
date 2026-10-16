@@ -13,7 +13,7 @@ type Body = {
   endpoint?: string;
 };
 
-/** 이 기기의 게임방 상대 찾기 알림 상태 */
+/** 이 기기의 오락실 상대 찾기 알림 상태 */
 export async function GET(request: Request) {
   const endpoint =
     new URL(request.url).searchParams.get("endpoint")?.trim() ?? "";
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ on: Boolean(row?.gameAlerts) });
 }
 
-/** 게임방 상대 찾기 알림 켜기(하루 2번까지). 다른 알림은 그대로 둡니다. */
+/** 오락실 상대 찾기 알림 켜기(하루 2번까지). 다른 알림은 그대로 둡니다. */
 export async function POST(request: Request) {
   if (!pushEnabled())
     return NextResponse.json(
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true });
 }
 
-/** 게임방 상대 찾기 알림 끄기. 다른 알림도 안 받는 기기면 구독을 지웁니다(keep:false → 브라우저 구독도 해제). */
+/** 오락실 상대 찾기 알림 끄기. 다른 알림도 안 받는 기기면 구독을 지웁니다(keep:false → 브라우저 구독도 해제). */
 export async function DELETE(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
   const endpoint = body.endpoint?.trim();

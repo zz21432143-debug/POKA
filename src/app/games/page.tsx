@@ -5,9 +5,9 @@ import { getCurrentUser } from "@/lib/current-user";
 import { gamesOpen } from "@/lib/omok-server";
 
 export const metadata: Metadata = {
-  title: "요괴 게임방",
+  title: "요괴 오락실",
   robots: { index: false, follow: false },
-  openGraph: { title: "요괴 게임방 — 윷놀이 · 오목", description: "POKA 요괴 마을의 요괴 게임방: 윷놀이 · 오목 한 판", url: "/games", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
+  openGraph: { title: "요괴 오락실 — 윷놀이 · 오목", description: "POKA 요괴 마을의 요괴 오락실: 윷놀이 · 오목 한 판", url: "/games", images: [{ url: "/images/og/yokai-village-og.jpg", width: 1200, height: 630, alt: "요괴 마을 — 요괴 키우기 · POKA 홀덤 커뮤니티" }], },
 };
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ const GAMES = [
   // 요괴 체스는 완성되면 다시 넣음(준비 중 카드는 덜 만든 사이트처럼 보여서 숨김)
 ];
 
-/** 요괴 게임방(비공개 기간: 마스터만) */
+/** 요괴 오락실(비공개 기간: 마스터만) */
 export default async function GamesPage() {
   const user = await getCurrentUser().catch(() => null);
   if (!gamesOpen(user)) notFound();
@@ -38,14 +38,14 @@ export default async function GamesPage() {
       <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
         <p className="arcade-px neon-purple text-[10px]">POKA</p>
         <h1 className="arcade-px neon-gold text-2xl leading-snug">
-          YOKAI ARCADE
+          요괴 오락실
         </h1>
-        <p className="arcade-kr text-lg text-white">요괴 게임방</p>
+        <p className="arcade-kr text-base text-white">윷놀이 · 오목 한 판!</p>
         <p className="text-xs text-zinc-300">
           요괴들과 한 판! 친구와 대전하거나 요괴와 연습해 보세요.
         </p>
         <p className="arcade-px arcade-blink text-[9px] text-[#ffe08a]">
-          SELECT GAME
+          게임을 골라요
         </p>
       </header>
       <ul className="grid gap-2">
@@ -64,7 +64,7 @@ export default async function GamesPage() {
                   <span className="text-xs text-zinc-300">{g.hint}</span>
                 </span>
                 <span className="arcade-px neon-red arcade-blink ml-auto text-[9px]">
-                  PLAY
+                  시작
                 </span>
               </Link>
             </li>

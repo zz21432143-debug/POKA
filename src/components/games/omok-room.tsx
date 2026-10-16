@@ -1,5 +1,7 @@
 "use client";
 
+import { LagReportButton } from "@/components/games/lag-report";
+
 import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
 
 import Link from "next/link";
@@ -270,10 +272,10 @@ export function OmokRoom({
     // 시작
     if (view.status === "playing" && before.status === "waiting") {
       readySound();
-      setBanner({ text: "READY", sub: "흑이 먼저 둬요", key: seed });
+      setBanner({ text: "준비", sub: "흑이 먼저 둬요", key: seed });
       window.setTimeout(() => {
         fightSound();
-        setBanner({ text: "FIGHT!", tone: "red", key: seed + 1 });
+        setBanner({ text: "시작!", tone: "red", key: seed + 1 });
       }, 1000);
       setSay({
         [BLACK]: { text: pickOmokLine(PLAYER_LINES.start, seed), key: seed },
@@ -702,14 +704,14 @@ export function OmokRoom({
     view.status !== "done"
       ? ""
       : view.endReason === "cancel"
-        ? "CLOSED"
+        ? "닫힌 방"
         : !view.winner
-          ? "DRAW"
+          ? "무승부"
           : view.me
             ? view.winner === view.me
-              ? "YOU WIN!"
-              : "YOU LOSE"
-            : "WINNER!";
+              ? "승리!"
+              : "패배"
+            : "승부 끝!";
   const winnerInfo = view.winner ? info(view.winner) : null;
   const inviteText = `${view.host?.nickname ?? ""}님이 POKA 요괴 오목 한 판 하재요! 🏮\n방 코드: ${code}`;
 
@@ -816,6 +818,7 @@ export function OmokRoom({
       <div className="omok-left relative grid gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <FullscreenButton />
+          <LagReportButton game="omok" />
           {(() => {
             // 나가기: 대국 중 = 기권 · 방장 대기실 = 방 닫기 · 손님 = 일어나기 · 그 밖 = 로비로
             const risky =
@@ -970,10 +973,10 @@ export function OmokRoom({
                       )}
                     >
                       {view.seat === "host" && !view.guest
-                        ? "친구가 앉으면 READY!"
+                        ? "친구가 앉으면 준비!"
                         : myReady
                           ? "READY 취소"
-                          : "✅ READY!"}
+                          : "✅ 준비!"}
                     </button>
                   ) : !view.guest ? (
                     !loggedIn ? (
@@ -1009,7 +1012,7 @@ export function OmokRoom({
                   )}
                 </div>
                 <p className="arcade-px neon-gold text-xs sm:text-sm">
-                  ROOM CODE
+                  방 코드
                 </p>
                 <button
                   type="button"
@@ -1038,7 +1041,7 @@ export function OmokRoom({
                 </p>
                 {!view.guest ? (
                   <p className="arcade-px arcade-blink text-[11px] text-[#ffcf4a]">
-                    WAITING FOR 2P
+                    상대를 기다리는 중…
                   </p>
                 ) : null}
                 {!view.guest && view.isHost && now - enteredAt > 60_000 ? (
@@ -1082,7 +1085,7 @@ export function OmokRoom({
               data-omok-undo-ask
               className="arcade-overlay absolute inset-x-3 top-1/2 z-20 grid -translate-y-1/2 gap-3 rounded-2xl border-2 border-[#6ad7ff] p-4 text-center"
             >
-              <p className="arcade-px neon-cyan text-sm">UNDO?</p>
+              <p className="arcade-px neon-cyan text-sm">물리기?</p>
               <p className="arcade-kr text-xl text-white">
                 상대가 한 수 물러 달래요
               </p>
@@ -1115,7 +1118,7 @@ export function OmokRoom({
               data-omok-draw-ask
               className="arcade-overlay absolute inset-x-3 top-1/2 z-20 grid -translate-y-1/2 gap-3 rounded-2xl border-2 border-[#ffcf4a] p-4 text-center"
             >
-              <p className="arcade-px neon-gold text-sm">DRAW?</p>
+              <p className="arcade-px neon-gold text-sm">무승부?</p>
               <p className="arcade-kr text-xl text-white">
                 상대가 무승부를 제안했어요
               </p>
@@ -1161,9 +1164,9 @@ export function OmokRoom({
                 <p
                   className={cn(
                     "arcade-px arcade-pop text-3xl sm:text-4xl",
-                    resultTitle === "YOU LOSE"
+                    resultTitle === "패배"
                       ? "neon-red"
-                      : resultTitle === "DRAW" || resultTitle === "CLOSED"
+                      : resultTitle === "무승부" || resultTitle === "닫힌 방"
                         ? "neon-cyan"
                         : "neon-gold",
                   )}
@@ -1418,6 +1421,12 @@ export function OmokRoom({
           </div>
         ) : null}
 
+        {/* 자리비움(자동) 중인 대국자: 상대 · 관전자에게도 */}
+        {playing && (view.auto?.[1] || view.auto?.[2]) && !(view.me && view.auto?.[view.me] && !view.auto?.[view.me === 1 ? 2 : 1]) ? (
+          <p data-omok-rival-auto className="rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-black text-[#ffe08a]">
+            🤖 {[view.auto?.[1] ? view.black?.nickname : null, view.auto?.[2] ? view.white?.nickname : null].filter(Boolean).join(", ")}님 자리비움 중 · 요괴 AI가 대신 둬요(10분 안에 안 돌아오면 기권패)
+          </p>
+        ) : null}
         {/* ── 대국 조작: 물리기 · 기권 · 이모티콘 ── */}
         {view.me && playing ? (
           <div className="grid gap-2">

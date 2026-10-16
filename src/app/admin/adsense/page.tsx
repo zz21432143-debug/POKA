@@ -68,10 +68,14 @@ export default async function AdminAdsensePage() {
   if (!user || !isStaff(user)) notFound();
   const publicWhere = { hidden: false, isPrivate: false, isAttendanceThread: false };
   const since = daysAgo(30);
-  const [byBoard, recent, adsTxt] = await Promise.all([
+  const [byBoard, recent, adsTxt, live] = await Promise.all([
     prisma.post.groupBy({ by: ["boardType"], where: publicWhere, _count: { _all: true } }).catch(() => []),
     prisma.post.count({ where: { ...publicWhere, createdAt: { gte: since } } }).catch(() => 0),
     readFile(join(process.cwd(), "public", "ads.txt"), "utf8").catch(() => ""),
+    // 실제 사이트 주소로 구글 광고 로봇처럼 받아 보기
+    fetch("https://pokerwiki.co.kr/ads.txt", { headers: { "User-Agent": "Mediapartners-Google" }, cache: "no-store", signal: AbortSignal.timeout(5000) })
+      .then(async (r) => ({ status: r.status, type: r.headers.get("content-type") ?? "", body: (await r.text()).slice(0, 300) }))
+      .catch(() => null),
   ]);
   const total = byBoard.reduce((sum, b) => sum + b._count._all, 0);
   const pub = adsensePublisherId();
@@ -174,6 +178,17 @@ export default async function AdminAdsensePage() {
           <Link href="/ads.txt" target="_blank" className="text-primary underline">
             열어 보기
           </Link>
+        </p>
+        <p data-adsense-live className="mt-1 text-sm">
+          실제 사이트(구글 광고 로봇 기준):{" "}
+          {live ? (
+            <b className={live.status === 200 && live.body.includes(`pub-${pubDigits}`) ? "text-emerald-300" : "text-rose-300"}>
+              {live.status === 200 && live.body.includes(`pub-${pubDigits}`) ? `✅ 정상(200 · ${live.type.split(";")[0]})` : `⚠️ 응답 ${live.status} · ID ${live.body.includes(`pub-${pubDigits}`) ? "있음" : "없음"}`}
+            </b>
+          ) : (
+            <b className="text-amber-300">확인 못 함(잠시 뒤 다시)</b>
+          )}
+          <span className="block text-xs text-muted-foreground">정상인데 애드센스에 「찾을 수 없음」이면 구글이 다시 읽을 때까지(며칠~2주) 기다리면 돼요.</span>
         </p>
       </section>
 

@@ -60,7 +60,9 @@ async function ConnectedNotice() {
   const recent = notices
     .filter((n) => nowMs() - new Date(n.createdAt).getTime() < 14 * 86_400_000)
     .map((n) => ({ text: n.title, href: `/posts/${n.id}` }));
-  return <SiteNoticeBanner text={settings?.noticeBanner} items={recent} />;
+  // 공지가 있으면 앱 받기는 공지 띠 안 작은 버튼으로(휴대폰 첫 화면 띠를 하나로) · 없으면 앱 받기 띠
+  if (!settings?.noticeBanner?.trim() && !recent.length) return <InstallPwaButton variant="strip" />;
+  return <SiteNoticeBanner text={settings?.noticeBanner} items={recent} leading={<InstallPwaButton variant="chip" />} />;
 }
 
 /** 관리자가 끈 광고 구좌를 광고 칸에 알려 줌 */
@@ -106,10 +108,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
           </Suspense>
         </HideOnGames>
       </div>
-      {/* 휴대폰 전용 앱 다운로드 띠. 고정(sticky) 영역 밖에 두어 헤더·전광판과 겹치지 않고 스크롤하면 사라집니다. */}
-      <HideOnGames>
-        <InstallPwaButton variant="strip" />
-      </HideOnGames>
       <VisitBeacon />
       <SourceBeacon />
       <HideOnGames>

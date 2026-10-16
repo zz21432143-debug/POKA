@@ -87,7 +87,7 @@ export function BoardNav({
   onNavigate?: () => void;
   id?: string;
   inDrawer?: boolean;
-  /** 아이콘만(게임방에서 접힌 메뉴) */
+  /** 아이콘만(오락실에서 접힌 메뉴) */
   compact?: boolean;
 }) {
   const pathname = usePathname();

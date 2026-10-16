@@ -68,8 +68,8 @@ export function InstallPwaButton({
   variant,
 }: {
   compact?: boolean;
-  /** header: 상단 바 아이콘 버튼 · strip: 휴대폰 화면 상단 "POKA 앱 다운로드" 띠 */
-  variant?: "header" | "strip";
+  /** header: 상단 바 아이콘 버튼 · strip: 휴대폰 화면 상단 "POKA 앱 다운로드" 띠 · chip: 공지 띠 안 작은 버튼 */
+  variant?: "header" | "strip" | "chip";
 }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [iosOpen, setIosOpen] = useState(false);
@@ -177,6 +177,15 @@ export function InstallPwaButton({
             <XIcon className="size-3.5" />
           </button>
         </div>
+      ) : variant === "chip" ? (
+        <button
+          type="button"
+          data-app-chip
+          onClick={() => void install()}
+          className="app-get inline-flex h-7 shrink-0 items-center gap-1 rounded-full bg-[#c9a25c] px-2.5 text-xs font-bold text-[#1d1611] hover:bg-[#e7c98a] lg:hidden"
+        >
+          <DownloadIcon className="size-3.5" />앱
+        </button>
       ) : variant === "header" ? (
         <button
           type="button"

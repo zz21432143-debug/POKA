@@ -34,7 +34,7 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const YUT_CODE_RE = /^[A-HJKMNP-Z2-9]{6}$/;
 export const NO_YOKAI = "NO_YOKAI";
 
-export type Seat = { team: Team; idx: number; userId: string | null; ready: boolean; bot?: boolean; left?: boolean; botYokai?: YokaiSpecies; surrender?: boolean; /** 자리비움: 서버가 대신 둠 */ auto?: boolean; /** 쉬운 요괴봇(방 설정 · 모든 자리에 같이 저장) */ botEasy?: boolean };
+export type Seat = { team: Team; idx: number; userId: string | null; ready: boolean; bot?: boolean; left?: boolean; botYokai?: YokaiSpecies; surrender?: boolean; /** 자리비움: 서버가 대신 둠 */ auto?: boolean; /** 자동 켠 시각 */ autoAt?: number; /** 이 판에서 자동을 쓴 적 있음(랭킹 절반) */ autoUsed?: boolean; /** 쉬운 요괴봇(방 설정 · 모든 자리에 같이 저장) */ botEasy?: boolean };
 type Row = NonNullable<Awaited<ReturnType<typeof prisma.yutGame.findUnique>>>;
 type Cheer = { n: string; e: string; at: number };
 
@@ -63,6 +63,8 @@ const queueOf = (row: { queueJson: string }): QueueEntry[] => {
   }
 };
 const PLAYER_GONE_MS = 15_000;
+/** 자동을 켠 채 이만큼 화면에 안 돌아오면 나간 것으로(1:1 기권패 · 팀전은 AI 교대) */
+const AUTO_LIMIT_MS = 10 * 60_000;
 
 const kickedOf = (row: { kickedJson: string }): string[] => {
   try {
@@ -157,7 +159,7 @@ async function recordYut(row: Row, s: YutState) {
         winnerId: x.team === s.winner ? x.userId : null,
         loserId: x.team === s.winner ? null : x.userId,
         draw: false,
-        reason: `${row.endReason}#${roster}`,
+        reason: `${row.endReason}${seatsOf(row).some((s) => s.autoUsed) ? "#auto" : ""}#${roster}`,
         moves: s.movesMade,
       })),
       skipDuplicates: true,
@@ -267,10 +269,12 @@ async function settle(row: Row): Promise<Row> {
   if (!s) return row;
   if (row.mode >= 2) {
     // 팀전: 접속이 끊긴 사람 자리는 요괴 AI가 이어서(그 사람 차례마다 시간을 다 기다리지 않게)
-    const humans = seats.filter((x) => x.userId && !x.bot && !x.left && !x.auto);
+    const humans = seats.filter((x) => x.userId && !x.bot && !x.left);
     const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
     const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
-    const goneIds = new Set(humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS).map((x) => x.userId));
+    // 자동인 사람은 켠 채 10분 넘게 안 돌아올 때만
+    const isGone = (x: Seat) => (x.auto ? now - Math.max(seenAll.get(x.userId!) ?? 0, x.autoAt ?? 0) > AUTO_LIMIT_MS : now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
+    const goneIds = new Set(humans.filter(isGone).map((x) => x.userId));
     if (goneIds.size && goneIds.size < humans.length) {
       const r = await prisma.yutGame.updateMany({
         where: { id: row.id, version: row.version, status: "playing" },
@@ -280,10 +284,10 @@ async function settle(row: Row): Promise<Row> {
     }
   }
   if (row.mode === 1 && !row.withBots) {
-    const humans = seats.filter((x) => x.userId && !x.bot && !x.auto);
+    const humans = seats.filter((x) => x.userId && !x.bot);
     const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
     const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
-    const goneSeats = humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
+    const goneSeats = humans.filter((x) => (x.auto ? now - Math.max(seenAll.get(x.userId!) ?? 0, x.autoAt ?? 0) > AUTO_LIMIT_MS : now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS));
     if (goneSeats.length === 1 && row.mode === 1) {
       const winner = other(goneSeats[0].team);
       const ended: YutState = { ...s, winner, results: [], throws: 0, stats: s.stats ? { ...s.stats, endAt: Date.now() } : s.stats };
@@ -575,7 +579,7 @@ export async function yutAct(
     const on = payload.on !== false;
     const r = await prisma.yutGame.updateMany({
       where: { id, version: row.version, status: "playing" },
-      data: { seatsJson: JSON.stringify(seats.map((x) => (x.userId === userId ? { ...x, auto: on } : x))), version: { increment: 1 } },
+      data: { seatsJson: JSON.stringify(seats.map((x) => (x.userId === userId ? { ...x, auto: on, autoAt: on ? Date.now() : 0, autoUsed: Boolean(x.autoUsed) || on } : x))), version: { increment: 1 } },
     });
     if (r.count !== 1) return fail("판이 바뀌었어요. 다시 눌러 주세요.", 409);
     return done();

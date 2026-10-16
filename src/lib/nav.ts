@@ -87,7 +87,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제", icon: "seal" },
       { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern", badge: "NEW" },
-      { href: "/games", label: "요괴 게임방", hint: "요괴 오목 · 친구 대전", icon: "cards", badge: "NEW" },
+      { href: "/games", label: "요괴 오락실", hint: "요괴 오목 · 윷놀이", icon: "cards", badge: "NEW" },
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
       { href: "/invite", label: "친구 초대", hint: "친구 첫 출석하면 둘 다 포인트", icon: "coin", badge: "NEW" },
     ],

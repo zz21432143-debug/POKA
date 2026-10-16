@@ -239,7 +239,7 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
               : "bg-white/10 text-[#d6cdee]",
           )}
         >
-          {seat.empty ? "기다리는 중…" : seat.ready ? "✅ READY!" : "준비 중…"}
+          {seat.empty ? "기다리는 중…" : seat.ready ? "✅ 준비!" : "준비 중…"}
         </span>
       ) : ratio !== null ? (
         <div
@@ -275,7 +275,7 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
       )}
       {seat.result === "win" ? (
         <span className="arcade-px neon-gold arcade-pop absolute -top-3 left-1/2 -translate-x-1/2 text-xs">
-          WIN
+          승
         </span>
       ) : null}
       {seat.emote ? (
@@ -441,7 +441,7 @@ export function BigWinCutIn({
       <div className="bigwin-rays" />
       <div className="relative grid w-full justify-items-center gap-2 px-3 text-center">
         <p data-omok-victory className="arcade-px neon-gold bigwin-title text-4xl sm:text-6xl">
-          VICTORY!
+          승리!
         </p>
         <p className="arcade-kr bigwin-title text-2xl text-white sm:text-3xl">{title}</p>
         {yokai ? (

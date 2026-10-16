@@ -7,12 +7,12 @@ import { prisma } from "@/lib/db";
 import { loadWinReward } from "@/lib/game-reward";
 import { nowMs } from "@/lib/dates";
 
-export const metadata: Metadata = { title: "게임방 관리", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "오락실 관리", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<string, string> = { waiting: "대기실", playing: "진행 중" };
 
-/** 게임방 관리(마스터): 오목 · 윷놀이 방 실시간 목록 · 강제 닫기 · 대기실 강퇴 · 승리 보상 조정 */
+/** 오락실 관리(마스터): 오목 · 윷놀이 방 실시간 목록 · 강제 닫기 · 대기실 강퇴 · 승리 보상 조정 */
 export default async function AdminGamesPage() {
   const viewer = await getCurrentUser().catch(() => null);
   if (!viewer?.isMaster) notFound();
@@ -45,7 +45,7 @@ export default async function AdminGamesPage() {
   return (
     <div className="flex flex-col gap-4">
       <header>
-        <h1 className="text-2xl font-semibold">🎮 게임방 관리</h1>
+        <h1 className="text-2xl font-semibold">🎮 오락실 관리</h1>
         <p className="mt-1 text-sm text-muted-foreground">최근 2시간 안에 움직인 오목 · 윷놀이 방이에요. 닫으면 전적 · 보상 없이 끝나요. 강퇴는 대기실에서만(다시 못 앉아요).</p>
       </header>
 
