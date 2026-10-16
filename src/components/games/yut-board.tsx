@@ -57,7 +57,7 @@ export function NameTag({ name, team, className }: { name: string; team: Team; c
   return (
     <span
       data-yut-name
-      className={cn("pointer-events-none relative z-20 max-w-[5.5rem] truncate border-2 px-1 text-[9px] leading-[14px] font-black text-white shadow-[2px_2px_0_#0a0614] sm:text-[10px] sm:leading-4", className)}
+      className={cn("pointer-events-none relative z-20 max-w-[5.5rem] truncate border-2 px-1 text-[11px] leading-[15px] font-black text-white shadow-[2px_2px_0_#0a0614] sm:text-[12px] sm:leading-4", className)}
       style={{ background: "#0a0614e6", borderColor: TEAM_COLOR[team] }}
     >
       {name}
@@ -290,9 +290,18 @@ export function YutBoard({
           {line("o15", "o0")}
           {line("o5", "o15")}
           {line("o10", "o0")}
-          {/* 출발 모서리 → 골인 칸 */}
-          <line x1={NODE_XY.o0[0]} y1={NODE_XY.o0[1]} x2={GOAL_XY[0]} y2={GOAL_XY[1]} stroke="#4a2c14" strokeWidth={2.6} strokeLinecap="round" />
-          <line x1={NODE_XY.o0[0]} y1={NODE_XY.o0[1]} x2={GOAL_XY[0]} y2={GOAL_XY[1]} stroke="#ffcf4a" strokeWidth={1.1} strokeDasharray="1.2 0.8" strokeLinecap="round" />
+          {/* 출발 모서리 → 골인 문(곡선 화살표) */}
+          <path d={`M ${NODE_XY.o0[0]} ${NODE_XY.o0[1] + 4} Q ${NODE_XY.o0[0]} ${GOAL_XY[1]} ${GOAL_XY[0] + 25} ${GOAL_XY[1]}`} fill="none" stroke="#4a2c14" strokeWidth={2.6} strokeLinecap="round" />
+          <path d={`M ${NODE_XY.o0[0]} ${NODE_XY.o0[1] + 4} Q ${NODE_XY.o0[0]} ${GOAL_XY[1]} ${GOAL_XY[0] + 25} ${GOAL_XY[1]}`} fill="none" stroke="#ffcf4a" strokeWidth={1.1} strokeDasharray="1.2 0.8" strokeLinecap="round" />
+          <path d={`M ${GOAL_XY[0] + 27.5} ${GOAL_XY[1] - 1.8} L ${GOAL_XY[0] + 24.6} ${GOAL_XY[1]} L ${GOAL_XY[0] + 27.5} ${GOAL_XY[1] + 1.8}`} fill="none" stroke="#ffcf4a" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+          {/* 모서리 장식: 전통 구름 문양(판 네 귀퉁이) */}
+          {([[3, 3, 0], [97, 3, 90], [97, 86, 180], [3, 86, 270]] as const).map(([x, y, r]) => (
+            <g key={`orn-${x}-${y}`} transform={`translate(${x} ${y}) rotate(${r})`} opacity={0.55}>
+              <path d="M0 7 Q0 0 7 0" fill="none" stroke="#7a4a1c" strokeWidth={0.9} />
+              <path d="M1.8 7 Q1.8 1.8 7 1.8" fill="none" stroke="#c9944c" strokeWidth={0.5} />
+              <circle cx={3.6} cy={3.6} r={1.1} fill="none" stroke="#7a4a1c" strokeWidth={0.6} />
+            </g>
+          ))}
         </svg>
         {/* 큰 불: 판 전체에 불티가 올라감 */}
         {blaze ? (
@@ -315,20 +324,39 @@ export function YutBoard({
               className={cn("absolute -translate-x-1/2 -translate-y-1/2", gold ? "yut-tile-gold size-[10.5%]" : "yut-tile size-[6.6%]", lit && "yut-tile-lit")}
               style={{ left: `${NODE_XY[n][0]}%`, top: `${NODE_XY[n][1]}%` }}
             >
-              {n === "o0" ? <b className="absolute inset-x-0 -top-[46%] text-center text-[clamp(8px,2.2cqw,13px)] font-black whitespace-nowrap text-[#ffe08a] [text-shadow:1px_1px_0_#0a0614]">출발</b> : null}
-              {n === "c" ? <b className="absolute inset-0 grid place-items-center text-[clamp(8px,2.2cqw,13px)] font-black text-[#5a3a00]">방</b> : null}
+              {n === "o0" ? <b data-yut-start-label className="absolute left-1/2 -top-[52%] -translate-x-1/2 rounded-full border-2 border-[#0a0614] bg-[#ff5d6c] px-1.5 text-[clamp(11px,2.8cqw,15px)] leading-tight font-black whitespace-nowrap text-white shadow-[2px_2px_0_#0a0614]">출발</b> : null}
+              {n === "c" ? <b className="absolute inset-0 grid place-items-center text-[clamp(12px,3.2cqw,18px)] font-black text-[#5a3a00]">방</b> : null}
             </span>
           );
         })}
-        {/* 골인 칸: 출발 모서리 바로 아래 */}
-        <span
+        {/* 골인 문: 판 아래 가운데 — 팀마다 들어온 말을 동그라미로 */}
+        <div
           data-yut-goal
-          aria-hidden
-          className="yut-goal absolute grid h-[7%] w-[13%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md border-[3px] border-[#0a0614] text-[clamp(8px,2.2cqw,13px)] font-black text-[#2a1400]"
+          aria-label={`골인 — 홍팀 ${state.pieces.A.filter((p) => p.pos === END).length}/${state.pieces.A.length} · 청팀 ${state.pieces.B.filter((p) => p.pos === END).length}/${state.pieces.B.length}`}
+          className="yut-goal-gate absolute flex h-[11%] w-[50%] -translate-x-1/2 -translate-y-1/2 items-center gap-[3%] rounded-[14px] border-[3px] border-[#0a0614] px-[3%] py-[1%]"
           style={{ left: `${GOAL_XY[0]}%`, top: `${GOAL_XY[1]}%` }}
         >
-          GOAL · 골인
-        </span>
+          <span aria-hidden className="yut-goal-flag grid aspect-square h-[78%] shrink-0 place-items-center rounded-[10px] border-2 border-[#0a0614] text-[clamp(14px,4cqw,26px)]">
+            🏁
+          </span>
+          <b className="shrink-0 text-[clamp(16px,4.8cqw,30px)] leading-none font-black tracking-wider text-[#2a1400] [text-shadow:1px_1px_0_#fff6dc]">골인</b>
+          <span className="ml-auto grid gap-[3px]">
+            {(["A", "B"] as const).map((team) => (
+              <span key={team} data-yut-goal-team={team} className="flex items-center gap-[2px]">
+                <b className="mr-[2px] text-[clamp(11px,2.2cqw,13px)] leading-none font-black" style={{ color: team === "A" ? "#b3122a" : "#0b4fa8" }}>
+                  {team === "A" ? "홍" : "청"}
+                </b>
+                {state.pieces[team].map((p, i) => (
+                  <span
+                    key={i}
+                    className="block size-[clamp(8px,2.1cqw,13px)] rounded-full border-[1.5px] border-[#0a0614]"
+                    style={{ background: p.pos === END ? TEAM_COLOR[team] : "#fff6dc", boxShadow: p.pos === END ? `0 0 6px ${TEAM_COLOR[team]}` : undefined }}
+                  />
+                ))}
+              </span>
+            ))}
+          </span>
+        </div>
         {/* 단계 안내: ① 말 고르기 → ② 노란 칸 누르기 */}
         {guide ? (
           <div data-yut-guide={guide} className="pointer-events-none absolute top-[1.5%] left-1/2 z-[55] -translate-x-1/2">
@@ -360,7 +388,7 @@ export function YutBoard({
         {douse ? (
           <span key={`douse-${douse.key}`} data-yut-douse aria-hidden className="yut-douse pointer-events-none absolute z-[45] grid -translate-x-1/2 -translate-y-full justify-items-center" style={{ left: `${xy(douse.node)[0]}%`, top: `${xy(douse.node)[1]}%` }}>
             <span className="text-[clamp(20px,7cqw,52px)] leading-none">💨</span>
-            <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1.5 text-[clamp(9px,2.4cqw,15px)] font-black text-[#04263a] shadow-[2px_2px_0_#0a0614]">불길 진압!</b>
+            <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1.5 text-[clamp(11px,2.4cqw,15px)] font-black text-[#04263a] shadow-[2px_2px_0_#0a0614]">불길 진압!</b>
           </span>
         ) : null}
         {SHORTCUT_NODES.map((n) => (
@@ -378,7 +406,7 @@ export function YutBoard({
             style={{ left: `${xy(g.node)[0]}%`, top: `${xy(g.node)[1]}%` }}
           >
             <span className="text-[#fff6dc] [text-shadow:1px_1px_0_#0a0614]">{g.node === END ? "골인!" : "여기"}</span>
-            <span className="bg-[#0a0614] px-1 text-[10px] text-[#ffcf4a]">{g.label}</span>
+            <span className="bg-[#0a0614] px-1 text-[11px] text-[#ffcf4a]">{g.label}</span>
           </button>
         ))}
         {portal ? (
@@ -425,20 +453,20 @@ export function YutBoard({
               ) : null}
               {can && p.top && !isSel && guide === "pick" ? (
                 <span data-yut-tap aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[40%] left-1/2 grid -translate-x-1/2 justify-items-center">
-                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-sans font-black text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">누르기</b>
-                  <span className="text-[clamp(10px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▼</span>
+                  <b className="border-2 border-[#0a0614] bg-[#6ad7ff] px-1 font-sans font-black text-[clamp(11px,1.9cqw,12px)] leading-[1.6] text-[#04263a] shadow-[2px_2px_0_#0a0614]">누르기</b>
+                  <span className="text-[clamp(11px,2.4cqw,16px)] leading-none text-[#6ad7ff] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
               {/* 고른 말: 머리 위 고르기! 노란 픽셀 손가락 화살표 */}
               {isSel && p.top ? (
                 <span data-yut-select-arrow aria-hidden className="yut-select-arrow pointer-events-none absolute -top-[46%] left-1/2 grid -translate-x-1/2 justify-items-center">
-                  <b className="border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(6px,1.4cqw,10px)] leading-[1.6] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">고르기!</b>
+                  <b className="border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(11px,1.9cqw,12px)] leading-[1.6] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">고르기!</b>
                   <span className="text-[clamp(12px,3cqw,20px)] leading-none text-[#ffcf4a] [text-shadow:2px_2px_0_#0a0614]">▼</span>
                 </span>
               ) : null}
               {p.top ? <NameTag name={pieceName(names, p.team, p.i)} team={p.team} className="!absolute -bottom-[32%] left-1/2 -translate-x-1/2" /> : null}
               {p.top && p.count > 1 ? (
-                <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(7px,1.5cqw,11px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
+                <span data-yut-stack className="absolute -top-[8%] -right-[18%] border-2 border-[#0a0614] bg-[#ffcf4a] px-1 font-sans font-black text-[clamp(11px,2cqw,13px)] leading-[1.7] text-[#2a1400] shadow-[2px_2px_0_#0a0614]">
                   ×{p.count}
                 </span>
               ) : null}
@@ -464,7 +492,7 @@ export function YutBoard({
               style={pos ? { left: `${pos[0]}%`, top: `${Math.max(0, pos[1] - 30 - (at?.level ?? 0) * 7.2)}%` } : { left: "50%", top: "4%" }}
             >
               <EmoteArt e={bb.e} className="size-14 drop-shadow-[0_3px_0_#0a0614] sm:size-16" />
-              <span className="max-w-24 truncate border-2 border-[#0a0614] px-1.5 text-[10px] font-black text-white shadow-[2px_2px_0_#0a0614]" style={{ background: bb.color }}>
+              <span className="max-w-24 truncate border-2 border-[#0a0614] px-1.5 text-[11px] font-black text-white shadow-[2px_2px_0_#0a0614]" style={{ background: bb.color }}>
                 {bb.who}
               </span>
             </span>

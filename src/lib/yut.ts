@@ -297,11 +297,11 @@ export function easyStep(s: YutState, rand: () => number = Math.random, now = Da
   return r.ok ? r.state : endTurn(s);
 }
 
-/** 판 그림 좌표(0~100) — 출발 모서리 아래 골인 칸 자리를 남기려고 판을 위로 조금 올림 */
-const BX_L = 12;
-const BX_R = 88;
-const BY_T = 5;
-const BY_B = 81;
+/** 판 그림 좌표(0~100) — 정사각형 판(74×74)을 위쪽에 두고 아래 가운데에 골인 문 자리 */
+const BX_L = 13;
+const BX_R = 87;
+const BY_T = 3;
+const BY_B = 77;
 export const NODE_XY: Record<string, [number, number]> = (() => {
   const xy: Record<string, [number, number]> = {};
   const step = (BX_R - BX_L) / 5;
@@ -313,9 +313,9 @@ export const NODE_XY: Record<string, [number, number]> = (() => {
   for (let k = 1; k <= 4; k += 1) xy[`o${10 + k}`] = [BX_L, BY_T + step * k];
   xy.o15 = [BX_L, BY_B];
   for (let k = 1; k <= 4; k += 1) xy[`o${15 + k}`] = [BX_L + step * k, BY_B];
-  const mid = 50;
   const lerp = (a: [number, number], b: [number, number], t: number): [number, number] => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  xy.c = [mid, mid];
+  // 「방」은 판 정사각형의 한가운데(두 대각선이 곧게 만나는 곳)
+  xy.c = [(BX_L + BX_R) / 2, (BY_T + BY_B) / 2];
   xy.a1 = lerp(xy.o5, xy.c, 1 / 3);
   xy.a2 = lerp(xy.o5, xy.c, 2 / 3);
   xy.a3 = lerp(xy.c, xy.o15, 1 / 3);
@@ -327,5 +327,5 @@ export const NODE_XY: Record<string, [number, number]> = (() => {
   return xy;
 })();
 export const BIG_NODES = ["o0", "o5", "o10", "o15", "c"];
-/** 골인 칸(출발 모서리 바로 아래) */
-export const GOAL_XY: [number, number] = [BX_R, 95];
+/** 골인 문(판 아래 가운데) */
+export const GOAL_XY: [number, number] = [50, 92.5];

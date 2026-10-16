@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { AUTHOR_SELECT } from "@/components/user/user-badge";
 import { displayMarkSrc } from "@/lib/mark-assets";
 import { regionWhere, type JobRegion } from "@/lib/job-status";
+import { openSlots } from "@/lib/job-slots";
 
 /**
  * 지원 딜러 「오픈채팅」: 공고 한 개 = 말풍선 한 개. 올리거나 끌어올린 순서(최신이 맨 아래).
@@ -18,6 +19,10 @@ export type ChatMessage = {
   /** 비로그인에게 줄인 경우 */
   clipped: boolean;
   contact: string | null;
+  /** 빈자리 칩(오늘 이후 · 비로그인도 보임) */
+  slots: { date: string; time: string | null; count: string | null }[];
+  /** 같은 사람이 같은 매장 공고를 다시 올려 이 말풍선은 이전 것 */
+  superseded: boolean;
   author: { nickname: string; level: number; markUrl: string | null; isMaster: boolean } | null;
 };
 
@@ -53,15 +58,26 @@ export async function loadApplyChat(opts: { region: JobRegion | null; before?: D
         jobFilled: true,
         jobDeadline: true,
         jobContact: true,
+        jobEvents: true,
+        jobWorkDate: true,
+        jobWorkHours: true,
+        jobHeadcount: true,
+        authorId: true,
         author: { select: AUTHOR_SELECT },
       },
     })
     .catch(() => []);
   const list = opts.after ? rows : rows.reverse();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+  // 같은 사람 · 같은 매장: 가장 최근 것만 펼쳐 두고 이전 것은 접기(채팅방이 같은 내용으로 도배되지 않게)
+  const latestKey = new Map<string, string>();
+  for (const p of list) latestKey.set(`${p.authorId}|${(p.jobCompanyName ?? "").replace(/\s+/g, "")}`, p.id);
   return list.map<ChatMessage>((p) => {
     const text = p.content ?? "";
+    const key = `${p.authorId}|${(p.jobCompanyName ?? "").replace(/\s+/g, "")}`;
     return {
+      slots: openSlots(p, today).slice(0, 8).map((s) => ({ date: s.date, time: s.time, count: s.count })),
+      superseded: Boolean(p.jobCompanyName) && latestKey.get(key) !== p.id,
       id: p.id,
       at: p.bumpedAt.toISOString(),
       bumped: p.bumpedAt.getTime() - p.createdAt.getTime() > 60_000,

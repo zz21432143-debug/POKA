@@ -208,7 +208,7 @@ function Plate({ seat, side }: { seat: HudSeat; side: "left" | "right" }) {
           ) : null}
           {!seat.empty && seat.name ? (
             <span data-omok-honor className="flex max-w-full flex-wrap gap-1 empty:hidden">
-              <PotTitleBadge nickname={seat.name} max={1} yokai={false} className="!text-[10px]" />
+              <PotTitleBadge nickname={seat.name} max={1} yokai={false} className="!text-[11px]" />
             </span>
           ) : null}
           {seat.record ? (
@@ -527,7 +527,7 @@ export function SpectatorBar({
                 <span className="arcade-px text-xs text-[#8eeaff]">?</span>
               )}
             </span>
-            <span className="max-w-full truncate text-[10px] font-black text-white">{w.n}</span>
+            <span className="max-w-full truncate text-[11px] font-black text-white">{w.n}</span>
           </span>
         );
       })}
@@ -536,7 +536,7 @@ export function SpectatorBar({
           <span className="spec-pop absolute -top-9">
             <EmoteArt e={c.e} className="size-11" />
           </span>
-          <span className="max-w-full truncate text-[10px] font-black text-[#8eeaff]">{c.n}</span>
+          <span className="max-w-full truncate text-[11px] font-black text-[#8eeaff]">{c.n}</span>
         </span>
       ))}
       {guests > 0 ? <span className="g-chip shrink-0 self-center">손님 {guests}</span> : null}

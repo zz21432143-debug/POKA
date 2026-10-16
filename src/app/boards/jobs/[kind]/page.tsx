@@ -69,17 +69,23 @@ export default async function JobBoardPage({
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
           <BoardTitle sticker={BOARD_STICKER[kind] ?? BOARD_STICKER.jobs}>{region ? `${region} ${job.title}` : job.title}</BoardTitle>
-          <p className="mt-2">
-            {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
-            {page.total ? ` · ${page.total}개` : ""}
-          </p>
+          {chat ? (
+            <p className="mt-1 text-sm">카톡 공고를 붙여넣으면 바로 올라가요 · 연락처는 로그인 후</p>
+          ) : (
+            <p className="mt-2">
+              {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
+              {page.total ? ` · ${page.total}개` : ""}
+            </p>
+          )}
         </div>
-        <Link
-          href={writeHref}
-          className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
-        >
-          {job.cta}
-        </Link>
+        {chat ? null : (
+          <Link
+            href={writeHref}
+            className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
+          >
+            {job.cta}
+          </Link>
+        )}
       </header>
       {job.kind === "URGENT" ? <RegionUrgentAlert /> : null}
       {chat ? (

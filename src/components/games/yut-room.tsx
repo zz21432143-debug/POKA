@@ -841,7 +841,7 @@ export function YutRoom({
         {emoteOn(seat) ? (
           <span
             key={view.emote!.at}
-            className="absolute -top-1 -right-1 z-20 rounded-full bg-[#ffcf4a] px-1 text-[10px] font-black text-[#2a1400]"
+            className="absolute -top-1 -right-1 z-20 rounded-full bg-[#ffcf4a] px-1 text-[11.5px] font-black text-[#2a1400]"
           >
             💬
           </span>
@@ -866,7 +866,7 @@ export function YutRoom({
           >
             {seat.player?.nickname ?? "빈자리"}
           </b>
-          <span className="flex min-w-0 items-center gap-1 overflow-hidden text-[10px] font-bold text-[#d6cdee]">
+          <span className="flex min-w-0 items-center gap-1 overflow-hidden text-[11.5px] font-bold text-[#d6cdee]">
             {seat.auto && playing ? (
               <span data-yut-seat-auto className="text-[#ffe08a]">🤖 자리비움</span>
             ) : seat.surrender ? (
@@ -882,7 +882,7 @@ export function YutRoom({
                 nickname={seat.player.nickname}
                 max={1}
                 yokai={false}
-                className="!text-[9px]"
+                className="!text-[11px]"
               />
             ) : (
               ""
@@ -948,7 +948,7 @@ export function YutRoom({
             <NameTag
               name={pieceName(names, team, i)}
               team={team}
-              className="!max-w-[3.5rem] !text-[9px]"
+              className="!max-w-[3.5rem] !text-[11px]"
             />
           </button>
         ))}
@@ -1142,7 +1142,7 @@ export function YutRoom({
       {/* ───── 대기실 ───── */}
       {waiting ? (
         <section data-yut-waiting className="yut-hud grid gap-3 p-3">
-          <p className="text-center font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+          <p className="text-center font-sans font-black text-[11.5px] leading-relaxed tracking-wider text-[#6ad7ff]">
             대기실 · 준비를 눌러요!
           </p>
           <div className="grid justify-items-center gap-1 text-center">
@@ -1223,7 +1223,7 @@ export function YutRoom({
                                   nickname={seat.player.nickname}
                                   max={1}
                                   yokai={false}
-                                  className="!text-[10px]"
+                                  className="!text-[11.5px]"
                                 />
                               </span>
                             </span>
@@ -1509,7 +1509,7 @@ export function YutRoom({
                 {canThrow && !throwFx && !callout && !winding ? (
                   <p
                     data-yut-press
-                    className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-sans font-black text-[clamp(9px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
+                    className="yut-press pointer-events-none absolute inset-x-0 bottom-[9%] z-30 text-center font-sans font-black text-[clamp(11px,2.3vw,17px)] leading-relaxed text-[#ffe08a] [text-shadow:3px_3px_0_#0a0614,0_0_12px_#ffcf4a]"
                   >
                     눌러서 윷을 던져요!
                   </p>
@@ -1540,10 +1540,10 @@ export function YutRoom({
                       {view.status === "done" && view.winner === team ? (
                         <span className="block">🏆</span>
                       ) : myTeam === team ? (
-                        <span className="text-[10px] text-[#d6cdee]">우리 팀</span>
+                        <span className="text-[11.5px] text-[#d6cdee]">우리 팀</span>
                       ) : null}
                       {s ? (
-                        <span data-yut-left={team} className="ml-auto text-[10px] font-bold text-[#d6cdee]">
+                        <span data-yut-left={team} className="ml-auto text-[11.5px] font-bold text-[#d6cdee]">
                           남은 말 {s.pieces[team].filter((p) => p.pos !== END).length}/{s.pieces[team].length}
                         </span>
                       ) : null}
@@ -1558,7 +1558,7 @@ export function YutRoom({
               {/* 내 차례 · 남의 차례 */}
               {playing ? (
                 <section data-yut-action className="yut-hud grid gap-2 p-2.5">
-                  <p className="font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                  <p className="font-sans font-black text-[11.5px] leading-relaxed tracking-wider text-[#6ad7ff]">
                     {myTurn
                       ? s.phase === "throw"
                         ? "내 차례 · 윷 던지기!"
@@ -1588,7 +1588,7 @@ export function YutRoom({
                           >
                             <span>
                               {yutName(v)}
-                              <span className="ml-0.5 text-[10px] opacity-70">
+                              <span className="ml-0.5 text-[11.5px] opacity-70">
                                 {v < 0 ? "-1" : `+${v}`}
                               </span>
                             </span>
@@ -1690,7 +1690,7 @@ export function YutRoom({
 
               {/* 말 대기소(홍 · 청): 출발 전 말 · 골인 — 여기서만 대기 말을 내보냄 */}
               <section data-yut-docks className="yut-hud grid gap-1.5 p-2.5">
-                <p className="font-sans font-black text-[10px] leading-relaxed tracking-wider text-[#6ad7ff]">
+                <p className="font-sans font-black text-[11.5px] leading-relaxed tracking-wider text-[#6ad7ff]">
                   말 대기소
                 </p>
                 {tray("A")}

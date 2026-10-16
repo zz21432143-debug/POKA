@@ -16,6 +16,22 @@ const dayKey = (iso: string) => kst(iso, { year: "numeric", month: "2-digit", da
 const todayKst = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
 const PHONE = /(0\d{1,2})[\s.-]?(\d{3,4})[\s.-]?(\d{4})/;
 
+/** 지점 이름 → 지역(자주 나오는 곳만) — 서울 · 경기가 섞인 공고 알려 주기 */
+const PLACE_REGION: [RegExp, string][] = [
+  [/잠실|송파|강남|역삼|선릉|서초|홍대|합정|마포|신촌|건대|성수|강동|천호|종로|을지로|신림|영등포|여의도|노원|목동|구로|가산|용산|이태원|왕십리|수유|미아|사당|방이/, "서울"],
+  [/하남|미사|분당|서현|정자|판교|성남|수원|인계|영통|화성|동탄|병점|일산|고양|부천|안양|평촌|용인|수지|기흥|평택|의정부|남양주|다산|별내|김포|파주|운정|광명|시흥|안산|구리|오산|군포|의왕|이천|양주/, "경기"],
+  [/부평|송도|구월|주안|청라|인천|계양|연수|검단|영종/, "인천"],
+];
+/** 지점 줄(「• 잠실 방이점」)에 나온 지역 — 많은 순 */
+function regionsIn(text: string) {
+  const hits = new Map<string, number>();
+  for (const line of text.split(/\r?\n/)) {
+    if (!/^\s*[•·\-▶■◆★]/.test(line) && !/(점|지점|매장)\s*$/.test(line.trim())) continue;
+    for (const [re, r] of PLACE_REGION) if (re.test(line)) hits.set(r, (hits.get(r) ?? 0) + 1);
+  }
+  return [...hits.entries()].sort((a, b) => b[1] - a[1]).map(([r]) => r);
+}
+
 /** 말풍선 본문: 지난 날짜 줄은 흐리게 · 「마감」 줄 줄긋기 · 전화번호는 누르면 전화 */
 function Body({ text, today }: { text: string; today: string }) {
   return (
@@ -165,6 +181,18 @@ export function ApplyChat({
 
 function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean }) {
   const phone = m.contact ?? m.text.match(PHONE)?.[0] ?? null;
+  // 긴 공고는 12줄까지만 · 같은 매장 이전 공고는 접어 둠
+  const lineCount = m.text.split(/\r?\n/).length;
+  const [open, setOpen] = useState(false);
+  if (m.superseded && !open) {
+    return (
+      <button type="button" data-chat-superseded onClick={() => setOpen(true)} className={cn("mx-auto rounded-full bg-black/10 px-3 py-1 text-[11.5px] font-bold text-[#1d2733]", mine && "ml-auto mr-0")}>
+        {m.author?.nickname ?? "POKA"} · {m.company ?? "매장"} 이전 공고(새로 올림) · 펼치기
+      </button>
+    );
+  }
+  const long = lineCount > 12 && !open;
+  const shown = long ? m.text.split(/\r?\n/).slice(0, 12).join("\n") : m.text;
   const smsBody = encodeURIComponent("POKA 보고 지원합니다. 성함 / 경력 / 성별: ");
   return (
     <div data-chat-msg={m.id} className={cn("flex items-start gap-2", mine && "flex-row-reverse")}>
@@ -182,7 +210,21 @@ function ChatBubble({ m, mine, today, loggedIn }: { m: ChatMessage; mine: boolea
         <div className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
           <div className={cn("relative min-w-0 rounded-2xl px-3 py-2 text-[14px] leading-relaxed text-[#1d1d1d] shadow-sm", mine ? "rounded-tr-sm bg-[#fee500]" : "rounded-tl-sm bg-white")}>
             {m.status === "closed" ? <span className="mb-1 inline-block rounded bg-zinc-300 px-1.5 text-[11px] font-black text-zinc-700">마감</span> : null}
-            <Body text={m.text} today={today} />
+            <Body text={shown} today={today} />
+            {long ? (
+              <button type="button" data-chat-more onClick={() => setOpen(true)} className="mt-0.5 text-xs font-bold text-[#0b57d0]">
+                … 더 보기({lineCount - 12}줄)
+              </button>
+            ) : null}
+            {!loggedIn && m.slots.length ? (
+              <span data-chat-slots className="mt-1.5 flex flex-wrap gap-1">
+                {m.slots.map((s, i) => (
+                  <span key={i} className="rounded-md bg-[#eef3f8] px-1.5 py-0.5 text-[11.5px] font-bold text-[#1d2733]">
+                    {Number(s.date.slice(5, 7))}/{Number(s.date.slice(8))} {s.time ?? ""} {s.count ?? ""}
+                  </span>
+                ))}
+              </span>
+            ) : null}
             {m.clipped ? (
               <Link href={`/login?next=/boards/jobs/apply`} className="mt-1 block text-xs font-bold text-[#0b57d0]">
                 … 로그인하면 전체 공고 · 연락처
@@ -218,7 +260,8 @@ function Composer({ loggedIn, defaultRegion, onSent }: { loggedIn: boolean; defa
   const today = todayKst();
   const parsed = useMemo(() => (text.trim().length > 10 ? parseJobPost(text, today) : null), [text, today]);
   const slots = useMemo(() => (text.trim() ? slotsFromText(text, today).filter((s) => s.date >= today && !s.closed) : []), [text, today]);
-  const pickRegion = region || parsed?.region || "";
+  const placeRegions = useMemo(() => regionsIn(text), [text]);
+  const pickRegion = region || placeRegions[0] || parsed?.region || "";
   if (!loggedIn) {
     return (
       <div className="border-t border-black/10 bg-white px-3 py-3 text-center">
@@ -283,6 +326,11 @@ function Composer({ loggedIn, defaultRegion, onSent }: { loggedIn: boolean; defa
           ) : (
             <span className="mt-0.5 block text-[11px] text-[#b3261e]">날짜 줄을 못 읽었어요(예: 10월 18일 (일) PM 2:00 - 2명)</span>
           )}
+          {placeRegions.length > 1 ? (
+            <span data-chat-multi-region className="mt-0.5 block text-[11px] font-bold text-[#b3261e]">
+              ⚠️ 지점이 {placeRegions.join(" · ")}에 걸쳐 있어요. 지점이 가장 많은 「{placeRegions[0]}」로 골랐어요 — 필요하면 왼쪽 지역을 바꿔 주세요.
+            </span>
+          ) : null}
         </p>
       ) : null}
       <div className="flex items-end gap-1.5">
