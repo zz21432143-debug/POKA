@@ -2,7 +2,7 @@ import type { BoardType } from "@/generated/prisma/enums";
 
 export const MARK_PRICE_POINTS = 3000;
 /** 글·댓글·연습만 쓰는 하루 포인트 한도. 출석·연속 보너스는 이 한도에 넣지 않습니다. */
-export const DAILY_POINT_CAP = 490;
+export const DAILY_POINT_CAP = 700;
 
 /** 레벨용 EXP. 포인트와 별개. 출석 1회가 레벨 1에 가깝습니다. */
 export const POST_EXP: Record<BoardType, number> = {

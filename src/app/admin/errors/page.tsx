@@ -10,8 +10,8 @@ import { ensurePointLedger } from "@/lib/point-ledger";
 export const metadata: Metadata = { title: "오류 · 이상 감시", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-/** 하루에 정상적으로 받을 수 있는 포인트(출석 195 + 연속 최대 520 + 활동 490 + 미션 130 + 주간 390 + 퀴즈 · 채택 등)를 넘으면 의심 */
-const SUSPECT_DAY = 2000;
+/** 하루에 정상적으로 받을 수 있는 포인트(출석 195 + 연속 최대 520 + 활동 700 + 미션 130 + 주간 390 + 퀴즈 · 채택 등)를 넘으면 의심 */
+const SUSPECT_DAY = 2200;
 /** 하루 포인트 받은 횟수가 이보다 많으면 의심(글 · 댓글 도배 등) */
 const SUSPECT_COUNT = 60;
 

@@ -154,7 +154,9 @@ async function recordYut(row: Row, s: YutState) {
   const { grantRewards } = await import("@/lib/exp");
   const { addMainAffection } = await import("@/lib/yokai-server");
   const WIN_REWARD = await loadWinReward();
+  const { rewardLose } = await import("@/lib/game-stats");
   for (const x of seats) {
+    if (x.team !== s.winner && x.userId) await rewardLose("yut", x.userId).catch(() => undefined);
     if (x.team !== s.winner || !x.userId) continue;
     const [today, sameRoster] = await Promise.all([
       prisma.gameResult.count({ where: { game: "yut", winnerId: x.userId, createdAt: { gte: since } } }),

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { grantRewards } from "@/lib/exp";
+import { DAILY_POINT_CAP } from "@/lib/rewards";
 
 /** 오늘의 미션 5개를 다 하면 받는 보너스(하루 한 번 · 활동 한도와 별도) */
 export const MISSION_REWARD = { points: 130, exp: 30 } as const;
@@ -16,6 +17,8 @@ export type MissionStatus = {
   claimed: boolean;
   /** 이번 주 보너스 받은 날 수 · 목표 · 주간 보너스 받았는지 */
   week: { days: number; target: number; claimed: boolean };
+  /** 오늘 글 · 댓글 · 게임으로 받은 포인트 · 하루 한도(출석 · 미션 보너스는 따로) */
+  pointsToday: { earned: number; cap: number };
 };
 
 /** 오늘(KST) 미션 상태 */
@@ -23,7 +26,7 @@ export async function getMissions(userId: string): Promise<MissionStatus> {
   const day = todayKstDate();
   const since = new Date(Date.parse(`${day}T00:00:00+09:00`));
   const week = weekStartKst(day);
-  const [attend, quiz, posts, comments, study, claim, weekDays, weekClaim] = await Promise.all([
+  const [attend, quiz, posts, comments, study, claim, weekDays, weekClaim, me] = await Promise.all([
     prisma.dailyAttendance.count({ where: { userId, date: day } }).catch(() => 0),
     prisma.quizAnswer.count({ where: { userId, correct: true, createdAt: { gte: since } } }).catch(() => 0),
     prisma.post.count({ where: { authorId: userId, createdAt: { gte: since }, isAttendanceThread: false } }).catch(() => 0),
@@ -32,7 +35,9 @@ export async function getMissions(userId: string): Promise<MissionStatus> {
     prisma.toolSaved.count({ where: { id: `mission_${userId}_${day}` } }).catch(() => 0),
     prisma.toolSaved.count({ where: { ownerId: userId, kind: "mission-claim", name: { gte: week } } }).catch(() => 0),
     prisma.toolSaved.count({ where: { id: `weekmission_${userId}_${week}` } }).catch(() => 0),
+    prisma.user.findUnique({ where: { id: userId }, select: { pointsEarnedDate: true, pointsEarnedToday: true } }).catch(() => null),
   ]);
+  const earned = me?.pointsEarnedDate === day ? me.pointsEarnedToday : 0;
   const items: MissionStatus["items"] = [
     { key: "attend", label: "출석체크", done: attend > 0, href: "/attendance" },
     { key: "quiz", label: "오늘의 퀴즈 맞히기", done: quiz > 0, href: "/quiz" },
@@ -41,7 +46,7 @@ export async function getMissions(userId: string): Promise<MissionStatus> {
     { key: "study", label: "홀덤 공부 도구 열기", done: study > 0, href: "/study" },
   ];
   const done = items.filter((i) => i.done).length;
-  return { items, done, allDone: done === items.length, claimed: claim > 0, week: { days: weekDays, target: WEEK_TARGET, claimed: weekClaim > 0 } };
+  return { items, done, allDone: done === items.length, claimed: claim > 0, week: { days: weekDays, target: WEEK_TARGET, claimed: weekClaim > 0 }, pointsToday: { earned: Math.min(earned, DAILY_POINT_CAP), cap: DAILY_POINT_CAP } };
 }
 
 /** 보너스 받기: 5개를 다 했고 오늘 아직 안 받았을 때만(동시에 눌러도 한 번) */

@@ -29,7 +29,7 @@ import {
   GameChampionBadge,
   PotTitleBadge,
 } from "@/components/honor/crowned-frame";
-import { WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
+import { LOSE_REWARD, WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
 import type { WinReward } from "@/lib/game-reward";
 import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
 import {
@@ -1764,6 +1764,20 @@ export function YutRoom({
                 ) : view.withBots ? (
                   <p className="text-sm text-[#d6cdee]">
                     요괴봇이 낀 판이라 전적 · 보상은 없어요.
+                  </p>
+                ) : null}
+                {view.mySeat && !view.withBots && view.winner ? (
+                  <p
+                    data-yut-rank-delta
+                    className={cn(
+                      "rounded-xl px-3 py-1.5 text-sm font-black",
+                      won ? "bg-emerald-400/15 text-emerald-200" : "bg-rose-400/15 text-rose-200",
+                    )}
+                  >
+                    {won ? "📈 이번 달 랭킹 +3점" : `📉 이번 달 랭킹 -1점 · 위로 EXP +${LOSE_REWARD.exp}`}
+                    <span className="block text-xs font-bold text-[#d6cdee]">
+                      승 +3 · 패 -1 · 짧은 판 제외 — 많이 둘수록 유리해요
+                    </span>
                   </p>
                 ) : null}
               </>

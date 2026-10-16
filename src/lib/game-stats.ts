@@ -72,8 +72,10 @@ export async function recordGameResult(r: {
       skipDuplicates: true,
     })
     .catch(() => ({ count: 0 }));
-  if (made.count === 1 && r.winnerId && loserId && rewardsOn())
+  if (made.count === 1 && r.winnerId && loserId && rewardsOn()) {
     await rewardWin(r.game, r.winnerId, loserId).catch(() => undefined);
+    await rewardLose(r.game, loserId).catch(() => undefined);
+  }
   return made.count === 1;
 }
 
@@ -95,6 +97,16 @@ async function rewardWin(game: GameKind, winnerId: string, loserId: string) {
   // 대표 요괴 친밀도도
   const { addMainAffection } = await import("@/lib/yokai-server");
   await addMainAffection(winnerId, R.affection).catch(() => undefined);
+}
+
+/** 진 사람 위로 경험치(하루 LOSE_REWARD.perDay판까지) */
+export async function rewardLose(game: GameKind, loserId: string) {
+  const { LOSE_REWARD } = await import("@/lib/game-config");
+  const since = new Date(`${todayKstDate()}T00:00:00+09:00`);
+  const today = await prisma.gameResult.count({ where: { game, loserId, createdAt: { gte: since } } });
+  if (today > LOSE_REWARD.perDay) return;
+  const { grantRewards } = await import("@/lib/exp");
+  await grantRewards(loserId, LOSE_REWARD.exp, 0);
 }
 
 export type GameRecord = {

@@ -62,9 +62,9 @@ describe("activity levels", () => {
 
   it("마크 3000P: 출석만이면 20일, 출석 + 활동 한도면 6일", () => {
     assert.equal(MARK_PRICE_POINTS, 3000);
-    assert.equal(DAILY_POINT_CAP, 490);
+    assert.equal(DAILY_POINT_CAP, 700);
     assert.equal(ATTENDANCE_POINTS, 195);
     assert.equal(Math.ceil(MARK_PRICE_POINTS / ATTENDANCE_POINTS), 16);
-    assert.equal(Math.ceil(MARK_PRICE_POINTS / (ATTENDANCE_POINTS + DAILY_POINT_CAP)), 5);
+    assert.equal(Math.ceil(MARK_PRICE_POINTS / (ATTENDANCE_POINTS + DAILY_POINT_CAP)), 4);
   });
 });

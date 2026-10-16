@@ -39,7 +39,7 @@ describe("streak attendance bonus", () => {
       label: "35일 연속",
     });
     assert.equal(streakBonusFor(STREAK_REPEAT_AFTER + STREAK_REPEAT_EVERY), null);
-    // 활동 한도(490)가 출석(195)보다 커서 활동하는 회원이 더 받음
+    // 활동 한도(700)가 출석(195)보다 커서 활동하는 회원이 더 받음
     assert.ok(DAILY_POINT_CAP > ATTENDANCE_POINTS);
   });
 

@@ -31,7 +31,7 @@ import {
 } from "@/lib/omok";
 import type { YokaiSpecies } from "@/lib/yokai";
 import { ONI_EMOTES, QUICK_TEXTS } from "@/lib/omok-emotes";
-import { WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
+import { LOSE_REWARD, WIN_REWARD as DEFAULT_REWARD } from "@/lib/game-config";
 import type { WinReward } from "@/lib/game-reward";
 import { PLAYER_LINES, pickOmokLine, yokaiVoice } from "@/lib/omok-lines";
 import {
@@ -1163,6 +1163,24 @@ export function OmokRoom({
                     <span className="block text-xs font-bold text-[#d6cdee]">
                       하루 {WIN_REWARD.perDay}판 · 같은 상대{" "}
                       {WIN_REWARD.perOpponentPerDay}판까지
+                    </span>
+                  </p>
+                ) : null}
+                {view.me && view.moves.length >= 9 && view.endReason !== "cancel" ? (
+                  <p
+                    data-omok-rank-delta
+                    className={cn(
+                      "rounded-xl px-3 py-1.5 text-sm font-black",
+                      view.winner === view.me ? "bg-emerald-400/15 text-emerald-200" : view.winner ? "bg-rose-400/15 text-rose-200" : "bg-white/10 text-white",
+                    )}
+                  >
+                    {view.winner === view.me
+                      ? "📈 이번 달 랭킹 +3점"
+                      : view.winner
+                        ? `📉 이번 달 랭킹 -1점 · 위로 EXP +${LOSE_REWARD.exp}`
+                        : "🤝 이번 달 랭킹 +1점"}
+                    <span className="block text-xs font-bold text-[#d6cdee]">
+                      승 +3 · 무 +1 · 패 -1 — 많이 둘수록 유리해요
                     </span>
                   </p>
                 ) : null}

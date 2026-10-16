@@ -87,6 +87,22 @@ export function MissionCard({ initial }: { initial: MissionStatus }) {
           </button>
         ) : null}
       </div>
+      {m.pointsToday ? (
+        <div data-points-today={`${m.pointsToday.earned}/${m.pointsToday.cap}`} className="grid gap-1 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white">오늘 활동 포인트</span>
+            <span className="ml-auto tabular-nums text-[#e7c98a]">
+              {m.pointsToday.earned} / {m.pointsToday.cap}P
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-emerald-400/80" style={{ width: `${Math.min(100, (m.pointsToday.earned / m.pointsToday.cap) * 100)}%` }} />
+          </div>
+          {m.pointsToday.earned >= m.pointsToday.cap ? (
+            <p className="font-bold text-emerald-300">오늘 글 · 댓글 · 게임 포인트를 다 받았어요. 경험치는 계속 쌓이고 출석 · 미션 보너스는 따로 받아요.</p>
+          ) : null}
+        </div>
+      ) : null}
       {note ? <p className="text-xs font-bold text-[#e7c98a]">{note}</p> : null}
     </section>
   );
