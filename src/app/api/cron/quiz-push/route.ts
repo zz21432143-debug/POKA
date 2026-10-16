@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   if (!quiz) return NextResponse.json({ ok: false, error: "no quiz" });
   const result = await notifyQuiz({
     title: `🧩 ${quizSlotName(day)} 퀴즈 · ${KIND_LABEL[quiz.kind]}`,
-    body: `${quiz.question.slice(0, 80)} — 맞히면 +10P!`,
+    body: `${quiz.question.slice(0, 80)} — 맞히면 +13P!`,
     url: "/quiz?from=push",
   });
   await prisma.toolSaved.update({ where: { id: `quizpush_${day}` }, data: { dataJson: JSON.stringify(result) } }).catch(() => undefined);

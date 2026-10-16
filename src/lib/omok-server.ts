@@ -298,6 +298,19 @@ const EMPTY_MS = 60_000;
 /** 대국 중 접속이 끊기면 이만큼(재접속 유예 10초 + 신호 간격) 지나 기권패 */
 const PLAYER_GONE_MS = 15_000;
 
+/** 끝난 판: 상대 신호가 이만큼 없으면 「나갔어요」(대국자는 1초마다 · 숨긴 탭은 5초마다 신호) */
+const RIVAL_AWAY_MS = 12_000;
+
+/** 끝난 판에서 상대(흑 ↔ 백)가 방을 떠났는지 */
+async function rivalAway(row: Row, userId: string) {
+  const rival = userId === row.blackId ? row.whiteId : userId === row.whiteId ? row.blackId : null;
+  if (!rival) return false;
+  const seen = await prisma.gameWatch
+    .findUnique({ where: { gameId_viewer: { gameId: row.id, viewer: `p:${rival}` } }, select: { seenAt: true } })
+    .catch(() => null);
+  return !seen || Date.now() - seen.seenAt.getTime() > RIVAL_AWAY_MS;
+}
+
 /** 시간 초과 · 비어 있는 대기실 정리(볼 때마다 · 원자적으로) */
 async function settle(row: Row): Promise<Row> {
   const now = Date.now();
@@ -583,11 +596,13 @@ export async function omokState(
     viewerId &&
     [row.blackId, row.whiteId, row.hostId, row.guestId].includes(viewerId),
   );
+  const inGame = Boolean(viewerId && (viewerId === row.blackId || viewerId === row.whiteId));
+  // 대국자는 판이 끝난 뒤에도 신호(상대가 결과 화면에 남아 있는지 · 한 판 더 가능한지)
   if (
     watcher &&
     isPlayer &&
     viewerId &&
-    row.status !== "done" &&
+    (row.status !== "done" || (inGame && !row.nextId)) &&
     /^[a-z0-9]{8,40}$/.test(watcher)
   ) {
     const now = new Date();
@@ -629,9 +644,14 @@ export async function omokState(
   }
   const w =
     row.status !== "done" ? await watchersOf(id) : { count: 0, names: [], list: [] as Watcher[] };
+  const away =
+    row.status === "done" && !row.nextId && row.endReason !== "cancel" && inGame && viewerId
+      ? await rivalAway(row, viewerId)
+      : false;
   if (knownVersion !== undefined && row.version === knownVersion)
     return {
       same: true as const,
+      away,
       serverNow: Date.now(),
       watchers: w.count,
       watcherNames: w.names,
@@ -639,6 +659,7 @@ export async function omokState(
     };
   return {
     same: false as const,
+    away,
     view: {
       ...(await toView(row, viewerId, withRecords)),
       watchers: w.count,
@@ -1267,6 +1288,8 @@ export async function omokAct(
     if (row.status !== "done" || !row.blackId || !row.whiteId)
       return fail("끝난 대국에서만 할 수 있어요.", 409);
     if (row.nextId) return done();
+    if (await rivalAway(row, userId))
+      return fail("상대가 이미 방을 나갔어요. 로비에서 새 상대를 찾아 주세요.", 409);
     // 다음 판: 같은 두 사람이 대기실에 앉은 채로(둘 다 READY 누르면 시작)
     const other = userId === row.blackId ? row.whiteId : row.blackId;
     const next = await makeRoom({

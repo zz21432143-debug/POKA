@@ -41,6 +41,11 @@ export function BoardWriteForm({
   const [password, setPassword] = useState("");
 
   async function submit() {
+    // 자유 · 질문 · 건의: 본문 10자 이상(공백 빼고)
+    if (["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && content.replace(/\s+/g, "").length < 10) {
+      setError(`본문을 10자 이상 써 주세요(지금 ${content.replace(/\s+/g, "").length}자).`);
+      return;
+    }
     setPending(true);
     setError(null);
     try {
@@ -178,7 +183,7 @@ export function BoardWriteForm({
           />
         )}
         {/* 자유 · 질문 · 건의: 10자 이상(한두 글자 글 방지) */}
-        {["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && content.trim().length > 0 && content.replace(/\s+/g, "").length < 10 ? (
+        {["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && content.replace(/\s+/g, "").length < 10 ? (
           <p data-write-min-hint className="text-xs text-[#e7c98a]">본문을 조금 더 자세히 써 주세요 · 10자 이상 ({content.replace(/\s+/g, "").length}/10)</p>
         ) : null}
       </div>

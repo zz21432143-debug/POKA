@@ -215,6 +215,17 @@ async function lastSeenMap(gameId: string, ids: string[]) {
   return new Map(rows.map((r) => [r.viewer.slice(2), r.seenAt.getTime()]));
 }
 
+/** 끝난 판: 신호가 이만큼 없으면 「나갔어요」(앉은 사람은 1초마다 · 숨긴 탭은 5초마다 신호) */
+const AWAY_MS = 12_000;
+
+/** 끝난 판에서 나를 뺀 사람 참가자 중 방을 떠난 사람 */
+async function awayHumans(row: Row, userId: string) {
+  const others = seatsOf(row).filter((x) => x.userId && !x.bot && !x.left && x.userId !== userId).map((x) => x.userId!);
+  const seen = await lastSeenMap(row.id, others);
+  const now = Date.now();
+  return { others, away: others.filter((id) => now - (seen.get(id) ?? 0) > AWAY_MS) };
+}
+
 async function settle(row: Row): Promise<Row> {
   const now = Date.now();
   const seats = seatsOf(row);
@@ -238,12 +249,26 @@ async function settle(row: Row): Promise<Row> {
   if (row.status !== "playing") return row;
   const s = stateOf(row);
   if (!s) return row;
+  if (row.mode >= 2) {
+    // 팀전: 접속이 끊긴 사람 자리는 요괴 AI가 이어서(그 사람 차례마다 시간을 다 기다리지 않게)
+    const humans = seats.filter((x) => x.userId && !x.bot && !x.left);
+    const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
+    const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
+    const goneIds = new Set(humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS).map((x) => x.userId));
+    if (goneIds.size && goneIds.size < humans.length) {
+      const r = await prisma.yutGame.updateMany({
+        where: { id: row.id, version: row.version, status: "playing" },
+        data: { seatsJson: JSON.stringify(seats.map((x) => (goneIds.has(x.userId) ? { ...x, left: true } : x))), version: { increment: 1 } },
+      });
+      if (r.count === 1) return (await prisma.yutGame.findUnique({ where: { id: row.id } })) ?? row;
+    }
+  }
   if (row.mode === 1 && !row.withBots) {
     const humans = seats.filter((x) => x.userId && !x.bot);
     const seenAll = await lastSeenMap(row.id, humans.map((x) => x.userId!));
     const startAt = row.turnAt?.getTime() ?? row.updatedAt.getTime();
     const goneSeats = humans.filter((x) => now - Math.max(seenAll.get(x.userId!) ?? 0, Math.min(startAt, now)) > PLAYER_GONE_MS);
-    if (goneSeats.length === 1) {
+    if (goneSeats.length === 1 && row.mode === 1) {
       const winner = other(goneSeats[0].team);
       const ended: YutState = { ...s, winner, results: [], throws: 0 };
       const r = await prisma.yutGame.updateMany({
@@ -397,7 +422,8 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
   if (!found) return null;
   const row = await settle(found).catch(() => found);
   const seated = seatsOf(row).some((x) => viewerId && x.userId === viewerId);
-  if (watcher && /^[a-z0-9]{8,40}$/.test(watcher) && row.status !== "done") {
+  const ended = row.status === "done" && !row.nextId && row.endReason !== "cancel";
+  if (watcher && /^[a-z0-9]{8,40}$/.test(watcher) && (row.status !== "done" || (seated && ended))) {
     const now = new Date();
     if (seated && viewerId) {
       await prisma.gameWatch.upsert({ where: { gameId_viewer: { gameId: id, viewer: `p:${viewerId}` } }, create: { gameId: id, viewer: `p:${viewerId}`, seenAt: now }, update: { seenAt: now } }).catch(() => undefined);
@@ -407,8 +433,17 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
     }
   }
   const w = row.status !== "done" ? await watchersOf(id) : { count: 0, names: [] as string[], list: [] as Watcher[] };
-  if (knownVersion !== undefined && row.version === knownVersion) return { same: true as const, serverNow: Date.now(), watchers: w.count, watcherNames: w.names, watcherList: w.list };
-  return { same: false as const, view: { ...(await toView(row, viewerId)), watchers: w.count, watcherNames: w.names, watcherList: w.list } };
+  // 끝난 판: 나간 사람 이름 · 다 나갔는지(한 판 더 버튼)
+  let away: { names: string[]; all: boolean } = { names: [], all: false };
+  if (ended && seated && viewerId) {
+    const a = await awayHumans(row, viewerId);
+    if (a.away.length) {
+      const users = await prisma.user.findMany({ where: { id: { in: a.away } }, select: { nickname: true } }).catch(() => []);
+      away = { names: users.map((u) => u.nickname), all: a.away.length === a.others.length };
+    }
+  }
+  if (knownVersion !== undefined && row.version === knownVersion) return { same: true as const, away, serverNow: Date.now(), watchers: w.count, watcherNames: w.names, watcherList: w.list };
+  return { same: false as const, away, view: { ...(await toView(row, viewerId)), watchers: w.count, watcherNames: w.names, watcherList: w.list } };
 }
 
 /* ───────── 동작 ───────── */
@@ -645,7 +680,11 @@ export async function yutAct(
     if (row.status !== "done" || !mine) return fail("끝난 판의 참가자만 한 판 더 할 수 있어요.", 409);
     if (row.nextId) return done();
     // 같은 사람 · 같은 팀으로 새 대기실(봇 · 나간 사람 자리는 비움) — 누른 사람이 방장
-    const next = seats.map((x) => ({ team: x.team, idx: x.idx, userId: x.bot || x.left ? null : x.userId, ready: false }));
+    const a = await awayHumans(row, userId);
+    if (a.others.length && a.away.length === a.others.length && !row.withBots)
+      return fail("다른 사람이 모두 방을 나갔어요. 로비에서 새 방을 만들어 주세요.", 409);
+    const gone = new Set(a.away);
+    const next = seats.map((x) => ({ team: x.team, idx: x.idx, userId: x.bot || x.left || (x.userId && gone.has(x.userId)) ? null : x.userId, ready: false }));
     const made = await makeRoom({ hostId: userId, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate, title: row.title });
     const linked = await prisma.yutGame.updateMany({ where: { id, nextId: null }, data: { nextId: made.id, version: { increment: 1 } } });
     if (linked.count !== 1) await prisma.yutGame.delete({ where: { id: made.id } }).catch(() => undefined);

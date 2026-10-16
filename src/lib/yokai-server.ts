@@ -110,7 +110,7 @@ export type YokaiView = {
 
 const FREE_BOARDS = ["FREE", "RULE_QA", "SKETCH"] as const;
 
-/** 오늘(KST) 밥이 늘어나는 활동: 출석 · 퀴즈 정답 · 글이나 댓글(출석 댓글 빼고) */
+/** 오늘(KST) 밥이 늘어나는 활동: 출석 · 퀴즈 정답 · 글 1개 · 댓글 1개(출석 댓글 빼고) */
 async function feedSources(userId: string): Promise<FeedSources> {
   const day = todayKstDate();
   const since = new Date(Date.parse(`${day}T00:00:00+09:00`));
@@ -143,7 +143,8 @@ async function feedSources(userId: string): Promise<FeedSources> {
   return {
     attended: attended > 0,
     quiz: quiz > 0,
-    wrote: posts + comments > 0,
+    posted: posts > 0,
+    commented: comments > 0,
   };
 }
 
@@ -573,7 +574,8 @@ function tipLine(i: {
     return `🍙 오늘 밥이 ${i.feedsLeft}번 남았어요`;
   if (!i.src.attended) return "📅 출석하면 오늘 밥이 하나 더 생겨요";
   if (!i.src.quiz) return "🧩 오늘의 퀴즈를 맞히면 밥이 하나 더 생겨요";
-  if (!i.src.wrote) return "✍️ 글이나 댓글을 쓰면 밥이 하나 더 생겨요";
+  if (!i.src.posted) return "✍️ 글을 1개 쓰면 밥이 하나 더 생겨요";
+  if (!i.src.commented) return "💬 댓글을 1개 쓰면 밥이 하나 더 생겨요";
   return null;
 }
 

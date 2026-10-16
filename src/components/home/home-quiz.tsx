@@ -22,7 +22,7 @@ export async function HomeQuiz() {
               ? initial.result?.correct
                 ? "✅ 맞혔어요"
                 : "풀었어요"
-              : "맞히면 +10P"}
+              : "맞히면 +13P"}
           </span>
         </>
       }

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { cn } from "cn";
 import type { MissionStatus } from "@/lib/missions";
 
-const REWARD = "+100P · EXP +30";
-const WEEK = "+300P · EXP +100";
+const REWARD = "+130P · EXP +30";
+const WEEK = "+390P · EXP +100";
 
-/** 오늘의 미션 4개 · 다 하면 보너스 받기 */
+/** 오늘의 미션 5개 · 다 하면 보너스 받기 */
 export function MissionCard({ initial }: { initial: MissionStatus }) {
   const [m, setM] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -42,7 +42,7 @@ export function MissionCard({ initial }: { initial: MissionStatus }) {
       <div className="h-2 overflow-hidden rounded-full bg-white/10">
         <div className="h-full rounded-full bg-[#c9a25c] transition-[width] duration-500" style={{ width: `${(m.done / m.items.length) * 100}%` }} />
       </div>
-      <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
+      <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-2">
         {m.items.map((item) => (
           <li key={item.key}>
             <Link

@@ -44,7 +44,7 @@ export async function getHomeRankings(): Promise<HomeRankBoard[]> {
   return boards;
 }
 
-/** 오목: 이번 달 랭킹(승 3점 · 무 1점 · 3판 이상) */
+/** 오목: 이번 달 랭킹(승 3점 · 무 1점 · 패 -1점 · 3판 이상) */
 async function omokBoard(): Promise<HomeRankBoard> {
   const { gameRanking } = await import("@/lib/game-stats");
   const rows = (await gameRanking("omok", "month", TOP)).slice(0, TOP);
@@ -53,7 +53,7 @@ async function omokBoard(): Promise<HomeRankBoard> {
   return {
     key: "omok",
     title: "오목 랭킹",
-    note: "이번 달 · 승 3점",
+    note: "이번 달 · 승 +3 · 패 -1",
     href: "/games/omok",
     rows: rows.map((r) => ({ rank: r.rank, nickname: r.nickname, level: by.get(r.nickname)?.level ?? 1, markUrl: displayMarkSrc({ isMaster: Boolean(by.get(r.nickname)?.isMaster), profileMarkImageUrl: by.get(r.nickname)?.profileMarkImageUrl ?? null }), score: `${r.wins}승 ${r.losses}패` })),
   };

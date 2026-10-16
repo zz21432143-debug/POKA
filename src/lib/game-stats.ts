@@ -151,6 +151,12 @@ export async function gameRecord(
   };
 }
 
+/** 랭킹 점수: 승 3 · 무 1 · 패 -1(0점 아래로는 안 내려감) — 져도 많이 둘수록 손해가 크지 않게 */
+export const RANK_POINTS = { win: 3, draw: 1, loss: -1 } as const;
+export function rankScore(r: { wins: number; draws: number; losses: number }) {
+  return Math.max(0, r.wins * RANK_POINTS.win + r.draws * RANK_POINTS.draw + r.losses * RANK_POINTS.loss);
+}
+
 export type GameRankRow = {
   rank: number;
   nickname: string;
@@ -162,7 +168,7 @@ export type GameRankRow = {
 };
 
 /**
- * 랭킹: 점수 = 승 3 · 무 1(기간 안 · 3판 이상). 같으면 승률 → 먼저 이긴 사람.
+ * 랭킹: 점수 = 승 3 · 무 1 · 패 -1(기권 · 나가기도 패, 0점 아래로는 안 내려감 · 기간 안 · 3판 이상). 같으면 승률 → 먼저 이긴 사람.
  * period: "month"(이번 달 KST) · "all"
  */
 export async function gameRanking(
@@ -204,7 +210,7 @@ export async function gameRanking(
       const games = r.wins + r.losses + r.draws;
       return {
         ...r,
-        score: r.wins * 3 + r.draws,
+        score: rankScore(r),
         rate: games ? Math.round((r.wins / games) * 100) : 0,
       };
     })

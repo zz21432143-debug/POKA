@@ -38,7 +38,7 @@ export default async function QuizPage() {
     <div className="flex flex-col gap-4">
       <header className="board-intro">
         <BoardTitle sticker={BOARD_STICKER.study}>오늘의 퀴즈</BoardTitle>
-        <p className="mt-2">아침 9시 · 저녁 9시, 하루 두 번 새 문제 · 하나만 고르면 정답과 해설이 바로 나와요. 맞히면 +10P, 7일 연속이면 보너스 +30P.</p>
+        <p className="mt-2">아침 9시 · 저녁 9시, 하루 두 번 새 문제 · 하나만 고르면 정답과 해설이 바로 나와요. 맞히면 +13P, 7일 연속이면 보너스 +39P.</p>
       </header>
 
       {initial ? (

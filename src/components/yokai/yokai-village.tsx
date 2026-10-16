@@ -786,8 +786,19 @@ export function YokaiVillage({
                     ) : null}
                   </li>
                   <li>
-                    {yokai.feeds.sources.wrote ? "✅" : "⬜"} 글이나 댓글 쓰기{" "}
-                    {!yokai.feeds.sources.wrote ? (
+                    {yokai.feeds.sources.posted ? "✅" : "⬜"} 글 1개 쓰기{" "}
+                    {!yokai.feeds.sources.posted ? (
+                      <Link
+                        href="/boards/free/write"
+                        className="font-bold text-[#c9a25c] underline"
+                      >
+                        글쓰러 가기
+                      </Link>
+                    ) : null}
+                  </li>
+                  <li>
+                    {yokai.feeds.sources.commented ? "✅" : "⬜"} 댓글 1개 쓰기{" "}
+                    {!yokai.feeds.sources.commented ? (
                       <Link
                         href="/boards/free"
                         className="font-bold text-[#c9a25c] underline"

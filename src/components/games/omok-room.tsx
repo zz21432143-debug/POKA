@@ -126,6 +126,10 @@ export function OmokRoom({
   const [pops, setPops] = useState<Pop[]>([]);
   const seenPops = useRef(new Set<string>());
   const [showResult, setShowResult] = useState(initial.status === "done");
+  // 끝난 판: 상대가 방을 나갔는지(서버가 1초마다 알려 줌)
+  const [rivalAway, setRivalAway] = useState(false);
+  // 결과 화면에서 떠나면(로비 · 다른 메뉴 · 창 닫기) 상대에게 바로 「나갔어요」가 보이게
+  const exitOnLeave = useRef(false);
   const [jump, setJump] = useState<Record<number, number>>({});
   const [watching, setWatching] = useState({
     count: initial.watchers ?? 0,
@@ -187,7 +191,9 @@ export function OmokRoom({
             watchers?: number;
             watcherNames?: string[];
             watcherList?: Watcher[];
+            away?: boolean;
           };
+          if (alive && typeof json.away === "boolean") setRivalAway(json.away);
           if (alive && !json.same && json.view) receive(json.view);
           if (alive && json.same && json.watchers !== undefined)
             setWatching({
@@ -375,6 +381,27 @@ export function OmokRoom({
   }, [view, offset, router]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  useEffect(() => {
+    exitOnLeave.current = view.status === "done" && Boolean(view.me) && !view.nextId;
+  }, [view.status, view.me, view.nextId]);
+  useEffect(() => {
+    const send = () => {
+      if (!exitOnLeave.current) return;
+      exitOnLeave.current = false;
+      void fetch(`/api/games/omok/${initial.id}`, {
+        method: "POST",
+        keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "exit" }),
+      }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", send);
+    return () => {
+      window.removeEventListener("pagehide", send);
+      send();
+    };
+  }, [initial.id]);
+
   // 다음 판이 열리면(한 판 더 · 도전 줄 자동 교대) 잠깐 결과를 보여 준 뒤 모두 다음 판으로 — 진 사람 · 관전자는 관전석
   const nextAt = useRef<number | null>(null);
   useEffect(() => {
@@ -439,8 +466,8 @@ export function OmokRoom({
         return;
       }
       if (json.view) receive(json.view);
-      // 다음 판 도전에 성공하면 그 대기실로
-      if (res.ok && action === "challenge" && json.view?.nextId)
+      // 다음 판 도전 · 한 판 더를 누른 사람은 바로 그 대기실로(상대는 몇 초 뒤 따라옴)
+      if (res.ok && (action === "challenge" || action === "rematch") && json.view?.nextId)
         router.push(`/games/omok/${json.view.nextId}`);
       if (!res.ok) {
         setNote(json.error ?? "처리하지 못했어요.");
@@ -1140,7 +1167,14 @@ export function OmokRoom({
                   </p>
                 ) : null}
                 <div className="mt-1 grid w-full max-w-xs gap-2">
-                  {view.me && view.endReason !== "cancel" ? (
+                  {view.me && view.endReason !== "cancel" && !view.nextId && rivalAway ? (
+                    <p
+                      data-omok-rival-away
+                      className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#ffb4b4]"
+                    >
+                      👋 상대가 방을 나갔어요 · 로비에서 새 상대를 찾아 보세요
+                    </p>
+                  ) : view.me && view.endReason !== "cancel" && !view.nextId ? (
                     <button
                       type="button"
                       data-omok-rematch

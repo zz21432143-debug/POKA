@@ -35,7 +35,7 @@ export default async function YutRoomPage({ params }: { params: Promise<{ id: st
       <Link href="/games/yut" className="game-back inline-flex min-h-10 w-fit items-center text-sm font-black text-[#ffcf4a]">
         ← 요괴 윷놀이
       </Link>
-      <YutRoom initial={state.view} loggedIn={Boolean(user)} hasYokai={yokai} shareUrl={`${siteUrl()}/games/yut/${id}`}
+      <YutRoom key={id} initial={state.view} loggedIn={Boolean(user)} hasYokai={yokai} shareUrl={`${siteUrl()}/games/yut/${id}`}
         reward={await loadWinReward()} />
     </div>
   );

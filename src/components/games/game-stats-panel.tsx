@@ -86,8 +86,8 @@ export async function GameStatsPanel({
         </ol>
       ) : (
         <p className="text-sm text-zinc-400">
-          이번 달 {RANK_MIN_GAMES}판 이상 둔 사람이 랭킹에 올라요(승 3점 · 무
-          1점).
+          이번 달 {RANK_MIN_GAMES}판 이상 둔 사람이 랭킹에 올라요(승 +3점 · 무
+          +1점 · 패 -1점).
         </p>
       )}
     </section>

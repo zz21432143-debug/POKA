@@ -87,7 +87,7 @@ export function QuizAdmin() {
         setAnswer(s.answer);
         setExplanation(s.explanation);
         setFromSuggestion({ id: s.id, nickname: s.nickname });
-        setMsg({ ok: true, text: `${s.nickname}님 문제를 채택했어요(+50P). 날짜를 골라 저장하세요.` });
+        setMsg({ ok: true, text: `${s.nickname}님 문제를 채택했어요(+65P). 날짜를 골라 저장하세요.` });
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else setMsg({ ok: true, text: "제안을 거절했어요." });
     } catch (e) {
@@ -183,7 +183,7 @@ export function QuizAdmin() {
                   <span className="text-xs text-muted-foreground">{s.createdAt.slice(0, 10)}</span>
                   <span className="ml-auto flex gap-1">
                     <button type="button" disabled={busy} onClick={() => void decide(s, "adopt")} className="min-h-9 rounded-lg bg-[#c9a25c] px-3 text-xs font-bold text-black">
-                      채택(+50P)
+                      채택(+65P)
                     </button>
                     <button type="button" disabled={busy} onClick={() => void decide(s, "reject")} className="min-h-9 rounded-lg border border-white/20 px-3 text-xs">
                       거절

@@ -36,8 +36,9 @@ describe("요괴 마을 계산", () => {
   });
 
   it("하루 밥: 기본 1 + 출석 · 퀴즈 · 글", () => {
-    assert.equal(feedsAllowed({ attended: false, quiz: false, wrote: false }), 1);
-    assert.equal(feedsAllowed({ attended: true, quiz: true, wrote: true }), 4);
+    assert.equal(feedsAllowed({ attended: false, quiz: false, posted: false, commented: false }), 1);
+    assert.equal(feedsAllowed({ attended: true, quiz: true, posted: true, commented: false }), 4);
+    assert.equal(feedsAllowed({ attended: true, quiz: true, posted: true, commented: true }), 5);
   });
 
   it("배부르면 안 먹음 · 쓰다듬기 쉬는 시간 · 남은 시간 글", () => {
@@ -127,7 +128,7 @@ describe("친밀도 단계", () => {
     assert.equal(bondName(9), "친해지는 중");
     assert.equal(bondName(10), "친구");
     assert.equal(bondName(55), "단짝");
-    assert.deepEqual(nextBond(45), { at: 50, points: 100, name: "단짝", left: 5 });
+    assert.deepEqual(nextBond(45), { at: 50, points: 130, name: "단짝", left: 5 });
     assert.equal(nextBond(100), null);
     // 하루 한 번 들르는 회원(인사 + 밥 1 + 쓰다듬기 1 + 샤워 1) ≈ 18 → 첫날 10 넘음
     assert.equal(GREET_AFFECTION + FEED.affection + PET_AFFECTION + SHOWER_AFFECTION, 18);

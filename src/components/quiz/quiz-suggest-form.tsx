@@ -6,7 +6,7 @@ import { cn } from "cn";
 
 const field = "w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white placeholder:text-zinc-500";
 
-/** 회원 문제 제안: 운영자가 골라서 오늘의 퀴즈로 냄 · 채택되면 +50P */
+/** 회원 문제 제안: 운영자가 골라서 오늘의 퀴즈로 냄 · 채택되면 +65P */
 export function QuizSuggestForm({ loggedIn }: { loggedIn: boolean }) {
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState(["", "", "", ""]);
@@ -30,7 +30,7 @@ export function QuizSuggestForm({ loggedIn }: { loggedIn: boolean }) {
       setChoices(["", "", "", ""]);
       setAnswer(0);
       setExplanation("");
-      setMsg({ ok: true, text: "문제를 보냈어요! 채택되면 +50P를 드려요." });
+      setMsg({ ok: true, text: "문제를 보냈어요! 채택되면 +65P를 드려요." });
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : "보내지 못했어요." });
     } finally {
@@ -43,7 +43,7 @@ export function QuizSuggestForm({ loggedIn }: { loggedIn: boolean }) {
     <details data-quiz-suggest className="ink-panel group rounded-2xl p-4">
       <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
         <span className="text-base font-black text-[#f3d9a4]">✍️ 내가 문제 내기</span>
-        <span className="text-xs text-zinc-400">채택되면 +50P · 오늘의 퀴즈로 나가요</span>
+        <span className="text-xs text-zinc-400">채택되면 +65P · 오늘의 퀴즈로 나가요</span>
         <span className="ml-auto text-xs font-bold text-[#c9a25c] group-open:hidden">펼치기</span>
       </summary>
       {loggedIn ? (

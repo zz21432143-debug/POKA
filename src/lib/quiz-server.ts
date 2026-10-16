@@ -6,9 +6,9 @@ import { generateQuiz, quizSlotAt, quizSlotDate, type QuizData, type QuizKind } 
 import handRanking from "@/lib/data/hand-ranking.json";
 
 /** 맞히면 포인트 · 연속 STREAK_DAYS일 맞히면 보너스 */
-export const QUIZ_POINTS = 10;
+export const QUIZ_POINTS = 13;
 export const STREAK_DAYS = 7;
-export const STREAK_BONUS = 30;
+export const STREAK_BONUS = 39;
 
 /** author: 회원이 낸 문제(채택)면 그 회원 닉네임 */
 export type QuizPublic = { id: string; day: string; kind: QuizKind; question: string; choices: string[]; author?: string | null };

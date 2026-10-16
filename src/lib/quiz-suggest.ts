@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 
 /** 회원이 낸 문제가 채택되면 주는 포인트 · 하루에 낼 수 있는 수 */
-export const SUGGEST_POINTS = 50;
+export const SUGGEST_POINTS = 65;
 export const SUGGEST_PER_DAY = 3;
 const KIND = "quiz-suggest";
 

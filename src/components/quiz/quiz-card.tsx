@@ -112,7 +112,7 @@ export function QuizCard({
           </div>
           <p className="text-xs text-zinc-400">
             {total ? `회원 ${total.toLocaleString()}명이 풀었어요` : "아직 푼 회원이 없어요 — 첫 정답자가 되어 보세요"}
-            {loggedIn && result.streak > 0 ? ` · 연속 정답 ${result.streak}일째(7일마다 보너스 +30P)` : ""}
+            {loggedIn && result.streak > 0 ? ` · 연속 정답 ${result.streak}일째(7일마다 보너스 +39P)` : ""}
           </p>
           {/* 친구에게 문제 내기: 정답은 안 넣고 문제 · 보기 · 내 결과만 */}
           <ShareButton
@@ -141,12 +141,12 @@ export function QuizCard({
               <Link href="/login?next=%2Fquiz" className="font-bold underline">
                 로그인
               </Link>
-              하면 맞힐 때마다 포인트 +10P · 연속 정답 보너스 · 퀴즈 랭킹에 올라가요.
+              하면 맞힐 때마다 포인트 +13P · 연속 정답 보너스 · 퀴즈 랭킹에 올라가요.
             </p>
           ) : null}
         </div>
       ) : (
-        <p className="text-xs text-zinc-400">하나를 고르면 바로 정답과 해설이 나와요. {loggedIn ? "맞히면 +10P!" : "로그인하면 맞힐 때 +10P."}</p>
+        <p className="text-xs text-zinc-400">하나를 고르면 바로 정답과 해설이 나와요. {loggedIn ? "맞히면 +13P!" : "로그인하면 맞힐 때 +13P."}</p>
       )}
     </section>
   );

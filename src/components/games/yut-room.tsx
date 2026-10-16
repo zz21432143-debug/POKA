@@ -131,6 +131,10 @@ export function YutRoom({
   const [kick, setKick] = useState<{ key: number; node: string } | null>(null);
   const [stepMs, setStepMs] = useState(initial.mode >= 3 ? 160 : 260);
   const [showResult, setShowResult] = useState(initial.status === "done");
+  // 끝난 판: 방을 나간 사람(서버가 1초마다 알려 줌)
+  const [away, setAway] = useState<{ names: string[]; all: boolean }>({ names: [], all: false });
+  // 결과 화면에서 떠나면(로비 · 다른 메뉴 · 창 닫기) 다른 사람에게 바로 「나갔어요」가 보이게
+  const exitOnLeave = useRef(false);
   const [emoteWait, setEmoteWait] = useState(0);
   const [watching, setWatching] = useState({
     count: initial.watchers ?? 0,
@@ -206,7 +210,9 @@ export function YutRoom({
             watchers?: number;
             watcherNames?: string[];
             watcherList?: Watcher[];
+            away?: { names: string[]; all: boolean };
           };
+          if (alive && json.away) setAway(json.away);
           if (alive && !json.same && json.view) receive(json.view);
           if (alive && json.same && json.watchers !== undefined)
             setWatching({
@@ -693,6 +699,26 @@ export function YutRoom({
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 방마다 한 번만
   }, [canAutoQueue, view.id]);
+  useEffect(() => {
+    exitOnLeave.current = view.status === "done" && Boolean(view.mySeat) && !view.nextId;
+  }, [view.status, view.mySeat, view.nextId]);
+  useEffect(() => {
+    const send = () => {
+      if (!exitOnLeave.current) return;
+      exitOnLeave.current = false;
+      void fetch(`/api/games/yut/${initial.id}`, {
+        method: "POST",
+        keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "exit" }),
+      }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", send);
+    return () => {
+      window.removeEventListener("pagehide", send);
+      send();
+    };
+  }, [initial.id]);
   // 다음 판이 열리면(한 판 더 · 승자 연전) 결과를 잠깐 보여 준 뒤 모두 다음 판으로 — 진 사람 · 관전자는 관전석
   const nextAt = useRef<number | null>(null);
   useEffect(() => {
@@ -1753,6 +1779,13 @@ export function YutRoom({
                 >
                   ⏩ 곧 다음 판으로 이동해요 · 바로 가기
                 </Link>
+              ) : view.mySeat && ended && away.all ? (
+                <p
+                  data-yut-rival-away
+                  className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#ffb4b4]"
+                >
+                  👋 {away.names.join(", ")}님이 방을 나갔어요 · 로비에서 새 방을 만들어 보세요
+                </p>
               ) : view.mySeat && ended ? (
                 <button
                   type="button"
@@ -1762,6 +1795,11 @@ export function YutRoom({
                   className="arcade-btn btn-main min-h-14 text-lg"
                 >
                   🔁 한 판 더! (같은 멤버)
+                  {away.names.length ? (
+                    <span className="block text-xs font-bold">
+                      나간 사람({away.names.join(", ")}) 자리는 비워 둬요
+                    </span>
+                  ) : null}
                 </button>
               ) : null}
               <button

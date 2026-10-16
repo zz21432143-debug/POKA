@@ -10,6 +10,7 @@ import type { JobKind } from "@/generated/prisma/enums";
 import { boardAllowsPhotos, parsePostPhotos } from "@/lib/post-photos";
 import { needsTax } from "@/lib/job-tax";
 import { AccountRestrictedError, assertAccountActive } from "@/lib/account-restriction";
+import { plainPostText } from "@/lib/seo-quality";
 
 const JOB_KINDS: JobKind[] = ["FIXED", "APPLY", "TEAM", "URGENT", "SEEKING", "TOURNAMENT"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -59,6 +60,11 @@ export async function PATCH(
       const maxContent = post.boardType === "TDA" || post.boardType === "NOTICE" ? 300_000 : 30_000;
       if (title.length > 120 || content.length > maxContent) {
         return NextResponse.json({ error: `제목은 120자, 본문은 ${maxContent.toLocaleString()}자까지 쓸 수 있습니다.` }, { status: 400 });
+      }
+
+      // 자유게시판 · 질문 · 건의: 고칠 때도 10자 이상(글쓰기와 같은 기준)
+      if (["FREE", "RULE_QA", "SUGGESTION"].includes(post.boardType) && plainPostText(content).replace(/\s/g, "").length < 10) {
+        return NextResponse.json({ error: "본문을 조금 더 자세히 써 주세요(10자 이상)." }, { status: 400 });
       }
 
       const data: Record<string, unknown> = { title, content };

@@ -24,10 +24,10 @@ describe("streak attendance bonus", () => {
   it("pays extra on 3 / 7 / 14 / 30 day milestones", () => {
     assert.equal(streakBonusFor(1), null);
     assert.equal(streakBonusFor(2), null);
-    assert.deepEqual(streakBonusFor(3), { points: 30, exp: 20, label: "3일 연속" });
-    assert.deepEqual(streakBonusFor(7), { points: 100, exp: 50, label: "7일 연속" });
-    assert.deepEqual(streakBonusFor(14), { points: 200, exp: 80, label: "14일 연속" });
-    assert.deepEqual(streakBonusFor(30), { points: 400, exp: 150, label: "30일 연속" });
+    assert.deepEqual(streakBonusFor(3), { points: 39, exp: 20, label: "3일 연속" });
+    assert.deepEqual(streakBonusFor(7), { points: 130, exp: 50, label: "7일 연속" });
+    assert.deepEqual(streakBonusFor(14), { points: 260, exp: 80, label: "14일 연속" });
+    assert.deepEqual(streakBonusFor(30), { points: 520, exp: 150, label: "30일 연속" });
     assert.equal(STREAK_MILESTONES.length, 4);
   });
 
@@ -39,16 +39,16 @@ describe("streak attendance bonus", () => {
       label: "35일 연속",
     });
     assert.equal(streakBonusFor(STREAK_REPEAT_AFTER + STREAK_REPEAT_EVERY), null);
-    // 활동 한도(375)가 출석(150)보다 커서 활동하는 회원이 더 받음
+    // 활동 한도(490)가 출석(195)보다 커서 활동하는 회원이 더 받음
     assert.ok(DAILY_POINT_CAP > ATTENDANCE_POINTS);
   });
 
   it("pays points for posts and comments separately from attendance", () => {
-    assert.equal(COMMENT_POINTS, 10);
-    assert.equal(POST_POINTS.FREE, 15);
-    assert.equal(POST_POINTS.HAND_REVIEW, 30);
-    assert.equal(postRewardLine("FREE"), "EXP +4 · 포인트 +15P");
-    assert.equal(commentRewardLine(), "EXP +2 · 포인트 +10P");
+    assert.equal(COMMENT_POINTS, 13);
+    assert.equal(POST_POINTS.FREE, 20);
+    assert.equal(POST_POINTS.HAND_REVIEW, 39);
+    assert.equal(postRewardLine("FREE"), "EXP +4 · 포인트 +20P");
+    assert.equal(commentRewardLine(), "EXP +2 · 포인트 +13P");
   });
 });
 

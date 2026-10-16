@@ -48,7 +48,7 @@ export default async function QuizDayPage({ params }: { params: Promise<{ day: s
         <BoardTitle sticker={BOARD_STICKER.study}>
           {sameDay ? "오늘" : "지난"} 퀴즈 · {day.slice(0, 10).replace(/-/g, ".")} {quizSlotName(day)}
         </BoardTitle>
-        <p className="mt-2">{sameDay ? "오늘 아침 문제예요. 아직 안 풀었다면 맞히면 +10P!" : "지난 문제도 풀어 볼 수 있어요(포인트는 그날 문제만)."}</p>
+        <p className="mt-2">{sameDay ? "오늘 아침 문제예요. 아직 안 풀었다면 맞히면 +13P!" : "지난 문제도 풀어 볼 수 있어요(포인트는 그날 문제만)."}</p>
       </header>
       <QuizCard quiz={initial.quiz} initialResult={initial.result} loggedIn={initial.loggedIn} />
       {/* 검색으로 들어온 사람도 볼 수 있게 정답 · 해설은 접어서 */}

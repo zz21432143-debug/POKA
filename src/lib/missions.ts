@@ -2,13 +2,13 @@ import { prisma } from "@/lib/db";
 import { todayKstDate, weekStartKst } from "@/lib/dates";
 import { grantRewards } from "@/lib/exp";
 
-/** 오늘의 미션 4개를 다 하면 받는 보너스(하루 한 번 · 활동 한도와 별도) */
-export const MISSION_REWARD = { points: 100, exp: 30 } as const;
+/** 오늘의 미션 5개를 다 하면 받는 보너스(하루 한 번 · 활동 한도와 별도) */
+export const MISSION_REWARD = { points: 130, exp: 30 } as const;
 /** 주간 미션: 이번 주(월~일)에 오늘의 미션 보너스를 WEEK_TARGET일 받으면 */
 export const WEEK_TARGET = 5;
-export const WEEK_REWARD = { points: 300, exp: 100 } as const;
+export const WEEK_REWARD = { points: 390, exp: 100 } as const;
 
-export type MissionKey = "attend" | "quiz" | "write" | "study";
+export type MissionKey = "attend" | "quiz" | "post" | "comment" | "study";
 export type MissionStatus = {
   items: { key: MissionKey; label: string; done: boolean; href: string }[];
   done: number;
@@ -36,14 +36,15 @@ export async function getMissions(userId: string): Promise<MissionStatus> {
   const items: MissionStatus["items"] = [
     { key: "attend", label: "출석체크", done: attend > 0, href: "/attendance" },
     { key: "quiz", label: "오늘의 퀴즈 맞히기", done: quiz > 0, href: "/quiz" },
-    { key: "write", label: "글이나 댓글 1개", done: posts + comments > 0, href: "/boards/free" },
+    { key: "post", label: "글 1개 쓰기", done: posts > 0, href: "/boards/free/write" },
+    { key: "comment", label: "댓글 1개 쓰기", done: comments > 0, href: "/boards/free" },
     { key: "study", label: "홀덤 공부 도구 열기", done: study > 0, href: "/study" },
   ];
   const done = items.filter((i) => i.done).length;
   return { items, done, allDone: done === items.length, claimed: claim > 0, week: { days: weekDays, target: WEEK_TARGET, claimed: weekClaim > 0 } };
 }
 
-/** 보너스 받기: 4개를 다 했고 오늘 아직 안 받았을 때만(동시에 눌러도 한 번) */
+/** 보너스 받기: 5개를 다 했고 오늘 아직 안 받았을 때만(동시에 눌러도 한 번) */
 export async function claimMissions(userId: string) {
   const status = await getMissions(userId);
   if (!status.allDone) return { ok: false as const, error: `미션을 ${status.items.length - status.done}개 더 하면 받을 수 있어요.` };

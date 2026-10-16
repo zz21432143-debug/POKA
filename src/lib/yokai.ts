@@ -154,11 +154,11 @@ export const SHOWER_COOLDOWN_MIN = 360;
 export const MAIN_CHANGE_COST = 200;
 /** 친밀도 보상: 단계 · 받는 포인트 · 이름(하루 한 번 들르는 회원 기준 첫날 10 → 3일쯤 50 → 6일쯤 100) */
 export const BOND_TIERS = [
-  { at: 10, points: 20, name: "친구" },
-  { at: 30, points: 50, name: "다정한 친구" },
-  { at: 50, points: 100, name: "단짝" },
-  { at: 70, points: 150, name: "찐친" },
-  { at: 100, points: 300, name: "영혼의 단짝" },
+  { at: 10, points: 26, name: "친구" },
+  { at: 30, points: 65, name: "다정한 친구" },
+  { at: 50, points: 130, name: "단짝" },
+  { at: 70, points: 195, name: "찐친" },
+  { at: 100, points: 390, name: "영혼의 단짝" },
 ] as const;
 /** 친밀도 오르는 양: 쓰다듬기 · 하루 첫 방문 인사(밥은 FEED.affection, 샤워는 SHOWER_AFFECTION) */
 export const PET_AFFECTION = 3;
@@ -202,10 +202,10 @@ export function waitText(until: Date, now = new Date()) {
   return h ? (m ? `${h}시간 ${m}분` : `${h}시간`) : `${m}분`;
 }
 
-/** 오늘 밥 횟수: 기본 1 + 출석 · 퀴즈 정답 · 글이나 댓글 각 1 */
-export type FeedSources = { attended: boolean; quiz: boolean; wrote: boolean };
+/** 오늘 밥 횟수: 기본 1 + 출석 · 퀴즈 정답 · 글 1개 · 댓글 1개 각 1 */
+export type FeedSources = { attended: boolean; quiz: boolean; posted: boolean; commented: boolean };
 export function feedsAllowed(src: FeedSources) {
-  return 1 + Number(src.attended) + Number(src.quiz) + Number(src.wrote);
+  return 1 + Number(src.attended) + Number(src.quiz) + Number(src.posted) + Number(src.commented);
 }
 
 /** 기분(말풍선) */

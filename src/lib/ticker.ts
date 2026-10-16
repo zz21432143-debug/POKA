@@ -55,7 +55,7 @@ export async function ensureWeeklyBestHand() {
 
   const { grantRewards } = await import("@/lib/exp");
   if (best.authorId) {
-    await grantRewards(best.authorId, WEEKLY_HAND_EXP, 40);
+    await grantRewards(best.authorId, WEEKLY_HAND_EXP, 52);
   }
   await pushTicker({
     kind,

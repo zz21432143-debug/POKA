@@ -49,6 +49,7 @@ export default async function OmokRoomPage({
         ← 요괴 오목
       </Link>
       <OmokRoom
+        key={id}
         initial={state.view}
         loggedIn={Boolean(user)}
         hasYokai={yokai}

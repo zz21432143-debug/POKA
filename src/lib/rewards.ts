@@ -2,7 +2,7 @@ import type { BoardType } from "@/generated/prisma/enums";
 
 export const MARK_PRICE_POINTS = 3000;
 /** 글·댓글·연습만 쓰는 하루 포인트 한도. 출석·연속 보너스는 이 한도에 넣지 않습니다. */
-export const DAILY_POINT_CAP = 375;
+export const DAILY_POINT_CAP = 490;
 
 /** 레벨용 EXP. 포인트와 별개. 출석 1회가 레벨 1에 가깝습니다. */
 export const POST_EXP: Record<BoardType, number> = {
@@ -23,45 +23,46 @@ export const POST_EXP: Record<BoardType, number> = {
   TDA: 4,
 };
 
+/** 글 포인트(2026-10: 전체 1.3배) */
 export const POST_POINTS: Record<BoardType, number> = {
-  HAND_REVIEW: 30,
-  ANONYMOUS_REVIEW: 15,
-  RULE_QA: 15,
-  SKETCH: 15,
-  FREE: 15,
-  JOBS: 20,
-  TALENT: 12,
-  PICKUP: 12,
-  EVENT_POSTER: 12,
-  OFFICIAL_POSTER: 12,
-  SCHEDULE: 12,
-  PROMO: 12,
-  NOTICE: 12,
-  SUGGESTION: 12,
-  TDA: 12,
+  HAND_REVIEW: 39,
+  ANONYMOUS_REVIEW: 20,
+  RULE_QA: 20,
+  SKETCH: 20,
+  FREE: 20,
+  JOBS: 26,
+  TALENT: 16,
+  PICKUP: 16,
+  EVENT_POSTER: 16,
+  OFFICIAL_POSTER: 16,
+  SCHEDULE: 16,
+  PROMO: 16,
+  NOTICE: 16,
+  SUGGESTION: 16,
+  TDA: 16,
 };
 
 export const ATTENDANCE_EXP = 100;
-/** 출석 포인트(2026-10 조정: 375 → 150, 글 · 댓글 · 퀴즈 활동을 하는 회원이 더 받도록) */
-export const ATTENDANCE_POINTS = 150;
+/** 출석 포인트(2026-10 조정: 375 → 150, 글 · 댓글 · 퀴즈 활동을 하는 회원이 더 받도록 · 이후 전체 1.3배 → 195) */
+export const ATTENDANCE_POINTS = 195;
 /** 그날 1 · 2 · 3번째로 출석한 사람 추가 경험치 */
 export const EARLY_BIRD_EXP = [50, 30, 20] as const;
 export const COMMENT_EXP = 2;
-export const COMMENT_POINTS = 10;
+export const COMMENT_POINTS = 13;
 export const ATTENDANCE_MIN_COMMENT_LENGTH = 2;
 export const WEEKLY_HAND_EXP = 20;
 export const LUCKY_ATTENDANCE_POINTS = 0;
 /** 30일 이후 매주 반복되는 연속 출석 보너스. */
 export const STREAK_REPEAT_AFTER = 30;
 export const STREAK_REPEAT_EVERY = 7;
-export const STREAK_REPEAT_POINTS = 80;
+export const STREAK_REPEAT_POINTS = 104;
 export const STREAK_REPEAT_EXP = 40;
 
 export const STREAK_MILESTONES = [
-  { day: 3, points: 30, exp: 20, label: "3일 연속" },
-  { day: 7, points: 100, exp: 50, label: "7일 연속" },
-  { day: 14, points: 200, exp: 80, label: "14일 연속" },
-  { day: 30, points: 400, exp: 150, label: "30일 연속" },
+  { day: 3, points: 39, exp: 20, label: "3일 연속" },
+  { day: 7, points: 130, exp: 50, label: "7일 연속" },
+  { day: 14, points: 260, exp: 80, label: "14일 연속" },
+  { day: 30, points: 520, exp: 150, label: "30일 연속" },
 ] as const;
 
 export type StreakBonus = { points: number; exp: number; label: string };
@@ -94,7 +95,7 @@ export function nextStreakBonus(currentStreak: number): (StreakBonus & { day: nu
 export const POPULAR_UPVOTE_THRESHOLD = 5;
 export const BEST_COMMENT_MIN = 2;
 export const UPVOTE_RECEIVED_EXP = 1;
-export const UPVOTE_RECEIVED_POINTS = 2;
+export const UPVOTE_RECEIVED_POINTS = 3;
 
 export function formatRewardLine(exp: number, points: number) {
   return `EXP +${exp} · 포인트 +${points}P`;
