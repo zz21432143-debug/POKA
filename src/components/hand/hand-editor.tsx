@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StickySubmit } from "@/components/ui/sticky-submit";
+import { useLocalDraft } from "@/lib/use-local-draft";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +58,11 @@ export function HandEditor() {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [hand, setHand] = useState<HandReviewData>(EMPTY_HAND);
+  // 제목 · 설명 임시 저장(휴대폰 안에만)
+  const draft = useLocalDraft("poka-draft-hand", { title, notes }, (d) => {
+    setTitle(d.title ?? "");
+    setNotes(d.notes ?? "");
+  });
   const [slot, setSlot] = useState<Slot>("hero");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -194,6 +200,7 @@ export function HandEditor() {
       if (!response.ok || !payload.id) {
         throw new Error(payload.error ?? "저장에 실패했습니다.");
       }
+      draft.clear();
       router.replace(`/posts/${payload.id}`);
       router.refresh();
     } catch (err) {
@@ -206,6 +213,23 @@ export function HandEditor() {
 
   return (
     <div className="ink-panel flex max-w-full flex-col gap-5 overflow-x-clip rounded-2xl p-4 sm:p-5">
+      {draft.restored ? (
+        <p data-draft-loaded className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm">
+          📝 쓰다 만 내용을 불러왔어요.
+          <button
+            type="button"
+            className="ml-auto rounded-full border border-border px-2.5 py-0.5 text-xs font-bold"
+            onClick={() => {
+              draft.clear();
+              setTitle("");
+              setNotes("");
+              draft.dismiss();
+            }}
+          >
+            지우고 새로 쓰기
+          </button>
+        </p>
+      ) : null}
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm leading-6">
         <b>① 자리 → ② 카드 → ③ 액션 → ④ 제목</b> 순서로 채우면 됩니다. 액션은 차례가 자동으로 넘어가고 콜 금액·팟도
         자동 계산됩니다. 등록 시 EXP <strong>+{POST_EXP.HAND_REVIEW}</strong> · 포인트{" "}

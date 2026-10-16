@@ -42,7 +42,7 @@ async function HomePosters() {
   return <HomePosterCarousel posters={posters} />;
 }
 
-async function HomeFeedSections() {
+async function HomeFeedSections({ daily }: { daily?: React.ReactNode }) {
   const feed = await getHomeFeed().catch(() => ({
     all: [],
     free: [],
@@ -64,6 +64,8 @@ async function HomeFeedSections() {
         <HomePosters />
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
+      {/* 매일 할 일(미션 · 퀴즈 · 요괴): 구인 아래로 — POKA 메인은 구인구직 · 매장 관리 */}
+      {daily}
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
       <div id="home-latest" data-home-latest-rank className="grid scroll-mt-24 gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
@@ -97,31 +99,11 @@ export default async function HomePage() {
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
         <HomeSummary />
       </Suspense>
-      {/* 매일 할 일 묶음: 휴대폰은 미션 → 요괴 마을 → 퀴즈, PC는 왼쪽 요괴 마을 · 오른쪽 미션 + 퀴즈 */}
-      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
-        <div className="lg:col-start-2 lg:row-start-1">
-          <Suspense fallback={null}>
-            <HomeMissions />
-          </Suspense>
-        </div>
-        <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:h-full">
-          <Suspense fallback={<HomePanelFallback className="h-72" />}>
-            <HomeYokai />
-          </Suspense>
-        </div>
-        <div className="lg:col-start-2 lg:row-start-2">
-          <Suspense fallback={<HomePanelFallback className="h-40" />}>
-            <HomeQuiz />
-          </Suspense>
-        </div>
-      </div>
-      {/* 바로가기 두 줄을 한 줄로: 홀덤 공부 도구 · 매장 관리(PC는 나란히) */}
+      {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히) — 구인 공고 바로 위 */}
       <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-stretch">
-        <HomeStudyTools />
         <HomeDealerTools />
+        <HomeStudyTools />
       </div>
-      {/* 오늘의 딜러 가이드 3편(날마다 바뀜) */}
-      <HomeGuides />
       <Suspense
         fallback={
           <div className="flex flex-col gap-2.5">
@@ -130,8 +112,24 @@ export default async function HomePage() {
           </div>
         }
       >
-        <HomeFeedSections />
+        <HomeFeedSections
+          daily={
+            <div data-home-daily className="grid gap-2.5 lg:grid-cols-3 lg:items-stretch">
+              <Suspense fallback={null}>
+                <HomeMissions />
+              </Suspense>
+              <Suspense fallback={<HomePanelFallback className="h-40" />}>
+                <HomeQuiz />
+              </Suspense>
+              <Suspense fallback={<HomePanelFallback className="h-24" />}>
+                <HomeYokai />
+              </Suspense>
+            </div>
+          }
+        />
       </Suspense>
+      {/* 오늘의 딜러 가이드 3편(날마다 바뀜) — 구인 · 커뮤니티 아래 */}
+      <HomeGuides />
       <BoardBottomAd placement="home-bottom" />
     </div>
   );

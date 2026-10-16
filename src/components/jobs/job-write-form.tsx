@@ -5,6 +5,7 @@ import { SlotPreview } from "@/components/jobs/slot-preview";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { StickySubmit } from "@/components/ui/sticky-submit";
+import { useLocalDraft } from "@/lib/use-local-draft";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -193,6 +194,13 @@ export function JobWriteForm({
   const [pasteNote, setPasteNote] = useState<string | null>(null);
   // 새 글은 붙여넣기 칸을 펼쳐 두고, 수정할 때는 접어 둡니다.
   const [pasteOpen, setPasteOpen] = useState(!postId);
+  // 붙여넣은 카톡 공고 임시 저장(새 글만 · 휴대폰 안에만)
+  const draft = useLocalDraft(postId ? null : `poka-draft-job-${jobKind}`, { paste }, (d) => {
+    if (d.paste) {
+      setPaste(d.paste);
+      setPasteOpen(true);
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -400,6 +408,7 @@ export function JobWriteForm({
       }
       // 급구면 "알림 N명에게 보냈어요"를 글 위에 띄웁니다.
       const pushed = payload.pushSent == null ? "" : `?pushed=${payload.pushSent}`;
+      draft.clear();
       router.replace(`/posts/${payload.id}${pushed}`);
       router.refresh();
     } catch (err) {
@@ -410,6 +419,22 @@ export function JobWriteForm({
 
   return (
     <div className="ink-panel flex flex-col gap-4 rounded-2xl p-4 sm:p-5">
+      {draft.restored ? (
+        <p data-draft-loaded className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm">
+          📝 쓰다 만 내용을 불러왔어요.
+          <button
+            type="button"
+            className="ml-auto rounded-full border border-border px-2.5 py-0.5 text-xs font-bold"
+            onClick={() => {
+              draft.clear();
+              setPaste("");
+              draft.dismiss();
+            }}
+          >
+            지우고 새로 쓰기
+          </button>
+        </p>
+      ) : null}
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
         {hint} · 작성 {postRewardLine("JOBS")}
       </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BriefcaseIcon,
   HomeIcon,
@@ -23,6 +24,23 @@ const ICONS = {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  // 댓글 · 검색 등 글자를 입력하는 동안은 숨김(키보드 위로 떠서 입력칸을 가리지 않게)
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const isField = (t: EventTarget | null) =>
+      t instanceof HTMLElement && (t.isContentEditable || (t.tagName === "INPUT" && !["checkbox", "radio", "button", "submit", "range", "file"].includes((t as HTMLInputElement).type)) || t.tagName === "TEXTAREA" || t.tagName === "SELECT");
+    const onIn = (e: FocusEvent) => {
+      if (isField(e.target)) setTyping(true);
+    };
+    const onOut = () => window.setTimeout(() => setTyping(isField(document.activeElement)), 50);
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
+    return () => {
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
+    };
+  }, []);
+  if (typing) return null;
   // 글쓰기 화면은 키보드가 올라오면 아래 메뉴가 입력칸을 가려서 숨김(「등록」 버튼이 아래에 붙음)
   if (/\/(write|edit)(\/|$)/.test(pathname ?? "")) return null;
 

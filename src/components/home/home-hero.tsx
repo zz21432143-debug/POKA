@@ -42,7 +42,9 @@ export function HomeHero() {
       </div>
     </section>
   );
-  if (!games) return main;
+  // 요괴 마을 · 오락실 오픈 배너는 잠시 가림 — POKA 메인은 구인구직 · 매장 관리(다시 켜려면 true)
+  const SHOW_YOKAI_BANNER = false;
+  if (!games || !SHOW_YOKAI_BANNER) return main;
   // 롤링: ① 요괴 마을 · 요괴 오락실(메인) ② 딜러 구인구직 · 매장 관리
   return (
     <HeroCarousel
