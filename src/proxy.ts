@@ -43,5 +43,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|marks/|banners/).*)"],
+  // 그림 · 글꼴 · 파일 요청은 검사하지 않음(홈 한 번에 50개가 넘어 서버 사용량만 늘어서) — 화면 · API만
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|marks/|banners/|yokai/|images/|brand/|icons/|theme/|vendor/|ads/|assets/|api/images/|.*\\.(?:webp|png|jpe?g|gif|svg|ico|woff2?|ttf|css|js|map|txt|xml|json|webmanifest|bcmap|pdf|mp3|mp4)$).*)",
+  ],
 };
