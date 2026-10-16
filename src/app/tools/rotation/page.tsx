@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { toolMetadata } from "@/lib/tool-seo";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";

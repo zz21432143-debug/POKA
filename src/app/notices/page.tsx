@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { InfinitePostList } from "@/components/posts/infinite-post-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/current-user";

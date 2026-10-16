@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { EyeIcon, MessageCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RatingStamp } from "@/components/reviews/rating-stamp";

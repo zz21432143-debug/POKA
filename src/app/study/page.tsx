@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BarChart3Icon, Grid3x3Icon, ListOrderedIcon, PercentIcon, PieChartIcon, GraduationCapIcon, TargetIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle, OniSticker } from "@/components/brand/oni";
 import { ToolCard } from "@/components/tools/tool-card";

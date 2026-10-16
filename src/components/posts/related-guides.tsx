@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 
 const words = (s: string) => new Set((s.match(/[가-힣A-Za-z]{2,}/g) ?? []).map((w) => w.toLowerCase()));

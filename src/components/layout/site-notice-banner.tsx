@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { useEffect, useState } from "react";
 
 /** 공지 제목 앞 [업데이트] · [이벤트] · [점검] · [안내] 같은 말머리 → 색 태그 */

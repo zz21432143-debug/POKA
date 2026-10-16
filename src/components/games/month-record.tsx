@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { MONTH_RANK_REWARD, monthRecord, todayHighlight, type GameKind } from "@/lib/game-stats";
 import { playersOnline } from "@/lib/game-watch";
 import { GameAlertToggle } from "@/components/quiz/quiz-alert-toggle";

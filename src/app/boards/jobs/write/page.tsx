@@ -1,6 +1,6 @@
 import { BackToList } from "@/components/posts/back-to-list";
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronRightIcon } from "lucide-react";
 import { JOB_KINDS } from "@/lib/nav";
 

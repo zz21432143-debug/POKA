@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BrandIcon } from "@/components/brand/brand-icon";
 
 import { formatWon } from "@/lib/jobs";

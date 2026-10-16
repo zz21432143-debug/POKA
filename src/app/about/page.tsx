@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { InfoPage, InfoSection } from "@/components/legal/info-page";
 import { POKA_TAGLINE } from "@/lib/brand-copy";
 import { DEFAULT_CONTACT_EMAIL } from "@/lib/legal-contact";

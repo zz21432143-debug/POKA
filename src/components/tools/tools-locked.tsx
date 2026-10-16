@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CheckIcon, LockIcon } from "lucide-react";
 import { DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
 import { toolIntro } from "@/lib/tool-seo";

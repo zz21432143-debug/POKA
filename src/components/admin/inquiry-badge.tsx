@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 
 /** 관리자용: 확인 안 한 광고 문의가 있으면 "새 문의 N" 버튼을 보여줍니다. */
 export function InquiryBadge() {

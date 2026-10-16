@@ -2,7 +2,7 @@ import { AdSlotsAdmin } from "@/components/admin/ad-slots-admin";
 import { recentAdsTxtChecks } from "@/lib/adstxt-check";
 import { parseAdsOff, parseAdsSlots } from "@/lib/site-settings";
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { notFound } from "next/navigation";

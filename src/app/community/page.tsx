@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { SIDEBAR_NAV } from "@/lib/nav";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";

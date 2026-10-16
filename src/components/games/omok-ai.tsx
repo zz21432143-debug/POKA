@@ -2,7 +2,7 @@
 
 import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-fullscreen";
 
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { OmokBoard } from "@/components/games/omok-board";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BriefcaseIcon, CalendarDaysIcon, MessageCircleIcon, NewspaperIcon, ScrollTextIcon, SpadeIcon, TrophyIcon } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";

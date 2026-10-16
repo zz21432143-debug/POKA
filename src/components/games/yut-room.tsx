@@ -7,7 +7,7 @@ import { FullscreenButton, FullscreenPrompt } from "@/components/games/game-full
 import { nowMs } from "@/lib/dates";
 /** 게이지 없이 던질 때 세기(60~89) — 렌더 밖에서만 부름 */
 const randomPower = () => 60 + Math.floor(Math.random() * 30);
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";

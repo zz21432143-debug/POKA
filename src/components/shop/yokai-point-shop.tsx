@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import type { MarkCatalog, MarkCatalogItem } from "@/lib/mark-categories";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import type { ReactNode } from "react";
 
 /** 가이드 분류(목록 탭) — 없는 글은 「더 보기」 */

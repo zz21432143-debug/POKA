@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { MapPinIcon } from "lucide-react";
 import { JOB_REGIONS, type JobRegion } from "@/lib/job-status";
 import { cn } from "cn";

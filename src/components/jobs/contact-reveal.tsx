@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CopyIcon, MessageSquareIcon, PhoneIcon } from "lucide-react";
 
 /** 연락처 글("김포카 010-1234-5678")에서 전화번호를 찾아 전화·문자 버튼에 씁니다. */

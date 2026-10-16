@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { MyJobRefresh } from "@/components/jobs/my-job-refresh";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { AUTHOR_SELECT } from "@/components/posts/author-chip";
 import { PostList } from "@/components/posts/post-list";
 import { prisma } from "@/lib/db";

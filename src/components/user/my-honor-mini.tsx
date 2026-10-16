@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { MyRankList } from "@/components/user/my-rank-list";
 import type { MyRanks } from "@/lib/my-rank";

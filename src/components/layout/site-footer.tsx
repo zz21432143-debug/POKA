@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { PokaLogo } from "@/components/brand/poka-logo";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { POKA_PROMO_LINE } from "@/lib/brand-copy";

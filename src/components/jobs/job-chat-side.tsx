@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { addDays } from "@/lib/job-events";
 import { loadJobBoard } from "@/lib/job-board";
 import { JOB_KINDS } from "@/lib/nav";

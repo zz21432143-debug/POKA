@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceToLogin } from "@/lib/history-redirect";
 import { NICKNAME_CHANGE_HREF, NICKNAME_TICKET_NAME } from "@/lib/nickname-change";

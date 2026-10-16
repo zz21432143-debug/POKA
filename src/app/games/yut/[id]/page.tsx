@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound } from "next/navigation";
 import { YutRoom } from "@/components/games/yut-room";
 import { getCurrentUser } from "@/lib/current-user";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { getCurrentUser } from "@/lib/current-user";

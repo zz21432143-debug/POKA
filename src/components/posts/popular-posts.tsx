@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { prisma } from "@/lib/db";
 import type { BoardType } from "@/generated/prisma/enums";
 import { postIsThin } from "@/lib/seo-quality";

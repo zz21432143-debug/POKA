@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import type { DirectCreative } from "@/lib/inventory-policy";
 import { cn } from "cn";

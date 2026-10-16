@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { FREE_PROMO } from "@/lib/free-promo";
 import { cn } from "cn";
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { VerifyToggle } from "@/components/admin/verify-toggle";
 import { PublicProfileCard } from "@/components/user/public-profile-card";
 import { HonorShelf } from "@/components/user/honor-shelf";

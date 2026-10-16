@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound } from "next/navigation";
 import { GameStatsPanel } from "@/components/games/game-stats-panel";
 import { loadWinReward } from "@/lib/game-reward";

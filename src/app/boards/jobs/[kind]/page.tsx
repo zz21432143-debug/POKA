@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { parseJobTagParam } from "@/lib/job-tags";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound } from "next/navigation";
 import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
 import { JobFilters } from "@/components/jobs/job-filters";

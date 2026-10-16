@@ -37,7 +37,7 @@ import { postIsThin } from "@/lib/seo-quality";
 import { adsenseSlotId, splitForMidAd } from "@/lib/adsense";
 import { getSiteSettings } from "@/lib/site-settings";
 import { commentRewardLine } from "@/lib/rewards";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { cookies } from "next/headers";
 import { ReportButton } from "@/components/posts/report-button";
 import { UnlockPostForm } from "@/components/posts/unlock-post-form";

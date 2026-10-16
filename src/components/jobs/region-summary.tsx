@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { prisma } from "@/lib/db";
 import { nowMs } from "@/lib/dates";
 import { openJobWhere, regionWhere, type JobRegion } from "@/lib/job-status";

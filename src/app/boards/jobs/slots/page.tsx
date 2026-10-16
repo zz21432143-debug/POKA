@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CalendarDaysIcon, FlameIcon, PenSquareIcon, TrophyIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { NewSlotsPill } from "@/components/jobs/new-slots-pill";

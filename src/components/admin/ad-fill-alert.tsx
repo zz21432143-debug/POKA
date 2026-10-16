@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { nowMs } from "@/lib/dates";
 import { lowFillPlacements } from "@/lib/ad-fill";
 

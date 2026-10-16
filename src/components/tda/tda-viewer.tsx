@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronDownIcon, ChevronUpIcon, ListIcon, PencilIcon, SearchIcon, XIcon } from "lucide-react";
 import { DocDesk, DocSheet } from "@/components/docs/doc-sheet";
 import { PdfDocViewer } from "@/components/docs/pdf-doc-viewer";

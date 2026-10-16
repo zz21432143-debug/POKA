@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { StarIcon } from "lucide-react";
 import { getVerifiedDealers } from "@/lib/growth-ops";
 import { MarkImage } from "@/components/layout/mark-image";

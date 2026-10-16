@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { ensureBannerSlots } from "@/lib/premium-banners";
 import { ensureSponsorUnits } from "@/lib/inventory";
 import { prisma } from "@/lib/db";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { AdSlotGuide } from "@/components/admin/ad-slot-guide";
 
 export const metadata: Metadata = { title: "배너 관리", robots: { index: false } };

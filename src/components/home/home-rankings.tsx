@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronRightIcon, CrownIcon } from "lucide-react";
 import { cn } from "cn";
 import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";

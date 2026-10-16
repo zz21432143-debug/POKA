@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { formatWon } from "@/lib/jobs";
 import { CrownIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

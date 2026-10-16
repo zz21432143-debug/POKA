@@ -6,7 +6,7 @@ import { displayMarkSrc } from "@/lib/mark-assets";
 import { CrownedFrame } from "@/components/honor/crowned-frame";
 import { auraClassForSrc } from "@/lib/yokai-achievements";
 import { memberRankTitle } from "@/lib/levels";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { NicknameMenu } from "@/components/user/nickname-menu";
 import { InquiryBadge } from "@/components/admin/inquiry-badge";
 import { MyHonorMini } from "@/components/user/my-honor-mini";

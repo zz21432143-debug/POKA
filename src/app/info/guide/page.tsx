@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { GUIDE_CATEGORIES } from "@/lib/guide-links";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";

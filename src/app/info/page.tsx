@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BookOpenIcon, CalendarDaysIcon, GraduationCapIcon } from "lucide-react";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import { prisma } from "@/lib/db";

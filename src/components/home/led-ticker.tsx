@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronsUpIcon } from "lucide-react";
 
 /** 소식 하나를 보여 주는 시간 */

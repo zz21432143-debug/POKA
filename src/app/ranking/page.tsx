@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CrownIcon } from "lucide-react";
 import { CrownedFrame, PotTitleBadge } from "@/components/honor/crowned-frame";
 import { RankChange } from "@/components/user/rank-change";

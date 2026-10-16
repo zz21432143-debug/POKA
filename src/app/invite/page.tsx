@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import { InviteShare } from "@/components/invite/invite-share";
 import { getCurrentUser } from "@/lib/current-user";

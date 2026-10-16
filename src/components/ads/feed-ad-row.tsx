@@ -3,7 +3,7 @@ import { getFeedCreatives } from "@/lib/inventory";
 import { getSiteSettings } from "@/lib/site-settings";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { adsenseSlotId, type AdSensePlacement } from "@/lib/adsense";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { sizedImage } from "@/lib/image-url";
 
 function DirectCard({ creative }: { creative: DirectCreative }) {

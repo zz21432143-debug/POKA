@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 
 export function NicknameMenu({
   nickname,

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { PromoApplyCta } from "@/components/layout/promo-apply-cta";
 import { sizedImage } from "@/lib/image-url";

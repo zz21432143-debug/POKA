@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { SearchIcon } from "lucide-react";
 import { MobileDrawer } from "@/components/layout/mobile-drawer";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";

@@ -3,7 +3,7 @@
 import { VILLAGE_ALL_MARKS } from "@/lib/yokai-marks";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import {

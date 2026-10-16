@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound, redirect } from "next/navigation";
 import { LobbyRefresh } from "@/components/games/omok-create";
 import { YutCodeEntry, YutCreate } from "@/components/games/yut-create";

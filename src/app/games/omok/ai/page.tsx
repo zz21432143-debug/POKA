@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound, redirect } from "next/navigation";
 import { OmokAi } from "@/components/games/omok-ai";
 import { getCurrentUser } from "@/lib/current-user";

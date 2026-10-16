@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BellIcon, BriefcaseIcon, CalendarCheckIcon, CalendarDaysIcon, ChevronRightIcon, FlameIcon } from "lucide-react";
 import { getHomeCounts } from "@/lib/home-data";
 import { ttlCache } from "@/lib/ttl-cache";

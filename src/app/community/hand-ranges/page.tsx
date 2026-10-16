@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { HandRangeRanking } from "@/components/tools/hand-range-ranking";
 import { StudyAd } from "@/components/ads/board-bottom-ad";
 

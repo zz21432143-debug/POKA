@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { closedFromOf, formatWorkDate, kstClock, nowMinutes, tableTag, type RotationShareView } from "@/lib/rotation";

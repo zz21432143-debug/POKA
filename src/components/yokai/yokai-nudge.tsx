@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { getCurrentUser } from "@/lib/current-user";
 import { STARTERS, YOKAI, yokaiImage } from "@/lib/yokai";
 import { yokaiNudge, yokaiPublic } from "@/lib/yokai-server";

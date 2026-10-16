@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OperatorPosts } from "@/components/posts/operator-posts";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { GUIDE_ARTICLES, GUIDE_UPDATED_DEFAULT, getGuideArticle } from "@/lib/info-pages";
 import { linkGuideTerms } from "@/lib/guide-links";
 import { jsonLdString } from "@/lib/job-jsonld";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { ChevronRightIcon, CrownIcon, PenSquareIcon } from "lucide-react";
 import { EmptyBoard } from "@/components/posts/empty-board";
 import { formatRelativeKst } from "@/lib/dates";

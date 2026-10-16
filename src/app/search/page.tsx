@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { prisma } from "@/lib/db";
 import { PostList, type PostSummary } from "@/components/posts/post-list";
 import { JobCards, type JobCardData } from "@/components/jobs/job-cards";

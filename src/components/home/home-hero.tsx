@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CircleIcon, DicesIcon, FlameIcon, LampIcon } from "lucide-react";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";

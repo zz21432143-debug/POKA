@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BarChart3Icon, ChevronRightIcon, Grid3x3Icon, ListOrderedIcon, PercentIcon, PieChartIcon, ScrollTextIcon } from "lucide-react";
 
 const TOOLS = [

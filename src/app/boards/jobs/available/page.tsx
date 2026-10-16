@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { AvailabilityForm } from "@/components/jobs/availability-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { readAvailability } from "@/lib/job-board";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import type { MyRanks } from "@/lib/my-rank";
 import { RankChange } from "@/components/user/rank-change";
 

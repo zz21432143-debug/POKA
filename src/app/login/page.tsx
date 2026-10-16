@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { AuthForm } from "@/components/auth/auth-form";
 import { getCurrentUser } from "@/lib/current-user";
 import { replaceTo } from "@/lib/history-redirect";

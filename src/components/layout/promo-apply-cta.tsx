@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { MegaphoneIcon } from "lucide-react";
 
 /** 우측 사이드바. 매장·대회·브랜드가 POKA에 광고를 문의하도록 안내합니다. */

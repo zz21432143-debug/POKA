@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { LONG_GUIDES } from "@/lib/guide-articles-long";
 import { todayKstDate } from "@/lib/dates";

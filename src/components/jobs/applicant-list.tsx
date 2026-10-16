@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { UsersIcon } from "lucide-react";
 import { formatRelativeKst } from "@/lib/dates";
 

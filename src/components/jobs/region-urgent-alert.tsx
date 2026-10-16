@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { BellRingIcon } from "lucide-react";
 import { ALL_REGIONS, JOB_REGIONS } from "@/lib/job-status";
 import { ensurePushSubscription, pushSupported } from "@/lib/push-client";

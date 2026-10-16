@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { PotTitleBadge } from "@/components/honor/crowned-frame";
 import { listHonorHistory } from "@/lib/pot-titles";
 import { HonorMainPicker } from "@/components/user/honor-main-picker";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CardRow } from "@/components/cards/poker-card";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";

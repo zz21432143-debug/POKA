@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { notFound, redirect } from "next/navigation";
 import { OpponentCard } from "@/components/games/omok-ai";
 import { LobbyRefresh, OmokCodeEntry, OmokCreate } from "@/components/games/omok-create";

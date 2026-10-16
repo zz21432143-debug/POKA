@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { INFO_PAGES } from "@/components/legal/info-page";
 
 /** 바닥글 안내 링크: 검색·광고 심사에서 읽을 수 있게 팝업 대신 실제 페이지로 연결합니다. */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { MegaphoneIcon, PlusIcon } from "lucide-react";
 import { shuffleInPlaceCopy } from "@/lib/promo-rotate";
 import { sizedImage } from "@/lib/image-url";

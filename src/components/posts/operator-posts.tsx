@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { prisma } from "@/lib/db";
 
 /** 딜러 가이드 아래: 운영자가 정리한 커뮤니티 글(질문 · 공지) — 가이드 ↔ 커뮤니티 글을 서로 이어 줌 */

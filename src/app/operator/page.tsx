@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { InfoPage, InfoSection } from "@/components/legal/info-page";
 import { KAKAO_INQUIRY_ID } from "@/lib/kakao";
 import { LEGAL_SERVICE_URL } from "@/lib/legal";

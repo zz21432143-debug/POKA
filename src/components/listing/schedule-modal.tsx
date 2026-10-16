@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CalendarDaysIcon, ExternalLinkIcon, MapPinIcon, TrophyIcon, XIcon, ZoomInIcon } from "lucide-react";
 import type { ScheduleEvent } from "@/components/listing/schedule-calendar";
 import { LinkifiedText } from "@/components/posts/linkified-text";

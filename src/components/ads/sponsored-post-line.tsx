@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { pickFill, type DirectCreative } from "@/lib/inventory-policy";
 import { AdIfSlot } from "@/components/ads/ad-toggle";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";

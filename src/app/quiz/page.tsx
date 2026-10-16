@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/ui/link";
 import { CrownIcon } from "lucide-react";
 import { cn } from "cn";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
