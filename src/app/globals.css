@@ -183,7 +183,7 @@ body {
   --secondary: #2a2426;
   --secondary-foreground: #e5e7eb;
   --muted: #221d1e;
-  --muted-foreground: #9ca3af;
+  --muted-foreground: #b3b8c2;
   --accent: #2a2426;
   --accent-foreground: #e5e7eb;
   --border: rgba(255, 255, 255, 0.1);
@@ -1186,7 +1186,7 @@ select {
 .board-head,
 .board-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 9.5rem 4.8rem 3rem 3rem;
+  grid-template-columns: minmax(0, 1fr) 15rem 4.8rem 3rem 3rem;
   column-gap: 0.75rem;
   align-items: center;
   padding: 0 1rem;
@@ -1284,6 +1284,16 @@ select {
 
 .board-author-copy {
   min-width: 0;
+  /* PC: 닉네임 · 대표 요괴 · 칭호를 한 줄에, 레벨 칭호는 아래 줄(세로로 쌓이지 않게) */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.3rem;
+  row-gap: 0.1rem;
+}
+
+.board-author-copy .board-author-rank {
+  flex-basis: 100%;
 }
 
 .board-row .mark-image-wrapper {
@@ -1313,9 +1323,9 @@ select {
   font-weight: 700;
 }
 
-/* 팟 계산 칭호: 닉네임 아래(PC) · 옆(휴대폰) */
+/* 칭호: 닉네임 옆 */
 .board-author-title {
-  margin: 0.1rem 0;
+  margin: 0;
   max-width: 100%;
 }
 
@@ -1663,13 +1673,21 @@ select {
     font-size: 0.75rem;
   }
 
-  /* 휴대폰: 칭호도 닉네임 옆에 짧게(레벨 칭호 · Lv) */
+  /* 휴대폰: 레벨 칭호는 빼서 작성자 · 날짜 · 조회 · 추천을 한 줄에(글 안에서는 보임) */
   .board-author-rank {
-    font-size: 0.68rem;
+    display: none;
   }
 
   .board-author-title {
     margin: 0;
+  }
+
+  /* 휴대폰 목록: 칭호 배지는 작게(날짜 · 조회 · 추천이 같은 줄에 들어가게) */
+  .board-row .board-author-title {
+    font-size: 0.66rem !important;
+    padding: 0 0.4rem !important;
+    min-height: 0 !important;
+    line-height: 1.5 !important;
   }
 
   /* 휴대폰: 칭호는 대표 1개만, 닉네임은 잘리지 않게 */
@@ -1688,7 +1706,26 @@ select {
 
   .board-when,
   .board-stat {
-    margin-left: 0.55rem;
+    margin-left: 0;
+    color: #b8ad9c;
+  }
+
+  .board-row {
+    column-gap: 0.55rem;
+  }
+
+  /* 휴대폰: 게시판 맨 위 소개 칸은 작게(목록이 첫 화면에 더 보이게) */
+  .board-intro {
+    padding: 0.85rem 1rem;
+  }
+
+  .board-intro h1 {
+    font-size: 1.4rem;
+  }
+
+  .board-intro p {
+    font-size: 0.92rem;
+    line-height: 1.55;
   }
 
   .write-body-input {

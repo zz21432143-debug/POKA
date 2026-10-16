@@ -33,6 +33,13 @@ export async function GET(request: Request) {
     const { notifyAdmins } = await import("@/lib/push");
     await notifyAdmins({ title: `⚠️ 광고가 잘 안 채워지는 자리 ${low.length}곳`, body: low.map((r) => `${r.label} ${r.rate}%`).join(" · "), url: "/admin/adsense" }).catch(() => undefined);
   }
+  // ads.txt가 실제로 잘 열리는지 매일 확인 — 안 열리면 운영자에게 바로 알림
+  const { checkAdsTxtLive } = await import("@/lib/adstxt-check");
+  const ads = await checkAdsTxtLive().catch(() => null);
+  if (ads && !ads.ok) {
+    const { notifyAdmins } = await import("@/lib/push");
+    await notifyAdmins({ title: "⚠️ ads.txt가 안 열려요", body: `pokerwiki.co.kr/ads.txt · ${ads.note} — 애드센스 승인에 영향이 있어요`, url: "/admin/adsense" }).catch(() => undefined);
+  }
   const target = shiftDate(today, NOTICE_DAYS);
   const rows = await prisma.post.findMany({
     where: {

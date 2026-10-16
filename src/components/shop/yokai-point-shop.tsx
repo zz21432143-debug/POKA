@@ -267,7 +267,7 @@ export function YokaiPointShop({
             <strong>{nickname}</strong>
           </div>
           <p data-mark-preview-inline className="flex items-center gap-1.5 rounded-lg bg-black/30 px-2 py-1.5 text-xs text-zinc-300">
-            <span className="text-zinc-500">게시판에선</span>
+            <span className="text-zinc-400">게시판에선</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview.imageUrl} alt="" width={20} height={20} className="size-5 rounded-full" />
             <b className="text-white">{nickname}</b>

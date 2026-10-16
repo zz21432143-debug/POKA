@@ -35,8 +35,8 @@ export default async function GamesPage() {
   if (!gamesOpen(user)) notFound();
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pt-12">
-      <header className="arcade-panel grid justify-items-center gap-2 px-4 py-6 text-center">
-        <p className="arcade-px neon-purple text-[10px]">POKA</p>
+      <header className="arcade-panel grid justify-items-center gap-1.5 px-4 py-4 text-center">
+        <p className="arcade-px neon-purple text-xs">POKA</p>
         <h1 className="arcade-px neon-gold text-2xl leading-snug">
           요괴 오락실
         </h1>
@@ -44,8 +44,8 @@ export default async function GamesPage() {
         <p className="text-xs text-zinc-300">
           요괴들과 한 판! 친구와 대전하거나 요괴와 연습해 보세요.
         </p>
-        <p className="arcade-px arcade-blink text-xs text-[#ffe08a]">
-          게임을 골라요
+        <p className="arcade-px text-xs text-[#ffe08a]">
+          ▼ 아래에서 게임을 골라요
         </p>
       </header>
       <ul className="grid gap-2">
@@ -63,7 +63,7 @@ export default async function GamesPage() {
                   <b className="arcade-kr text-lg text-[#ffe08a]">{g.name}</b>
                   <span className="text-xs text-zinc-300">{g.hint}</span>
                 </span>
-                <span className="arcade-px neon-red arcade-blink ml-auto text-[9px]">
+                <span className="arcade-px neon-red ml-auto text-xs">
                   시작
                 </span>
               </Link>

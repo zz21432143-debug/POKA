@@ -24,10 +24,12 @@ export async function HomeSummary() {
   const [counts, todaySlots] = await Promise.all([getHomeCounts().catch(() => null), todaySlotCount().catch(() => 0)]);
   if (!counts) return null;
   const items = [
-    { href: "/boards/jobs/slots?d=today", icon: CalendarCheckIcon, label: "오늘 빈자리", value: todaySlots, tone: "text-[#ffcf4a]" },
-    { href: "/boards/jobs", icon: BriefcaseIcon, label: "모집 중", value: counts.jobs, tone: "text-[#f3d9a4]" },
-    { href: "/boards/jobs/urgent", icon: FlameIcon, label: "급구", value: counts.urgent, tone: "text-rose-300" },
-    { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-sky-200" },
+    todaySlots
+      ? { href: "/boards/jobs/slots?d=today", icon: CalendarCheckIcon, label: "오늘 빈자리", value: todaySlots as number | string, tone: "text-xl text-[#ffcf4a]" }
+      : { href: "/boards/jobs/available", icon: BellIcon, label: "빈자리 알림", value: "🔔 받기" as number | string, tone: "text-[15px] whitespace-nowrap text-[#ffcf4a]" },
+    { href: "/boards/jobs", icon: BriefcaseIcon, label: "모집 중", value: counts.jobs, tone: "text-xl text-[#f3d9a4]" },
+    { href: "/boards/jobs/urgent", icon: FlameIcon, label: "급구", value: counts.urgent, tone: "text-xl text-rose-300" },
+    { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-xl text-sky-200" },
   ];
   return (
     <section aria-label="오늘 요약" className="lounge-card grid gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5">
@@ -39,7 +41,7 @@ export async function HomeSummary() {
                 <it.icon className="hidden size-3.5 sm:block" />
                 {it.label}
               </span>
-              <span className={`text-xl leading-tight font-black tabular-nums ${it.tone}`}>{it.value}</span>
+              <span className={`leading-tight font-black tabular-nums ${it.tone}`}>{it.value}</span>
             </Link>
           </li>
         ))}

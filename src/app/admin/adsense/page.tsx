@@ -1,4 +1,5 @@
 import { AdSlotsAdmin } from "@/components/admin/ad-slots-admin";
+import { recentAdsTxtChecks } from "@/lib/adstxt-check";
 import { parseAdsOff, parseAdsSlots } from "@/lib/site-settings";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -96,6 +97,7 @@ export default async function AdminAdsensePage() {
     .$queryRaw<{ placement: string; filled: number; unfilled: number }[]>`SELECT "placement", SUM("filled")::int AS "filled", SUM("unfilled")::int AS "unfilled" FROM "AdFillStat" WHERE "day" >= ${fillSince} GROUP BY "placement"`
     .catch(() => []);
   const fill = new Map(fillRows.map((r) => [r.placement, { filled: r.filled, unfilled: r.unfilled }]));
+  const checks = await recentAdsTxtChecks(14);
 
   // 승인 전 할 일: 부족한 것부터 짚어 줌
   const countOf = (types: readonly string[]) => byBoard.filter((b) => types.includes(b.boardType)).reduce((sum, b) => sum + b._count._all, 0);
@@ -211,6 +213,23 @@ export default async function AdminAdsensePage() {
           )}
           <span className="block text-xs text-muted-foreground">정상인데 애드센스에 「찾을 수 없음」이면 구글이 다시 읽을 때까지(며칠~2주) 기다리면 돼요.</span>
         </p>
+        <div data-adstxt-history className="mt-2 text-sm">
+          <b>매일 자동 확인(오전 10시):</b>{" "}
+          {checks.length ? (
+            <>
+              {checks.every((c) => c.ok) ? <span className="text-emerald-300">최근 {checks.length}번 모두 정상</span> : <span className="text-rose-300">문제 {checks.filter((c) => !c.ok).length}번</span>}
+              <span className="mt-1 flex flex-wrap gap-1">
+                {checks.map((c) => (
+                  <span key={c.at} title={c.note} className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${c.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+                    {new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric" }).format(new Date(c.at))} {c.ok ? "✓" : "✕"}
+                  </span>
+                ))}
+              </span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">내일 오전부터 기록돼요.</span>
+          )}
+        </div>
       </section>
 
       <section aria-label="자동 광고 제외" className={card}>
