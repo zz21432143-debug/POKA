@@ -326,7 +326,7 @@ export function OmokAi({
   const resultTitle =
     winner === "draw" ? "DRAW" : humanWon ? "YOU WIN!" : "YOU LOSE";
   return (
-    <div data-omok-ai className="grid gap-2.5">
+    <div data-omok-ai data-game-land className="omok-ai-root grid gap-2.5">
       <FullscreenPrompt />
       <div className="flex justify-end">
         <FullscreenButton />
@@ -364,7 +364,7 @@ export function OmokAi({
                 : "win",
         }}
       />
-      <div className="relative mt-1">
+      <div data-land-snap className="omok-board-wrap relative mt-1">
         <OmokBoard
           moves={moves}
           forbidden={forbidden}

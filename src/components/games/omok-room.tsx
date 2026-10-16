@@ -770,11 +770,12 @@ export function OmokRoom({
   return (
     <div
       data-omok-room={view.status}
+      data-game-land
       className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start"
     >
       <FullscreenPrompt />
       {/* ── 왼쪽(휴대폰은 위): HUD · 판 · 조작 ── */}
-      <div className="relative grid gap-2.5">
+      <div className="omok-left relative grid gap-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <FullscreenButton />
           {(() => {
@@ -860,7 +861,7 @@ export function OmokRoom({
           me={spectator && watching.count > 0}
         />
 
-        <div className={cn("relative mt-1", theyAsked && "arcade-shake")}>
+        <div data-land-snap className={cn("omok-board-wrap relative mt-1", theyAsked && "arcade-shake")}>
           <OmokBoard
             moves={view.moves}
             forbidden={forbidden}

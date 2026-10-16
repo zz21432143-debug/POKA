@@ -44,7 +44,7 @@ export default async function OmokRoomPage({
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-2">
       <Link
         href={gamesOpen(user) ? "/games/omok" : "/games/omok/join"}
-        className="font-black inline-flex min-h-10 w-fit items-center text-sm text-[#ffcf4a]"
+        className="game-back font-black inline-flex min-h-10 w-fit items-center text-sm text-[#ffcf4a]"
       >
         ← 요괴 오목
       </Link>

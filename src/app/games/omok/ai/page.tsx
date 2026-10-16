@@ -36,7 +36,7 @@ export default async function OmokAiPage({
     <div className="mx-auto flex w-full max-w-xl flex-col gap-2">
       <Link
         href="/games/omok"
-        className="font-black inline-flex min-h-10 w-fit items-center text-sm text-[#ffcf4a]"
+        className="game-back font-black inline-flex min-h-10 w-fit items-center text-sm text-[#ffcf4a]"
       >
         ← 요괴 오목
       </Link>

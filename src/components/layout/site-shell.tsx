@@ -96,7 +96,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <CrownProvider>
     <div className="felt-bg flex min-h-dvh flex-col">
-      <div className="sticky top-0 z-40 bg-[#120d0a] shadow-[0_6px_18px_rgb(0_0_0/0.35)]">
+      <div className="site-top sticky top-0 z-40 bg-[#120d0a] shadow-[0_6px_18px_rgb(0_0_0/0.35)]">
         <Suspense fallback={<SiteHeader profile={null} />}>
           <ConnectedHeader />
         </Suspense>

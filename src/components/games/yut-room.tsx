@@ -944,8 +944,8 @@ export function YutRoom({
     view.endReason === "leave";
 
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
-      <FullscreenPrompt />
+    <div data-game-land className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
+      <FullscreenPrompt landscape />
       {/* 머리(한 줄) */}
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <h1
@@ -978,7 +978,7 @@ export function YutRoom({
         >
           {sound ? "🔊" : "🔇"}
         </button>
-        <FullscreenButton />
+        <FullscreenButton landscape />
         <button
           type="button"
           data-yut-howto
@@ -1328,9 +1328,9 @@ export function YutRoom({
       {/* ───── 판(크게) ───── */}
       {!waiting && s ? (
         <>
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
+          <div data-land-snap className="yut-main grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] lg:items-start">
             {/* 왼쪽(PC): 판 · 대기 말 */}
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
+            <div className="yut-left grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2">
               <div className="relative min-w-0">
                 <YutBoard
                   state={s}
@@ -1404,7 +1404,7 @@ export function YutRoom({
               </div>
             </div>
             {/* 오른쪽(PC) · 아래(휴대폰): 팀 · 차례 · 이모티콘 · 관전석 · 도전 줄 */}
-            <div className="grid min-w-0 gap-2 max-lg:contents">
+            <div className="yut-side grid min-w-0 gap-2 max-lg:contents">
               {/* 팀 줄(가로로 밀어서 보기) */}
               <div data-yut-teams className="grid gap-1.5 max-lg:-order-1">
                 {(["A", "B"] as const).map((team) => (
@@ -1488,7 +1488,7 @@ export function YutRoom({
                     // 휴대폰: 화면 아래에 크게 고정(엄지로 바로) · PC: 이 칸 안
                     <div
                       data-yut-throw-bar
-                      className="max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-t-4 max-lg:border-[#ffcf4a] max-lg:bg-[#140d24]/95 max-lg:p-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+                      className="yut-throwbar max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:border-t-4 max-lg:border-[#ffcf4a] max-lg:bg-[#140d24]/95 max-lg:p-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
                     >
                       {gauge ? (
                         <div className="grid gap-2">
@@ -1574,6 +1574,36 @@ export function YutRoom({
                 {tray("B")}
               </section>
 
+              {/* 관전자 칸 · 그 왼쪽에 「새 말 내보내기」(내 차례 · 대기 말이 있을 때) */}
+              <div className="flex min-w-0 items-stretch gap-2">
+                {moving && !busy && startRep !== undefined ? (
+                  <button
+                    type="button"
+                    data-yut-new-piece
+                    onClick={() => pickPiece(startRep)}
+                    className={cn(
+                      "grid w-24 shrink-0 place-items-center rounded-2xl border-[3px] border-[#0a0614] px-1.5 py-2 text-center text-sm leading-tight font-black shadow-[3px_3px_0_#0a0614]",
+                      selected === startRep ? "bg-[#6ad7ff] text-[#04263a]" : "yut-select-jump bg-[#ffcf4a] text-[#2a1400]",
+                    )}
+                  >
+                    <span className="text-xl" aria-hidden>
+                      🐾
+                    </span>
+                    <span>새 말</span>
+                    <span className="text-[11px]">{selected === startRep ? "골랐어요" : "내보내기"}</span>
+                  </button>
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <SpectatorBar
+                    count={watching.count}
+                    list={watching.list}
+                    cheers={view.cheers}
+                    now={now + offset}
+                    me={!view.mySeat}
+                  />
+                </div>
+              </div>
+
               {/* 이모티콘 · 응원 */}
               {loggedIn && view.status !== "done" ? (
                 <section
@@ -1627,36 +1657,7 @@ export function YutRoom({
                 </section>
               ) : null}
 
-              {canThrow ? <div className="h-28 lg:hidden" aria-hidden /> : null}
-              {/* 관전자 칸 · 그 왼쪽에 「새 말 내보내기」(내 차례 · 대기 말이 있을 때) */}
-              <div className="flex min-w-0 items-stretch gap-2">
-                {moving && !busy && startRep !== undefined ? (
-                  <button
-                    type="button"
-                    data-yut-new-piece
-                    onClick={() => pickPiece(startRep)}
-                    className={cn(
-                      "grid w-24 shrink-0 place-items-center rounded-2xl border-[3px] border-[#0a0614] px-1.5 py-2 text-center text-sm leading-tight font-black shadow-[3px_3px_0_#0a0614]",
-                      selected === startRep ? "bg-[#6ad7ff] text-[#04263a]" : "yut-select-jump bg-[#ffcf4a] text-[#2a1400]",
-                    )}
-                  >
-                    <span className="text-xl" aria-hidden>
-                      🐾
-                    </span>
-                    <span>새 말</span>
-                    <span className="text-[11px]">{selected === startRep ? "골랐어요" : "내보내기"}</span>
-                  </button>
-                ) : null}
-                <div className="min-w-0 flex-1">
-                  <SpectatorBar
-                    count={watching.count}
-                    list={watching.list}
-                    cheers={view.cheers}
-                    now={now + offset}
-                    me={!view.mySeat}
-                  />
-                </div>
-              </div>
+              {canThrow ? <div className="yut-throw-spacer h-28 lg:hidden" aria-hidden /> : null}
               {queuePanel}
             </div>
           </div>

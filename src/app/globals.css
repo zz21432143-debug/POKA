@@ -4045,3 +4045,71 @@ aside[aria-label="광고"]:not(:has(ins.adsbygoogle[data-ad-status="filled"])) {
   border-width: 0;
   overflow: hidden;
 }
+
+/* ───────── 게임방: 휴대폰 가로 화면(높이 520px 이하) — 판은 왼쪽에 화면 높이로 · 정보는 오른쪽 ───────── */
+@media (orientation: landscape) and (max-height: 520px) {
+  :root:has([data-game-land]) .site-top,
+  :root:has([data-game-land]) footer,
+  :root:has([data-game-land]) .game-back {
+    display: none !important;
+  }
+  :root:has([data-game-land]) .site-columns {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  /* 윷 */
+  .yut-main {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start;
+  }
+  .yut-main > .yut-left {
+    position: sticky;
+    top: 8px;
+  }
+  .yut-main [data-yut-board] {
+    width: calc(100dvh - 16px) !important;
+    max-width: none !important;
+  }
+  .yut-main > .yut-side {
+    display: grid !important;
+    align-content: start;
+  }
+  .yut-side [data-yut-teams] {
+    order: -1;
+  }
+  .yut-throwbar {
+    position: static !important;
+    border-top-width: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  .yut-throw-spacer {
+    display: none;
+  }
+  /* 오목(대국 · AI 연습): 판 왼쪽 · 나머지 오른쪽 */
+  .omok-left,
+  .omok-ai-root {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(29, auto) 1fr;
+    column-gap: 12px;
+    align-items: start;
+  }
+  .omok-left > *,
+  .omok-ai-root > * {
+    grid-column: 2;
+  }
+  .omok-left > .omok-board-wrap,
+  .omok-ai-root > .omok-board-wrap {
+    grid-column: 1;
+    grid-row: 1 / 31;
+    margin-top: 0;
+    position: sticky;
+    top: 8px;
+  }
+  .omok-board-wrap [data-omok-board] {
+    width: calc(100dvh - 16px) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+}
