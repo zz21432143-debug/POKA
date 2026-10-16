@@ -65,12 +65,20 @@ export function BoardWriteForm({
           password: boardType === "SUGGESTION" ? password : undefined,
         }),
       });
-      const payload = (await response.json()) as { id?: string; error?: string };
+      const payload = (await response.json()) as { id?: string; error?: string; points?: number };
       if (response.status === 401) {
         router.replace("/login");
         return;
       }
       if (!response.ok || !payload.id) throw new Error(payload.error ?? "저장에 실패했습니다.");
+      // 오늘 활동 포인트 한도에 닿아 포인트가 0이면 글 화면에서 한 번 알려 줌
+      if (payload.points === 0) {
+        try {
+          window.sessionStorage.setItem("poka-cap-note", payload.id);
+        } catch {
+          /* 못 써도 글은 올라감 */
+        }
+      }
       router.replace(`/posts/${payload.id}`);
       router.refresh();
     } catch (err) {

@@ -13,10 +13,13 @@ import { markPriceTag } from "@/lib/yokai-catalog";
 import {
   KOREAN_LEGEND_MARKS,
   LOGO_MARKS,
+  VILLAGE_COMMON_MARKS,
+  VILLAGE_RARE_MARKS,
   YOKAI_MARKS,
   isLegendSlug,
   isLogoSlug,
   isShopMarkSlug,
+  isVillageSlug,
   isYokaiSlug,
 } from "@/lib/yokai-marks";
 import { cn } from "cn";
@@ -51,6 +54,14 @@ export function YokaiPointShop({
     () => mergeFrom(KOREAN_LEGEND_MARKS, catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
   );
+  const villageCommon = useMemo(
+    () => mergeFrom(VILLAGE_COMMON_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
+  const villageRare = useMemo(
+    () => mergeFrom(VILLAGE_RARE_MARKS, catalog, demoOwned, demoEquipped),
+    [catalog, demoOwned, demoEquipped],
+  );
   const logos = useMemo(
     () => mergeFrom(LOGO_MARKS, catalog, demoOwned, demoEquipped),
     [catalog, demoOwned, demoEquipped],
@@ -76,13 +87,14 @@ export function YokaiPointShop({
     [catalog, demoOwned, demoEquipped],
   );
   const preview =
-    [...logos, ...regular, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
-  const inventory = [...rewards, ...kings, ...logos, ...legends, ...regular].filter((mark) => mark.owned);
+    [...logos, ...regular, ...villageCommon, ...villageRare, ...legends, ...rewards, ...kings].find((mark) => mark.slug === selected) ?? regular[0]!;
+  const inventory = [...rewards, ...kings, ...logos, ...legends, ...villageRare, ...villageCommon, ...regular].filter((mark) => mark.owned);
   const others = (catalog?.marks ?? []).filter(
     (mark) =>
       !isYokaiSlug(mark.slug) &&
       !isLegendSlug(mark.slug) &&
       !isLogoSlug(mark.slug) &&
+      !isVillageSlug(mark.slug) &&
       !isAchievementSlug(mark.slug) &&
       !isKingSlug(mark.slug),
   );
@@ -251,6 +263,26 @@ export function YokaiPointShop({
             <MarkGrid
               title="일반 마크"
               marks={regular}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
+            <MarkGrid
+              title="요괴 마을 · 일반"
+              marks={villageCommon}
+              points={points}
+              pending={pending}
+              selected={selected}
+              onSelect={setSelected}
+              onBuy={buy}
+              onEquip={equip}
+            />
+            <MarkGrid
+              title="요괴 마을 · 희귀"
+              marks={villageRare}
               points={points}
               pending={pending}
               selected={selected}

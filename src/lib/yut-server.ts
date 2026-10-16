@@ -8,6 +8,7 @@ import { YOKAI_ORDER, type YokaiSpecies } from "@/lib/yokai";
 import { isGameEmote } from "@/lib/omok-emotes";
 import { loadWinReward } from "@/lib/game-reward";
 import { MIN_COUNTED_MOVES } from "@/lib/game-stats";
+import { askRematch, declineRematch, readRematch, rematchView, type RematchView } from "@/lib/game-rematch";
 import { applyMove, applyThrow, autoStep, newState, other, type Team, type YutState } from "@/lib/yut";
 
 /**
@@ -346,6 +347,8 @@ export type YutView = {
   emote: { seat: string; e: string; at: number } | null;
   cheers: Cheer[];
   nextId: string | null;
+  /** 「한 판 더」 신청(1:1 사람끼리) */
+  rematch: RematchView;
   /** 도전 줄(닉네임 순서) · 내 순번(0 = 없음) */
   queue: string[];
   queueMine: number;
@@ -410,6 +413,7 @@ async function toView(row: Row, viewerId: string | null): Promise<YutView> {
     emote: em.last,
     cheers: em.cheers.filter((c) => Date.now() - c.at < 15_000),
     nextId: row.nextId,
+    rematch: row.status === "done" && !row.nextId && row.mode === 1 && !row.withBots ? rematchView(await readRematch("yut", row.id), viewerId) : null,
     queue: queueOf(row).map((e) => e.n),
     queueMine: viewerId ? queueOf(row).findIndex((e) => e.id === viewerId) + 1 : 0,
   };
@@ -450,7 +454,7 @@ export async function yutState(id: string, viewerId: string | null, knownVersion
 
 /* ───────── 동작 ───────── */
 
-export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave" | "bot-add" | "bot-remove";
+export type YutAction = "sit" | "leave" | "ready" | "shuffle" | "mode" | "kick" | "start" | "throw" | "move" | "emote" | "cheer" | "exit" | "rematch" | "rematch-no" | "surrender" | "surrender-cancel" | "queue-join" | "queue-leave" | "bot-add" | "bot-remove";
 type ActResult = { ok: true; view: YutView } | { ok: false; error: string; status: number };
 
 export async function yutAct(
@@ -681,15 +685,33 @@ export async function yutAct(
   if (action === "rematch") {
     if (row.status !== "done" || !mine) return fail("끝난 판의 참가자만 한 판 더 할 수 있어요.", 409);
     if (row.nextId) return done();
-    // 같은 사람 · 같은 팀으로 새 대기실(봇 · 나간 사람 자리는 비움) — 누른 사람이 방장
+    // 같은 사람 · 같은 팀으로 새 대기실(봇 · 나간 사람 자리는 비움) — 신청한 사람(없으면 누른 사람)이 방장
     const a = await awayHumans(row, userId);
     if (a.others.length && a.away.length === a.others.length && !row.withBots)
       return fail("다른 사람이 모두 방을 나갔어요. 로비에서 새 방을 만들어 주세요.", 409);
+    // 1:1 사람끼리: 상대가 먼저 신청한 게 없으면 신청만(상대 화면에 「수락 · 거절」)
+    let asker: string | null = null;
+    if (row.mode === 1 && !row.withBots && a.others.length) {
+      const ask = await readRematch("yut", id);
+      asker = ask?.by ?? null;
+      if (!ask || ask.declined || ask.by === userId) {
+        if (!ask || ask.declined || ask.by !== userId) {
+          await askRematch("yut", id, userId);
+          await prisma.yutGame.updateMany({ where: { id }, data: { version: { increment: 1 } } });
+        }
+        return done();
+      }
+    }
     const gone = new Set(a.away);
     const next = seats.map((x) => ({ team: x.team, idx: x.idx, userId: x.bot || x.left || (x.userId && gone.has(x.userId)) ? null : x.userId, ready: false }));
-    const made = await makeRoom({ hostId: userId, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate, title: row.title });
+    const made = await makeRoom({ hostId: asker && next.some((x) => x.userId === asker) ? asker : userId, mode: row.mode, seatsJson: JSON.stringify(next), isPrivate: row.isPrivate, title: row.title });
     const linked = await prisma.yutGame.updateMany({ where: { id, nextId: null }, data: { nextId: made.id, version: { increment: 1 } } });
     if (linked.count !== 1) await prisma.yutGame.delete({ where: { id: made.id } }).catch(() => undefined);
+    return done();
+  }
+  if (action === "rematch-no") {
+    if (row.status !== "done" || !mine) return fail("끝난 판에서만 할 수 있어요.", 409);
+    if (await declineRematch("yut", id, userId)) await prisma.yutGame.updateMany({ where: { id }, data: { version: { increment: 1 } } });
     return done();
   }
   return fail("알 수 없는 요청이에요.");

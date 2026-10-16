@@ -15,6 +15,7 @@ import { profileYokai } from "@/lib/yokai-server";
 import type { YokaiSpecies } from "@/lib/yokai";
 import { isGameEmote } from "@/lib/omok-emotes";
 import { gameRecord, headToHead, recordGameResult } from "@/lib/game-stats";
+import { askRematch, declineRematch, readRematch, rematchView, type RematchView } from "@/lib/game-rematch";
 
 /**
  * 요괴 오목 친구 대전(서버가 차례 · 금수 · 승패 · 시간을 판정).
@@ -175,6 +176,8 @@ export type OmokView = {
   canChallenge: boolean;
   isPrivate: boolean;
   nextId: string | null;
+  /** 「한 판 더」 신청(누가 · 내가 했는지 · 거절됐는지) */
+  rematch: RematchView;
   line: number[] | null;
   /** 관전자: 로그인한 사람 닉네임 · 손님 수 */
   watchers?: number;
@@ -546,6 +549,10 @@ async function toView(
     })(),
     isPrivate: row.isPrivate,
     nextId: row.nextId,
+    rematch:
+      row.status === "done" && !row.nextId && row.endReason !== "cancel"
+        ? rematchView(await readRematch("omok", row.id), viewerId)
+        : null,
     line: row.winner && row.endReason === "five" ? findWinLine(moves) : null,
     undo: {
       askBy:
@@ -742,6 +749,7 @@ export type OmokAction =
   | "cancel"
   | "emote"
   | "rematch"
+  | "rematch-no"
   | "undo-ask"
   | "undo-yes"
   | "undo-no"
@@ -1290,11 +1298,21 @@ export async function omokAct(
     if (row.nextId) return done();
     if (await rivalAway(row, userId))
       return fail("상대가 이미 방을 나갔어요. 로비에서 새 상대를 찾아 주세요.", 409);
-    // 다음 판: 같은 두 사람이 대기실에 앉은 채로(둘 다 READY 누르면 시작)
+    // 상대가 먼저 신청한 게 없으면: 신청만(상대 화면에 「수락 · 거절」)
+    const ask = await readRematch("omok", id);
+    if (!ask || ask.declined || ask.by === userId) {
+      if (!ask || ask.declined || ask.by !== userId) {
+        await askRematch("omok", id, userId);
+        await prisma.omokGame.updateMany({ where: { id }, data: { version: { increment: 1 } } });
+      }
+      return done();
+    }
+    // 상대 신청을 수락 → 다음 판: 같은 두 사람이 대기실에 앉은 채로(둘 다 READY 누르면 시작)
     const other = userId === row.blackId ? row.whiteId : row.blackId;
+    // 신청한 사람이 방장
     const next = await makeRoom({
-      hostId: userId,
-      guestId: other,
+      hostId: other,
+      guestId: userId,
       isPrivate: row.isPrivate,
       title: row.title,
       queueJson: row.queueJson,
@@ -1307,6 +1325,13 @@ export async function omokAct(
       await prisma.omokGame
         .delete({ where: { id: next.id } })
         .catch(() => undefined);
+    return done();
+  }
+
+  if (action === "rematch-no") {
+    if (!mine || row.status !== "done") return fail("끝난 대국에서만 할 수 있어요.", 409);
+    if (await declineRematch("omok", id, userId))
+      await prisma.omokGame.updateMany({ where: { id }, data: { version: { increment: 1 } } });
     return done();
   }
 

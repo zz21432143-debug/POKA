@@ -55,6 +55,7 @@ import { loginHref } from "@/lib/login-path";
 import { eventJsonLd, jobPostingJsonLd, jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
 import { ShareButton } from "@/components/posts/share-button";
+import { CapNotice } from "@/components/posts/cap-notice";
 import { openJobWhere, regionWhere, parseJobRegion } from "@/lib/job-status";
 
 /** 이전/다음 글 미리보기: 태그 · 공백 정리한 첫 90자 */
@@ -368,6 +369,7 @@ export default async function PostDetailPage({
       <Suspense fallback={null}>
         <PushSentNotice />
       </Suspense>
+      <CapNotice postId={post.id} />
       <div className="flex items-center justify-between gap-2">
         <BackToList href={listHref} />
         {post.isPrivate ? null : <ShareButton path={`/posts/${post.id}`} title={post.title} />}

@@ -407,10 +407,10 @@ export function OmokRoom({
   useEffect(() => {
     if (!view.nextId || view.status !== "done") return;
     if (nextAt.current === null) nextAt.current = Date.now();
-    const wait = Math.max(0, nextAt.current + 5000 - Date.now());
+    const wait = Math.max(0, nextAt.current + (view.me ? 1200 : 5000) - Date.now());
     const t = window.setTimeout(() => router.replace(`/games/omok/${view.nextId}`), wait);
     return () => window.clearTimeout(t);
-  }, [view.nextId, view.status, router]);
+  }, [view.nextId, view.status, view.me, router]);
 
   // 큰 글자 1.2초 · 컷인 1.8초 · 말풍선 4초
   useEffect(() => {
@@ -1192,16 +1192,39 @@ export function OmokRoom({
                     >
                       👋 상대가 방을 나갔어요 · 로비에서 새 상대를 찾아 보세요
                     </p>
+                  ) : view.me && view.endReason !== "cancel" && !view.nextId && view.rematch && !view.rematch.mine && !view.rematch.declined ? (
+                    <div data-omok-rematch-ask className="grid gap-2 rounded-xl bg-[#ffcf4a]/15 p-2.5">
+                      <p className="text-sm font-black text-[#ffcf4a]">🔁 {view.rematch.name}님이 한 판 더 원해요!</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" data-omok-rematch-no disabled={busy} onClick={() => void act("rematch-no")} className="arcade-btn btn-dark">
+                          거절
+                        </button>
+                        <button type="button" data-omok-rematch-yes disabled={busy} onClick={() => void act("rematch")} className="arcade-btn btn-main">
+                          수락
+                        </button>
+                      </div>
+                    </div>
+                  ) : view.me && view.endReason !== "cancel" && !view.nextId && view.rematch?.mine && !view.rematch.declined ? (
+                    <p data-omok-rematch-wait className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#d6cdee]">
+                      ⏳ 한 판 더 신청했어요 · 상대가 수락하면 바로 시작해요
+                    </p>
                   ) : view.me && view.endReason !== "cancel" && !view.nextId ? (
-                    <button
-                      type="button"
-                      data-omok-rematch
-                      disabled={busy}
-                      onClick={() => void act("rematch")}
-                      className="arcade-btn btn-main"
-                    >
-                      🔁 한 판 더(흑백 바꿈)
-                    </button>
+                    <>
+                      {view.rematch?.mine && view.rematch.declined ? (
+                        <p data-omok-rematch-declined className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#ffb4b4]">
+                          🙅 상대가 이번엔 한 판 더를 거절했어요
+                        </p>
+                      ) : null}
+                      <button
+                        type="button"
+                        data-omok-rematch
+                        disabled={busy}
+                        onClick={() => void act("rematch")}
+                        className="arcade-btn btn-main"
+                      >
+                        🔁 한 판 더 신청(흑백 바꿈)
+                      </button>
+                    </>
                   ) : null}
                   {!view.me &&
                   !view.nextId &&

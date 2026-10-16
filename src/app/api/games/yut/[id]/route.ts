@@ -4,7 +4,7 @@ import { NO_YOKAI, yutAct, yutState, type YutAction } from "@/lib/yut-server";
 
 export const dynamic = "force-dynamic";
 const NO_STORE = { "Cache-Control": "no-store" };
-const ACTIONS: YutAction[] = ["sit", "leave", "ready", "shuffle", "mode", "kick", "start", "throw", "move", "emote", "cheer", "exit", "rematch", "surrender", "surrender-cancel", "queue-join", "queue-leave", "bot-add", "bot-remove"];
+const ACTIONS: YutAction[] = ["sit", "leave", "ready", "shuffle", "mode", "kick", "start", "throw", "move", "emote", "cheer", "exit", "rematch", "rematch-no", "surrender", "surrender-cancel", "queue-join", "queue-leave", "bot-add", "bot-remove"];
 
 /** 판 상태(누구나 관전) · ?v=버전이 같으면 { same: true }만 · &w=키(보고 있어요) */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {

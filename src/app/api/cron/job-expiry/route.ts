@@ -20,6 +20,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const today = todayKstDate();
+  // 매달 초: 지난달 오목 · 윷 랭킹 1~3위 포인트(달마다 한 번)
+  const { payMonthlyGameRewards } = await import("@/lib/game-stats");
+  await payMonthlyGameRewards(today).catch(() => undefined);
   const target = shiftDate(today, NOTICE_DAYS);
   const rows = await prisma.post.findMany({
     where: {

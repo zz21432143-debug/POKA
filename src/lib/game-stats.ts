@@ -171,6 +171,7 @@ export function rankScore(r: { wins: number; draws: number; losses: number }) {
 
 export type GameRankRow = {
   rank: number;
+  userId: string;
   nickname: string;
   wins: number;
   losses: number;
@@ -187,11 +188,15 @@ export async function gameRanking(
   game: GameKind,
   period: "month" | "all" = "month",
   limit = 20,
+  /** 지난달처럼 정해진 달(YYYY-MM) — 없으면 이번 달 */
+  month?: string,
 ): Promise<GameRankRow[]> {
+  const ym = month ?? todayKstDate().slice(0, 7);
   const start =
     period === "month"
-      ? new Date(`${todayKstDate().slice(0, 7)}-01T00:00:00+09:00`)
+      ? new Date(`${ym}-01T00:00:00+09:00`)
       : new Date(0);
+  const end = period === "month" ? new Date(`${nextMonth(ym)}-01T00:00:00+09:00`) : new Date(8.64e15);
   const rows = await prisma.$queryRaw<
     {
       id: string;
@@ -203,9 +208,9 @@ export async function gameRanking(
     }[]
   >`
     WITH p AS (
-      SELECT "playerAId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start}
+      SELECT "playerAId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
       UNION ALL
-      SELECT "playerBId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start}
+      SELECT "playerBId" AS uid, "winnerId", "loserId", draw, "createdAt" FROM "GameResult" WHERE game = ${game} AND "createdAt" >= ${start} AND "createdAt" < ${end}
     )
     SELECT u.id, u.nickname,
       COUNT(*) FILTER (WHERE p."winnerId" = p.uid)::int AS wins,
@@ -235,6 +240,7 @@ export async function gameRanking(
     .slice(0, limit)
     .map((r, i) => ({
       rank: i + 1,
+      userId: r.id,
       nickname: r.nickname,
       wins: r.wins,
       losses: r.losses,
@@ -242,6 +248,48 @@ export async function gameRanking(
       score: r.score,
       rate: r.rate,
     }));
+}
+
+const nextMonth = (ym: string) => {
+  const [y, m] = ym.split("-").map(Number);
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, "0")}`;
+};
+const prevMonth = (ym: string) => {
+  const [y, m] = ym.split("-").map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
+};
+
+/** 월말 게임 랭킹 보상(1 · 2 · 3위) */
+export const MONTH_RANK_REWARD = [650, 390, 260] as const;
+/** 이 달부터 지급(그 전 달은 테스트 판이 섞여 있어 안 줌) */
+const MONTH_REWARD_FROM = "2026-10";
+
+/** 지난달 오목 · 윷 랭킹 1~3위에게 포인트(달마다 한 번 · 매일 크론에서 불러도 같은 결과) */
+export async function payMonthlyGameRewards(today = todayKstDate()) {
+  const month = prevMonth(today.slice(0, 7));
+  if (month < MONTH_REWARD_FROM) return [];
+  const paid: string[] = [];
+  for (const game of ["omok", "yut"] as const) {
+    const rows = await gameRanking(game, "month", 3, month);
+    if (!rows.length) continue;
+    const mark = await prisma.toolSaved
+      .createMany({ data: [{ id: `gamerank_${game}_${month}`, ownerId: "site", kind: "game-month-reward", name: month, dataJson: JSON.stringify(rows.map((r) => r.nickname)) }], skipDuplicates: true })
+      .catch(() => ({ count: 0 }));
+    if (mark.count !== 1) continue;
+    const { grantRewards } = await import("@/lib/exp");
+    for (const r of rows) {
+      const points = MONTH_RANK_REWARD[r.rank - 1] ?? 0;
+      if (points) await grantRewards(r.userId, 0, points, { ignorePointCap: true }).catch(() => undefined);
+    }
+    const { pushTicker } = await import("@/lib/ticker");
+    await pushTicker({
+      kind: `GAMERANK:${game}:${month}`,
+      message: `🏆 ${Number(month.slice(5))}월 ${GAME_LABEL[game]} 랭킹 ${rows.map((r) => `${r.rank}위 ${r.nickname}`).join(" · ")} — 축하해요!`,
+      href: "/ranking",
+    }).catch(() => undefined);
+    paid.push(game);
+  }
+  return paid;
 }
 
 /** 두 사람 상대 전적(a 승 · b 승 · 무) */

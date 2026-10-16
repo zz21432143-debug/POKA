@@ -724,13 +724,13 @@ export function YutRoom({
   useEffect(() => {
     if (!view.nextId || view.status !== "done") return;
     if (nextAt.current === null) nextAt.current = Date.now();
-    const wait = Math.max(0, nextAt.current + 6000 - Date.now());
+    const wait = Math.max(0, nextAt.current + (view.mySeat ? 1200 : 6000) - Date.now());
     const t = window.setTimeout(
       () => router.replace(`/games/yut/${view.nextId}`),
       wait,
     );
     return () => window.clearTimeout(t);
-  }, [view.nextId, view.status, router]);
+  }, [view.nextId, view.status, view.mySeat, router]);
   const queueOut = (out: boolean) => {
     try {
       if (out) window.sessionStorage.setItem(`yut-q-out:${view.id}`, "1");
@@ -1800,6 +1800,22 @@ export function YutRoom({
                 >
                   👋 {away.names.join(", ")}님이 방을 나갔어요 · 로비에서 새 방을 만들어 보세요
                 </p>
+              ) : view.mySeat && ended && view.rematch && !view.rematch.mine && !view.rematch.declined ? (
+                <div data-yut-rematch-ask className="grid gap-2 rounded-xl bg-[#ffcf4a]/15 p-2.5">
+                  <p className="text-base font-black text-[#ffcf4a]">🔁 {view.rematch.name}님이 한 판 더 원해요!</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" data-yut-rematch-no disabled={busy} onClick={() => act("rematch-no")} className="arcade-btn btn-dark min-h-12">
+                      거절
+                    </button>
+                    <button type="button" data-yut-rematch-yes disabled={busy} onClick={() => act("rematch")} className="arcade-btn btn-main min-h-12">
+                      수락
+                    </button>
+                  </div>
+                </div>
+              ) : view.mySeat && ended && view.rematch?.mine && !view.rematch.declined ? (
+                <p data-yut-rematch-wait className="rounded-xl bg-white/10 px-3 py-2 text-sm font-black text-[#d6cdee]">
+                  ⏳ 한 판 더 신청했어요 · 상대가 수락하면 바로 시작해요
+                </p>
               ) : view.mySeat && ended ? (
                 <button
                   type="button"
@@ -1808,6 +1824,9 @@ export function YutRoom({
                   onClick={() => act("rematch")}
                   className="arcade-btn btn-main min-h-14 text-lg"
                 >
+                  {view.rematch?.mine && view.rematch.declined ? (
+                    <span className="block text-xs font-bold">🙅 상대가 이번엔 거절했어요 · 다시 신청할 수 있어요</span>
+                  ) : null}
                   🔁 한 판 더! (같은 멤버)
                   {away.names.length ? (
                     <span className="block text-xs font-bold">
