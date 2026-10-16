@@ -19,24 +19,18 @@ export async function HomeYokai() {
 
   if (!y) {
     return (
-      <section
-        aria-label="요괴 마을"
-        data-home-yokai="intro"
-        className="flex h-full items-center gap-3 rounded-[1.3rem] border border-[#c9a25c]/25 bg-[#16100e] p-3"
-      >
+      <div data-home-yokai="intro" className="flex min-w-0 items-center gap-2 rounded-xl bg-black/35 px-2 py-1.5">
         {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
-        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-16 shrink-0 object-contain sm:size-20" />
-        <div className="grid min-w-0 flex-1 gap-1.5">
-          <p className="text-sm font-bold text-[#f6efe2]">🏮 요괴 마을 — 첫 요괴를 골라 키워 보세요</p>
-          <Link
-            href={user ? "/yokai" : "/login?next=%2Fyokai"}
-            data-home-yokai-start
-            className="inline-flex min-h-9 w-fit items-center rounded-full bg-[#7a1c22] px-3.5 text-xs font-black text-white hover:bg-[#93242c]"
-          >
-            {user ? "첫 요괴 고르러 가기" : "로그인하고 요괴 키우기"}
-          </Link>
-        </div>
-      </section>
+        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-10 shrink-0 object-contain" />
+        <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-[#f6efe2]">🏮 요괴 마을 · 첫 요괴 키우기</p>
+        <Link
+          href={user ? "/yokai" : "/login?next=%2Fyokai"}
+          data-home-yokai-start
+          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-[#7a1c22] px-2.5 text-[11px] font-black whitespace-nowrap text-white"
+        >
+          {user ? "고르기" : "시작"}
+        </Link>
+      </div>
     );
   }
 
@@ -50,45 +44,34 @@ export async function HomeYokai() {
   const happy = low.value >= 70;
 
   return (
-    <section
-      aria-label="요괴 마을"
-      data-home-yokai="mine"
-      className="flex h-full items-center gap-3 rounded-[1.3rem] border border-[#c9a25c]/25 bg-[#16100e] p-3"
-    >
-      <style>{`@keyframes hy-bob{50%{transform:translateY(-4px)}}`}</style>
+    <div data-home-yokai="mine" className="flex min-w-0 items-center gap-2 rounded-xl bg-black/35 px-2 py-1.5">
+      <style>{`@keyframes hy-bob{50%{transform:translateY(-3px)}}`}</style>
       <Link
         href="/yokai"
         aria-label={`${y.name} 보러 가기`}
-        className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-[#c9a25c]/30 sm:size-24"
+        className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-[#c9a25c]/30"
         style={{ background: bgCss(y.bg) }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
-        <img
-          src={yokaiImage(y.species, y.stage)}
-          alt=""
-          className="w-[84%] object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,.6)]"
-          style={{ animation: "hy-bob 2.4s ease-in-out infinite" }}
-        />
+        <img src={yokaiImage(y.species, y.stage)} alt="" className="w-[86%] object-contain" style={{ animation: "hy-bob 2.4s ease-in-out infinite" }} />
       </Link>
-      <div className="grid min-w-0 flex-1 gap-1.5">
-        <p className="text-xs font-bold text-[#e7c98a]">🏮 {y.name}</p>
-        <p
-          data-home-yokai-whine={happy ? "happy" : low.key}
-          className="w-fit max-w-full rounded-2xl rounded-tl-sm border border-[#c9a25c]/30 bg-black/35 px-3 py-1.5 text-[13px] font-bold text-[#f6efe2]"
-        >
-          「{happy ? pickLine(y.species, "full", y.stage + y.dex) : low.line}」
-        </p>
-        <Link
-          href="/yokai"
-          data-home-yokai-go
-          className={cn(
-            "inline-flex min-h-9 w-fit items-center rounded-full px-3.5 text-xs font-black",
-            happy ? "border border-[#c9a25c]/40 text-[#e7c98a]" : "bg-[#7a1c22] text-white hover:bg-[#93242c]",
-          )}
-        >
-          {happy ? "요괴 마을 가기" : low.cta}
-        </Link>
-      </div>
-    </section>
+      <p
+        data-home-yokai-whine={happy ? "happy" : low.key}
+        title={happy ? undefined : low.line}
+        className="line-clamp-2 min-w-0 flex-1 text-[12px] leading-snug font-bold text-[#f6efe2]"
+      >
+        {happy ? `${y.name}: 기분 좋아요 ✨` : low.line}
+      </p>
+      <Link
+        href="/yokai"
+        data-home-yokai-go
+        className={cn(
+          "inline-flex min-h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-black whitespace-nowrap",
+          happy ? "border border-[#c9a25c]/40 text-[#e7c98a]" : "bg-[#7a1c22] text-white hover:bg-[#93242c]",
+        )}
+      >
+        {happy ? "🏮 마을" : low.cta}
+      </Link>
+    </div>
   );
 }

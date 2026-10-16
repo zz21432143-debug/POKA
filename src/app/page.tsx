@@ -42,7 +42,7 @@ async function HomePosters() {
   return <HomePosterCarousel posters={posters} />;
 }
 
-async function HomeFeedSections({ daily }: { daily?: React.ReactNode }) {
+async function HomeFeedSections() {
   const feed = await getHomeFeed().catch(() => ({
     all: [],
     free: [],
@@ -64,8 +64,6 @@ async function HomeFeedSections({ daily }: { daily?: React.ReactNode }) {
         <HomePosters />
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
-      {/* 매일 할 일(미션 · 퀴즈 · 요괴): 구인 아래로 — POKA 메인은 구인구직 · 매장 관리 */}
-      {daily}
       {/* 커뮤니티 최신글 · 랭킹(PC는 나란히) */}
       <div id="home-latest" data-home-latest-rank className="grid scroll-mt-24 gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
@@ -97,10 +95,25 @@ export default async function HomePage() {
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
       <Suspense fallback={<HomePanelFallback className="h-16" />}>
-        <HomeSummary />
+        <HomeSummary
+          side={
+            <Suspense fallback={null}>
+              <HomeYokai />
+            </Suspense>
+          }
+        />
       </Suspense>
+      {/* 매일 할 일: 오늘의 미션 · 오늘의 퀴즈(PC는 나란히, 높이는 각자) */}
+      <div data-home-daily className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
+        <Suspense fallback={null}>
+          <HomeMissions />
+        </Suspense>
+        <Suspense fallback={<HomePanelFallback className="h-40" />}>
+          <HomeQuiz />
+        </Suspense>
+      </div>
       {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히) — 구인 공고 바로 위 */}
-      <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-stretch">
+      <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
         <HomeDealerTools />
         <HomeStudyTools />
       </div>
@@ -112,21 +125,7 @@ export default async function HomePage() {
           </div>
         }
       >
-        <HomeFeedSections
-          daily={
-            <div data-home-daily className="grid gap-2.5 lg:grid-cols-3 lg:items-stretch">
-              <Suspense fallback={null}>
-                <HomeMissions />
-              </Suspense>
-              <Suspense fallback={<HomePanelFallback className="h-40" />}>
-                <HomeQuiz />
-              </Suspense>
-              <Suspense fallback={<HomePanelFallback className="h-24" />}>
-                <HomeYokai />
-              </Suspense>
-            </div>
-          }
-        />
+        <HomeFeedSections />
       </Suspense>
       {/* 오늘의 딜러 가이드 3편(날마다 바뀜) — 구인 · 커뮤니티 아래 */}
       <HomeGuides />
