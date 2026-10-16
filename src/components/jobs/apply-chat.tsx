@@ -484,6 +484,8 @@ function FirstTip() {
 function Composer({ kind, slug, loggedIn, defaultRegion, onSent }: { kind: JobKind; slug: string; loggedIn: boolean; defaultRegion: string | null; onSent: () => void }) {
   const dated = DATED.includes(kind);
   const [existingId, setExistingId] = useState<string | null>(null);
+  // 처음 공고를 올리면 한 번: 내 공고 관리 안내
+  const [mineTip, setMineTip] = useState(false);
   const [text, setText] = useState("");
   const [region, setRegion] = useState(defaultRegion ?? "");
   const [busy, setBusy] = useState(false);
@@ -543,6 +545,14 @@ function Composer({ kind, slug, loggedIn, defaultRegion, onSent }: { kind: JobKi
     }
     setText("");
     setNote("✅ 공고를 올렸어요!");
+    try {
+      if (!localStorage.getItem("poka-job-mine-tip-v1")) {
+        localStorage.setItem("poka-job-mine-tip-v1", "1");
+        setMineTip(true);
+      }
+    } catch {
+      /* 저장소를 못 쓰면 안내 생략 */
+    }
     onSent();
   }
   async function refreshExisting() {
@@ -617,6 +627,14 @@ function Composer({ kind, slug, loggedIn, defaultRegion, onSent }: { kind: JobKi
         </button>
       </div>
       {note ? <p className="text-xs font-bold text-[#1d2733]">{note}</p> : null}
+      {mineTip ? (
+        <p data-chat-mine-tip className="rounded-lg bg-[#fff8c4] px-2.5 py-1.5 text-xs text-[#1d1d1d]">
+          💡 <b>내 공고 관리</b>에서 매장 로고 올리기 · 날짜 줄 하나씩 마감 · 끌어올리기를 할 수 있어요.{" "}
+          <Link href="/boards/jobs/mine" className="font-bold text-[#0b57d0] underline">
+            내 공고 관리 열기
+          </Link>
+        </p>
+      ) : null}
       {existingId ? (
         <button type="button" data-chat-refresh-existing disabled={busy} onClick={() => void refreshExisting()} className="justify-self-start rounded-full bg-[#1d2733] px-3 py-1.5 text-xs font-black text-white disabled:opacity-50">
           ✏ 기존 공고를 이 내용으로 갱신하고 맨 아래로

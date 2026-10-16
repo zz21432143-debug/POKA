@@ -225,9 +225,12 @@ export function BoardWriteForm({
         </fieldset>
       ) : null}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="button" size="touch" disabled={pending} onClick={submit}>
-        {pending ? "등록 중…" : "등록"}
-      </Button>
+      {/* 휴대폰: 화면 아래에 붙어 있어 글을 쓰다 바로 누를 수 있음 */}
+      <div data-write-submit className="sticky bottom-0 z-30 -mx-4 border-t border-[#c9a25c]/30 bg-[#120d0a]/95 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+        <Button type="button" size="touch" disabled={pending} onClick={submit} className="w-full sm:w-auto">
+          {pending ? "등록 중…" : "등록"}
+        </Button>
+      </div>
     </div>
   );
 }
