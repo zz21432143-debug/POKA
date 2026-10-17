@@ -254,6 +254,8 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
   const META_ID = (await resolveGame(ownerId, gameId)).id;
   let target = META_ID;
   let deleted = false;
+  // 계정 설정은 트랜잭션 밖에서 미리(서버는 DB 연결이 1개라 안에서 따로 읽으면 서로 기다리다 실패 → 새 게임이 안 만들어졌음)
+  const prefs = action.type === "createGame" ? await loadPrefs(ownerId) : null;
   await prisma.$transaction(async (tx) => {
     // 딜러를 바꾸는 요청은 이 게임 딜러만
     const own = async (id: string) => {
@@ -442,7 +444,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
             tableCount: 0,
             tableLabels: "",
             // 공유 링크 열림 기간: 계정 기본값
-            shareDays: (await loadPrefs(ownerId)).shareDays,
+            shareDays: prefs?.shareDays ?? 1,
             ...(action.copySettings
               ? {
                   interval: from.interval,
@@ -559,6 +561,6 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       }
     }
     if (!deleted) await tx.rotationMeta.update({ where: { id: META_ID }, data: { version: { increment: 1 } } });
-  });
+  }, { maxWait: 10_000, timeout: 15_000 });
   return deleted ? (await resolveGame(ownerId)).id : target;
 }
