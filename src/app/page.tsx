@@ -88,7 +88,7 @@ export default async function HomePage() {
       <HomeHero />
       {/* 게시판 바로가기(홈 아래쪽까지 내려가지 않아도) */}
       {/* 왼쪽: 게시판 바로가기 + 오늘 요약 · 오른쪽: 세로 요괴 카드(PC) */}
-      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:items-stretch">
+      <div data-home-top className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:items-stretch">
         <div className="grid min-w-0 content-start gap-2.5">
           <Suspense fallback={<HomePanelFallback className="h-10" />}>
             <HomeBoardNav />
@@ -106,7 +106,7 @@ export default async function HomePage() {
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
       {/* 매일 할 일: 오늘의 미션 · 오늘의 퀴즈(PC는 나란히, 높이는 각자) */}
-      <div data-home-daily className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
+      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
         <Suspense fallback={null}>
           <HomeMissions />
         </Suspense>
@@ -115,7 +115,7 @@ export default async function HomePage() {
         </Suspense>
       </div>
       {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히) — 구인 공고 바로 위 */}
-      <div data-home-shortcuts className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
+      <div data-home-shortcuts className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-2 lg:items-start [&>*]:min-w-0">
         <HomeDealerTools />
         <HomeStudyTools />
       </div>

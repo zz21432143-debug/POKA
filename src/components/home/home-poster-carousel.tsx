@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "@/components/ui/link";
-import { MegaphoneIcon, PlusIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, MegaphoneIcon, PlusIcon } from "lucide-react";
 import { shuffleInPlaceCopy } from "@/lib/promo-rotate";
 import { sizedImage } from "@/lib/image-url";
 
@@ -40,6 +40,27 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
   const empty = posters.filter((p) => p.plain).length;
   const [start, setStart] = useState(0);
   const [hidden, setHidden] = useState(false);
+  // 손으로 넘기면 잠깐(8초) 자동 넘김을 쉼 — 보던 포스터가 바로 바뀌지 않게
+  const pausedUntil = useRef(0);
+  const timers = useRef<number[]>([]);
+  /** 앞뒤로 n칸(물결처럼 흐려졌다 나타나며) */
+  const step = (delta: number) => {
+    if (deck.length <= 1) return;
+    timers.current.forEach((t) => window.clearTimeout(t));
+    setHidden(true);
+    timers.current = [
+      window.setTimeout(() => {
+        setStart((value) => (((value + delta) % deck.length) + deck.length) % deck.length);
+        timers.current.push(window.setTimeout(() => setHidden(false), 30));
+      }, FADE_MS + STAGGER_MS * (VISIBLE - 1)),
+    ];
+  };
+  const go = (delta: number) => {
+    pausedUntil.current = Date.now() + 8000;
+    step(delta);
+  };
+  // 휴대폰: 옆으로 밀어서 넘기기
+  const touchX = useRef<number | null>(null);
 
   useEffect(() => {
     // 서버와 첫 화면을 맞춘 뒤, 브라우저에서 방문마다 순서를 섞습니다.
@@ -52,7 +73,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
     let swap = 0;
     let show = 0;
     const timer = window.setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || Date.now() < pausedUntil.current) return;
       setHidden(true);
       // 마지막(오른쪽) 포스터까지 다 흐려진 뒤 다음 포스터로 바꾸고 다시 나타나게 합니다.
       swap = window.setTimeout(() => {
@@ -80,7 +101,20 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           포스터 홍보 문의{empty ? ` · 빈 자리 ${empty}` : ""}
         </Link>
       </div>
-      <ul className="grid grid-cols-3 gap-2 lg:grid-cols-4">
+      <div className="relative">
+      <ul
+        className="grid grid-cols-3 gap-2 lg:grid-cols-4"
+        onTouchStart={(e) => {
+          touchX.current = e.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(e) => {
+          const from = touchX.current;
+          touchX.current = null;
+          const to = e.changedTouches[0]?.clientX;
+          if (from == null || to == null || Math.abs(to - from) < 40) return;
+          go(to < from ? 1 : -1);
+        }}
+      >
         {visible.map((poster, position) => (
           <li
             key={`slot-${position}`}
@@ -95,13 +129,42 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
           </li>
         ))}
       </ul>
-      {deck.length > VISIBLE ? (
-        <div className="flex justify-center gap-1.5" aria-hidden>
+      {deck.length > 3 ? (
+        <>
+          <button
+            type="button"
+            data-poster-prev
+            aria-label="이전 홍보 포스터"
+            onClick={() => go(-1)}
+            className="absolute top-1/2 -left-1 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:-left-3"
+          >
+            <ChevronLeftIcon className="size-5" />
+          </button>
+          <button
+            type="button"
+            data-poster-next
+            aria-label="다음 홍보 포스터"
+            onClick={() => go(1)}
+            className="absolute top-1/2 -right-1 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:-right-3"
+          >
+            <ChevronRightIcon className="size-5" />
+          </button>
+        </>
+      ) : null}
+      </div>
+      {deck.length > 3 ? (
+        <div className="flex justify-center gap-0.5">
           {deck.map((poster, i) => (
-            <span
+            <button
               key={poster.key}
-              className={i === start ? "h-1.5 w-4 rounded-full bg-[#c9a25c] transition-all" : "size-1.5 rounded-full bg-white/25 transition-all"}
-            />
+              type="button"
+              aria-label={`${i + 1}번째 포스터부터 보기`}
+              aria-current={i === start}
+              onClick={() => go(i - start)}
+              className="grid h-6 min-w-6 place-items-center"
+            >
+              <span className={i === start ? "h-1.5 w-4 rounded-full bg-[#c9a25c] transition-all" : "size-1.5 rounded-full bg-white/30 transition-all"} />
+            </button>
           ))}
         </div>
       ) : null}
