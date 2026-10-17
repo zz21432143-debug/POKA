@@ -354,3 +354,16 @@ describe("들어갔던 테이블 또 안 들어가게(고르게)", () => {
     });
   }
 });
+
+describe("휴게는 교대 간격 한 칸(30분 교대면 30분)", () => {
+  for (const [tables, n, k] of [[3, 5, 0], [5, 7, 0], [5, 8, 3], [6, 10, 2], [8, 11, 0], [10, 14, 3], [15, 19, 4], [4, 8, 0]] as const) {
+    it(`테이블 ${tables} · 딜러 ${n}${k ? ` · 최대 연속 ${k}` : ""}: 휴게가 두 칸 이어지지 않음`, () => {
+      const plan = buildPlan({ dealers: dealers(n), tables, start: 600, end: 600 + 30 * 24, interval: 30, maxStreak: k });
+      assertPhysical(plan);
+      for (const d of dealers(n)) {
+        const run = dealerSchedule(plan, d.id).map((x) => (x.table ? "W" : "R")).join("");
+        assert.ok(!run.slice(1).includes("RR"), `${d.id}: ${run}`);
+      }
+    });
+  }
+});

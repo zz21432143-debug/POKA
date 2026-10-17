@@ -504,7 +504,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   };
   const missing = future.length
     ? state.dealers.filter((d) => {
-        if (d.status !== "IN") return false;
+        // 스태프는 딜에 안 들어가는 게 맞으니 「빠져 있음」으로 안 봄
+        if (d.status !== "IN" || d.staff) return false;
         const firstAt = future[0].at;
         const lastAt = future[future.length - 1].at;
         if (!workingAt(d.id, firstAt)) return false;
@@ -580,9 +581,20 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   function autoBuild(basePlan: RotationPlan | null, views: typeof state.dealers) {
     const nowMin = nowMinutes(start, new Date());
     const leftIds = new Set(views.filter((d) => d.status === "LEFT").map((d) => d.id));
-    const dealers = planDealers(views, start).map((d) =>
-      leftIds.has(d.id) ? { ...d, to: Math.min(d.to ?? nowMin, nowMin) } : d,
-    );
+    // 지금 칸이 시작한 시각: 칸 중간에 출근 체크한 딜러도 지금 칸부터 넣음(다음 교대까지 테이블이 비지 않게)
+    const iv = basePlan?.interval ?? state.interval;
+    const slotNow =
+      basePlan && current >= 0
+        ? basePlan.slots[current]?.at
+        : nowMin >= start
+          ? start + Math.floor((nowMin - start) / iv) * iv
+          : undefined;
+    const inNow = new Set(views.filter((d) => d.status === "IN" && d.checkedInAt).map((d) => d.id));
+    const dealers = planDealers(views, start).map((d) => {
+      if (leftIds.has(d.id)) return { ...d, to: Math.min(d.to ?? nowMin, nowMin) };
+      if (slotNow != null && inNow.has(d.id) && d.from > slotNow && d.from <= nowMin) return { ...d, from: slotNow };
+      return d;
+    });
     return autoArrange({
       plan: basePlan,
       dealers,
@@ -1178,25 +1190,27 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 지금 {kstClock(clock)}
               </span>
             </div>
-            <dl className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {/* 한 줄: 테이블 · 딜러 · 딜 중 · 휴게 · 스태프(딜 안 함, 따로) */}
+            <dl data-run-stats className="grid grid-cols-5 gap-1">
               {[
+                ["러닝 테이블", `${runningLabels.length}`, "text-emerald-300"],
+                ["딜러", `${onDuty}`, "text-white"],
+                ["딜 중", `${dealing}`, "text-emerald-300"],
+                ["휴게", `${resting}`, "text-amber-300"],
                 [
-                  "러닝 테이블",
-                  `${runningLabels.length}개`,
-                  "text-emerald-300",
+                  "스태프",
+                  `${state.dealers.filter((d) => d.staff && d.status !== "OFF" && d.status !== "LEFT").length}`,
+                  "text-violet-300",
                 ],
-                ["총 딜러(출근 전 포함)", `${onDuty}명`, "text-white"],
-                ["딜 중", `${dealing}명`, "text-emerald-300"],
-                ["휴게 중", `${resting}명`, "text-amber-300"],
               ].map(([label, value, tone]) => (
                 <div
                   key={label}
-                  className="rounded-lg bg-zinc-900 px-2.5 py-1.5"
+                  className="min-w-0 rounded-lg bg-zinc-900 px-1.5 py-1 text-center"
                 >
-                  <dt className="text-[11px] font-bold text-zinc-400">
+                  <dt className="truncate text-[11px] font-bold text-zinc-400">
                     {label}
                   </dt>
-                  <dd className={cn("text-2xl font-black", tone)}>{value}</dd>
+                  <dd className={cn("text-xl font-black sm:text-2xl", tone)}>{value}</dd>
                 </div>
               ))}
             </dl>
