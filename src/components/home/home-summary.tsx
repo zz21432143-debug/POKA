@@ -20,7 +20,7 @@ function shortDate(start: string | null, end: string | null) {
 }
 
 /** 홈 오늘 요약 한 줄: 모집 중 · 급구 · 이번 주 대회 + 최신 공지 */
-export async function HomeSummary() {
+export async function HomeSummary({ side }: { side?: React.ReactNode } = {}) {
   const [counts, todaySlots] = await Promise.all([getHomeCounts().catch(() => null), todaySlotCount().catch(() => 0)]);
   if (!counts) return null;
   const items = [
@@ -32,7 +32,7 @@ export async function HomeSummary() {
     { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-xl text-sky-200" },
   ];
   return (
-    <section aria-label="오늘 요약" className="lounge-card grid gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5">
+    <section aria-label="오늘 요약" className="lounge-card grid gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5 xl:grid-cols-[auto_minmax(0,1fr)_17rem]">
       <ul className="grid grid-cols-4 gap-1.5">
         {items.map((it) => (
           <li key={it.href}>
@@ -64,6 +64,8 @@ export async function HomeSummary() {
         </Link>
       ) : null}
       </div>
+      {/* 작은 요괴 칸(휴대폰 · 태블릿은 아래 한 줄) */}
+      {side ? <div className="min-w-0 sm:col-span-2 xl:col-span-1">{side}</div> : null}
     </section>
   );
 }

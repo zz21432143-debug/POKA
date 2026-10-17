@@ -87,24 +87,22 @@ export default async function HomePage() {
     <div className="flex flex-col gap-2.5">
       <HomeHero />
       {/* 게시판 바로가기(홈 아래쪽까지 내려가지 않아도) */}
-      {/* 왼쪽: 게시판 바로가기 + 오늘 요약 · 오른쪽: 세로 요괴 카드(PC) */}
-      <div data-home-top className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_13.5rem] lg:items-stretch">
-        <div className="grid min-w-0 content-start gap-2.5">
-          <Suspense fallback={<HomePanelFallback className="h-10" />}>
-            <HomeBoardNav />
-          </Suspense>
-          <Suspense fallback={<HomePanelFallback className="h-16" />}>
-            <HomeSummary />
-          </Suspense>
-        </div>
-        <Suspense fallback={null}>
-          <HomeYokai />
-        </Suspense>
-      </div>
-      {/* 광고 구좌 1: 대문 아래 가로 배너(휴대폰 · PC 반응형) */}
+      <Suspense fallback={<HomePanelFallback className="h-10" />}>
+        <HomeBoardNav />
+      </Suspense>
+      {/* 광고 구좌 1: 대문 바로 아래 가로 배너(휴대폰 · PC 반응형) */}
       <GoogleAdUnit placement="home-top" />
       {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
       <UrgentAlertPrompt />
+      <Suspense fallback={<HomePanelFallback className="h-16" />}>
+        <HomeSummary
+          side={
+            <Suspense fallback={null}>
+              <HomeYokai />
+            </Suspense>
+          }
+        />
+      </Suspense>
       {/* 매일 할 일: 오늘의 미션 · 오늘의 퀴즈(PC는 나란히, 높이는 각자) */}
       <div data-home-daily className="grid gap-2.5 lg:grid-cols-2 lg:items-start">
         <Suspense fallback={null}>
