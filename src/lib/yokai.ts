@@ -252,3 +252,18 @@ export function bgCss(id: YokaiBackground) {
   // 위(말풍선) · 아래(이름표)는 살짝 어둡게 해서 글자가 잘 보이게
   return img ? `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.05) 30%, rgba(0,0,0,.05) 65%, rgba(0,0,0,.5)), url(${img}) center 70% / cover no-repeat` : YOKAI_BACKGROUNDS[id].css;
 }
+
+/** 키우는 화면 · 등장 화면 배경: 전설은 전용(구미호 보름달 · 염라 업경대), 산 배경이 있으면 그것, 영웅은 은빛 */
+export function stageBg(
+  species: YokaiSpecies,
+  bg: YokaiBackground = "default",
+) {
+  if (species === "gumiho")
+    return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
+  if (species === "yeomra")
+    return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
+  if (bg !== "default") return bgCss(bg);
+  if (YOKAI[species].rarity === "hero")
+    return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
+  return "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)";
+}

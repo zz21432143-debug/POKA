@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { cn } from "cn";
 import {
   bgCss,
+  stageBg,
   bgReady,
   CLEAN_BONUS_AT,
   CLEAN_BONUS_EXP,
@@ -69,20 +70,7 @@ const RARITY_TEXT: Record<YokaiRarity, string> = {
   legend: "text-[#f5d76e]",
 };
 
-/** 키우는 화면 · 등장 화면 배경: 전설은 전용(구미호 보름달 · 염라 업경대), 산 배경이 있으면 그것, 영웅은 은빛 */
-function stageBackground(
-  species: YokaiSpecies,
-  bg: YokaiBackground = "default",
-) {
-  if (species === "gumiho")
-    return "radial-gradient(circle at 50% 42%, rgba(255,226,140,.55) 0 22%, rgba(255,226,140,.12) 34%, transparent 52%), radial-gradient(circle at 20% 80%, rgba(90,170,255,.25), transparent 40%), linear-gradient(#1b1630, #0b0814)";
-  if (species === "yeomra")
-    return "radial-gradient(circle at 50% 42%, transparent 0 20%, rgba(245,215,110,.6) 21% 23%, rgba(245,215,110,.12) 24% 36%, transparent 48%), radial-gradient(circle at 50% 100%, rgba(255,255,255,.18), transparent 50%), linear-gradient(#1a0f0f, #050303)";
-  if (bg !== "default") return bgCss(bg);
-  if (YOKAI[species].rarity === "hero")
-    return "radial-gradient(circle at 50% 55%, rgba(220,226,240,.25), transparent 58%), linear-gradient(#1a1c24, #0b0c10)";
-  return "radial-gradient(circle at 50% 70%, rgba(201,162,92,.18), transparent 60%), linear-gradient(#22150f, #0d0907)";
-}
+const stageBackground = stageBg;
 
 function ElementTag({ species }: { species: YokaiSpecies }) {
   const el = YOKAI[species].element;
