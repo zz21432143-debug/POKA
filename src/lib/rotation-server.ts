@@ -268,7 +268,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       case "addDealers": {
         const count = await tx.rotationDealer.count({ where: { gameId: META_ID } });
         const rows = action.dealers
-          .map((d) => ({ name: String(d.name ?? "").trim().slice(0, 20), startTime: normalizeTime(d.startTime), endTime: normalizeTime(d.endTime) }))
+          .map((d) => ({ name: String(d.name ?? "").trim().slice(0, 20), startTime: normalizeTime(d.startTime), endTime: normalizeTime(d.endTime), staff: Boolean(d.staff) }))
           .filter((d) => d.name);
         if (count + rows.length > MAX_DEALERS) throw new RotationError(`딜러는 최대 ${MAX_DEALERS}명까지 등록할 수 있습니다.`);
         const last = await tx.rotationDealer.aggregate({ where: { gameId: META_ID }, _max: { sort: true } });

@@ -224,6 +224,15 @@ export function RotationTvScreen({
   const font = Math.max(10, layout.font);
   // 교대 1분 전부터 「교대」 칸을 깜빡여 멀리서도 알아보게
   const soon = Boolean(swap && swap.at - now > 0 && swap.at - now <= 1);
+  // 교대 직전 깜빡임: 시계 하나로 모든 칸이 같은 박자(0.8초)로 — 칸마다 따로 깜빡이면 어지러워서
+  const [blinkPhase, setBlinkPhase] = useState(false);
+  useEffect(() => {
+    if (!soon) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => setBlinkPhase((v) => !v), 800);
+    return () => window.clearInterval(t);
+  }, [soon]);
+  const dim = soon && blinkPhase;
   // 소리: 1분 전 「띵」, 교대 칸이 바뀌는 순간 「딩동 딩동」
   const lastRef = useRef<{ current: number; soon: boolean } | null>(null);
   useEffect(() => {
@@ -293,7 +302,7 @@ export function RotationTvScreen({
         <section
           aria-label="다음 교대"
           data-tv-soon={soon ? "on" : undefined}
-          className={cn("flex shrink-0 flex-wrap items-baseline gap-x-[1.2vw] gap-y-0 rounded-2xl border-2 px-[1.5vw] py-[0.8dvh]", c.headline, soon && "animate-pulse")}
+          className={cn("flex shrink-0 flex-wrap items-baseline gap-x-[1.2vw] gap-y-0 rounded-2xl border-2 px-[1.5vw] py-[0.8dvh]", c.headline, "transition-opacity duration-300", dim && "opacity-45")}
         >
           <span className={cn("font-black", c.headlineMain)} style={{ fontSize: "min(3vw, 5dvh)" }}>
             다음 교대 {formatClock(swap.at)}
@@ -340,7 +349,7 @@ export function RotationTvScreen({
                     {cols.map(({ slot, index }) => (
                       <th
                         key={slot.at}
-                        className={cn("truncate rounded-lg px-1 font-black whitespace-nowrap tabular-nums", index === next ? c.nextHead : c.nowHead, index === next && soon && "animate-pulse")}
+                        className={cn("truncate rounded-lg px-1 font-black whitespace-nowrap tabular-nums", index === next ? c.nextHead : c.nowHead, "transition-opacity duration-300", index === next && dim && "opacity-45")}
                         style={{ fontSize: headFont }}
                       >
                         {index === next ? "교대" : "지금"} {formatClock(slot.at)}
@@ -362,7 +371,8 @@ export function RotationTvScreen({
                             className={cn(
                               "truncate rounded-lg px-1 text-center font-black leading-none",
                               text === "컨바인" ? c.shut : index === next ? c.nextCell : c.nowCell,
-                              index === next && soon && "animate-pulse",
+                              "transition-opacity duration-300",
+                              index === next && dim && "opacity-45",
                               text === "—" && c.empty,
                             )}
                             style={{ fontSize: font }}

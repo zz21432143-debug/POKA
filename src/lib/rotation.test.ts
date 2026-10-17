@@ -131,3 +131,19 @@ describe("view-only link expiry", () => {
     assert.equal(shareExpired("2026-10-01", "2027-10-01", 0), false);
   });
 });
+
+describe("딜러 등록 줄: 스태프", () => {
+  it("「스태프」를 붙이면 스태프로 · 이름 · 시간은 그대로", async () => {
+    const { parseDealerLines } = await import("./rotation");
+    const rows = parseDealerLines("김실장 18:00 스태프\n박딜러 18:00-02:00\n이매니저 스태프\n스태프킴 19:00");
+    assert.deepEqual(
+      rows.map((r) => [r.name, r.startTime, r.endTime, Boolean("staff" in r && r.staff)]),
+      [
+        ["김실장", "18:00", null, true],
+        ["박딜러", "18:00", "02:00", false],
+        ["이매니저", null, null, true],
+        ["스태프킴", "19:00", null, false],
+      ],
+    );
+  });
+});

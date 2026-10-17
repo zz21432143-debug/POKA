@@ -560,6 +560,59 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   }
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
+  /** Auto 계산(시간표 · 딜러 목록을 바꿔 넣을 수 있게) */
+  function autoBuild(basePlan: RotationPlan | null, views: typeof state.dealers) {
+    const nowMin = nowMinutes(start, new Date());
+    const leftIds = new Set(views.filter((d) => d.status === "LEFT").map((d) => d.id));
+    const dealers = planDealers(views, start).map((d) =>
+      leftIds.has(d.id) ? { ...d, to: Math.min(d.to ?? nowMin, nowMin) } : d,
+    );
+    return autoArrange({
+      plan: basePlan,
+      dealers,
+      current,
+      tables: state.tableCount,
+      start,
+      interval: basePlan?.interval ?? state.interval,
+      setup: basePlan?.setup ?? state.setupMinutes,
+      now: nowMin,
+      closedFrom,
+      maxStreak,
+      blocked,
+    });
+  }
+
+  /** 출근 체크: 시간표가 돌고 있으면 「지금 칸부터 바로 딜?」을 물어 바로 투입(아니면 다음 교대부터) */
+  async function checkInDealer(dealer: (typeof state.dealers)[number]) {
+    if (!(await send({ type: "checkIn", id: dealer.id }))) return;
+    if (!plan || manual || dealer.staff || current < 0) return;
+    const slot = plan.slots[current];
+    if (!slot || slot.seats.includes(dealer.id)) return;
+    const nextAt = plan.slots[current + 1]?.at;
+    if (!window.confirm(`${dealer.name} 지금 칸(${formatClock(slot.at)})부터 바로 딜에 넣을까요?\n가장 오래 이어서 딜한 딜러와 교대합니다.${nextAt != null ? `\n취소하면 다음 교대(${formatClock(nextAt)})부터 들어가요.` : ""}`)) return;
+    // 넣을 테이블: 빈 러닝 테이블 먼저, 없으면 지금까지 가장 오래 이어 딜한 딜러 자리(못 넣는 테이블 제외)
+    const runOf = (t: number) => {
+      const id = slot.seats[t];
+      if (!id) return -1;
+      let run = 1;
+      for (let i = current - 1; i >= 0 && plan.slots[i].seats[t] === id; i -= 1) run += 1;
+      return run;
+    };
+    const open = labels.map((_, t) => t).filter((t) => !isClosedAt(t, slot.at) && !(blocked[t] ?? []).includes(dealer.id));
+    const empty = open.find((t) => !slot.seats[t]);
+    const target = empty ?? [...open].sort((a, b) => runOf(b) - runOf(a))[0];
+    if (target == null) return;
+    const out = slot.seats[target];
+    const nowSlot = {
+      ...slot,
+      seats: slot.seats.map((id, t) => (t === target ? dealer.id : id)),
+      rest: [...slot.rest.filter((id) => id !== dealer.id), ...(out ? [out] : [])],
+    };
+    const base = { ...plan, slots: plan.slots.map((x, i) => (i === current ? nowSlot : x)) };
+    const views = state.dealers.map((d) => (d.id === dealer.id ? { ...d, status: "IN" as const, checkedInAt: new Date(Date.now() - 60_000).toISOString() } : d));
+    await send({ type: "savePlan", plan: autoBuild(base, views) });
+  }
+
   function runAuto() {
     // 새 게임은 테이블 0개 · 딜러 0명으로 시작하므로 먼저 정하라고 안내
     if (state.tableCount === 0) {
@@ -572,26 +625,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       setError("딜러가 없어요. 딜러 탭에서 딜러를 먼저 등록해 주세요.");
       return;
     }
-    const nowMin = nowMinutes(start, new Date());
-    const leftIds = new Set(
-      state.dealers.filter((d) => d.status === "LEFT").map((d) => d.id),
-    );
-    const dealers = planDealers(state.dealers, start).map((d) =>
-      leftIds.has(d.id) ? { ...d, to: Math.min(d.to ?? nowMin, nowMin) } : d,
-    );
-    const built = autoArrange({
-      plan,
-      dealers,
-      current,
-      tables: state.tableCount,
-      start,
-      interval: plan?.interval ?? state.interval,
-      setup: plan?.setup ?? state.setupMinutes,
-      now: nowMin,
-      closedFrom,
-      maxStreak,
-      blocked,
-    });
+    const built = autoBuild(plan, state.dealers);
     void send({ type: "savePlan", plan: manual ? { ...built, manual: true } : built });
   }
 
@@ -741,6 +775,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   function changeCell(dealerId: string | null) {
     if (!plan || !cell) return;
+    // 바로 앞 칸에 다른 테이블에서 딜하던 딜러를 쉬지 않고 이 테이블로 옮기면 경고(실제로는 교대가 필요)
+    const before = cell.slot > 0 ? plan.slots[cell.slot - 1] : null;
+    const was = dealerId && before ? before.seats.indexOf(dealerId) : -1;
+    if (dealerId && was >= 0 && was !== cell.table && !isClosedAt(was, plan.slots[cell.slot].at)) {
+      const who = name(dealerId);
+      if (!window.confirm(`${who}은(는) 바로 앞 칸(${formatClock(before!.at)})에 ${tableWord(labels[was])}에서 딜하고 있어요.\n쉬지 않고 ${tableWord(labels[cell.table])}로 옮기면 ${tableWord(labels[was])}에 교대해 줄 사람이 따로 있어야 해요. 그래도 넣을까요?`)) return;
+    }
     const slots = plan.slots.map((slot, index) =>
       index === cell.slot ? swapInSlot(slot, cell.table, dealerId) : slot,
     );
@@ -1432,6 +1473,32 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   </span>
                 ) : null}
               </label>
+              {labels.length ? (
+                <div data-settings-tables className="col-span-2 grid gap-1 sm:col-span-3">
+                  <span className="text-xs font-bold text-zinc-300">테이블별: 번호 바꾸기 · 🚫 못 넣는 딜러 · 삭제(다시 열기 없음)</span>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {labels.map((label, t) => (
+                      <li key={label} className="flex items-center gap-0.5 rounded-lg border border-white/15 bg-zinc-900 px-1.5 py-1">
+                        <b className={cn("px-1 text-sm", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>{tableTag(label)}</b>
+                        <button type="button" disabled={busy} onClick={() => void renameTable(t)} className="min-h-8 rounded border border-white/25 px-1.5 text-[11px] font-black">
+                          번호
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => setBlockFor(t)}
+                          className={cn("min-h-8 rounded border px-1.5 text-[11px] font-black", (blocked[t] ?? []).length ? "border-amber-400 bg-amber-500/20 text-amber-200" : "border-white/25")}
+                        >
+                          🚫{(blocked[t] ?? []).length || ""}
+                        </button>
+                        <button type="button" disabled={busy} onClick={() => void removeTable(t)} className="min-h-8 rounded border border-rose-500/50 px-1.5 text-[11px] font-black text-rose-300">
+                          삭제
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
             <p className="rounded-lg bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300">
               설정을 바꾼 뒤 <b className="text-amber-300">운영</b> 탭에서{" "}
@@ -2742,9 +2809,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               <button
                                 type="button"
                                 disabled={busy}
-                                onClick={() =>
-                                  void send({ type: "checkIn", id: dealer.id })
-                                }
+                                onClick={() => void checkInDealer(dealer)}
                                 className="min-h-9 rounded bg-emerald-500 px-3 text-xs font-black text-black"
                               >
                                 {dealer.status === "LEFT"

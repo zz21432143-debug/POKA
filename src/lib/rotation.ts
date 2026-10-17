@@ -101,7 +101,7 @@ export type RotationStateView = {
 };
 
 export type RotationAction =
-  | { type: "addDealers"; dealers: { name: string; startTime?: string | null; endTime?: string | null }[] }
+  | { type: "addDealers"; dealers: { name: string; startTime?: string | null; endTime?: string | null; staff?: boolean }[] }
   | { type: "setTimes"; id: string; start?: string | null; end?: string | null }
   | { type: "updateDealer"; id: string; name?: string; startTime?: string | null; staff?: boolean }
   | { type: "removeDealer"; id: string }
@@ -231,16 +231,24 @@ export function parseDealerLines(text: string) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => {
-      const span = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)\s*[-~]\s*(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
-      const spanStart = span ? normalizeTime(span[2]) : null;
-      const spanEnd = span ? normalizeTime(span[3]) : null;
-      if (span && spanStart && spanEnd) return { name: span[1].trim().slice(0, 20), startTime: spanStart, endTime: spanEnd as string | null };
-      const m = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
-      const time = m ? normalizeTime(m[2]) : null;
-      return { name: (time && m ? m[1] : line).trim().slice(0, 20), startTime: time, endTime: null as string | null };
+    .map((raw) => {
+      // 「김실장 18:00 스태프」: 스태프(딜 안 함) 표시는 떼어 내고 따로
+      const staff = /(^|[\s,(])(스태프|staff)(?=$|[\s,)])/i.test(raw);
+      const line = staff ? raw.replace(/(^|[\s,(])(스태프|staff)(?=$|[\s,)])\)?/gi, " ").replace(/\s+/g, " ").trim() : raw;
+      return staff ? { ...parseOne(line), staff: true } : parseOne(line);
     })
     .filter((row) => row.name);
+}
+
+/** 한 줄: 이름 · 출근(· 퇴근) */
+function parseOne(line: string) {
+  const span = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)\s*[-~]\s*(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
+  const spanStart = span ? normalizeTime(span[2]) : null;
+  const spanEnd = span ? normalizeTime(span[3]) : null;
+  if (span && spanStart && spanEnd) return { name: span[1].trim().slice(0, 20), startTime: spanStart, endTime: spanEnd as string | null };
+  const m = /^(.*?)[\s,\t]+(\d{1,2}\s*(?::|시)?\s*\d{0,2}\s*분?)$/.exec(line);
+  const time = m ? normalizeTime(m[2]) : null;
+  return { name: (time && m ? m[1] : line).trim().slice(0, 20), startTime: time, endTime: null as string | null };
 }
 
 /** ISO 시각 → 한국 시간 "HH:MM" */
