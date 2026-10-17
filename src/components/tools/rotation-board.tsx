@@ -134,6 +134,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [error, setError] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
   const [busy, setBusy] = useState(false);
+  /** Auto 되돌리기: Auto 전 시간표 · Auto가 만든 시간표(그 뒤 다른 변경이 생기면 되돌리기는 사라짐) */
+  const [undo, setUndo] = useState<{ game: string; before: RotationPlan | null; after: string } | null>(null);
   const [bulk, setBulk] = useState("");
   /** 딜러 명단 저장 · 고치기 창 */
   const [rosterEdit, setRosterEdit] = useState<{
@@ -654,7 +656,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       return;
     }
     const built = autoBuild(plan, state.dealers);
-    void send({ type: "savePlan", plan: manual ? { ...built, manual: true } : built });
+    const next = manual ? { ...built, manual: true } : built;
+    const before = state.plan;
+    const game = state.game.id;
+    void send({ type: "savePlan", plan: next }).then((ok) => {
+      if (ok) setUndo({ game, before, after: JSON.stringify(next) });
+    });
+  }
+
+  /** 방금 누른 Auto 전 시간표로 되돌리기(그 사이 다른 변경이 없을 때만 보임) */
+  const canUndo = Boolean(undo && undo.game === state.game.id && JSON.stringify(state.plan) === undo.after);
+  async function undoAuto() {
+    if (!undo || !canUndo) return;
+    if (await send({ type: "savePlan", plan: undo.before })) setUndo(null);
   }
 
   /** 직접 배치: 빈 시간표(칸만)를 만들고 테이블 · 딜러를 사람이 칸을 눌러 넣음 */
@@ -1575,11 +1589,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   ? `퇴근·휴무인 ${leftInPlan.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 있습니다. `
                   : ""}
               </span>
+              {canUndo ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void undoAuto()}
+                  title="방금 누른 Auto 전 시간표로 되돌립니다"
+                  className="ml-auto min-h-10 rounded-lg border border-white/40 px-3 text-sm font-black text-zinc-100"
+                >
+                  ↩ 되돌리기
+                </button>
+              ) : null}
               <button
                 type="button"
                 disabled={busy}
                 onClick={runAuto}
-                className="ml-auto min-h-10 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
+                className={cn("min-h-10 rounded-lg bg-amber-400 px-4 text-sm font-black text-black", !canUndo && "ml-auto")}
               >
                 Auto
               </button>
@@ -1813,6 +1838,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   {manual ? "✋ 직접 배치 중" : "✋ 직접 배치로"}
                 </button>
               )}
+              {canUndo ? (
+                <button
+                  type="button"
+                  data-rot-undo
+                  disabled={busy}
+                  onClick={() => void undoAuto()}
+                  title="방금 누른 Auto 전 시간표로 되돌립니다"
+                  className="min-h-12 rounded-xl border-2 border-white/40 px-3 text-base font-black text-zinc-100 disabled:opacity-40"
+                >
+                  ↩ 되돌리기
+                </button>
+              ) : null}
               {/* Auto: 시간표 바로 옆(오른쪽) */}
               <button
                 type="button"
