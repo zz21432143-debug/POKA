@@ -7,7 +7,7 @@
  * 1) 그 시각에 일할 수 있는 딜러(출근 이후 · 퇴근 전 · 휴무 아님)를 고르고
  * 2) 테이블 수만큼 근무, 나머지는 휴식. 계속 일하던 딜러는 정해진 횟수(cap)까지 이어서 일하고, 오래 쉰 딜러부터 들어옵니다.
  *    cap = 테이블 수 ÷ 휴식 인원(반올림) → 모두가 cap칸 일하고 1칸 쉬는 흐름이 고르게 돕니다.
- * 3) 이어서 일하는 딜러는 다음 테이블로 한 칸씩 이동(T1→T2…), 비는 테이블은 들어오는 딜러가 채웁니다.
+ * 3) 앉아 있던 딜러는 교대를 받을 때까지 그 테이블 그대로, 비는 테이블(휴식 가는 딜러 자리)은 들어오는 딜러가 채웁니다.
  */
 
 export type PlanDealer = {
@@ -135,14 +135,6 @@ export function buildPlan(options: {
 
   const closedFrom = options.closedFrom ?? [];
   const isOpen = (t: number, at: number) => closedFrom[t] == null || at < (closedFrom[t] as number);
-  /** 다음 러닝 테이블(한 칸씩 이동, 닫힌 테이블은 건너뜀) */
-  const nextOpen = (from: number, open: number[]) => {
-    for (let k = 1; k <= tables; k += 1) {
-      const t = (from + k) % tables;
-      if (open.includes(t)) return t;
-    }
-    return null;
-  };
   const setup = Math.max(0, Math.floor(options.setup ?? 0));
   const first = start - setup;
   const keep = (options.keep ?? []).filter((slot) => slot.at >= first && slot.at < end);
@@ -183,17 +175,17 @@ export function buildPlan(options: {
     const workers = ranked.slice(0, open.length);
     const rest = ranked.slice(open.length).map((d) => d.id);
 
-    // 테이블: 이어서 일하는 딜러는 다음 테이블로, 들어오는 딜러는 빈 테이블로
+    // 테이블: 앉아 있던 딜러는 교대(휴식)를 받을 때까지 그 테이블에 그대로 — 교대 없이 다른 테이블로 옮기는 일은 없음.
+    // 들어오는 딜러(휴식에서 돌아옴 · 새로 출근)는 빈 테이블로 가서 그 테이블 딜러를 휴식 보냄.
+    // 자기 테이블이 컨바인됐을 때만 빈 테이블로 옮김.
     const seats: (string | null)[] = Array(tables).fill(null);
     const incoming: string[] = [];
     for (const dealer of workers) {
       const s = state.get(dealer.id)!;
-      if (s.lastTable != null) {
-        const next = nextOpen(s.lastTable, open);
-        if (next != null && seats[next] == null && !blockedAt(next, dealer.id)) {
-          seats[next] = dealer.id;
-          continue;
-        }
+      const own = s.lastTable;
+      if (own != null && open.includes(own) && seats[own] == null && !blockedAt(own, dealer.id)) {
+        seats[own] = dealer.id;
+        continue;
       }
       incoming.push(dealer.id);
     }

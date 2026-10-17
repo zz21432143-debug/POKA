@@ -4,6 +4,23 @@ import { alignToStart, buildPlan, dealerSchedule, formatClock, parseClock, slotI
 
 const dealers = (n: number, from = 600): PlanDealer[] => Array.from({ length: n }, (_, i) => ({ id: `d${i + 1}`, from, to: null }));
 
+/**
+ * 실제로 가능한 시간표인지: 앉아 있던 딜러가 다음 칸에도 일하면 같은 테이블이어야 함
+ * (교대 없이 다른 테이블로 옮기는 일 없음). 자기 테이블이 닫힌 경우만 예외.
+ */
+function assertPhysical(plan: { slots: { at: number; seats: (string | null)[] }[] }, closedFrom: (number | null)[] = []) {
+  for (let i = 1; i < plan.slots.length; i += 1) {
+    const prev = plan.slots[i - 1];
+    const cur = plan.slots[i];
+    prev.seats.forEach((id, t) => {
+      if (!id) return;
+      const now = cur.seats.indexOf(id);
+      const closed = closedFrom[t] != null && cur.at >= (closedFrom[t] as number);
+      if (now >= 0 && now !== t && !closed) assert.fail(`${id}: ${formatClock(cur.at)}에 교대 없이 T${t + 1} → T${now + 1}`);
+    });
+  }
+}
+
 describe("rotation timetable", () => {
   it("reads and prints clock times, overnight aware", () => {
     assert.equal(parseClock("10:00"), 600);
@@ -23,7 +40,7 @@ describe("rotation timetable", () => {
     }
   });
 
-  it("rotates breaks fairly and moves working dealers to the next table", () => {
+  it("rotates breaks fairly and keeps seated dealers at their table until relieved", () => {
     // 테이블 4개, 딜러 6명 → 매 칸 2명 휴식, 2칸 일하고 1칸 쉬는 흐름
     const plan = buildPlan({ dealers: dealers(6), tables: 4, start: 600, end: 600 + 20 * 12, interval: 20 });
     const work = new Map<string, number>();
@@ -35,13 +52,7 @@ describe("rotation timetable", () => {
       const run = dealerSchedule(plan, d.id).map((x) => (x.table ? "W" : "R")).join("");
       assert.ok(!run.includes("WWW"), `${d.id}: ${run}`);
     }
-    // 이어서 일한 딜러는 다음 테이블로
-    const s0 = plan.slots[0];
-    const s1 = plan.slots[1];
-    s0.seats.forEach((id, t) => {
-      const next = s1.seats.indexOf(id);
-      if (id && next >= 0) assert.equal(next, (t + 1) % 4);
-    });
+    assertPhysical(plan);
   });
 
   it("only uses dealers after they check in and before they leave", () => {
@@ -259,5 +270,32 @@ describe("테이블에 못 넣는 딜러", () => {
     const plan = buildPlan({ dealers: [], tables: 3, start: 600, end: 720, interval: 20 });
     assert.ok(plan.slots.length >= 5);
     assert.ok(plan.slots.every((slot) => slot.seats.length === 3 && slot.seats.every((id) => id === null)));
+  });
+});
+
+describe("실제로 가능한 시간표(교대 없이 이동 없음)", () => {
+  for (const [tables, n, streak] of [[4, 6, 0], [8, 10, 0], [15, 19, 3], [21, 26, 2], [5, 5, 0], [6, 14, 1]] as const) {
+    it(`테이블 ${tables} · 딜러 ${n}${streak ? ` · 최대 연속 ${streak}` : ""}`, () => {
+      const plan = buildPlan({ dealers: dealers(n), tables, start: 600, end: 600 + 30 * 30, interval: 30, maxStreak: streak });
+      assertPhysical(plan);
+      // 모든 테이블이 매 칸 채워짐(사람이 충분할 때)
+      if (n >= tables) for (const slot of plan.slots) assert.equal(slot.seats.filter(Boolean).length, tables);
+    });
+  }
+  it("중간 출근 · 퇴근 · 컨바인이 섞여도", () => {
+    const list: PlanDealer[] = [...dealers(8), { id: "late", from: 720, to: null }, { id: "early", from: 600, to: 780 }];
+    const closedFrom = [null, null, 840, null, null, null, null];
+    const plan = buildPlan({ dealers: list, tables: 7, start: 600, end: 1080, interval: 20, closedFrom, maxStreak: 3 });
+    assertPhysical(plan, closedFrom);
+  });
+  it("게임 중 Auto · 이어 짜기도", async () => {
+    const { autoArrange, extendPlan } = await import("./rotation-plan");
+    const list = dealers(12);
+    const first = buildPlan({ dealers: list, tables: 10, start: 600, end: 900, interval: 30, maxStreak: 3 });
+    // 4번째 칸에서 d3 퇴근 · d13 새로 출근 → Auto
+    const changed = [...list.map((d) => (d.id === "d3" ? { ...d, to: 700 } : d)), { id: "d13", from: 690, to: null }];
+    const auto = autoArrange({ plan: first, dealers: changed, current: 3, tables: 10, start: 600, interval: 30, now: 700, maxStreak: 3 });
+    assertPhysical({ slots: auto.slots.slice(3) });
+    assertPhysical(extendPlan(auto, changed, 3, 300));
   });
 });
