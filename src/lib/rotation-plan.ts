@@ -161,12 +161,17 @@ export function buildPlan(options: {
     // 최대 연속 딜을 정했으면 그보다 길게 잇지 않습니다(쉴 사람이 있을 때).
     const cap = maxStreak > 0 ? Math.min(fairCap, maxStreak) : fairCap;
 
-    // 근무 우선순위: 0 이어서 일하기(cap 전) · 1 쉬던 사람(오래 쉰 순) · 2 cap 채운 사람(쉬어야 함)
+    // 근무 우선순위: -1 방금 출근(아직 한 번도 안 딜함 → 출근한 칸부터 바로 딜) · 0 이어서 일하기(cap 전)
+    // · 1 쉬던 사람(오래 쉰 순) · 2 cap 채운 사람(쉬어야 함)
+    // 늦게 출근한 딜러가 쉬는 사이 일찍 온 딜러만 계속 딜하지 않게, 새로 온 사람이 먼저 들어가고 오래 딜한 사람이 쉼.
+    const tier = (st: DealerState) => (st.work === 0 && st.lastTable == null ? -1 : st.lastTable != null ? (st.streak < cap ? 0 : 2) : 1);
     const ranked = [...available].sort((a, b) => {
       const sa = state.get(a.id)!;
       const sb = state.get(b.id)!;
-      const pa = sa.lastTable != null ? (sa.streak < cap ? 0 : 2) : 1;
-      const pb = sb.lastTable != null ? (sb.streak < cap ? 0 : 2) : 1;
+      const pa = tier(sa);
+      const pb = tier(sb);
+      // 이어서 일하는 사람끼리는 오래 이어 딜한 사람이 먼저 쉼(새로 온 사람에게 자리 비켜 줄 때)
+      if (pa === 0 && pb === 0 && sa.streak !== sb.streak) return sa.streak - sb.streak;
       if (pa !== pb) return pa - pb;
       if (pa === 1 && sa.restStreak !== sb.restStreak) return sb.restStreak - sa.restStreak;
       if (sa.work !== sb.work) return sa.work - sb.work;

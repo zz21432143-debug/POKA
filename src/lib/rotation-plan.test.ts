@@ -299,3 +299,29 @@ describe("실제로 가능한 시간표(교대 없이 이동 없음)", () => {
     assertPhysical(extendPlan(auto, changed, 3, 300));
   });
 });
+
+describe("늦게 출근한 딜러도 공평하게", () => {
+  for (const [tables, early, late, maxStreak] of [[4, 4, 2, 0], [10, 10, 4, 0], [15, 12, 7, 3], [6, 6, 3, 2]] as const) {
+    it(`테이블 ${tables} · 10시 ${early}명 · 10시30분 ${late}명${maxStreak ? ` · 최대 연속 ${maxStreak}` : ""}`, () => {
+      const list: PlanDealer[] = [
+        ...Array.from({ length: early }, (_, i) => ({ id: `e${i}`, from: 600, to: null })),
+        ...Array.from({ length: late }, (_, i) => ({ id: `l${i}`, from: 630, to: null })),
+      ];
+      const plan = buildPlan({ dealers: list, tables, start: 600, end: 600 + 30 * 20, interval: 30, maxStreak });
+      assertPhysical(plan);
+      // 10시30분 칸: 늦게 온 딜러는 출근하자마자 딜(자리가 있으면)
+      const at1030 = plan.slots.find((x) => x.at === 630)!;
+      const lateIn = list.filter((d) => d.from === 630 && at1030.seats.includes(d.id)).length;
+      assert.equal(lateIn, Math.min(late, tables), `10:30 늦게 온 딜러 중 딜 ${lateIn}/${late}`);
+      // 끝까지 보면: 같은 시간 있었던 칸 대비 딜한 비율이 비슷(차이 1칸 안쪽 · 일찍 온 사람이 더 많이 쉬어야 맞음)
+      const ratio = (id: string, from: number) => {
+        const here = plan.slots.filter((x) => x.at >= from);
+        return here.filter((x) => x.seats.includes(id)).length / here.length;
+      };
+      const er = list.filter((d) => d.from === 600).map((d) => ratio(d.id, 600));
+      const lr = list.filter((d) => d.from === 630).map((d) => ratio(d.id, 630));
+      const all = [...er, ...lr];
+      assert.ok(Math.max(...all) - Math.min(...all) <= 0.15, `딜 비율 차이 ${(Math.max(...all) - Math.min(...all)).toFixed(2)} (일찍 ${er.map((x) => x.toFixed(2))} / 늦게 ${lr.map((x) => x.toFixed(2))})`);
+    });
+  }
+});
