@@ -229,8 +229,14 @@ export function RotationTvScreen({
   useEffect(() => {
     if (!soon) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    // 교대 1분 전 알림음과 같은 순간에 첫 깜빡임(소리 · 화면 박자 맞춤)
+    const first = window.setTimeout(() => setBlinkPhase(true), 0);
     const t = window.setInterval(() => setBlinkPhase((v) => !v), 800);
-    return () => window.clearInterval(t);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(t);
+      setBlinkPhase(false);
+    };
   }, [soon]);
   const dim = soon && blinkPhase;
   // 소리: 1분 전 「띵」, 교대 칸이 바뀌는 순간 「딩동 딩동」
