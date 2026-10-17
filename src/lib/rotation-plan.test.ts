@@ -367,3 +367,38 @@ describe("휴게는 교대 간격 한 칸(30분 교대면 30분)", () => {
     });
   }
 });
+
+describe("최대한 공평하게(오늘 딜한 시간 · 테이블)", () => {
+  /** 딜러별 (딜한 칸 − 공평한 몫). 몫 = 있었던 칸마다 딜 자리 ÷ 그 칸 딜러 수 */
+  const owed = (plan: { slots: { seats: (string | null)[]; rest: string[] }[] }) => {
+    const work = new Map<string, number>();
+    const share = new Map<string, number>();
+    for (const slot of plan.slots) {
+      const seated = slot.seats.filter(Boolean) as string[];
+      const present = [...seated, ...slot.rest];
+      for (const id of present) share.set(id, (share.get(id) ?? 0) + seated.length / present.length);
+      for (const id of seated) work.set(id, (work.get(id) ?? 0) + 1);
+    }
+    return [...share].map(([id, s]) => [id, (work.get(id) ?? 0) - s] as const);
+  };
+  for (const [tables, n, k] of [[8, 10, 2], [15, 19, 3], [4, 6, 0], [6, 9, 0], [10, 14, 2]] as const) {
+    it(`테이블 ${tables} · 딜러 ${n}: 늦게 출근 · 일찍 퇴근이 섞여도 딜 시간이 몫과 1칸 반 넘게 차이 안 남`, () => {
+      const start = 600;
+      const list = dealers(n).map((d, i) => ({
+        ...d,
+        from: i >= n - Math.ceil(n / 4) ? start + 90 + (i % 3) * 30 : start,
+        to: i < 2 ? start + 360 : null,
+      }));
+      const plan = buildPlan({ dealers: list, tables, start, end: start + 720, interval: 30, maxStreak: k });
+      assertPhysical(plan);
+      for (const [id, diff] of owed(plan)) assert.ok(Math.abs(diff) <= 1.5, `${id}: 몫보다 ${diff.toFixed(2)}칸`);
+    });
+  }
+  it("테이블 5 · 딜러 10: 같은 테이블에 연달아 들어가지 않음(돌아가며)", () => {
+    const plan = buildPlan({ dealers: dealers(10), tables: 5, start: 600, end: 600 + 30 * 24, interval: 30 });
+    for (const d of dealers(10)) {
+      const tables = dealerSchedule(plan, d.id).map((x) => x.table).filter((t): t is number => Boolean(t));
+      for (let i = 1; i < tables.length; i += 1) assert.notEqual(tables[i], tables[i - 1], `${d.id}: ${tables.join(",")}`);
+    }
+  });
+});

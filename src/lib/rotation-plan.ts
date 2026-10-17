@@ -75,39 +75,104 @@ export function alignToStart(minutes: number, start: number) {
   return minutes < start - 360 ? minutes + MINUTES_PER_DAY : minutes;
 }
 
-type DealerState = { lastTable: number | null; streak: number; restStreak: number; work: number; /** 테이블별 들어간 횟수(휴식 뒤 새로 앉은 번) */ visits: Map<number, number> };
+type DealerState = {
+  lastTable: number | null;
+  streak: number;
+  restStreak: number;
+  work: number;
+  /** 공평한 몫: 있었던 칸마다 (딜 자리 ÷ 그 칸 딜러 수)를 더한 값. 몫 − 딜한 칸 = 덜 딜한 만큼 */
+  share: number;
+  /** 테이블별 들어간 횟수(휴식 뒤 새로 앉은 번) */
+  visits: Map<number, number>;
+  /** 테이블별 마지막으로 앉은 칸 번호 */
+  seenAt: Map<number, number>;
+};
 
 /**
- * 휴식에서 돌아온 · 새로 출근한 딜러를 빈 테이블에 앉힘: 각자 가장 적게 들어간 테이블로(같으면 앞 번호).
- * 순서대로(먼저 들어갈 사람부터) 한 명씩 고르고, 못 넣는 테이블은 건너뜀. 남은 사람은 돌려줌.
+ * 휴식에서 돌아온 · 새로 출근한 딜러를 빈 테이블에 앉힘(모두 합쳐 가장 고르게 되는 짝으로).
+ * 짝마다 비용 = 그 테이블에 들어간 횟수(가장 큼) + 최근에 들어갔던 테이블일수록 조금 더 → 같은 테이블이 연달아 걸리지 않게.
+ * 못 넣는 테이블은 제외, 자리가 모자라면 뒤 순서(나중에 들어갈 사람)가 남음. 남은 사람은 돌려줌.
  */
 function seatIncoming(
   incoming: string[],
   emptyTables: number[],
   visitsOf: (id: string, t: number) => number,
   blockedAt: (t: number, id: string) => boolean,
+  /** 그 테이블에 마지막으로 앉은 뒤 지난 칸 수(없으면 null) */
+  agoOf: (id: string, t: number) => number | null = () => null,
 ) {
-  // 전체에서 「가장 적게 들어간 (딜러, 테이블)」 짝부터 맞춤(같으면 먼저 들어갈 사람 · 앞 번호)
-  const free = new Set(emptyTables);
-  const waiting = [...incoming];
+  const BLOCK = 1e9;
+  const SKIP = 1e7;
+  const n = incoming.length;
+  const cols = emptyTables.length + n; // 뒤쪽 n칸 = 「못 앉음」
+  const cost = incoming.map((id, i) =>
+    Array.from({ length: cols }, (_, c) => {
+      if (c >= emptyTables.length) return SKIP * (n - i); // 앞 순서일수록 못 앉으면 손해가 큼
+      const t = emptyTables[c];
+      if (blockedAt(t, id)) return BLOCK;
+      const ago = agoOf(id, t);
+      return visitsOf(id, t) * 1000 + (ago == null ? 0 : Math.max(0, 100 - ago)) + c * 0.001;
+    }),
+  );
+  const pick = assign(cost);
   const placed: [number, string][] = [];
-  while (waiting.length && free.size) {
-    let best: { i: number; t: number; v: number } | null = null;
-    waiting.forEach((id, i) => {
-      for (const t of free) {
-        if (blockedAt(t, id)) continue;
-        const v = visitsOf(id, t);
-        if (!best || v < best.v || (v === best.v && (i < best.i || (i === best.i && t < best.t)))) best = { i, t, v };
-      }
-    });
-    if (!best) break;
-    const pick = best as { i: number; t: number; v: number };
-    placed.push([pick.t, waiting[pick.i]]);
-    free.delete(pick.t);
-    waiting.splice(pick.i, 1);
-  }
-  const left = waiting;
+  const left: string[] = [];
+  incoming.forEach((id, i) => {
+    const c = pick[i];
+    if (c < emptyTables.length && cost[i][c] < BLOCK) placed.push([emptyTables[c], id]);
+    else left.push(id);
+  });
   return { placed, left };
+}
+
+/** 최소 비용 짝 맞추기(헝가리안, 행 ≤ 열). 행마다 고른 열 */
+function assign(cost: number[][]) {
+  const n = cost.length;
+  if (!n) return [] as number[];
+  const m = cost[0].length;
+  const u = Array(n + 1).fill(0);
+  const v = Array(m + 1).fill(0);
+  const p = Array(m + 1).fill(0);
+  const way = Array(m + 1).fill(0);
+  for (let i = 1; i <= n; i += 1) {
+    p[0] = i;
+    let j0 = 0;
+    const minv = Array(m + 1).fill(Number.POSITIVE_INFINITY);
+    const used = Array(m + 1).fill(false);
+    do {
+      used[j0] = true;
+      const i0 = p[j0];
+      let delta = Number.POSITIVE_INFINITY;
+      let j1 = 0;
+      for (let j = 1; j <= m; j += 1) {
+        if (used[j]) continue;
+        const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) {
+          minv[j] = cur;
+          way[j] = j0;
+        }
+        if (minv[j] < delta) {
+          delta = minv[j];
+          j1 = j;
+        }
+      }
+      for (let j = 0; j <= m; j += 1) {
+        if (used[j]) {
+          u[p[j]] += delta;
+          v[j] -= delta;
+        } else minv[j] -= delta;
+      }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do {
+      const j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0);
+  }
+  const out = Array(n).fill(-1);
+  for (let j = 1; j <= m; j += 1) if (p[j]) out[p[j] - 1] = j - 1;
+  return out;
 }
 
 function availableAt(dealer: PlanDealer, at: number) {
@@ -141,18 +206,26 @@ export function buildPlan(options: {
   const end = options.end > start ? options.end : options.end + MINUTES_PER_DAY;
   const order = new Map(options.dealers.map((d, i) => [d.id, i]));
   const state = new Map<string, DealerState>(
-    options.dealers.map((d) => [d.id, { lastTable: null, streak: 0, restStreak: Number.POSITIVE_INFINITY, work: 0, visits: new Map<number, number>() }]),
+    options.dealers.map((d) => [d.id, { lastTable: null, streak: 0, restStreak: Number.POSITIVE_INFINITY, work: 0, share: 0, visits: new Map<number, number>(), seenAt: new Map<number, number>() }]),
   );
 
   const slots: PlanSlot[] = [];
   const record = (slot: PlanSlot) => {
     const working = new Set<string>();
+    // 이 칸에 있던 딜러(딜 + 휴식)는 모두 같은 몫을 받음
+    const seatedCount = slot.seats.filter(Boolean).length;
+    const present = [...slot.seats, ...slot.rest].filter((id): id is string => Boolean(id));
+    for (const id of present) {
+      const s = state.get(id);
+      if (s) s.share += seatedCount / present.length;
+    }
     slot.seats.forEach((id, table) => {
       if (!id) return;
       working.add(id);
       const s = state.get(id);
       if (!s) return;
       if (s.lastTable !== table) s.visits.set(table, (s.visits.get(table) ?? 0) + 1);
+      s.seenAt.set(table, slots.length);
       s.streak = s.lastTable != null ? s.streak + 1 : 1;
       s.lastTable = table;
       s.restStreak = 0;
@@ -206,7 +279,11 @@ export function buildPlan(options: {
       const pa = tier(sa);
       const pb = tier(sb);
       if (pa !== pb) return pa - pb;
+      // 쉬던 사람은 오래 쉰 사람부터(휴게가 길어지지 않게)
       if (pa === 0 && sa.restStreak !== sb.restStreak) return sb.restStreak - sa.restStreak;
+      // 같은 차례 안에서는 지금까지 몫보다 덜 딜한 사람부터(반 칸 넘게 차이 날 때) — 오늘 전체 딜 시간을 고르게
+      const owe = sa.share - sa.work - (sb.share - sb.work);
+      if (pa >= 0 && Math.abs(owe) > 0.5) return owe > 0 ? -1 : 1;
       if (pa === 1 && sa.streak !== sb.streak) return sa.streak - sb.streak;
       if (sa.work !== sb.work) return sa.work - sb.work;
       return (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0);
@@ -234,6 +311,10 @@ export function buildPlan(options: {
       open.filter((t) => seats[t] == null),
       (id, t) => state.get(id)?.visits.get(t) ?? 0,
       blockedAt,
+      (id, t) => {
+        const last = state.get(id)?.seenAt.get(t);
+        return last == null ? null : slots.length - last;
+      },
     );
     for (const [t, id] of seated.placed) seats[t] = id;
     // 막힌 테이블 때문에 못 앉은 딜러는 휴식으로
@@ -428,9 +509,14 @@ export function autoArrange(options: {
     });
   // 지금 칸 빈자리: 지난 칸 기록으로 각자 가장 적게 들어간 테이블에(못 넣는 테이블 제외)
   const visits = new Map<string, Map<number, number>>();
+  const seenAt = new Map<string, Map<number, number>>();
   for (let i = 0; i < before.length; i += 1) {
     before[i].seats.forEach((id, t) => {
-      if (!id || before[i - 1]?.seats[t] === id) return;
+      if (!id) return;
+      const last = seenAt.get(id) ?? new Map<number, number>();
+      last.set(t, i);
+      seenAt.set(id, last);
+      if (before[i - 1]?.seats[t] === id) return;
       const m = visits.get(id) ?? new Map<number, number>();
       m.set(t, (m.get(t) ?? 0) + 1);
       visits.set(id, m);
@@ -439,7 +525,10 @@ export function autoArrange(options: {
   const empty = [...Array(options.tables).keys()].filter((t) => seats[t] == null && isOpen(t));
   // 먼저 들어갈 사람(오래 쉰 순) 빈자리 수만큼 · 그 안에서 테이블은 고르게
   const want = candidates.slice(0, empty.length);
-  const fill = seatIncoming(want, empty, (id, t) => visits.get(id)?.get(t) ?? 0, blockedAt);
+  const fill = seatIncoming(want, empty, (id, t) => visits.get(id)?.get(t) ?? 0, blockedAt, (id, t) => {
+    const last = seenAt.get(id)?.get(t);
+    return last == null ? null : before.length - last;
+  });
   for (const [t, id] of fill.placed) {
     seats[t] = id;
     seated.add(id);
