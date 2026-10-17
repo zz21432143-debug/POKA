@@ -97,9 +97,12 @@ export default async function HomePage() {
             <HomeSummary />
           </Suspense>
         </div>
-        <Suspense fallback={null}>
-          <HomeYokai />
-        </Suspense>
+        {/* PC: 오른쪽 세로 카드 · 휴대폰은 미션 · 퀴즈 아래(같은 요청이라 DB는 한 번) */}
+        <div className="hidden min-w-0 lg:block">
+          <Suspense fallback={null}>
+            <HomeYokai />
+          </Suspense>
+        </div>
       </div>
       {/* 광고 구좌 1: 대문 아래 가로 배너(휴대폰 · PC 반응형) */}
       <GoogleAdUnit placement="home-top" />
@@ -112,6 +115,11 @@ export default async function HomePage() {
         </Suspense>
         <Suspense fallback={<HomePanelFallback className="h-40" />}>
           <HomeQuiz />
+        </Suspense>
+      </div>
+      <div className="min-w-0 lg:hidden">
+        <Suspense fallback={null}>
+          <HomeYokai />
         </Suspense>
       </div>
       {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히) — 구인 공고 바로 위 */}

@@ -136,7 +136,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
             data-poster-prev
             aria-label="이전 홍보 포스터"
             onClick={() => go(-1)}
-            className="absolute top-1/2 -left-1 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:-left-3"
+            className="absolute top-1/2 -left-3 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:grid"
           >
             <ChevronLeftIcon className="size-5" />
           </button>
@@ -145,7 +145,7 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
             data-poster-next
             aria-label="다음 홍보 포스터"
             onClick={() => go(1)}
-            className="absolute top-1/2 -right-1 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:-right-3"
+            className="absolute top-1/2 -right-3 z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full border border-[#c9a25c]/60 bg-black/75 text-[#f3d9a4] shadow hover:bg-black sm:grid"
           >
             <ChevronRightIcon className="size-5" />
           </button>
@@ -153,7 +153,11 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
       ) : null}
       </div>
       {deck.length > 3 ? (
-        <div className="flex justify-center gap-0.5">
+        <div className="flex items-center justify-center gap-0.5">
+          {/* 휴대폰: 화살표는 점 줄 양옆 */}
+          <button type="button" data-poster-prev-m aria-label="이전 홍보 포스터" onClick={() => go(-1)} className="mr-1 grid size-8 place-items-center rounded-full border border-[#c9a25c]/50 text-[#f3d9a4] sm:hidden">
+            <ChevronLeftIcon className="size-4" />
+          </button>
           {deck.map((poster, i) => (
             <button
               key={poster.key}
@@ -166,6 +170,9 @@ export function HomePosterCarousel({ posters }: { posters: HomePoster[] }) {
               <span className={i === start ? "h-1.5 w-4 rounded-full bg-[#c9a25c] transition-all" : "size-1.5 rounded-full bg-white/30 transition-all"} />
             </button>
           ))}
+          <button type="button" data-poster-next-m aria-label="다음 홍보 포스터" onClick={() => go(1)} className="ml-1 grid size-8 place-items-center rounded-full border border-[#c9a25c]/50 text-[#f3d9a4] sm:hidden">
+            <ChevronRightIcon className="size-4" />
+          </button>
         </div>
       ) : null}
     </section>

@@ -7,14 +7,17 @@ import {
   stageBg,
   yokaiImage,
 } from "@/lib/yokai";
+import { cache } from "react";
 import { yokaiHome, yokaiPublic } from "@/lib/yokai-server";
+
+const yokaiHomeOnce = cache((userId: string) => yokaiHome(userId));
 
 
 /** 홈: 요괴 마을 칸. 키우는 요괴가 있으면 상태 · 할 일, 없으면 시작 요괴 소개 */
 export async function HomeYokai() {
   const user = await getCurrentUser().catch(() => null);
   if (!yokaiPublic() && !user?.isMaster) return null;
-  const y = user ? await yokaiHome(user.id).catch(() => null) : null;
+  const y = user ? await yokaiHomeOnce(user.id).catch(() => null) : null;
 
 
   if (!y) {

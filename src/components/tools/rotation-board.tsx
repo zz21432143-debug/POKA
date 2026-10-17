@@ -2825,6 +2825,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               )}
             </div>
           )}
+          <p data-dealer-howto className="rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs leading-relaxed text-zinc-300">
+            💡 <b className="text-amber-300">미리:</b> 그날 근무할 딜러를 출근 시간과 함께 등록(예: 김딜러 10:30) → Auto가 그 시간부터 시간표에 넣어요.{" "}
+            <b className="text-emerald-300">당일:</b> 딜러가 실제로 오면 <b>출근</b>을 눌러 기록(늦게 오면 실제 온 시간으로 다시 짜요) · 갈 때 <b>퇴근</b>. 딜 안 하는 인원은 <b className="text-violet-300">스태프</b>로.
+          </p>
           <details
             className="group rounded-xl border border-white/15 bg-zinc-950 p-2"
             open={regOpen}
