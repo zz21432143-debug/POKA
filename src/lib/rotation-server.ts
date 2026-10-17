@@ -177,6 +177,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
       status: toDealerStatus(d.status),
       checkedInAt: d.checkedInAt?.toISOString() ?? null,
       leftAt: d.leftAt?.toISOString() ?? null,
+      staff: d.staff,
       sort: d.sort,
     })),
   };
@@ -282,6 +283,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           data: {
             ...(action.name !== undefined ? { name: String(action.name).trim().slice(0, 20) } : {}),
             ...(action.startTime !== undefined ? { startTime: normalizeTime(action.startTime) } : {}),
+            ...(action.staff !== undefined ? { staff: Boolean(action.staff) } : {}),
           },
         });
         break;
@@ -503,7 +505,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         if (action.copyDealers) {
           const dealers = await tx.rotationDealer.findMany({ where: { gameId: META_ID }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] });
           await tx.rotationDealer.createMany({
-            data: dealers.map((d) => ({ gameId: id, name: d.name, startTime: d.startTime, endTime: d.endTime, status: "WAIT", sort: d.sort })),
+            data: dealers.map((d) => ({ gameId: id, name: d.name, startTime: d.startTime, endTime: d.endTime, status: "WAIT", staff: d.staff, sort: d.sort })),
           });
         }
         target = id;

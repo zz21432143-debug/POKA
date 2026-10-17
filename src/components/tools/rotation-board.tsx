@@ -168,7 +168,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [removeMode, setRemoveMode] = useState(false);
   const [removePick, setRemovePick] = useState<Set<string>>(() => new Set());
   const [dealerFilter, setDealerFilter] = useState<
-    "all" | "in" | "rest" | "nextRest" | "left"
+    "all" | "in" | "rest" | "nextRest" | "left" | "staff"
   >("all");
   const [timeEdit, setTimeEdit] = useState<{
     index: number;
@@ -415,8 +415,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const shownDealers = state.dealers.filter((d) => {
     const q = dealerQ.trim();
     if (q && !d.name.includes(q)) return false;
-    if (dealerFilter === "in") return d.status === "IN" && !restNow.has(d.id);
-    if (dealerFilter === "rest") return d.status === "IN" && restNow.has(d.id);
+    if (dealerFilter === "in") return d.status === "IN" && !d.staff && !restNow.has(d.id);
+    if (dealerFilter === "rest") return d.status === "IN" && !d.staff && restNow.has(d.id);
+    if (dealerFilter === "staff") return Boolean(d.staff);
     if (dealerFilter === "nextRest") return d.status !== "LEFT" && restNext.has(d.id);
     if (dealerFilter === "left") return d.status === "LEFT";
     return true;
@@ -431,7 +432,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const dealing = nowSlot ? nowSlot.seats.filter(Boolean).length : 0;
   const resting = nowSlot ? nowSlot.rest.length : 0;
   const onDuty = state.dealers.filter(
-    (d) => d.status !== "OFF" && d.status !== "LEFT",
+    (d) => d.status !== "OFF" && d.status !== "LEFT" && !d.staff,
   ).length;
   // 최대 연속 딜: 분 → 칸 수(간격으로 나눔). 0이면 제한 없음
   const intervalNow = plan?.interval ?? state.interval;
@@ -2490,14 +2491,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       "in",
                       "출근",
                       state.dealers.filter(
-                        (d) => d.status === "IN" && !restNow.has(d.id),
+                        (d) => d.status === "IN" && !d.staff && !restNow.has(d.id),
                       ).length,
                     ],
                     [
                       "rest",
                       "지금 휴식",
                       state.dealers.filter(
-                        (d) => d.status === "IN" && restNow.has(d.id),
+                        (d) => d.status === "IN" && !d.staff && restNow.has(d.id),
                       ).length,
                     ],
                     [
@@ -2511,6 +2512,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       "left",
                       "퇴근",
                       state.dealers.filter((d) => d.status === "LEFT").length,
+                    ],
+                    [
+                      "staff",
+                      "스태프",
+                      state.dealers.filter((d) => d.staff).length,
                     ],
                   ] as const
                 ).map(([key, label, n]) => (
@@ -2630,6 +2636,33 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               <span className="shrink-0 text-xs text-zinc-400">
                                 ✎
                               </span>
+                            </button>
+                            {/* 스태프: 출근 체크만 · 딜에는 안 들어감 */}
+                            <button
+                              type="button"
+                              disabled={busy}
+                              data-staff={dealer.name}
+                              aria-pressed={Boolean(dealer.staff)}
+                              onClick={() => {
+                                const on = !dealer.staff;
+                                if (on && !window.confirm(`${dealer.name}을(를) 스태프로 바꿀까요?\n출근 · 퇴근 체크는 그대로 되고, 딜(시간표)에는 들어가지 않아요.`)) return;
+                                void (async () => {
+                                  if (!(await send({ type: "updateDealer", id: dealer.id, staff: on }))) return;
+                                  // 스태프로: 지금 칸부터 시간표에서 빼기(지난 칸 기록은 그대로)
+                                  if (on && plan) {
+                                    const from = Math.max(0, current);
+                                    const slots = plan.slots.map((slot, i) => (i < from ? slot : { ...slot, seats: slot.seats.map((id) => (id === dealer.id ? null : id)), rest: slot.rest.filter((id) => id !== dealer.id) }));
+                                    await send({ type: "savePlan", plan: { ...plan, slots } });
+                                  }
+                                })();
+                              }}
+                              title={dealer.staff ? "스태프(딜 안 함) · 눌러서 딜러로" : "눌러서 스태프로(딜 안 함)"}
+                              className={cn(
+                                "min-h-9 shrink-0 rounded px-1.5 text-[11px] font-black",
+                                dealer.staff ? "bg-violet-600 text-white" : "border border-white/20 text-zinc-400",
+                              )}
+                            >
+                              {dealer.staff ? "스태프" : "딜러"}
                             </button>
                             {/* 출근·퇴근 시간(누르면 바꾸기). 실제 체크한 시간은 색으로, 예정 시간은 회색 */}
                             <button

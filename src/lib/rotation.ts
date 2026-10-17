@@ -60,6 +60,8 @@ export type RotationDealerView = {
   /** 실제 출근 체크 시각(ISO) */
   checkedInAt: string | null;
   leftAt: string | null;
+  /** 스태프: 출근 체크만 · 딜에는 안 들어감 */
+  staff?: boolean;
   sort: number;
 };
 
@@ -101,7 +103,7 @@ export type RotationStateView = {
 export type RotationAction =
   | { type: "addDealers"; dealers: { name: string; startTime?: string | null; endTime?: string | null }[] }
   | { type: "setTimes"; id: string; start?: string | null; end?: string | null }
-  | { type: "updateDealer"; id: string; name?: string; startTime?: string | null }
+  | { type: "updateDealer"; id: string; name?: string; startTime?: string | null; staff?: boolean }
   | { type: "removeDealer"; id: string }
   /** 여러 딜러 한꺼번에 빼기 */
   | { type: "removeDealers"; ids: string[] }
@@ -269,7 +271,8 @@ export function nowMinutes(start: number, now = new Date()) {
  */
 export function planDealers(dealers: RotationDealerView[], start: number): PlanDealer[] {
   return dealers
-    .filter((d) => d.status !== "OFF")
+    // 휴무 · 스태프(딜 안 함)는 시간표에 넣지 않음
+    .filter((d) => d.status !== "OFF" && !d.staff)
     .map((d) => {
       const fromClock = d.checkedInAt ? parseClock(kstClock(d.checkedInAt)) : parseClock(d.startTime ?? "");
       const from = fromClock == null ? start : alignToStart(fromClock, start);
