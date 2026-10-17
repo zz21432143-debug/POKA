@@ -412,6 +412,22 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const restNow = new Set(nowSlot?.rest ?? []);
   /** 다음 교대 칸에서 쉬는 딜러(교대 때 빠질 사람) */
   const restNext = new Set(plan && next >= 0 ? (plan.slots[next]?.rest ?? []) : []);
+  // 딜러별 오늘 들어간 테이블(지금 칸까지 · 새로 앉은 번 수) · 딜한 칸 수
+  const tableHistory = useMemo(() => {
+    const out = new Map<string, { visits: Map<number, number>; slots: number }>();
+    if (!plan) return out;
+    const upto = Math.min(plan.slots.length - 1, Math.max(-1, current));
+    for (let i = 0; i <= upto; i += 1) {
+      plan.slots[i].seats.forEach((id, t) => {
+        if (!id) return;
+        const row = out.get(id) ?? { visits: new Map<number, number>(), slots: 0 };
+        row.slots += 1;
+        if (plan.slots[i - 1]?.seats[t] !== id) row.visits.set(t, (row.visits.get(t) ?? 0) + 1);
+        out.set(id, row);
+      });
+    }
+    return out;
+  }, [plan, current]);
   const shownDealers = state.dealers.filter((d) => {
     const q = dealerQ.trim();
     if (q && !d.name.includes(q)) return false;
@@ -2654,7 +2670,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             key={dealer.id}
                             data-dealer={dealer.name}
                             className={cn(
-                              "relative flex items-center gap-1.5 rounded-lg border px-2 py-1.5",
+                              "relative flex flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1.5",
                               dealer.status === "IN"
                                 ? "border-emerald-500/40 bg-emerald-950/30"
                                 : "border-white/10 bg-zinc-950",
@@ -2817,6 +2833,24 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                   : "출근"}
                               </button>
                             )}
+                            {/* 오늘 들어간 테이블(많이 간 순) — 같은 테이블만 가는지 한눈에 */}
+                            {(() => {
+                              const h = tableHistory.get(dealer.id);
+                              if (!h || dealer.staff) return null;
+                              const list = [...h.visits.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+                              return (
+                                <span data-dealer-tables={dealer.name} className="basis-full text-[11.5px] leading-snug text-zinc-400">
+                                  오늘 딜 {h.slots}칸 ·{" "}
+                                  {list.map(([t, n], i) => (
+                                    <span key={t} className={n >= 3 ? "font-black text-amber-300" : "text-zinc-300"}>
+                                      {i ? " · " : ""}
+                                      {labels[t] != null ? tableTag(labels[t]) : "?"}
+                                      {n > 1 ? ` ×${n}` : ""}
+                                    </span>
+                                  ))}
+                                </span>
+                              );
+                            })()}
                           </div>
                         ))}
                     </div>
