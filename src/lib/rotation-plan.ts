@@ -38,6 +38,8 @@ export type RotationPlan = {
   setup?: number;
   /** 최대 연속 딜 칸 수(0·없음 = 제한 없음). 이어 짤 때도 같은 규칙을 씁니다. */
   maxStreak?: number;
+  /** 직접 배치: 컨바인 · 이어 짜기 때 자동으로 다시 짜지 않고 빈칸으로 둠(배치는 사람이) */
+  manual?: boolean;
 };
 
 /**
@@ -95,8 +97,11 @@ export function buildPlan(options: {
   closedFrom?: (number | null)[];
   /** 최대 연속 딜 칸 수(0 = 제한 없음). 사람이 모자라면 지킬 수 없어 화면에서 경고합니다. */
   maxStreak?: number;
+  /** 테이블별(인덱스) 못 넣는 딜러 id */
+  blocked?: string[][];
 }): RotationPlan {
   const maxStreak = Math.max(0, Math.floor(options.maxStreak ?? 0));
+  const blockedAt = (t: number, id: string) => Boolean(options.blocked?.[t]?.includes(id));
   const tables = Math.max(1, Math.floor(options.tables));
   const interval = Math.max(5, Math.floor(options.interval));
   const start = options.start;
@@ -185,7 +190,7 @@ export function buildPlan(options: {
       const s = state.get(dealer.id)!;
       if (s.lastTable != null) {
         const next = nextOpen(s.lastTable, open);
-        if (next != null && seats[next] == null) {
+        if (next != null && seats[next] == null && !blockedAt(next, dealer.id)) {
           seats[next] = dealer.id;
           continue;
         }
@@ -194,8 +199,13 @@ export function buildPlan(options: {
     }
     for (const t of open) {
       if (!incoming.length) break;
-      if (seats[t] == null) seats[t] = incoming.shift()!;
+      if (seats[t] != null) continue;
+      // 이 테이블에 못 넣는 딜러는 건너뜀
+      const k = incoming.findIndex((id) => !blockedAt(t, id));
+      if (k >= 0) seats[t] = incoming.splice(k, 1)[0];
     }
+    // 막힌 테이블 때문에 못 앉은 딜러는 휴식으로
+    for (const id of incoming) if (!rest.includes(id)) rest.push(id);
     // 처음 들어오는 딜러들이 한꺼번에 같은 때 쉬지 않도록 쉬는 차례를 엇갈리게 둡니다.
     const fresh = Number.isFinite(cap) ? workers.filter((d) => state.get(d.id)!.work === 0).map((d) => d.id) : [];
     record({ at, seats, rest });
@@ -287,6 +297,7 @@ export function extendPlan(
   current: number,
   horizon = PLAN_HORIZON,
   closedFrom?: (number | null)[],
+  blocked?: string[][],
 ): RotationPlan {
   const last = plan.slots[plan.slots.length - 1];
   if (!last) return plan;
@@ -300,6 +311,7 @@ export function extendPlan(
     keep: plan.slots,
     closedFrom,
     maxStreak: plan.maxStreak,
+    blocked,
   });
   const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
   return { ...built, slots: built.slots.slice(trimFrom) };
@@ -324,8 +336,10 @@ export function autoArrange(options: {
   closedFrom?: (number | null)[];
   horizon?: number;
   maxStreak?: number;
+  blocked?: string[][];
 }): RotationPlan {
   const horizon = options.horizon ?? PLAN_HORIZON;
+  const blockedAt = (t: number, id: string) => Boolean(options.blocked?.[t]?.includes(id));
   const closedFrom = options.closedFrom ?? [];
   const end = Math.max(options.now, options.start) + horizon;
   const base = {
@@ -337,6 +351,7 @@ export function autoArrange(options: {
     setup: options.setup,
     closedFrom,
     maxStreak: options.maxStreak,
+    blocked: options.blocked,
   };
   const plan = options.plan;
   if (!plan || options.current < 0 || !plan.slots[options.current]) return buildPlan(base);
@@ -357,7 +372,7 @@ export function autoArrange(options: {
   const seats: (string | null)[] = Array.from({ length: options.tables }, (_, t) => {
     const id = cur.seats[t] ?? null;
     if (!isOpen(t)) return null;
-    return id && available.has(id) ? id : null;
+    return id && available.has(id) && !blockedAt(t, id) ? id : null;
   });
   const seated = new Set(seats.filter(Boolean) as string[]);
   const order = new Map(options.dealers.map((d, i) => [d.id, i]));
@@ -381,7 +396,9 @@ export function autoArrange(options: {
     });
   for (let t = 0; t < options.tables; t += 1) {
     if (seats[t] == null && isOpen(t) && candidates.length) {
-      const id = candidates.shift()!;
+      const k = candidates.findIndex((c) => !blockedAt(t, c));
+      if (k < 0) continue;
+      const id = candidates.splice(k, 1)[0];
       seats[t] = id;
       seated.add(id);
     }

@@ -30,7 +30,14 @@ export type TableState = {
   closedAt?: number | null;
   /** 게임 중 추가로 연 시각(분). 이보다 앞 칸은 "오픈 전" */
   openedAt?: number | null;
+  /** 이 테이블에 못 넣는 딜러 id(Auto · 칸 바꾸기 모두 지킴) */
+  blocked?: string[];
 };
+
+/** 시간표 테이블 순서대로 못 넣는 딜러 */
+export function blockedOf(labels: number[], tableState: Record<string, TableState>) {
+  return labels.map((label) => tableState[String(label)]?.blocked ?? []);
+}
 
 /** 시간표 테이블 순서대로 추가 오픈 시각(없으면 null) */
 export function openedFromOf(labels: number[], tableState: Record<string, TableState>) {
@@ -114,7 +121,11 @@ export type RotationAction =
   | { type: "clearPlan" }
   | { type: "setShare"; on: boolean }
   | { type: "savePlan"; plan: RotationPlan | null }
-  | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null }
+  | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null; blocked?: string[] }
+  /** 테이블 번호 바꾸기(잘못 연 번호 고치기) — 그 테이블 시간표 · 버튼 자리는 그대로 */
+  | { type: "renameTable"; from: number; to: string }
+  /** 테이블 삭제(다시 열기 없음) — 그 테이블에 있던 딜러는 휴식으로 */
+  | { type: "removeTable"; label: number }
   | { type: "createGame"; name: string; workDate: string; copyDealers?: boolean; copySettings?: boolean }
   | { type: "setGame"; name?: string; workDate?: string }
   | { type: "deleteGame" }

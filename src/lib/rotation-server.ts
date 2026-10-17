@@ -407,8 +407,52 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           row.button = b != null && b >= 1 && b <= 10 ? b : null;
         }
         if (action.closedAt !== undefined) row.closedAt = action.closedAt == null || !Number.isFinite(Number(action.closedAt)) ? null : Math.floor(Number(action.closedAt));
+        if (action.blocked !== undefined) {
+          const ids = new Set((await tx.rotationDealer.findMany({ where: { gameId: META_ID }, select: { id: true } })).map((d) => d.id));
+          row.blocked = Array.isArray(action.blocked) ? [...new Set(action.blocked.filter((id): id is string => typeof id === "string" && ids.has(id)))] : [];
+        }
         all[key] = row;
         await tx.rotationMeta.update({ where: { id: META_ID }, data: { tableStateJson: JSON.stringify(all) } });
+        break;
+      }
+      case "renameTable":
+      case "removeTable": {
+        const m = await tx.rotationMeta.findUniqueOrThrow({ where: { id: META_ID } });
+        const oldLabels = tableLabelsOf({ tableCount: m.tableCount, tableLabels: m.tableLabels ? parseTableLabels(m.tableLabels).labels : null });
+        const all = parseTableState(m.tableStateJson);
+        let newLabels: number[];
+        // 시간표 칸은 번호 기준으로 옮김: 바꾸기는 「옛 번호 = 새 번호」로 보고 옮겨서 그 테이블 칸이 그대로 남음
+        let mapped = oldLabels;
+        if (action.type === "renameTable") {
+          const from = Math.floor(Number(action.from));
+          const { labels: parsed, errors } = parseTableLabels(String(action.to ?? ""));
+          if (errors.length || parsed.length !== 1) throw new RotationError("새 테이블 번호를 하나만 적어 주세요(예: 7 또는 B).");
+          const to = parsed[0];
+          if (!oldLabels.includes(from)) throw new RotationError("테이블을 찾을 수 없습니다. 새로고침해 주세요.");
+          if (to === from) break;
+          if (oldLabels.includes(to)) throw new RotationError("이미 있는 테이블 번호예요.");
+          mapped = oldLabels.map((l) => (l === from ? to : l));
+          newLabels = [...mapped].sort((a, b) => a - b);
+          if (all[String(from)]) all[String(to)] = all[String(from)];
+          delete all[String(from)];
+        } else {
+          const label = Math.floor(Number(action.label));
+          if (!oldLabels.includes(label)) throw new RotationError("테이블을 찾을 수 없습니다. 새로고침해 주세요.");
+          if (oldLabels.length <= 1) throw new RotationError("마지막 테이블은 지울 수 없어요. 게임을 지우거나 번호를 바꿔 주세요.");
+          newLabels = oldLabels.filter((l) => l !== label);
+          delete all[String(label)];
+        }
+        const plan = parsePlan(m.planJson);
+        const moved = plan ? remapPlanTables(plan, mapped, newLabels) : null;
+        await tx.rotationMeta.update({
+          where: { id: META_ID },
+          data: {
+            tableCount: newLabels.length,
+            tableLabels: newLabels.map(labelText).join(","),
+            tableStateJson: JSON.stringify(all),
+            ...(plan ? { planJson: moved ? JSON.stringify(moved) : null } : {}),
+          },
+        });
         break;
       }
       case "clearPlan": {

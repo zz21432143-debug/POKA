@@ -33,6 +33,7 @@ import {
   type DealerStatus,
   type RotationAction,
   type RotationStateView,
+  blockedOf,
 } from "@/lib/rotation";
 import {
   EXTEND_WHEN_LEFT,
@@ -386,6 +387,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     () => closedFromOf(labels, state.tableState),
     [labels, state.tableState],
   );
+  // 테이블별 못 넣는 딜러(Auto · 칸 바꾸기 모두 지킴)
+  const blocked = useMemo(
+    () => blockedOf(labels, state.tableState),
+    [labels, state.tableState],
+  );
+  const [blockFor, setBlockFor] = useState<number | null>(null);
+  // 직접 배치: 컨바인 · 이어 짜기 때 자동으로 다시 짜지 않음
+  const manual = Boolean(plan?.manual);
   // 버튼 자리: 한 번 정하면 모든 테이블이 같습니다(테이블 상태 "0"에 저장)
   const button = state.tableState["0"]?.button ?? null;
   const isClosedAt = (t: number, at: number) =>
@@ -580,8 +589,50 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       now: nowMin,
       closedFrom,
       maxStreak,
+      blocked,
     });
-    void send({ type: "savePlan", plan: built });
+    void send({ type: "savePlan", plan: manual ? { ...built, manual: true } : built });
+  }
+
+  /** 직접 배치: 빈 시간표(칸만)를 만들고 테이블 · 딜러를 사람이 칸을 눌러 넣음 */
+  function startManual() {
+    if (state.tableCount === 0) {
+      setError("테이블이 0개예요. 설정 탭에서 테이블 번호(예: 1~8 또는 A~D)를 먼저 정해 주세요.");
+      return;
+    }
+    const blank = buildPlan({
+      dealers: [],
+      tables: state.tableCount,
+      start,
+      end: Math.max(nowMinutes(start, new Date()), start) + PLAN_HORIZON,
+      interval: state.interval,
+      setup: state.setupMinutes,
+      closedFrom,
+    });
+    void send({ type: "savePlan", plan: { ...blank, manual: true } });
+  }
+
+  /** 테이블 번호 바꾸기(잘못 연 번호 고치기) */
+  async function renameTable(t: number) {
+    const label = labels[t];
+    const to = window.prompt(`${tableWord(label)} 번호를 무엇으로 바꿀까요? (예: 7 또는 B)`, "");
+    if (!to || !to.trim()) return;
+    await send({ type: "renameTable", from: label, to: to.trim() });
+  }
+
+  /** 테이블 삭제(다시 열기 없음) */
+  async function removeTable(t: number) {
+    const label = labels[t];
+    if (!window.confirm(`${tableWord(label)}을 삭제할까요?\n시간표에서 완전히 빠지고 다시 열기가 없습니다(그 테이블 딜러는 휴식으로).\n잠깐 닫는 거라면 「컨바인」을 쓰세요.`)) return;
+    await send({ type: "removeTable", label });
+  }
+
+  /** 이 테이블에 못 넣는 딜러 켜기 · 끄기 */
+  async function toggleBlocked(t: number, dealerId: string) {
+    const label = labels[t];
+    const cur = blocked[t] ?? [];
+    const nextIds = cur.includes(dealerId) ? cur.filter((id) => id !== dealerId) : [...cur, dealerId];
+    await send({ type: "setTable", label, blocked: nextIds });
   }
 
   // 남은 칸이 적으면 같은 흐름으로 이어 짜기(한 번만)
@@ -592,17 +643,20 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     if (left >= EXTEND_WHEN_LEFT || extendingRef.current === state.version)
       return;
     extendingRef.current = state.version;
+    const extended = extendPlan(
+      plan,
+      plan.manual ? [] : planDealers(state.dealers, start),
+      current,
+      undefined,
+      closedFrom,
+      blocked,
+    );
     void send({
       type: "savePlan",
-      plan: extendPlan(
-        plan,
-        planDealers(state.dealers, start),
-        current,
-        undefined,
-        closedFrom,
-      ),
+      plan: plan.manual ? { ...extended, manual: true } : extended,
     });
   }, [
+    blocked,
     plan,
     busy,
     current,
@@ -624,6 +678,21 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     if (!window.confirm(message)) return;
     if (!(await send({ type: "setTable", label, closedAt: at }))) return;
     if (!plan) return;
+    if (plan.manual) {
+      // 직접 배치: 닫는 시각부터 그 테이블 딜러만 휴식으로 옮김(다른 테이블은 그대로)
+      if (at == null) return;
+      const slots = plan.slots.map((slot) => {
+        if (slot.at < at || !slot.seats[t]) return slot;
+        const id = slot.seats[t] as string;
+        return {
+          ...slot,
+          seats: slot.seats.map((v, i) => (i === t ? null : v)),
+          rest: slot.rest.includes(id) ? slot.rest : [...slot.rest, id],
+        };
+      });
+      await send({ type: "savePlan", plan: { ...plan, slots } });
+      return;
+    }
     const nextClosed = closedFrom.map((value, i) => (i === t ? at : value));
     const keep = plan.slots.filter((_, index) => index <= current);
     const built = buildPlan({
@@ -636,6 +705,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       keep,
       closedFrom: nextClosed,
       maxStreak,
+      blocked,
     });
     await send({ type: "savePlan", plan: built });
   }
@@ -714,10 +784,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           Boolean(row.id) && row.t !== cell.table,
       );
     const inSlot = new Set([...slot.seats, ...slot.rest]);
+    const banned = new Set(blocked[cell.table] ?? []);
     const outside = state.dealers.filter(
-      (d) => available.has(d.id) && !inSlot.has(d.id),
+      (d) => available.has(d.id) && !inSlot.has(d.id) && !banned.has(d.id),
     );
-    return { slot, resting, seated, outside };
+    return {
+      slot,
+      resting: resting.filter((id) => !banned.has(id)),
+      seated: seated.filter((row) => !banned.has(row.id)),
+      outside,
+    };
   })();
 
   return (
@@ -1612,18 +1688,42 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   시간표 삭제
                 </button>
               ) : null}
+              {/* 직접 배치: 빈 시간표에서 사람이 칸을 눌러 넣기 / 모드 바꾸기 */}
+              {!plan ? (
+                <button
+                  type="button"
+                  data-rot-manual
+                  disabled={busy}
+                  onClick={startManual}
+                  title="빈 시간표를 만들고, 칸을 눌러 딜러를 직접 넣습니다(자동으로 다시 짜지 않음)"
+                  className="ml-auto min-h-12 rounded-xl border-2 border-sky-400 px-4 text-base font-black text-sky-200 disabled:opacity-40"
+                >
+                  ✋ 직접 배치
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  data-rot-mode
+                  disabled={busy}
+                  onClick={() => void send({ type: "savePlan", plan: { ...plan, manual: !manual } })}
+                  title={manual ? "컨바인 · 이어 짜기 때 다시 자동으로 짜게 바꿉니다" : "자동으로 다시 짜지 않고 직접 배치하게 바꿉니다"}
+                  className={cn(
+                    "min-h-10 rounded-lg px-3 text-sm font-black",
+                    manual ? "bg-sky-600 text-white" : "border border-sky-400/60 text-sky-200",
+                  )}
+                >
+                  {manual ? "✋ 직접 배치 중" : "✋ 직접 배치로"}
+                </button>
+              )}
               {/* Auto: 시간표 바로 옆(오른쪽) */}
               <button
                 type="button"
                 disabled={busy || state.dealers.length === 0}
                 onClick={runAuto}
                 title="지금 칸 빈자리(퇴근·컨바인)를 채우고, 다음 칸부터 딜·휴식 시간을 맞춰 자동으로 다시 짭니다"
-                className={cn(
-                  "min-h-12 rounded-xl bg-amber-400 px-8 text-xl font-black text-black shadow-[0_0_0_3px_rgba(251,191,36,0.25)] disabled:opacity-40",
-                  !plan && "ml-auto",
-                )}
+                className="min-h-12 rounded-xl bg-amber-400 px-8 text-xl font-black text-black shadow-[0_0_0_3px_rgba(251,191,36,0.25)] disabled:opacity-40"
               >
-                Auto
+                {manual ? "Auto 채우기" : "Auto"}
               </button>
             </div>
 
@@ -1634,8 +1734,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   : ""}
                 <b className="text-amber-300">딜러</b> 탭에서 딜러를 등록하고,{" "}
                 <b className="text-amber-300">설정</b> 탭에서 게임 시작·테이블
-                번호를 정한 뒤 <b className="text-amber-300">Auto</b>를
-                누르세요.
+                번호를 정한 뒤 <b className="text-amber-300">Auto</b>(자동으로 짜기) 또는{" "}
+                <b className="text-sky-300">✋ 직접 배치</b>(빈 시간표에서 칸을 눌러 직접 넣기)를 누르세요.
               </p>
             ) : !gridOpen ? (
               <button
@@ -1784,6 +1884,41 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                       {closedFrom[t] != null
                                         ? "다시 열기"
                                         : "컨바인"}
+                                    </button>
+                                  </span>
+                                  <span className="mt-0.5 flex items-center gap-0.5">
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      data-rot-rename={label}
+                                      onClick={() => void renameTable(t)}
+                                      title="테이블 번호 바꾸기"
+                                      className="min-h-7 rounded border border-white/25 px-1 text-[10px] font-black text-zinc-200"
+                                    >
+                                      번호
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      data-rot-block={label}
+                                      onClick={() => setBlockFor(t)}
+                                      title="이 테이블에 못 넣는 딜러"
+                                      className={cn(
+                                        "min-h-7 rounded border px-1 text-[10px] font-black",
+                                        (blocked[t] ?? []).length ? "border-amber-400 bg-amber-500/20 text-amber-200" : "border-white/25 text-zinc-200",
+                                      )}
+                                    >
+                                      🚫{(blocked[t] ?? []).length || ""}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      data-rot-remove={label}
+                                      onClick={() => void removeTable(t)}
+                                      title="테이블 삭제(다시 열기 없음)"
+                                      className="min-h-7 rounded border border-rose-500/50 px-1 text-[10px] font-black text-rose-300"
+                                    >
+                                      삭제
                                     </button>
                                   </span>
                                   {closedFrom[t] != null ? (
@@ -2982,6 +3117,39 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </ToolDialog>
       ) : null}
 
+      {/* 테이블에 못 넣는 딜러 */}
+      {blockFor != null && labels[blockFor] != null ? (
+        <ToolDialog label="못 넣는 딜러" onClose={() => setBlockFor(null)}>
+          <div data-rot-block-dialog className="grid w-full max-w-sm gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <h3 className="text-lg font-black">{tableWord(labels[blockFor])} · 못 넣는 딜러</h3>
+            <p className="text-xs text-zinc-400">체크한 딜러는 이 테이블에 Auto로도, 칸 바꾸기로도 들어가지 않아요. 다른 테이블에는 그대로 들어갑니다.</p>
+            {state.dealers.length ? (
+              <ul className="grid max-h-[50dvh] gap-1 overflow-y-auto">
+                {state.dealers.map((d) => (
+                  <li key={d.id}>
+                    <label className="flex min-h-11 items-center gap-2 rounded-lg border border-white/10 px-2 text-sm font-bold">
+                      <input
+                        type="checkbox"
+                        data-rot-block-dealer={d.name}
+                        checked={(blocked[blockFor] ?? []).includes(d.id)}
+                        disabled={busy}
+                        onChange={() => void toggleBlocked(blockFor, d.id)}
+                        className="size-5"
+                      />
+                      {d.name}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-zinc-400">딜러가 없어요. 딜러 탭에서 먼저 등록해 주세요.</p>
+            )}
+            <button type="button" onClick={() => setBlockFor(null)} className="min-h-11 rounded-lg bg-white/10 text-sm font-black">
+              닫기
+            </button>
+          </div>
+        </ToolDialog>
+      ) : null}
       {/* 새 게임 · 날짜 변경 · 이름/날짜 고치기 */}
       {gameDialog ? (
         <ToolDialog label="게임" onClose={() => setGameDialog(null)}>

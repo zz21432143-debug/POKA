@@ -245,3 +245,19 @@ describe("open more tables mid-game", async () => {
     assert.ok(moved.slots[0].rest.includes(gone));
   });
 });
+
+describe("테이블에 못 넣는 딜러", () => {
+  it("막은 딜러는 그 테이블에 앉지 않음(Auto 처음 짜기)", () => {
+    const dealers = ["a", "b", "c", "d"].map((id) => ({ id, from: 600, to: null }));
+    const plan = buildPlan({ dealers, tables: 2, start: 600, end: 840, interval: 20, blocked: [["a", "b"], []] });
+    for (const slot of plan.slots) {
+      assert.ok(slot.seats[0] !== "a" && slot.seats[0] !== "b", `T1에 막힌 딜러: ${slot.seats[0]}`);
+    }
+    assert.ok(plan.slots.some((slot) => slot.seats[1] === "a" || slot.seats[1] === "b"), "다른 테이블엔 들어감");
+  });
+  it("직접 배치용 빈 시간표: 딜러 없이 칸만", () => {
+    const plan = buildPlan({ dealers: [], tables: 3, start: 600, end: 720, interval: 20 });
+    assert.ok(plan.slots.length >= 5);
+    assert.ok(plan.slots.every((slot) => slot.seats.length === 3 && slot.seats.every((id) => id === null)));
+  });
+});
