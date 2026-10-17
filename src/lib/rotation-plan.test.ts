@@ -325,3 +325,32 @@ describe("늦게 출근한 딜러도 공평하게", () => {
     });
   }
 });
+
+describe("들어갔던 테이블 또 안 들어가게(고르게)", () => {
+  /** 딜러별 테이블마다 새로 앉은 횟수 */
+  const stints = (plan: { slots: { seats: (string | null)[] }[] }) => {
+    const out = new Map<string, number[]>();
+    plan.slots.forEach((slot, i) => {
+      slot.seats.forEach((id, t) => {
+        if (!id || plan.slots[i - 1]?.seats[t] === id) return;
+        const row = out.get(id) ?? Array(slot.seats.length).fill(0);
+        row[t] += 1;
+        out.set(id, row);
+      });
+    });
+    return out;
+  };
+  for (const [tables, n, streak] of [[4, 6, 0], [6, 9, 2], [10, 14, 3], [3, 5, 1]] as const) {
+    it(`테이블 ${tables} · 딜러 ${n}: 한 테이블에만 몰리지 않음`, () => {
+      const plan = buildPlan({ dealers: dealers(n), tables, start: 600, end: 600 + 20 * 40, interval: 20, maxStreak: streak });
+      assertPhysical(plan);
+      for (const [id, row] of stints(plan)) {
+        const total = row.reduce((a, b) => a + b, 0);
+        const fair = Math.ceil(total / tables);
+        // 자리가 나는 테이블이 정해져 있어 완전히 똑같진 않아도: 한 테이블에 고른 몫보다 2번 넘게 몰리지 않고, 거의 모든 테이블에 가 봄
+        assert.ok(Math.max(...row) <= fair + 2, `${id}: 테이블별 ${row.join(",")} (고르면 ${fair}번씩)`);
+        assert.ok(row.filter((x) => x > 0).length >= Math.min(tables, total) - 2, `${id}: 가 본 테이블 ${row.filter((x) => x > 0).length}곳 / ${row.join(",")}`);
+      }
+    });
+  }
+});
