@@ -1,6 +1,7 @@
 import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { SITE_HOST } from "@/lib/site";
+import { BLOG_TOOL_POSTS } from "@/lib/blog-tool-posts";
 
 /** 블로그에 붙는 링크는 늘 실제 사이트 주소 */
 const BASE = `https://${SITE_HOST}`;
@@ -10,9 +11,9 @@ const BASE = `https://${SITE_HOST}`;
  * 본문 통째 복사는 하지 않음(같은 글이 두 곳에 있으면 검색에서 손해) — 첫 문장 · 소제목 · 소제목 첫 문장만.
  */
 export type BlogDraft = {
-  /** "holdem:set-mining" · "dealer:how-to-become-dealer" */
+  /** "holdem:set-mining" · "dealer:how-to-become-dealer" · "tool:shot-clock" */
   key: string;
-  kind: "holdem" | "dealer";
+  kind: "holdem" | "dealer" | "tool";
   title: string;
   body: string;
   tags: string;
@@ -83,7 +84,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
     `예시 · 계산까지 담은 전체 글은 POKA ${label}에서 볼 수 있어요.`,
     `👉 ${url}`,
     "",
-    "POKA는 딜러 구인 · 게임 현황판 · 딜러 로테이션 · 홀덤 공부 도구를 한곳에 모은 홀덤 커뮤니티예요.",
+    POKA_LINE,
   ]
     .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
     .join("\n");
@@ -108,7 +109,25 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
   };
 }
 
-/** 올릴 순서: 홀덤 · 딜러 번갈아(하루 1편씩) */
+const POKA_LINE = "POKA는 딜러 구인 · 게임 현황판 · 딜러 로테이션 · 홀덤 공부 도구를 한곳에 모은 홀덤 커뮤니티예요.";
+
+/** 매장 관리 도구 소개 글(직접 쓴 글) */
+function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
+  const url = `${BASE}${t.path}?from=${BLOG_SOURCE}`;
+  const body = [
+    t.body,
+    "",
+    "✍️ (여기에 한두 줄: 매장에서 써 보니 어땠는지 적으면 더 좋아요)",
+    "",
+    "바로 써 보기 👉 " + url,
+    "",
+    POKA_LINE,
+  ].join("\n");
+  const tags = ["홀덤", ...t.tags, "POKA"].map((x) => `#${x}`).join(" ");
+  return { key: `tool:${t.slug}`, kind: "tool", title: `${t.title} | 매장 관리`, body, tags, url, photo: `${BASE}${t.path}` };
+}
+
+/** 올릴 순서: 홀덤 · 딜러 번갈아(하루 1편씩), 매장 관리 도구 소개는 5편마다 한 편 */
 export function blogDrafts(): BlogDraft[] {
   const holdem = HOLDEM_GUIDES.map((g) => draft("holdem", g));
   const dealer = GUIDE_ARTICLES.map((g) => draft("dealer", g));
@@ -117,5 +136,7 @@ export function blogDrafts(): BlogDraft[] {
     if (holdem[i]) out.push(holdem[i]);
     if (dealer[i]) out.push(dealer[i]);
   }
+  // 첫 두 편(포지션 · 딜러가 하는 일) 다음에 샷클락, 그 뒤 5편마다 도구 한 편
+  BLOG_TOOL_POSTS.map(toolDraft).forEach((t, i) => out.splice(2 + i * 6, 0, t));
   return out;
 }
