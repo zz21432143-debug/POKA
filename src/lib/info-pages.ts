@@ -9,6 +9,7 @@ import { LONG_GUIDES_8 } from "@/lib/guide-articles-long-8";
 import { LONG_GUIDES_9 } from "@/lib/guide-articles-long-9";
 import { LONG_GUIDES_10 } from "@/lib/guide-articles-long-10";
 import { BASE_GUIDE_UPDATES } from "@/lib/guide-articles-base";
+import { MORE_GUIDE_UPDATES } from "@/lib/guide-articles-more";
 
 export type InfoArticle = {
   title: string;
@@ -342,7 +343,11 @@ export const GUIDE_UPDATED_DEFAULT = "2026-10-16";
 // 기본 9편은 보강판(실전 예시 · 계산 · 질문)으로 덮어씀
 const BASE_GUIDES_FULL = BASE_GUIDES.map((row) => ({ ...row, ...(BASE_GUIDE_UPDATES[row.slug] ?? {}) }));
 
-export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES_FULL, ...LONG_GUIDES, ...LONG_GUIDES_2, ...LONG_GUIDES_3, ...LONG_GUIDES_4, ...LONG_GUIDES_5, ...LONG_GUIDES_6, ...LONG_GUIDES_7, ...LONG_GUIDES_8, ...LONG_GUIDES_9, ...LONG_GUIDES_10];
+// 짧았던 글 보강판(2차)도 같은 slug에 덮어씀
+export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES_FULL, ...LONG_GUIDES, ...LONG_GUIDES_2, ...LONG_GUIDES_3, ...LONG_GUIDES_4, ...LONG_GUIDES_5, ...LONG_GUIDES_6, ...LONG_GUIDES_7, ...LONG_GUIDES_8, ...LONG_GUIDES_9, ...LONG_GUIDES_10].map((row) => ({
+  ...row,
+  ...(MORE_GUIDE_UPDATES[row.slug] ?? {}),
+}));
 
 export function getGuideArticle(slug: string) {
   return GUIDE_ARTICLES.find((row) => row.slug === slug) ?? null;

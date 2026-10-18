@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { parseJobTagParam } from "@/lib/job-tags";
 import Link from "@/components/ui/link";
 import { notFound } from "next/navigation";
-import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
-import { JobFilters } from "@/components/jobs/job-filters";
 import { RegionUrgentAlert } from "@/components/jobs/region-urgent-alert";
-import { buttonVariants } from "@/components/ui/button";
-import { jobFeedKey, PAGE_SIZE } from "@/lib/feed";
 import { JOB_REGIONS, parseJobRegion } from "@/lib/job-status";
-import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS, resolveJobKind } from "@/lib/nav";
 import { cn } from "cn";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
@@ -20,7 +14,7 @@ import { JobChatSide } from "@/components/jobs/job-chat-side";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ region?: string; open?: string; tag?: string; view?: string }>;
+type SearchParams = Promise<{ region?: string }>;
 
 export async function generateMetadata({
   params,
@@ -51,19 +45,12 @@ export default async function JobBoardPage({
   if (!job) notFound();
   const query = await searchParams;
   const region = parseJobRegion(query.region);
-  const openOnly = query.open === "1";
-  const tag = parseJobTagParam(query.tag);
-  const feedKey = jobFeedKey(job.kind);
   // 비로그인은 제목만 보이게 조건·주소 등을 빼고 내려보냅니다.
   const viewer = await getCurrentUser().catch(() => null);
   const guest = !viewer;
-  // 모든 구인: 카카오톡 오픈채팅처럼(공고 = 말풍선 · 최신이 맨 아래 · 붙여넣어 바로 올리기) — ?view=list 면 예전 목록
-  const chat = query.view !== "list";
+  // 모든 구인: 카카오톡 오픈채팅처럼(공고 = 말풍선 · 최신이 맨 아래 · 붙여넣어 바로 올리기). 예전 목록 보기(?view=list)는 없앰
   const slug = Object.entries(JOB_KINDS).find(([, v]) => v.kind === job.kind)?.[0] ?? kind;
-  const [page, chatMessages] = await Promise.all([
-    chat ? Promise.resolve({ jobs: [], total: 0, nextOffset: null }) : loadJobPage(feedKey, { offset: 0, limit: PAGE_SIZE, region, openOnly, tag, guest }),
-    chat ? loadApplyChat({ kind: job.kind, region, guest }) : Promise.resolve([]),
-  ]);
+  const chatMessages = await loadApplyChat({ kind: job.kind, region, guest });
   const writeHref = `/boards/jobs/${kind}/write`;
 
   return (
@@ -71,26 +58,11 @@ export default async function JobBoardPage({
       <header className="board-intro flex flex-wrap items-end justify-between gap-3">
         <div>
           <BoardTitle sticker={BOARD_STICKER[kind] ?? BOARD_STICKER.jobs}>{region ? `${region} ${job.title}` : job.title}</BoardTitle>
-          {chat ? (
-            <p className="mt-1 text-sm">카톡 공고를 붙여넣으면 바로 올라가요 · 연락처는 로그인 후</p>
-          ) : (
-            <p className="mt-2">
-              {job.blurb}. 제목은 지역·상호(조건)로 자동 붙습니다. 연락처와 본문은 로그인 후 볼 수 있습니다.
-              {page.total ? ` · ${page.total}개` : ""}
-            </p>
-          )}
+          <p className="mt-1 text-sm">카톡 공고를 붙여넣으면 바로 올라가요 · 연락처는 로그인 후</p>
         </div>
-        {chat ? null : (
-          <Link
-            href={writeHref}
-            className={cn(buttonVariants({ size: "touch" }), "relative z-10 inline-flex w-full shrink-0 sm:w-auto")}
-          >
-            {job.cta}
-          </Link>
-        )}
       </header>
       {job.kind === "URGENT" ? <RegionUrgentAlert /> : null}
-      {chat ? (
+      {(
         <div className="mx-auto grid w-full max-w-[720px] items-start gap-4 xl:max-w-[1016px] xl:grid-cols-[minmax(0,720px)_280px]">
         <div className="flex min-w-0 flex-col gap-3">
           <nav aria-label="지역" className="card-scroller -mx-1 overflow-x-auto px-1">
@@ -108,29 +80,13 @@ export default async function JobBoardPage({
             </ul>
           </nav>
           <ApplyChat key={`${slug}-${region ?? "all"}`} kind={job.kind} slug={slug} title={job.title} initial={chatMessages} region={region} loggedIn={!guest} myNickname={viewer?.nickname ?? null} />
-          <Link href={`/boards/jobs/${slug}?view=list${region ? `&region=${encodeURIComponent(region)}` : ""}`} className="self-center text-sm font-bold text-[#e7c98a] underline">
-            예전처럼 목록으로 보기
-          </Link>
           <Link href={writeHref} className="self-center text-sm font-bold text-zinc-400 underline">
             양식으로 자세히 쓰기({job.cta})
           </Link>
         </div>
         <JobChatSide region={region} slug={slug} loggedIn={!guest} />
         </div>
-      ) : null}
-      {chat ? null : <JobFilters basePath={`/boards/jobs/${kind}`} region={region} openOnly={openOnly} tag={tag} />}
-      {chat ? null : <InfiniteJobList
-        key={`${region ?? "all"}-${openOnly}-${tag ?? ""}`}
-        tag={tag}
-        feedKey={feedKey}
-        initialItems={page.jobs}
-        initialTotal={page.total}
-        initialNextOffset={page.nextOffset}
-        region={region}
-        openOnly={openOnly}
-        emptyText={region ? `${region} 지역 ${job.title} 글이 아직 없습니다.` : `아직 ${job.title} 글이 없습니다.`}
-        emptyAction={{ href: writeHref, label: `첫 ${job.cta}하기` }}
-      />}
+      )}
       <BoardBottomAd />
     </div>
   );
