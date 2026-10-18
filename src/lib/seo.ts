@@ -90,6 +90,7 @@ export const SITEMAP_PATHS = [
   { path: "/tools/rotation", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/tools/seat-draw", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/tools/pay", changeFrequency: "monthly" as const, priority: 0.7 },
+  { path: "/tools/shot-clock", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/tools/practice", changeFrequency: "weekly" as const, priority: 0.7 },
   { path: "/info/guide", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/study", changeFrequency: "monthly" as const, priority: 0.8 },

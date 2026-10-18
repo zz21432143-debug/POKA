@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MonitorPlayIcon, RefreshCwIcon, ShuffleIcon, WalletIcon } from "lucide-react";
+import { MonitorPlayIcon, RefreshCwIcon, ShuffleIcon, TimerIcon, WalletIcon } from "lucide-react";
 import { ToolCard } from "@/components/tools/tool-card";
 import { toolMetadata } from "@/lib/tool-seo";
 import { getCurrentUser } from "@/lib/current-user";
@@ -14,6 +14,7 @@ const TOOLS = [
   { href: "/tools/board", title: "게임 현황판", icon: MonitorPlayIcon, body: "블라인드 레벨 · 남은 시간 · 인원 · 평균 스택 · 상금을 TV에 띄우는 토너먼트 시계. 내 계정에만 보이고 휴대폰으로 조작합니다." },
   { href: "/tools/rotation", icon: RefreshCwIcon, title: "딜러 로테이션", body: "게임마다 테이블 최대 100개 · 딜러 150명. 간격(예: 20분)마다 누가 몇 번 테이블로 들어가고 쉬는지 시간표로 미리 짭니다." },
   { href: "/tools/seat-draw", icon: ShuffleIcon, title: "싯드로우", body: "진출자 칩을 테이블마다 고르게 나누고 좌석은 무작위로 배정합니다." },
+  { href: "/tools/shot-clock", icon: TimerIcon, title: "샷클락", body: "플레이어마다 생각 시간(초). 0.1초까지 크게 · 밀면 다시 시작 · 누르면 멈춤. 로그인 없이 바로." },
   { href: "/tools/pay", icon: WalletIcon, title: "급여 계산기", body: "일한 날짜·출근·퇴근을 넣으면 세전 금액, 3.3% 공제, 4대보험 공제, 실수령액을 계산합니다." },
 ];
 

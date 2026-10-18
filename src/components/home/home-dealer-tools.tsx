@@ -7,6 +7,7 @@ const TOOLS = [
   { href: "/tools/seat-draw", icon: "cards" as const, title: "싯드로우", body: "칩 균형 맞춰 좌석 배정 · 이미지 · 인쇄" },
   { href: "/tools/board", icon: "lantern" as const, title: "게임 현황판", body: "블라인드 · 남은 시간 · 인원을 TV에 크게" },
   { href: "/tools/pay", icon: "coin" as const, title: "급여 계산기", body: "근무 시간 → 3.3% · 4대보험 · 실수령" },
+  { href: "/tools/shot-clock", icon: "lantern" as const, title: "샷클락", body: "플레이어 생각 시간 · 0.1초 · 밀면 다시" },
   { href: "/boards/jobs/mine", icon: "noren" as const, title: "내 공고 관리", body: "매장 로고 · 날짜 줄 마감 · 끌어올리기" },
 ];
 
