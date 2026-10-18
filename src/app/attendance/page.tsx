@@ -19,7 +19,8 @@ import {
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { PushAlertToggle } from "@/components/quiz/quiz-alert-toggle";
 
-export const metadata: Metadata = { title: "출석체크" };
+// 내용이 거의 없는 화면이라 검색에서 뺌(애드센스 품질 평가)
+export const metadata: Metadata = { title: "출석체크", robots: { index: false, follow: true } };
 
 export const dynamic = "force-dynamic";
 

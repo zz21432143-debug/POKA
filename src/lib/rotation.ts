@@ -99,6 +99,8 @@ export type RotationStateView = {
   editCode: string | null;
   /** 같이 편집하는 계정(주인에게만) */
   editors: { id: string; name: string }[];
+  /** 같이 편집할 때: 나 말고 다른 사람이 마지막으로 바꾼 것(닉네임 · ISO 시각). 혼자 쓰면 null */
+  lastEdit: { name: string; at: string } | null;
   /** 보기 전용 공유 링크 값(없으면 공유 꺼짐) */
   shareToken: string | null;
   /** 최대 연속 딜(분). 0이면 제한 없음 */

@@ -38,13 +38,21 @@ const THEMES: { key: Theme; label: string; hint: string }[] = [
   { key: "light", label: "라이트", hint: "흰 바탕 · 검정 글씨(밝은 곳)" },
 ];
 
+/** 빨간 바탕 선택: 끝까지 기본색 · n초부터 */
+const RED_CHOICES = [
+  { sec: 0, label: "끝까지 기본색" },
+  { sec: 3, label: "3초부터 빨간 바탕" },
+  { sec: 5, label: "5초부터 빨간 바탕" },
+  { sec: 10, label: "10초부터 빨간 바탕" },
+] as const;
+
 type Settings = {
   seconds: number;
   theme: Theme;
   sound: boolean;
   vibrate: boolean;
-  warnAt: number;
-  flash: boolean;
+  /** 빨간 바탕으로 바뀌는 남은 초(0 = 끝까지 기본색) */
+  redAt: number;
   /** 가로 보기: 휴대폰을 세워 둬도 숫자를 옆으로 눕혀 크게 */
   landscape: boolean;
 };
@@ -53,8 +61,7 @@ const DEFAULTS: Settings = {
   theme: "dark",
   sound: false,
   vibrate: true,
-  warnAt: 10,
-  flash: true,
+  redAt: 0,
   landscape: false,
 };
 
@@ -73,10 +80,9 @@ function loadSettings(): Settings {
       sound: typeof raw.sound === "boolean" ? raw.sound : DEFAULTS.sound,
       vibrate:
         typeof raw.vibrate === "boolean" ? raw.vibrate : DEFAULTS.vibrate,
-      warnAt: [0, 5, 10, 15].includes(Number(raw.warnAt))
-        ? Number(raw.warnAt)
-        : DEFAULTS.warnAt,
-      flash: typeof raw.flash === "boolean" ? raw.flash : DEFAULTS.flash,
+      redAt: RED_CHOICES.some((c) => c.sec === Number(raw.redAt))
+        ? Number(raw.redAt)
+        : DEFAULTS.redAt,
       landscape:
         typeof raw.landscape === "boolean" ? raw.landscape : DEFAULTS.landscape,
     };
@@ -97,11 +103,10 @@ export function shotParts(ms: number) {
   return [String(Math.floor(tenths / 10)), `.${tenths % 10}`] as const;
 }
 
-/** 남은 시간에 따른 단계: 넉넉 · 주의(warnAt초 이하) · 위험(5초 이하) · 끝 */
-export function shotStage(ms: number, warnAt: number) {
+/** 남은 시간에 따른 단계: 넉넉 · 빨강(redAt초 이하, 0이면 없음) · 끝 */
+export function shotStage(ms: number, redAt: number) {
   if (ms <= 0) return "over" as const;
-  if (ms <= 5000) return "danger" as const;
-  if (warnAt > 0 && ms <= warnAt * 1000) return "warn" as const;
+  if (redAt > 0 && ms <= redAt * 1000) return "red" as const;
   return "ok" as const;
 }
 
@@ -154,7 +159,7 @@ export function ShotClock() {
   }, [settings, loaded]);
 
   const remaining = running ? shown : left;
-  const stage = shotStage(remaining, settings.warnAt);
+  const stage = shotStage(remaining, settings.redAt);
 
   // 흐르는 동안: 화면 갱신 + 알림(남은 초가 바뀔 때)
   useEffect(() => {
@@ -175,9 +180,6 @@ export function ShotClock() {
         if (whole <= 5) {
           if (settings.vibrate) navigator.vibrate?.(60);
           if (settings.sound) beep(660, 90);
-        } else if (settings.warnAt > 0 && whole === settings.warnAt) {
-          if (settings.vibrate) navigator.vibrate?.([80, 60, 80]);
-          if (settings.sound) beep(520, 150);
         }
       }
       setShown(ms);
@@ -185,7 +187,7 @@ export function ShotClock() {
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [running, settings.vibrate, settings.sound, settings.warnAt]);
+  }, [running, settings.vibrate, settings.sound]);
 
   // 화면 꺼짐 막기(지원하는 기기만)
   useEffect(() => {
@@ -319,20 +321,14 @@ export function ShotClock() {
     return () => ro.disconnect();
   }, [big]);
 
-  // 색: 테마 + 단계(필름 너머로도 보이게 남은 시간이 적으면 바탕색이 통째로 바뀜)
-  const flashOn = settings.flash && (stage === "danger" || stage === "over");
+  // 색: 테마 그대로, 빨간 바탕을 골랐으면 그 초부터만 바탕이 통째로 빨강(필름 너머로도 보이게)
+  const flashOn = settings.redAt > 0 && (stage === "red" || stage === "over");
   const tone = (() => {
     const t = settings.theme;
     if (flashOn)
       return stage === "over"
         ? "bg-red-600 text-white"
         : "bg-red-700 text-white";
-    if (stage === "warn")
-      return t === "light"
-        ? "bg-amber-300 text-black"
-        : "bg-black text-amber-300";
-    if (stage === "danger" || stage === "over")
-      return t === "light" ? "bg-white text-red-600" : "bg-black text-red-500";
     if (t === "light") return "bg-white text-black";
     if (t === "contrast") return "bg-black text-yellow-300";
     return "bg-black text-white";
@@ -561,34 +557,28 @@ export function ShotClock() {
         </div>
 
         <div className="flex flex-wrap gap-1.5 text-sm font-bold">
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-white/20 px-3">
-            주의 색
-            <select
-              value={settings.warnAt}
-              onChange={(e) =>
-                setSettings((s) => ({ ...s, warnAt: Number(e.target.value) }))
-              }
-              className="h-9 rounded-lg border border-white/20 bg-black px-1 font-black text-white"
-            >
-              <option value={0}>끔</option>
-              <option value={5}>5초부터</option>
-              <option value={10}>10초부터</option>
-              <option value={15}>15초부터</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            aria-pressed={settings.flash}
-            onClick={() => setSettings((s) => ({ ...s, flash: !s.flash }))}
-            className={cn(
-              "min-h-11 rounded-xl px-3",
-              settings.flash
-                ? "bg-red-700 text-white"
-                : "border border-white/20 text-zinc-300",
-            )}
-          >
-            5초부터 화면 빨갛게 {settings.flash ? "켬" : "끔"}
-          </button>
+          {/* 빨간 바탕: 고를 때만(그 전까지는 고른 화면 색 그대로) */}
+          <div data-shot-red className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {RED_CHOICES.map((c) => (
+              <button
+                key={c.sec}
+                type="button"
+                data-red-at={c.sec}
+                aria-pressed={settings.redAt === c.sec}
+                onClick={() => setSettings((s) => ({ ...s, redAt: c.sec }))}
+                className={cn(
+                  "min-h-11 rounded-xl px-2",
+                  settings.redAt === c.sec
+                    ? c.sec
+                      ? "bg-red-700 text-white ring-2 ring-amber-400"
+                      : "bg-zinc-200 text-black ring-2 ring-amber-400"
+                    : "border border-white/20 text-zinc-300",
+                )}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             aria-pressed={settings.vibrate}
@@ -659,9 +649,10 @@ export function ShotClock() {
           </li>
           <li>
             <b className="text-white">필름 때문에 잘 안 보일 때:</b> 「고대비」
-            화면 + 「화면 꽉 채우기」 + 화면 밝기 최대. 남은 시간이 적으면
-            바탕이 통째로 빨개지고 아래 막대가 줄어 글자가 흐려도 알아볼 수
-            있어요. 반사가 심하면 무광(저반사) 필름이 가장 잘 보입니다.
+            화면 + 「화면 꽉 채우기」 + 화면 밝기 최대. 「n초부터 빨간 바탕」을
+            고르면 그 초부터 바탕이 통째로 빨개지고(그 전까지는 기본색), 아래
+            막대도 줄어 글자가 흐려도 알아볼 수 있어요. 반사가 심하면 무광(저반사)
+            필름이 가장 잘 보입니다.
           </li>
           <li>
             화면 꽉 채우기 동안은 화면이 꺼지지 않아요(지원하는 기기). 블루투스

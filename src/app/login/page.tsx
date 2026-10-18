@@ -6,7 +6,8 @@ import { replaceTo } from "@/lib/history-redirect";
 import { safeNextPath } from "@/lib/oauth-consent";
 import { cn } from "cn";
 
-export const metadata: Metadata = { title: "로그인 · 회원가입" };
+// 내용이 거의 없는 화면이라 검색에서 뺌(애드센스 품질 평가)
+export const metadata: Metadata = { title: "로그인 · 회원가입", robots: { index: false, follow: true } };
 
 export const dynamic = "force-dynamic";
 

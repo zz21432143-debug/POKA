@@ -6,8 +6,8 @@ import { findProfanity } from "@/lib/profanity";
  * - 욕설 · 성적 표현이 들어간 글도 검색 제외 · 광고 없음
  * 글은 그대로 보이고, 검색 결과와 광고에서만 빠집니다.
  */
-export const THIN_MIN_CHARS = 120;
-const LENGTH_CHECKED = new Set(["FREE", "RULE_QA", "SUGGESTION", "TALENT", "PICKUP"]);
+// 애드센스 「가치가 별로 없는 콘텐츠」 대응: 본문 300자 미만 글은 검색 · 광고에서 뺌(구인 공고는 따로 판단)
+export const THIN_MIN_CHARS = 300;
 
 export function plainPostText(content: string | null | undefined) {
   return (content ?? "")
@@ -21,7 +21,7 @@ export function plainPostText(content: string | null | undefined) {
 export function postIsThin(post: { boardType: string; title: string; content: string | null | undefined }) {
   if (post.boardType === "JOBS") return false;
   const text = plainPostText(post.content);
-  if (LENGTH_CHECKED.has(post.boardType) && text.length < THIN_MIN_CHARS) return true;
+  if (text.length < THIN_MIN_CHARS) return true;
   return Boolean(findProfanity(`${post.title}\n${text}`));
 }
 

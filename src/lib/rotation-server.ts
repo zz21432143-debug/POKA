@@ -186,7 +186,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
         select: { id: true, name: true, workDate: true, ownerId: true },
       })
     : [];
-  const nameIds = [...new Set([...sharedMetas.map((g) => g.ownerId), ...editorRows.map((e) => e.userId), m.ownerId].filter((x): x is string => Boolean(x)))];
+  const nameIds = [...new Set([...sharedMetas.map((g) => g.ownerId), ...editorRows.map((e) => e.userId), m.ownerId, m.lastEditorId].filter((x): x is string => Boolean(x)))];
   const people = nameIds.length ? await prisma.user.findMany({ where: { id: { in: nameIds } }, select: { id: true, nickname: true } }) : [];
   const nick = new Map(people.map((p) => [p.id, p.nickname]));
   const rosters = rosterRows.map((s) => ({ id: s.id, name: s.name, text: s.dataJson }));
@@ -211,6 +211,11 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
     role: m.role,
     editCode: m.role === "owner" ? m.editCode : null,
     editors: editorRows.map((e) => ({ id: e.userId, name: nick.get(e.userId) ?? "(탈퇴한 계정)" })),
+    // 같이 쓰는 게임에서 다른 사람이 바꿨을 때만
+    lastEdit:
+      m.lastEditorId && m.lastEditedAt && m.lastEditorId !== ownerId && (m.role === "editor" || editorRows.length > 0)
+        ? { name: nick.get(m.lastEditorId) ?? "다른 계정", at: m.lastEditedAt.toISOString() }
+        : null,
     shareToken: m.shareToken,
     maxStreakMinutes: m.maxStreakMinutes,
     shareDays: m.shareDays,
@@ -722,7 +727,13 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         break;
       }
     }
-    if (!deleted) await tx.rotationMeta.update({ where: { id: META_ID }, data: { version: { increment: 1 } } });
+    // 같이 편집 안내용: 누가 · 언제 바꿨는지(편집 코드 들어가기 · 나가기는 바꾼 게 아니라 빼고)
+    const edited = action.type !== "joinGame" && action.type !== "leaveGame";
+    if (!deleted)
+      await tx.rotationMeta.update({
+        where: { id: META_ID },
+        data: { version: { increment: 1 }, ...(edited ? { lastEditorId: ownerId, lastEditedAt: now } : {}) },
+      });
   }, { maxWait: 10_000, timeout: 15_000 });
   // 지웠거나 같이 쓰던 게임에서 나가면 내 게임으로
   return deleted || !target ? (await resolveGame(ownerId)).id : target;

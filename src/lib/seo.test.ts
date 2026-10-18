@@ -13,11 +13,12 @@ describe("seo defaults", () => {
     assert.equal(SITE_TITLE, "POKA - 홀덤·딜러 커뮤니티");
   });
 
-  it("lists home, boards, login, and terms in the sitemap", () => {
+  it("lists home, boards, and terms in the sitemap (login · attendance · shop are left out as thin pages)", () => {
     const paths = SITEMAP_PATHS.map((row) => row.path);
-    for (const required of ["/", "/boards/free", "/login", "/terms", "/privacy", "/youth", "/community"]) {
+    for (const required of ["/", "/boards/free", "/terms", "/privacy", "/youth", "/community"]) {
       assert.equal(paths.includes(required), true, required);
     }
+    for (const thin of ["/login", "/attendance", "/shop"]) assert.equal(paths.includes(thin), false, thin);
     assert.equal(SITEMAP_PATHS[0]?.priority, 1);
   });
 

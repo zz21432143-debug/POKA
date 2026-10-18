@@ -1154,6 +1154,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             👥 {state.editors.length}명이 같이 편집 중 · {state.editors.map((e) => e.name).join(", ")} (공유 탭에서 관리)
           </button>
         ) : null}
+        {state.lastEdit && clock.getTime() - new Date(state.lastEdit.at).getTime() < 60 * 60_000 ? (
+          <p data-last-edit className="basis-full text-xs font-bold text-violet-200">
+            ✏ {state.lastEdit.name}님이 {kstClock(new Date(state.lastEdit.at))}에 바꿨어요
+          </p>
+        ) : null}
         {isEditor ? (
           <p data-coedit-banner className="basis-full rounded-lg bg-violet-950/60 px-2 py-1 text-xs font-bold text-violet-200">
             👥 {state.game.ownerName ?? "다른 계정"}님의 게임을 같이 편집하고 있어요. 바꾸면 모두의 화면에 바로 반영됩니다.

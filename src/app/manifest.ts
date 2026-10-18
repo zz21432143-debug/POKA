@@ -49,5 +49,11 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    // 앱 아이콘을 길게 누르면 바로 열기(안드로이드 · 일부 브라우저)
+    shortcuts: [
+      { name: "샷클락", short_name: "샷클락", url: "/tools/shot-clock", icons: [{ src: PWA_ICON_192, sizes: "192x192", type: "image/png" }] },
+      { name: "딜러 로테이션", short_name: "로테이션", url: "/tools/rotation", icons: [{ src: PWA_ICON_192, sizes: "192x192", type: "image/png" }] },
+      { name: "딜러 구인", short_name: "구인", url: "/boards/jobs", icons: [{ src: PWA_ICON_192, sizes: "192x192", type: "image/png" }] },
+    ],
   };
 }

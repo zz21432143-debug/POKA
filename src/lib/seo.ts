@@ -69,16 +69,14 @@ export const SITEMAP_PATHS = [
   { path: "/boards/jobs/urgent", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/rules", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/hand-review", changeFrequency: "daily" as const, priority: 0.8 },
-  { path: "/boards/suggestions", changeFrequency: "daily" as const, priority: 0.5 },
-  { path: "/attendance", changeFrequency: "daily" as const, priority: 0.6 },
+
   { path: "/quiz", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/yokai", changeFrequency: "weekly" as const, priority: 0.6 },
   { path: "/boards/schedule", changeFrequency: "daily" as const, priority: 0.8 },
   { path: "/boards/official", changeFrequency: "daily" as const, priority: 0.7 },
   { path: "/boards/tda", changeFrequency: "weekly" as const, priority: 0.7 },
   { path: "/notices", changeFrequency: "weekly" as const, priority: 0.5 },
-  { path: "/shop", changeFrequency: "weekly" as const, priority: 0.4 },
-  { path: "/login", changeFrequency: "monthly" as const, priority: 0.3 },
+
   { path: "/terms", changeFrequency: "yearly" as const, priority: 0.4 },
   { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.4 },
   { path: "/youth", changeFrequency: "yearly" as const, priority: 0.3 },
