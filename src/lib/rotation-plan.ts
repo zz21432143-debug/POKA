@@ -490,7 +490,10 @@ export function autoArrange(options: {
   const seated = new Set(seats.filter(Boolean) as string[]);
   const order = new Map(options.dealers.map((d, i) => [d.id, i]));
   // 지금까지 이어서 쉰 칸 수: 가장 오래 쉰 딜러가 먼저 나옵니다(휴게 시간 맞추기). 지금 시간표에 없던 딜러(새로 출근)는 다 쉰 것으로 봅니다.
+  const prev = before[before.length - 1];
   const restRun = (id: string) => {
+    // 바로 앞 칸에 딜하던 딜러(이 칸에 막 교대로 나옴)는 아직 못 쉼 → 맨 뒤(또 다른 테이블로 바로 보내지 않게)
+    if (prev?.seats.includes(id)) return 0;
     if (!cur.rest.includes(id)) return Number.POSITIVE_INFINITY;
     let run = 1;
     for (let i = before.length - 1; i >= 0 && before[i].rest.includes(id); i -= 1) run += 1;
@@ -532,6 +535,24 @@ export function autoArrange(options: {
   for (const [t, id] of fill.placed) {
     seats[t] = id;
     seated.add(id);
+  }
+  // 교대 시각 바로 뒤(5분 안 · 아직 자리를 바꾸기 전)에 누르면: 앞 칸 T(p)에서 딜하던 딜러가 지금 칸 다른 테이블로 가 있으면
+  // 원래 테이블로 돌려놓고, 그 자리에 들어오던 딜러(쉬다 들어옴)를 다른 테이블로 — 교대 없이 테이블을 옮기는 딜러가 없게
+  if (prev && options.now - at < Math.min(5, options.interval / 4)) {
+    for (let round = 0; round < options.tables; round += 1) {
+      let changed = false;
+      seats.forEach((id, t) => {
+        if (!id) return;
+        const p = prev.seats.indexOf(id);
+        if (p < 0 || p === t || p >= options.tables || !isOpen(p) || blockedAt(p, id)) return;
+        const other = seats[p];
+        if (other && (prev.seats.includes(other) || blockedAt(t, other))) return;
+        seats[p] = id;
+        seats[t] = other ?? null;
+        changed = true;
+      });
+      if (!changed) break;
+    }
   }
   const rest = [...available].filter((id) => !seated.has(id));
   return buildPlan({ ...base, keep: [...before, { at, seats, rest }] });

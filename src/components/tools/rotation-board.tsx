@@ -529,6 +529,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     return gone.has(id) || !workingAt(id, plan.slots[index].at);
   };
   const goneLabel = (id: string) => gone.get(id) ?? "퇴근 시간";
+  // 남은 시간표에 교대(휴식) 없이 다른 테이블로 옮기는 칸(예전에 짠 시간표 등) → Auto로 다시 짜라고 안내
+  const jumps: string[] = [];
+  if (plan && !manual) {
+    for (let i = Math.max(1, current + 1); i < plan.slots.length && jumps.length < 3; i += 1) {
+      const slot = plan.slots[i];
+      plan.slots[i - 1].seats.forEach((id, t) => {
+        const to = id ? slot.seats.indexOf(id) : -1;
+        if (id && to >= 0 && to !== t && !isClosedAt(t, slot.at) && jumps.length < 3)
+          jumps.push(`${name(id)} ${formatClock(slot.at)} ${tableTag(labels[t])}→${tableTag(labels[to])}`);
+      });
+    }
+  }
   const leftInPlan = state.dealers.filter((d) =>
     plan
       ? plan.slots.some(
@@ -1576,7 +1588,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ) : null}
 
           {/* 다시 짜기 안내 */}
-          {missing.length || leftInPlan.length ? (
+          {missing.length || leftInPlan.length || jumps.length ? (
             <section
               aria-label="다시 짜기 안내"
               className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-rose-500 bg-rose-950/50 p-3 text-sm font-bold"
@@ -1587,6 +1599,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   : ""}
                 {leftInPlan.length
                   ? `퇴근·휴무인 ${leftInPlan.map((d) => d.name).join(", ")} 딜러가 남은 시간표에 있습니다. `
+                  : ""}
+                {jumps.length
+                  ? `쉬지 않고 테이블을 옮기는 칸이 있습니다(${jumps.join(", ")}). Auto를 누르면 고쳐집니다. `
                   : ""}
               </span>
               {canUndo ? (

@@ -402,3 +402,45 @@ describe("최대한 공평하게(오늘 딜한 시간 · 테이블)", () => {
     }
   });
 });
+
+describe("Auto 눌러도 교대 없이 테이블 이동 없음", () => {
+  it("테이블을 새로 열고 Auto: 막 교대로 나온 딜러를 새 테이블로 바로 보내지 않음", async () => {
+    const { autoArrange } = await import("./rotation-plan");
+    // 11:00 A T1 · B T2 · C 휴식 → 11:30 C가 T1 교대, A 휴식. 11:30에 T3 추가 오픈 후 Auto
+    const plan = { start: 660, end: 900, interval: 30, tables: 3, slots: [
+      { at: 660, seats: ["A", "B", null], rest: ["C"] },
+      { at: 690, seats: ["C", "B", null], rest: ["A"] },
+    ] };
+    const list = ["A", "B", "C"].map((id) => ({ id, from: 660, to: null }));
+    const auto = autoArrange({ plan, dealers: list, current: 1, tables: 3, start: 660, interval: 30, now: 691 });
+    assertPhysical(auto);
+    assert.equal(auto.slots[1].seats[0], "A", JSON.stringify(auto.slots[1]));
+  });
+  it("여러 경우를 섞어(퇴근 · 출근 · 테이블 추가 · 컨바인) 아무 때나 Auto를 눌러도", async () => {
+    const { autoArrange, extendPlan } = await import("./rotation-plan");
+    let seed = 7;
+    const rnd = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let run = 0; run < 300; run += 1) {
+      const tables = 2 + rnd(13);
+      const n = tables + 1 + rnd(tables + 2);
+      const list = dealers(n);
+      const first = buildPlan({ dealers: list, tables, start: 600, end: 1080, interval: 30, maxStreak: rnd(4) });
+      const current = 1 + rnd(8);
+      const now = first.slots[current].at + rnd(30);
+      const more = rnd(3);
+      const changed = [
+        ...list.map((d, i) => (i === rnd(n) ? { ...d, to: now } : d)),
+        ...Array.from({ length: rnd(3) }, (_, i) => ({ id: `new${i}`, from: now - rnd(20), to: null })),
+      ];
+      const closedFrom = Array.from({ length: tables + more }, (_, t) => (t < tables && rnd(6) === 0 ? first.slots[current + 1].at : null));
+      const widened = { ...first, tables: tables + more, slots: first.slots.map((x) => ({ ...x, seats: [...x.seats, ...Array(more).fill(null)] })) };
+      const auto = autoArrange({ plan: widened, dealers: changed, current, tables: tables + more, start: 600, interval: 30, now, closedFrom });
+      assertPhysical({ slots: auto.slots.slice(now - first.slots[current].at < 5 ? current - 1 : current) }, closedFrom);
+      // 이어 짜기는 지난 칸을 덜어 내지 않는 범위(60칸)라 번호가 같음
+      assertPhysical({ slots: extendPlan(auto, changed, current, 300, closedFrom).slots.slice(current) }, closedFrom);
+    }
+  });
+});
