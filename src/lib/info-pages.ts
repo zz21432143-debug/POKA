@@ -12,6 +12,7 @@ import { BASE_GUIDE_UPDATES } from "@/lib/guide-articles-base";
 import { MORE_GUIDE_UPDATES } from "@/lib/guide-articles-more";
 import { GUIDE_APPENDS, GUIDE_APPEND_UPDATED } from "@/lib/guide-articles-append";
 import { GUIDE_APPENDS_2, GUIDE_APPEND_2_UPDATED } from "@/lib/guide-articles-append-2";
+import { GUIDE_APPENDS_3, GUIDE_APPEND_3_UPDATED } from "@/lib/guide-articles-append-3";
 
 export type InfoArticle = {
   title: string;
@@ -355,9 +356,14 @@ export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES_FULL, ...LONG_GUID
 ${extra}`, updated: GUIDE_APPEND_UPDATED } : full;
   // 핵심 글 2차 덧붙임(공백 포함 2,000자 이상)
   const extra2 = GUIDE_APPENDS_2[row.slug];
-  return extra2 ? { ...withExtra, body: `${withExtra.body}
+  const withExtra2 = extra2 ? { ...withExtra, body: `${withExtra.body}
 
 ${extra2}`, updated: GUIDE_APPEND_2_UPDATED } : withExtra;
+  // 3차 덧붙임(짧은 글 1,500자 이상으로)
+  const extra3 = GUIDE_APPENDS_3[row.slug];
+  return extra3 ? { ...withExtra2, body: `${withExtra2.body}
+
+${extra3}`, updated: GUIDE_APPEND_3_UPDATED } : withExtra2;
 });
 
 export function getGuideArticle(slug: string) {
