@@ -13,6 +13,8 @@ import { MORE_GUIDE_UPDATES } from "@/lib/guide-articles-more";
 import { GUIDE_APPENDS, GUIDE_APPEND_UPDATED } from "@/lib/guide-articles-append";
 import { GUIDE_APPENDS_2, GUIDE_APPEND_2_UPDATED } from "@/lib/guide-articles-append-2";
 import { GUIDE_APPENDS_3, GUIDE_APPEND_3_UPDATED } from "@/lib/guide-articles-append-3";
+import { GUIDE_APPENDS_4, GUIDE_APPEND_4_UPDATED } from "@/lib/guide-articles-append-4";
+import { GUIDE_APPENDS_5, GUIDE_APPEND_5_UPDATED } from "@/lib/guide-articles-append-5";
 
 export type InfoArticle = {
   title: string;
@@ -361,9 +363,19 @@ ${extra}`, updated: GUIDE_APPEND_UPDATED } : full;
 ${extra2}`, updated: GUIDE_APPEND_2_UPDATED } : withExtra;
   // 3차 덧붙임(짧은 글 1,500자 이상으로)
   const extra3 = GUIDE_APPENDS_3[row.slug];
-  return extra3 ? { ...withExtra2, body: `${withExtra2.body}
+  const withExtra3 = extra3 ? { ...withExtra2, body: `${withExtra2.body}
 
 ${extra3}`, updated: GUIDE_APPEND_3_UPDATED } : withExtra2;
+  // 4차 덧붙임
+  const extra4 = GUIDE_APPENDS_4[row.slug];
+  const withExtra4 = extra4 ? { ...withExtra3, body: `${withExtra3.body}
+
+${extra4}`, updated: GUIDE_APPEND_4_UPDATED } : withExtra3;
+  // 5차 덧붙임
+  const extra5 = GUIDE_APPENDS_5[row.slug];
+  return extra5 ? { ...withExtra4, body: `${withExtra4.body}
+
+${extra5}`, updated: GUIDE_APPEND_5_UPDATED } : withExtra4;
 });
 
 export function getGuideArticle(slug: string) {
