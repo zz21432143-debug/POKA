@@ -22,10 +22,10 @@ export async function HomeYokai() {
 
   if (!y) {
     return (
-      <div data-home-yokai="intro" className="lounge-card flex min-w-0 items-center gap-2 rounded-[1.35rem] px-2 py-1.5 lg:min-h-[13rem] lg:flex-col lg:justify-center lg:text-center">
+      <div data-home-yokai="intro" className="lounge-card flex min-h-14 min-w-0 items-center gap-2 rounded-[1.35rem] px-3 py-1.5">
         {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
-        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-10 shrink-0 object-contain lg:size-24" />
-        <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-[#f6efe2] lg:flex-none lg:whitespace-normal">🏮 요괴 마을 · 첫 요괴 키우기</p>
+        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-10 shrink-0 object-contain" />
+        <p className="min-w-0 flex-1 truncate text-[13px] font-bold text-[#f6efe2]">🏮 요괴 마을 · 첫 요괴 키우기</p>
         <Link
           href={user ? "/yokai" : "/login?next=%2Fyokai"}
           data-home-yokai-start
@@ -52,14 +52,14 @@ export async function HomeYokai() {
       href="/yokai"
       data-home-yokai="mine"
       aria-label={`${y.name} 보러 요괴 마을 가기`}
-      className="relative flex min-h-[5.5rem] min-w-0 items-center gap-2 overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/40 px-2 py-1.5 lg:h-full lg:min-h-[13rem] lg:flex-col lg:justify-between lg:p-2"
+      className="relative flex min-h-[5.5rem] min-w-0 items-center gap-2 overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/40 px-2 py-1.5"
       style={{ background: stageBg(y.species, y.bg) }}
     >
       <style>{`@keyframes hy-bob{50%{transform:translateY(-4px)}}`}</style>
       {/* 말풍선(위) */}
       <p
         data-home-yokai-whine={happy ? "happy" : low.key}
-        className="relative order-2 line-clamp-2 min-w-0 flex-1 rounded-xl bg-black/65 px-2 py-1 text-[12px] leading-snug font-bold text-[#f6efe2] lg:order-none lg:w-full lg:flex-none lg:text-center lg:text-[11.5px]"
+        className="relative order-2 line-clamp-2 min-w-0 flex-1 rounded-xl bg-black/65 px-2 py-1 text-[12px] leading-snug font-bold text-[#f6efe2]"
       >
         {happy ? pickLine(y.species, "full", y.stage + y.dex) : low.line}
       </p>
@@ -68,12 +68,12 @@ export async function HomeYokai() {
       <img
         src={yokaiImage(y.species, y.stage)}
         alt=""
-        className="relative order-1 size-16 shrink-0 object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.6)] lg:order-none lg:size-auto lg:max-h-[62%] lg:w-[78%] lg:flex-1"
+        className="relative order-1 size-16 shrink-0 object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,.6)]"
         style={{ animation: "hy-bob 2.4s ease-in-out infinite" }}
       />
       {/* 이름표 · 할 일(아래) */}
-      <span className="relative order-3 flex shrink-0 items-end justify-between gap-1 lg:order-none lg:w-full">
-        <span className="hidden min-w-0 lg:grid">
+      <span className="relative order-3 flex shrink-0 items-center gap-2">
+        <span className="hidden min-w-0 sm:grid">
           <b className="truncate text-[14px] leading-tight text-white [text-shadow:0_1px_3px_#000]">{y.name}</b>
           <span className="truncate text-[10.5px] text-[#e7dcc6] [text-shadow:0_1px_3px_#000]">{y.stageName} · {y.stage}단계</span>
         </span>

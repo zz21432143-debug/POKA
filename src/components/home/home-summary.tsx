@@ -32,11 +32,11 @@ export async function HomeSummary() {
     { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-xl text-sky-200" },
   ];
   return (
-    <section aria-label="오늘 요약" className="lounge-card grid gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5">
+    <section aria-label="오늘 요약" className="lounge-card grid content-center gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5 lg:grid-cols-1">
       <ul className="grid grid-cols-4 gap-1.5">
         {items.map((it) => (
           <li key={it.href}>
-            <Link href={it.href} className="touch-target flex min-h-14 flex-col items-center justify-center rounded-xl bg-black/35 px-1.5 hover:bg-black/55 sm:min-w-28 sm:px-3">
+            <Link href={it.href} className="touch-target flex min-h-14 flex-col items-center justify-center rounded-xl bg-black/35 px-1.5 hover:bg-black/55 sm:min-w-28 sm:px-3 lg:min-h-16 lg:min-w-0">
               <span className="flex items-center gap-1 text-[12px] font-bold whitespace-nowrap text-[#b9aa92] sm:text-[11px]">
                 <it.icon className="hidden size-3.5 sm:block" />
                 {it.label}

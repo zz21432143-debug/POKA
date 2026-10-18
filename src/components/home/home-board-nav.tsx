@@ -1,5 +1,5 @@
 import Link from "@/components/ui/link";
-import { BriefcaseIcon, CalendarDaysIcon, MessageCircleIcon, NewspaperIcon, ScrollTextIcon, SpadeIcon, TrophyIcon } from "lucide-react";
+import { BriefcaseIcon, CalendarDaysIcon, MessageCircleIcon, NewspaperIcon, ScrollTextIcon, SpadeIcon, StoreIcon, TrophyIcon } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import { ttlCache } from "@/lib/ttl-cache";
@@ -8,6 +8,7 @@ import { cn } from "cn";
 const BOARDS = [
   { href: "/boards/jobs/slots", label: "빈자리", type: "JOBS", icon: CalendarDaysIcon, hot: true },
   { href: "/boards/jobs", label: "구인구직", type: "", icon: BriefcaseIcon },
+  { href: "/tools", label: "매장 관리", type: "", icon: StoreIcon, store: true },
   { href: "/boards/free", label: "자유", type: "FREE", icon: MessageCircleIcon },
   { href: "/boards/hand-review", label: "핸드리뷰", type: "HAND_REVIEW", icon: SpadeIcon },
   { href: "/boards/tda", label: "TDA 룰", type: "TDA", icon: ScrollTextIcon, tda: true },
@@ -30,7 +31,7 @@ export async function HomeBoardNav() {
   const counts = await todayCounts().catch(() => ({}) as Record<string, number>);
   return (
     <nav aria-label="게시판 바로가기" data-home-board-nav>
-      {/* 휴대폰: 4칸씩 두 줄(옆으로 밀지 않아도 다 보이게) · 넓은 화면: 한 줄 */}
+      {/* 휴대폰: 4칸씩 두 줄(8개 꽉 차게) · 넓은 화면: 한 줄 */}
       <ul className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap">
         {BOARDS.map((b) => {
           const n = b.type ? (counts[b.type] ?? 0) : 0;
@@ -43,9 +44,11 @@ export async function HomeBoardNav() {
                   "touch-target flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border px-1 text-[12.5px] font-black sm:w-auto sm:px-3.5 sm:text-sm",
                   "tda" in b && b.tda
                     ? "border-[#5aa9ff]/80 bg-[#123a66] text-white"
-                    : "hot" in b && b.hot
-                      ? "border-[#ffcf4a]/80 bg-[#3a2a0c] text-[#ffe08a]"
-                      : "border-[#c9a25c]/40 bg-black/35 text-[#f3e6cf] hover:border-[#c9a25c]",
+                    : "store" in b && b.store
+                      ? "border-[#e7c98a]/80 bg-[#c9a25c]/20 text-[#f3d9a4]"
+                      : "hot" in b && b.hot
+                        ? "border-[#ffcf4a]/80 bg-[#3a2a0c] text-[#ffe08a]"
+                        : "border-[#c9a25c]/40 bg-black/35 text-[#f3e6cf] hover:border-[#c9a25c]",
                 )}
               >
                 <Icon aria-hidden className="size-4 shrink-0" />

@@ -9,7 +9,7 @@ import { MyHomeRank } from "@/components/home/my-home-rank";
 
 const CROWN = ["text-[#f5d76e]", "text-[#d1d5db]", "text-[#e0a36a]"];
 
-/** 홈: 레벨 · 마크 · 팟 계산 랭킹(PC 5위까지 · 휴대폰 3위까지) */
+/** 홈: 레벨 · 마크 · 팟 계산 랭킹(3위까지 — 나머지는 전체 랭킹에서) */
 export async function HomeRankings() {
   const [boards, riser] = await Promise.all([getHomeRankings().catch(() => []), getWeeklyRiser().catch(() => null)]);
   if (boards.length === 0) return null;
@@ -36,7 +36,7 @@ export async function HomeRankings() {
             ) : (
               <ol className="grid gap-0.5">
                 {board.rows.map((row) => (
-                  <li key={row.nickname} className={cn("flex min-h-10 items-center gap-2 rounded-lg px-1", row.rank > 3 && "max-sm:hidden", row.rank === 1 && "bg-[#c9a25c]/10")}>
+                  <li key={row.nickname} className={cn("flex min-h-10 items-center gap-2 rounded-lg px-1", row.rank > 3 && "hidden", row.rank === 1 && "bg-[#c9a25c]/10")}>
                     <span className="flex w-7 shrink-0 items-center justify-center gap-0.5 text-sm font-black text-white tabular-nums">
                       {row.rank <= 3 ? <CrownIcon aria-hidden className={cn("size-3.5", CROWN[row.rank - 1])} /> : null}
                       {row.rank}

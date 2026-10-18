@@ -12,7 +12,7 @@ import { HeroCarousel } from "@/components/home/hero-carousel";
 export function HomeHero() {
   const games = process.env.GAMES_PUBLIC !== "0";
   const main = (
-    <section aria-label="POKA 하나로" className="relative h-full overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/40 bg-black">
+    <section aria-label="POKA 하나로" className="relative flex h-full flex-col justify-center overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/40 bg-black">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/hero/poka-hero.webp"
@@ -30,15 +30,8 @@ export function HomeHero() {
       <div className="relative grid gap-2.5 px-4 py-4 sm:gap-3 sm:px-6 sm:py-6">
         <p className="hidden text-[11px] font-black tracking-[0.3em] text-[#c9a25c] sm:block">홀덤 커뮤니티 · POKA</p>
         <h1 className="max-w-[17rem] text-[1.2rem] leading-snug font-black text-white sm:max-w-md sm:text-[1.9rem]">{POKA_TAGLINE}</h1>
-        <ul className="flex max-w-md flex-wrap gap-1.5">
-          {POKA_FEATURES.map((f) => (
-            <li key={f.href}>
-              <Link href={f.href} className="touch-target inline-flex min-h-10 items-center rounded-full border border-[#c9a25c]/50 bg-black/60 px-3 text-xs sm:min-h-9 sm:px-3 sm:text-[13px] font-bold text-[#f3d9a4] hover:border-[#c9a25c] hover:text-white">
-                {f.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {/* 바로가기 버튼은 아래 한 줄(게시판 바로가기)에 모아 두고, 여기는 글씨만 */}
+        <p className="max-w-[19rem] text-xs leading-relaxed font-bold text-[#e7c98a] sm:max-w-md sm:text-sm">{POKA_FEATURES.map((f) => f.label).join(" · ")}</p>
       </div>
     </section>
   );
