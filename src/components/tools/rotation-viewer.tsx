@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import Link from "@/components/ui/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
-import { closedFromOf, formatWorkDate, kstClock, nowMinutes, tableTag, type RotationShareView } from "@/lib/rotation";
+import { closedFromOf, formatWorkDate, kstClock, nowMinutes, openedFromOf, tableTag, type RotationShareView } from "@/lib/rotation";
 import { formatClock, parseClock, slotIndexAt } from "@/lib/rotation-plan";
 import { swapInfo } from "@/components/tools/rotation-export";
 import { RotationTvScreen, type TvTheme } from "@/components/tools/rotation-tv";
@@ -131,7 +131,7 @@ export function RotationViewer({
   const closedFrom = useMemo(() => closedFromOf(labels, state.tableState), [labels, state.tableState]);
   const button = state.tableState["0"]?.button ?? null;
   const { current, next } = plan ? slotIndexAt(plan, now) : { current: -1, next: -1 };
-  const swap = plan ? swapInfo(plan, labels, current, next, closedFrom) : null;
+  const swap = plan ? swapInfo(plan, labels, current, next, closedFrom, openedFromOf(labels, state.tableState)) : null;
   const nowAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? now) : now;
   const openTables = labels.map((label, t) => ({ label, t })).filter(({ t }) => closedFrom[t] == null || (closedFrom[t] as number) > nowAt);
   const cols = plan ? plan.slots.map((slot, index) => ({ slot, index })).slice(Math.max(0, current), Math.max(0, current) + (narrow ? COLS_NARROW : COLS)) : [];

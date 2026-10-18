@@ -241,7 +241,10 @@ function validPlan(plan: RotationPlan, tableCount: number) {
         slot.seats.length === tableCount &&
         slot.seats.every((id) => id === null || typeof id === "string") &&
         Array.isArray(slot.rest) &&
-        slot.rest.every((id) => typeof id === "string"),
+        slot.rest.every((id) => typeof id === "string") &&
+        // 손으로 정한 칸(📌 고정): 테이블 번호 목록
+        (slot.fixed === undefined ||
+          (Array.isArray(slot.fixed) && slot.fixed.length <= tableCount && slot.fixed.every((t) => Number.isInteger(t) && t >= 0 && t < tableCount))),
     )
   );
 }

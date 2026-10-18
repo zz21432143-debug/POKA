@@ -25,7 +25,20 @@ export type PlanSlot = {
   seats: (string | null)[];
   /** 휴식 중인 딜러 id */
   rest: string[];
+  /** 손으로 정한 칸(테이블 인덱스): Auto · 이어 짜기 때 그대로 둠 */
+  fixed?: number[];
 };
+
+/** 테이블이 그 칸에 러닝 중인지: 컨바인 전이고, 추가 오픈 시각이 그 칸이 끝나기 전(예: 13:10 오픈 → 13:00~13:30 칸부터, 딜러는 13:10부터) */
+export function tableOpenAt(t: number, at: number, interval: number, closedFrom: (number | null)[] = [], openFrom: (number | null)[] = []) {
+  if (closedFrom[t] != null && at >= (closedFrom[t] as number)) return false;
+  return openFrom[t] == null || (openFrom[t] as number) < at + interval;
+}
+
+/** 이 칸 뒤 손으로 정한 칸들(Auto가 다시 짤 때 그대로 둘 것) */
+export function pinsAfter(plan: RotationPlan | null, index: number) {
+  return plan ? plan.slots.slice(index + 1).filter((slot) => slot.fixed?.length) : [];
+}
 
 export type RotationPlan = {
   /** 게임 시작 시각(분). 세팅 칸은 이보다 setup분 앞 */
@@ -197,6 +210,10 @@ export function buildPlan(options: {
   maxStreak?: number;
   /** 테이블별(인덱스) 못 넣는 딜러 id */
   blocked?: string[][];
+  /** 테이블별 추가 오픈 시각(분). 이 시각이 든 칸부터 러닝 */
+  openFrom?: (number | null)[];
+  /** 손으로 정한 칸이 있는 예전 칸들(시각이 같은 칸에 그대로 둠) */
+  pins?: PlanSlot[];
 }): RotationPlan {
   const maxStreak = Math.max(0, Math.floor(options.maxStreak ?? 0));
   const blockedAt = (t: number, id: string) => Boolean(options.blocked?.[t]?.includes(id));
@@ -241,11 +258,18 @@ export function buildPlan(options: {
   };
 
   const closedFrom = options.closedFrom ?? [];
-  const isOpen = (t: number, at: number) => closedFrom[t] == null || at < (closedFrom[t] as number);
+  const isOpen = (t: number, at: number) => tableOpenAt(t, at, interval, closedFrom, options.openFrom);
   const setup = Math.max(0, Math.floor(options.setup ?? 0));
   const first = start - setup;
   const keep = (options.keep ?? []).filter((slot) => slot.at >= first && slot.at < end);
-  for (const slot of keep) record({ at: slot.at, seats: slot.seats.slice(0, tables).concat(Array(Math.max(0, tables - slot.seats.length)).fill(null)), rest: slot.rest });
+  for (const slot of keep)
+    record({
+      at: slot.at,
+      seats: slot.seats.slice(0, tables).concat(Array(Math.max(0, tables - slot.seats.length)).fill(null)),
+      rest: slot.rest,
+      ...(slot.fixed?.length ? { fixed: slot.fixed } : {}),
+    });
+  const pinAt = new Map((options.pins ?? []).map((slot) => [slot.at, slot]));
 
   // 칸 시각: (세팅 칸) + 시작부터 간격마다. 이미 둔 칸(keep) 다음부터 짭니다.
   const times: number[] = [];
@@ -260,9 +284,21 @@ export function buildPlan(options: {
   for (const at of times.filter((t) => t > lastKept)) {
     // 세팅 칸은 게임 시작 때 올 딜러(예정 출근이 시작 시각 이전)를 모두 넣습니다.
     const checkAt = setup > 0 && at === first ? start : at;
-    const available = options.dealers.filter((d) => availableAt(d, checkAt));
-    // 러닝 중인 테이블(컨바인한 테이블 제외)
-    const open = [...Array(tables).keys()].filter((t) => isOpen(t, at));
+    const allAvailable = options.dealers.filter((d) => availableAt(d, checkAt));
+    // 러닝 중인 테이블(컨바인한 테이블 제외 · 추가 오픈 전 제외)
+    const allOpen = [...Array(tables).keys()].filter((t) => isOpen(t, at));
+    // 손으로 정한 칸: 그 딜러 그대로(퇴근 · 못 넣는 테이블 · 겹침이면 풂). 빈칸으로 정했으면 비워 둠
+    const pinned = new Map<number, string | null>();
+    const pin = pinAt.get(at);
+    for (const t of pin?.fixed ?? []) {
+      if (!allOpen.includes(t) || pinned.has(t)) continue;
+      const id = pin?.seats[t] ?? null;
+      if (id && (!allAvailable.some((d) => d.id === id) || blockedAt(t, id) || [...pinned.values()].includes(id))) continue;
+      pinned.set(t, id);
+    }
+    const pinnedIds = new Set([...pinned.values()].filter(Boolean) as string[]);
+    const available = allAvailable.filter((d) => !pinnedIds.has(d.id));
+    const open = allOpen.filter((t) => !pinned.has(t));
     const breaks = Math.max(0, available.length - open.length);
     const fairCap = breaks > 0 ? Math.max(1, Math.round(open.length / breaks)) : Number.POSITIVE_INFINITY;
     // 최대 연속 딜을 정했으면 그보다 길게 잇지 않습니다(쉴 사람이 있을 때).
@@ -295,6 +331,7 @@ export function buildPlan(options: {
     // 들어오는 딜러(휴식에서 돌아옴 · 새로 출근)는 빈 테이블로 가서 그 테이블 딜러를 휴식 보냄.
     // 자기 테이블이 컨바인됐을 때만 빈 테이블로 옮김.
     const seats: (string | null)[] = Array(tables).fill(null);
+    for (const [t, id] of pinned) seats[t] = id;
     const incoming: string[] = [];
     for (const dealer of workers) {
       const s = state.get(dealer.id)!;
@@ -321,7 +358,7 @@ export function buildPlan(options: {
     for (const id of seated.left) if (!rest.includes(id)) rest.push(id);
     // 처음 들어오는 딜러들이 한꺼번에 같은 때 쉬지 않도록 쉬는 차례를 엇갈리게 둡니다.
     const fresh = Number.isFinite(cap) ? workers.filter((d) => state.get(d.id)!.work === 0).map((d) => d.id) : [];
-    record({ at, seats, rest });
+    record({ at, seats, rest, ...(pinned.size ? { fixed: [...pinned.keys()].sort((a, b) => a - b) } : {}) });
     fresh.forEach((id, index) => {
       state.get(id)!.streak += index % cap;
     });
@@ -347,7 +384,8 @@ export function remapPlanTables(plan: RotationPlan, oldLabels: number[], newLabe
     const dropped = oldLabels
       .map((label, i) => (newLabels.includes(label) ? null : slot.seats[i]))
       .filter((id): id is string => Boolean(id) && !slot.rest.includes(id as string));
-    return { ...slot, seats, rest: [...slot.rest, ...dropped] };
+    const fixed = (slot.fixed ?? []).map((t) => newLabels.indexOf(oldLabels[t])).filter((t) => t >= 0);
+    return { ...slot, seats, rest: [...slot.rest, ...dropped], ...(slot.fixed ? { fixed } : {}) };
   });
   return { ...plan, tables: newLabels.length, slots };
 }
@@ -411,6 +449,7 @@ export function extendPlan(
   horizon = PLAN_HORIZON,
   closedFrom?: (number | null)[],
   blocked?: string[][],
+  openFrom?: (number | null)[],
 ): RotationPlan {
   const last = plan.slots[plan.slots.length - 1];
   if (!last) return plan;
@@ -425,6 +464,7 @@ export function extendPlan(
     closedFrom,
     maxStreak: plan.maxStreak,
     blocked,
+    openFrom,
   });
   const trimFrom = Math.max(0, current - KEEP_PAST_SLOTS);
   return { ...built, slots: built.slots.slice(trimFrom) };
@@ -450,6 +490,7 @@ export function autoArrange(options: {
   horizon?: number;
   maxStreak?: number;
   blocked?: string[][];
+  openFrom?: (number | null)[];
 }): RotationPlan {
   const horizon = options.horizon ?? PLAN_HORIZON;
   const blockedAt = (t: number, id: string) => Boolean(options.blocked?.[t]?.includes(id));
@@ -465,6 +506,9 @@ export function autoArrange(options: {
     closedFrom,
     maxStreak: options.maxStreak,
     blocked: options.blocked,
+    openFrom: options.openFrom,
+    // 손으로 정한 칸(지금 칸 뒤)은 다시 짜도 그대로
+    pins: pinsAfter(options.plan, options.current),
   };
   const plan = options.plan;
   if (!plan || options.current < 0 || !plan.slots[options.current]) return buildPlan(base);
@@ -476,7 +520,8 @@ export function autoArrange(options: {
   const moment = Math.max(at, options.now);
   const slotEnd = Math.max(at + options.interval, moment);
   const available = new Set(options.dealers.filter((d) => d.from <= moment && (d.to == null || d.to >= slotEnd)).map((d) => d.id));
-  const isOpen = (t: number) => closedFrom[t] == null || at < (closedFrom[t] as number);
+  const isOpen = (t: number) => tableOpenAt(t, at, options.interval, closedFrom, options.openFrom);
+  const fixedNow = new Set(cur.fixed ?? []);
 
   // 지금까지 딜한 칸 수(공평하게 채우기)
   const work = new Map<string, number>();
@@ -545,6 +590,7 @@ export function autoArrange(options: {
         if (!id) return;
         const p = prev.seats.indexOf(id);
         if (p < 0 || p === t || p >= options.tables || !isOpen(p) || blockedAt(p, id)) return;
+        if (fixedNow.has(t) || fixedNow.has(p)) return; // 손으로 정한 칸은 그대로
         const other = seats[p];
         if (other && (prev.seats.includes(other) || blockedAt(t, other))) return;
         seats[p] = id;
@@ -555,5 +601,6 @@ export function autoArrange(options: {
     }
   }
   const rest = [...available].filter((id) => !seated.has(id));
-  return buildPlan({ ...base, keep: [...before, { at, seats, rest }] });
+  const fixed = [...fixedNow].filter((t) => t < options.tables && seats[t] === (cur.seats[t] ?? null));
+  return buildPlan({ ...base, keep: [...before, { at, seats, rest, ...(fixed.length ? { fixed } : {}) }] });
 }

@@ -444,3 +444,63 @@ describe("Auto 눌러도 교대 없이 테이블 이동 없음", () => {
     }
   });
 });
+
+describe("게임 중 추가 오픈 시각(스탠바이)", () => {
+  it("13:10 오픈 테이블: 13:00 칸 전에는 비고, 13:00~13:30 칸부터 딜러가 들어감", async () => {
+    const { autoArrange, tableOpenAt } = await import("./rotation-plan");
+    const list = dealers(6);
+    // T1~T3 러닝, T4는 13:10 오픈 예정. 12:00부터 30분 교대
+    const openFrom = [null, null, null, 790];
+    const plan = buildPlan({ dealers: list, tables: 4, start: 720, end: 900, interval: 30, openFrom });
+    for (const slot of plan.slots) {
+      if (slot.at + 30 <= 790) assert.equal(slot.seats[3], null, `${formatClock(slot.at)}엔 T4 오픈 전`);
+      else assert.ok(slot.seats[3], `${formatClock(slot.at)}엔 T4에 딜러`);
+    }
+    assert.equal(tableOpenAt(3, 780, 30, [], openFrom), true, "13:00 칸(13:10 오픈 포함)");
+    assert.equal(tableOpenAt(3, 750, 30, [], openFrom), false);
+    assertPhysical(plan);
+    // 게임 중(12:20) Auto를 눌러도 같음
+    const auto = autoArrange({ plan, dealers: list, current: 0, tables: 4, start: 720, interval: 30, now: 740, openFrom });
+    assert.equal(auto.slots.find((s) => s.at === 750)!.seats[3], null);
+    assert.ok(auto.slots.find((s) => s.at === 780)!.seats[3]);
+  });
+});
+
+describe("손으로 정한 칸 · 지난 칸은 Auto를 눌러도 그대로", () => {
+  it("다음 칸들에 손으로 넣은 딜러는 그 자리 그대로 · 나머지만 다시 짬", async () => {
+    const { autoArrange } = await import("./rotation-plan");
+    const list = dealers(7);
+    const plan = buildPlan({ dealers: list, tables: 4, start: 600, end: 900, interval: 30 });
+    // 11:00 칸 T2에 d7, 11:30 칸 T1은 빈칸으로 손으로 정함
+    const i1 = plan.slots.findIndex((s) => s.at === 660);
+    const i2 = plan.slots.findIndex((s) => s.at === 690);
+    const slots = plan.slots.map((s, i) => {
+      if (i === i1) {
+        const seats = s.seats.map((id) => (id === "d7" ? null : id));
+        return { ...s, seats: seats.map((id, t) => (t === 1 ? "d7" : id)), rest: s.rest.filter((id) => id !== "d7"), fixed: [1] };
+      }
+      if (i === i2) return { ...s, seats: s.seats.map((id, t) => (t === 0 ? null : id)), fixed: [0] };
+      return s;
+    });
+    const edited = { ...plan, slots };
+    // 10:10에 d3 퇴근 → Auto
+    const changed = list.map((d) => (d.id === "d3" ? { ...d, to: 610 } : d));
+    const auto = autoArrange({ plan: edited, dealers: changed, current: 0, tables: 4, start: 600, interval: 30, now: 610 });
+    const a1 = auto.slots.find((s) => s.at === 660)!;
+    const a2 = auto.slots.find((s) => s.at === 690)!;
+    assert.equal(a1.seats[1], "d7", JSON.stringify(a1));
+    assert.deepEqual(a1.fixed, [1]);
+    assert.equal(a2.seats[0], null, "빈칸으로 정한 칸도 그대로");
+    assert.ok(auto.slots.every((s) => !s.seats.includes("d3") || s.at < 630), "퇴근한 딜러는 빠짐");
+    // 이어 짜기 · 한 번 더 Auto도 그대로
+    const again = autoArrange({ plan: auto, dealers: changed, current: 1, tables: 4, start: 600, interval: 30, now: 640 });
+    assert.equal(again.slots.find((s) => s.at === 660)!.seats[1], "d7");
+  });
+  it("지난 칸은 Auto를 눌러도 바뀌지 않음", async () => {
+    const { autoArrange } = await import("./rotation-plan");
+    const list = dealers(6);
+    const plan = buildPlan({ dealers: list, tables: 4, start: 600, end: 900, interval: 30 });
+    const auto = autoArrange({ plan, dealers: [...list, { id: "new", from: 700, to: null }], current: 4, tables: 4, start: 600, interval: 30, now: 725 });
+    assert.deepEqual(auto.slots.slice(0, 4), plan.slots.slice(0, 4));
+  });
+});

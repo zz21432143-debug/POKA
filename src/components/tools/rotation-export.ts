@@ -30,6 +30,8 @@ export function swapInfo(
   current: number,
   next: number,
   closedFrom: (number | null)[],
+  /** 추가 오픈 시각: 아직 스탠바이(이번 교대 칸에도 안 열림)인 테이블은 빼고 보여 줌 */
+  openFrom: (number | null)[] = [],
 ): SwapInfo | null {
   if (next < 0 || !plan.slots[next]) return null;
   const before = current >= 0 ? plan.slots[current] : null;
@@ -42,7 +44,12 @@ export function swapInfo(
       closed: closedFrom[t] != null && after.at >= (closedFrom[t] as number),
     }))
     // 이미 컨바인된 테이블(지금도 비어 있음)은 빼고, 이번 교대에 닫히는 테이블만 남깁니다.
-    .filter((row) => !(row.closed && !row.from));
+    .filter((row) => !(row.closed && !row.from))
+    // 아직 오픈 전(스탠바이)인 빈 테이블도 뺌
+    .filter((row) => {
+      const o = openFrom[labels.indexOf(row.label)];
+      return row.from || row.to || o == null || o < after.at + plan.interval;
+    });
   const toRest = after.rest.filter((id) => !before?.rest.includes(id));
   const stillRest = after.rest.filter((id) => before?.rest.includes(id));
   return { at: after.at, prevAt: before?.at ?? null, rows, toRest, stillRest };

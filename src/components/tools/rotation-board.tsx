@@ -47,8 +47,10 @@ import {
   formatClock,
   parseClock,
   retimeFrom,
+  pinsAfter,
   slotIndexAt,
   swapInSlot,
+  tableOpenAt,
   type RotationPlan,
 } from "@/lib/rotation-plan";
 import {
@@ -199,6 +201,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [qr, setQr] = useState<string | null>(null);
   // 게임 중 테이블 추가 오픈
   const [addText, setAddText] = useState("");
+  /** 추가 오픈 테이블 러닝 시각(비우면 지금 칸부터) */
+  const [addAt, setAddAt] = useState("");
   /** TV 쪽 넘김 간격(초) — TV 링크에 붙음 */
   const [tvSec, setTvSec] = useState(10);
   /** TV 밝은 화면(조명이 밝은 매장) */
@@ -406,8 +410,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     () => openedFromOf(labels, state.tableState),
     [labels, state.tableState],
   );
+  // 그 칸이 끝나기 전에 열면 그 칸부터 러닝(예: 13:10 오픈 → 13:00~13:30 칸에 딜러, 13:10부터 앉음)
   const isBeforeOpen = (t: number, at: number) =>
-    openedFrom[t] != null && at < (openedFrom[t] as number);
+    !tableOpenAt(t, at, plan?.interval ?? state.interval, [], openedFrom);
+  /** 칸 중간에 여는 테이블: 그 칸에서 딜러가 앉는 시각 */
+  const opensInSlot = (t: number, at: number) => {
+    const o = openedFrom[t];
+    return o != null && o > at && o < at + (plan?.interval ?? state.interval) ? o : null;
+  };
   // 운영 현황(지금 칸 기준, 시작 전이면 첫 칸)
   const nowSlot = plan ? plan.slots[Math.max(0, current)] : null;
   /** 지금 칸에서 쉬는 딜러 */
@@ -573,9 +583,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     }
     // 다시 연 테이블(컨바인했던 번호)은 "다시 열기"로
     const next = [...labels, ...added].sort((a, b) => a - b);
-    const openedAt = plan
-      ? (plan.slots[Math.max(0, current)]?.at ?? undefined)
-      : undefined;
+    // 러닝 시각을 적으면 그 시각부터(스탠바이), 아니면 지금 칸부터
+    const wantAt = parseClock(addAt);
+    if (addAt.trim() && wantAt == null) {
+      setError("러닝 시각을 확인하세요(예: 13:10).");
+      return;
+    }
+    const openedAt =
+      wantAt != null
+        ? alignToStart(wantAt, start)
+        : plan
+          ? (plan.slots[Math.max(0, current)]?.at ?? undefined)
+          : undefined;
     if (
       await send({
         type: "setSettings",
@@ -584,8 +603,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       })
     ) {
       setAddText("");
+      setAddAt("");
       setOpenNotice(
-        `${added.map((l) => tableTag(l)).join(", ")} 오픈했습니다. Auto를 누르면 쉬던 딜러가 들어갑니다.`,
+        wantAt != null
+          ? `${added.map((l) => tableTag(l)).join(", ")} ${formatClock(wantAt)} 러닝으로 열었습니다. Auto를 누르면 ${formatClock(wantAt)}부터 딜러가 들어갑니다(그 전까지 스탠바이).`
+          : `${added.map((l) => tableTag(l)).join(", ")} 오픈했습니다. Auto를 누르면 쉬던 딜러가 들어갑니다.`,
       );
     }
   }
@@ -621,6 +643,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       closedFrom,
       maxStreak,
       blocked,
+      openFrom: openedFrom,
     });
   }
 
@@ -739,6 +762,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       undefined,
       closedFrom,
       blocked,
+      openedFrom,
     );
     void send({
       type: "savePlan",
@@ -746,6 +770,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     });
   }, [
     blocked,
+    openedFrom,
     plan,
     busy,
     current,
@@ -795,6 +820,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       closedFrom: nextClosed,
       maxStreak,
       blocked,
+      openFrom: openedFrom,
+      pins: pinsAfter(plan, current),
     });
     await send({ type: "savePlan", plan: built });
   }
@@ -836,9 +863,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       const who = name(dealerId);
       if (!window.confirm(`${who}은(는) 바로 앞 칸(${formatClock(before!.at)})에 ${tableWord(labels[was])}에서 딜하고 있어요.\n쉬지 않고 ${tableWord(labels[cell.table])}로 옮기면 ${tableWord(labels[was])}에 교대해 줄 사람이 따로 있어야 해요. 그래도 넣을까요?`)) return;
     }
-    const slots = plan.slots.map((slot, index) =>
-      index === cell.slot ? swapInSlot(slot, cell.table, dealerId) : slot,
-    );
+    // 손으로 바꾼 칸은 📌 고정: Auto · 이어 짜기 때 그대로(맞바꾼 테이블도)
+    const slots = plan.slots.map((slot, index) => {
+      if (index !== cell.slot) return slot;
+      const other = dealerId ? slot.seats.indexOf(dealerId) : -1;
+      const fixed = new Set(slot.fixed ?? []);
+      fixed.add(cell.table);
+      if (other >= 0) fixed.add(other);
+      return { ...swapInSlot(slot, cell.table, dealerId), fixed: [...fixed].sort((a, b) => a - b) };
+    });
     void send({
       type: "savePlan",
       plan: { ...plan, slots } satisfies RotationPlan,
@@ -846,9 +879,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     setCell(null);
   }
 
+  /** 📌 고정 풀기: 이 칸을 다시 Auto에 맡김 */
+  function unpinCell() {
+    if (!plan || !cell) return;
+    const slots = plan.slots.map((slot, index) => {
+      if (index !== cell.slot) return slot;
+      const fixed = (slot.fixed ?? []).filter((t) => t !== cell.table);
+      const { fixed: _drop, ...rest } = slot;
+      void _drop;
+      return fixed.length ? { ...rest, fixed } : rest;
+    });
+    void send({ type: "savePlan", plan: { ...plan, slots } });
+    setCell(null);
+  }
+
   const swap = useMemo(
-    () => (plan ? swapInfo(plan, labels, current, next, closedFrom) : null),
-    [plan, labels, current, next, closedFrom],
+    () => (plan ? swapInfo(plan, labels, current, next, closedFrom, openedFrom) : null),
+    [plan, labels, current, next, closedFrom, openedFrom],
   );
 
   // 보여 줄 칸: 바로 앞 칸 1개, 지금 칸(2번째), 그 뒤 칸들
@@ -1278,6 +1325,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 }}
                 className="h-10 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
               />
+              <input
+                aria-label="러닝 시각(비우면 지금부터)"
+                data-open-at
+                type="time"
+                value={addAt}
+                title="러닝 시각: 예) 13:10 — 그 시각부터 딜러가 들어가요(그 전엔 스탠바이). 비우면 지금 칸부터"
+                onChange={(e) => setAddAt(e.target.value)}
+                className="h-10 w-28 rounded-lg border border-white/20 bg-zinc-900 px-1 text-base font-bold"
+              />
               <button
                 type="button"
                 disabled={busy || !addText.trim()}
@@ -1292,7 +1348,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               >
                 숫자 <b className="text-zinc-200">1~3</b> · 알파벳{" "}
                 <b className="text-zinc-200">A~B</b> 모두 가능 · 쉼표로 여러
-                개(예: 7, 9, C). 숫자는 T1, 알파벳은 A로 보여요
+                개(예: 7, 9, C). 숫자는 T1, 알파벳은 A로 보여요. 시각(예: 13:10)을 넣으면 그때부터 딜러가 들어가요(그 전엔 스탠바이)
               </span>
             </div>
             {openNotice ? (
@@ -2164,7 +2220,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                               : "text-emerald-300",
                                           )}
                                         >
-                                          {tableTag(label)} · {time}
+                                          {slot.fixed?.includes(t) ? "📌 " : ""}
+                                          {tableTag(label)} · {opensInSlot(t, slot.at) != null ? `${formatClock(opensInSlot(t, slot.at) as number)}~` : time}
                                           {goneHere
                                             ? ` · ${goneLabel(id as string)}`
                                             : ""}
@@ -3236,7 +3293,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </h3>
             <p className="text-xs text-zinc-400">
               이 칸만 바뀝니다. 다른 테이블 딜러를 고르면 자리를 맞바꾸고, 지금
-              딜러는 휴식으로 갑니다.
+              딜러는 휴식으로 갑니다. 바꾼 칸은 <b className="text-amber-300">📌 고정</b>되어 Auto를 눌러도 그대로예요.
             </p>
             {candidates.resting.length ? (
               <div className="grid gap-1">
@@ -3307,6 +3364,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               >
                 이 칸 비우기
               </button>
+              {candidates.slot.fixed?.includes(cell.table) ? (
+                <button
+                  type="button"
+                  data-unpin
+                  onClick={unpinCell}
+                  className="min-h-11 rounded-lg border border-amber-400/60 px-3 text-sm font-bold text-amber-200"
+                >
+                  📌 고정 풀기
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setCell(null)}
