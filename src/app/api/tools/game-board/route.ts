@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import type { ClockOp } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
-import { GameBoardError, boardVersion, createBoard, deleteBoard, deletePreset, listBoards, listPresets, loadBoard, savePreset, setBoardShare, updateBoard } from "@/lib/game-board-server";
+import { GameBoardError, boardVersion, createBoard, deleteBoard, deletePreset, listBoards, listPresets, loadBoard, loadPreset, savePreset, setBoardShare, updateBoard } from "@/lib/game-board-server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +15,18 @@ async function guard(): Promise<{ ownerId: string } | { denied: NextResponse }> 
   return { ownerId: user.id };
 }
 
-/** 목록, 또는 ?id=현황판(&v=번호를 주면 바뀐 게 없을 때 짧게) */
+/** 목록, 또는 ?id=현황판(&v=번호를 주면 바뀐 게 없을 때 짧게), ?preset=저장한 구조(미리보기) */
 export async function GET(request: Request) {
   const access = await guard();
   if ("denied" in access) return access.denied;
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
+  const presetId = url.searchParams.get("preset");
+  if (presetId) {
+    const preset = await loadPreset(access.ownerId, presetId);
+    if (!preset) return NextResponse.json({ error: "저장한 구조를 찾을 수 없습니다." }, { status: 404 });
+    return NextResponse.json({ preset }, { headers: NO_STORE });
+  }
   if (!id) return NextResponse.json({ boards: await listBoards(access.ownerId), presets: await listPresets(access.ownerId) }, { headers: NO_STORE });
   const known = Number(url.searchParams.get("v"));
   if (Number.isFinite(known) && known >= 0 && known === (await boardVersion(access.ownerId, id))) {

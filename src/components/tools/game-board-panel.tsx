@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
-import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
+import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
+import { BoardTemplatePreview } from "@/components/tools/board-template-preview";
 import { shrinkPhoto } from "@/lib/poster-fit";
 import { blindUpSound, countdownTick, unlockBoardSound } from "@/lib/board-sound";
 
@@ -54,6 +55,33 @@ export function GameBoardPanel({
   /** 새 현황판 창(이름 · 시작 방법 · 가져올 현황판) */
   const [creating, setCreating] = useState(false);
   const [maker, setMaker] = useState<{ name: string; template: BoardTemplate; copyFrom: string; savedId: string } | null>(null);
+  /** 새 현황판 미리보기: 가져올 현황판 · 저장한 구조 데이터(한 번 받은 건 기억) */
+  const [sources, setSources] = useState<Record<string, GameBoardData | null>>({});
+  const sourceKey = maker ? (maker.template === "copy" ? `b:${maker.copyFrom}` : maker.template === "saved" ? `p:${maker.savedId}` : "") : "";
+  useEffect(() => {
+    if (!sourceKey || sourceKey.length < 3 || sourceKey in sources) return;
+    if (sourceKey === `b:${board?.id}` && draftRef.current) {
+      setSources((s) => ({ ...s, [sourceKey]: draftRef.current }));
+      return;
+    }
+    let alive = true;
+    const [kind, id] = [sourceKey.slice(0, 1), sourceKey.slice(2)];
+    void fetch(`${API}?${kind === "b" ? "id" : "preset"}=${encodeURIComponent(id)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { board?: BoardState; preset?: GameBoardData }) => alive && setSources((s) => ({ ...s, [sourceKey]: j.board?.data ?? j.preset ?? null })))
+      .catch(() => alive && setSources((s) => ({ ...s, [sourceKey]: null })));
+    return () => {
+      alive = false;
+    };
+  }, [sourceKey, sources, board?.id]);
+  const previewLoading = Boolean(sourceKey) && !(sourceKey in sources);
+  const preview = !maker
+    ? null
+    : maker.template === "basic" || maker.template === "empty"
+      ? newBoardData(maker.template, maker.name)
+      : sources[sourceKey]
+        ? newBoardData(maker.template, maker.name, sources[sourceKey])
+        : null;
   const dirty = useRef(false);
   const saveTimer = useRef<number | null>(null);
   // 화면에 보이는 최신 입력(빠르게 연달아 바꿔도 늘 이걸 바탕으로) · 몇 번째 입력인지
@@ -454,6 +482,7 @@ export function GameBoardPanel({
                 </span>
               </label>
             ) : null}
+            <BoardTemplatePreview data={preview} loading={previewLoading} />
             {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
             <div className="flex flex-wrap gap-2">
               <button type="button" disabled={creating} onClick={() => void create()} className="min-h-11 rounded-lg bg-amber-400 px-5 text-sm font-black text-black disabled:opacity-40">

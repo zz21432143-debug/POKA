@@ -53,7 +53,8 @@ export async function trafficSummary(days: number) {
   const rows = await prisma.trafficDaily
     .groupBy({
       by: ["source"],
-      where: { day: { gte: from } },
+      // "x-"로 시작하는 칸은 유입 경로가 아니라 다른 숫자(예: 비회원 퀴즈 풀이)
+      where: { day: { gte: from }, NOT: { source: { startsWith: "x-" } } },
       _sum: { visits: true, signups: true },
     })
     .catch(() => []);

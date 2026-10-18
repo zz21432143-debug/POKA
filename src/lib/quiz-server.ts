@@ -131,6 +131,11 @@ export async function answerQuiz(quizId: string, choice: number, userId: string 
       }
     }
   }
+  if (!userId) {
+    // 비회원 풀이 수(하루 단위 숫자만 — 누가 풀었는지는 남기지 않음)
+    const [{ addTraffic }, { QUIZ_GUEST_SOURCE }] = await Promise.all([import("@/lib/traffic"), import("@/lib/quiz-stats")]);
+    await addTraffic(QUIZ_GUEST_SOURCE, "visits").catch(() => undefined);
+  }
   const [stats, streak] = await Promise.all([quizStats(quiz.id, quiz.choices.length), userId ? quizStreak(userId) : Promise.resolve(0)]);
   return { correct: finalChoice === quiz.answer, choice: finalChoice, answer: quiz.answer, explanation: quiz.explanation, stats, gained, streak, saved };
 }

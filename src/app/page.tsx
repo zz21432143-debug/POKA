@@ -24,6 +24,8 @@ import { HomeBoardNav } from "@/components/home/home-board-nav";
 import { HomeGuides } from "@/components/home/home-guides";
 import { UrgentAlertPrompt } from "@/components/jobs/urgent-alert-prompt";
 import { FREE_PROMO } from "@/lib/free-promo";
+import { getCurrentUser } from "@/lib/current-user";
+import { FIRST_POST_POINTS, firstPostBonusOpen } from "@/lib/first-post";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -74,6 +76,9 @@ async function HomeFeedSections() {
     })),
     homePosters(),
   ]);
+  // 첫 글 보너스 안내: 아직 안 받은 회원만
+  const user = await getCurrentUser().catch(() => null);
+  const firstBonus = user && (await firstPostBonusOpen(user.id).catch(() => false)) ? FIRST_POST_POINTS : null;
   const today = todayKstDate();
   return (
     <>
@@ -89,14 +94,12 @@ async function HomeFeedSections() {
       {/* 홍보 포스터(유료 구좌): 맡긴 포스터가 있을 때만 넓게 */}
       {promo.filled ? <HomePosterCarousel posters={promo.posters} /> : null}
       <GoogleAdUnit placement="home-mid" />
-      {/* 아래는 PC 두 칸: 왼쪽 글(최신글 · 핸드 · 가이드) · 오른쪽 매일 할 것(미션 · 퀴즈 · 요괴 · 랭킹) — 칸마다 따로 쌓여 빈 공간이 없게 */}
+      {/* 아래는 PC 두 칸: 왼쪽 글(최신글 · 핸드) · 오른쪽 매일 할 것(미션 · 퀴즈 · 요괴 · 랭킹) — 칸마다 따로 쌓여 빈 공간이 없게 */}
       <div data-home-columns className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <div id="home-latest" className="grid min-w-0 scroll-mt-24 content-start gap-2.5">
-          <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} />
+          <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} firstBonus={firstBonus} />
           <GoogleAdUnit placement="infeed" />
           <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
-          {/* 오늘의 딜러 가이드 3편(날마다 바뀜) */}
-          <HomeGuides />
         </div>
         <div data-home-side className="grid min-w-0 content-start gap-2.5">
           {/* 매일 할 것: 미션 · 랭킹(퀴즈 · 요괴는 맨 위 작은 칸) */}
@@ -109,6 +112,8 @@ async function HomeFeedSections() {
           {promo.filled ? null : <PromoSlotCard />}
         </div>
       </div>
+      {/* 오늘의 딜러 가이드 3편(날마다 바뀜) — 두 칸 아래 넓게(두 칸 길이가 비슷하게) */}
+      <HomeGuides />
     </>
   );
 }

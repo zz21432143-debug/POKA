@@ -283,6 +283,9 @@ export async function POST(request: Request) {
     });
 
     const reward = await grantRewards(user.id, POST_EXP[boardType], POST_POINTS[boardType]);
+    // 커뮤니티 첫 글 보너스(한 번만)
+    const { grantFirstPostBonus } = await import("@/lib/first-post");
+    const firstBonus = await grantFirstPostBonus(user.id, boardType).catch(() => 0);
     await prisma.user.update({ where: { id: user.id }, data: { lastPostAt: new Date() } });
 
     const { pushTicker } = await import("@/lib/ticker");
@@ -335,7 +338,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       id: post.id,
       exp: reward.grantedExp,
-      points: reward.grantedPoints,
+      points: reward.grantedPoints + firstBonus,
+      ...(firstBonus ? { firstBonus } : {}),
       anonymous: false,
       // 급구면 알림을 보낸 기기 수(글 위에 "N명에게 보냈어요")
       ...(pushSent == null ? {} : { pushSent }),

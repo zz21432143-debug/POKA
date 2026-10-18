@@ -107,6 +107,12 @@ export async function savePreset(ownerId: string, name: string, data: unknown) {
   await prisma.toolSaved.create({ data: { ownerId, kind: KIND_PRESET, name: title || clean.name, dataJson: JSON.stringify(clean) } });
 }
 
+/** 저장한 구조 하나(새 현황판 미리보기용) */
+export async function loadPreset(ownerId: string, id: string): Promise<GameBoardData | null> {
+  const row = await prisma.toolSaved.findFirst({ where: { id, ownerId, kind: KIND_PRESET }, select: { dataJson: true } }).catch(() => null);
+  return row ? normalizeBoard(parse(row.dataJson)) : null;
+}
+
 export async function deletePreset(ownerId: string, id: string) {
   await prisma.toolSaved.deleteMany({ where: { id, ownerId, kind: KIND_PRESET } });
 }

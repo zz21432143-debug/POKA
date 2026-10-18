@@ -42,6 +42,11 @@ export const POST_POINTS: Record<BoardType, number> = {
   TDA: 16,
 };
 
+/** 커뮤니티 첫 글 보너스(한 번만, 하루 한도와 별도) — 회원 글을 늘리려고 */
+export const FIRST_POST_POINTS = 100;
+/** 첫 글 보너스가 붙는 게시판: 회원끼리 이야기하는 곳 */
+export const FIRST_POST_BOARDS: ReadonlySet<BoardType> = new Set(["FREE", "HAND_REVIEW", "RULE_QA", "SKETCH"]);
+
 export const ATTENDANCE_EXP = 100;
 /** 출석 포인트(2026-10 조정: 375 → 150, 글 · 댓글 · 퀴즈 활동을 하는 회원이 더 받도록 · 이후 전체 1.3배 → 195) */
 export const ATTENDANCE_POINTS = 195;

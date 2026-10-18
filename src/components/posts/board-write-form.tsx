@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DocEditor } from "@/components/docs/doc-editor";
 import type { BoardType } from "@/generated/prisma/enums";
-import { postRewardLine } from "@/lib/rewards";
+import { FIRST_POST_BOARDS, FIRST_POST_POINTS, postRewardLine } from "@/lib/rewards";
 import { boardAllowsPhotos } from "@/lib/post-photos";
 import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
 import { cn } from "cn";
@@ -164,6 +164,7 @@ export function BoardWriteForm({
       ) : null}
       <p className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
         {hint} · 작성 {postRewardLine(boardType)}
+        {FIRST_POST_BOARDS.has(boardType) ? <span className="ml-1 font-bold text-[#ffcf4a]">· 커뮤니티 첫 글은 +{FIRST_POST_POINTS}P 보너스(한 번)</span> : null}
       </p>
       {categories && categories.length > 1 ? (
         <div className="grid gap-2">
