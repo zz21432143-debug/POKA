@@ -1416,7 +1416,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             {/* 한 줄: 테이블 · 딜러 · 딜 중 · 휴게 · 스태프(딜 안 함, 따로) */}
             <dl data-run-stats className="grid grid-cols-5 gap-1">
               {[
-                ["러닝 테이블", `${runningLabels.length}`, "text-emerald-300"],
+                ["테이블", `${runningLabels.length}`, "text-emerald-300"],
                 ["딜러", `${onDuty}`, "text-white"],
                 ["딜 중", `${dealing}`, "text-emerald-300"],
                 ["휴게", `${resting}`, "text-amber-300"],

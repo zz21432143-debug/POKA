@@ -14,6 +14,8 @@ export type BlogDraft = {
   /** "holdem:set-mining" · "dealer:how-to-become-dealer" · "tool:shot-clock" */
   key: string;
   kind: "holdem" | "dealer" | "tool";
+  /** 올릴 블로그 카테고리 */
+  category: "홀덤 공부" | "딜러 실무" | "매장 관리";
   title: string;
   body: string;
   tags: string;
@@ -90,6 +92,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
   return {
     key: `${kind}:${g.slug}`,
     kind,
+    category: kind === "holdem" ? "홀덤 공부" : "딜러 실무",
     title: `${g.title} | ${label}`,
     body,
     tags,
@@ -131,11 +134,12 @@ function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
     "",
     POKA_LINE,
   ].join("\n");
-  const tags = tagLine([...t.tags, ...KIND_TAGS.tool]);
-  return { key: `tool:${t.slug}`, kind: "tool", title: `${t.title} | 매장 관리`, body, tags, url, photo: `${BASE}${t.path}` };
+  const category = t.category ?? "매장 관리";
+  const tags = tagLine([...t.tags, ...KIND_TAGS[category === "딜러 실무" ? "dealer" : "tool"]]);
+  return { key: `tool:${t.slug}`, kind: "tool", category, title: `${t.title} | ${category === "딜러 실무" ? "딜러 실무" : "매장 관리"}`, body, tags, url, photo: `${BASE}${t.path}` };
 }
 
-/** 올릴 순서: 홀덤 · 딜러 번갈아(하루 1편씩), 매장 관리 도구 소개는 5편마다 한 편 */
+/** 올릴 순서: 홀덤 · 딜러 번갈아(하루 1편씩), 도구 소개는 5편마다 한 편 */
 export function blogDrafts(): BlogDraft[] {
   const holdem = HOLDEM_GUIDES.map((g) => draft("holdem", g));
   const dealer = GUIDE_ARTICLES.map((g) => draft("dealer", g));

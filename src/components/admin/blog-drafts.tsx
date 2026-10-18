@@ -82,8 +82,8 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
     return (
       <article key={d.key} data-blog-draft={d.key} className={cn("grid gap-2 rounded-2xl border bg-[#151213] p-3 sm:p-4", big ? "border-[#c9a25c]" : "border-border", done && "opacity-60")}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-black", d.kind === "holdem" ? "bg-[#1f6f4a] text-white" : d.kind === "tool" ? "bg-[#c9a25c] text-[#1d1611]" : "bg-[#7a1c22] text-white")}>{d.kind === "holdem" ? "홀덤 가이드" : d.kind === "tool" ? "매장 관리 도구" : "딜러 가이드"}</span>
-          <span className="text-xs text-muted-foreground">블로그 카테고리: {d.kind === "holdem" ? "홀덤 공부" : d.kind === "tool" ? "매장 관리" : "딜러 실무"}</span>
+          <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-black", d.kind === "holdem" ? "bg-[#1f6f4a] text-white" : d.kind === "tool" ? "bg-[#c9a25c] text-[#1d1611]" : "bg-[#7a1c22] text-white")}>{d.kind === "holdem" ? "홀덤 가이드" : d.kind === "tool" ? "POKA 도구 소개" : "딜러 가이드"}</span>
+          <span className="text-xs text-muted-foreground">블로그 카테고리: {d.category}</span>
           {done ? <span className="text-xs font-bold text-emerald-300">✅ {done} 올림</span> : null}
         </div>
         <h3 className="text-base font-bold break-keep">{d.title}</h3>

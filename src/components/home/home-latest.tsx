@@ -21,6 +21,7 @@ export function HomeLatest({
   hands,
   nativeSponsor = null,
   firstBonus = null,
+  topic = null,
 }: {
   all: PostSummary[];
   free: PostSummary[];
@@ -28,6 +29,8 @@ export function HomeLatest({
   nativeSponsor?: DirectCreative | null;
   /** 첫 글 보너스 포인트(아직 안 받은 회원만) */
   firstBonus?: number | null;
+  /** 오늘의 이야기거리(번호 · 질문) */
+  topic?: { index: number; text: string } | null;
 }) {
   const [tab, setTab] = useState<Tab>("all");
   const posts = useMemo(() => {
@@ -67,7 +70,7 @@ export function HomeLatest({
       </div>
       {/* 회원 글 늘리기: 바로 쓰러 가기(첫 글이면 보너스 안내) */}
       <Link
-        href={tab === "hands" ? "/boards/hand-review/write" : "/boards/free/write"}
+        href={tab === "hands" ? "/boards/hand-review/write" : topic ? `/boards/free/write?topic=${topic.index}` : "/boards/free/write"}
         data-home-write
         className="flex min-h-11 items-center gap-2 border-b border-white/10 bg-[#c9a25c]/10 px-4 text-sm font-bold text-[#f3d9a4] hover:bg-[#c9a25c]/20"
       >
@@ -75,10 +78,14 @@ export function HomeLatest({
         <span className="min-w-0 flex-1 truncate">
           {firstBonus ? (
             <>
-              첫 글 쓰면 <b className="text-[#ffcf4a]">+{firstBonus}P</b> 보너스 · {tab === "hands" ? "핸드 하나 올려 보기" : "오늘 매장 이야기 한 줄"}
+              첫 글 쓰면 <b className="text-[#ffcf4a]">+{firstBonus}P</b> 보너스 · {tab === "hands" ? "핸드 하나 올려 보기" : topic ? topic.text : "오늘 매장 이야기 한 줄"}
             </>
           ) : tab === "hands" ? (
             `핸드 올리고 의견 받기 · +${POST_POINTS.HAND_REVIEW}P`
+          ) : topic ? (
+            <>
+              <b className="text-[#ffcf4a]">오늘의 이야기거리</b> · {topic.text}
+            </>
           ) : (
             `오늘 있었던 일 · 궁금한 것 한 줄 · +${POST_POINTS.FREE}P`
           )}

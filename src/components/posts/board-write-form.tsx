@@ -20,15 +20,18 @@ export function BoardWriteForm({
   boardType: initialBoardType,
   hint,
   categories,
+  initialTitle,
 }: {
   boardType: BoardType;
   hint: string;
   /** 말머리. 주면 작성자가 고른 말머리가 게시판 종류가 됩니다. */
   categories?: BoardCategory[];
+  /** 제목 미리 채우기(홈 「오늘의 이야기거리」) */
+  initialTitle?: string;
 }) {
   const router = useRouter();
   const [boardType, setBoardType] = useState<BoardType>(initialBoardType);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle ?? "");
   const [content, setContent] = useState("");
   const [bannerSlot, setBannerSlot] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");

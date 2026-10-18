@@ -26,6 +26,7 @@ import { UrgentAlertPrompt } from "@/components/jobs/urgent-alert-prompt";
 import { FREE_PROMO } from "@/lib/free-promo";
 import { getCurrentUser } from "@/lib/current-user";
 import { FIRST_POST_POINTS, firstPostBonusOpen } from "@/lib/first-post";
+import { TALK_TOPICS, todayTopicIndex } from "@/lib/talk-topics";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
@@ -80,6 +81,7 @@ async function HomeFeedSections() {
   const user = await getCurrentUser().catch(() => null);
   const firstBonus = user && (await firstPostBonusOpen(user.id).catch(() => false)) ? FIRST_POST_POINTS : null;
   const today = todayKstDate();
+  const topicIndex = todayTopicIndex(today);
   return (
     <>
       {/* 가장 급한 것부터: 급구(있을 때만 — 0건은 위 요약 칸에 보임) → 지원 · 대회 딜러 구인 */}
@@ -97,7 +99,7 @@ async function HomeFeedSections() {
       {/* 아래는 PC 두 칸: 왼쪽 글(최신글 · 핸드) · 오른쪽 매일 할 것(미션 · 퀴즈 · 요괴 · 랭킹) — 칸마다 따로 쌓여 빈 공간이 없게 */}
       <div data-home-columns className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <div id="home-latest" className="grid min-w-0 scroll-mt-24 content-start gap-2.5">
-          <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} firstBonus={firstBonus} />
+          <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} firstBonus={firstBonus} topic={{ index: topicIndex, text: TALK_TOPICS[topicIndex] }} />
           <GoogleAdUnit placement="infeed" />
           <GrowthHomePanel today={today} hand={feed.hand} hub={feed.hub} />
         </div>

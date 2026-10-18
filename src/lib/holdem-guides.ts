@@ -21,9 +21,9 @@ export type HoldemGuide = {
 };
 
 export const HOLDEM_GUIDE_CATEGORIES = [
-  { id: "basics", label: "기초 개념", hint: "모든 판단의 바탕", slugs: ["position", "thinking-in-ranges", "pot-odds-equity", "hand-reading-steps", "board-texture", "player-types", "hand-history-review", "common-leaks"] },
+  { id: "basics", label: "기초 개념", hint: "모든 판단의 바탕", slugs: ["position", "thinking-in-ranges", "pot-odds-equity", "hand-reading-steps", "board-texture", "player-types", "hand-history-review", "common-leaks", "short-handed"] },
   { id: "preflop", label: "프리플랍", hint: "오픈 · 3벳 · 블라인드", slugs: ["preflop-chart-reading", "open-sizing-limping", "cold-calling", "three-bet-four-bet", "blind-defense", "set-mining"] },
-  { id: "postflop", label: "플랍 이후", hint: "벳 · 계획", slugs: ["continuation-bet", "check-raise", "spr-planning", "turn-river-planning", "probe-donk-bets", "multiway-pots", "delayed-cbet", "slowplay"] },
+  { id: "postflop", label: "플랍 이후", hint: "벳 · 계획", slugs: ["continuation-bet", "check-raise", "spr-planning", "turn-river-planning", "probe-donk-bets", "multiway-pots", "delayed-cbet", "slowplay", "float"] },
   { id: "river", label: "리버 · 블러프", hint: "밸류와 블러프", slugs: ["value-bet-sizing", "choosing-bluffs", "river-call-decisions", "bluff-catching", "overbet"] },
   { id: "tournament", label: "토너먼트", hint: "스택 · ICM", slugs: ["tournament-phases", "tournament-stack-strategy", "ante-effect", "short-stack-resteal", "heads-up-final-table"] },
 ] as const;
