@@ -4,7 +4,10 @@ import { prisma } from "@/lib/db";
 import {
   INTERVAL_MAX,
   INTERVAL_MIN,
+  EDIT_CODE_CHARS,
+  EDIT_CODE_LENGTH,
   MAX_DEALERS,
+  MAX_EDITORS,
   MAX_GAMES,
   MAX_ROSTERS,
   ROSTER_TEXT_MAX,
@@ -12,6 +15,7 @@ import {
   kstDate,
   labelText,
   kstDateAt,
+  normalizeEditCode,
   normalizeWorkDate,
   shareExpired,
   normalizeTime,
@@ -82,6 +86,7 @@ async function moveToTrash(tx: Tx, ownerId: string, ids: string[]) {
     })),
   });
   await tx.rotationDealer.deleteMany({ where: { gameId: { in: metas.map((m) => m.id) } } });
+  await tx.rotationEditor.deleteMany({ where: { gameId: { in: metas.map((m) => m.id) } } });
   await tx.rotationMeta.deleteMany({ where: { ownerId, id: { in: metas.map((m) => m.id) } } });
 }
 
@@ -92,13 +97,28 @@ const MAX_SLOTS = 300;
  * 게임 찾기(계정마다 따로): 주어진 게임(이 계정 것만) → 없으면 이 계정의 가장 최근 날짜 게임
  * → 하나도 없으면 오늘 날짜로 새로 만듭니다. 다른 계정의 게임은 절대 돌려주지 않습니다.
  */
-async function resolveGame(ownerId: string, gameId?: string | null) {
+async function resolveGame(ownerId: string, gameId?: string | null): Promise<MetaRow & { role: "owner" | "editor" }> {
   let game = gameId ? await prisma.rotationMeta.findFirst({ where: { id: gameId, ownerId } }) : null;
+  // 편집 코드로 같이 쓰는 게임(편집자로 등록된 계정만)
+  if (!game && gameId) {
+    const editor = await prisma.rotationEditor.findUnique({ where: { gameId_userId: { gameId, userId: ownerId } } });
+    const shared = editor ? await prisma.rotationMeta.findUnique({ where: { id: gameId } }) : null;
+    if (shared) return { ...shared, role: "editor" };
+  }
   game ??= await prisma.rotationMeta.findFirst({ where: { ownerId }, orderBy: GAME_ORDER });
   // 처음 만드는 게임도 새 게임과 같이 테이블 0개로 시작(DB 기본값 20개를 쓰지 않음)
   game ??= await prisma.rotationMeta.create({ data: { id: randomUUID(), ownerId, workDate: kstDate(), tableCount: 0, tableLabels: "" } });
   if (!game.workDate) game = await prisma.rotationMeta.update({ where: { id: game.id }, data: { workDate: kstDate(game.createdAt) } });
-  return game;
+  return { ...game, role: "owner" };
+}
+
+/** 새 공동 편집 코드(겹치지 않게) */
+async function newEditCode(tx: Tx) {
+  for (let i = 0; i < 8; i += 1) {
+    const code = [...randomBytes(EDIT_CODE_LENGTH)].map((b) => EDIT_CODE_CHARS[b % EDIT_CODE_CHARS.length]).join("");
+    if (!(await tx.rotationMeta.findUnique({ where: { editCode: code }, select: { id: true } }))) return code;
+  }
+  throw new RotationError("코드를 만들지 못했습니다. 다시 눌러 주세요.");
 }
 
 function parseTableState(json: string | null): Record<string, TableState> {
@@ -133,7 +153,7 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
   } catch {
     void cleanTrash();
   }
-  const [dealers, games, rosterRows, trashRows, prefs] = await Promise.all([
+  const [dealers, games, rosterRows, trashRows, prefs, joined, editorRows] = await Promise.all([
     prisma.rotationDealer.findMany({ where: { gameId: m.id }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }] }),
     prisma.rotationMeta.findMany({ where: { ownerId }, orderBy: GAME_ORDER, take: GAME_LIST, select: { id: true, name: true, workDate: true } }),
     // 명단은 내용까지, 휴지통은 이름만(내용은 되살릴 때 읽음)
@@ -144,7 +164,23 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
       .findMany({ where: { ownerId, kind: KIND_TRASH }, orderBy: { createdAt: "desc" }, take: MAX_GAMES, select: { id: true, name: true, createdAt: true } })
       .catch(() => []),
     loadPrefs(ownerId),
+    // 편집 코드로 같이 쓰는 게임(남의 게임)
+    prisma.rotationEditor.findMany({ where: { userId: ownerId }, select: { gameId: true }, take: MAX_GAMES }).catch(() => []),
+    // 이 게임을 같이 편집하는 계정(주인에게 보여 줌)
+    m.role === "owner"
+      ? prisma.rotationEditor.findMany({ where: { gameId: m.id }, orderBy: { createdAt: "asc" }, select: { userId: true } }).catch(() => [])
+      : Promise.resolve([] as { userId: string }[]),
   ]);
+  const sharedMetas = joined.length
+    ? await prisma.rotationMeta.findMany({
+        where: { id: { in: joined.map((j) => j.gameId) } },
+        orderBy: GAME_ORDER,
+        select: { id: true, name: true, workDate: true, ownerId: true },
+      })
+    : [];
+  const nameIds = [...new Set([...sharedMetas.map((g) => g.ownerId), ...editorRows.map((e) => e.userId), m.ownerId].filter((x): x is string => Boolean(x)))];
+  const people = nameIds.length ? await prisma.user.findMany({ where: { id: { in: nameIds } }, select: { id: true, nickname: true } }) : [];
+  const nick = new Map(people.map((p) => [p.id, p.nickname]));
   const rosters = rosterRows.map((s) => ({ id: s.id, name: s.name, text: s.dataJson }));
   const trash = trashRows
     .map((s) => {
@@ -154,8 +190,19 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
   return {
     rosters,
     trash,
-    game: { id: m.id, name: m.name, workDate: m.workDate },
-    games,
+    game: {
+      id: m.id,
+      name: m.name,
+      workDate: m.workDate,
+      ...(m.role === "editor" ? { shared: true, ownerName: nick.get(m.ownerId ?? "") ?? null } : {}),
+    },
+    games: [
+      ...games,
+      ...sharedMetas.map((g) => ({ id: g.id, name: g.name, workDate: g.workDate, shared: true, ownerName: nick.get(g.ownerId ?? "") ?? null })),
+    ],
+    role: m.role,
+    editCode: m.role === "owner" ? m.editCode : null,
+    editors: editorRows.map((e) => ({ id: e.userId, name: nick.get(e.userId) ?? "(탈퇴한 계정)" })),
     shareToken: m.shareToken,
     maxStreakMinutes: m.maxStreakMinutes,
     shareDays: m.shareDays,
@@ -186,7 +233,11 @@ export async function loadRotation(ownerId: string, gameId?: string | null): Pro
 export async function rotationVersion(ownerId: string, gameId?: string | null) {
   if (!gameId) return (await resolveGame(ownerId)).version;
   const game = await prisma.rotationMeta.findFirst({ where: { id: gameId, ownerId }, select: { version: true } });
-  return game?.version ?? -1;
+  if (game) return game.version;
+  // 같이 편집하는 게임(편집자에서 빠지면 -1 → 화면이 새로 받아 내 게임으로 돌아감)
+  const editor = await prisma.rotationEditor.findUnique({ where: { gameId_userId: { gameId, userId: ownerId } }, select: { gameId: true } });
+  if (!editor) return -1;
+  return (await prisma.rotationMeta.findUnique({ where: { id: gameId }, select: { version: true } }))?.version ?? -1;
 }
 
 /** 보기 전용 공유: 링크 값으로 찾은 게임(공유를 끄면 null). 로그인 없이 봅니다. */
@@ -255,9 +306,15 @@ function validPlan(plan: RotationPlan, tableCount: number) {
  */
 export async function applyRotation(ownerId: string, gameId: string | null | undefined, action: RotationAction): Promise<string> {
   const now = new Date();
-  const META_ID = (await resolveGame(ownerId, gameId)).id;
+  const resolved = await resolveGame(ownerId, gameId);
+  const META_ID = resolved.id;
+  const role = resolved.role;
   let target = META_ID;
   let deleted = false;
+  /** 주인만 할 수 있는 일 */
+  const ownerOnly = (what: string) => {
+    if (role !== "owner") throw new RotationError(`${what}: 게임을 만든 계정만 할 수 있어요.`);
+  };
   // 계정 설정은 트랜잭션 밖에서 미리(서버는 DB 연결이 1개라 안에서 따로 읽으면 서로 기다리다 실패 → 새 게임이 안 만들어졌음)
   const prefs = action.type === "createGame" ? await loadPrefs(ownerId) : null;
   await prisma.$transaction(async (tx) => {
@@ -535,6 +592,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         break;
       }
       case "deleteGame": {
+        ownerOnly("게임 삭제");
         // 하나뿐인 게임도 지울 수 있음(지우면 오늘 날짜 빈 게임이 새로 생김 · 휴지통에서 되살리기 가능)
         await moveToTrash(tx, ownerId, [META_ID]);
         deleted = true;
@@ -568,6 +626,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
             id,
             ownerId,
             shareToken: null,
+            editCode: null,
             createdAt: new Date(snap.meta.createdAt),
             dayStartedAt: new Date(snap.meta.dayStartedAt),
           },
@@ -608,8 +667,49 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         await tx.toolSaved.deleteMany({ where: { id: String(action.id ?? ""), ownerId, kind: KIND_ROSTER } });
         break;
       }
+      case "setEditCode": {
+        ownerOnly("공동 편집 코드");
+        if (action.on) {
+          await tx.rotationMeta.update({ where: { id: META_ID }, data: { editCode: await newEditCode(tx) } });
+        } else {
+          // 끄면 같이 쓰던 계정도 모두 끊김
+          await tx.rotationMeta.update({ where: { id: META_ID }, data: { editCode: null } });
+          await tx.rotationEditor.deleteMany({ where: { gameId: META_ID } });
+        }
+        break;
+      }
+      case "removeEditor": {
+        ownerOnly("편집자 끊기");
+        await tx.rotationEditor.deleteMany({ where: { gameId: META_ID, userId: String(action.userId ?? "") } });
+        break;
+      }
+      case "joinGame": {
+        const code = normalizeEditCode(action.code);
+        const game = code ? await tx.rotationMeta.findUnique({ where: { editCode: code }, select: { id: true, ownerId: true } }) : null;
+        if (!game) throw new RotationError("코드가 맞지 않아요. 6자리를 다시 확인해 주세요(주인이 코드를 끄거나 새로 만들면 예전 코드는 안 돼요).");
+        if (game.ownerId !== ownerId) {
+          const exists = await tx.rotationEditor.findUnique({ where: { gameId_userId: { gameId: game.id, userId: ownerId } } });
+          if (!exists) {
+            if ((await tx.rotationEditor.count({ where: { gameId: game.id } })) >= MAX_EDITORS) {
+              throw new RotationError(`같이 편집할 수 있는 계정은 ${MAX_EDITORS}명까지예요. 주인에게 정리를 부탁해 주세요.`);
+            }
+            await tx.rotationEditor.create({ data: { gameId: game.id, userId: ownerId } });
+          }
+        }
+        target = game.id;
+        // 주인 화면에 편집자 목록이 바로 보이게
+        if (game.id !== META_ID) await tx.rotationMeta.update({ where: { id: game.id }, data: { version: { increment: 1 } } });
+        break;
+      }
+      case "leaveGame": {
+        if (role !== "editor") throw new RotationError("내 게임에서는 나갈 수 없어요. 지우려면 게임 삭제를 쓰세요.");
+        await tx.rotationEditor.deleteMany({ where: { gameId: META_ID, userId: ownerId } });
+        target = "";
+        break;
+      }
     }
     if (!deleted) await tx.rotationMeta.update({ where: { id: META_ID }, data: { version: { increment: 1 } } });
   }, { maxWait: 10_000, timeout: 15_000 });
-  return deleted ? (await resolveGame(ownerId)).id : target;
+  // 지웠거나 같이 쓰던 게임에서 나가면 내 게임으로
+  return deleted || !target ? (await resolveGame(ownerId)).id : target;
 }

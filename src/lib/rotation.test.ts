@@ -147,3 +147,14 @@ describe("딜러 등록 줄: 스태프", () => {
     );
   });
 });
+
+describe("공동 편집 코드", () => {
+  it("소문자 · 공백 · 하이픈은 정리하고, 헷갈리는 글자나 길이가 틀리면 거절", async () => {
+    const { normalizeEditCode } = await import("./rotation");
+    assert.equal(normalizeEditCode("qza-3p6"), "QZA3P6");
+    assert.equal(normalizeEditCode(" QZA 3P6 "), "QZA3P6");
+    assert.equal(normalizeEditCode("QZA3P"), null);
+    assert.equal(normalizeEditCode("QZA3PO"), null, "O는 안 씀(0과 헷갈림)");
+    assert.equal(normalizeEditCode(null), null);
+  });
+});

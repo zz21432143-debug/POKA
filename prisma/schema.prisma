@@ -636,9 +636,21 @@ model RotationMeta {
   setupMinutes Int      @default(30)
   /// 테이블별 버튼 자리·컨바인 시각 {"5":{"button":3,"closedAt":1410}}
   tableStateJson String?
+  /// 공동 편집 코드(6자리). 다른 계정이 이 코드를 넣으면 같이 편집. 없으면 꺼짐
+  editCode     String?  @unique
 
   @@index([workDate, createdAt])
   @@index([ownerId, workDate])
+}
+
+/// 딜러 로테이션 공동 편집자: 편집 코드로 들어온 계정(주인이 끊거나 본인이 나가면 지움)
+model RotationEditor {
+  gameId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@id([gameId, userId])
+  @@index([userId])
 }
 
 /// 게임 현황판(토너먼트 시계). 계정마다 따로(비공개), 주인이 켜면 보기 전용 TV 링크(/g/값)

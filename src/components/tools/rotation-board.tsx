@@ -132,6 +132,9 @@ function untilLabel(minutes: number) {
  */
 export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [state, setState] = useState(initial);
+  // 내 게임(같이 편집하는 남의 게임은 빼고) — 정리 · 개수 · 삭제 안내용
+  const myGames = state.games.filter((g) => !g.shared);
+  const isEditor = state.role === "editor";
   const [clock, setClock] = useState(() => new Date());
   const [error, setError] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
@@ -198,6 +201,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   /** 지난 게임 정리 창: 고른 게임 id(null이면 닫힘) */
   const [cleanup, setCleanup] = useState<string[] | null>(null);
   // 화면 탭: 운영(시간표) · 딜러 · 공유 · 설정. 딜러가 없으면 딜러 탭부터
+  /** 공동 편집 코드 입력 */
+  const [joinCode, setJoinCode] = useState("");
+  const [codeCopied, setCodeCopied] = useState(false);
   const [tab, setTab] = useState<"run" | "dealers" | "share" | "settings">(
     () => (initial.dealers.length ? "run" : "dealers"),
   );
@@ -1000,6 +1006,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         >
           {state.games.map((g) => (
             <option key={g.id} value={g.id}>
+              {g.shared ? `👥 ${g.ownerName ?? "다른 계정"} · ` : ""}
               {formatWorkDate(g.workDate)} · {g.name}
             </option>
           ))}
@@ -1058,14 +1065,29 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           >
             ✎ 날짜·이름
           </button>
+          {isEditor ? (
+            <button
+              type="button"
+              data-game-leave
+              disabled={busy}
+              onClick={async () => {
+                if (!window.confirm(`'${state.game.name}' 같이 편집하기에서 나갈까요?\n게임은 ${state.game.ownerName ?? "주인"}님 계정에 그대로 남고, 다시 들어오려면 코드가 필요해요.`)) return;
+                await send({ type: "leaveGame" });
+              }}
+              className="min-h-11 rounded-lg border border-rose-500/70 px-3 text-sm font-black text-rose-300"
+            >
+              👥 나가기
+            </button>
+          ) : null}
           <button
             type="button"
             data-game-delete
+            hidden={isEditor}
             disabled={busy}
             onClick={async () => {
               if (
                 !window.confirm(
-                  `'${state.game.name}' 게임을 지울까요?\n${TRASH_DAYS}일 동안 휴지통에 남아 그 안에는 되살릴 수 있어요.${state.games.length <= 1 ? "\n(마지막 게임이라 지우면 빈 새 게임이 생겨요)" : ""}`,
+                  `'${state.game.name}' 게임을 지울까요?\n${TRASH_DAYS}일 동안 휴지통에 남아 그 안에는 되살릴 수 있어요.${myGames.length <= 1 ? "\n(마지막 게임이라 지우면 빈 새 게임이 생겨요)" : ""}`,
                 )
               )
                 return;
@@ -1076,6 +1098,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             🗑 게임 삭제
           </button>
         </div>
+        {isEditor ? (
+          <p data-coedit-banner className="basis-full rounded-lg bg-violet-950/60 px-2 py-1 text-xs font-bold text-violet-200">
+            👥 {state.game.ownerName ?? "다른 계정"}님의 게임을 같이 편집하고 있어요. 바꾸면 모두의 화면에 바로 반영됩니다.
+          </p>
+        ) : null}
       </section>
 
       {/* 휴지통: 내일 완전히 지워질 게임 안내(되살리기 바로) */}
@@ -1196,13 +1223,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       ) : null}
 
       {/* 게임 수 한도에 가까우면 지난 게임 정리 안내 */}
-      {state.games.length >= MAX_GAMES - 20 ? (
+      {myGames.length >= MAX_GAMES - 20 ? (
         <p
           data-cleanup-notice
           className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/50 px-3 py-2 text-sm font-bold text-amber-200"
         >
-          게임이 {state.games.length}/{MAX_GAMES}개예요.{" "}
-          {state.games.length >= MAX_GAMES ? "더 만들려면" : "한도에 가까워요."}{" "}
+          게임이 {myGames.length}/{MAX_GAMES}개예요.{" "}
+          {myGames.length >= MAX_GAMES ? "더 만들려면" : "한도에 가까워요."}{" "}
           지난 게임을 정리해 주세요.
           <button
             type="button"
@@ -1344,7 +1371,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && addText.trim()) void openTables();
                 }}
-                className="h-10 min-w-0 flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
+                className="h-10 min-w-[11rem] flex-1 rounded-lg border border-white/20 bg-zinc-900 px-2 text-base font-bold"
               />
               <input
                 aria-label="러닝 시각(비우면 지금부터)"
@@ -2641,6 +2668,126 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               보기 전용 링크 만들기
             </button>
           )}
+          {/* 공동 편집: 코드로 다른 계정과 같이 고치기 */}
+          <div data-coedit className="grid gap-2 rounded-xl border border-violet-400/40 bg-violet-950/30 p-3">
+            <div className="flex flex-wrap items-baseline gap-2">
+              <h3 className="text-base font-black text-violet-200">👥 코드로 같이 편집</h3>
+              <span className="text-xs text-zinc-400">
+                코드를 받은 POKA 회원은 이 게임을 같이 고칠 수 있어요(출근 체크 · 시간표 · Auto 모두). 게임 삭제 · 코드 관리는 만든 사람만.
+              </span>
+            </div>
+            {isEditor ? (
+              <p className="text-sm text-zinc-200">
+                {state.game.ownerName ?? "다른 계정"}님의 게임을 같이 편집 중이에요. 그만두려면 위의 <b>👥 나가기</b>를 누르세요.
+              </p>
+            ) : state.editCode ? (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <b data-edit-code className="rounded-lg bg-black px-3 py-1 font-mono text-3xl tracking-[0.25em] text-violet-200">
+                    {state.editCode}
+                  </b>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void navigator.clipboard
+                        ?.writeText(`[POKA 딜러 로테이션 같이 편집]\n${state.game.name} · 코드 ${state.editCode}\n${window.location.origin}/tools/rotation 에서 공유 탭 → 코드 입력`)
+                        .then(() => setCodeCopied(true))
+                        .catch(() => undefined);
+                    }}
+                    className="min-h-10 rounded-lg bg-violet-500 px-3 text-sm font-black text-white"
+                  >
+                    {codeCopied ? "복사됨 ✓ 단톡방에 붙여 넣기" : "코드 복사"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm("새 코드로 바꿀까요? 예전 코드로는 더 못 들어와요(이미 같이 쓰는 사람은 그대로).")) void send({ type: "setEditCode", on: true });
+                    }}
+                    className="min-h-10 rounded-lg border border-white/30 px-3 text-sm font-bold"
+                  >
+                    새 코드
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm("같이 편집을 끌까요? 코드가 없어지고, 같이 쓰던 사람도 모두 끊겨요.")) void send({ type: "setEditCode", on: false });
+                    }}
+                    className="min-h-10 rounded-lg border border-rose-500/60 px-3 text-sm font-bold text-rose-300"
+                  >
+                    끄기(모두 끊기)
+                  </button>
+                </div>
+                <div className="grid gap-1 text-sm">
+                  <span className="text-xs font-bold text-zinc-400">같이 편집하는 사람 {state.editors.length}명</span>
+                  {state.editors.length ? (
+                    <ul className="flex flex-wrap gap-1.5">
+                      {state.editors.map((e) => (
+                        <li key={e.id} data-editor={e.name} className="flex items-center gap-1 rounded-lg bg-zinc-900 px-2 py-1 font-bold">
+                          {e.name}
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => {
+                              if (window.confirm(`${e.name}님을 같이 편집에서 뺄까요?`)) void send({ type: "removeEditor", userId: e.id });
+                            }}
+                            className="min-h-8 rounded border border-rose-500/50 px-1.5 text-[11px] font-black text-rose-300"
+                          >
+                            빼기
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-xs text-zinc-500">아직 없어요. 코드를 보내 주세요.</span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                data-make-code
+                disabled={busy}
+                onClick={() => void send({ type: "setEditCode", on: true })}
+                className="min-h-11 justify-self-start rounded-lg bg-violet-500 px-4 text-sm font-black text-white"
+              >
+                편집 코드 만들기
+              </button>
+            )}
+            {/* 받은 코드 넣기 */}
+            <form
+              className="flex flex-wrap items-center gap-1.5 border-t border-white/10 pt-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!joinCode.trim()) return;
+                if (await send({ type: "joinGame", code: joinCode })) {
+                  setJoinCode("");
+                  setOpenNotice("같이 편집하는 게임으로 들어왔어요. 위 게임 목록에서 👥 표시로 언제든 다시 열 수 있어요.");
+                  setTab("run");
+                }
+              }}
+            >
+              <span className="text-xs font-bold text-zinc-300">받은 코드로 들어가기</span>
+              <input
+                aria-label="편집 코드"
+                data-join-code
+                value={joinCode}
+                maxLength={9}
+                placeholder="예: K7Q2M9"
+                autoCapitalize="characters"
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                className="h-10 w-32 rounded-lg border border-white/20 bg-zinc-900 px-2 font-mono text-base font-bold tracking-widest"
+              />
+              <button
+                type="submit"
+                disabled={busy || !joinCode.trim()}
+                className="min-h-10 rounded-lg bg-violet-500 px-3 text-sm font-black text-white disabled:opacity-40"
+              >
+                같이 편집
+              </button>
+            </form>
+          </div>
         </section>
       ) : null}
 
@@ -3593,7 +3740,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </button>
               ) : null}
               {gameDialog.mode === "edit" &&
-              (state.games.length > 1 || state.trash.length > 0) ? (
+              (myGames.length > 1 || state.trash.length > 0) ? (
                 <button
                   type="button"
                   disabled={busy}
@@ -3624,10 +3771,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         <ToolDialog label="지난 게임 정리" onClose={() => setCleanup(null)}>
           <div className="grid max-h-[90dvh] w-full max-w-md grid-rows-[auto_auto_minmax(0,1fr)_auto_auto] gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
             <h3 className="text-lg font-black">
-              지난 게임 정리 · {state.games.length}/{MAX_GAMES}개
+              지난 게임 정리 · {myGames.length}/{MAX_GAMES}개
             </h3>
             {(() => {
-              const others = state.games.filter((g) => g.id !== state.game.id);
+              const others = myGames.filter((g) => g.id !== state.game.id);
               const today = kstDate();
               const past = others
                 .filter((g) => !g.workDate || g.workDate < today)
@@ -3655,7 +3802,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               );
             })()}
             <ul className="grid content-start gap-1 overflow-y-auto overscroll-contain pr-1">
-              {state.games
+              {myGames
                 .filter((g) => g.id !== state.game.id)
                 .slice()
                 .reverse()
@@ -3696,7 +3843,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             <details
               data-trash
               className="group rounded-xl border border-white/15 bg-black/40 p-2"
-              open={state.trash.length > 0 && state.games.length <= 1}
+              open={state.trash.length > 0 && myGames.length <= 1}
             >
               <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-bold [&::-webkit-details-marker]:hidden">
                 🗑 휴지통 {state.trash.length}개

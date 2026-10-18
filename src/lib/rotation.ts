@@ -66,11 +66,36 @@ export type RotationDealerView = {
 };
 
 /** 게임(근무일·이벤트) 목록 한 줄 */
-export type RotationGame = { id: string; name: string; workDate: string | null };
+export type RotationGame = {
+  id: string;
+  name: string;
+  workDate: string | null;
+  /** 다른 계정이 편집 코드로 같이 쓰게 해 준 게임(내 게임 아님) */
+  shared?: boolean;
+  /** 같이 쓰는 게임의 주인 닉네임 */
+  ownerName?: string | null;
+};
+
+/** 공동 편집 코드: 헷갈리는 글자(0 · O · 1 · I · L) 없이 6자리 */
+export const EDIT_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export const EDIT_CODE_LENGTH = 6;
+/** 게임 하나에 같이 편집할 수 있는 계정 수(주인 빼고) */
+export const MAX_EDITORS = 10;
+/** 입력한 코드 정리: 대문자 · 공백 · 하이픈 빼기 */
+export function normalizeEditCode(value: unknown) {
+  const code = String(value ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return code.length === EDIT_CODE_LENGTH && [...code].every((ch) => EDIT_CODE_CHARS.includes(ch)) ? code : null;
+}
 
 export type RotationStateView = {
   /** 지금 보고 있는 게임 */
   game: RotationGame;
+  /** 내 게임이면 owner, 편집 코드로 같이 쓰는 게임이면 editor */
+  role: "owner" | "editor";
+  /** 공동 편집 코드(주인에게만 · 꺼져 있으면 null) */
+  editCode: string | null;
+  /** 같이 편집하는 계정(주인에게만) */
+  editors: { id: string; name: string }[];
   /** 보기 전용 공유 링크 값(없으면 공유 꺼짐) */
   shareToken: string | null;
   /** 최대 연속 딜(분). 0이면 제한 없음 */
@@ -139,7 +164,15 @@ export type RotationAction =
   | { type: "setShareDays"; days: number; asDefault?: boolean }
   /** 딜러 명단 따로 저장(계정마다 · 게임과 상관없이 남음). id가 있으면 고치기 */
   | { type: "saveRoster"; id?: string; name: string; text: string }
-  | { type: "deleteRoster"; id: string };
+  | { type: "deleteRoster"; id: string }
+  /** 공동 편집 코드 켜기(새 코드) · 끄기(같이 쓰던 계정도 모두 끊김) — 주인만 */
+  | { type: "setEditCode"; on: boolean }
+  /** 편집 코드로 다른 계정의 게임에 들어가기 */
+  | { type: "joinGame"; code: string }
+  /** 같이 쓰던 게임에서 나가기(편집자) */
+  | { type: "leaveGame" }
+  /** 같이 편집하던 계정 한 명 끊기 — 주인만 */
+  | { type: "removeEditor"; userId: string };
 
 /** 따로 저장한 딜러 명단(한 줄에 한 명: "김딜러 10:00" 형식) */
 export type RotationRoster = { id: string; name: string; text: string };
