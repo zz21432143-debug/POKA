@@ -192,6 +192,8 @@ export function GameBoardPanel({
     if (!maker || creating) return;
     setCreating(true);
     setError(null);
+    // 만든 뒤 열 탭: 빈 상태면 구조를 채워야 하니 설정, 나머지는 바로 진행(시작 · 레벨 조작)
+    const nextTab = maker.template === "empty" ? "setup" : "play";
     try {
       const json = await call({ action: "create", name: maker.name.trim() || "메인 토너먼트", template: maker.template, copyFrom: maker.template === "saved" ? maker.savedId : maker.copyFrom });
       setMaker(null);
@@ -202,7 +204,7 @@ export function GameBoardPanel({
         dirty.current = false;
         showDraft(json.board.data);
         take(json.board);
-        setTab("setup");
+        setTab(nextTab);
         window.history.replaceState(null, "", `/tools/board?id=${encodeURIComponent(json.board.id)}`);
       }
     } catch (e) {
@@ -286,7 +288,7 @@ export function GameBoardPanel({
       {/* 내 현황판 고르기 */}
       <section className="ink-panel grid gap-2 rounded-2xl p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <label className="grid min-w-0 flex-1 gap-1 text-xs font-bold text-zinc-300">
+          <label className="grid min-w-0 flex-1 basis-full gap-1 text-xs font-bold text-zinc-300 sm:basis-0">
             내 현황판 · 내 계정에만 보여요
             <select
               aria-label="현황판 고르기"

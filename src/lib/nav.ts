@@ -135,7 +135,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
       { href: "/games", label: "요괴 오락실", hint: "요괴 오목 · 윷놀이", icon: "cards" },
       { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },
-      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
+      { href: "/shop", label: "포인트 상점", hint: "포인트로 마크 · 변경권 구매", icon: "coin" },
       { href: "/invite", label: "친구 초대", hint: "친구 첫 출석하면 둘 다 포인트", icon: "coin", badge: "NEW" },
     ],
   },

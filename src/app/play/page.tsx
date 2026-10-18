@@ -5,5 +5,5 @@ import { SidebarHub } from "@/components/layout/sidebar-hub";
 export const metadata: Metadata = { title: "포인트 · 놀이", robots: { index: false, follow: true } };
 
 export default function PlayHubPage() {
-  return <SidebarHub title="포인트 · 놀이" intro="매일 출석으로 포인트를 모으고, 요괴를 키우고, 친구와 한 판. 레벨 · 랭킹 · 마크 상점도 여기에 있어요. (오늘의 퀴즈는 홀덤 공부에 있어요)" sticker="community" />;
+  return <SidebarHub title="포인트 · 놀이" intro="매일 출석으로 포인트를 모으고, 요괴를 키우고, 친구와 한 판. 레벨 · 랭킹 · 포인트 상점도 여기에 있어요. (오늘의 퀴즈는 홀덤 공부에 있어요)" sticker="community" />;
 }

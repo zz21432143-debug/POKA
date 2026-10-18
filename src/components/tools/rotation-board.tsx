@@ -205,9 +205,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   /** 공동 편집 코드 입력 */
   const [joinCode, setJoinCode] = useState("");
   const [codeCopied, setCodeCopied] = useState(false);
-  const [tab, setTab] = useState<"run" | "dealers" | "share" | "settings">(
-    () => (initial.dealers.length ? "run" : "dealers"),
-  );
+  const [tab, setTab] = useState<"run" | "dealers" | "share" | "settings">("run");
+  // 빠른 시작(시간표가 없을 때 운영 탭 한 화면에서): 테이블 · 시작 · 간격 · 딜러 명단 → 시간표 만들기
+  const [qsTables, setQsTables] = useState(() => formatTableLabels(initial.tableLabels));
+  const [qsStart, setQsStart] = useState(initial.planStart);
+  const [qsInterval, setQsInterval] = useState(initial.interval);
+  const [qsText, setQsText] = useState("");
+  /** 빠른 시작 저장이 끝나 새 상태가 오면 Auto를 한 번 */
+  const [autoAfter, setAutoAfter] = useState(false);
   // 딜러 등록 칸: 등록한 뒤에도 접히지 않게(여러 번 나눠 등록)
   const [regOpen, setRegOpen] = useState(initial.dealers.length === 0);
   // 공유 링크 QR코드(이미지 주소)
@@ -717,6 +722,29 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     await send({ type: "savePlan", plan: autoBuild(base, views) });
   }
 
+  /** 빠른 시작: 테이블 · 시작 시각 · 간격 저장 → 명단 등록 → (새 상태가 오면) Auto */
+  async function quickStart() {
+    const parsed = parseTableLabels(qsTables);
+    if (!parsed.labels.length || parsed.errors.length) {
+      setError(parsed.errors.length ? `테이블 번호를 확인하세요: ${parsed.errors.join(", ")}` : "테이블 번호를 넣어 주세요(예: 1~8 또는 A~D).");
+      return;
+    }
+    const lines = parseDealerLines(qsText);
+    if (!lines.length && state.dealers.length === 0) {
+      setError("딜러 명단을 한 줄에 한 명씩 넣어 주세요(예: 김딜러 10:00).");
+      return;
+    }
+    const settingsChanged =
+      formatTableLabels(state.tableLabels) !== formatTableLabels(parsed.labels) || state.planStart !== qsStart || state.interval !== qsInterval;
+    if (settingsChanged && !(await send({ type: "setSettings", tableLabels: qsTables, planStart: qsStart, interval: qsInterval }))) return;
+    if (lines.length) {
+      const dealers = lines.map((d) => ({ name: d.name, startTime: d.startTime, endTime: d.endTime, staff: "staff" in d ? Boolean(d.staff) : false }));
+      if (!(await send({ type: "addDealers", dealers }))) return;
+      setQsText("");
+    }
+    setAutoAfter(true);
+  }
+
   function runAuto() {
     // 새 게임은 테이블 0개 · 딜러 0명으로 시작하므로 먼저 정하라고 안내
     if (state.tableCount === 0) {
@@ -737,6 +765,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       if (ok) setUndo({ game, before, after: JSON.stringify(next) });
     });
   }
+
+  // 빠른 시작: 저장이 반영된 새 상태에서 Auto
+  useEffect(() => {
+    if (!autoAfter || busy) return;
+    if (state.tableCount > 0 && state.dealers.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAutoAfter(false);
+      runAuto();
+    }
+    // 새 상태(version)가 올 때만 다시 확인(runAuto는 매번 새로 만들어져 넣지 않음)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAfter, busy, state.version]);
 
   /** 방금 누른 Auto 전 시간표로 되돌리기(그 사이 다른 변경이 없을 때만 보임) */
   const canUndo = Boolean(undo && undo.game === state.game.id && JSON.stringify(state.plan) === undo.after);
@@ -1015,11 +1055,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-sky-500/60 bg-sky-950/40 p-3"
       >
         <div className="grid min-w-0 gap-1">
-          <span className="text-xs font-bold text-sky-300">
-            근무일 · 게임 이름(교대표·TV에 나옵니다)
-          </span>
           <span className="flex flex-wrap items-center gap-2">
-            <span className="text-2xl font-black">
+            <span className="text-xl font-black">
               {formatWorkDate(state.game.workDate)}
             </span>
             <input
@@ -1038,9 +1075,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") e.currentTarget.blur();
               }}
-              className="h-11 w-48 max-w-full rounded-lg border-2 border-amber-400/70 bg-black px-2 text-xl font-black text-amber-300"
+              title="게임 이름(교대표 · TV에 나옵니다) — 눌러서 바로 바꾸기"
+              className="h-11 w-44 max-w-full rounded-lg border-2 border-amber-400/70 bg-black px-2 text-lg font-black text-amber-300"
             />
-            <span className="text-xs text-zinc-400">✎ 눌러서 바로 바꾸기</span>
           </span>
         </div>
         <select
@@ -1057,7 +1094,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </option>
           ))}
         </select>
-        <div className="ml-auto flex flex-wrap gap-1.5">
+        <details data-game-menu className="group/gm relative ml-auto">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-lg border border-white/30 px-3 text-sm font-bold [&::-webkit-details-marker]:hidden">
+            ⚙ 게임 관리 <span className="transition-transform group-open/gm:rotate-180">▾</span>
+          </summary>
+        <div className="absolute right-0 z-30 mt-1 grid w-56 gap-1.5 rounded-xl border border-white/20 bg-zinc-950 p-2 shadow-xl">
           <button
             type="button"
             disabled={busy}
@@ -1075,9 +1116,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 copySettings: true,
               });
             }}
-            className="min-h-11 rounded-lg bg-sky-500 px-4 text-sm font-black text-black"
+            className="min-h-11 rounded-lg bg-sky-500 px-4 text-left text-sm font-black text-black"
           >
-            날짜 변경
+            📅 날짜 변경(다음 영업일)
           </button>
           <button
             type="button"
@@ -1091,9 +1132,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 copySettings: false,
               })
             }
-            className="min-h-11 rounded-lg bg-amber-400 px-4 text-sm font-black text-black"
+            className="min-h-11 rounded-lg bg-amber-400 px-4 text-left text-sm font-black text-black"
           >
-            + 새 게임
+            + 새 게임(같은 날 다른 이벤트)
           </button>
           <button
             type="button"
@@ -1107,9 +1148,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 copySettings: false,
               })
             }
-            className="min-h-11 rounded-lg border border-white/30 px-3 text-sm font-bold"
+            className="min-h-11 rounded-lg border border-white/30 px-3 text-left text-sm font-bold"
           >
-            ✎ 날짜·이름
+            ✎ 날짜 · 이름 고치기
           </button>
           {isEditor ? (
             <button
@@ -1139,11 +1180,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 return;
               await send({ type: "deleteGame" });
             }}
-            className="min-h-11 rounded-lg bg-rose-600 px-3 text-sm font-black text-white"
+            className="min-h-11 rounded-lg bg-rose-600 px-3 text-left text-sm font-black text-white"
           >
             🗑 게임 삭제
           </button>
         </div>
+        </details>
         {!isEditor && state.editors.length ? (
           <button
             type="button"
@@ -1196,92 +1238,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           </p>
         ) : null;
       })()}
-
-      {/* 처음 쓰는 사람용 3단계 안내: 다 끝나면(시간표가 생기면) 사라집니다 */}
-      {!plan || state.dealers.length === 0 ? (
-        <section
-          data-rotation-guide
-          aria-label="시작 안내"
-          className="grid gap-2 rounded-2xl border border-amber-400/50 bg-amber-950/40 p-3"
-        >
-          <h2 className="text-sm font-black text-amber-200">
-            처음이면 이 순서대로 해 주세요
-          </h2>
-          <ol className="grid gap-1.5 sm:grid-cols-3">
-            {(
-              [
-                {
-                  key: "dealers",
-                  no: "①",
-                  title: "딜러 등록",
-                  body: `딜러 탭 · 지금 ${state.dealers.length}명`,
-                  done: state.dealers.length > 0,
-                },
-                {
-                  key: "settings",
-                  no: "②",
-                  title: "테이블 정하기",
-                  body: state.tableCount
-                    ? `설정 탭 · 지금 ${state.tableCount}개`
-                    : "설정 탭 · 예: 1~8 또는 A~D",
-                  done: state.tableCount > 0,
-                },
-                {
-                  key: "run",
-                  no: "③",
-                  title: "Auto 누르기",
-                  body: "시간표 자동 완성",
-                  done: !!plan,
-                },
-              ] as const
-            ).map((step, index, steps) => {
-              // 앞 단계가 다 끝난 첫 단계를 강조
-              const active =
-                !step.done && steps.slice(0, index).every((s) => s.done);
-              return (
-                <li key={step.key}>
-                  <button
-                    type="button"
-                    data-guide-step={step.key}
-                    disabled={busy}
-                    onClick={() => {
-                      setTab(step.key);
-                      // ③은 바로 Auto(앞 단계가 남았으면 runAuto가 무엇부터 할지 알려 줌)
-                      if (step.key === "run") runAuto();
-                    }}
-                    className={cn(
-                      "flex min-h-12 w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition active:scale-[0.98]",
-                      step.done
-                        ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-200"
-                        : active
-                          ? "border-amber-400 bg-amber-400 text-black"
-                          : "border-white/15 bg-black/40 text-zinc-300",
-                    )}
-                  >
-                    <span className="text-lg font-black">
-                      {step.done ? "✔" : step.no}
-                    </span>
-                    <span className="grid min-w-0 flex-1">
-                      <span className="text-sm font-black">{step.title}</span>
-                      <span
-                        className={cn(
-                          "truncate text-xs",
-                          active ? "text-black/70" : "opacity-75",
-                        )}
-                      >
-                        {step.body}
-                      </span>
-                    </span>
-                    <span aria-hidden className="text-base font-black">
-                      ›
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-      ) : null}
 
       {/* 게임 수 한도에 가까우면 지난 게임 정리 안내 */}
       {myGames.length >= MAX_GAMES - 20 ? (
@@ -1341,7 +1297,97 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </p>
       ) : null}
 
-      {tab === "run" ? (
+      {tab === "run" && !plan ? (
+        <section data-quick-start aria-label="빠른 시작" className="grid gap-3 rounded-2xl border-2 border-amber-400 bg-amber-950/30 p-3">
+          <div className="grid gap-0.5">
+            <h2 className="text-lg font-black text-amber-200">시간표 만들기</h2>
+            <p className="text-xs text-amber-100/80">아래 네 칸만 채우고 버튼을 누르면 교대표가 바로 만들어져요. 나중에 설정 · 딜러 탭에서 언제든 바꿀 수 있어요.</p>
+          </div>
+          {state.plan ? (
+            <p className="rounded-lg bg-rose-950/60 px-2 py-1 text-xs font-bold text-rose-200">테이블 번호가 바뀌어 시간표를 다시 만들어야 해요.</p>
+          ) : null}
+          <label className="grid gap-1">
+            <span className="text-sm font-black">① 테이블 번호</span>
+            <input
+              data-qs-tables
+              value={qsTables}
+              onChange={(e) => setQsTables(e.target.value)}
+              placeholder="예: 1~8 · 또는 A~D · 쉼표로 7, 9, 12"
+              className="h-12 rounded-xl border border-white/25 bg-black px-3 text-lg font-black"
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="grid gap-1">
+              <span className="text-sm font-black">② 게임 시작</span>
+              <input
+                data-qs-start
+                type="time"
+                value={qsStart}
+                onChange={(e) => setQsStart(e.target.value)}
+                className="h-12 rounded-xl border border-white/25 bg-black px-2 text-lg font-black"
+              />
+            </label>
+            <label className="grid gap-1">
+              <span className="text-sm font-black">③ 교대 간격</span>
+              <select
+                data-qs-interval
+                value={qsInterval}
+                onChange={(e) => setQsInterval(Number(e.target.value))}
+                className="h-12 rounded-xl border border-white/25 bg-black px-2 text-lg font-black"
+              >
+                {[...new Set([...INTERVAL_CHOICES, qsInterval])].sort((a, b) => a - b).map((m) => (
+                  <option key={m} value={m}>
+                    {m}분마다
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="grid gap-1">
+            <span className="flex flex-wrap items-center gap-2 text-sm font-black">
+              ④ 딜러 명단
+              {state.dealers.length ? <span className="rounded bg-emerald-700 px-1.5 text-xs">이미 {state.dealers.length}명 등록됨 ✓</span> : null}
+              <span className="text-xs font-bold text-zinc-400">한 줄에 한 명 · 늦게 오면 시간(김딜러 18:00) · 딜 안 하면 「스태프」</span>
+            </span>
+            <textarea
+              data-qs-dealers
+              value={qsText}
+              onChange={(e) => setQsText(e.target.value)}
+              rows={5}
+              placeholder={"김딜러\n이딜러\n박딜러 18:00\n최실장 스태프"}
+              className="rounded-xl border border-white/25 bg-black px-3 py-2 text-base font-bold"
+            />
+          </label>
+          {state.rosters.length ? (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="font-bold text-zinc-300">저장한 명단 불러오기:</span>
+              {state.rosters.map((r) => (
+                <button key={r.id} type="button" onClick={() => setQsText(r.text)} className="min-h-9 rounded-lg border border-white/25 px-2 font-bold">
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <button
+            type="button"
+            data-qs-go
+            disabled={busy || autoAfter}
+            onClick={() => void quickStart()}
+            className="min-h-14 rounded-xl bg-amber-400 text-xl font-black text-black disabled:opacity-50"
+          >
+            {autoAfter ? "만드는 중…" : "시간표 만들기"}
+          </button>
+          <p className="text-xs text-zinc-400">
+            자동 말고 칸을 직접 채우고 싶다면{" "}
+            <button type="button" data-rot-manual disabled={busy} onClick={startManual} className="font-bold text-sky-300 underline">
+              ✋ 직접 배치로 시작
+            </button>
+            (테이블 번호는 먼저 저장돼 있어야 해요).
+          </p>
+        </section>
+      ) : null}
+
+      {tab === "run" && plan ? (
         <>
           {/* 운영 현황 */}
           <section
@@ -1422,8 +1468,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </>
               ) : null}
             </p>
-            {/* 게임 중 테이블 추가 오픈 */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            {/* 게임 중 테이블 추가 오픈(접어 둠) */}
+            <details data-add-tables className="group/add" open={Boolean(addText)}>
+              <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 text-sm font-black text-emerald-300 [&::-webkit-details-marker]:hidden">
+                ＋ 테이블 추가 오픈 <span className="text-xs font-bold text-zinc-400">(게임 중 새 테이블 · 러닝 시각)</span>
+                <span className="ml-auto transition-transform group-open/add:rotate-180">▾</span>
+              </summary>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <input
                 aria-label="추가로 열 테이블"
                 value={addText}
@@ -1460,6 +1511,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 개(예: 7, 9, C). 숫자는 T1, 알파벳은 A로 보여요. 시각(예: 13:10)을 넣으면 그때부터 딜러가 들어가요(그 전엔 스탠바이)
               </span>
             </div>
+            </details>
             {openNotice ? (
               <p
                 data-open-notice
@@ -1959,7 +2011,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ) : null}
 
           {/* 시간표 */}
-          <section aria-label="시간표" className="poka-watermark grid gap-2">
+          <section aria-label="시간표" hidden={!plan} className="poka-watermark grid gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-black">로테이션 시간표</h2>
               {plan ? (
@@ -2021,7 +2073,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               {!plan ? (
                 <button
                   type="button"
-                  data-rot-manual
                   disabled={busy}
                   onClick={startManual}
                   title="빈 시간표를 만들고, 칸을 눌러 딜러를 직접 넣습니다(자동으로 다시 짜지 않음)"
