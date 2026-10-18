@@ -147,8 +147,10 @@ export type RotationAction =
     }
   | { type: "clearPlan" }
   | { type: "setShare"; on: boolean }
-  | { type: "savePlan"; plan: RotationPlan | null }
-  | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null; blocked?: string[] }
+  /** baseVersion: 이 시간표를 짤 때 본 변경 번호 — 그 사이 다른 사람이 바꿨으면 덮어쓰지 않고 알려 줌 */
+  | { type: "savePlan"; plan: RotationPlan | null; baseVersion?: number }
+  /** openedAt: 추가 오픈 테이블 러닝 시각(분) — null이면 지움(처음부터 러닝) */
+  | { type: "setTable"; label: number; button?: number | null; closedAt?: number | null; blocked?: string[]; openedAt?: number | null }
   /** 테이블 번호 바꾸기(잘못 연 번호 고치기) — 그 테이블 시간표 · 버튼 자리는 그대로 */
   | { type: "renameTable"; from: number; to: string }
   /** 테이블 삭제(다시 열기 없음) — 그 테이블에 있던 딜러는 휴식으로 */

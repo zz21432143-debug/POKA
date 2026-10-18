@@ -353,12 +353,21 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         const response = await fetch("/api/tools/rotation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game: gameRef.current, action }),
+          body: JSON.stringify({
+            game: gameRef.current,
+            // 같이 편집: 시간표는 통째로 저장하니, 내가 본 뒤 다른 사람이 바꿨으면 덮어쓰지 않음
+            action: action.type === "savePlan" && action.baseVersion === undefined ? { ...action, baseVersion: versionRef.current } : action,
+          }),
         });
         const data = (await response.json()) as {
           state?: RotationStateView;
           error?: string;
+          conflict?: boolean;
         };
+        if (response.status === 409 && data.conflict && data.state) {
+          showState(data.state);
+          throw new Error(data.error ?? "다른 사람이 방금 바꿨어요. 다시 눌러 주세요.");
+        }
         if (!response.ok || !data.state)
           throw new Error(data.error ?? "저장하지 못했습니다.");
         showState(data.state);
@@ -634,7 +643,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
 
   /** Auto: 지금 칸 빈자리(퇴근·컨바인) 채우고, 다음 칸부터 딜·휴식 시간 맞춰 다시 짬 */
   /** Auto 계산(시간표 · 딜러 목록을 바꿔 넣을 수 있게) */
-  function autoBuild(basePlan: RotationPlan | null, views: typeof state.dealers) {
+  function autoBuild(basePlan: RotationPlan | null, views: typeof state.dealers, openFromNow = openedFrom) {
     const nowMin = nowMinutes(start, new Date());
     const leftIds = new Set(views.filter((d) => d.status === "LEFT").map((d) => d.id));
     // 지금 칸이 시작한 시각: 칸 중간에 출근 체크한 딜러도 지금 칸부터 넣음(다음 교대까지 테이블이 비지 않게)
@@ -663,7 +672,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       closedFrom,
       maxStreak,
       blocked,
-      openFrom: openedFrom,
+      openFrom: openFromNow,
     });
   }
 
@@ -752,6 +761,33 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     const to = window.prompt(`${tableWord(label)} 번호를 무엇으로 바꿀까요? (예: 7 또는 B)`, "");
     if (!to || !to.trim()) return;
     await send({ type: "renameTable", from: label, to: to.trim() });
+  }
+
+  /** 러닝 시각 바꾸기(스탠바이): 예 13:10 → 그 시각부터 딜러. 비우면 처음부터 러닝 */
+  async function setOpenTime(t: number) {
+    const label = labels[t];
+    const cur = openedFrom[t];
+    const value = window.prompt(
+      `${tableWord(label)} 러닝 시각(예: 13:10)\n그 시각부터 딜러가 들어가요(그 전엔 스탠바이). 비우면 처음부터 러닝.`,
+      cur != null ? formatClock(cur) : "",
+    );
+    if (value == null) return;
+    const parsed = value.trim() ? parseClock(value.trim()) : null;
+    if (value.trim() && parsed == null) {
+      setError("러닝 시각을 확인하세요(예: 13:10).");
+      return;
+    }
+    const at = parsed == null ? null : alignToStart(parsed, start);
+    if (!(await send({ type: "setTable", label, openedAt: at }))) return;
+    // 시간표가 있으면 바로 다시 짜기(직접 배치면 칸은 그대로 · 안내만)
+    if (!plan) return;
+    if (manual) {
+      setOpenNotice(`${tableTag(label)} 러닝 시각을 ${at == null ? "처음부터" : formatClock(at)}로 바꿨어요. 직접 배치라 칸은 손으로 맞춰 주세요.`);
+      return;
+    }
+    const nextOpen = openedFrom.map((v, i) => (i === t ? at : v));
+    await send({ type: "savePlan", plan: autoBuild(plan, state.dealers, nextOpen) });
+    setOpenNotice(`${tableTag(label)} 러닝 시각을 ${at == null ? "처음부터" : formatClock(at)}로 바꾸고 시간표를 다시 맞췄어요.`);
   }
 
   /** 테이블 삭제(다시 열기 없음) */
@@ -1098,6 +1134,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             🗑 게임 삭제
           </button>
         </div>
+        {!isEditor && state.editors.length ? (
+          <button
+            type="button"
+            data-coedit-count
+            onClick={() => setTab("share")}
+            className="basis-full justify-self-start rounded-lg bg-violet-950/60 px-2 py-1 text-left text-xs font-bold text-violet-200"
+          >
+            👥 {state.editors.length}명이 같이 편집 중 · {state.editors.map((e) => e.name).join(", ")} (공유 탭에서 관리)
+          </button>
+        ) : null}
         {isEditor ? (
           <p data-coedit-banner className="basis-full rounded-lg bg-violet-950/60 px-2 py-1 text-xs font-bold text-violet-200">
             👥 {state.game.ownerName ?? "다른 계정"}님의 게임을 같이 편집하고 있어요. 바꾸면 모두의 화면에 바로 반영됩니다.
@@ -1635,13 +1681,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </label>
               {labels.length ? (
                 <div data-settings-tables className="col-span-2 grid gap-1 sm:col-span-3">
-                  <span className="text-xs font-bold text-zinc-300">테이블별: 번호 바꾸기 · 🚫 못 넣는 딜러 · 삭제(다시 열기 없음)</span>
+                  <span className="text-xs font-bold text-zinc-300">테이블별: 번호 바꾸기 · ⏰ 러닝 시각(스탠바이) · 🚫 못 넣는 딜러 · 삭제(다시 열기 없음)</span>
                   <ul className="flex flex-wrap gap-1.5">
                     {labels.map((label, t) => (
                       <li key={label} className="flex items-center gap-0.5 rounded-lg border border-white/15 bg-zinc-900 px-1.5 py-1">
                         <b className={cn("px-1 text-sm", closedFrom[t] != null ? "text-rose-400" : "text-emerald-300")}>{tableTag(label)}</b>
                         <button type="button" disabled={busy} onClick={() => void renameTable(t)} className="min-h-8 rounded border border-white/25 px-1.5 text-[11px] font-black">
                           번호
+                        </button>
+                        <button
+                          type="button"
+                          data-open-time={label}
+                          disabled={busy}
+                          onClick={() => void setOpenTime(t)}
+                          title="러닝 시각(스탠바이) 바꾸기"
+                          className={cn("min-h-8 rounded border px-1.5 text-[11px] font-black", openedFrom[t] != null ? "border-emerald-400 text-emerald-200" : "border-white/25")}
+                        >
+                          ⏰{openedFrom[t] != null ? formatClock(openedFrom[t] as number) : ""}
                         </button>
                         <button
                           type="button"
@@ -2199,10 +2255,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                   ) : null}
                                   {closedFrom[t] == null &&
                                   openedFrom[t] != null ? (
-                                    <span className="block text-[10px] font-black text-emerald-300">
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => void setOpenTime(t)}
+                                      title="러닝 시각 바꾸기"
+                                      className="block text-[10px] font-black text-emerald-300 underline decoration-dotted"
+                                    >
                                       {formatClock(openedFrom[t] as number)}{" "}
-                                      오픈
-                                    </span>
+                                      오픈 ⏰
+                                    </button>
                                   ) : null}
                                 </th>
                                 {rows.map(({ slot, index }) => {

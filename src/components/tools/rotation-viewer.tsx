@@ -5,7 +5,7 @@ import Link from "@/components/ui/link";
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { closedFromOf, formatWorkDate, kstClock, nowMinutes, openedFromOf, tableTag, type RotationShareView } from "@/lib/rotation";
-import { formatClock, parseClock, slotIndexAt } from "@/lib/rotation-plan";
+import { formatClock, parseClock, slotIndexAt, tableOpenAt } from "@/lib/rotation-plan";
 import { swapInfo } from "@/components/tools/rotation-export";
 import { RotationTvScreen, type TvTheme } from "@/components/tools/rotation-tv";
 
@@ -131,10 +131,21 @@ export function RotationViewer({
   const closedFrom = useMemo(() => closedFromOf(labels, state.tableState), [labels, state.tableState]);
   const button = state.tableState["0"]?.button ?? null;
   const { current, next } = plan ? slotIndexAt(plan, now) : { current: -1, next: -1 };
-  const swap = plan ? swapInfo(plan, labels, current, next, closedFrom, openedFromOf(labels, state.tableState)) : null;
+  const openedFrom = useMemo(() => openedFromOf(labels, state.tableState), [labels, state.tableState]);
+  const swap = plan ? swapInfo(plan, labels, current, next, closedFrom, openedFrom) : null;
   const nowAt = plan ? (plan.slots[Math.max(0, current)]?.at ?? now) : now;
-  const openTables = labels.map((label, t) => ({ label, t })).filter(({ t }) => closedFrom[t] == null || (closedFrom[t] as number) > nowAt);
   const cols = plan ? plan.slots.map((slot, index) => ({ slot, index })).slice(Math.max(0, current), Math.max(0, current) + (narrow ? COLS_NARROW : COLS)) : [];
+  const interval = plan?.interval ?? state.interval;
+  // 보이는 칸 안에 열리지 않는 테이블(스탠바이)은 빼고, 컨바인 끝난 테이블도 뺌
+  const lastAt = cols.length ? cols[cols.length - 1].slot.at : nowAt;
+  const openTables = labels
+    .map((label, t) => ({ label, t }))
+    .filter(({ t }) => (closedFrom[t] == null || (closedFrom[t] as number) > nowAt) && tableOpenAt(t, lastAt, interval, [], openedFrom));
+  /** 칸 중간에 여는 테이블: 그 칸에 딜러가 앉는 시각(예: 13:10) */
+  const opensIn = (t: number, at: number) => {
+    const o = openedFrom[t];
+    return o != null && o > at && o < at + interval ? o : null;
+  };
   const meId = state.dealers.find((d) => d.name === me)?.id ?? null;
   const mySchedule = plan && meId
     ? cols.map(({ slot, index }) => {
@@ -368,15 +379,24 @@ export function RotationViewer({
                   {cols.map(({ slot, index }) => {
                     const id = slot.seats[t];
                     const shut = closedFrom[t] != null && slot.at >= (closedFrom[t] as number);
+                    const standby = !tableOpenAt(t, slot.at, interval, [], openedFrom);
+                    const opens = opensIn(t, slot.at);
                     return (
                       <td key={slot.at} className={cn("px-0.5 py-0.5 sm:p-1", index === current && "bg-emerald-950")}>
                         <span
                           className={cn(
                             "grid place-items-center truncate rounded-lg px-1 py-1.5 text-sm font-black sm:text-base",
-                            shut ? "border border-rose-500 bg-rose-950 text-rose-300" : id && id === meId ? "bg-sky-500 text-black" : "bg-zinc-800",
+                            shut
+                              ? "border border-rose-500 bg-rose-950 text-rose-300"
+                              : standby
+                                ? "border border-dashed border-white/15 bg-zinc-900 text-xs text-zinc-500"
+                                : id && id === meId
+                                  ? "bg-sky-500 text-black"
+                                  : "bg-zinc-800",
                           )}
                         >
-                          {shut ? "컨바인" : name(id) || "—"}
+                          {shut ? "컨바인" : standby ? "오픈 전" : name(id) || "—"}
+                          {!shut && !standby && opens != null ? <span className="text-[10px] text-emerald-300">{formatClock(opens)}~</span> : null}
                         </span>
                       </td>
                     );
@@ -422,6 +442,7 @@ export function RotationViewer({
         openTables={openTables}
         name={name}
         closedFrom={closedFrom}
+        openedFrom={openedFrom}
         current={current}
         next={next}
         swap={swap}

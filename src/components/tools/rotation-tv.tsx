@@ -109,6 +109,7 @@ export function RotationTvScreen({
   openTables,
   name,
   closedFrom,
+  openedFrom = [],
   current,
   next,
   swap,
@@ -128,6 +129,8 @@ export function RotationTvScreen({
   openTables: { label: number; t: number }[];
   name: (id: string | null) => string;
   closedFrom: (number | null)[];
+  /** 추가 오픈 러닝 시각(스탠바이) */
+  openedFrom?: (number | null)[];
   current: number;
   next: number;
   swap: Swap;
@@ -204,7 +207,10 @@ export function RotationTvScreen({
     };
   }, []);
 
-  const pageCount = Math.max(1, Math.ceil(openTables.length / TV_PAGE));
+  // 지금 · 다음 교대 칸에 아직 안 여는 테이블(스탠바이)은 TV에서 뺌(큰 화면 자리 아끼기)
+  const lastSlotAt = plan ? plan.slots[next >= 0 ? next : Math.max(0, current)]?.at : undefined;
+  const tvTables = openTables.filter(({ t }) => openedFrom[t] == null || lastSlotAt == null || (openedFrom[t] as number) < lastSlotAt + (plan?.interval ?? 30));
+  const pageCount = Math.max(1, Math.ceil(tvTables.length / TV_PAGE));
   useEffect(() => {
     if (pageCount <= 1) return;
     const timer = window.setInterval(() => setPageTick((n) => n + 1), pageSeconds * 1000);
@@ -212,10 +218,18 @@ export function RotationTvScreen({
   }, [pageCount, pageSeconds]);
 
   const pageIndex = pageTick % pageCount;
-  const pageTables = openTables.slice(pageIndex * TV_PAGE, pageIndex * TV_PAGE + TV_PAGE);
+  const pageTables = tvTables.slice(pageIndex * TV_PAGE, pageIndex * TV_PAGE + TV_PAGE);
   // 지금 칸 · 다음 교대 칸만(게임 시작 전이면 첫 칸만)
   const cols = plan ? [current, next].filter((i, k, all) => i >= 0 && all.indexOf(i) === k).map((index) => ({ slot: plan.slots[index], index })) : [];
-  const cellText = (t: number, slotAt: number, seat: string | null) => (closedFrom[t] != null && slotAt >= (closedFrom[t] as number) ? "컨바인" : name(seat) || "—");
+  const interval = plan?.interval ?? 30;
+  const cellText = (t: number, slotAt: number, seat: string | null) => {
+    if (closedFrom[t] != null && slotAt >= (closedFrom[t] as number)) return "컨바인";
+    const o = openedFrom[t];
+    if (o != null && o >= slotAt + interval) return "오픈 전";
+    // 칸 중간에 여는 테이블: 앉는 시각을 앞에(예: 13:10~ 김딜러)
+    if (o != null && o > slotAt && seat) return `${formatClock(o)}~ ${name(seat)}`;
+    return name(seat) || "—";
+  };
   const nameEm = Math.max(3, ...pageTables.flatMap(({ t }) => cols.map(({ slot }) => textEm(cellText(t, slot.at, slot.seats[t])))));
   const labelEm = Math.max(1.5, ...pageTables.map(({ label }) => textEm(tableTag(label))));
   const layout = tvLayout(pageTables.length, cols.length, size.w, size.h, nameEm, labelEm);
@@ -379,7 +393,7 @@ export function RotationTvScreen({
                               text === "컨바인" ? c.shut : index === next ? c.nextCell : c.nowCell,
                               "transition-opacity duration-300",
                               index === next && dim && "opacity-45",
-                              text === "—" && c.empty,
+                              (text === "—" || text === "오픈 전") && c.empty,
                             )}
                             style={{ fontSize: font }}
                           >

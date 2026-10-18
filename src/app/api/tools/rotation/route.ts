@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools } from "@/lib/dealer-tools-access";
-import { RotationError, applyRotation, loadRotation, rotationVersion } from "@/lib/rotation-server";
+import { RotationConflict, RotationError, applyRotation, loadRotation, rotationVersion } from "@/lib/rotation-server";
 import type { RotationAction } from "@/lib/rotation";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +40,10 @@ export async function POST(request: Request) {
   try {
     game = await applyRotation(access.ownerId, typeof body.game === "string" ? body.game : null, body.action);
   } catch (error) {
+    // 덮어쓰기 막음: 최신 상태를 같이 보내 화면이 바로 새 내용으로 바뀌게
+    if (error instanceof RotationConflict) {
+      return NextResponse.json({ error: error.message, conflict: true, state: await loadRotation(access.ownerId, typeof body.game === "string" ? body.game : null) }, { status: 409 });
+    }
     if (error instanceof RotationError) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ error: "저장하지 못했습니다. 다시 시도해 주세요." }, { status: 500 });
   }

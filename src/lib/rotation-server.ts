@@ -278,6 +278,8 @@ export async function sharedVersion(token: string) {
 }
 
 export class RotationError extends Error {}
+/** 다른 사람(다른 기기)이 먼저 바꿔서 이 시간표로 덮어쓰면 안 될 때 */
+export class RotationConflict extends RotationError {}
 
 /** 시간표가 형식에 맞는지(딜러 id는 문자열, 칸 수 상한) 확인 */
 function validPlan(plan: RotationPlan, tableCount: number) {
@@ -452,6 +454,9 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
       }
       case "savePlan": {
         const m = await tx.rotationMeta.findUnique({ where: { id: META_ID } });
+        if (action.baseVersion != null && Number.isFinite(Number(action.baseVersion)) && m && m.version !== Number(action.baseVersion)) {
+          throw new RotationConflict("다른 사람이 방금 시간표를 바꿨어요. 새 내용을 불러왔으니 확인하고 다시 눌러 주세요.");
+        }
         if (action.plan && !validPlan(action.plan, m?.tableCount ?? 20)) {
           throw new RotationError("시간표 형식이 맞지 않습니다. 다시 짜 주세요.");
         }
@@ -469,6 +474,7 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
           row.button = b != null && b >= 1 && b <= 10 ? b : null;
         }
         if (action.closedAt !== undefined) row.closedAt = action.closedAt == null || !Number.isFinite(Number(action.closedAt)) ? null : Math.floor(Number(action.closedAt));
+        if (action.openedAt !== undefined) row.openedAt = action.openedAt == null || !Number.isFinite(Number(action.openedAt)) ? null : Math.floor(Number(action.openedAt));
         if (action.blocked !== undefined) {
           const ids = new Set((await tx.rotationDealer.findMany({ where: { gameId: META_ID }, select: { id: true } })).map((d) => d.id));
           row.blocked = Array.isArray(action.blocked) ? [...new Set(action.blocked.filter((id): id is string => typeof id === "string" && ids.has(id)))] : [];
