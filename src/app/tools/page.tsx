@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { MonitorPlayIcon, RefreshCwIcon, ShuffleIcon, TimerIcon, WalletIcon } from "lucide-react";
 import { ToolCard } from "@/components/tools/tool-card";
+import { ToolGuideSection } from "@/components/tools/tool-guide-section";
+import Link from "@/components/ui/link";
 import { toolMetadata } from "@/lib/tool-seo";
 import { getCurrentUser } from "@/lib/current-user";
 import { canUseDealerTools, DEALER_TOOLS_OPEN } from "@/lib/dealer-tools-access";
@@ -20,18 +22,29 @@ const TOOLS = [
 
 export default async function ToolsPage() {
   const user = await getCurrentUser().catch(() => null);
-  if (!canUseDealerTools(user)) return <ToolsLocked />;
+  // 로그인 전에도 도구 목록은 보여 줌(샷클락은 바로 쓰고, 나머지는 눌러서 들어가면 로그인 안내)
+  const guest = !user && DEALER_TOOLS_OPEN;
+  if (!guest && !canUseDealerTools(user)) return <ToolsLocked />;
   return (
     <div className="flex flex-col gap-4">
       <header className="board-intro">
         <BoardTitle sticker={BOARD_STICKER.tools}>매장 관리</BoardTitle>
         <p className="mt-2">대회 현장 운영 도구입니다.{DEALER_TOOLS_OPEN ? " 로테이션은 계정마다 따로 저장되어 다른 사람에게 보이지 않습니다." : " 지금은 마스터 계정만 볼 수 있습니다(제작 중)."}</p>
+        {guest ? (
+          <p className="mt-2 text-sm">
+            샷클락은 로그인 없이 바로, 나머지 도구는 회원 무료입니다.{" "}
+            <Link href="/login?tab=login&next=%2Ftools" className="font-bold text-[#e7c98a] underline">
+              로그인하고 무료로 쓰기
+            </Link>
+          </p>
+        ) : null}
       </header>
       <div className="grid gap-3 sm:grid-cols-2">
         {TOOLS.map((tool) => (
           <ToolCard key={tool.href} href={tool.href} icon={tool.icon} title={tool.title} body={tool.body} />
         ))}
       </div>
+      {guest ? <ToolGuideSection path="/tools" /> : null}
     </div>
   );
 }

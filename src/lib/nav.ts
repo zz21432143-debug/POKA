@@ -38,6 +38,10 @@ export type SidebarItem = NavItem & { icon: SidebarIcon; /** 메뉴 옆 작은 �
 
 export type SidebarGroup = {
   title: string | null;
+  /** 왼쪽 메뉴 한 줄(묶음)을 누르면 가는 모음 화면 */
+  hub?: string;
+  /** 묶음 줄 아이콘(브랜드 아이콘 이름) */
+  icon?: SidebarIcon;
   items: SidebarItem[];
   /** 사이드바에서 접어 둘 수 있는 그룹 */
   collapsible?: boolean;
@@ -63,7 +67,10 @@ export function topNavPath(pathname: string) {
   return pathname;
 }
 
-/** 홈 사이드바(시안). 피드 검증용 BOARD_NAV와 분리 */
+/**
+ * 왼쪽 메뉴: 홈 + 큰 묶음 6줄(최소형). 묶음을 누르면 모음 화면(hub)으로 가고,
+ * 지금 보는 페이지가 그 묶음 안이면 아래에 세부 메뉴가 펼쳐집니다.
+ */
 export const SIDEBAR_NAV: SidebarGroup[] = [
   {
     title: null,
@@ -71,71 +78,85 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
   },
   {
     title: "구인구직",
+    hub: "/boards/jobs",
+    icon: "chips",
     items: [
       // 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "chips" },
-      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "lantern" },
       { href: "/boards/jobs/urgent", label: "급구 / 대타", hint: "당일 · 긴급", icon: "flame" },
+      { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "lantern" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "noren" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "oni" },
     ],
   },
   {
-    // 회원끼리 이야기하는 곳
-    title: "커뮤니티",
+    // 매장 · 대회 운영 도구(샷클락은 로그인 없이, 나머지는 회원 무료)
+    title: "매장 관리",
+    hub: "/tools",
+    icon: "noren",
     items: [
-      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문", icon: "cloud" },
-      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
-      { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제", icon: "seal" },
-      { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
-      { href: "/games", label: "요괴 오락실", hint: "요괴 오목 · 윷놀이", icon: "cards" },
-      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
-      { href: "/invite", label: "친구 초대", hint: "친구 첫 출석하면 둘 다 포인트", icon: "coin", badge: "NEW" },
+      { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
+      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
+      { href: "/tools/shot-clock", label: "샷클락", hint: "플레이어 생각 시간", icon: "lantern" },
+      { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
+      { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
     ],
   },
   {
-    // 무료 공부 · 계산 도구(로그인 없이)
+    // 가이드 · 무료 공부 · 계산 도구(로그인 없이)
     title: "홀덤 공부",
+    hub: "/study",
+    icon: "scroll",
     items: STUDY_ITEMS,
   },
   {
-    // 읽는 곳: 대회 일정 · 룰 · 가이드
-    title: "대회 · 정보",
-    collapsible: true,
-    closed: true,
+    // 회원끼리 이야기하는 곳 + 대회 일정 · 룰
+    title: "커뮤니티",
+    hub: "/community",
+    icon: "cloud",
     items: [
+      { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문", icon: "cloud" },
+      { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
     ],
   },
   {
-    // 매장 · 대회 운영 도구. 로그인한 회원 누구나(로테이션 · 현황판은 계정마다 따로).
-    title: "매장 관리",
-    collapsible: true,
-    closed: true,
+    // 포인트 · 레벨 · 놀이
+    title: "포인트 · 놀이",
+    hub: "/play",
+    icon: "omamori",
     items: [
-      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
-      { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
-      { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
-      { href: "/tools/shot-clock", label: "샷클락", hint: "플레이어 생각 시간", icon: "lantern" },
-      { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
+      { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
+      { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제", icon: "seal" },
+      { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
+      { href: "/games", label: "요괴 오락실", hint: "요괴 오목 · 윷놀이", icon: "cards" },
+      { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },
+      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
+      { href: "/invite", label: "친구 초대", hint: "친구 첫 출석하면 둘 다 포인트", icon: "coin", badge: "NEW" },
     ],
   },
   {
-    // POKA 운영: 공지 · 홍보 · 포인트 · 문의 (운영 정책은 맨 아래 바닥글에)
+    // POKA 운영: 공지 · 홍보 · 문의 (운영 정책은 맨 아래 바닥글에)
     title: "POKA",
-    collapsible: true,
-    closed: true,
+    hub: "/poka",
+    icon: "bell",
     items: [
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "fan" },
-      { href: "/shop", label: "마크 상점", hint: "포인트로 마크 구매", icon: "coin" },
-      { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },
       { href: "/boards/suggestions", label: "건의사항", hint: "비밀글 가능", icon: "brush" },
       { href: "/advertise", label: "제휴 · 광고", hint: "문의하기", icon: "gourd" },
     ],
   },
 ];
+
+/** 이 주소가 왼쪽 메뉴 어느 묶음인지(모음 화면 또는 세부 메뉴) */
+export function sidebarGroupActive(pathname: string, group: SidebarGroup) {
+  if (group.hub && pathname === group.hub) return true;
+  // 구인 글쓰기 · 내 공고 등 구인 아래 주소는 구인구직
+  if (group.hub === "/boards/jobs" && pathname.startsWith("/boards/jobs/")) return true;
+  return group.items.some((item) => navItemActive(pathname, item.href));
+}
 
 /** 피드 키 연결용 게시판 트리 (사이드바 시안과 별개) */
 export const BOARD_NAV: NavGroup[] = [
