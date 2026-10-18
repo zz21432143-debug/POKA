@@ -99,6 +99,21 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
           </button>
         </div>
         {big ? (
+          // 붙여넣은 뒤 직접 할 일(본문에는 안내문을 넣지 않음 — 그대로 발행되지 않게)
+          <div data-blog-todo className="grid gap-1 rounded-xl border border-amber-400/60 bg-amber-500/10 p-3 text-sm text-amber-100">
+            <b>붙여넣은 뒤 꼭 할 일 2가지</b>
+            <span>
+              ✍️ 「{d.kind === "tool" ? "이렇게 써요" : "이 글에서 다루는 것"}」 바로 위에 <b>직접 한두 줄</b> 쓰기 — 예:{" "}
+              {d.kind === "holdem"
+                ? "「매장에서 보면 처음 오신 분들이 이 부분을 가장 많이 헷갈려요.」"
+                : d.kind === "tool"
+                  ? "「매장에서 써 보니 손님들이 시간을 덜 끌어서 테이블이 빨라졌어요.」"
+                  : "「7년 동안 딜러를 하면서 이 실수를 가장 많이 봤어요.」"}
+            </span>
+            <span>📷 같은 자리에 사진 한 장 넣기{d.photo ? " (아래 「사진」 화면 캡처)" : ""}</span>
+          </div>
+        ) : null}
+        {big ? (
           <pre className="max-h-80 overflow-y-auto rounded-xl bg-black/40 p-3 font-sans text-[13px] leading-6 whitespace-pre-wrap text-[#ece4d6]">{d.body}</pre>
         ) : null}
         <p className="text-xs text-muted-foreground">{d.tags}</p>

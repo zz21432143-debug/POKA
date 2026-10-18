@@ -79,8 +79,6 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
     points.length ? "이 글에서 다루는 것" : "",
     ...points.map((p) => `✔ ${p.head}${p.line ? `\n   ${p.line}` : ""}`),
     "",
-    "✍️ (여기에 한두 줄: 매장에서 직접 겪은 일이나 느낀 점을 적으면 더 좋아요)",
-    "",
     `예시 · 계산까지 담은 전체 글은 POKA ${label}에서 볼 수 있어요.`,
     `👉 ${url}`,
     "",
@@ -116,8 +114,6 @@ function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
   const url = `${BASE}${t.path}?from=${BLOG_SOURCE}`;
   const body = [
     t.body,
-    "",
-    "✍️ (여기에 한두 줄: 매장에서 써 보니 어땠는지 적으면 더 좋아요)",
     "",
     "바로 써 보기 👉 " + url,
     "",
