@@ -18,6 +18,9 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
   const left = drafts.filter((d) => !posted[d.key]);
   const next = left[0] ?? null;
   const postedToday = Object.values(posted).filter((d) => d === today).length;
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase().replace(/\s+/g, "");
+  const found = q ? drafts.filter((d) => d.title.toLowerCase().replace(/\s+/g, "").includes(q)) : [];
 
   async function copy(id: string, text: string) {
     try {
@@ -150,10 +153,26 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
       ) : (
         <p className="text-sm text-emerald-300">모든 글감을 올렸어요! 새 가이드가 생기면 여기에 자동으로 추가돼요.</p>
       )}
-      <button type="button" onClick={() => setShowAll((v) => !v)} className="min-h-11 w-fit rounded-lg border border-border px-4 text-sm font-bold">
-        {showAll ? "전체 목록 접기" : `전체 목록 보기(${drafts.length}편)`}
-      </button>
-      {showAll ? (
+      {/* 글감 찾기: 제목 · 태그 몇 글자로(치면 목록이 바로 펼쳐짐) */}
+      <input
+        type="search"
+        data-blog-search
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="글감 찾기(제목) — 예: 딜러, 샷클락, 블러프, 토너먼트"
+        className="h-11 w-full rounded-lg border border-border bg-black px-3 text-base"
+      />
+      {q ? null : (
+        <button type="button" onClick={() => setShowAll((v) => !v)} className="min-h-11 w-fit rounded-lg border border-border px-4 text-sm font-bold">
+          {showAll ? "전체 목록 접기" : `전체 목록 보기(${drafts.length}편)`}
+        </button>
+      )}
+      {q ? (
+        <div className="grid gap-2">
+          <p className="text-xs text-muted-foreground">「{query.trim()}」 글감 {found.length}편</p>
+          {found.map((d) => card(d, false))}
+        </div>
+      ) : showAll ? (
         <div className="grid gap-2">
           {/* 올린 글(취소할 수 있게)부터, 그다음 남은 글 순서대로 */}
           {[...drafts.filter((d) => posted[d.key]), ...drafts.filter((d) => !posted[d.key] && d.key !== next?.key)].map((d) => card(d, false))}

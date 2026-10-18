@@ -86,16 +86,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
   ]
     .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
     .join("\n");
-  const tags = [
-    "홀덤",
-    kind === "holdem" ? "홀덤전략" : "홀덤딜러",
-    kind === "holdem" ? "포커공부" : "딜러가이드",
-    titleTag(g.title),
-    "POKA",
-  ]
-    .filter((t, i, all) => t && all.indexOf(t) === i)
-    .map((t) => `#${t}`)
-    .join(" ");
+  const tags = tagLine([titleTag(g.title), ...KIND_TAGS[kind]]);
   return {
     key: `${kind}:${g.slug}`,
     kind,
@@ -107,7 +98,28 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
   };
 }
 
-const POKA_LINE = "POKA는 딜러 구인 · 게임 현황판 · 딜러 로테이션 · 홀덤 공부 도구를 한곳에 모은 홀덤 커뮤니티예요.";
+/**
+ * 네이버 블로그 태그(최대 30개): 글 제목 태그 + 종류별 태그 + 모든 글 공통(TDA · GTO 꼭 포함).
+ * 글과 상관없는 태그를 많이 붙이면 오히려 손해라, 홀덤 · 딜러 · 매장 이야기에 맞는 것만.
+ */
+const COMMON_TAGS = ["홀덤", "텍사스홀덤", "포커", "홀덤토너먼트", "TDA", "TDA룰", "GTO", "홀덤펍", "POKA", "포카"];
+const KIND_TAGS: Record<BlogDraft["kind"], string[]> = {
+  holdem: ["홀덤전략", "홀덤공부", "포커공부", "포커전략", "홀덤팁", "홀덤초보", "GTO전략", "포커레인지", "팟오즈", ...COMMON_TAGS],
+  dealer: ["홀덤딜러", "포커딜러", "딜러가이드", "딜러실무", "딜러교육", "딜러구인", "홀덤딜러구인", "딜러알바", "홀덤매장", ...COMMON_TAGS],
+  tool: ["매장관리", "홀덤매장", "홀덤펍운영", "딜러로테이션", "게임현황판", "샷클락", "블라인드타이머", "홀덤딜러", ...COMMON_TAGS],
+};
+const MAX_TAGS = 30;
+
+function tagLine(tags: string[]) {
+  return tags
+    .map((t) => t.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter((t, i, all) => t && all.indexOf(t) === i)
+    .slice(0, MAX_TAGS)
+    .map((t) => `#${t}`)
+    .join(" ");
+}
+
+const POKA_LINE ="POKA는 딜러 구인 · 게임 현황판 · 딜러 로테이션 · 홀덤 공부 도구를 한곳에 모은 홀덤 커뮤니티예요.";
 
 /** 매장 관리 도구 소개 글(직접 쓴 글) */
 function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
@@ -119,7 +131,7 @@ function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
     "",
     POKA_LINE,
   ].join("\n");
-  const tags = ["홀덤", ...t.tags, "POKA"].map((x) => `#${x}`).join(" ");
+  const tags = tagLine([...t.tags, ...KIND_TAGS.tool]);
   return { key: `tool:${t.slug}`, kind: "tool", title: `${t.title} | 매장 관리`, body, tags, url, photo: `${BASE}${t.path}` };
 }
 
