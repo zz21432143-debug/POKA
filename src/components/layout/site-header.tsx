@@ -34,7 +34,7 @@ export function SiteHeader({
             <input
               type="search"
               name="q"
-              placeholder="검색어를 입력하세요."
+              placeholder="검색어 · 메뉴 이름(예: 출석, 로테이션)"
               className="search-inset h-10 w-full rounded-full pr-10 pl-4 text-sm outline-none placeholder:text-[#a89880] focus:ring-2 focus:ring-[#c9a25c]/50"
             />
           </label>

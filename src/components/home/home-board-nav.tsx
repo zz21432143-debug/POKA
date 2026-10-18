@@ -1,5 +1,6 @@
 import Link from "@/components/ui/link";
-import { BriefcaseIcon, CalendarDaysIcon, MessageCircleIcon, NewspaperIcon, ScrollTextIcon, SpadeIcon, StoreIcon, TrophyIcon } from "lucide-react";
+import { BriefcaseIcon, CalendarCheckIcon, CalendarDaysIcon, MessageCircleIcon, ScrollTextIcon, SpadeIcon, StoreIcon, TrophyIcon } from "lucide-react";
+import { getCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import { ttlCache } from "@/lib/ttl-cache";
@@ -26,9 +27,14 @@ async function todayCounts() {
   });
 }
 
-/** 홈 맨 위: 게시판 바로가기(아래로 내려가지 않아도 바로) · 오늘 새 글 수 · 최신글로 내려가기 */
+/** 홈 맨 위: 게시판 바로가기(아래로 내려가지 않아도 바로) · 오늘 새 글 수 · 출석(오늘 안 했으면 눈에 띄게) */
 export async function HomeBoardNav() {
-  const counts = await todayCounts().catch(() => ({}) as Record<string, number>);
+  const [counts, user] = await Promise.all([todayCounts().catch(() => ({}) as Record<string, number>), getCurrentUser().catch(() => null)]);
+  // 오늘 출석했는지(회원만)
+  const checked = user
+    ? Boolean(await prisma.dailyAttendance.findUnique({ where: { userId_date: { userId: user.id, date: todayKstDate() } }, select: { id: true } }).catch(() => null))
+    : false;
+  const attendLabel = !user ? "출석체크" : checked ? "출석 완료" : "출석하기";
   return (
     <nav aria-label="게시판 바로가기" data-home-board-nav>
       {/* 휴대폰: 4칸씩 두 줄(8개 꽉 차게) · 넓은 화면: 한 줄 */}
@@ -59,10 +65,18 @@ export async function HomeBoardNav() {
           );
         })}
         <li>
-          <a href="#home-latest" className="touch-target flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-2 text-[13px] font-black text-white sm:w-auto sm:px-3.5 sm:text-sm">
-            <NewspaperIcon aria-hidden className="size-4 shrink-0" />
-            최신글 ↓
-          </a>
+          <Link
+            href="/attendance"
+            data-home-attendance={user ? (checked ? "done" : "todo") : "guest"}
+            className={cn(
+              "touch-target relative flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border px-1 text-[12.5px] font-black sm:w-auto sm:px-3.5 sm:text-sm",
+              user && checked ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200" : "border-[#ff8a8a]/80 bg-[#7a1c22] text-white",
+            )}
+          >
+            <CalendarCheckIcon aria-hidden className="size-4 shrink-0" />
+            {attendLabel}
+            {user && !checked ? <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2.5 animate-pulse rounded-full bg-[#ffcf4a]" /> : null}
+          </Link>
         </li>
       </ul>
     </nav>

@@ -194,6 +194,20 @@ export function BoardNav({
           <span className="flex-1">홈</span>
           <ChevronRightIcon className="size-4 opacity-80" />
         </Link>
+        {/* 매일 쓰는 출석체크는 묶음 안에 숨기지 않고 홈 바로 아래 */}
+        <Link
+          href="/attendance"
+          onClick={onNavigate}
+          data-nav-attendance
+          className={cn(
+            "touch-target mt-1 flex min-h-11 items-center gap-2.5 rounded-xl px-3 text-[15px] font-semibold",
+            pathname.startsWith("/attendance") ? "bg-[#7a1c22] text-[#f6efe2]" : "text-[#ece3d3] hover:bg-[#2a2017] hover:text-[#e7c98a]",
+          )}
+        >
+          <NavIcon href="/attendance" icon="omamori" active={pathname.startsWith("/attendance")} />
+          <span className="flex-1">출석체크</span>
+          <span className="rounded-full bg-[#c9a25c]/20 px-2 py-0.5 text-[11px] font-black text-[#f3d9a4]">매일 P</span>
+        </Link>
       </div>
       <div
         className={

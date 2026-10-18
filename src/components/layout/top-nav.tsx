@@ -28,6 +28,17 @@ export function TopNav() {
         홈
         {pathname === "/" ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#F5EFE6]" /> : null}
       </Link>
+      <Link
+        href="/attendance"
+        data-top-attendance
+        className={cn(
+          "relative z-10 touch-target inline-flex min-h-11 items-center px-2.5 text-sm font-medium whitespace-nowrap xl:px-3",
+          pathname.startsWith("/attendance") ? "text-[#F5EFE6]" : "text-[#F5EFE6]/70 hover:text-[#F5EFE6]",
+        )}
+      >
+        출석
+        {pathname.startsWith("/attendance") ? <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-[#F5EFE6]" /> : null}
+      </Link>
       {groups.map((group) => {
         const active = section === group.title;
         const store = group.title === "매장 관리";

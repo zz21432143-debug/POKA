@@ -8,6 +8,7 @@ import { guestJobCard, toJobCard } from "@/lib/load-feed";
 import { cn } from "cn";
 import { getCurrentUser } from "@/lib/current-user";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
+import { searchMenus } from "@/lib/menu-search";
 
 export const metadata: Metadata = { title: "검색", robots: { index: false } };
 
@@ -93,12 +94,34 @@ export default async function SearchPage({
             type="search"
             name="q"
             defaultValue={query}
-            placeholder="지역, 매장, 제목으로 검색하세요."
+            placeholder="지역, 매장, 제목, 메뉴 이름(예: 출석)으로 검색하세요."
             className="ink-field h-11 w-full rounded-full px-4 text-sm outline-none focus:border-[#C59B27] focus:ring-2 focus:ring-[#C59B27]/30"
           />
           {scope !== "all" ? <input type="hidden" name="scope" value={scope} /> : null}
         </form>
       </header>
+      {query && searchMenus(query).length ? (
+        // 메뉴 이름으로 찾았을 때: 그 메뉴로 바로 가기(게시판이 많아 메뉴를 못 찾는 경우)
+        <section aria-label="메뉴 바로가기" data-menu-hits className="grid gap-2 rounded-2xl border border-[#c9a25c]/50 bg-[#c9a25c]/10 p-3">
+          <h2 className="text-sm font-black text-[#f3d9a4]">메뉴 바로가기</h2>
+          <ul className="grid gap-1.5 sm:grid-cols-2">
+            {searchMenus(query).map((m) => (
+              <li key={m.href}>
+                <Link href={m.href} className="flex min-h-12 items-center gap-2 rounded-xl bg-black/35 px-3 hover:bg-black/55">
+                  <span className="grid min-w-0 flex-1">
+                    <span className="truncate text-[15px] font-bold text-white">{m.label}</span>
+                    <span className="truncate text-xs text-[#b9aa92]">
+                      {m.group}
+                      {m.hint ? ` · ${m.hint}` : ""}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-bold text-[#e7c98a]">바로 가기 ›</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {query ? (
         <>
           <nav aria-label="검색 범위" className="flex gap-1.5">
