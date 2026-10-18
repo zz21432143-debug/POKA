@@ -14,6 +14,7 @@ import { HomeYokai } from "@/components/home/home-yokai";
 import { HomeMissions } from "@/components/home/home-missions";
 import { HomeRankings } from "@/components/home/home-rankings";
 import { HomeSummary } from "@/components/home/home-summary";
+import { HomeMyStatus } from "@/components/home/home-my-status";
 import { todayKstDate } from "@/lib/dates";
 import { getHomeFeed } from "@/lib/home-data";
 import { getPremiumBanners } from "@/lib/premium-banners";
@@ -133,6 +134,10 @@ export default async function HomePage() {
           <HomeSummary />
         </Suspense>
       </div>
+      {/* 회원: 레벨 · 경험치 · 포인트 · 연속 출석 · 출석 버튼 한 줄 */}
+      <Suspense fallback={null}>
+        <HomeMyStatus />
+      </Suspense>
       {/* 처음 온 사람도 바로 한 번: 오늘의 퀴즈(펼쳐 둠) · 요괴 마을 — PC는 나란히, 휴대폰은 위아래 */}
       <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_15rem] lg:[&:has(>:only-child)]:grid-cols-1 [&>*]:min-w-0">
         <Suspense fallback={<HomePanelFallback className="h-14" />}>
