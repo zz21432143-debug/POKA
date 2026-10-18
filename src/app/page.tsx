@@ -99,14 +99,9 @@ async function HomeFeedSections() {
           <HomeGuides />
         </div>
         <div data-home-side className="grid min-w-0 content-start gap-2.5">
+          {/* 매일 할 것: 미션 · 랭킹(퀴즈 · 요괴는 맨 위 작은 칸) */}
           <Suspense fallback={null}>
             <HomeMissions />
-          </Suspense>
-          <Suspense fallback={<HomePanelFallback className="h-14" />}>
-            <HomeQuiz />
-          </Suspense>
-          <Suspense fallback={null}>
-            <HomeYokai />
           </Suspense>
           <Suspense fallback={<HomePanelFallback className="h-48" />}>
             <HomeRankings />
@@ -119,7 +114,7 @@ async function HomeFeedSections() {
 }
 
 /**
- * 홈 순서: 대문 · 오늘 요약(PC는 나란히) → 바로가기 한 줄 → 급구 · 구인 → 매장 관리 · 공부 도구 → (포스터) → 두 칸(글 | 매일 할 것).
+ * 홈 순서: 대문 · 오늘 요약(PC는 나란히) → 퀴즈 · 요괴(작은 두 칸) → 바로가기 한 줄 → 급구 · 구인 → 매장 관리 · 공부 도구 → (포스터) → 두 칸(글 | 매일 할 것).
  * 내용 없는 칸은 그리지 않고, PC는 칸을 나란히 두어 가로로 남는 자리가 없게 합니다.
  */
 export default async function HomePage() {
@@ -129,6 +124,15 @@ export default async function HomePage() {
         <HomeHero />
         <Suspense fallback={<HomePanelFallback className="h-28" />}>
           <HomeSummary />
+        </Suspense>
+      </div>
+      {/* 매일 오는 사람: 오늘의 퀴즈 · 요괴 밥 — 작은 두 칸 나란히(퀴즈를 펼치면 한 줄 전체) */}
+      <div data-home-daily className="grid grid-cols-2 gap-2 has-[[data-open=true]]:grid-cols-1 [&:has(>:only-child)]:grid-cols-1 [&>*]:min-w-0">
+        <Suspense fallback={<HomePanelFallback className="h-14" />}>
+          <HomeQuiz />
+        </Suspense>
+        <Suspense fallback={<HomePanelFallback className="h-14" />}>
+          <HomeYokai />
         </Suspense>
       </div>
       {/* 게시판 · 매장 관리 바로가기 한 줄 */}
