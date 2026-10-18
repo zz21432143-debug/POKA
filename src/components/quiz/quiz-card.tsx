@@ -11,7 +11,7 @@ import type { QuizPublic, QuizResult } from "@/lib/quiz-server";
 /**
  * 오늘의 퀴즈 카드: 보기를 누르면 바로 정답 · 해설 · 다른 사람 선택 비율.
  * 로그인하면 맞힐 때 포인트, 비로그인은 정답만 보여 줌(기록 안 함).
- * compact: 홈 등에서 작게(해설은 접어 둠)
+ * compact: 메인 납작형 — 머리줄 한 줄 · 문제 · 보기 한 줄(누르면 그 자리에서 정답 · 해설)
  */
 export function QuizCard({
   quiz,
@@ -46,26 +46,28 @@ export function QuizCard({
 
   const total = result?.stats.total ?? 0;
   return (
-    <section aria-label="오늘의 퀴즈" data-quiz-card={quiz.day} className="lounge-card grid gap-3 rounded-[1.35rem] p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">🧩 오늘의 퀴즈</span>
-        <span className="rounded-full border border-[#c9a25c]/50 px-2 py-0.5 text-[11px] font-bold text-[#e7c98a]">{quiz.author ? "회원 출제" : KIND_LABEL[quiz.kind]}</span>
-        {quiz.author ? (
+    <section aria-label="오늘의 퀴즈" data-quiz-card={quiz.day} className={cn("lounge-card grid rounded-[1.35rem]", compact ? "gap-2 border-[#c9a25c]/50 p-3" : "gap-3 p-4")}>
+      <div className={cn("flex items-center gap-2", compact ? "min-w-0" : "flex-wrap")}>
+        <span className="shrink-0 rounded-full bg-[#7a1c22] px-2 py-0.5 text-[11px] font-black text-[#f6efe2]">🧩 {compact ? `${quizSlotName(quiz.day)} 퀴즈` : "오늘의 퀴즈"}</span>
+        <span className="shrink-0 rounded-full border border-[#c9a25c]/50 px-2 py-0.5 text-[11px] font-bold text-[#e7c98a]">{quiz.author ? "회원 출제" : KIND_LABEL[quiz.kind]}</span>
+        {compact && !result ? <span className="shrink-0 text-xs font-black text-[#f5d76e]">맞히면 +13P</span> : null}
+        {quiz.author && !compact ? (
           <span data-quiz-author className="rounded-full bg-[#1f6f4a] px-2 py-0.5 text-[11px] font-black text-[#eafff3]">
             ✍️ {quiz.author}님 출제
           </span>
         ) : null}
-        <span className="text-xs text-zinc-400">
-          {quiz.day.slice(0, 10).replace(/-/g, ".")} {quizSlotName(quiz.day)}
-        </span>
         {compact ? (
-          <Link href="/quiz" className="ml-auto text-xs font-bold text-[#e7c98a]">
-            퀴즈 랭킹 · 지난 문제 ›
+          <Link href="/quiz" className="ml-auto shrink-0 text-xs font-bold whitespace-nowrap text-[#e7c98a]">
+            <span className="hidden sm:inline">퀴즈 랭킹 · </span>지난 문제 ›
           </Link>
-        ) : null}
+        ) : (
+          <span className="text-xs text-zinc-400">
+            {quiz.day.slice(0, 10).replace(/-/g, ".")} {quizSlotName(quiz.day)}
+          </span>
+        )}
       </div>
-      <h2 className={cn("font-black leading-snug text-white", compact ? "text-base" : "text-lg sm:text-xl")}>{quiz.question}</h2>
-      <ul className={cn("grid gap-2", quiz.choices.length > 2 ? "sm:grid-cols-2" : "grid-cols-2")}>
+      <h2 className={cn("font-black leading-snug text-white", compact ? "text-[15px] sm:text-base" : "text-lg sm:text-xl")}>{quiz.question}</h2>
+      <ul className={cn("grid gap-2", quiz.choices.length > 2 && !compact ? "sm:grid-cols-2" : "grid-cols-2")}>
         {quiz.choices.map((label, i) => {
           const picked = result?.choice === i;
           const right = result ? result.answer === i : false;
@@ -78,7 +80,8 @@ export function QuizCard({
                 disabled={busy || Boolean(result)}
                 onClick={() => void pick(i)}
                 className={cn(
-                  "relative flex min-h-12 w-full items-center gap-2 overflow-hidden rounded-xl border px-3 text-left text-[15px] font-black transition",
+                  compact ? "min-h-11" : "min-h-12",
+                  "relative flex w-full items-center gap-2 overflow-hidden rounded-xl border px-3 text-left text-[15px] font-black transition",
                   !result && "border-[#c9a25c]/50 bg-black/40 text-white hover:border-[#c9a25c] hover:bg-[#2a2017] active:scale-[0.98]",
                   result && right && "border-emerald-400 bg-emerald-950/60 text-emerald-100",
                   result && !right && picked && "border-rose-400 bg-rose-950/60 text-rose-100",
@@ -145,7 +148,7 @@ export function QuizCard({
             </p>
           ) : null}
         </div>
-      ) : (
+      ) : compact ? null : (
         <p className="text-xs text-zinc-400">하나를 고르면 바로 정답과 해설이 나와요. {loggedIn ? "맞히면 +13P!" : "로그인하면 맞힐 때 +13P."}</p>
       )}
     </section>

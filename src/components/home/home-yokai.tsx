@@ -22,21 +22,22 @@ export async function HomeYokai() {
 
   if (!y) {
     return (
-      <div data-home-yokai="intro" className="lounge-card flex min-h-14 min-w-0 items-center gap-1.5 rounded-[1.35rem] px-2 py-1">
+      <Link
+        href={user ? "/yokai" : "/login?next=%2Fyokai"}
+        data-home-yokai="intro"
+        className="relative flex min-h-16 min-w-0 items-center gap-2.5 overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/60 bg-[radial-gradient(circle_at_20%_50%,#4a1d5e_0%,#1a0f24_70%)] px-3 py-1.5 lg:h-full lg:flex-col lg:justify-center lg:gap-1.5 lg:py-3 lg:text-center"
+      >
+        <style>{`@keyframes hy-bob{50%{transform:translateY(-3px)}}`}</style>
         {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
-        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-9 shrink-0 object-contain" />
-        <p className="grid min-w-0 flex-1">
-          <b className="truncate text-[13px] leading-tight text-white">요괴 마을</b>
-          <span className="truncate text-[11.5px] font-bold text-[#e7dcc6]">요괴 키우기</span>
-        </p>
-        <Link
-          href={user ? "/yokai" : "/login?next=%2Fyokai"}
-          data-home-yokai-start
-          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-[#7a1c22] px-2 text-[11px] font-black whitespace-nowrap text-white"
-        >
-          {user ? "고르기" : "시작"}
-        </Link>
-      </div>
+        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-12 shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,.6)] lg:size-20" style={{ animation: "hy-bob 2.4s ease-in-out infinite" }} />
+        <span className="grid min-w-0 flex-1 lg:flex-none">
+          <b className="truncate text-sm leading-tight text-[#ffe08a]">🏮 요괴 마을</b>
+          <span className="truncate text-xs font-bold text-[#f3e8ff]">내 요괴 골라서 밥 주고 키우기</span>
+        </span>
+        <span data-home-yokai-start className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[#ffcf4a] px-3 text-xs font-black whitespace-nowrap text-[#2a1400]">
+          {user ? "요괴 고르기" : "시작하기"}
+        </span>
+      </Link>
     );
   }
 
@@ -55,7 +56,7 @@ export async function HomeYokai() {
       href="/yokai"
       data-home-yokai="mine"
       aria-label={`${y.name} 보러 요괴 마을 가기`}
-      className="relative flex min-h-14 min-w-0 items-center gap-2 overflow-hidden rounded-[1.35rem] border border-[#c9a25c]/40 px-2.5 py-1"
+      className="relative flex min-h-16 min-w-0 items-center gap-2.5 overflow-hidden rounded-[1.35rem] border border-[#ffcf4a]/60 px-3 py-1.5 lg:h-full lg:flex-col lg:justify-center lg:gap-1.5 lg:py-3 lg:text-center"
       style={{ background: stageBg(y.species, y.bg) }}
     >
       <style>{`@keyframes hy-bob{50%{transform:translateY(-3px)}}`}</style>
@@ -63,10 +64,10 @@ export async function HomeYokai() {
       <img
         src={yokaiImage(y.species, y.stage)}
         alt=""
-        className="relative size-10 shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,.6)]"
+        className="relative size-12 shrink-0 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,.6)] lg:size-20"
         style={{ animation: "hy-bob 2.4s ease-in-out infinite" }}
       />
-      <span className="relative grid min-w-0 flex-1">
+      <span className="relative grid min-w-0 flex-1 lg:w-full lg:flex-none">
         <b className="truncate text-[13px] leading-tight text-white [text-shadow:0_1px_3px_#000]">{y.name}</b>
         <span
           data-home-yokai-whine={happy ? "happy" : low.key}
@@ -78,14 +79,12 @@ export async function HomeYokai() {
       <span
         data-home-yokai-go
         className={cn(
-          "relative hidden min-h-8 shrink-0 items-center rounded-full px-2.5 text-[11px] font-black whitespace-nowrap sm:inline-flex",
-          happy ? "border border-[#c9a25c]/60 bg-black/50 text-[#e7c98a]" : "bg-[#7a1c22] text-white",
+          "relative inline-flex min-h-9 shrink-0 items-center rounded-full px-3 text-xs font-black whitespace-nowrap",
+          happy ? "border border-[#c9a25c]/60 bg-black/50 text-[#e7c98a]" : "bg-[#ffcf4a] text-[#2a1400]",
         )}
       >
         {happy ? "🏮 마을" : low.cta}
       </span>
-      {/* 휴대폰(반 칸): 할 일은 아이콘만 */}
-      <span aria-hidden className={cn("relative shrink-0 text-lg sm:hidden", happy && "opacity-70")}>{happy ? "🏮" : low.cta.slice(0, 2)}</span>
     </Link>
   );
 }
