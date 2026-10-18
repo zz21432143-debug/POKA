@@ -101,9 +101,9 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
         {big ? (
           // 붙여넣은 뒤 직접 할 일(본문에는 안내문을 넣지 않음 — 그대로 발행되지 않게)
           <div data-blog-todo className="grid gap-1 rounded-xl border border-amber-400/60 bg-amber-500/10 p-3 text-sm text-amber-100">
-            <b>붙여넣은 뒤 꼭 할 일 2가지</b>
+            <b>붙여넣은 뒤 하면 좋은 것</b>
             <span>
-              ✍️ 「{d.kind === "tool" ? "이렇게 써요" : "이 글에서 다루는 것"}」 바로 위에 <b>직접 한두 줄</b> 쓰기 — 예:{" "}
+              ✍️ 「{d.kind === "tool" ? "이렇게 써요" : "이 글에서 다루는 것"}」 바로 위에 직접 한두 줄(선택 · 생각날 때만) — 예:{" "}
               {d.kind === "holdem"
                 ? "「매장에서 보면 처음 오신 분들이 이 부분을 가장 많이 헷갈려요.」"
                 : d.kind === "tool"
