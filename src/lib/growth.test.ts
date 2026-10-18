@@ -80,3 +80,16 @@ describe("evergreen guides and verified dealers", () => {
     assert.equal(/바카라/.test(blob), false);
   });
 });
+
+describe("홀덤 가이드(플레이어 전략)", () => {
+  it("slug가 겹치지 않고, 금지 단어가 없고, 분류에 모든 글이 들어 있음", async () => {
+    const { HOLDEM_GUIDES, HOLDEM_GUIDE_CATEGORIES } = await import("./holdem-guides");
+    assert.equal(new Set(HOLDEM_GUIDES.map((row) => row.slug)).size, HOLDEM_GUIDES.length);
+    const placed = new Set(HOLDEM_GUIDE_CATEGORIES.flatMap((c) => [...c.slugs]));
+    for (const row of HOLDEM_GUIDES) {
+      assert.equal(/바카라|캐시|현금|수익|돈을/.test(row.body + row.title + row.summary), false, row.slug);
+      assert.ok(placed.has(row.slug), `${row.slug} 분류 없음`);
+      assert.ok(row.body.replace(/\s/g, "").length > 1200, `${row.slug} 본문이 짧음`);
+    }
+  });
+});

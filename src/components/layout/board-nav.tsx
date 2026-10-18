@@ -59,6 +59,7 @@ const NAV_ICON: Record<string, LucideIcon> = {
   "/boards/schedule": CalendarDaysIcon,
   "/boards/tda": BookOpenIcon,
   "/info/guide": GraduationCapIcon,
+  "/info/holdem": BookOpenIcon,
   "/info/icm": PieChartIcon,
   "/info/push-fold": Grid3x3Icon,
   "/tools/board": MonitorPlayIcon,

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { JOB_REGIONS } from "@/lib/job-status";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
+import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
 import { sitemapEntries } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 import { latestJobPerAuthor, postIsThin } from "@/lib/seo-quality";
@@ -76,5 +77,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...sitemapEntries(), ...guides, ...regions, ...jobPosts, ...boardPosts];
+  const holdemGuides: MetadataRoute.Sitemap = HOLDEM_GUIDES.map((row) => ({
+    url: `${base}/info/holdem/${row.slug}`,
+    lastModified: new Date(row.updated),
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  return [...sitemapEntries(), ...guides, ...holdemGuides, ...regions, ...jobPosts, ...boardPosts];
 }

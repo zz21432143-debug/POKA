@@ -53,7 +53,8 @@ export const STUDY_ITEMS: SidebarItem[] = [
   { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
   { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
   { href: "/tools/practice", label: "팟 계산", hint: "팟 계산 랭킹 · 사이드팟", icon: "chips", badge: "HOT" },
-  { href: "/info/guide", label: "딜러 가이드", hint: "테이블 기본 룰", icon: "seal" },
+  { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
+  { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
 ];
 
 /** 위 메뉴에서 이 주소가 어느 칸인지(홀덤 공부 도구는 주소와 메뉴가 달라서 따로 매핑) */
