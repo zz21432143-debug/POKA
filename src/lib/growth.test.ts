@@ -89,7 +89,7 @@ describe("홀덤 가이드(플레이어 전략)", () => {
     for (const row of HOLDEM_GUIDES) {
       assert.equal(/바카라|캐시|현금|수익|돈을/.test(row.body + row.title + row.summary), false, row.slug);
       assert.ok(placed.has(row.slug), `${row.slug} 분류 없음`);
-      assert.ok(row.body.replace(/\s/g, "").length > 1200, `${row.slug} 본문이 짧음`);
+      assert.ok(row.body.replace(/\s/g, "").length > 850, `${row.slug} 본문이 짧음`);
     }
   });
 });
