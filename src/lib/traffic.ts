@@ -16,6 +16,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   "game-share": "🎮 게임 결과 공유",
   "game-invite": "🎮 오락실 초대 링크",
   "push-game": "🔔 게임 상대 찾기 알림",
+  blog: "📝 블로그",
   push: "🔔 푸시 알림",
   google: "구글",
   naver: "네이버",
