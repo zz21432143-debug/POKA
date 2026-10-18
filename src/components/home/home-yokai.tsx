@@ -22,17 +22,17 @@ export async function HomeYokai() {
 
   if (!y) {
     return (
-      <div data-home-yokai="intro" className="lounge-card flex min-h-14 min-w-0 items-center gap-2 rounded-[1.35rem] px-2.5 py-1">
+      <div data-home-yokai="intro" className="lounge-card flex min-h-14 min-w-0 items-center gap-1.5 rounded-[1.35rem] px-2 py-1">
         {/* eslint-disable-next-line @next/next/no-img-element -- 도트 그림 */}
-        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-10 shrink-0 object-contain" />
+        <img src={yokaiImage(STARTERS[0], 1)} alt="" className="size-9 shrink-0 object-contain" />
         <p className="grid min-w-0 flex-1">
-          <b className="truncate text-[13px] leading-tight text-white">🏮 요괴 마을</b>
-          <span className="truncate text-[11.5px] font-bold text-[#e7dcc6]">첫 요괴 키우기</span>
+          <b className="truncate text-[13px] leading-tight text-white">요괴 마을</b>
+          <span className="truncate text-[11.5px] font-bold text-[#e7dcc6]">요괴 키우기</span>
         </p>
         <Link
           href={user ? "/yokai" : "/login?next=%2Fyokai"}
           data-home-yokai-start
-          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-[#7a1c22] px-2.5 text-[11px] font-black whitespace-nowrap text-white"
+          className="inline-flex min-h-8 shrink-0 items-center rounded-full bg-[#7a1c22] px-2 text-[11px] font-black whitespace-nowrap text-white"
         >
           {user ? "고르기" : "시작"}
         </Link>
