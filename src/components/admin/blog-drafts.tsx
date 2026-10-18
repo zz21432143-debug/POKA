@@ -10,6 +10,10 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
   const [copied, setCopied] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** 방금 「올렸어요」 한 글(되돌리기) · 다음 글 버튼 잠깐 잠금(연달아 눌러 다음 글까지 표시되지 않게) */
+  const [justDone, setJustDone] = useState<{ key: string; title: string } | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [busy, setBusy] = useState(false);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
   const left = drafts.filter((d) => !posted[d.key]);
   const next = left[0] ?? null;
@@ -32,12 +36,23 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
   }
 
   async function mark(key: string, done: boolean) {
+    if (busy || (done && locked)) return;
+    const target = drafts.find((d) => d.key === key);
+    if (done && !window.confirm(`「${target?.title ?? key}」
+블로그에 올렸나요?`)) return;
     setError(null);
+    setBusy(true);
     const res = await fetch("/api/admin/blog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, done }) }).catch(() => null);
+    setBusy(false);
     if (!res?.ok) {
       setError("저장하지 못했어요. 다시 눌러 주세요.");
       return;
     }
+    if (done) {
+      setJustDone({ key, title: target?.title ?? key });
+      setLocked(true);
+      window.setTimeout(() => setLocked(false), 3000);
+    } else if (justDone?.key === key) setJustDone(null);
     setPosted((p) => {
       const n = { ...p };
       if (done) n[key] = today;
@@ -76,10 +91,11 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
           <button
             type="button"
             data-blog-done={d.key}
+            disabled={busy || (!done && locked)}
             onClick={() => void mark(d.key, !done)}
-            className={cn("min-h-11 rounded-lg border px-3 text-sm font-bold", done ? "border-border text-muted-foreground" : "border-emerald-400 text-emerald-300")}
+            className={cn("min-h-11 rounded-lg border px-3 text-sm font-bold disabled:opacity-40", done ? "border-border text-muted-foreground" : "border-emerald-400 text-emerald-300")}
           >
-            {done ? "올림 취소" : "올렸어요"}
+            {done ? "올림 취소" : !done && locked ? "잠깐만요…" : "올렸어요"}
           </button>
         </div>
         {big ? (
@@ -103,6 +119,14 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
       </p>
       {postedToday >= 2 ? <p className="rounded-xl bg-amber-500/15 p-3 text-sm text-amber-200">오늘은 충분해요. 하루 1~2편이 네이버에 가장 안전해요.</p> : null}
       {error ? <p className="text-sm font-bold text-rose-300">{error}</p> : null}
+      {justDone ? (
+        <p data-blog-just-done className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-400/50 bg-emerald-500/10 p-3 text-sm">
+          <span className="min-w-0 flex-1">✅ 「{justDone.title}」 올림으로 표시했어요.</span>
+          <button type="button" onClick={() => void mark(justDone.key, false)} className="min-h-10 rounded-lg border border-border px-3 text-sm font-bold">
+            되돌리기
+          </button>
+        </p>
+      ) : null}
       {next ? (
         <section aria-label="오늘 올릴 글" className="grid gap-2">
           <h2 className="text-lg font-semibold">오늘 올릴 글</h2>
@@ -114,7 +138,12 @@ export function BlogDrafts({ drafts, initialPosted }: { drafts: BlogDraft[]; ini
       <button type="button" onClick={() => setShowAll((v) => !v)} className="min-h-11 w-fit rounded-lg border border-border px-4 text-sm font-bold">
         {showAll ? "전체 목록 접기" : `전체 목록 보기(${drafts.length}편)`}
       </button>
-      {showAll ? <div className="grid gap-2">{drafts.filter((d) => d.key !== next?.key).map((d) => card(d, false))}</div> : null}
+      {showAll ? (
+        <div className="grid gap-2">
+          {/* 올린 글(취소할 수 있게)부터, 그다음 남은 글 순서대로 */}
+          {[...drafts.filter((d) => posted[d.key]), ...drafts.filter((d) => !posted[d.key] && d.key !== next?.key)].map((d) => card(d, false))}
+        </div>
+      ) : null}
     </div>
   );
 }
