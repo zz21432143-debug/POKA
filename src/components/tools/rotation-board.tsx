@@ -137,7 +137,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [online, setOnline] = useState(true);
   const [busy, setBusy] = useState(false);
   /** Auto 되돌리기: Auto 전 시간표 · Auto가 만든 시간표(그 뒤 다른 변경이 생기면 되돌리기는 사라짐) */
-  const [undo, setUndo] = useState<{ game: string; before: RotationPlan | null; after: string } | null>(null);
+  const [undo, setUndo] = useState<{
+    game: string;
+    before: RotationPlan | null;
+    after: string;
+    /** 시간표 삭제로 함께 지워진 컨바인(되돌릴 때 다시) */
+    closed?: { label: number; at: number }[];
+  } | null>(null);
   const [bulk, setBulk] = useState("");
   /** 딜러 명단 저장 · 고치기 창 */
   const [rosterEdit, setRosterEdit] = useState<{
@@ -426,13 +432,21 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const restNext = new Set(plan && next >= 0 ? (plan.slots[next]?.rest ?? []) : []);
   // 딜러별 오늘 들어간 테이블(지금 칸까지 · 새로 앉은 번 수) · 딜한 칸 수
   const tableHistory = useMemo(() => {
-    const out = new Map<string, { visits: Map<number, number>; slots: number }>();
+    // share: 공평한 몫(있던 칸마다 딜 자리 ÷ 그 칸 딜러 수) — 딜한 칸과 비교해 많이 · 적게 딜한 사람 표시
+    const out = new Map<string, { visits: Map<number, number>; slots: number; share: number }>();
     if (!plan) return out;
     const upto = Math.min(plan.slots.length - 1, Math.max(-1, current));
     for (let i = 0; i <= upto; i += 1) {
+      const seated = plan.slots[i].seats.filter(Boolean) as string[];
+      const present = [...seated, ...plan.slots[i].rest];
+      for (const id of present) {
+        const row = out.get(id) ?? { visits: new Map<number, number>(), slots: 0, share: 0 };
+        row.share += seated.length / present.length;
+        out.set(id, row);
+      }
       plan.slots[i].seats.forEach((id, t) => {
         if (!id) return;
-        const row = out.get(id) ?? { visits: new Map<number, number>(), slots: 0 };
+        const row = out.get(id) ?? { visits: new Map<number, number>(), slots: 0, share: 0 };
         row.slots += 1;
         if (plan.slots[i - 1]?.seats[t] !== id) row.visits.set(t, (row.visits.get(t) ?? 0) + 1);
         out.set(id, row);
@@ -703,7 +717,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const canUndo = Boolean(undo && undo.game === state.game.id && JSON.stringify(state.plan) === undo.after);
   async function undoAuto() {
     if (!undo || !canUndo) return;
-    if (await send({ type: "savePlan", plan: undo.before })) setUndo(null);
+    if (!(await send({ type: "savePlan", plan: undo.before }))) return;
+    for (const c of undo.closed ?? []) await send({ type: "setTable", label: c.label, closedAt: c.at });
+    setUndo(null);
   }
 
   /** 직접 배치: 빈 시간표(칸만)를 만들고 테이블 · 딜러를 사람이 칸을 눌러 넣음 */
@@ -1287,6 +1303,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 </div>
               ))}
             </dl>
+            {runningLabels.length && onDuty > runningLabels.length * 2 ? (
+              <p data-too-many className="rounded-lg bg-amber-950/60 px-2 py-1 text-xs font-bold text-amber-200">
+                딜러({onDuty})가 러닝 테이블({runningLabels.length})의 2배보다 많아 휴게가 교대 한 칸보다 길어질 수 있어요. 테이블을 더 열거나 출근 시간을 나눠 보세요.
+              </p>
+            ) : null}
             <p className="flex flex-wrap items-center gap-1 text-sm font-bold">
               <span className="text-zinc-400">러닝 중</span>
               {runningLabels.map((label) => (
@@ -1785,6 +1806,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         >
                           {name(row.to) || "비어 있음"}
                         </span>
+                        {(() => {
+                          // 들어오는 딜러가 지금 다른 테이블에서 딜 중이면(쉬지 않고 이동) 빨간 표시
+                          const was = row.to && plan && current >= 0 ? plan.slots[current].seats.indexOf(row.to) : -1;
+                          return was >= 0 && labels[was] !== row.label ? (
+                            <span data-swap-jump className="ml-1 rounded bg-rose-600 px-1 text-[11px] font-black text-white">
+                              ⚠ {tableTag(labels[was])}에서 쉬지 않고
+                            </span>
+                          ) : null;
+                        })()}
                       </span>
                     )}
                   </li>
@@ -1874,7 +1904,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         "시간표를 삭제할까요? 짜 둔 칸과 컨바인이 모두 지워집니다(딜러 명단·출근 기록은 그대로). 다시 짜려면 Auto를 누르세요.",
                       )
                     ) {
-                      void send({ type: "clearPlan" });
+                      const before = state.plan;
+                      const game = state.game.id;
+                      const closed = labels
+                        .map((label, t) => ({ label, at: closedFrom[t] }))
+                        .filter((c): c is { label: number; at: number } => c.at != null);
+                      void send({ type: "clearPlan" }).then((ok) => {
+                        if (ok) setUndo({ game, before, after: "null", closed });
+                      });
                     }
                   }}
                   className="ml-auto min-h-10 rounded-lg border border-rose-500/70 px-3 text-sm font-black text-rose-300 hover:bg-rose-950"
@@ -2963,7 +3000,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               const list = [...h.visits.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
                               return (
                                 <span data-dealer-tables={dealer.name} className="basis-full text-[11.5px] leading-snug text-zinc-400">
-                                  오늘 딜 {h.slots}칸 ·{" "}
+                                  오늘 딜 {h.slots}칸
+                                  {Math.abs(h.slots - h.share) >= 1 ? (
+                                    <b data-dealer-owe className={h.slots > h.share ? "text-amber-300" : "text-sky-300"}>
+                                      {" "}(몫보다 {h.slots > h.share ? "+" : "−"}
+                                      {Math.round(Math.abs(h.slots - h.share))}칸 — Auto가 맞춰 줘요)
+                                    </b>
+                                  ) : null}{" "}
+                                  ·{" "}
                                   {list.map(([t, n], i) => (
                                     <span key={t} className={n >= 3 ? "font-black text-amber-300" : "text-zinc-300"}>
                                       {i ? " · " : ""}
