@@ -11,6 +11,7 @@ import { LONG_GUIDES_10 } from "@/lib/guide-articles-long-10";
 import { BASE_GUIDE_UPDATES } from "@/lib/guide-articles-base";
 import { MORE_GUIDE_UPDATES } from "@/lib/guide-articles-more";
 import { GUIDE_APPENDS, GUIDE_APPEND_UPDATED } from "@/lib/guide-articles-append";
+import { GUIDE_APPENDS_2, GUIDE_APPEND_2_UPDATED } from "@/lib/guide-articles-append-2";
 
 export type InfoArticle = {
   title: string;
@@ -349,9 +350,14 @@ export const GUIDE_ARTICLES: GuideArticle[] = [...BASE_GUIDES_FULL, ...LONG_GUID
   const full = { ...row, ...(MORE_GUIDE_UPDATES[row.slug] ?? {}) };
   // 3차: 본문 끝에 예시 · 실수 · 질문 덧붙임
   const extra = GUIDE_APPENDS[row.slug];
-  return extra ? { ...full, body: `${full.body}
+  const withExtra = extra ? { ...full, body: `${full.body}
 
 ${extra}`, updated: GUIDE_APPEND_UPDATED } : full;
+  // 핵심 글 2차 덧붙임(공백 포함 2,000자 이상)
+  const extra2 = GUIDE_APPENDS_2[row.slug];
+  return extra2 ? { ...withExtra, body: `${withExtra.body}
+
+${extra2}`, updated: GUIDE_APPEND_2_UPDATED } : withExtra;
 });
 
 export function getGuideArticle(slug: string) {
