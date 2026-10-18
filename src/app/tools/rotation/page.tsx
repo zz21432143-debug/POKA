@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { toolMetadata } from "@/lib/tool-seo";
 import Link from "@/components/ui/link";
 import { getCurrentUser } from "@/lib/current-user";
@@ -6,6 +7,7 @@ import { canUseDealerTools } from "@/lib/dealer-tools-access";
 import { ToolsLocked } from "@/components/tools/tools-locked";
 import { RotationBoard } from "@/components/tools/rotation-board";
 import { loadRotation } from "@/lib/rotation-server";
+import { LAST_GAME_COOKIE } from "@/lib/rotation";
 
 export const metadata: Metadata = toolMetadata("/tools/rotation");
 export const dynamic = "force-dynamic";
@@ -14,7 +16,9 @@ export default async function RotationPage({ searchParams }: { searchParams: Pro
   const user = await getCurrentUser().catch(() => null);
   if (!user || !canUseDealerTools(user)) return <ToolsLocked next="/tools/rotation" />;
   const { g } = await searchParams;
-  const initial = await loadRotation(user.id, g);
+  // 주소에 게임이 없으면 마지막으로 연 게임(같이 편집하는 게임도 · 내가 열 수 없는 게임이면 내 최근 게임)
+  const last = (await cookies()).get(LAST_GAME_COOKIE)?.value;
+  const initial = await loadRotation(user.id, g || last || null);
   return (
     <div className="flex flex-col gap-3">
       <header className="flex flex-wrap items-end justify-between gap-2">

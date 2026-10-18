@@ -76,6 +76,9 @@ export type RotationGame = {
   ownerName?: string | null;
 };
 
+/** 마지막으로 연 게임(쿠키): 주소에 게임이 없을 때(메뉴로 들어오기 · 새로고침) 그 게임을 다시 엶 — 같이 편집하는 게임도 코드 없이 */
+export const LAST_GAME_COOKIE = "poka_rot_game";
+
 /** 공동 편집 코드: 헷갈리는 글자(0 · O · 1 · I · L) 없이 6자리 */
 export const EDIT_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const EDIT_CODE_LENGTH = 6;

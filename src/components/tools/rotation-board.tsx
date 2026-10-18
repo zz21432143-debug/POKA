@@ -24,6 +24,7 @@ import {
   formatWorkDate,
   kstClock,
   kstDate,
+  LAST_GAME_COOKIE,
   shareExpired,
   SHARE_DAY_CHOICES,
   nowMinutes,
@@ -270,6 +271,15 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       document.removeEventListener("visibilitychange", poll);
     };
   }, []);
+
+  // 마지막으로 연 게임 기억(쿠키 · 이 기기만): 메뉴로 들어오거나 새로고침해도 같은 게임(같이 편집 코드 다시 안 침)
+  useEffect(() => {
+    try {
+      document.cookie = `${LAST_GAME_COOKIE}=${encodeURIComponent(state.game.id)}; path=/; max-age=${60 * 60 * 24 * 60}; samesite=lax`;
+    } catch {
+      // 쿠키를 못 쓰는 환경이면 그냥 둠
+    }
+  }, [state.game.id]);
 
   /** 받은 상태 보여 주기. 게임이 바뀌었으면(새 게임·삭제) 주소도 바꿉니다. */
   const showState = useCallback((next: RotationStateView) => {

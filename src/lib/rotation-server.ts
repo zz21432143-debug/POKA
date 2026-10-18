@@ -106,6 +106,14 @@ async function resolveGame(ownerId: string, gameId?: string | null): Promise<Met
     if (shared) return { ...shared, role: "editor" };
   }
   game ??= await prisma.rotationMeta.findFirst({ where: { ownerId }, orderBy: GAME_ORDER });
+  // 내 게임이 없고 같이 편집하는 게임만 있으면 그 게임(빈 게임을 새로 만들지 않음)
+  if (!game) {
+    const joined = await prisma.rotationEditor.findMany({ where: { userId: ownerId }, select: { gameId: true }, take: MAX_GAMES });
+    const shared = joined.length
+      ? await prisma.rotationMeta.findFirst({ where: { id: { in: joined.map((j) => j.gameId) } }, orderBy: GAME_ORDER })
+      : null;
+    if (shared) return { ...shared, role: "editor" };
+  }
   // 처음 만드는 게임도 새 게임과 같이 테이블 0개로 시작(DB 기본값 20개를 쓰지 않음)
   game ??= await prisma.rotationMeta.create({ data: { id: randomUUID(), ownerId, workDate: kstDate(), tableCount: 0, tableLabels: "" } });
   if (!game.workDate) game = await prisma.rotationMeta.update({ where: { id: game.id }, data: { workDate: kstDate(game.createdAt) } });
