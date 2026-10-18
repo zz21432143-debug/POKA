@@ -46,14 +46,17 @@ export type SidebarGroup = {
 
 /** 홀덤 공부(무료 도구). 주소는 예전 그대로 두고 메뉴만 한곳에 모읍니다. */
 export const STUDY_ITEMS: SidebarItem[] = [
+  // 읽을거리(가이드) 먼저, 그다음 차트 · 계산 도구, 문제 풀기 · 룰 자료
+  { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
+  { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
   { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위 · ICM", icon: "cards" },
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
   { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
   { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
   { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
   { href: "/tools/practice", label: "팟 계산", hint: "팟 계산 랭킹 · 사이드팟", icon: "chips", badge: "HOT" },
-  { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
-  { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
+  { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제 · 맞히면 포인트", icon: "seal" },
+  { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
 ];
 
 /** 위 메뉴에서 이 주소가 어느 칸인지(홀덤 공부 도구는 주소와 메뉴가 달라서 따로 매핑) */
@@ -83,6 +86,9 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
       { href: "/boards/jobs/tournament", label: "대회 딜러 구인", hint: "대회 · 행사", icon: "lantern" },
       { href: "/boards/jobs/fixed", label: "고정 직원 구인", hint: "상시 · 고정", icon: "noren" },
       { href: "/boards/jobs/team", label: "팀 구인", hint: "팀원 모집", icon: "oni" },
+      // 딜러용 · 매장용 바로가기
+      { href: "/boards/jobs/slots", label: "날짜별 빈자리", hint: "오늘 · 내일 빈자리 · 알림 받기", icon: "moon" },
+      { href: "/boards/jobs/mine", label: "내 공고 관리", hint: "로고 · 마감 · 끌어올리기", icon: "brush" },
     ],
   },
   {
@@ -110,14 +116,12 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "커뮤니티",
     hub: "/community",
     icon: "cloud",
-    // 대회 · 정보 모음(/info), 현장 스케치, 회원 글 목록도 커뮤니티
-    match: ["/info", "/boards/sketch", "/u/", "/search"],
+    // 대회 · 정보 모음(/info), 자유게시판 「질문」 탭(/boards/rules), 현장 스케치, 회원 글 목록도 커뮤니티
+    match: ["/info", "/boards/rules", "/boards/sketch", "/u/", "/search"],
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문", icon: "cloud" },
-      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 진행 질문", icon: "seal" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
-      { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
     ],
   },
   {
@@ -128,7 +132,6 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     match: ["/i/"],
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
-      { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제", icon: "seal" },
       { href: "/yokai", label: "요괴 마을", hint: "요괴 키우기 · 도감", icon: "lantern" },
       { href: "/games", label: "요괴 오락실", hint: "요괴 오목 · 윷놀이", icon: "cards" },
       { href: "/ranking", label: "랭킹", hint: "레벨 · 수집 · 출석", icon: "pagoda" },

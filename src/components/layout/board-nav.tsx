@@ -43,6 +43,8 @@ import {
   Gamepad2Icon,
   InfoIcon,
   CircleHelpIcon,
+  CalendarSearchIcon,
+  ClipboardListIcon,
   GhostIcon,
   UserPlusIcon,
   type LucideIcon,
@@ -56,6 +58,8 @@ const NAV_ICON: Record<string, LucideIcon> = {
   "/boards/jobs/urgent": ZapIcon,
   "/boards/jobs/fixed": Building2Icon,
   "/boards/jobs/team": UsersIcon,
+  "/boards/jobs/slots": CalendarSearchIcon,
+  "/boards/jobs/mine": ClipboardListIcon,
   "/boards/free": MessagesSquareIcon,
   "/boards/hand-review": SpadeIcon,
   "/tools/practice": TargetIcon,
@@ -131,7 +135,10 @@ export function BoardNav({
     if (inDrawer || compact || !canHover.current) return;
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
     const r = el.getBoundingClientRect();
-    setFly({ title, top: Math.min(r.top, window.innerHeight - 380), left: r.right + 8 });
+    // 메뉴판 높이(대략: 머리 줄 + 칸마다 약 53px)만큼 화면 안에 들어오게 위로 올림
+    const count = SIDEBAR_NAV.find((g) => g.title === title)?.items.length ?? 5;
+    const height = 64 + count * 53;
+    setFly({ title, top: Math.max(8, Math.min(r.top, window.innerHeight - height - 8)), left: r.right + 8 });
   };
   const closeFly = () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
@@ -271,7 +278,7 @@ export function BoardNav({
             onMouseEnter={keepFly}
             onMouseLeave={closeFly}
             className="fixed z-[60] w-72 rounded-2xl border border-[#c9a25c]/40 bg-[#1d1611]/98 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.55)] backdrop-blur"
-            style={{ top: Math.max(8, fly.top), left: fly.left }}
+            style={{ top: Math.max(8, fly.top), left: fly.left, maxHeight: "calc(100vh - 16px)", overflowY: "auto" }}
           >
             <a href={g.hub ?? g.items[0].href} className="mb-1 flex min-h-10 items-center justify-between rounded-lg px-3 text-sm font-black text-[#f3d9a4] hover:bg-[#2a2017]">
               {g.title} 전체 보기

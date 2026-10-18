@@ -37,6 +37,9 @@ const EXPECT: [string, string | null][] = [
   ["/info/guide/side-pots", "홀덤 공부"],
   ["/info/holdem", "홀덤 공부"],
   ["/info/holdem/position", "홀덤 공부"],
+  ["/boards/tda", "홀덤 공부"],
+  ["/quiz", "홀덤 공부"],
+  ["/quiz/2026-10-19", "홀덤 공부"],
   // 커뮤니티
   ["/community", "커뮤니티"],
   ["/boards/free", "커뮤니티"],
@@ -46,7 +49,6 @@ const EXPECT: [string, string | null][] = [
   ["/boards/hand-review", "커뮤니티"],
   ["/boards/hand-review/write", "커뮤니티"],
   ["/boards/schedule", "커뮤니티"],
-  ["/boards/tda", "커뮤니티"],
   ["/boards/sketch", "커뮤니티"],
   ["/info", "커뮤니티"],
   ["/u/홍길동", "커뮤니티"],
@@ -54,8 +56,6 @@ const EXPECT: [string, string | null][] = [
   // 포인트 · 놀이
   ["/play", "포인트 · 놀이"],
   ["/attendance", "포인트 · 놀이"],
-  ["/quiz", "포인트 · 놀이"],
-  ["/quiz/2026-10-19", "포인트 · 놀이"],
   ["/yokai", "포인트 · 놀이"],
   ["/games", "포인트 · 놀이"],
   ["/games/omok/ai", "포인트 · 놀이"],

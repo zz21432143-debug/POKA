@@ -66,7 +66,7 @@ export function TopNav() {
               data-top-flyout={group.title}
               className="invisible absolute top-full left-0 z-50 pt-2 opacity-0 transition-opacity duration-150 group-hover/top:visible group-hover/top:opacity-100 group-focus-within/top:visible group-focus-within/top:opacity-100"
             >
-              <div className="w-72 rounded-2xl border border-[#c9a25c]/40 bg-[#1d1611] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.55)]">
+              <div className="max-h-[calc(100vh-90px)] w-72 overflow-y-auto rounded-2xl border border-[#c9a25c]/40 bg-[#1d1611] p-2 shadow-[0_18px_40px_rgba(0,0,0,0.55)]">
                 <Link href={group.hub!} className="mb-1 flex min-h-10 items-center justify-between rounded-lg px-3 text-sm font-black text-[#f3d9a4] hover:bg-[#2a2017]">
                   {group.title} 전체 보기
                   <ChevronRightIcon className="size-4" />
