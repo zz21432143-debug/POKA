@@ -1,4 +1,7 @@
 import { Suspense } from "react";
+import { NavHint } from "@/lib/nav-hint";
+import { BOARD_SECTION } from "@/lib/nav";
+import type { BoardType } from "@/generated/prisma/enums";
 import { notFound } from "next/navigation";
 import { replaceTo } from "@/lib/history-redirect";
 import { Badge } from "@/components/ui/badge";
@@ -368,6 +371,8 @@ export default async function PostDetailPage({
 
   return (
     <article className="flex flex-col gap-4">
+      {/* 메뉴: 이 글의 게시판 묶음에 불이 들어오게 */}
+      <NavHint section={BOARD_SECTION[post.boardType as BoardType] ?? null} />
       {structured ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(structured) }} /> : null}
       {/* 급구를 막 올렸으면: 알림을 몇 명에게 보냈는지 */}
       <Suspense fallback={null}>

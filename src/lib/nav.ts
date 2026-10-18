@@ -14,14 +14,7 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-export const TOP_NAV = [
-  { href: "/", label: "홈" },
-  { href: "/boards/jobs", label: "구인구직" },
-  { href: "/community", label: "커뮤니티" },
-  { href: "/study", label: "홀덤 공부" },
-  { href: "/info", label: "대회 · 정보" },
-  { href: "/tools", label: "매장 관리" },
-] as const;
+// 위쪽 메뉴는 왼쪽 메뉴(SIDEBAR_NAV)와 같은 묶음 · 순서를 씁니다(top-nav.tsx).
 
 export const MOBILE_BOTTOM_NAV = [
   { href: "/", label: "홈", icon: "home" as const, match: "exact" as const },
@@ -42,6 +35,8 @@ export type SidebarGroup = {
   hub?: string;
   /** 묶음 줄 아이콘(브랜드 아이콘 이름) */
   icon?: SidebarIcon;
+  /** 메뉴에 없지만 이 묶음에 속하는 주소(앞부분 일치) — 예: 지역별 구인, 약관 */
+  match?: string[];
   items: SidebarItem[];
   /** 사이드바에서 접어 둘 수 있는 그룹 */
   collapsible?: boolean;
@@ -80,6 +75,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "구인구직",
     hub: "/boards/jobs",
     icon: "chips",
+    match: ["/boards/jobs", "/jobs/"],
     items: [
       // 지원 딜러 구인이 메인, 급구/대타가 그다음입니다.
       { href: "/boards/jobs/apply", label: "지원 딜러 구인", hint: "단기 · 스팟", icon: "chips" },
@@ -114,8 +110,11 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "커뮤니티",
     hub: "/community",
     icon: "cloud",
+    // 대회 · 정보 모음(/info), 현장 스케치, 회원 글 목록도 커뮤니티
+    match: ["/info", "/boards/sketch", "/u/", "/search"],
     items: [
       { href: "/boards/free", label: "자유 게시판", hint: "잡담 · 질문", icon: "cloud" },
+      { href: "/boards/rules", label: "질문 & 답변", hint: "룰 · 진행 질문", icon: "seal" },
       { href: "/boards/hand-review", label: "핸드리뷰", hint: "투표 · 스팟", icon: "cards" },
       { href: "/boards/schedule", label: "대회 캘린더", hint: "일자별 · 월별", icon: "moon" },
       { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
@@ -126,6 +125,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "포인트 · 놀이",
     hub: "/play",
     icon: "omamori",
+    match: ["/i/"],
     items: [
       { href: "/attendance", label: "출석체크", hint: "매일 포인트 · 연속 출석 보너스", icon: "omamori" },
       { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제", icon: "seal" },
@@ -141,6 +141,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "POKA",
     hub: "/poka",
     icon: "bell",
+    // 공식 홍보 옛 주소(/boards/promo), 운영 · 약관 · 문의 · 인증 뱃지 안내
+    match: ["/boards/promo", "/about", "/operator", "/contact", "/terms", "/privacy", "/youth", "/info/dealers"],
     items: [
       { href: "/notices", label: "공지사항", hint: "운영 공지", icon: "bell" },
       { href: "/boards/official", label: "공식 홍보", hint: "제휴 · 협찬", icon: "fan" },
@@ -151,11 +153,52 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
 ];
 
 /** 이 주소가 왼쪽 메뉴 어느 묶음인지(모음 화면 또는 세부 메뉴) */
-export function sidebarGroupActive(pathname: string, group: SidebarGroup) {
-  if (group.hub && pathname === group.hub) return true;
-  // 구인 글쓰기 · 내 공고 등 구인 아래 주소는 구인구직
-  if (group.hub === "/boards/jobs" && pathname.startsWith("/boards/jobs/")) return true;
-  return group.items.some((item) => navItemActive(pathname, item.href));
+export function sidebarGroupActive(pathname: string, group: SidebarGroup, hint: string | null = null) {
+  return group.title != null && navSectionOf(pathname, hint) === group.title;
+}
+
+/** 게시글(/posts/…)이 어느 묶음인지: 게시판 종류로 */
+export const BOARD_SECTION: Partial<Record<BoardType, string>> = {
+  JOBS: "구인구직",
+  TALENT: "구인구직",
+  PICKUP: "구인구직",
+  FREE: "커뮤니티",
+  RULE_QA: "커뮤니티",
+  SKETCH: "커뮤니티",
+  HAND_REVIEW: "커뮤니티",
+  ANONYMOUS_REVIEW: "커뮤니티",
+  SCHEDULE: "커뮤니티",
+  TDA: "커뮤니티",
+  EVENT_POSTER: "커뮤니티",
+  NOTICE: "POKA",
+  PROMO: "POKA",
+  OFFICIAL_POSTER: "POKA",
+  SUGGESTION: "POKA",
+};
+
+function prefixHit(pathname: string, prefix: string) {
+  if (prefix.endsWith("/")) return pathname.startsWith(prefix);
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * 이 주소가 왼쪽 · 위쪽 메뉴의 어느 묶음인지(하나만). 메뉴 주소 중 가장 길게 맞는 것이 이깁니다.
+ * 예: /community/equity → 홀덤 공부(메뉴 항목), /community → 커뮤니티(모음 화면), /jobs/서울 → 구인구직.
+ * hint: 게시글처럼 주소만으로 모를 때 화면이 알려 주는 묶음 이름.
+ */
+export function navSectionOf(pathname: string, hint: string | null = null): string | null {
+  if (hint) return hint;
+  let best: { title: string; len: number } | null = null;
+  for (const group of SIDEBAR_NAV) {
+    if (!group.title) continue;
+    const candidates = [
+      ...group.items.filter((item) => navItemActive(pathname, item.href)).map((item) => item.href.length + 1000),
+      ...(group.hub && pathname === group.hub ? [group.hub.length + 2000] : []),
+      ...(group.match ?? []).filter((m) => prefixHit(pathname, m)).map((m) => m.length),
+    ];
+    for (const len of candidates) if (!best || len > best.len) best = { title: group.title, len };
+  }
+  return best?.title ?? null;
 }
 
 /** 피드 키 연결용 게시판 트리 (사이드바 시안과 별개) */

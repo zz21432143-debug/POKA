@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
 import { SIDEBAR_NAV, navItemActive, sidebarGroupActive } from "@/lib/nav";
+import { useNavHint } from "@/lib/nav-hint";
 import { BrandIcon } from "@/components/brand/brand-icon";
 import {
   AwardIcon,
@@ -111,6 +112,9 @@ export function BoardNav({
   compact?: boolean;
 }) {
   const pathname = usePathname();
+  // 게시글처럼 주소만으로 모를 때 화면이 알려 주는 묶음
+  const navHint = useNavHint();
+  const hint = pathname.startsWith("/posts/") ? navHint : null;
   // PC(마우스): 묶음 줄에 올리면 옆으로 세부 메뉴판(화면 기준 위치 — 좌측 칸에 잘리지 않게)
   const [fly, setFly] = useState<{ title: string; top: number; left: number } | null>(null);
   const closeTimer = useRef<number | null>(null);
@@ -149,7 +153,7 @@ export function BoardNav({
     return (
       <nav id={id} aria-label="전체 게시판(접힘)" data-nav-compact className="flex flex-col items-center gap-1 py-2">
         {all.map((item) => {
-          const active = item.href === "/" ? homeActive : item.group ? sidebarGroupActive(pathname, item.group) : false;
+          const active = item.href === "/" ? homeActive : item.group ? sidebarGroupActive(pathname, item.group, hint) : false;
           return (
             <a
               key={item.href}
@@ -190,7 +194,7 @@ export function BoardNav({
         }
       >
         {groups.map((group, index) => {
-          const open = sidebarGroupActive(pathname, group);
+          const open = sidebarGroupActive(pathname, group, hint);
           const hub = group.hub ?? group.items[0].href;
           const hubActive = pathname === hub;
           // 매장 관리는 금색으로 돋보이게(위 메뉴와 같은 느낌)
