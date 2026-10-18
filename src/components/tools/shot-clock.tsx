@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   Maximize2Icon,
   MinusIcon,
+  RotateCwIcon,
   PlusIcon,
   Volume2Icon,
   VolumeXIcon,
@@ -44,6 +45,8 @@ type Settings = {
   vibrate: boolean;
   warnAt: number;
   flash: boolean;
+  /** 가로 보기: 휴대폰을 세워 둬도 숫자를 옆으로 눕혀 크게 */
+  landscape: boolean;
 };
 const DEFAULTS: Settings = {
   seconds: 30,
@@ -52,6 +55,7 @@ const DEFAULTS: Settings = {
   vibrate: true,
   warnAt: 10,
   flash: true,
+  landscape: false,
 };
 
 function loadSettings(): Settings {
@@ -73,6 +77,8 @@ function loadSettings(): Settings {
         ? Number(raw.warnAt)
         : DEFAULTS.warnAt,
       flash: typeof raw.flash === "boolean" ? raw.flash : DEFAULTS.flash,
+      landscape:
+        typeof raw.landscape === "boolean" ? raw.landscape : DEFAULTS.landscape,
     };
   } catch {
     return DEFAULTS;
@@ -83,6 +89,12 @@ function loadSettings(): Settings {
 export function formatShot(ms: number) {
   const tenths = Math.max(0, Math.floor(ms / 100));
   return `${Math.floor(tenths / 10)}.${tenths % 10}`;
+}
+
+/** 큰 글씨(초)와 작은 글씨(.소수)로 나눔: 9.2 → ["9", ".2"] */
+export function shotParts(ms: number) {
+  const tenths = Math.max(0, Math.floor(ms / 100));
+  return [String(Math.floor(tenths / 10)), `.${tenths % 10}`] as const;
 }
 
 /** 남은 시간에 따른 단계: 넉넉 · 주의(warnAt초 이하) · 위험(5초 이하) · 끝 */
@@ -119,6 +131,9 @@ export function ShotClock() {
   /** 흐르는 동안 화면에 보여 줄 남은 시간(ms) — 매 프레임 갱신 */
   const [shown, setShown] = useState(DEFAULTS.seconds * 1000);
   const endAt = useRef(0);
+  /** 시계 칸 크기(px): 숫자를 칸에 꽉 차게 */
+  const faceRef = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ w: 360, h: 480 });
   const lastWhole = useRef<number | null>(null);
 
   useEffect(() => {
@@ -293,6 +308,17 @@ export function ShotClock() {
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
+  // 시계 칸 크기 따라가기(꽉 채우기 · 화면 돌림)
+  useEffect(() => {
+    const el = faceRef.current;
+    if (!el) return;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [big]);
+
   // 색: 테마 + 단계(필름 너머로도 보이게 남은 시간이 적으면 바탕색이 통째로 바뀜)
   const flashOn = settings.flash && (stage === "danger" || stage === "over");
   const tone = (() => {
@@ -313,21 +339,29 @@ export function ShotClock() {
   })();
   const total = settings.seconds * 1000;
   const ratio = Math.max(0, Math.min(1, remaining / total));
-  const hint =
-    !running && remaining === total
-      ? "밀면 시작"
-      : running
-        ? "누르면 멈춤 · 밀면 처음부터"
-        : remaining <= 0
-          ? "시간 끝 · 밀면 다음 플레이어"
-          : "멈춤 · 누르면 이어서";
+  // 안내 글은 시작 전에만(흐르는 동안은 숫자만)
+  const idle = !running && remaining === total;
+  const hint = idle ? "밀면 시작 · 누르면 멈춤" : "";
+  // 가로 보기: 화면이 세로일 때만 숫자를 90도 눕힘(이미 가로면 그대로)
+  const rotate = settings.landscape && box.h > box.w;
+  const W = rotate ? box.h : box.w;
+  const H = rotate ? box.w : box.h;
+  // 큰 숫자(초) 자리 수는 설정 시간 기준(10초 → 9초가 돼도 크기가 튀지 않게)
+  const digits = String(settings.seconds).length;
+  const SMALL = 0.36;
+  const mainPx = Math.max(
+    40,
+    Math.min((W * 0.94) / (digits * 0.6 + 0.95 * SMALL), H * 0.74),
+  );
+  const [whole, frac] = shotParts(remaining);
 
   const face = (
     <div
       data-shot-face
       role="button"
       tabIndex={0}
-      aria-label={`샷클락 ${formatShot(remaining)}초 · ${hint}`}
+      ref={faceRef}
+      aria-label={`샷클락 ${formatShot(remaining)}초${hint ? ` · ${hint}` : ""}`}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={() => {
@@ -342,47 +376,64 @@ export function ShotClock() {
       )}
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* 남은 시간 막대(바탕에 크게): 글자가 흐려도 막대 길이로 보임 */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-x-0 bottom-0 origin-left",
-          flashOn
-            ? "bg-white/25"
-            : settings.theme === "light"
-              ? "bg-black/10"
-              : "bg-white/15",
-        )}
-        style={{ height: big ? "14%" : "12%", transform: `scaleX(${ratio})` }}
-      />
-      <span
-        data-shot-time
-        className="font-black leading-none tracking-tight tabular-nums"
+      <div
+        data-shot-rotated={rotate ? "1" : undefined}
+        className="absolute top-1/2 left-1/2 grid place-items-center"
         style={{
-          fontSize: big ? "min(42vw, 70dvh)" : "min(34vw, 30dvh)",
-          // 필름 너머로도 또렷하게: 굵은 글자 + 테두리
-          WebkitTextStroke:
-            settings.theme === "light" && !flashOn
-              ? "0"
-              : "0.012em currentColor",
+          width: W,
+          height: H,
+          transform: `translate(-50%, -50%)${rotate ? " rotate(90deg)" : ""}`,
         }}
       >
-        {formatShot(remaining)}
-      </span>
-      <span
-        className={cn(
-          "absolute left-0 right-0 text-center font-black",
-          big ? "top-16 text-2xl" : "top-3 text-base",
-          "opacity-80",
-        )}
-      >
-        {hint}
-      </span>
-      {!running && remaining > 0 && remaining < total ? (
-        <span className="absolute bottom-[16%] left-0 right-0 text-center text-xl font-black opacity-90">
-          ⏸ 멈춤
+        {/* 남은 시간 막대(바탕에 크게): 글자가 흐려도 막대 길이로 보임 */}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute inset-x-0 bottom-0 origin-left",
+            flashOn
+              ? "bg-white/25"
+              : settings.theme === "light"
+                ? "bg-black/10"
+                : "bg-white/15",
+          )}
+          style={{ height: "7%", transform: `scaleX(${ratio})` }}
+        />
+        <span
+          data-shot-time
+          aria-hidden
+          className="flex items-baseline font-black leading-none tracking-tight tabular-nums"
+          style={{
+            fontSize: mainPx,
+            // 필름 너머로도 또렷하게: 굵은 글자 + 테두리
+            WebkitTextStroke:
+              settings.theme === "light" && !flashOn
+                ? "0"
+                : "0.012em currentColor",
+          }}
+        >
+          {/* 초는 아주 크게, .소수는 작게 */}
+          <span data-shot-whole>{whole}</span>
+          <span data-shot-frac style={{ fontSize: `${SMALL}em` }}>
+            {frac}
+          </span>
         </span>
-      ) : null}
+        {hint ? (
+          <span
+            data-shot-hint
+            className={cn(
+              "absolute left-0 right-0 text-center font-black opacity-80",
+              big ? "top-16 text-2xl" : "top-3 text-base",
+            )}
+          >
+            {hint}
+          </span>
+        ) : null}
+        {!running && remaining > 0 && remaining < total ? (
+          <span className="absolute bottom-[16%] left-0 right-0 text-center text-xl font-black opacity-90">
+            ⏸
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 
@@ -393,23 +444,22 @@ export function ShotClock() {
           createPortal(
             <>
               {face}
-              <div className="fixed top-2 right-2 z-[2147483001] flex gap-2">
+              {/* 흐르는 동안은 숫자만(멈추거나 끝나면 버튼이 나옴) */}
+              <div
+                hidden={running}
+                data-shot-top
+                className="fixed top-2 right-2 z-[2147483001] flex gap-2"
+              >
                 <button
                   type="button"
+                  aria-label="가로 보기"
+                  aria-pressed={settings.landscape}
                   onClick={() =>
-                    setSettings((s) => ({
-                      ...s,
-                      theme:
-                        s.theme === "dark"
-                          ? "contrast"
-                          : s.theme === "contrast"
-                            ? "light"
-                            : "dark",
-                    }))
+                    setSettings((s) => ({ ...s, landscape: !s.landscape }))
                   }
-                  className="min-h-12 rounded-xl bg-black/60 px-3 text-sm font-black text-white ring-1 ring-white/30"
+                  className="grid min-h-12 min-w-12 place-items-center rounded-xl bg-black/60 text-white ring-1 ring-white/30"
                 >
-                  {THEMES.find((t) => t.key === settings.theme)?.label}
+                  <RotateCwIcon className="size-6" />
                 </button>
                 <button
                   type="button"
@@ -572,6 +622,23 @@ export function ShotClock() {
               <VolumeXIcon className="size-4" />
             )}
             소리 {settings.sound ? "켬" : "끔"}
+          </button>
+          <button
+            type="button"
+            data-shot-landscape
+            aria-pressed={settings.landscape}
+            onClick={() =>
+              setSettings((s) => ({ ...s, landscape: !s.landscape }))
+            }
+            className={cn(
+              "flex min-h-11 items-center gap-1 rounded-xl px-3",
+              settings.landscape
+                ? "bg-zinc-200 text-black"
+                : "border border-white/20 text-zinc-300",
+            )}
+          >
+            <RotateCwIcon className="size-4" />
+            가로 보기 {settings.landscape ? "켬" : "끔"}
           </button>
           <button
             type="button"
