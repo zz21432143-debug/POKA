@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { postRewardLine } from "@/lib/rewards";
 import { PromoImageUpload } from "@/components/promo/promo-image-upload";
+import { MoneyTitleHint } from "@/components/posts/money-title-hint";
 
 export function OfficialPromoForm({ hint }: { hint: string }) {
   const router = useRouter();
@@ -63,6 +64,7 @@ export function OfficialPromoForm({ hint }: { hint: string }) {
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="title" className="write-label">홍보 제목</Label>
           <Input id="title" className="write-title-input" placeholder="제목을 입력하세요" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <MoneyTitleHint title={title} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="store">검증 매장명</Label>

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DocEditor } from "@/components/docs/doc-editor";
 import type { BoardType } from "@/generated/prisma/enums";
 import { FIRST_POST_BOARDS, FIRST_POST_POINTS, postRewardLine } from "@/lib/rewards";
+import { MoneyTitleHint } from "@/components/posts/money-title-hint";
 import { boardAllowsPhotos } from "@/lib/post-photos";
 import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
 import { cn } from "cn";
@@ -208,6 +209,7 @@ export function BoardWriteForm({
                 : "제목을 입력하세요"
           }
         />
+        <MoneyTitleHint title={title} />
         {boardType === "NOTICE" ? (
           // 공지 말머리: 누르면 제목 앞에 [업데이트] 같은 태그가 붙고, 맨 위 공지 띠에 색 태그로 보여요
           <div data-notice-tags className="flex flex-wrap items-center gap-1.5">

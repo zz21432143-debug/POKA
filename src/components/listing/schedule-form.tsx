@@ -13,6 +13,7 @@ import { postRewardLine } from "@/lib/rewards";
 import { todayKstDate } from "@/lib/dates";
 import { parseScheduleText } from "@/lib/schedule-parse";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES } from "@/lib/uploads";
+import { MoneyTitleHint } from "@/components/posts/money-title-hint";
 
 /**
  * 포스터는 원본 그대로 올립니다. 업로드 한도(3MB)를 넘거나 지원하지 않는 형식일 때만
@@ -306,6 +307,7 @@ export function ScheduleForm({
             placeholder="예: 서울 홀덤 위클리"
             onChange={(e) => setTitle(e.target.value)}
           />
+          <MoneyTitleHint title={title} />
         </div>
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="venue">개최 장소 (주소)</Label>

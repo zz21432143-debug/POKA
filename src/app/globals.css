@@ -507,6 +507,15 @@ select {
   scrollbar-width: thin;
 }
 
+/* 휴대폰: 오른쪽 끝을 살짝 흐리게 — 잘린 버튼이 고장처럼 보이지 않고 「옆으로 밀 수 있다」는 표시 */
+@media (max-width: 639px) {
+  .card-scroller {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+    padding-right: 24px;
+  }
+}
+
 .led-board {
   border-top: 1px solid rgba(201, 162, 92, 0.18);
   border-bottom: 1px solid rgba(201, 162, 92, 0.3);
