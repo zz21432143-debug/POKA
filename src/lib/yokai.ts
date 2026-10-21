@@ -183,8 +183,13 @@ export function cooldownUntil(at: Date | null, minutes: number, now = new Date()
 /** 둘 중 늦은 시각 */
 export const later = (a: Date | null, b: Date | null) => (a && b ? (a > b ? a : b) : (a ?? b));
 
-/** 밥 한 번 경험치(깨끗하면 보너스) */
-export const feedExp = (clean: number) => FEED.exp + (clean >= CLEAN_BONUS_AT ? CLEAN_BONUS_EXP : 0);
+/** 영혼의 단짝(친밀도 BOND_BONUS_AT 이상)이면 밥 경험치 +BOND_BONUS_EXP — 친밀도를 다 채운 뒤에도 「친해지면 더 빨리 큰다」 */
+export const BOND_BONUS_AT = 100;
+export const BOND_BONUS_EXP = 5;
+
+/** 밥 한 번 경험치(깨끗하면 · 영혼의 단짝이면 보너스) */
+export const feedExp = (clean: number, affection = 0) =>
+  FEED.exp + (clean >= CLEAN_BONUS_AT ? CLEAN_BONUS_EXP : 0) + (affection >= BOND_BONUS_AT ? BOND_BONUS_EXP : 0);
 
 /** 쓰다듬기 쉬는 중이면 다시 할 수 있는 시각 */
 export function nextPetTime(pettedAt: Date | null, now = new Date()) {

@@ -12,6 +12,8 @@ import {
   bgReady,
   CLEAN_BONUS_AT,
   CLEAN_BONUS_EXP,
+  BOND_BONUS_AT,
+  BOND_BONUS_EXP,
   FEED,
   RARITY_LABEL,
   SHOWER_BELOW,
@@ -616,7 +618,7 @@ export function YokaiVillage({
                   value={v.affection}
                   max={100}
                   color="linear-gradient(90deg,#ff2e88,#ff9ed2)"
-                  right={`${v.affection} · ${v.bond}${v.nextBond ? ` · ${v.nextBond.name}까지 ${v.nextBond.left} (+${v.nextBond.points}P)` : " · 최고 단계"}`}
+                  right={`${v.affection} · ${v.bond}${v.nextBond ? ` · ${v.nextBond.name}까지 ${v.nextBond.left} (+${v.nextBond.points}P)` : v.affection >= BOND_BONUS_AT ? ` · 밥 +${BOND_BONUS_EXP}` : " · 최고 단계"}`}
                 />
                 {v.next ? (
                   <Bar
@@ -765,7 +767,7 @@ export function YokaiVillage({
                 <ul className="grid gap-1.5 pb-1 pt-1">
                   <li>
                     ✅ 기본 1번 (밥 1번 = 경험치 +{FEED.exp}, 깨끗하면 +
-                    {FEED.exp + CLEAN_BONUS_EXP})
+                    {FEED.exp + CLEAN_BONUS_EXP}, 💕 영혼의 단짝이면 +{BOND_BONUS_EXP} 더)
                   </li>
                   <li>
                     {yokai.feeds.sources.attended ? "✅" : "⬜"} 출석체크{" "}

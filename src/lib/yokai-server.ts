@@ -708,7 +708,7 @@ export async function feedYokai(userId: string): Promise<CareResult> {
   });
   if (counted.count !== 1)
     return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
-  const exp = row.exp + feedExp(cleanNow(row.clean, row.cleanAt, now));
+  const exp = row.exp + feedExp(cleanNow(row.clean, row.cleanAt, now), row.affection);
   const affection = Math.min(100, row.affection + FEED.affection);
   await prisma.yokaiOwned.update({
     where: { id: row.id },

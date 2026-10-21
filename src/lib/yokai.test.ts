@@ -105,6 +105,10 @@ describe("청결도 · 샤워 · 대사", () => {
     assert.equal(nextShowerTime(100, at)?.toISOString(), "2026-10-15T07:45:00.000Z");
     assert.equal(feedExp(50), 25);
     assert.equal(feedExp(49), 20);
+    // 영혼의 단짝(친밀도 100): +5
+    assert.equal(feedExp(50, 100), 30);
+    assert.equal(feedExp(49, 100), 25);
+    assert.equal(feedExp(50, 99), 25);
   });
 
   it("25종 모두 상황별 대사가 있고, 말풍선에 들어갈 길이", async () => {

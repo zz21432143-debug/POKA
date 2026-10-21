@@ -104,7 +104,7 @@ export default async function YokaiPage({
         <p>
           밥을 한 번 주면 경험치 +{FEED.exp}, 포만감 +{FEED.fullness}, 친밀도 +{FEED.affection}이 오릅니다. 포만감은 시간이 지나며
           줄어들어 배가 고프면 다시 밥을 줄 수 있습니다. 경험치가 {STAGE_EXP.slice(1).join(" · ")}에 이르면 한 단계씩 진화해 모두 5단계까지 자랍니다.
-          단계마다 모습과 이름이 바뀝니다.
+          단계마다 모습과 이름이 바뀝니다. 친밀도가 100(영혼의 단짝)이 되면 밥 한 번에 경험치가 5 더 올라 더 빨리 자랍니다.
         </p>
         <h3 className="text-base font-black text-white">친밀도</h3>
         <p>
