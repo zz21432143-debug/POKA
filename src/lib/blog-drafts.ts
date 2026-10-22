@@ -63,6 +63,14 @@ function sections(body: string) {
   return out;
 }
 
+/** 원문 「자주 묻는 질문」의 첫 Q&A 한 쌍(블로그 글을 알차게 · 통째 복사는 아님) */
+function faq(body: string): string[] {
+  const m = /Q\.\s*([^\n]+)\nA\.\s*([^\n]+)/.exec(body);
+  if (!m) return [];
+  const a = m[2].trim();
+  return ["자주 묻는 질문", `Q. ${m[1].trim()}`, `A. ${a.length > 160 ? `${a.slice(0, 159)}…` : a}`, ""];
+}
+
 /** "셋 마이닝 — 작은 …" → "셋마이닝" */
 function titleTag(title: string) {
   return title.split(/\s[—-]\s/)[0].replace(/[^\p{L}\p{N}]/gu, "").slice(0, 20);
@@ -81,6 +89,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
     points.length ? "이 글에서 다루는 것" : "",
     ...points.map((p) => `✔ ${p.head}${p.line ? `\n   ${p.line}` : ""}`),
     "",
+    ...faq(g.body),
     `예시 · 계산까지 담은 전체 글은 POKA ${label}에서 볼 수 있어요.`,
     `👉 ${url}`,
     "",
@@ -156,4 +165,4 @@ export function blogDrafts(): BlogDraft[] {
 }
 
 /** 블로그에 먼저 올릴 글감(검색어를 보고 바꿈) */
-export const BLOG_PRIORITY = ["holdem:add-on", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "dealer:showdown"];
+export const BLOG_PRIORITY = ["holdem:add-on", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "holdem:icm-basics", "dealer:showdown", "dealer:dealer-calls"];
