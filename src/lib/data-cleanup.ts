@@ -15,7 +15,8 @@ export async function purgeSeekingPosts() {
 
 /** 올린 지 이 기간이 안 된 사진은 지우지 않습니다(글을 쓰는 중일 수 있음). */
 const IMAGE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
-const IMAGE_REF = /\/api\/images\/([a-z0-9]{20,40})/gi;
+// 사진(/api/images/…)과 PDF 원본(/api/files/…) 모두 「쓰는 중」으로 셈 — PDF가 잘못 지워지지 않게
+const IMAGE_REF = /\/api\/(?:images|files)\/([a-z0-9]{20,40})/gi;
 
 type ColumnRow = { table_name: string; column_name: string };
 
@@ -34,12 +35,13 @@ export async function findUnusedImages() {
     const table = `"${table_name.replace(/"/g, "")}"`;
     const column = `"${column_name.replace(/"/g, "")}"`;
     const rows = await prisma.$queryRawUnsafe<{ v: string }[]>(
-      `SELECT ${column}::text AS v FROM ${table} WHERE ${column}::text LIKE '%/api/images/%'`,
+      `SELECT ${column}::text AS v FROM ${table} WHERE ${column}::text LIKE '%/api/images/%' OR ${column}::text LIKE '%/api/files/%'`,
     );
     for (const row of rows) for (const match of row.v.matchAll(IMAGE_REF)) used.add(match[1]);
   }
   const candidates = await prisma.uploadedImage.findMany({
-    where: { createdAt: { lt: new Date(Date.now() - IMAGE_GRACE_MS) } },
+    // PDF는 정리하지 않음(문서 원본)
+    where: { createdAt: { lt: new Date(Date.now() - IMAGE_GRACE_MS) }, NOT: { mime: "application/pdf" } },
     select: { id: true, size: true },
   });
   const unused = candidates.filter((row) => !used.has(row.id));

@@ -20,7 +20,9 @@ type Status =
 async function fetchPdfBytes(url: string, onProgress: (done: number, total: number) => void): Promise<Uint8Array> {
   const m = url.match(/^\/api\/files\/([a-z0-9]+)$/i);
   if (!m) return new Uint8Array(await (await fetch(url)).arrayBuffer());
-  const meta = (await (await fetch(`${url}/meta`)).json()) as { size: number; parts: number };
+  const metaRes = await fetch(`${url}/meta`);
+  if (!metaRes.ok) throw new Error(metaRes.status === 404 ? "PDF 원본을 찾을 수 없어요. 운영자가 PDF를 다시 올려야 해요." : "PDF 정보를 받지 못했습니다.");
+  const meta = (await metaRes.json()) as { size: number; parts: number };
   const out = new Uint8Array(meta.size);
   let done = 0;
   onProgress(0, meta.parts);
