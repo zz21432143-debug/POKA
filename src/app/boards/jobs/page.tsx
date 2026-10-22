@@ -2,17 +2,15 @@ import type { Metadata } from "next";
 import Link from "@/components/ui/link";
 import { BriefcaseIcon, PenSquareIcon, SirenIcon } from "lucide-react";
 import { HomeUrgentJobs, type HomeUrgentJob } from "@/components/home/home-urgent-jobs";
-import { InfiniteJobList } from "@/components/jobs/infinite-job-list";
-import { JobFilters } from "@/components/jobs/job-filters";
+import { ApplyChat } from "@/components/jobs/apply-chat";
+import { JobChatSide } from "@/components/jobs/job-chat-side";
+import { loadApplyChat } from "@/lib/job-chat";
 import { RegionUrgentAlert } from "@/components/jobs/region-urgent-alert";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
-import { PAGE_SIZE } from "@/lib/feed";
 import { JOB_REGIONS, openJobWhere, parseJobRegion, regionWhere } from "@/lib/job-status";
-import { loadJobPage } from "@/lib/load-feed";
 import { JOB_KINDS } from "@/lib/nav";
 import { cn } from "cn";
-import { parseJobTagParam } from "@/lib/job-tags";
 import { BoardBottomAd } from "@/components/ads/board-bottom-ad";
 import { getCurrentUser } from "@/lib/current-user";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
@@ -42,14 +40,10 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
 export default async function JobsHubPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const region = parseJobRegion(params.region);
-  const openOnly = params.open === "1";
-  const tag = parseJobTagParam(params.tag);
-  const [page, urgent] = await Promise.all([
-    loadJobPage("jobs", { offset: 0, limit: PAGE_SIZE, region, openOnly, tag, guest: !(await getCurrentUser().catch(() => null)) }).catch(() => ({
-      jobs: [],
-      total: 0,
-      nextOffset: null,
-    })),
+  const viewer = await getCurrentUser().catch(() => null);
+  const [chat, urgent] = await Promise.all([
+    // 모든 구인을 카톡 오픈채팅처럼 한 방에(종류별 방과 같은 모양)
+    loadApplyChat({ kind: "ALL", region, guest: !viewer }).catch(() => []),
     prisma.post
       .findMany({
         where: {
@@ -144,21 +138,25 @@ export default async function JobsHubPage({ searchParams }: { searchParams: Sear
 
       <HomeUrgentJobs jobs={urgent} region={region} />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold text-white">{region ? `${region} 공고` : "전체 공고"}</h2>
-        <JobFilters basePath="/boards/jobs" region={region} openOnly={openOnly} tag={tag} />
-        <InfiniteJobList
-          key={`${region ?? "all"}-${openOnly}-${tag ?? ""}`}
-          tag={tag}
-          feedKey="jobs"
-          initialItems={page.jobs}
-          initialTotal={page.total}
-          initialNextOffset={page.nextOffset}
-          region={region}
-          openOnly={openOnly}
-          emptyText={region ? `${region} 지역 공고가 아직 없습니다.` : "아직 올라온 공고가 없습니다."}
-          emptyAction={{ href: "/boards/jobs/write", label: "첫 공고 올리기" }}
-        />
+      <section aria-label={region ? `${region} 공고` : "전체 공고"} className="mx-auto grid w-full max-w-[720px] items-start gap-4 xl:max-w-[1016px] xl:grid-cols-[minmax(0,720px)_280px]">
+        <div className="flex min-w-0 flex-col gap-3">
+          <nav aria-label="지역" className="card-scroller -mx-1 overflow-x-auto px-1">
+            <ul className="flex w-max gap-1.5">
+              {[null, ...JOB_REGIONS].map((r) => (
+                <li key={r ?? "all"}>
+                  <Link
+                    href={r ? `/boards/jobs?region=${encodeURIComponent(r)}` : "/boards/jobs"}
+                    className={cn("touch-target inline-flex min-h-9 items-center rounded-full border px-3 text-sm font-bold", (r ?? null) === region ? "border-[#fee500] bg-[#fee500] text-[#1d1d1d]" : "border-white/15 text-zinc-300")}
+                  >
+                    {r ?? "전국"}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <ApplyChat key={region ?? "all"} kind="ALL" slug="apply" title="전체 구인" initial={chat} region={region} loggedIn={Boolean(viewer)} myNickname={viewer?.nickname ?? null} />
+        </div>
+        <JobChatSide region={region} slug="apply" loggedIn={Boolean(viewer)} />
       </section>
       {/* 지역별 구인 바로가기(검색엔진이 지역 페이지를 찾을 수 있게) */}
       <nav aria-label="지역별 홀덤 딜러 구인" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#9CA3AF]">

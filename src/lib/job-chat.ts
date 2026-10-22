@@ -11,6 +11,8 @@ import type { JobKind } from "@/generated/prisma/enums";
  */
 export type ChatMessage = {
   id: string;
+  /** 공고 종류(전체 채팅방에서 꼬리표로) */
+  jobKind: JobKind | null;
   at: string;
   bumped: boolean;
   company: string | null;
@@ -59,13 +61,16 @@ function preview(text: string) {
   return lines.slice(0, 4).join("\n").replace(PHONE, "010-****-****");
 }
 
-export async function loadApplyChat(opts: { kind?: JobKind; region: JobRegion | null; before?: Date | null; after?: Date | null; guest: boolean; limit?: number }) {
+/** 전체 채팅방에 모으는 구인 종류(구직은 빼고) */
+export const CHAT_ALL_KINDS: JobKind[] = ["APPLY", "TOURNAMENT", "URGENT", "FIXED", "TEAM"];
+
+export async function loadApplyChat(opts: { kind?: JobKind | "ALL"; region: JobRegion | null; before?: Date | null; after?: Date | null; guest: boolean; limit?: number }) {
   const limit = Math.min(opts.limit ?? 30, 60);
   const rows = await prisma.post
     .findMany({
       where: {
         AND: [
-          { boardType: "JOBS", jobKind: opts.kind ?? "APPLY", hidden: false, isAttendanceThread: false },
+          { boardType: "JOBS", jobKind: opts.kind === "ALL" ? { in: CHAT_ALL_KINDS } : (opts.kind ?? "APPLY"), hidden: false, isAttendanceThread: false },
           regionWhere(opts.region),
           opts.before ? { bumpedAt: { lt: opts.before } } : {},
           opts.after ? { bumpedAt: { gt: opts.after } } : {},
@@ -79,6 +84,7 @@ export async function loadApplyChat(opts: { kind?: JobKind; region: JobRegion | 
         content: true,
         createdAt: true,
         bumpedAt: true,
+        jobKind: true,
         jobCompanyName: true,
         jobLocation: true,
         jobFilled: true,
@@ -107,6 +113,7 @@ export async function loadApplyChat(opts: { kind?: JobKind; region: JobRegion | 
       superseded: Boolean(p.jobCompanyName) && latestKey.get(key) !== p.id,
       logoUrl: p.authorId && p.jobCompanyName ? (logos.get(storeLogoId(p.authorId, p.jobCompanyName)) ?? null) : null,
       id: p.id,
+      jobKind: p.jobKind,
       at: p.bumpedAt.toISOString(),
       bumped: p.bumpedAt.getTime() - p.createdAt.getTime() > 60_000,
       company: p.jobCompanyName?.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "") || null,

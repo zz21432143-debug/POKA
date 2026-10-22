@@ -14,6 +14,14 @@ import type { JobKind } from "@/generated/prisma/enums";
 
 /** 날짜 줄(빈자리)이 있는 분류 — 고정 · 팀은 날짜 없이 올림 */
 const DATED: JobKind[] = ["APPLY", "TOURNAMENT", "URGENT"];
+/** 전체 채팅방 말풍선 꼬리표 */
+const KIND_TAG: Partial<Record<JobKind, { label: string; slug: string; tone: string }>> = {
+  APPLY: { label: "지원 딜러", slug: "apply", tone: "bg-[#e3f2fd] text-[#0d47a1]" },
+  TOURNAMENT: { label: "대회 딜러", slug: "tournament", tone: "bg-[#ede7f6] text-[#4527a0]" },
+  URGENT: { label: "급구 · 대타", slug: "urgent", tone: "bg-[#ffebee] text-[#b71c1c]" },
+  FIXED: { label: "고정 직원", slug: "fixed", tone: "bg-[#e8f5e9] text-[#1b5e20]" },
+  TEAM: { label: "팀 구인", slug: "team", tone: "bg-[#fff3e0] text-[#e65100]" },
+};
 const HOURLY = DATED;
 
 const kst = (iso: string, opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...opts }).format(new Date(iso));
@@ -89,7 +97,8 @@ export function ApplyChat({
   loggedIn,
   myNickname,
 }: {
-  kind?: JobKind;
+  /** ALL: 구인구직 첫 화면 — 모든 구인을 한 채팅방에 */
+  kind?: JobKind | "ALL";
   slug?: string;
   title?: string;
   initial: ChatMessage[];
@@ -120,7 +129,7 @@ export function ApplyChat({
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const today = todayKst();
-  const q = `&kind=${slug}${region ? `&region=${encodeURIComponent(region)}` : ""}`;
+  const q = `&kind=${kind === "ALL" ? "all" : slug}${region ? `&region=${encodeURIComponent(region)}` : ""}`;
   const isMine = (m: ChatMessage) => Boolean(myNickname && m.author?.nickname === myNickname);
 
   // 처음엔 맨 아래(최신)부터 — 페이지는 그대로 두고 채팅 칸만
@@ -198,7 +207,7 @@ export function ApplyChat({
               {onlyMine ? "✓ 내 공고만" : "내 공고만"}
             </button>
           ) : null}
-          {DATED.includes(kind) ? (
+          {kind === "ALL" || DATED.includes(kind) ? (
             <Link href={region ? `/boards/jobs/slots?region=${encodeURIComponent(region)}` : "/boards/jobs/slots"} className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-black text-[#1d2733]">
               📅 날짜별로 보기
             </Link>
@@ -220,7 +229,7 @@ export function ApplyChat({
             {moreBusy ? "불러오는 중…" : "⬆ 이전 공고 더 보기"}
           </button>
         ) : null}
-        {rows.length === 0 ? <p className="py-10 text-center text-sm text-[#1d2733]">{onlyMine ? "이 채팅방에 내 공고가 없어요." : "아직 올라온 공고가 없어요. 아래에 카톡 공고를 붙여넣어 첫 공고를 올려 보세요."}</p> : null}
+        {rows.length === 0 ? <p className="py-10 text-center text-sm text-[#1d2733]">{onlyMine ? "이 채팅방에 내 공고가 없어요." : kind === "ALL" ? "아직 올라온 공고가 없어요." : "아직 올라온 공고가 없어요. 아래에 카톡 공고를 붙여넣어 첫 공고를 올려 보세요."}</p> : null}
         {rows.map((r) =>
           r.kind === "day" ? (
             <p key={`d-${r.key}`} className="mx-auto my-1 rounded-full bg-black/15 px-3 py-0.5 text-[11px] font-bold text-white">
@@ -233,8 +242,9 @@ export function ApplyChat({
               mine={isMine(r.m)}
               today={today}
               loggedIn={loggedIn}
-              slug={slug}
-              always={!DATED.includes(kind)}
+              slug={kind === "ALL" ? (KIND_TAG[r.m.jobKind ?? "APPLY"]?.slug ?? "apply") : slug}
+              always={!DATED.includes(kind === "ALL" ? (r.m.jobKind ?? "APPLY") : kind)}
+              tag={kind === "ALL" && r.m.jobKind ? (KIND_TAG[r.m.jobKind] ?? null) : null}
               onLogo={(id, url) => setMessages((old) => old.map((x) => (x.id === id ? { ...x, logoUrl: url } : x)))}
               onEdited={(id, text) => {
                 setMessages((old) => old.map((x) => (x.id === id ? { ...x, text } : x)));
@@ -259,8 +269,8 @@ export function ApplyChat({
           ⬇ 새 공고 {fresh}개
         </button>
       ) : null}
-      {loggedIn ? <FirstTip /> : null}
-      {loggedIn && !composerSeen ? (
+      {loggedIn && kind !== "ALL" ? <FirstTip /> : null}
+      {loggedIn && !composerSeen && kind !== "ALL" ? (
         <button
           type="button"
           data-chat-fab
@@ -274,21 +284,35 @@ export function ApplyChat({
           ✏️ 공고 올리기
         </button>
       ) : null}
-      <Composer
-        kind={kind}
-        slug={slug}
-        loggedIn={loggedIn}
-        defaultRegion={region}
-        onSent={() => {
-          void pullNew(true);
-          router.refresh();
-        }}
-      />
+      {kind === "ALL" ? (
+        // 전체 채팅방: 올리기는 종류별 채팅방에서(붙여넣어 바로 올리기)
+        <div data-chat-all-post className="grid gap-1.5 bg-[#a9bdce] px-3 py-2.5">
+          <p className="text-xs font-bold text-[#1d2733]">✏️ 카톡 공고 붙여넣어 올리기</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.values(KIND_TAG).map((t) => (
+              <Link key={t!.slug} href={`/boards/jobs/${t!.slug}`} className={cn("rounded-full px-3 py-1.5 text-xs font-black", t!.tone)}>
+                {t!.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Composer
+          kind={kind}
+          slug={slug}
+          loggedIn={loggedIn}
+          defaultRegion={region}
+          onSent={() => {
+            void pullNew(true);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function ChatBubble({ m, mine, today, loggedIn, slug, always, onEdited, onLogo }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean; slug: string; always: boolean; onEdited: (id: string, text: string) => void; onLogo: (id: string, url: string | null) => void }) {
+function ChatBubble({ m, mine, today, loggedIn, slug, always, tag = null, onEdited, onLogo }: { m: ChatMessage; mine: boolean; today: string; loggedIn: boolean; slug: string; always: boolean; tag?: { label: string; slug: string; tone: string } | null; onEdited: (id: string, text: string) => void; onLogo: (id: string, url: string | null) => void }) {
   const [editing, setEditing] = useState(false);
   const [logoBusy, setLogoBusy] = useState(false);
   // 매장 로고: 그림 올리기 → 이 매장 공고 말풍선 옆에(다른 사람 화면)
@@ -359,6 +383,9 @@ function ChatBubble({ m, mine, today, loggedIn, slug, always, onEdited, onLogo }
         ) : null}
         <div className={cn("flex items-end gap-1", mine && "flex-row-reverse")}>
           <div className={cn("relative min-w-0 rounded-2xl px-3 py-2 text-[14px] leading-relaxed text-[#1d1d1d] shadow-sm", mine ? "rounded-tr-sm bg-[#fee500]" : "rounded-tl-sm bg-white")}>
+            {tag ? (
+              <span data-chat-kind className={cn("mb-1 mr-1 inline-block rounded px-1.5 text-[11px] font-black", tag.tone)}>{tag.label}</span>
+            ) : null}
             {m.status === "closed" ? (
               <span className="mb-1 inline-block rounded bg-zinc-300 px-1.5 text-[11px] font-black text-zinc-700">마감</span>
             ) : always ? (

@@ -6,7 +6,7 @@ import { resolveJobKind } from "@/lib/nav";
 
 export const dynamic = "force-dynamic";
 
-/** 구인 오픈채팅: ?kind=apply|tournament|urgent|fixed|team · ?before=ISO(위로 더 보기) · ?after=ISO(새 공고) · ?region= */
+/** 구인 오픈채팅: ?kind=all|apply|tournament|urgent|fixed|team · ?before=ISO(위로 더 보기) · ?after=ISO(새 공고) · ?region= */
 export async function GET(request: Request) {
   const q = new URL(request.url).searchParams;
   const user = await getCurrentUser().catch(() => null);
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return Number.isFinite(t) ? new Date(t) : null;
   };
   const messages = await loadApplyChat({
-    kind: resolveJobKind(q.get("kind") ?? "apply")?.kind ?? "APPLY",
+    kind: q.get("kind") === "all" ? "ALL" : (resolveJobKind(q.get("kind") ?? "apply")?.kind ?? "APPLY"),
     region: parseJobRegion(q.get("region") ?? undefined),
     before: date(q.get("before")),
     after: date(q.get("after")),
