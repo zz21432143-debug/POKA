@@ -14,6 +14,7 @@ import {
   CLEAN_BONUS_EXP,
   BOND_BONUS_AT,
   BOND_BONUS_EXP,
+  PET_GIFT_EXP,
   FEED,
   RARITY_LABEL,
   SHOWER_BELOW,
@@ -744,6 +745,18 @@ export function YokaiVillage({
                         {b.count}
                       </span>
                     )}
+                    {/* 영혼의 단짝: 오늘 첫 쓰다듬기 선물을 받을 수 있는지 */}
+                    {b.key === "pet" && !viewingOther && a && a.affection >= BOND_BONUS_AT ? (
+                      <span
+                        data-yokai-gift={a.pets.used === 0 ? "ready" : "done"}
+                        className={cn(
+                          "rounded-full px-1.5 text-[10px] font-black",
+                          a.pets.used === 0 ? "bg-[#ffcf4a] text-[#2a1400]" : "text-zinc-400",
+                        )}
+                      >
+                        {a.pets.used === 0 ? `🎁 선물 +${PET_GIFT_EXP}` : "오늘 선물 받음"}
+                      </span>
+                    ) : null}
                   </button>
                 ))}
               </div>

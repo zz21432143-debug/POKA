@@ -150,5 +150,10 @@ export function blogDrafts(): BlogDraft[] {
   }
   // 첫 두 편(포지션 · 딜러가 하는 일) 다음에 샷클락, 그 뒤 5편마다 도구 한 편
   BLOG_TOOL_POSTS.map(toolDraft).forEach((t, i) => out.splice(2 + i * 6, 0, t));
-  return out;
+  // 검색에 걸리기 시작한 주제는 먼저(서치콘솔 검색어 기준 · 2026-10-23: 애드온 · 플로어 · TDA 룰)
+  const first = BLOG_PRIORITY.map((k) => out.find((d) => d.key === k)).filter((d): d is BlogDraft => Boolean(d));
+  return [...first, ...out.filter((d) => !BLOG_PRIORITY.includes(d.key))];
 }
+
+/** 블로그에 먼저 올릴 글감(검색어를 보고 바꿈) */
+export const BLOG_PRIORITY = ["holdem:add-on", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "dealer:showdown"];
