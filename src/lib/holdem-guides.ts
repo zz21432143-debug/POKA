@@ -13,6 +13,7 @@ import { HOLDEM_APPENDS_2 } from "@/lib/holdem-guides-append-2";
 import { HOLDEM_APPENDS_3 } from "@/lib/holdem-guides-append-3";
 import { HOLDEM_APPENDS_4 } from "@/lib/holdem-guides-append-4";
 import { HOLDEM_APPENDS_5 } from "@/lib/holdem-guides-append-5";
+import { HOLDEM_APPENDS_6 } from "@/lib/holdem-guides-append-6";
 
 export type HoldemGuide = {
   slug: string;
@@ -307,6 +308,10 @@ ${extra4}`;
   if (extra5) row.body = `${row.body}
 
 ${extra5}`;
+  const extra6 = HOLDEM_APPENDS_6[row.slug];
+  if (extra6) row.body = `${row.body}
+
+${extra6}`;
 }
 
 export function getHoldemGuide(slug: string) {

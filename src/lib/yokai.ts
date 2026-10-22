@@ -186,6 +186,12 @@ export const later = (a: Date | null, b: Date | null) => (a && b ? (a > b ? a : 
 /** 영혼의 단짝(친밀도 BOND_BONUS_AT 이상)이면 밥 경험치 +BOND_BONUS_EXP — 친밀도를 다 채운 뒤에도 「친해지면 더 빨리 큰다」 */
 export const BOND_BONUS_AT = 100;
 export const BOND_BONUS_EXP = 5;
+/** 영혼의 단짝이면 하루 첫 쓰다듬기에 선물(경험치) */
+export const PET_GIFT_EXP = 10;
+/** 다 키움(5단계) + 영혼의 단짝 → 한 번만 「전설의 단짝」 보상(bondReward에 LEGEND_MARK로 기록) */
+export const LEGEND_POINTS = 500;
+export const LEGEND_MARK = 101;
+export const LEGEND_NAME = "전설의 단짝";
 
 /** 밥 한 번 경험치(깨끗하면 · 영혼의 단짝이면 보너스) */
 export const feedExp = (clean: number, affection = 0) =>

@@ -40,5 +40,5 @@ export async function POST(request: Request) {
   }
   else return NextResponse.json({ error: "잘못된 요청이에요." }, { status: 400 });
   if (!result.ok) return NextResponse.json({ error: result.error, yokai: await getYokai(user.id) }, { status: 409, headers: NO_STORE });
-  return NextResponse.json({ ok: true, evolved: result.evolved ?? null, bond: result.bond ?? null, yokai: await getYokai(user.id) }, { headers: NO_STORE });
+  return NextResponse.json({ ok: true, evolved: result.evolved ?? null, bond: result.bond ?? null, legend: "legend" in result ? (result.legend ?? null) : null, gift: "gift" in result ? (result.gift ?? null) : null, yokai: await getYokai(user.id) }, { headers: NO_STORE });
 }

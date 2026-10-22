@@ -210,6 +210,8 @@ export function YokaiVillage({
         yokai?: YokaiView | null;
         evolved?: number | null;
         bond?: { at: number; points: number; name: string } | null;
+        legend?: { points: number; name: string } | null;
+        gift?: number | null;
         error?: string;
       };
       if (json.yokai !== undefined) setYokai(json.yokai ?? null);
@@ -237,8 +239,14 @@ export function YokaiVillage({
           reactionSeq.current += 1;
           const key = reactionSeq.current;
           const exp =
-            kind === "fed" && yokai ? next.exp - yokai.active.exp : undefined;
-          if (json.bond)
+            (kind === "fed" || kind === "pet") && yokai ? next.exp - yokai.active.exp : undefined;
+          if (json.legend)
+            setReaction({
+              kind: "bond",
+              text: `🌟 다 자라서 「${json.legend.name}」이 됐어요! +${json.legend.points}P`,
+              key,
+            });
+          else if (json.bond)
             setReaction({
               kind: "bond",
               text: `💕 ${josa(json.bond.name, "이가")} 됐어요! +${json.bond.points}P · ${pickLine(next.species, "bond", key)}`,
@@ -247,13 +255,13 @@ export function YokaiVillage({
           else
             setReaction({
               kind,
-              text: pickLine(next.species, kind, key),
+              text: json.gift ? `🎁 영혼의 단짝 선물! 경험치 +${json.gift} · ${pickLine(next.species, kind, key)}` : pickLine(next.species, kind, key),
               key,
               exp: exp && exp > 0 ? exp : undefined,
             });
           window.setTimeout(
             () => setReaction((r) => (r?.key === key ? null : r)),
-            json.bond ? 6000 : 3800,
+            json.legend || json.bond ? 6000 : json.gift ? 4800 : 3800,
           );
         }
       }
@@ -539,7 +547,7 @@ export function YokaiVillage({
                       : reaction.kind === "bond"
                         ? ["💖", "💕", "✨", "💗", "💖", "💕", "✨"]
                         : reaction.kind === "pet"
-                          ? ["💕", "💗", "💕"]
+                          ? ["💕", "💗", "💕", ...(reaction.exp ? [`+${reaction.exp}`] : [])]
                           : ["🍙", reaction.exp ? `+${reaction.exp}` : "😋"]
                     ).map((e, i) => (
                       <span
@@ -591,7 +599,7 @@ export function YokaiVillage({
                     className="min-h-9 shrink-0 rounded-full border border-[#f5d76e]/60 bg-black/40 px-3 text-[11px] font-black text-[#f5d76e] hover:bg-[#f5d76e]/10"
                   >
                     ⭐ 대표로 바꾸기 ·{" "}
-                    {v.mainCost ? `${v.mainCost}P` : "처음 무료"}
+                    {v.mainCost ? `${v.mainCost}P` : a && a.stage >= 5 ? "다 키워서 무료" : "처음 무료"}
                   </button>
                 )}
               </div>
@@ -1236,9 +1244,9 @@ export function YokaiVillage({
                           <>
                             🎁{" "}
                             <b className="text-emerald-300">
-                              처음 대표로 정하는 요괴라 무료예요
+                              {a && a.stage >= 5 ? "지금 대표 요괴를 다 키워서 무료예요" : "처음 대표로 정하는 요괴라 무료예요"}
                             </b>{" "}
-                            (다음부터는 {yokai.mainChangeCost}P)
+                            {a && a.stage >= 5 ? "(다음 요괴도 잘 키워 주세요!)" : `(다음부터는 ${yokai.mainChangeCost}P)`}
                           </>
                         )}
                       </li>

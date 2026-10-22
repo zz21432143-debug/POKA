@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db";
 import { todayKstDate } from "@/lib/dates";
 import {
+  BOND_BONUS_AT,
+  LEGEND_MARK,
+  LEGEND_NAME,
+  LEGEND_POINTS,
+  PET_GIFT_EXP,
   BOND_TIERS,
   GREET_AFFECTION,
   PET_AFFECTION,
@@ -341,7 +346,7 @@ function careOf(o: OwnedRow, now = new Date()): YokaiCare {
     fullness: fullnessNow(o.fullness, o.fullnessAt, now),
     clean: cleanNow(o.clean, o.cleanAt, now),
     affection: o.affection,
-    bond: bondName(o.affection),
+    bond: o.bondReward >= LEGEND_MARK ? LEGEND_NAME : bondName(o.affection),
     nextBond: nextBond(o.affection),
     mainCost: o.wasMain ? MAIN_CHANGE_COST : 0,
   };
@@ -454,7 +459,11 @@ export async function getYokai(userId: string): Promise<YokaiView | null> {
       nextShowerAt: showerAt?.toISOString() ?? null,
       pets: { used: pettedToday(pet), max: PET_MAX },
     },
-    owned: valid.map((o) => careOf(o, now)),
+    // 지금 대표 요괴를 다 키웠으면(5단계) 다음 요괴로 바꾸기 무료
+    owned: valid.map((o) => {
+      const c = careOf(o, now);
+      return stageForExp(activeRow.exp) >= 5 ? { ...c, mainCost: 0 } : c;
+    }),
     main: species,
     mainChangeCost: MAIN_CHANGE_COST,
     feeds: { used, allowed, sources },
@@ -645,6 +654,32 @@ async function grantBond(userId: string, row: OwnedRow, affection: number) {
   return { at: top.at, points, name: top.name };
 }
 
+/**
+ * 다 키움(5단계) + 영혼의 단짝(친밀도 100)이 되면 한 번만 「전설의 단짝」 보상(+LEGEND_POINTS P · 전광판 알림).
+ * bondReward를 LEGEND_MARK로 바꿔 기록(동시에 눌러도 한 번만).
+ */
+async function grantLegend(userId: string, row: OwnedRow, exp: number, affection: number) {
+  if (stageForExp(exp) < 5 || affection < BOND_BONUS_AT) return null;
+  const claimed = await prisma.yokaiOwned.updateMany({
+    where: { id: row.id, bondReward: { lt: LEGEND_MARK } },
+    data: { bondReward: LEGEND_MARK },
+  });
+  if (claimed.count !== 1) return null;
+  const { grantRewards } = await import("@/lib/exp");
+  await grantRewards(userId, 0, LEGEND_POINTS, { ignorePointCap: true }).catch(() => undefined);
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { nickname: true } }).catch(() => null);
+  if (user) {
+    const { pushTicker } = await import("@/lib/ticker");
+    const name = isSpecies(row.species) ? YOKAI[row.species].name : "요괴";
+    await pushTicker({
+      kind: `LEGEND:${userId}:${row.species}`,
+      message: `🌟 ${user.nickname}님의 ${name}, 다 자라서 「${LEGEND_NAME}」이 됐어요!`,
+      href: "/yokai",
+    }).catch(() => undefined);
+  }
+  return { points: LEGEND_POINTS, name: LEGEND_NAME };
+}
+
 /** 하루 첫 방문 인사: 대표 요괴 친밀도 +GREET_AFFECTION(하루 한 번 · 동시에 열어도 한 번) */
 async function greetToday(
   userId: string,
@@ -664,6 +699,7 @@ async function greetToday(
     data: { affection },
   });
   const bond = await grantBond(userId, row, affection);
+  await grantLegend(userId, row, row.exp, affection);
   return { amount: affection - row.affection, bond };
 }
 
@@ -672,6 +708,9 @@ type CareResult =
       ok: true;
       evolved?: number | null;
       bond?: { at: number; points: number; name: string } | null;
+      legend?: { points: number; name: string } | null;
+      /** 쓰다듬기 선물로 오른 경험치 */
+      gift?: number | null;
     }
   | { ok: false; error: string };
 
@@ -721,10 +760,12 @@ export async function feedYokai(userId: string): Promise<CareResult> {
   });
   const before = stageForExp(row.exp);
   const after = stageForExp(exp);
+  const bond = await grantBond(userId, row, affection);
   return {
     ok: true,
     evolved: after > before ? after : null,
-    bond: await grantBond(userId, row, affection),
+    bond,
+    legend: await grantLegend(userId, row, exp, affection),
   };
 }
 
@@ -753,11 +794,23 @@ export async function petYokai(userId: string): Promise<CareResult> {
   if (done.count !== 1)
     return { ok: false, error: "잠시 뒤에 다시 눌러 주세요." };
   const affection = Math.min(100, row.affection + PET_AFFECTION);
+  // 영혼의 단짝(친밀도 100)이면 하루 첫 쓰다듬기에 선물 경험치
+  const gift = row.affection >= BOND_BONUS_AT && count === 0 ? PET_GIFT_EXP : 0;
+  const exp = row.exp + gift;
   await prisma.yokaiOwned.update({
     where: { id: row.id },
-    data: { affection },
+    data: gift ? { affection, exp } : { affection },
   });
-  return { ok: true, bond: await grantBond(userId, row, affection) };
+  const before = stageForExp(row.exp);
+  const after = stageForExp(exp);
+  const bond = await grantBond(userId, row, affection);
+  return {
+    ok: true,
+    bond,
+    gift: gift || null,
+    evolved: after > before ? after : null,
+    legend: await grantLegend(userId, row, exp, affection),
+  };
 }
 
 /** 샤워(대표 요괴만): 청결도가 SHOWER_BELOW 미만 · 샤워 쿨타임(모든 요괴 함께)이 지났을 때 · 100으로 · 친밀도 +SHOWER_AFFECTION */
@@ -789,7 +842,8 @@ export async function showerYokai(userId: string): Promise<CareResult> {
     where: { id: row.id },
     data: { clean: 100, cleanAt: now, affection },
   });
-  return { ok: true, bond: await grantBond(userId, row, affection) };
+  const bond = await grantBond(userId, row, affection);
+  return { ok: true, bond, legend: await grantLegend(userId, row, row.exp, affection) };
 }
 
 /** 대표 요괴 바꾸기(가진 요괴만 · MAIN_CHANGE_COST P 차감 · 쿨타임은 그대로 이어짐) */
@@ -811,7 +865,13 @@ export async function setMainYokai(userId: string, species: YokaiSpecies) {
         data: { wasMain: true },
       })
     ).count === 1;
-  if (!firstTime) {
+  // 지금 대표 요괴를 다 키웠으면(5단계) 다음 요괴로 바꾸기 무료
+  const current = await prisma.yokaiOwned.findUnique({
+    where: { userId_species: { userId, species: mainOf(pet) } },
+    select: { exp: true },
+  }).catch(() => null);
+  const grownUp = current ? stageForExp(current.exp) >= 5 : false;
+  if (!firstTime && !grownUp) {
     const paid = await prisma.user.updateMany({
       where: { id: userId, points: { gte: MAIN_CHANGE_COST } },
       data: { points: { decrement: MAIN_CHANGE_COST } },
@@ -1040,5 +1100,6 @@ export async function addMainAffection(userId: string, amount: number) {
     data: { affection },
   });
   const bond = await grantBond(userId, row, affection);
+  await grantLegend(userId, row, row.exp, affection);
   return { amount: affection - row.affection, bond };
 }
