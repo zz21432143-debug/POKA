@@ -8,6 +8,7 @@ import { HOLDEM_GUIDES_3 } from "@/lib/holdem-guides-3";
 import { HOLDEM_GUIDES_4 } from "@/lib/holdem-guides-4";
 import { HOLDEM_GUIDES_5 } from "@/lib/holdem-guides-5";
 import { HOLDEM_GUIDES_6 } from "@/lib/holdem-guides-6";
+import { HOLDEM_GUIDES_7 } from "@/lib/holdem-guides-7";
 import { HOLDEM_APPENDS } from "@/lib/holdem-guides-append";
 import { HOLDEM_APPENDS_2 } from "@/lib/holdem-guides-append-2";
 import { HOLDEM_APPENDS_3 } from "@/lib/holdem-guides-append-3";
@@ -34,7 +35,7 @@ export const HOLDEM_GUIDE_CATEGORIES = [
   { id: "preflop", label: "프리플랍", hint: "오픈 · 3벳 · 블라인드", slugs: ["preflop-chart-reading", "open-sizing-limping", "cold-calling", "three-bet-four-bet", "blind-defense", "set-mining"] },
   { id: "postflop", label: "플랍 이후", hint: "벳 · 계획", slugs: ["continuation-bet", "check-raise", "spr-planning", "turn-river-planning", "probe-donk-bets", "multiway-pots", "delayed-cbet", "slowplay", "float"] },
   { id: "river", label: "리버 · 블러프", hint: "밸류와 블러프", slugs: ["value-bet-sizing", "choosing-bluffs", "river-call-decisions", "bluff-catching", "overbet"] },
-  { id: "tournament", label: "토너먼트", hint: "스택 · ICM", slugs: ["tournament-phases", "tournament-stack-strategy", "ante-effect", "short-stack-resteal", "heads-up-final-table"] },
+  { id: "tournament", label: "토너먼트", hint: "스택 · ICM", slugs: ["tournament-phases", "tournament-stack-strategy", "ante-effect", "short-stack-resteal", "heads-up-final-table", "add-on"] },
 ] as const;
 
 export const HOLDEM_GUIDES: HoldemGuide[] = [
@@ -289,7 +290,7 @@ A. "작으면 원페어로도 끝까지, 크면 강한 패로만 큰 팟" 한 �
 ];
 
 // 2 · 3차 글(따로 파일)
-HOLDEM_GUIDES.push(...HOLDEM_GUIDES_2, ...HOLDEM_GUIDES_3, ...HOLDEM_GUIDES_4, ...HOLDEM_GUIDES_5, ...HOLDEM_GUIDES_6);
+HOLDEM_GUIDES.push(...HOLDEM_GUIDES_2, ...HOLDEM_GUIDES_3, ...HOLDEM_GUIDES_4, ...HOLDEM_GUIDES_5, ...HOLDEM_GUIDES_6, ...HOLDEM_GUIDES_7);
 // 짧은 글 덧붙임(예시 · 질문)
 for (const row of HOLDEM_GUIDES) {
   const extra = HOLDEM_APPENDS[row.slug];

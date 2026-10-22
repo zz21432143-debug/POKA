@@ -3,7 +3,7 @@ import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { LONG_GUIDES } from "@/lib/guide-articles-long";
 import { todayKstDate } from "@/lib/dates";
 
-/** 홈 「오늘의 딜러 가이드」: 날마다 3편씩 돌아가며(긴 실무 글 위주) — 가이드 74편으로 들어가는 길 */
+/** 홈 「오늘의 딜러 가이드」: 날마다 3편씩 돌아가며(긴 실무 글 위주) — 딜러 가이드 전체로 들어가는 길 */
 export function HomeGuides() {
   const pool = GUIDE_ARTICLES.filter((g) => g.body.length >= 900);
   const list = pool.length ? pool : GUIDE_ARTICLES;

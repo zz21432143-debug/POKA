@@ -4,6 +4,8 @@ import { BarChart3Icon, BookOpenIcon, Grid3x3Icon, ListOrderedIcon, PercentIcon,
 import { BOARD_STICKER, BoardTitle, OniSticker } from "@/components/brand/oni";
 import { ToolCard } from "@/components/tools/tool-card";
 import { StudyAd } from "@/components/ads/board-bottom-ad";
+import { GUIDE_ARTICLES } from "@/lib/info-pages";
+import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
@@ -23,8 +25,8 @@ const CARDS = [
   { href: "/community/hand-ranges", icon: BarChart3Icon, title: "핸드 레인지 순위", body: "169개 시작 패 강한 순서. 상대 수별 순위, 상위 10 · 15 · 20% 범위." },
   { href: "/community/hand-rankings", icon: ListOrderedIcon, title: "족보 순위", body: "카드 그림으로 보는 족보 10가지, 헷갈리는 상황, 실제 확률." },
   { href: "/tools/practice", icon: TargetIcon, title: "팟 계산", body: "사이드팟 계산기와 팟 계산 연습 · 난이도별 랭킹(회원)." },
-  { href: "/info/holdem", icon: BookOpenIcon, title: "홀덤 가이드", body: "포지션 · 레인지 · 팟 오즈 · 3벳 · 블러프 · 밸류벳 · SPR · 토너먼트 스택. 플레이어용 전략 29편을 예시 핸드와 숫자로.", tag: "NEW" },
-  { href: "/info/guide", icon: GraduationCapIcon, title: "딜러 가이드", body: "자리 · 블라인드 · 액션 순서 · 쇼다운 · 사이드팟 · 급여 · 복장 등 딜러 실무 74편." },
+  { href: "/info/holdem", icon: BookOpenIcon, title: "홀덤 가이드", body: `포지션 · 레인지 · 팟 오즈 · 3벳 · 블러프 · 밸류벳 · SPR · 토너먼트 스택. 플레이어용 전략 ${HOLDEM_GUIDES.length}편을 예시 핸드와 숫자로.`, tag: "NEW" },
+  { href: "/info/guide", icon: GraduationCapIcon, title: "딜러 가이드", body: `자리 · 블라인드 · 액션 순서 · 쇼다운 · 사이드팟 · 급여 · 복장 등 딜러 실무 ${GUIDE_ARTICLES.length}편.` },
 ] as const;
 
 export default function StudyHubPage() {

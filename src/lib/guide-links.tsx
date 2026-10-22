@@ -19,7 +19,7 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "rules",
     label: "룰 · 토너먼트",
     hint: "TDA · 블라인드 · 분쟁 대처",
-    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry", "straddle-rules", "chip-race", "final-table-dealing", "incomplete-raise-rule", "hand-for-hand", "dead-button-rules", "tournament-table-setup"],
+    slugs: ["blinds-antes", "tda-core-rules", "tournament-structure", "tournament-terms", "color-up", "blind-structure-reading", "tournament-vs-ring-dealer", "table-balancing", "floor-call-disputes", "first-tournament-dealer-checklist", "late-reg-reentry", "straddle-rules", "chip-race", "final-table-dealing", "incomplete-raise-rule", "hand-for-hand", "dead-button-rules", "tournament-table-setup", "floor-role"],
   },
   {
     id: "work",
