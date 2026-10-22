@@ -21,7 +21,7 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
   const dayStart = new Date(`${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date())}T00:00:00+09:00`);
   const { badNicknames } = await import("@/lib/nickname-force");
   const weekAgo = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date(dayStart.getTime() - 6 * 86_400_000));
-  const [pendingReports, restricted, signups, members, bad, errors7, shares7, gameAlertSubs, gameAlertVisits, lag7] = await Promise.all([
+  const [pendingReports, restricted, signups, members, bad, errors7, shares7, gameAlertSubs, gameAlertVisits, lag7, dailyAlertMembers] = await Promise.all([
     prisma.report.count({ where: { status: "pending" } }).catch(() => 0),
     prisma.user.count({ where: { status: { in: ["SUSPENDED", "BANNED"] } } }).catch(() => 0),
     prisma.user.count({ where: { createdAt: { gte: dayStart } } }).catch(() => 0),
@@ -38,6 +38,11 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
       .then((r) => r._sum.visits ?? 0)
       .catch(() => 0),
     prisma.toolSaved.count({ where: { kind: "lag-report", createdAt: { gte: new Date(dayStart.getTime() - 6 * 86_400_000) } } }).catch(() => 0),
+    // 매일 알림(퀴즈 · 출석 · 요괴) 하나라도 켠 회원 수
+    prisma.pushSubscription
+      .findMany({ where: { userId: { not: null }, OR: [{ quizAlerts: true }, { attendAlerts: true }, { yokaiAlerts: true }] }, select: { userId: true }, distinct: ["userId"], take: 100000 })
+      .then((rows) => rows.length)
+      .catch(() => 0),
   ]);
   const cards = [
     { label: "처리할 신고", value: pendingReports, href: "/admin?tab=reports", tone: pendingReports ? "text-rose-300" : "text-emerald-300" },
@@ -48,6 +53,7 @@ async function AdminHome({ isMaster }: { isMaster: boolean }) {
     { label: "최근 7일 서버 오류", value: errors7, href: "/admin/errors", tone: errors7 ? "text-amber-300" : "text-emerald-300" },
     { label: "최근 7일 게임 결과 공유", value: shares7, href: "/admin/stats", tone: "text-sky-300" },
     { label: "게임 알림 켠 기기", value: gameAlertSubs, href: "/admin/push", tone: "text-sky-300" },
+    { label: "매일 알림 켠 회원", value: dailyAlertMembers, href: "/admin/push", tone: "text-emerald-300" },
     { label: "최근 7일 게임 렉 신고", value: lag7, href: "/admin/errors#lag", tone: lag7 ? "text-amber-300" : "text-emerald-300" },
     { label: "최근 7일 게임 알림으로 들어옴", value: gameAlertVisits, href: "/admin/stats", tone: "text-sky-300" },
   ].filter((c) => !c.master || isMaster);

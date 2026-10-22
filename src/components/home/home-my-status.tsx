@@ -5,9 +5,10 @@ import { liveStreak } from "@/lib/attendance";
 import { memberRankTitle } from "@/lib/levels";
 import { ATTENDANCE_POINTS, nextStreakBonus } from "@/lib/rewards";
 import { cn } from "cn";
+import { HomeAlertPrompt } from "@/components/home/home-alert-prompt";
 
 /**
- * 홈 「내 상태」 한 줄(휴대폰은 두 줄: 레벨 · 경험치 / 포인트 · 연속 출석 · 출석 버튼)(로그인 회원만): 레벨 · 경험치 막대 · 포인트 · 연속 출석 · 출석 버튼.
+ * 홈 「내 상태」(로그인 회원만): 레벨 · 경험치 막대 · 포인트 · 연속 출석 · 출석 버튼(휴대폰은 두 줄). 아래에 알림 켜기 권유.
  * 매일 오는 이유(출석 · 포인트 · 경험치)가 홈에서 바로 보이게 — 비회원에게는 안 보임.
  */
 export async function HomeMyStatus() {
@@ -21,6 +22,7 @@ export async function HomeMyStatus() {
   const rank = memberRankTitle(user);
   const pct = Math.max(0, Math.min(100, user.progressPercent));
   return (
+    <>
     <section aria-label="내 상태" data-home-my-status className="lounge-card flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[1.35rem] px-3 py-2.5 sm:px-4">
       <Link href={`/u/${encodeURIComponent(user.nickname)}`} className="grid min-w-0 basis-full gap-1 sm:basis-auto sm:min-w-[16rem] sm:flex-1">
         <span className="flex items-baseline gap-1.5 text-sm">
@@ -52,5 +54,8 @@ export async function HomeMyStatus() {
         </p>
       ) : null}
     </section>
+    {/* 매일 알림을 아직 안 켠 기기에만 한 줄 권유 */}
+    <HomeAlertPrompt />
+    </>
   );
 }

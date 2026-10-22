@@ -25,7 +25,7 @@ export const ADMIN_GROUPS: { title: string; icon: string; items: Item[] }[] = [
     items: [
       { href: "/admin/content", label: "콘텐츠 발행", master: true },
       { href: "/admin/quiz", label: "퀴즈 관리" },
-      { href: "/admin/blog", label: "블로그 글감" },
+      { href: "/admin/blog", label: "블로그 · 카톡 글감" },
       { href: "/admin/banners", label: "배너" },
       { href: "/admin?tab=words", label: "금지어" },
     ],

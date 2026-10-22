@@ -21,6 +21,7 @@ import { GUIDE_APPENDS_8, GUIDE_APPEND_8_UPDATED } from "@/lib/guide-articles-ap
 import { GUIDE_APPENDS_9, GUIDE_APPEND_9_UPDATED } from "@/lib/guide-articles-append-9";
 import { GUIDE_APPENDS_10, GUIDE_APPEND_10_UPDATED } from "@/lib/guide-articles-append-10";
 import { GUIDE_APPENDS_11, GUIDE_APPEND_11_UPDATED } from "@/lib/guide-articles-append-11";
+import { GUIDE_APPENDS_12, GUIDE_APPEND_12_UPDATED } from "@/lib/guide-articles-append-12";
 
 export type InfoArticle = {
   title: string;
@@ -409,9 +410,14 @@ ${extra9}`, updated: GUIDE_APPEND_9_UPDATED } : withExtra8;
 ${extra10}`, updated: GUIDE_APPEND_10_UPDATED } : withExtra9;
   // 11차 덧붙임
   const extra11 = GUIDE_APPENDS_11[row.slug];
-  return extra11 ? { ...withExtra10, body: `${withExtra10.body}
+  const withExtra11 = extra11 ? { ...withExtra10, body: `${withExtra10.body}
 
 ${extra11}`, updated: GUIDE_APPEND_11_UPDATED } : withExtra10;
+  // 12차 덧붙임
+  const extra12 = GUIDE_APPENDS_12[row.slug];
+  return extra12 ? { ...withExtra11, body: `${withExtra11.body}
+
+${extra12}`, updated: GUIDE_APPEND_12_UPDATED } : withExtra11;
 });
 
 export function getGuideArticle(slug: string) {
