@@ -19,6 +19,14 @@
       "schedule": "0 15 * * *"
     },
     {
+      "path": "/api/cron/content-publish",
+      "schedule": "5 3 * * *"
+    },
+    {
+      "path": "/api/cron/content-publish?slot=night",
+      "schedule": "5 12 * * *"
+    },
+    {
       "path": "/api/cron/job-expiry",
       "schedule": "0 1 * * *"
     }
