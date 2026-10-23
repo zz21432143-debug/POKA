@@ -25,7 +25,7 @@ export const GUIDE_CATEGORIES: { id: string; label: string; hint: string; slugs:
     id: "work",
     label: "근무 · 매장",
     hint: "급여 · 로테이션 · 건강 · 매장 운영",
-    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers", "rotation-handover", "new-store-first-month", "dealer-break-time", "seat-change-requests", "dealer-work-agreement"],
+    slugs: ["dealer-pay-structure", "dealer-pay", "urgent-shift-tips", "dealer-rotation-guide", "seat-draw-guide", "open-close-checklist", "dealer-health", "night-shift-safety", "dealer-career-path", "dealer-daily-routine", "dealer-hand-care", "training-new-dealers", "rotation-handover", "new-store-first-month", "dealer-break-time", "seat-change-requests", "dealer-work-agreement", "find-dealer-jobs"],
   },
 ];
 

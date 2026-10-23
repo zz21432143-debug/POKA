@@ -165,4 +165,4 @@ export function blogDrafts(): BlogDraft[] {
 }
 
 /** 블로그에 먼저 올릴 글감(검색어를 보고 바꿈) */
-export const BLOG_PRIORITY = ["holdem:add-on", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "holdem:icm-basics", "dealer:showdown", "dealer:dealer-calls"];
+export const BLOG_PRIORITY = ["holdem:add-on", "dealer:find-dealer-jobs", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "holdem:icm-basics", "holdem:rebuy-reentry", "dealer:showdown", "dealer:dealer-calls"];
