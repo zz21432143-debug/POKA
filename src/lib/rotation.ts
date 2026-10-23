@@ -167,6 +167,8 @@ export type RotationAction =
   | { type: "deleteGames"; ids: string[] }
   /** 휴지통(지운 지 7일 안)에서 게임 되살리기 */
   | { type: "restoreGame"; trashId: string }
+  /** 휴지통에서 완전히 지우기(trashId 없으면 휴지통 비우기 · 되돌릴 수 없음) */
+  | { type: "purgeTrash"; trashId?: string }
   /** 공유 링크 열림 기간(asDefault면 새 게임 기본값으로도 저장) */
   | { type: "setShareDays"; days: number; asDefault?: boolean }
   /** 딜러 명단 따로 저장(계정마다 · 게임과 상관없이 남음). id가 있으면 고치기 */

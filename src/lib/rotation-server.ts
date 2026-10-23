@@ -629,6 +629,11 @@ export async function applyRotation(ownerId: string, gameId: string | null | und
         }
         break;
       }
+      case "purgeTrash": {
+        // 내 휴지통만 · trashId가 있으면 그 게임 하나, 없으면 전부
+        await tx.toolSaved.deleteMany({ where: { ownerId, kind: KIND_TRASH, ...(action.trashId ? { id: String(action.trashId) } : {}) } });
+        break;
+      }
       case "restoreGame": {
         const row = await tx.toolSaved.findFirst({ where: { id: String(action.trashId ?? ""), ownerId, kind: KIND_TRASH } });
         if (!row) throw new RotationError("휴지통에서 찾을 수 없습니다. 7일이 지나 완전히 지워졌을 수 있어요.");

@@ -1235,6 +1235,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 {g.name} 되살리기
               </button>
             ))}
+            <button
+              type="button"
+              data-trash-purge-soon
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm(`휴지통의 ${soon.map((g) => `'${g.name}'`).join(", ")} 게임을 지금 완전히 지울까요? 되살릴 수 없어요.`))
+                  void (async () => { for (const g of soon) await send({ type: "purgeTrash", trashId: g.id }); })();
+              }}
+              className="min-h-9 rounded-lg border border-rose-300/60 px-3 text-xs font-black text-rose-100"
+            >
+              지금 완전히 지우기
+            </button>
           </p>
         ) : null;
       })()}
@@ -4017,6 +4029,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         >
                           되살리기
                         </button>
+                        <button
+                          type="button"
+                          data-trash-purge={g.id}
+                          disabled={busy}
+                          aria-label={`${g.name} 완전히 지우기`}
+                          onClick={() => {
+                            if (window.confirm(`'${g.name}' 게임을 완전히 지울까요? 되살릴 수 없어요.`))
+                              void send({ type: "purgeTrash", trashId: g.id });
+                          }}
+                          className="min-h-9 shrink-0 rounded-lg border border-rose-400/60 px-2.5 text-xs font-black text-rose-200"
+                        >
+                          삭제
+                        </button>
                       </li>
                     );
                   })}
@@ -4024,6 +4049,20 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               ) : (
                 <p className="mt-1 text-xs text-zinc-400">비어 있어요.</p>
               )}
+              {state.trash.length ? (
+                <button
+                  type="button"
+                  data-trash-empty
+                  disabled={busy}
+                  onClick={() => {
+                    if (window.confirm(`휴지통의 게임 ${state.trash.length}개를 모두 완전히 지울까요? 되살릴 수 없어요.`))
+                      void send({ type: "purgeTrash" });
+                  }}
+                  className="mt-2 min-h-10 w-full rounded-lg border border-rose-400/60 text-sm font-black text-rose-200"
+                >
+                  🗑 휴지통 비우기
+                </button>
+              ) : null}
             </details>
             <div className="flex flex-wrap gap-2">
               <button
