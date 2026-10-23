@@ -65,6 +65,8 @@ export async function generateMetadata({
   return {
     title: board.title,
     description: BOARD_DESCRIPTIONS[board.boardType],
+    // 대표 주소(같은 게시판이 여러 주소로 잡히지 않게)
+    alternates: { canonical: `/boards/${slug === "promo" ? "official" : slug}` },
   };
 }
 
