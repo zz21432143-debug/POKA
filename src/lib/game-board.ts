@@ -59,13 +59,26 @@ export type GameBoardData = {
   prizes: PrizeRow[];
   /** 아래 흐르는 공지 */
   notice: string;
+  /** 오른쪽 위 QR: view = 손님 휴대폰으로 이 현황판 보기(보기 링크) · store = 매장 QR(카톡방 · 메뉴판) · off = 없음 */
+  qrMode: BoardQrMode;
+  storeQrUrl: string;
+  /** 매장 QR 옆 글씨(예: 매장 카톡방) */
+  storeQrLabel: string;
   /** 배경 사진(올린 이미지 주소 /api/images/…) · 글씨가 잘 보이게 어둡게 덮는 정도(0~90%) */
   bgUrl: string;
   bgDim: number;
   clock: BoardClock;
 };
 
-export const BOARD_LIMITS = { levels: 60, name: 30, subtitle: 40, prizes: 30, prizeText: 24, prizeTitle: 30, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
+export type BoardQrMode = "view" | "store" | "off";
+export const QR_MODES: { value: BoardQrMode; label: string }[] = [
+  { value: "view", label: "휴대폰으로 현황판 보기(추천)" },
+  { value: "store", label: "매장 QR(카톡방 · 메뉴판 · 인스타)" },
+  { value: "off", label: "QR 안 보이기" },
+];
+/** 손님에게 도움 되는 흐르는 공지 예시 */
+export const NOTICE_EXAMPLE = "📱 오른쪽 위 QR을 찍으면 휴대폰으로 블라인드 · 남은 시간을 볼 수 있어요";
+export const BOARD_LIMITS = { storeQrUrl: 300, storeQrLabel: 20, levels: 60, name: 30, subtitle: 40, prizes: 30, prizeText: 24, prizeTitle: 30, notice: 200, players: 10_000, chips: 1_000_000_000, minutes: 240 } as const;
 
 /** 블라인드 구조 만들기(BB 앤티 = BB): 시작 BB부터 레벨마다 올리고, every 레벨마다 휴식 */
 export function makeStructure({ startBb = 200, minutes = 20, count = 16, breakEvery = 4, breakMinutes = 10 } = {}): BoardLevel[] {
@@ -99,6 +112,9 @@ export function defaultBoard(): GameBoardData {
     prizeTitle: "",
     prizes: [],
     notice: "",
+    qrMode: "view",
+    storeQrUrl: "",
+    storeQrLabel: "",
     bgUrl: "",
     bgDim: 60,
     clock: { level: 0, elapsedMs: 0, runningSince: null },
@@ -139,6 +155,9 @@ export function newBoardData(template: BoardTemplate, name: string, source?: Gam
       prizeTitle: source.prizeTitle,
       prizes: source.prizes,
       notice: source.notice,
+      qrMode: source.qrMode,
+      storeQrUrl: source.storeQrUrl,
+      storeQrLabel: source.storeQrLabel,
       bgUrl: source.bgUrl,
       bgDim: source.bgDim,
     };
@@ -210,6 +229,9 @@ export function normalizeBoard(raw: unknown): GameBoardData {
     prizeTitle: text(r.prizeTitle, BOARD_LIMITS.prizeTitle),
     prizes: normalizePrizes(r.prizes, (r as { prize?: unknown }).prize),
     notice: text(r.notice, BOARD_LIMITS.notice),
+    qrMode: r.qrMode === "store" || r.qrMode === "off" ? r.qrMode : "view",
+    storeQrUrl: typeof r.storeQrUrl === "string" && /^https?:\/\/\S+$/.test(r.storeQrUrl.trim()) ? r.storeQrUrl.trim().slice(0, BOARD_LIMITS.storeQrUrl) : "",
+    storeQrLabel: text(r.storeQrLabel, BOARD_LIMITS.storeQrLabel),
     bgUrl: typeof r.bgUrl === "string" && /^\/api\/images\/[\w-]{1,64}$/.test(r.bgUrl) ? r.bgUrl : "",
     bgDim: int(r.bgDim, 0, 90, 60),
     clock: {

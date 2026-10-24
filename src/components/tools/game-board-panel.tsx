@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
-import { BOARD_LIMITS, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
+import { BOARD_LIMITS, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
@@ -534,7 +534,7 @@ export function GameBoardPanel({
 
           {/* 미리보기(TV 화면을 그대로 줄여서) + TV 버튼 */}
           <section className="grid gap-2">
-            <ScaledPreview data={draft} now={now} />
+            <ScaledPreview data={draft} now={now} viewUrl={shareUrl} />
             <button type="button" onClick={() => void openTv()} className="min-h-14 rounded-2xl bg-amber-400 px-5 text-lg font-black text-black shadow-[0_6px_20px_rgba(251,191,36,.25)]">
               📺 TV 화면으로 보기(새 창)
             </button>
@@ -573,7 +573,7 @@ export function GameBoardPanel({
           {tv && inBrowser
             ? createPortal(
                 <div data-board-tv className="fixed inset-0 z-[9999] bg-black">
-                  <GameBoardScreen data={draft} now={now} sound={tvArmed} />
+                  <GameBoardScreen data={draft} now={now} sound={tvArmed} viewUrl={shareUrl} />
                   {!tvArmed ? (
                     <button type="button" data-board-tv-arm onClick={() => void enterTv()} className="absolute bottom-[12%] left-1/2 -translate-x-1/2 rounded-xl bg-amber-400/95 px-5 py-3 text-base font-black text-black shadow-lg">
                       ⛶ 전체 화면 · 🔊 알림음 켜기
@@ -749,6 +749,43 @@ function SetupForm({ data, current, onEdit, onJump }: { data: GameBoardData; cur
           흐르는 공지(화면 위쪽 · 비워 두면 안 나와요)
           <input value={data.notice} maxLength={BOARD_LIMITS.notice} onChange={(e) => onEdit({ notice: e.target.value })} placeholder="레지 마감은 레벨 8 종료까지 · 휴식 10분" className={field} />
         </label>
+        {!data.notice.includes("QR") ? (
+          <button
+            type="button"
+            data-notice-example
+            onClick={() => onEdit({ notice: data.notice.trim() ? `${data.notice.trim()} · ${NOTICE_EXAMPLE}` : NOTICE_EXAMPLE })}
+            className="justify-self-start rounded-lg border border-[#c9a25c]/50 px-3 py-1.5 text-xs font-bold text-[#e7c98a]"
+          >
+            + 「휴대폰으로 보기」 안내 문구 넣기
+          </button>
+        ) : null}
+        {/* 오른쪽 위 QR: 손님에게 쓸모 있는 것으로 */}
+        <label className={label}>
+          오른쪽 위 QR
+          <select data-qr-mode value={data.qrMode} onChange={(e) => onEdit({ qrMode: e.target.value as BoardQrMode })} className={field}>
+            {QR_MODES.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {data.qrMode === "view" ? (
+          <p className="text-xs text-[#b8ab98]">손님이 찍으면 이 현황판(블라인드 · 남은 시간)을 휴대폰으로 봐요. 아래 「공유」에서 보기 링크를 켜 둬야 해요(꺼져 있으면 POKA 홈으로 가요).</p>
+        ) : null}
+        {data.qrMode === "store" ? (
+          <div className="grid gap-2 sm:grid-cols-[1fr_12rem]">
+            <label className={label}>
+              매장 QR 주소(카톡 오픈채팅 · 메뉴판 · 인스타)
+              <input data-store-qr-url value={data.storeQrUrl} maxLength={BOARD_LIMITS.storeQrUrl} onChange={(e) => onEdit({ storeQrUrl: e.target.value })} placeholder="https://open.kakao.com/o/…" inputMode="url" className={field} />
+            </label>
+            <label className={label}>
+              QR 옆 글씨
+              <input value={data.storeQrLabel} maxLength={BOARD_LIMITS.storeQrLabel} onChange={(e) => onEdit({ storeQrLabel: e.target.value })} placeholder="매장 카톡방" className={field} />
+            </label>
+            {data.storeQrUrl && !/^https?:\/\/\S+$/.test(data.storeQrUrl.trim()) ? <p className="text-xs text-rose-300 sm:col-span-2">https:// 로 시작하는 주소를 넣어 주세요.</p> : null}
+          </div>
+        ) : null}
       </section>
 
       <BackgroundForm data={data} onEdit={onEdit} />
@@ -940,7 +977,7 @@ function PrizeForm({ data, onEdit }: { data: GameBoardData; onEdit: (c: Partial<
 
 /* ───────────── 미리보기: TV 화면(1280×720)을 그대로 줄여 보여 줌 ───────────── */
 
-function ScaledPreview({ data, now }: { data: GameBoardData; now: number }) {
+function ScaledPreview({ data, now, viewUrl = null }: { data: GameBoardData; now: number; viewUrl?: string | null }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   useEffect(() => {
@@ -953,7 +990,7 @@ function ScaledPreview({ data, now }: { data: GameBoardData; now: number }) {
   return (
     <div ref={box} data-board-preview className="relative aspect-video w-full overflow-hidden rounded-2xl border-2 border-[#c9a25c]/50 bg-black">
       <div style={{ width: 1280, height: 720, transform: `scale(${scale})`, transformOrigin: "top left" }} className={cn("absolute top-0 left-0", !scale && "invisible")}>
-        <GameBoardScreen data={data} now={now} />
+        <GameBoardScreen data={data} now={now} viewUrl={viewUrl} />
       </div>
     </div>
   );

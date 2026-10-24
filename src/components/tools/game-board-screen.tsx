@@ -25,7 +25,20 @@ export function useServerNow(initialNow: number, offset: number) {
  * 게임 현황판 화면(TV · 미리보기 공통). 화면 폭에 맞춰 글씨가 커집니다(cqw).
  * 가로 화면: 왼쪽 인원·스택 · 가운데 시계 · 오른쪽 상금 / 세로 화면: 시계 먼저 위에서 아래로.
  */
-export function GameBoardScreen({ data, now, sound = false, className }: { data: GameBoardData; now: number; sound?: boolean; className?: string }) {
+export function GameBoardScreen({
+  data,
+  now,
+  sound = false,
+  className,
+  viewUrl = null,
+}: {
+  data: GameBoardData;
+  now: number;
+  sound?: boolean;
+  className?: string;
+  /** 이 현황판 보기 링크(손님 휴대폰용). 없으면 휴대폰 보기 QR 대신 POKA 홈 */
+  viewUrl?: string | null;
+}) {
   const view = clockView(data, now);
   const { totalChips, avgStack } = boardStats(data);
   const prizes = data.prizes.filter((p) => p.place.trim() || p.amount.trim());
@@ -57,12 +70,32 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
   const nameFit = Math.min(1, 16 / Math.max(1, [...data.name].length));
   const ticker = data.notice.trim();
 
-  // 오른쪽 위 QR: 손님 · 딜러가 찍으면 POKA(홍보) — 어디서 왔는지 from=board
+  // 오른쪽 위 QR: 손님에게 쓸모 있는 것 — 기본은 「휴대폰으로 이 현황판 보기」, 점주가 고르면 매장 QR(카톡방 등)
+  const qrMode = data.qrMode ?? "view";
+  const qrTarget =
+    qrMode === "off"
+      ? null
+      : qrMode === "store" && data.storeQrUrl
+        ? data.storeQrUrl
+        : viewUrl
+          ? `${viewUrl}${viewUrl.includes("?") ? "&" : "?"}from=board`
+          : `https://${SITE}/?from=board`;
+  const qrLine =
+    qrMode === "store" && data.storeQrUrl
+      ? { top: "📱 찍으면", main: data.storeQrLabel || "매장 카톡방" }
+      : viewUrl
+        ? { top: "📱 블라인드 · 남은 시간", main: "휴대폰으로 보기" }
+        : { top: "📱 찍으면", main: "POKA 홀덤 커뮤니티" };
   const [qr, setQr] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
+    if (!qrTarget) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- QR을 끄면 그림을 지움
+      setQr(null);
+      return;
+    }
     void import("qrcode")
-      .then((QR) => QR.toDataURL(`https://${SITE}/?from=board`, { width: 300, margin: 1, color: { dark: "#000000", light: "#ffffff" } }))
+      .then((QR) => QR.toDataURL(qrTarget, { width: 300, margin: 1, color: { dark: "#000000", light: "#ffffff" } }))
       .then((url) => {
         if (alive) setQr(url);
       })
@@ -70,7 +103,7 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
     return () => {
       alive = false;
     };
-  }, []);
+  }, [qrTarget]);
 
   return (
     <div data-game-screen className={cn("@container-[size] relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,#2a0d0d_0%,#0b0706_60%,#050303_100%)] text-white", className)}>
@@ -98,12 +131,12 @@ export function GameBoardScreen({ data, now, sound = false, className }: { data:
         {qr ? (
           <span data-board-qr className="flex shrink-0 items-center gap-[calc(var(--u)*0.6)] [@container(max-height:380px)]:hidden">
             <span className="text-right text-[clamp(9px,calc(var(--u)*1.05),20px)] leading-tight font-bold text-zinc-300">
-              📱 찍으면
+              {qrLine.top}
               <br />
-              <b className="font-black text-amber-300">POKA</b> 홀덤 커뮤니티
+              <b className="font-black text-amber-300">{qrLine.main}</b>
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element -- 만든 QR 그림 */}
-            <img src={qr} alt="POKA 바로가기 QR" className="aspect-square w-[clamp(36px,calc(var(--u)*5.5),110px)] rounded-[calc(var(--u)*0.4)] bg-white p-[calc(var(--u)*0.2)]" />
+            <img src={qr} alt={`${qrLine.main} QR`} className="aspect-square w-[clamp(44px,calc(var(--u)*7),150px)] rounded-[calc(var(--u)*0.4)] bg-white p-[calc(var(--u)*0.2)]" />
           </span>
         ) : null}
       </header>
