@@ -6,7 +6,7 @@ import { isStaff } from "@/lib/roles";
 import { loadSiteStats } from "@/lib/site-stats";
 import { SHARE_TOOLS, shareStats, type ShareTool } from "@/lib/share-stats";
 import { formatKstLabel, shiftDate, todayKstDate } from "@/lib/dates";
-import { trafficSummary } from "@/lib/traffic";
+import { deviceSummary, trafficSummary } from "@/lib/traffic";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = { title: "방문 · 가입 통계", robots: { index: false } };
@@ -33,11 +33,12 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
   const { days: daysParam } = await searchParams;
   const range = RANGES.find((value) => String(value) === daysParam) ?? 30;
   const since = new Date(`${shiftDate(todayKstDate(), -(range - 1))}T00:00:00+09:00`);
-  const [stats, shares, traffic, invites] = await Promise.all([
+  const [stats, shares, traffic, invites, devices] = await Promise.all([
     loadSiteStats(range),
     shareStats(range),
     trafficSummary(range),
     prisma.toolSaved.groupBy({ by: ["name"], where: { kind: "invite", createdAt: { gte: since } }, _count: { _all: true } }).catch(() => []),
+    deviceSummary(range),
   ]);
   const inviteCount = (name: string) => invites.find((r) => r.name === name)?._count._all ?? 0;
   const shareRows = (Object.keys(SHARE_TOOLS) as ShareTool[]).map((k) => ({ key: k, label: SHARE_TOOLS[k], ...shares[k] })).sort((a, b) => b.total - a.total);
@@ -131,6 +132,31 @@ export default async function AdminStatsPage({ searchParams }: { searchParams: P
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* 기기 비율: 휴대폰 · PC · 태블릿(방문자 기준) */}
+      <section aria-label="기기 비율" data-device-stats className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+        <h2 className="text-lg font-semibold">📱 기기 비율 · 최근 {range}일</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          그날 처음 온 방문자를 기기별로 셉니다(검색 로봇 제외). 2026-10-24부터 집계해요. 아이패드 사파리는 컴퓨터처럼 보여서 PC로 셉니다.
+        </p>
+        {devices.total ? (
+          <div className="mt-3 grid gap-2">
+            {devices.list.map((d) => (
+              <div key={d.key} data-device-row={d.key} className="grid grid-cols-[5.5rem_1fr_6rem] items-center gap-2 text-sm">
+                <span className="font-semibold">{d.label}</span>
+                <span className="h-3 overflow-hidden rounded-full bg-white/10">
+                  <span className="block h-full rounded-full bg-[#c9a25c]" style={{ width: `${d.pct}%` }} />
+                </span>
+                <span className="text-right tabular-nums">
+                  <b>{d.pct}%</b> <span className="text-xs text-muted-foreground">({n(d.visits)})</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">아직 기록이 없어요. 오늘부터 쌓여요.</p>
+        )}
       </section>
 
       {/* 유입 경로: 어디서 들어와 가입했는지(QR · 초대 · 검색 · SNS) */}

@@ -68,3 +68,19 @@ export async function trafficSummary(days: number) {
     }))
     .sort((a, b) => b.visits - a.visits || b.signups - a.signups);
 }
+
+/** 최근 N일 기기 비율(방문자 기준 · 휴대폰 · 태블릿 · PC) */
+export async function deviceSummary(days: number) {
+  const from = shiftDate(todayKstDate(), -(days - 1));
+  const rows = await prisma.trafficDaily
+    .groupBy({ by: ["source"], where: { day: { gte: from }, source: { startsWith: "x-dev-" } }, _sum: { visits: true } })
+    .catch(() => []);
+  const get = (k: string) => rows.find((r) => r.source === `x-dev-${k}`)?._sum.visits ?? 0;
+  const list = [
+    { key: "mobile", label: "📱 휴대폰", visits: get("mobile") },
+    { key: "pc", label: "💻 PC", visits: get("pc") },
+    { key: "tablet", label: "📟 태블릿", visits: get("tablet") },
+  ];
+  const total = list.reduce((n, r) => n + r.visits, 0);
+  return { total, list: list.map((r) => ({ ...r, pct: total ? Math.round((r.visits / total) * 1000) / 10 : 0 })) };
+}

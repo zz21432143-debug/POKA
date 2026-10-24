@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { isBotAgent, recordVisit } from "@/lib/site-stats";
+import { deviceOf, isBotAgent, recordVisit } from "@/lib/site-stats";
+import { addTraffic } from "@/lib/traffic";
 
 const COOKIE = "poka_vid";
 
@@ -11,7 +12,9 @@ export async function POST(request: Request) {
   const jar = await cookies();
   const existing = jar.get(COOKIE)?.value;
   const id = existing && /^[0-9a-f-]{36}$/.test(existing) ? existing : randomUUID();
-  await recordVisit(id).catch(() => undefined);
+  const fresh = await recordVisit(id).catch(() => false);
+  // 기기 비율: 그날 처음 온 방문자만(유입 경로 표에서는 「x-」 칸이라 빠짐)
+  if (fresh) await addTraffic(`x-dev-${deviceOf(request.headers.get("user-agent"))}`, "visits").catch(() => undefined);
   const response = NextResponse.json({ ok: true, counted: true });
   if (id !== existing) {
     response.cookies.set(COOKIE, id, {

@@ -10,10 +10,23 @@ export function isBotAgent(userAgent: string | null | undefined) {
   return !userAgent || BOT_UA.test(userAgent);
 }
 
-/** 오늘(KST) 방문 1회 기록. 같은 브라우저는 하루 한 번만 셉니다. */
+/** 오늘(KST) 방문 1회 기록. 같은 브라우저는 하루 한 번만 셉니다. 오늘 처음이면 true */
 export async function recordVisit(visitorId: string, day = todayKstDate()) {
   const visitor = createHash("sha256").update(`poka-visit:${visitorId}`).digest("base64url").slice(0, 32);
-  await prisma.dailyVisit.createMany({ data: [{ day, visitor }], skipDuplicates: true });
+  const { count } = await prisma.dailyVisit.createMany({ data: [{ day, visitor }], skipDuplicates: true });
+  return count > 0;
+}
+
+export type DeviceKind = "mobile" | "tablet" | "pc";
+/**
+ * 브라우저 정보로 기기 구분(대략). 아이패드 사파리는 맥 컴퓨터처럼 보여서 PC로 셉니다.
+ * 태블릿: iPad · 「Tablet」 · 모바일 표시가 없는 안드로이드 / 휴대폰: Mobi · iPhone · 안드로이드 / 나머지 PC
+ */
+export function deviceOf(userAgent: string | null | undefined): DeviceKind {
+  const ua = userAgent ?? "";
+  if (/iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) return "tablet";
+  if (/Mobi|iPhone|iPod|Android/i.test(ua)) return "mobile";
+  return "pc";
 }
 
 export type DayStat = {
