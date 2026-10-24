@@ -1380,7 +1380,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20">
             <tr>
-              <th className="sticky left-0 z-30 w-28 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">딜러 / 시간</th>
+              <th className="sticky left-0 z-30 w-20 bg-zinc-900 sm:w-28 px-2 py-2 text-left text-sm font-black text-zinc-300">딜러 / 시간</th>
               {rows.map(({ slot, index }) => (
                 <th
                   key={slot.at}
@@ -1390,7 +1390,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     index < current && "opacity-60",
                   )}
                 >
-                  <span className="block min-w-[3.25rem] text-lg font-black">{formatClock(slot.at)}</span>
+                  <span className="block min-w-[2.75rem] sm:min-w-[3.25rem] text-lg font-black">{formatClock(slot.at)}</span>
                   <span className="block text-[11px] font-bold">{index === current ? "지금" : index === next ? "다음 교대" : " "}</span>
                 </th>
               ))}
@@ -1401,13 +1401,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 const focus = quickId ? (quickId === dealer.id ? "on" : "off") : null;
                 return (
                   <tr key={dealer.id} data-schedule={dealer.name} className={cn("border-t-2 border-white/10", focus === "off" && "opacity-30")}>
-                    <th className={cn("sticky left-0 z-10 px-2 py-1 text-left whitespace-nowrap", focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-900")}>
+                    <th className={cn("sticky left-0 z-10 px-1.5 py-1 text-left whitespace-nowrap sm:px-2", focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-900")}>
                       <button
                         type="button"
                         data-row-dealer={dealer.name}
                         onClick={() => setQuickId(quickId === dealer.id ? null : dealer.id)}
                         title="이 딜러만 보기"
-                        className="inline-flex min-h-11 items-center gap-1.5 align-middle text-base font-black"
+                        className="flex min-h-8 items-center gap-1.5 align-middle text-[15px] font-black sm:inline-flex sm:min-h-11 sm:text-base"
                       >
                         {dealer.name}
                       </button>
@@ -1418,7 +1418,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                           data-row-out={dealer.name}
                           disabled={busy}
                           onClick={() => void quickLeave(dealer)}
-                          className="ml-1.5 min-h-8 rounded-md border border-white/20 px-1.5 text-[11px] font-bold text-zinc-300 hover:bg-white/10"
+                          className="block min-h-7 sm:ml-1.5 sm:inline-block sm:min-h-8 rounded-md border border-white/20 px-1.5 text-[11px] font-bold text-zinc-300 hover:bg-white/10"
                         >
                           퇴근
                         </button>
@@ -1429,7 +1429,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                           disabled={busy}
                           onClick={() => void quickCheckIn(dealer)}
                           className={cn(
-                            "ml-1.5 min-h-8 rounded-md px-1.5 text-[11px] font-black",
+                            "block min-h-7 sm:ml-1.5 sm:inline-block sm:min-h-8 rounded-md px-1.5 text-[11px] font-black",
                             dealer.status === "LEFT" ? "border border-rose-400/60 text-rose-200" : "bg-emerald-500 text-black",
                           )}
                         >
@@ -1455,7 +1455,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               data-dcell={`${formatClock(slot.at)}-${dealer.name}`}
                               onClick={() => setDealerPick({ slot: index, dealerId: dealer.id })}
                               className={cn(
-                                "grid min-h-11 w-full min-w-[3.25rem] place-items-center rounded-lg text-xl font-black",
+                                "grid min-h-11 w-full min-w-[2.75rem] sm:min-w-[3.25rem] place-items-center rounded-lg text-lg font-black sm:text-xl",
                                 focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-800 text-white hover:bg-zinc-700",
                               )}
                             >
@@ -1466,12 +1466,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               type="button"
                               data-dcell-rest
                               onClick={() => setDealerPick({ slot: index, dealerId: dealer.id })}
-                              className="grid min-h-11 w-full min-w-[3.25rem] place-items-center rounded-lg border border-amber-400/25 bg-[#17120a] text-sm font-bold text-amber-300/90 hover:bg-[#241a0c]"
+                              className="grid min-h-11 w-full min-w-[2.75rem] sm:min-w-[3.25rem] place-items-center rounded-lg border border-amber-400/25 bg-[#17120a] text-sm font-bold text-amber-300/90 hover:bg-[#241a0c]"
                             >
                               휴식
                             </button>
                           ) : (
-                            <span className="grid min-h-11 min-w-[3.25rem] place-items-center text-sm text-zinc-600">—</span>
+                            <span className="grid min-h-11 min-w-[2.75rem] sm:min-w-[3.25rem] place-items-center text-sm text-zinc-600">—</span>
                           )}
                         </td>
                       );

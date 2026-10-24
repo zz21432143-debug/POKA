@@ -96,6 +96,7 @@ export const SITEMAP_PATHS = [
   { path: "/study/glossary", changeFrequency: "monthly" as const, priority: 0.7 },
   { path: "/study/push-fold-quiz", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/study/cheatsheet", changeFrequency: "monthly" as const, priority: 0.6 },
+  { path: "/study/floor-cases", changeFrequency: "monthly" as const, priority: 0.7 },
   { path: "/info/icm", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/info/push-fold", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/community/equity", changeFrequency: "monthly" as const, priority: 0.8 },

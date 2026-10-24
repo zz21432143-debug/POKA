@@ -38,6 +38,7 @@ const GUIDES: Partial<Record<BoardType, Guide>> = {
       `도움이 된 답은 글쓴이가 「채택」해 주세요. 답변자에게 +${ACCEPT_POINTS}P가 가요.`,
     ],
     links: [
+      { href: "/study/floor-cases", label: "현장 판정 사례" },
       { href: "/info/guide/tda-core-rules", label: "TDA 핵심 룰 10가지" },
       { href: "/study/glossary", label: "용어 사전" },
     ],

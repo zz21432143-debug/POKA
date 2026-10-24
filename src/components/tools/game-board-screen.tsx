@@ -288,24 +288,48 @@ export function GameBoardScreen({
               </span>
             ))}
           </div>
-          <span className="shrink-0 text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black text-white tabular-nums">{ft.alive.length} LEFT</span>
         </section>
       ) : null}
 
-      {/* 1명 남으면 우승 화면 */}
+      {/* 1명 남으면 우승 화면: 진한 바탕 · 빛 · 꽃가루 · 왕관 */}
       {ft.champion ? (
-        <div data-ft-champion className="absolute inset-0 z-20 grid place-items-center bg-black/85">
-          <div className="grid justify-items-center gap-[calc(var(--u)*1)] text-center">
-            <span className="text-[clamp(16px,calc(var(--u)*3),64px)] font-black tracking-[0.3em] text-[#e2bd72]">CHAMPION</span>
-            <span className="text-[clamp(40px,calc(var(--u)*11),240px)] leading-none">🏆</span>
-            <span className="text-[clamp(28px,calc(var(--u)*8),180px)] leading-none font-black text-amber-200 [text-shadow:0_0_24px_rgba(252,211,77,.55)]">{ft.champion}</span>
-            <span className="text-[clamp(13px,calc(var(--u)*2),40px)] font-bold text-zinc-300">{data.name}</span>
+        <div data-ft-champion className="absolute inset-0 z-20 grid place-items-center overflow-hidden bg-black/95">
+          <style>{`@keyframes ft-fall{0%{transform:translateY(-12cqh) rotate(0)}100%{transform:translateY(112cqh) rotate(540deg)}}@keyframes ft-spin{to{transform:rotate(360deg)}}@keyframes ft-pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}@keyframes ft-glow{50%{text-shadow:0 0 calc(var(--u)*3) rgba(252,211,77,.95),0 0 calc(var(--u)*7) rgba(245,158,11,.6)}}`}</style>
+          {/* 뒤에서 도는 금빛 */}
+          <span aria-hidden className="absolute top-1/2 left-1/2 size-[140cqw] -translate-x-1/2 -translate-y-1/2 opacity-40" style={{ background: "repeating-conic-gradient(from 0deg, rgba(226,189,114,.35) 0deg 8deg, transparent 8deg 22deg)", animation: "ft-spin 40s linear infinite", maskImage: "radial-gradient(circle, #000 0%, transparent 60%)", WebkitMaskImage: "radial-gradient(circle, #000 0%, transparent 60%)" }} />
+          {/* 꽃가루 */}
+          {CONFETTI.map((c, i) => (
+            <span key={i} aria-hidden className="absolute top-0 block rounded-[2px]" style={{ left: `${c.x}%`, width: `calc(var(--u) * ${c.w})`, height: `calc(var(--u) * ${c.w * 1.8})`, background: c.color, animation: `ft-fall ${c.dur}s linear ${c.delay}s infinite` }} />
+          ))}
+          <div className="relative grid justify-items-center gap-[calc(var(--u)*1.2)] text-center" style={{ animation: "ft-pop .9s ease-out both" }}>
+            {/* 왕관(그림) */}
+            <svg aria-hidden viewBox="0 0 64 48" className="w-[clamp(90px,calc(var(--u)*16),340px)] drop-shadow-[0_0_24px_rgba(252,211,77,.7)]">
+              <defs>
+                <linearGradient id="ft-gold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#fff3b0" />
+                  <stop offset=".5" stopColor="#f5c542" />
+                  <stop offset="1" stopColor="#b7791f" />
+                </linearGradient>
+              </defs>
+              <path d="M4 16 L18 28 L32 6 L46 28 L60 16 L54 40 H10 Z" fill="url(#ft-gold)" stroke="#7a4b0c" strokeWidth="1.5" strokeLinejoin="round" />
+              <rect x="10" y="40" width="44" height="6" rx="2" fill="url(#ft-gold)" stroke="#7a4b0c" strokeWidth="1.5" />
+              <circle cx="32" cy="6" r="3.2" fill="#ef4444" stroke="#7a4b0c" strokeWidth="1" />
+              <circle cx="4" cy="16" r="2.6" fill="#60a5fa" stroke="#7a4b0c" strokeWidth="1" />
+              <circle cx="60" cy="16" r="2.6" fill="#60a5fa" stroke="#7a4b0c" strokeWidth="1" />
+              <circle cx="32" cy="32" r="3" fill="#ef4444" stroke="#7a4b0c" strokeWidth="1" />
+            </svg>
+            <span className="text-[clamp(22px,calc(var(--u)*4.4),96px)] font-black tracking-[0.35em] text-[#f5d76e]">CHAMPION</span>
+            <span className="max-w-[92cqw] truncate text-[clamp(44px,calc(var(--u)*13),300px)] leading-none font-black text-amber-200" style={{ animation: "ft-glow 1.8s ease-in-out infinite", textShadow: "0 0 calc(var(--u)*2) rgba(252,211,77,.7)" }}>
+              {ft.champion}
+            </span>
+            <span className="text-[clamp(18px,calc(var(--u)*3.4),72px)] font-black text-zinc-100">{data.name}</span>
           </div>
         </div>
       ) : null}
 
       {/* 맨 아래 한 줄: POKA 주소 · 홍보(움직이지 않음) */}
       <footer data-promo className="flex items-center justify-center gap-[calc(var(--u)*0.8)] border-t border-[#c9a25c]/30 bg-black/60 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.45)] text-[clamp(10px,calc(var(--u)*1.35),26px)] font-bold whitespace-nowrap text-zinc-300">
+        {sound ? <span data-sound-on title="소리 켜짐" className="text-emerald-300">🔊</span> : null}
         <b className="font-black text-amber-300">FREE GAME CLOCK BY POKA</b>
         <span className="truncate">{PROMO}</span>
         <b className="font-black tracking-wide text-[#e2bd72]">{SITE}</b>
@@ -315,6 +339,15 @@ export function GameBoardScreen({
     </div>
   );
 }
+
+/** 우승 화면 꽃가루(자리 · 크기 · 속도 고정) */
+const CONFETTI = Array.from({ length: 28 }, (_, i) => ({
+  x: (i * 37) % 100,
+  w: 0.6 + ((i * 7) % 5) * 0.15,
+  dur: 3.2 + ((i * 13) % 7) * 0.35,
+  delay: -((i * 11) % 9) * 0.4,
+  color: ["#f5c542", "#ef4444", "#60a5fa", "#fff3b0", "#34d399"][i % 5],
+}));
 
 /** 현황판에 늘 나오는 POKA 홍보 */
 const SITE = "pokerwiki.co.kr";

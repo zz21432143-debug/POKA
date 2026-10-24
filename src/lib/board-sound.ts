@@ -73,15 +73,16 @@ function say(text: string, delay = 0) {
 
 /** 레벨 끝 몇 초 전 "띡"(1초 남았을 때는 높게) */
 export function countdownTick(secondsLeft: number) {
+  // 부드러운 사인파(귀가 덜 아프게)
   const high = secondsLeft <= 1;
-  tone(high ? 1320 : 880, 0, high ? 0.32 : 0.16, high ? 0.8 : 0.6);
+  tone(high ? 988 : 784, 0, high ? 0.3 : 0.14, high ? 0.5 : 0.35, "sine");
 }
 
 /** 블라인드 업: 올라가는 팡파르(도-미-솔-높은 도) + 음성 */
 export function blindUpSound(level: number, sb: number, bb: number) {
-  [523, 659, 784].forEach((f, i) => tone(f, i * 0.16, 0.15, 0.75));
-  tone(1047, 0.5, 0.75, 0.85);
-  tone(1568, 0.5, 0.75, 0.25, "triangle");
+  // 예전 사각파 팡파르는 귀가 아파서 → 부드러운 「딩-동」 차임 두 음
+  tone(659, 0, 0.45, 0.45, "sine");
+  tone(880, 0.32, 0.7, 0.45, "sine");
   say(`Blinds up. Level ${level}. Small blind ${sb.toLocaleString("en-US")}, big blind ${bb.toLocaleString("en-US")}.`, 1400);
 }
 
@@ -117,14 +118,14 @@ export function rotationSoonSound(volume: RotationVolume = 2) {
 
 /** 파이널 테이블 탈락: 낮게 「쿵」 두 번 */
 export function bustSound() {
-  tone(196, 0, 0.28, 0.9, "triangle");
-  tone(147, 0.22, 0.5, 0.9, "triangle");
+  tone(196, 0, 0.28, 0.6, "sine");
+  tone(147, 0.22, 0.5, 0.6, "sine");
 }
 
 /** 우승: 팡파르 + 음성 */
 export function championSound() {
-  [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.14, 0.8));
-  tone(1319, 0.6, 0.9, 0.85);
-  tone(1047, 0.6, 0.9, 0.4, "triangle");
+  [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.16, 0.5, "triangle"));
+  tone(1319, 0.6, 1.1, 0.5, "sine");
+  tone(1047, 0.6, 1.1, 0.35, "sine");
   say("Congratulations! We have a champion.", 1600);
 }

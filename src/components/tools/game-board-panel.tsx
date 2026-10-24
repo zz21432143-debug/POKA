@@ -10,7 +10,7 @@ import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
 import { BoardTemplatePreview } from "@/components/tools/board-template-preview";
 import { shrinkPhoto } from "@/lib/poster-fit";
-import { blindUpSound, countdownTick, unlockBoardSound } from "@/lib/board-sound";
+import { blindUpSound, bustSound, championSound, countdownTick, unlockBoardSound } from "@/lib/board-sound";
 
 const POLL_MS = 3000;
 const SAVE_DELAY = 600;
@@ -665,6 +665,17 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
         <div data-ft-panel className={cn("mt-2 grid gap-2 rounded-xl border p-3", data.ftOn ? "border-amber-400/60 bg-amber-950/30" : "border-white/10 bg-black/40")}>
           <div className="flex flex-wrap items-center gap-2">
             <b className="text-sm text-white">🏆 파이널 테이블</b>
+            <button
+              type="button"
+              onClick={() => {
+                unlockBoardSound();
+                bustSound();
+                window.setTimeout(() => championSound(), 1200);
+              }}
+              className="min-h-9 rounded-lg border border-white/15 px-2.5 text-xs font-bold text-zinc-300"
+            >
+              🔊 탈락 · 우승 소리
+            </button>
             {!data.ftOn && data.remaining > 1 && data.remaining <= 9 ? <span className="text-xs font-bold text-amber-300">지금 {data.remaining}명 · 켜 볼까요?</span> : null}
             <button
               type="button"
@@ -1187,6 +1198,7 @@ function ClockSetter({ remainingMs, onSet }: { remainingMs: number; onSet: (ms: 
             🔊 소리 확인
           </button>
         </div>
+        <p className="text-xs text-zinc-500">미리보기 화면에서는 소리가 나지 않아요. 소리는 「TV 화면」을 열고 「전체 화면 · 알림음 켜기」를 누르면 나요(화면 아래에 🔊 표시).</p>
       </div>
     );
   }
