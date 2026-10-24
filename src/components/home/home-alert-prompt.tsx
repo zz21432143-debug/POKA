@@ -72,21 +72,21 @@ export function HomeAlertPrompt() {
   if (state === "hidden") return null;
   if (state === "done")
     return (
-      <p data-home-alert="done" className="rounded-[1.35rem] border border-emerald-400/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-bold text-emerald-200">
+      <p data-home-alert="done" className="rounded-2xl border border-emerald-400/50 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-200">
         ✅ 알림을 켰어요. 퀴즈 · 출석 · 요괴 밥 시간을 알려 드릴게요.
       </p>
     );
   return (
-    <section data-home-alert className="flex flex-wrap items-center gap-2 rounded-[1.35rem] border border-[#c9a25c]/50 bg-[#c9a25c]/10 px-3 py-2.5 sm:px-4">
-      <BellRingIcon aria-hidden className="size-5 shrink-0 text-[#ffcf4a]" />
-      <p className="min-w-0 flex-1 text-sm">
+    <section data-home-alert className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#c9a25c]/50 bg-[#c9a25c]/10 px-3 py-1 sm:px-4">
+      <BellRingIcon aria-hidden className="size-4 shrink-0 text-[#ffcf4a]" />
+      <p className="min-w-0 flex-1 truncate text-sm">
         <b className="text-[#f3d9a4]">알림 켜면 놓치지 않아요</b>
-        <span className="block text-xs text-[#d9cfbd]">퀴즈(아침 · 저녁) · 출석 1등(밤 12시) · 요괴 밥 시간을 알려 드려요</span>
+        <span className="hidden text-xs text-[#d9cfbd] sm:inline"> · 퀴즈 · 출석 1등 · 요괴 밥 시간</span>
       </p>
-      <button type="button" data-home-alert-on disabled={busy} onClick={() => void turnOn()} className="min-h-10 shrink-0 rounded-full bg-[#ffcf4a] px-4 text-sm font-black text-[#2a1400] disabled:opacity-50">
+      <button type="button" data-home-alert-on disabled={busy} onClick={() => void turnOn()} className="min-h-9 shrink-0 rounded-full bg-[#ffcf4a] px-3.5 text-sm font-black text-[#2a1400] disabled:opacity-50">
         {busy ? "켜는 중…" : "🔔 알림 켜기"}
       </button>
-      <button type="button" onClick={later} aria-label="나중에" className="grid size-9 shrink-0 place-items-center rounded-full text-zinc-400 hover:bg-black/30">
+      <button type="button" onClick={later} aria-label="나중에" className="grid size-8 shrink-0 place-items-center rounded-full text-zinc-400 hover:bg-black/30">
         <XIcon className="size-4" />
       </button>
       {error ? <p className="basis-full text-xs text-rose-300">{error}</p> : null}

@@ -23,8 +23,8 @@ export async function HomeMyStatus() {
   const pct = Math.max(0, Math.min(100, user.progressPercent));
   return (
     <>
-    <section aria-label="내 상태" data-home-my-status className="lounge-card flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[1.35rem] px-3 py-2.5 sm:px-4">
-      <Link href={`/u/${encodeURIComponent(user.nickname)}`} className="grid min-w-0 basis-full gap-1 sm:basis-auto sm:min-w-[16rem] sm:flex-1">
+    <section aria-label="내 상태" data-home-my-status className="lounge-card flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl px-3 py-1.5 sm:px-4">
+      <Link href={`/u/${encodeURIComponent(user.nickname)}`} className="grid min-w-0 basis-full gap-0.5 sm:basis-auto sm:min-w-[12rem] sm:flex-1">
         <span className="flex items-baseline gap-1.5 text-sm">
           <b className="shrink-0 font-black text-[#f3d9a4]">Lv.{user.level}</b>
           {rank ? <span className="truncate text-xs font-bold text-[#c9a25c]">{rank}</span> : null}
@@ -37,19 +37,19 @@ export async function HomeMyStatus() {
       <Link href="/shop" className="shrink-0 text-sm font-black text-white tabular-nums" title="포인트 상점">
         {user.points.toLocaleString("ko-KR")}P
       </Link>
-      <span className="shrink-0 text-sm font-bold text-orange-300 tabular-nums">🔥 연속 {streak}일</span>
+      <span className="shrink-0 text-sm font-bold text-orange-300 tabular-nums" title={bonus ? `${bonus.label} 보너스 +${bonus.points}P까지 ${bonus.daysLeft}일` : undefined}>🔥 연속 {streak}일</span>
       <Link
         href="/attendance"
         data-my-status-attend={checked ? "done" : "todo"}
         className={cn(
-          "ml-auto inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 text-sm font-black sm:ml-0",
+          "ml-auto inline-flex min-h-9 shrink-0 items-center rounded-full px-3 text-sm font-black sm:ml-0",
           checked ? "border border-emerald-400/60 bg-emerald-500/10 text-emerald-200" : "bg-[#ffcf4a] text-[#2a1400]",
         )}
       >
         {checked ? "✅ 출석 완료" : `출석하기 +${ATTENDANCE_POINTS}P`}
       </Link>
       {bonus ? (
-        <p className="basis-full text-[11px] text-zinc-400">
+        <p className="basis-full text-[11px] text-zinc-400 sm:hidden">
           {bonus.label} 보너스 +{bonus.points.toLocaleString("ko-KR")}P까지 {bonus.daysLeft}일{checked ? " 남았어요" : "(오늘 출석 포함)"}
         </p>
       ) : null}

@@ -147,18 +147,20 @@ export default async function HomePage() {
         <Suspense fallback={<HomePanelFallback className="h-10" />}>
           <HomeBoardNav />
         </Suspense>
-        {/* 회원: 레벨 · 경험치 · 포인트 · 연속 출석 · 출석 버튼 한 줄 */}
-        <Suspense fallback={null}>
-          <HomeMyStatus />
-        </Suspense>
-        {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
-        <UrgentAlertPrompt />
       </div>
 
       {/* 한 묶음 두 칸: 본문 | 오른쪽 칸. 오른쪽 칸은 짧으면 스크롤을 따라 내려와(sticky) 중간에 빈칸이 안 생김 */}
       <HomeColumns
         main={
           <>
+            {/* 회원: 내 상태 한 줄 · 알림 권유(본문 칸 맨 위 — 오른쪽 칸이 이 줄부터 시작) */}
+            <div className="grid min-w-0 gap-2 empty:hidden">
+              <Suspense fallback={null}>
+                <HomeMyStatus />
+              </Suspense>
+              {/* 앱을 설치한 사람에게 한 번: 급구 알림 켜기 */}
+              <UrgentAlertPrompt />
+            </div>
             <Suspense fallback={<HomePanelFallback className="order-2 h-56 lg:order-none" />}>
               <HomeJobsSection />
             </Suspense>
