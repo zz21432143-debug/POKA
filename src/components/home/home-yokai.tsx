@@ -52,7 +52,17 @@ export async function HomeYokai() {
 
   // 메인 위쪽 작은 한 칸: 캐릭터 · 칭얼거림 · 할 일.
   // PC: 위는 요괴 마을 배경 + 큰 캐릭터(높이 고정), 아래는 차분한 바탕에 글씨 · 버튼 — 옆 퀴즈가 길어져도 같이 늘어나지 않음
+  // PC: 요괴 칸 아래 「오늘 할 일」(밥이 생기는 활동 · 옆 퀴즈가 길어져도 빈칸이 안 남게). 휴대폰은 숨김
+  const todo = [
+    { done: y.sources.attended, label: "출석체크", href: "/attendance" },
+    { done: y.sources.quiz, label: "오늘의 퀴즈 맞히기", href: "/quiz" },
+    { done: y.sources.posted, label: "글 1개 쓰기", href: "/boards/free/write" },
+    { done: y.sources.commented, label: "댓글 1개 쓰기", href: "/boards/free" },
+    { done: Boolean(y.sources.answered), label: "내 답변 채택받기(보너스)", href: "/boards/hand-review" },
+  ];
+  const doneCount = todo.filter((t) => t.done).length;
   return (
+    <div className="flex min-w-0 flex-col gap-2 lg:self-start">
     <Link
       href="/yokai"
       data-home-yokai="mine"
@@ -90,5 +100,26 @@ export async function HomeYokai() {
         {happy ? "🏮 마을" : low.cta}
       </span>
     </Link>
+    <section data-home-todo aria-label="오늘 할 일" className="hidden rounded-[1.1rem] border border-white/10 bg-[#1a1411] p-3 lg:block">
+      <p className="flex items-baseline justify-between text-sm font-black text-[#f3d9a4]">
+        오늘 할 일 <span className="text-xs text-[#b8ab98]">{doneCount}/{todo.length}</span>
+      </p>
+      <p className="mt-0.5 text-[11px] text-[#a89c88]">하나 할 때마다 요괴 밥이 하나 더 생겨요</p>
+      {/* 안 한 것만 최대 3개(칸이 너무 길어지지 않게) · 한 것은 개수로 */}
+      <ul className="mt-2 grid gap-0.5">
+        {todo
+          .filter((t) => !t.done)
+          .slice(0, 3)
+          .map((t) => (
+            <li key={t.label}>
+              <Link href={t.href} className="flex min-h-9 items-center gap-2 rounded-lg px-1 text-[13px] font-bold text-[#ece3d3] hover:bg-white/5">
+                ⬜ {t.label} <span className="ml-auto text-xs text-[#c9a25c]">›</span>
+              </Link>
+            </li>
+          ))}
+      </ul>
+      {doneCount ? <p className="mt-1 px-1 text-xs text-emerald-300">✅ {doneCount === todo.length ? "오늘 할 일을 다 했어요!" : `${doneCount}개 완료`}</p> : null}
+    </section>
+    </div>
   );
 }

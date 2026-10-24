@@ -1076,6 +1076,8 @@ export async function yokaiHome(userId: string) {
     nextBond: nextBond(active.affection),
     next: nextStageProgress(active.exp),
     feedsLeft: Math.max(0, allowed - fedToday(pet)),
+    /** 오늘 한 활동(홈 「오늘 할 일」) */
+    sources,
     // 배부름 · 밥 쿨타임(모든 요괴 함께) 중 늦은 쪽
     feedAt:
       later(
