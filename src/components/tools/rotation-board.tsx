@@ -1049,6 +1049,342 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     };
   })();
 
+  // 시간표 본문: 운영 탭에 바로 보이고, ⛶ 크게 보기 창에서도 같은 것을 씀
+  const gridBody = !plan ? null : (
+    view === "table" ? (
+      <div className={cn("overflow-auto rounded-xl border border-white/15", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
+        {/* 시간은 맨 위 한 줄, 테이블 번호는 왼쪽 */}
+        <table className="border-collapse">
+          <thead className="sticky top-0 z-20">
+            <tr>
+              <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">
+                테이블 / 시간
+              </th>
+              {rows.map(({ slot, index }) => {
+                const time = formatClock(slot.at);
+                return (
+                  <th
+                    key={slot.at}
+                    data-slot={time}
+                    className={cn(
+                      "px-1 py-1.5",
+                      index === current
+                        ? "bg-emerald-700"
+                        : index === next
+                          ? "bg-amber-500"
+                          : "bg-zinc-900",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTimeEdit({ index, value: time })
+                      }
+                      title="시간 바꾸기"
+                      className={cn(
+                        "grid w-full min-w-[5.5rem] rounded-md px-1 py-0.5 text-center hover:bg-white/10",
+                        index === next
+                          ? "text-black"
+                          : "text-white",
+                        index < current && "opacity-60",
+                      )}
+                    >
+                      <span className="text-xl font-black">
+                        {time}
+                      </span>
+                      <span className="text-[11px] font-bold">
+                        {slotLabel(index) ??
+                          (index === current
+                            ? "지금"
+                            : index === next
+                              ? "다음 교대"
+                              : "")}{" "}
+                        ✎
+                      </span>
+                    </button>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {labels.map((label, t) =>
+              hiddenTable(t) ? null : (
+                <tr
+                  key={label}
+                  className="border-t-2 border-white/10"
+                >
+                  <th className="sticky left-0 z-10 bg-zinc-900 px-1.5 py-1 text-left whitespace-nowrap">
+                    <span className="flex items-center gap-1">
+                      <span
+                        className={cn(
+                          "text-lg font-black",
+                          closedFrom[t] != null
+                            ? "text-rose-400"
+                            : "text-emerald-300",
+                        )}
+                      >
+                        {tableTag(label)}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void toggleCombine(t)}
+                        className={cn(
+                          "min-h-7 rounded px-1 text-[10px] font-black",
+                          closedFrom[t] != null
+                            ? "bg-emerald-700 text-white"
+                            : "border border-rose-500/60 text-rose-300",
+                        )}
+                      >
+                        {closedFrom[t] != null
+                          ? "다시 열기"
+                          : "컨바인"}
+                      </button>
+                    </span>
+                    <span className={cn("mt-0.5 items-center gap-0.5", tableTools ? "flex" : "hidden")}>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        data-rot-rename={label}
+                        onClick={() => void renameTable(t)}
+                        title="테이블 번호 바꾸기"
+                        className="min-h-7 rounded border border-white/25 px-1 text-[10px] font-black text-zinc-200"
+                      >
+                        번호
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        data-rot-block={label}
+                        onClick={() => setBlockFor(t)}
+                        title="이 테이블에 못 넣는 딜러"
+                        className={cn(
+                          "min-h-7 rounded border px-1 text-[10px] font-black",
+                          (blocked[t] ?? []).length ? "border-amber-400 bg-amber-500/20 text-amber-200" : "border-white/25 text-zinc-200",
+                        )}
+                      >
+                        🚫{(blocked[t] ?? []).length || ""}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        data-rot-remove={label}
+                        onClick={() => void removeTable(t)}
+                        title="테이블 삭제(다시 열기 없음)"
+                        className="min-h-7 rounded border border-rose-500/50 px-1 text-[10px] font-black text-rose-300"
+                      >
+                        삭제
+                      </button>
+                    </span>
+                    {closedFrom[t] != null ? (
+                      <span className="block text-[10px] font-black text-rose-300">
+                        {formatClock(closedFrom[t] as number)}{" "}
+                        컨바인
+                      </span>
+                    ) : null}
+                    {closedFrom[t] == null &&
+                    openedFrom[t] != null ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void setOpenTime(t)}
+                        title="러닝 시각 바꾸기"
+                        className="block text-[10px] font-black text-emerald-300 underline decoration-dotted"
+                      >
+                        {formatClock(openedFrom[t] as number)}{" "}
+                        오픈 ⏰
+                      </button>
+                    ) : null}
+                  </th>
+                  {rows.map(({ slot, index }) => {
+                    const id = slot.seats[t];
+                    const time = formatClock(slot.at);
+                    if (isBeforeOpen(t, slot.at)) {
+                      return (
+                        <td
+                          key={slot.at}
+                          className={cn(
+                            "px-1 py-1",
+                            index < current && "opacity-50",
+                          )}
+                        >
+                          <span
+                            data-before-open
+                            className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border border-dashed border-white/15 bg-zinc-900 text-xs font-bold text-zinc-500"
+                          >
+                            오픈 전
+                          </span>
+                        </td>
+                      );
+                    }
+                    if (isClosedAt(t, slot.at)) {
+                      return (
+                        <td
+                          key={slot.at}
+                          className={cn(
+                            "px-1 py-1",
+                            index < current && "opacity-50",
+                          )}
+                        >
+                          <span
+                            data-closed
+                            className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border-2 border-rose-500 bg-rose-950 text-xs font-black text-rose-300"
+                          >
+                            {tableTag(label)} 컨바인
+                          </span>
+                        </td>
+                      );
+                    }
+                    const goneHere = isGone(id, index);
+                    return (
+                      <td
+                        key={slot.at}
+                        className={cn(
+                          "px-1 py-1",
+                          index === current
+                            ? "bg-emerald-950"
+                            : index === next
+                              ? "bg-[#2a1d05]"
+                              : "bg-black",
+                          index < current && "opacity-50",
+                        )}
+                      >
+                        <button
+                          type="button"
+                          data-cell={`${time}-${tableTag(label)}`}
+                          onClick={() =>
+                            setCell({ slot: index, table: t })
+                          }
+                          className={cn(
+                            "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
+                            goneHere
+                              ? "bg-rose-700 hover:bg-rose-600"
+                              : id
+                                ? "bg-zinc-800 hover:bg-zinc-700"
+                                : "border-2 border-dashed border-rose-500/70",
+                            cell?.slot === index &&
+                              cell.table === t &&
+                              "ring-2 ring-amber-300",
+                          )}
+                        >
+                          {/* 테이블 · 시간은 왼쪽 · 위 머리에 있어 칸에는 꼭 필요할 때만(고정 · 늦은 오픈 · 퇴근) */}
+                          {slot.fixed?.includes(t) || opensInSlot(t, slot.at) != null || goneHere ? (
+                            <span
+                              className={cn(
+                                "text-[10px] font-black",
+                                goneHere
+                                  ? "text-white"
+                                  : "text-emerald-300",
+                              )}
+                            >
+                              {slot.fixed?.includes(t) ? "📌 고정 " : ""}
+                              {opensInSlot(t, slot.at) != null ? `${formatClock(opensInSlot(t, slot.at) as number)}~ ` : ""}
+                              {goneHere
+                                ? goneLabel(id as string)
+                                : ""}
+                            </span>
+                          ) : null}
+                          <span
+                            className={cn(
+                              "truncate text-lg font-black",
+                              id ? "text-white" : "text-rose-300",
+                            )}
+                          >
+                            {id ? name(id) : "비어 있음"}
+                          </span>
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ),
+            )}
+            <tr className="border-t-2 border-amber-400/40">
+              <th className="sticky left-0 z-10 bg-zinc-900 px-3 py-1.5 text-left text-base font-black text-amber-300">
+                휴식
+              </th>
+              {rows.map(({ slot, index }) => (
+                <td
+                  key={slot.at}
+                  className={cn(
+                    "max-w-[7rem] px-1.5 py-1.5 align-top text-xs font-bold text-amber-200",
+                    index < current && "opacity-50",
+                  )}
+                >
+                  {slot.rest.length ? (
+                    <span className="flex flex-wrap gap-1">
+                      {slot.rest.map((id) => (
+                        <span
+                          key={id}
+                          className={cn(
+                            "rounded-md px-1.5 py-0.5 text-sm font-black",
+                            isGone(id, index) ? "bg-rose-700 text-white" : "bg-amber-500/20 text-amber-100",
+                          )}
+                        >
+                          {name(id)}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className={cn("grid gap-1.5 overflow-auto", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
+        {state.dealers
+          .filter((d) => d.status !== "OFF")
+          .map((dealer) => {
+            const visible = new Set(rowIndexes);
+            const schedule = dealerSchedule(plan, dealer.id)
+              .map((row, index) => ({ ...row, index }))
+              .filter((row) => visible.has(row.index));
+            return (
+              <div
+                key={dealer.id}
+                data-schedule={dealer.name}
+                className="grid gap-1.5 rounded-xl border border-white/15 bg-zinc-950 p-2 sm:grid-cols-[7rem_1fr] sm:items-center"
+              >
+                <p className="flex items-center gap-1.5 text-base font-black">
+                  {dealer.name}{" "}
+                  <StatusChip status={dealer.status} />
+                </p>
+                <ul className="flex flex-wrap gap-1">
+                  {schedule.map((row) => (
+                    <li
+                      key={row.at}
+                      className={cn(
+                        "rounded-md px-2 py-1 text-sm font-black",
+                        row.table == null
+                          ? "bg-zinc-900 text-zinc-600"
+                          : row.table === 0
+                            ? "bg-amber-400 text-black"
+                            : "bg-emerald-600 text-white",
+                        row.index === current &&
+                          "ring-2 ring-white",
+                      )}
+                    >
+                      {formatClock(row.at)}{" "}
+                      {row.table == null
+                        ? "—"
+                        : row.table === 0
+                          ? "휴식"
+                          : tableTag(labels[row.table - 1])}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+      </div>
+    )
+  );
+
   return (
     <div className="grid gap-3 pb-10 text-white">
       {/* 게임: 근무일 · 이름 · 바꾸기 */}
@@ -1757,13 +2093,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   </button>
                 </div>
               </div>
-              <ul className="grid max-h-[45dvh] grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5 overflow-y-auto pr-1">
+              <ul className="grid max-h-[45dvh] grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,14rem),1fr))] gap-1.5 overflow-y-auto pr-1">
                 {swap.rows.map((row) => (
                   <li
                     key={row.label}
                     data-swap={row.label}
                     className={cn(
-                      "flex items-center gap-2 rounded-lg px-2.5 py-1.5",
+                      "flex min-w-0 flex-wrap items-center gap-x-1.5 rounded-lg px-2 py-1.5 sm:gap-2 sm:px-2.5",
                       row.closed
                         ? "border border-rose-500 bg-rose-950"
                         : "bg-black",
@@ -1855,7 +2191,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           {/* 시간표 */}
           <section aria-label="시간표" hidden={!plan} className="poka-watermark grid gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-black">로테이션 시간표</h2>
+              <h2 className="text-xl font-black">📅 시간표</h2>
               {plan ? (
                 <>
                   <div className="flex rounded-full border border-white/20 p-0.5">
@@ -1882,8 +2218,28 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       onChange={(e) => setShowAll(e.target.checked)}
                       className="size-4"
                     />
-                    전체 보기(지난 칸 포함)
+                    지난 칸
                   </label>
+                  {view === "table" ? (
+                    <button
+                      type="button"
+                      data-inline-table-tools
+                      aria-pressed={tableTools}
+                      onClick={() => setTableTools((v) => !v)}
+                      className={cn("min-h-9 rounded-full border px-3 text-xs font-bold", tableTools ? "border-sky-300 bg-sky-900 text-white" : "border-white/25 text-zinc-300")}
+                    >
+                      🛠 테이블 관리
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    data-open-grid
+                    onClick={() => setGridOpen(true)}
+                    title="시간표를 화면 가득 크게 봅니다(TV · 넓은 화면)"
+                    className="min-h-9 rounded-full border border-sky-400/60 px-3 text-xs font-bold text-sky-200"
+                  >
+                    ⛶ 크게 보기
+                  </button>
                 </>
               ) : null}
               {/* 자주 안 쓰는 것(시간표 삭제 · 직접 배치 바꾸기)은 더보기 안에 — Auto 옆에서 잘못 누르지 않게 */}
@@ -1980,17 +2336,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 <b className="text-sky-300">✋ 직접 배치</b>(빈 시간표에서 칸을 눌러 직접 넣기)를 누르세요.
               </p>
             ) : !gridOpen ? (
-              <button
-                type="button"
-                data-open-grid
-                onClick={() => setGridOpen(true)}
-                className="min-h-14 rounded-xl border-2 border-sky-400/70 bg-sky-950/40 px-4 text-lg font-black text-sky-100 hover:bg-sky-900/50"
-              >
-                📅 전체 시간표 크게 보기{" "}
-                <span className="text-sm font-bold text-sky-300">
-                  ({view === "table" ? "시간별" : "딜러별"} · 칸을 눌러 바꾸기)
-                </span>
-              </button>
+              <div data-grid-inline className="grid gap-1">
+                {gridBody}
+                <p className="text-xs text-zinc-400">칸을 누르면 딜러를 바꿀 수 있어요 · 시간을 누르면 교대 시각을 바꿔요</p>
+              </div>
             ) : (
               <ToolDialog
                 label="전체 시간표"
@@ -2080,338 +2429,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       닫기 ✕
                     </button>
                   </div>
-                  {view === "table" ? (
-                    <div className="max-h-[80dvh] overflow-auto rounded-xl border border-white/15">
-                      {/* 시간은 맨 위 한 줄, 테이블 번호는 왼쪽 */}
-                      <table className="border-collapse">
-                        <thead className="sticky top-0 z-20">
-                          <tr>
-                            <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">
-                              테이블 / 시간
-                            </th>
-                            {rows.map(({ slot, index }) => {
-                              const time = formatClock(slot.at);
-                              return (
-                                <th
-                                  key={slot.at}
-                                  data-slot={time}
-                                  className={cn(
-                                    "px-1 py-1.5",
-                                    index === current
-                                      ? "bg-emerald-700"
-                                      : index === next
-                                        ? "bg-amber-500"
-                                        : "bg-zinc-900",
-                                  )}
-                                >
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setTimeEdit({ index, value: time })
-                                    }
-                                    title="시간 바꾸기"
-                                    className={cn(
-                                      "grid w-full min-w-[5.5rem] rounded-md px-1 py-0.5 text-center hover:bg-white/10",
-                                      index === next
-                                        ? "text-black"
-                                        : "text-white",
-                                      index < current && "opacity-60",
-                                    )}
-                                  >
-                                    <span className="text-xl font-black">
-                                      {time}
-                                    </span>
-                                    <span className="text-[11px] font-bold">
-                                      {slotLabel(index) ??
-                                        (index === current
-                                          ? "지금"
-                                          : index === next
-                                            ? "다음 교대"
-                                            : "")}{" "}
-                                      ✎
-                                    </span>
-                                  </button>
-                                </th>
-                              );
-                            })}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {labels.map((label, t) =>
-                            hiddenTable(t) ? null : (
-                              <tr
-                                key={label}
-                                className="border-t-2 border-white/10"
-                              >
-                                <th className="sticky left-0 z-10 bg-zinc-900 px-1.5 py-1 text-left whitespace-nowrap">
-                                  <span className="flex items-center gap-1">
-                                    <span
-                                      className={cn(
-                                        "text-lg font-black",
-                                        closedFrom[t] != null
-                                          ? "text-rose-400"
-                                          : "text-emerald-300",
-                                      )}
-                                    >
-                                      {tableTag(label)}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      onClick={() => void toggleCombine(t)}
-                                      className={cn(
-                                        "min-h-7 rounded px-1 text-[10px] font-black",
-                                        closedFrom[t] != null
-                                          ? "bg-emerald-700 text-white"
-                                          : "border border-rose-500/60 text-rose-300",
-                                      )}
-                                    >
-                                      {closedFrom[t] != null
-                                        ? "다시 열기"
-                                        : "컨바인"}
-                                    </button>
-                                  </span>
-                                  <span className={cn("mt-0.5 items-center gap-0.5", tableTools ? "flex" : "hidden")}>
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      data-rot-rename={label}
-                                      onClick={() => void renameTable(t)}
-                                      title="테이블 번호 바꾸기"
-                                      className="min-h-7 rounded border border-white/25 px-1 text-[10px] font-black text-zinc-200"
-                                    >
-                                      번호
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      data-rot-block={label}
-                                      onClick={() => setBlockFor(t)}
-                                      title="이 테이블에 못 넣는 딜러"
-                                      className={cn(
-                                        "min-h-7 rounded border px-1 text-[10px] font-black",
-                                        (blocked[t] ?? []).length ? "border-amber-400 bg-amber-500/20 text-amber-200" : "border-white/25 text-zinc-200",
-                                      )}
-                                    >
-                                      🚫{(blocked[t] ?? []).length || ""}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      data-rot-remove={label}
-                                      onClick={() => void removeTable(t)}
-                                      title="테이블 삭제(다시 열기 없음)"
-                                      className="min-h-7 rounded border border-rose-500/50 px-1 text-[10px] font-black text-rose-300"
-                                    >
-                                      삭제
-                                    </button>
-                                  </span>
-                                  {closedFrom[t] != null ? (
-                                    <span className="block text-[10px] font-black text-rose-300">
-                                      {formatClock(closedFrom[t] as number)}{" "}
-                                      컨바인
-                                    </span>
-                                  ) : null}
-                                  {closedFrom[t] == null &&
-                                  openedFrom[t] != null ? (
-                                    <button
-                                      type="button"
-                                      disabled={busy}
-                                      onClick={() => void setOpenTime(t)}
-                                      title="러닝 시각 바꾸기"
-                                      className="block text-[10px] font-black text-emerald-300 underline decoration-dotted"
-                                    >
-                                      {formatClock(openedFrom[t] as number)}{" "}
-                                      오픈 ⏰
-                                    </button>
-                                  ) : null}
-                                </th>
-                                {rows.map(({ slot, index }) => {
-                                  const id = slot.seats[t];
-                                  const time = formatClock(slot.at);
-                                  if (isBeforeOpen(t, slot.at)) {
-                                    return (
-                                      <td
-                                        key={slot.at}
-                                        className={cn(
-                                          "px-1 py-1",
-                                          index < current && "opacity-50",
-                                        )}
-                                      >
-                                        <span
-                                          data-before-open
-                                          className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border border-dashed border-white/15 bg-zinc-900 text-xs font-bold text-zinc-500"
-                                        >
-                                          오픈 전
-                                        </span>
-                                      </td>
-                                    );
-                                  }
-                                  if (isClosedAt(t, slot.at)) {
-                                    return (
-                                      <td
-                                        key={slot.at}
-                                        className={cn(
-                                          "px-1 py-1",
-                                          index < current && "opacity-50",
-                                        )}
-                                      >
-                                        <span
-                                          data-closed
-                                          className="grid min-h-12 min-w-[5.5rem] place-items-center rounded-lg border-2 border-rose-500 bg-rose-950 text-xs font-black text-rose-300"
-                                        >
-                                          {tableTag(label)} 컨바인
-                                        </span>
-                                      </td>
-                                    );
-                                  }
-                                  const goneHere = isGone(id, index);
-                                  return (
-                                    <td
-                                      key={slot.at}
-                                      className={cn(
-                                        "px-1 py-1",
-                                        index === current
-                                          ? "bg-emerald-950"
-                                          : index === next
-                                            ? "bg-[#2a1d05]"
-                                            : "bg-black",
-                                        index < current && "opacity-50",
-                                      )}
-                                    >
-                                      <button
-                                        type="button"
-                                        data-cell={`${time}-${tableTag(label)}`}
-                                        onClick={() =>
-                                          setCell({ slot: index, table: t })
-                                        }
-                                        className={cn(
-                                          "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
-                                          goneHere
-                                            ? "bg-rose-700 hover:bg-rose-600"
-                                            : id
-                                              ? "bg-zinc-800 hover:bg-zinc-700"
-                                              : "border-2 border-dashed border-rose-500/70",
-                                          cell?.slot === index &&
-                                            cell.table === t &&
-                                            "ring-2 ring-amber-300",
-                                        )}
-                                      >
-                                        {/* 테이블 · 시간은 왼쪽 · 위 머리에 있어 칸에는 꼭 필요할 때만(고정 · 늦은 오픈 · 퇴근) */}
-                                        {slot.fixed?.includes(t) || opensInSlot(t, slot.at) != null || goneHere ? (
-                                          <span
-                                            className={cn(
-                                              "text-[10px] font-black",
-                                              goneHere
-                                                ? "text-white"
-                                                : "text-emerald-300",
-                                            )}
-                                          >
-                                            {slot.fixed?.includes(t) ? "📌 고정 " : ""}
-                                            {opensInSlot(t, slot.at) != null ? `${formatClock(opensInSlot(t, slot.at) as number)}~ ` : ""}
-                                            {goneHere
-                                              ? goneLabel(id as string)
-                                              : ""}
-                                          </span>
-                                        ) : null}
-                                        <span
-                                          className={cn(
-                                            "truncate text-lg font-black",
-                                            id ? "text-white" : "text-rose-300",
-                                          )}
-                                        >
-                                          {id ? name(id) : "비어 있음"}
-                                        </span>
-                                      </button>
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ),
-                          )}
-                          <tr className="border-t-2 border-amber-400/40">
-                            <th className="sticky left-0 z-10 bg-zinc-900 px-3 py-1.5 text-left text-base font-black text-amber-300">
-                              휴식
-                            </th>
-                            {rows.map(({ slot, index }) => (
-                              <td
-                                key={slot.at}
-                                className={cn(
-                                  "max-w-[7rem] px-1.5 py-1.5 align-top text-xs font-bold text-amber-200",
-                                  index < current && "opacity-50",
-                                )}
-                              >
-                                {slot.rest.length ? (
-                                  <span className="flex flex-wrap gap-1">
-                                    {slot.rest.map((id) => (
-                                      <span
-                                        key={id}
-                                        className={cn(
-                                          "rounded-md px-1.5 py-0.5 text-sm font-black",
-                                          isGone(id, index) ? "bg-rose-700 text-white" : "bg-amber-500/20 text-amber-100",
-                                        )}
-                                      >
-                                        {name(id)}
-                                      </span>
-                                    ))}
-                                  </span>
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="grid max-h-[80dvh] gap-1.5 overflow-auto">
-                      {state.dealers
-                        .filter((d) => d.status !== "OFF")
-                        .map((dealer) => {
-                          const visible = new Set(rowIndexes);
-                          const schedule = dealerSchedule(plan, dealer.id)
-                            .map((row, index) => ({ ...row, index }))
-                            .filter((row) => visible.has(row.index));
-                          return (
-                            <div
-                              key={dealer.id}
-                              data-schedule={dealer.name}
-                              className="grid gap-1.5 rounded-xl border border-white/15 bg-zinc-950 p-2 sm:grid-cols-[7rem_1fr] sm:items-center"
-                            >
-                              <p className="flex items-center gap-1.5 text-base font-black">
-                                {dealer.name}{" "}
-                                <StatusChip status={dealer.status} />
-                              </p>
-                              <ul className="flex flex-wrap gap-1">
-                                {schedule.map((row) => (
-                                  <li
-                                    key={row.at}
-                                    className={cn(
-                                      "rounded-md px-2 py-1 text-sm font-black",
-                                      row.table == null
-                                        ? "bg-zinc-900 text-zinc-600"
-                                        : row.table === 0
-                                          ? "bg-amber-400 text-black"
-                                          : "bg-emerald-600 text-white",
-                                      row.index === current &&
-                                        "ring-2 ring-white",
-                                    )}
-                                  >
-                                    {formatClock(row.at)}{" "}
-                                    {row.table == null
-                                      ? "—"
-                                      : row.table === 0
-                                        ? "휴식"
-                                        : tableTag(labels[row.table - 1])}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
+                  {gridBody}
                 </div>
               </ToolDialog>
             )}
@@ -2443,7 +2461,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 aria-label="운영 현황"
                 className="grid gap-2 rounded-2xl border border-white/15 bg-black p-3"
               >
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 text-xs font-bold",
@@ -2461,62 +2479,31 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   <span className="text-sm font-black text-amber-300">
                     지금 {kstClock(clock)}
                   </span>
+                  {/* 한 줄: 테이블 · 딜러 · 딜 중 · 휴게 · 스태프(딜 안 함, 따로) */}
+                  <dl data-run-stats className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-bold">
+                    {[
+                      ["테이블", `${runningLabels.length}`, "text-emerald-300"],
+                      ["딜러", `${onDuty}`, "text-white"],
+                      ["딜 중", `${dealing}`, "text-emerald-300"],
+                      ["휴게", `${resting}`, "text-amber-300"],
+                      [
+                        "스태프",
+                        `${state.dealers.filter((d) => d.staff && d.status !== "OFF" && d.status !== "LEFT").length}`,
+                        "text-violet-300",
+                      ],
+                    ].map(([label, value, tone]) => (
+                      <div key={label} className="flex items-baseline gap-1">
+                        <dt className="text-zinc-400">{label}</dt>
+                        <dd className={cn("text-lg font-black", tone)}>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                {/* 한 줄: 테이블 · 딜러 · 딜 중 · 휴게 · 스태프(딜 안 함, 따로) */}
-                <dl data-run-stats className="grid grid-cols-5 gap-1">
-                  {[
-                    ["테이블", `${runningLabels.length}`, "text-emerald-300"],
-                    ["딜러", `${onDuty}`, "text-white"],
-                    ["딜 중", `${dealing}`, "text-emerald-300"],
-                    ["휴게", `${resting}`, "text-amber-300"],
-                    [
-                      "스태프",
-                      `${state.dealers.filter((d) => d.staff && d.status !== "OFF" && d.status !== "LEFT").length}`,
-                      "text-violet-300",
-                    ],
-                  ].map(([label, value, tone]) => (
-                    <div
-                      key={label}
-                      className="min-w-0 rounded-lg bg-zinc-900 px-1.5 py-1 text-center"
-                    >
-                      <dt className="truncate text-[11px] font-bold text-zinc-400">
-                        {label}
-                      </dt>
-                      <dd className={cn("text-xl font-black sm:text-2xl", tone)}>{value}</dd>
-                    </div>
-                  ))}
-                </dl>
                 {runningLabels.length && onDuty > runningLabels.length * 2 ? (
                   <p data-too-many className="rounded-lg bg-amber-950/60 px-2 py-1 text-xs font-bold text-amber-200">
                     딜러({onDuty})가 러닝 테이블({runningLabels.length})의 2배보다 많아 휴게가 교대 한 칸보다 길어질 수 있어요. 테이블을 더 열거나 출근 시간을 나눠 보세요.
                   </p>
                 ) : null}
-                <p className="flex flex-wrap items-center gap-1 text-sm font-bold">
-                  <span className="text-zinc-400">러닝 중</span>
-                  {runningLabels.map((label) => (
-                    <span
-                      key={label}
-                      className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-xs font-black text-white"
-                    >
-                      {tableTag(label)}
-                    </span>
-                  ))}
-                  {labels.length !== runningLabels.length ? (
-                    <>
-                      <span className="ml-2 text-rose-300">컨바인</span>
-                      {labels
-                        .filter((label) => !runningLabels.includes(label))
-                        .map((label) => (
-                          <span
-                            key={label}
-                            className="rounded-md bg-rose-600 px-1.5 py-0.5 text-xs font-black text-white"
-                          >
-                            {tableTag(label)}
-                          </span>
-                        ))}
-                    </>
-                  ) : null}
-                </p>
                 {/* 게임 중 테이블 추가 오픈(접어 둠) */}
                 <details data-add-tables className="group/add" open={Boolean(addText)}>
                   <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 text-sm font-black text-emerald-300 [&::-webkit-details-marker]:hidden">
