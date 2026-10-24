@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "cn";
 import { POKA_PROMO_EN } from "@/lib/brand-copy";
-import { blindUpSound, breakSound, countdownTick } from "@/lib/board-sound";
-import { PRIZE_COLORS, boardStats, clockText, clockView, type BoardLevel, type GameBoardData } from "@/lib/game-board";
+import { blindUpSound, breakSound, bustSound, championSound, countdownTick } from "@/lib/board-sound";
+import { PRIZE_COLORS, boardStats, clockText, clockView, ftName, type BoardLevel, type GameBoardData } from "@/lib/game-board";
 
 const won = (n: number) => Math.round(n).toLocaleString("en-US");
 const blindText = (l: BoardLevel) => `SB ${won(l.sb)} / BB ${won(l.bb)}`;
@@ -64,6 +64,19 @@ export function GameBoardScreen({
     if (view.level.isBreak) breakSound(view.level.minutes);
     else blindUpSound(view.number, view.level.sb, view.level.bb);
   }, [view.index, view.running, view.level, view.number, sound]);
+
+  // 파이널 테이블: 남은 선수 · 1명이면 우승
+  const ftList = data.ftOn ? (data.ftPlayers ?? []) : [];
+  const ftAlive = ftList.map((p, i) => ({ key: i, name: ftName(p, i), out: p.out })).filter((p) => !p.out);
+  const ft = { on: data.ftOn && ftList.length > 0, alive: ftAlive, champion: data.ftOn && ftList.length > 1 && ftAlive.length === 1 ? ftAlive[0].name : null };
+  const lastAlive = useRef(ftAlive.length);
+  useEffect(() => {
+    const before = lastAlive.current;
+    lastAlive.current = ftAlive.length;
+    if (!sound || !data.ftOn || ftAlive.length >= before) return;
+    if (ftAlive.length === 1) championSound();
+    else bustSound();
+  }, [ftAlive.length, data.ftOn, sound]);
 
   const nowLabel = kstTime(now);
   // 매장 이름이 길면 글씨를 줄여 한 줄에 다 보이게(16자까지는 그대로)
@@ -259,6 +272,37 @@ export function GameBoardScreen({
           )}
         </section>
       </div>
+
+      {/* 파이널 테이블: 남은 선수 이름표(탈락하면 사라짐) */}
+      {ft.on ? (
+        <section data-ft className="flex items-center gap-[calc(var(--u)*1)] border-t border-[#e2bd72]/40 bg-[linear-gradient(90deg,rgba(60,40,10,.7),rgba(20,12,4,.7))] px-[calc(var(--u)*1.6)] py-[calc(var(--u)*0.7)]">
+          <span className="shrink-0 text-[clamp(11px,calc(var(--u)*1.5),30px)] leading-tight font-black tracking-[0.2em] text-[#e2bd72]">
+            FINAL
+            <br />
+            TABLE
+          </span>
+          <div className="flex min-w-0 flex-1 flex-wrap justify-center gap-[calc(var(--u)*0.6)]">
+            {ft.alive.map((p) => (
+              <span key={p.key} data-ft-name className="rounded-[calc(var(--u)*0.6)] border border-amber-300/50 bg-black/60 px-[calc(var(--u)*1.1)] py-[calc(var(--u)*0.25)] text-[clamp(13px,calc(var(--u)*2.2),46px)] font-black text-amber-100">
+                {p.name}
+              </span>
+            ))}
+          </div>
+          <span className="shrink-0 text-[clamp(12px,calc(var(--u)*1.6),32px)] font-black text-white tabular-nums">{ft.alive.length} LEFT</span>
+        </section>
+      ) : null}
+
+      {/* 1명 남으면 우승 화면 */}
+      {ft.champion ? (
+        <div data-ft-champion className="absolute inset-0 z-20 grid place-items-center bg-black/85">
+          <div className="grid justify-items-center gap-[calc(var(--u)*1)] text-center">
+            <span className="text-[clamp(16px,calc(var(--u)*3),64px)] font-black tracking-[0.3em] text-[#e2bd72]">CHAMPION</span>
+            <span className="text-[clamp(40px,calc(var(--u)*11),240px)] leading-none">🏆</span>
+            <span className="text-[clamp(28px,calc(var(--u)*8),180px)] leading-none font-black text-amber-200 [text-shadow:0_0_24px_rgba(252,211,77,.55)]">{ft.champion}</span>
+            <span className="text-[clamp(13px,calc(var(--u)*2),40px)] font-bold text-zinc-300">{data.name}</span>
+          </div>
+        </div>
+      ) : null}
 
       {/* 맨 아래 한 줄: POKA 주소 · 홍보(움직이지 않음) */}
       <footer data-promo className="flex items-center justify-center gap-[calc(var(--u)*0.8)] border-t border-[#c9a25c]/30 bg-black/60 px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.45)] text-[clamp(10px,calc(var(--u)*1.35),26px)] font-bold whitespace-nowrap text-zinc-300">

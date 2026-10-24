@@ -61,6 +61,9 @@ export type GameBoardData = {
   notice: string;
   /** 오른쪽 위 QR: view = 손님 휴대폰으로 이 현황판 보기(보기 링크) · store = 매장 QR(카톡방 · 메뉴판) · off = 없음 */
   qrMode: BoardQrMode;
+  /** 파이널 테이블 간단 모드: 남은 선수 이름표(스택 없음) · 1명 남으면 우승 화면 */
+  ftOn: boolean;
+  ftPlayers: FtPlayer[];
   storeQrUrl: string;
   /** 매장 QR 옆 글씨(예: 매장 카톡방) */
   storeQrLabel: string;
@@ -71,6 +74,12 @@ export type GameBoardData = {
 };
 
 export type BoardQrMode = "view" | "store" | "off";
+export type FtPlayer = { name: string; out: boolean };
+/** 파이널 테이블 자리 수(최대) · 이름 글자 수 */
+export const FT_MAX = 10;
+export const FT_NAME = 16;
+/** 이름을 안 적은 자리: 「1번」 */
+export const ftName = (p: FtPlayer, i: number) => p.name.trim() || `${i + 1}번`;
 export const QR_MODES: { value: BoardQrMode; label: string }[] = [
   { value: "view", label: "휴대폰으로 현황판 보기(추천)" },
   { value: "store", label: "매장 QR(카톡방 · 메뉴판 · 인스타)" },
@@ -113,6 +122,8 @@ export function defaultBoard(): GameBoardData {
     prizes: [],
     notice: "",
     qrMode: "view",
+    ftOn: false,
+    ftPlayers: [],
     storeQrUrl: "",
     storeQrLabel: "",
     bgUrl: "",
@@ -230,6 +241,13 @@ export function normalizeBoard(raw: unknown): GameBoardData {
     prizes: normalizePrizes(r.prizes, (r as { prize?: unknown }).prize),
     notice: text(r.notice, BOARD_LIMITS.notice),
     qrMode: r.qrMode === "store" || r.qrMode === "off" ? r.qrMode : "view",
+    ftOn: Boolean(r.ftOn),
+    ftPlayers: Array.isArray(r.ftPlayers)
+      ? (r.ftPlayers as unknown[]).slice(0, FT_MAX).map((p) => {
+          const o = (p ?? {}) as { name?: unknown; out?: unknown };
+          return { name: text(o.name, FT_NAME), out: Boolean(o.out) };
+        })
+      : [],
     storeQrUrl: typeof r.storeQrUrl === "string" && /^https?:\/\/\S+$/.test(r.storeQrUrl.trim()) ? r.storeQrUrl.trim().slice(0, BOARD_LIMITS.storeQrUrl) : "",
     storeQrLabel: text(r.storeQrLabel, BOARD_LIMITS.storeQrLabel),
     bgUrl: typeof r.bgUrl === "string" && /^\/api\/images\/[\w-]{1,64}$/.test(r.bgUrl) ? r.bgUrl : "",

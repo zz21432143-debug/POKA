@@ -114,3 +114,17 @@ export function rotationSoonSound(volume: RotationVolume = 2) {
   const { gain, wave } = VOL[volume];
   tone(1175, 0, 0.25, gain * 0.8, wave);
 }
+
+/** 파이널 테이블 탈락: 낮게 「쿵」 두 번 */
+export function bustSound() {
+  tone(196, 0, 0.28, 0.9, "triangle");
+  tone(147, 0.22, 0.5, 0.9, "triangle");
+}
+
+/** 우승: 팡파르 + 음성 */
+export function championSound() {
+  [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.14, 0.8));
+  tone(1319, 0.6, 0.9, 0.85);
+  tone(1047, 0.6, 0.9, 0.4, "triangle");
+  say("Congratulations! We have a champion.", 1600);
+}

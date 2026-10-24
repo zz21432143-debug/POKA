@@ -177,3 +177,17 @@ it("저장한 구조로 시작: 구조는 그대로, 인원 · 시계는 0부터
   assert.equal(b.earlyStack, 9_000);
   assert.equal(b.entries, 0);
 });
+
+describe("QR · 파이널 테이블 저장", () => {
+  it("QR 모드 · 매장 주소는 https만 · FT 자리는 10개까지 · 이름 16자", () => {
+    const n = normalizeBoard({ ...defaultBoard(), qrMode: "store", storeQrUrl: "javascript:alert(1)", ftOn: true, ftPlayers: Array.from({ length: 14 }, (_, i) => ({ name: `선수${i}`.repeat(5), out: i === 0 })) });
+    assert.equal(n.qrMode, "store");
+    assert.equal(n.storeQrUrl, "");
+    assert.equal(normalizeBoard({ ...defaultBoard(), storeQrUrl: "https://open.kakao.com/o/abc" }).storeQrUrl, "https://open.kakao.com/o/abc");
+    assert.equal(normalizeBoard({ ...defaultBoard(), qrMode: "hack" }).qrMode, "view");
+    assert.equal(n.ftPlayers.length, 10);
+    assert.ok(n.ftPlayers.every((p) => p.name.length <= 16));
+    assert.equal(n.ftPlayers[0].out, true);
+    assert.equal(defaultBoard().ftOn, false);
+  });
+});

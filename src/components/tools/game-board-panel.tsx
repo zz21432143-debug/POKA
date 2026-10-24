@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
-import { BOARD_LIMITS, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
+import { BOARD_LIMITS, FT_MAX, FT_NAME, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
@@ -661,6 +661,84 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
           <span className="ml-auto text-xs font-bold text-zinc-500">끄면 화면 · 총 칩에서 빠짐</span>
         </label>
         {data.addonOn ? <Counter label="애드온" value={data.addons} onChange={(v) => onEdit({ addons: v })} /> : null}
+        {/* 파이널 테이블 간단 모드: 이름표만(스택 없음) · 이름을 누르면 탈락 · 1명 남으면 우승 화면 */}
+        <div data-ft-panel className={cn("mt-2 grid gap-2 rounded-xl border p-3", data.ftOn ? "border-amber-400/60 bg-amber-950/30" : "border-white/10 bg-black/40")}>
+          <div className="flex flex-wrap items-center gap-2">
+            <b className="text-sm text-white">🏆 파이널 테이블</b>
+            {!data.ftOn && data.remaining > 1 && data.remaining <= 9 ? <span className="text-xs font-bold text-amber-300">지금 {data.remaining}명 · 켜 볼까요?</span> : null}
+            <button
+              type="button"
+              data-ft-toggle
+              onClick={() => {
+                if (data.ftOn) {
+                  onEdit({ ftOn: false });
+                  return;
+                }
+                const n = Math.min(FT_MAX, Math.max(2, data.remaining || 9));
+                const players = data.ftPlayers.length ? data.ftPlayers : Array.from({ length: n }, () => ({ name: "", out: false }));
+                onEdit({ ftOn: true, ftPlayers: players });
+              }}
+              className={cn("ml-auto min-h-10 rounded-lg px-3 text-sm font-black", data.ftOn ? "border border-white/25 text-zinc-200" : "bg-amber-400 text-black")}
+            >
+              {data.ftOn ? "끄기" : "켜기"}
+            </button>
+          </div>
+          {data.ftOn ? (
+            <>
+              <p className="text-xs text-zinc-400">이름은 처음 한 번만 적으면 돼요(비우면 「1번」). 「탈락」을 누르면 TV 이름표가 사라지고 플레이 중이 −1 돼요. 1명 남으면 우승 화면이 나와요.</p>
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {data.ftPlayers.map((p, i) => (
+                  <li key={i} className={cn("flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5", p.out && "opacity-50")}>
+                    <span className="w-7 shrink-0 text-center text-xs font-black text-zinc-400">{i + 1}</span>
+                    <input
+                      aria-label={`${i + 1}번 자리 이름`}
+                      value={p.name}
+                      maxLength={FT_NAME}
+                      placeholder={`${i + 1}번`}
+                      onChange={(e) => onEdit({ ftPlayers: data.ftPlayers.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)) })}
+                      className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-zinc-900 px-2 text-base font-bold text-white"
+                    />
+                    <button
+                      type="button"
+                      data-ft-bust={i}
+                      onClick={() =>
+                        onEdit({
+                          ftPlayers: data.ftPlayers.map((x, k) => (k === i ? { ...x, out: !x.out } : x)),
+                          remaining: Math.max(0, data.remaining + (p.out ? 1 : -1)),
+                        })
+                      }
+                      className={cn("min-h-10 shrink-0 rounded-md px-3 text-xs font-black", p.out ? "border border-emerald-400/60 text-emerald-200" : "bg-rose-600 text-white")}
+                    >
+                      {p.out ? "되살리기" : "탈락"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-2">
+                {data.ftPlayers.length < FT_MAX ? (
+                  <button type="button" onClick={() => onEdit({ ftPlayers: [...data.ftPlayers, { name: "", out: false }] })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
+                    + 자리 추가
+                  </button>
+                ) : null}
+                {data.ftPlayers.length > 2 ? (
+                  <button type="button" onClick={() => onEdit({ ftPlayers: data.ftPlayers.slice(0, -1) })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
+                    − 마지막 자리 빼기
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("파이널 테이블 이름 · 탈락 기록을 지울까요? (플레이 중 숫자는 그대로예요)")) onEdit({ ftPlayers: data.ftPlayers.map(() => ({ name: "", out: false })) });
+                  }}
+                  className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-400"
+                >
+                  처음부터
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+
 
         <h3 className="mt-2 text-sm font-black text-white">칩(1명당) — 총 칩 · 평균 스택 계산</h3>
         <div data-chip-inputs className="grid grid-cols-2 gap-2">
