@@ -9,6 +9,8 @@ import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
 import { CourseList } from "@/components/study/course-progress";
 import { courseViews } from "@/lib/course-titles";
 import { COURSE_POINTS } from "@/lib/courses";
+import { GLOSSARY } from "@/lib/glossary";
+import { STORE_TOOL_ITEMS } from "@/lib/nav";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
@@ -22,6 +24,8 @@ export const metadata: Metadata = {
 };
 
 const CARDS = [
+  { href: "/study/glossary", icon: BookOpenIcon, title: "홀덤 용어 사전", body: `넛 · 사이드팟 · c벳 · 3벳 · 리바인 · ICM · SPR … ㄱ~ㅎ ${GLOSSARY.length}개를 한 줄로. 자세한 가이드로 바로 이어져요.`, tag: "NEW" },
+  { href: "/study/push-fold-quiz", icon: TargetIcon, title: "푸시폴드 퀴즈", body: "5~15BB, 이 자리 · 이 패면 올인? 폴드? GTO 차트로 바로 채점 · 연속 정답 기록.", tag: "NEW" },
   { href: "/info/push-fold", icon: Grid3x3Icon, title: "GTO 푸시폴드 차트", body: "6인 · 9인 포지션별 올인 / 콜 범위, 헤즈업, 버블 · 파이널(ICM)까지.", tag: "인기" },
   { href: "/community/equity", icon: PercentIcon, title: "승률 계산기", body: "내 패 vs 상대 패(또는 상위 X% 범위) 프리플랍~리버 승률, 맞춰 보기, 팟 오즈 콜 판단.", tag: "인기" },
   { href: "/info/icm", icon: PieChartIcon, title: "ICM 계산기", body: "총상금 · 비율로 파이널 딜 금액을 공정하게. 이미 지급된 순위는 자동으로 빼요." },
@@ -52,6 +56,20 @@ export default function StudyHubPage() {
           </li>
         ))}
       </ul>
+      {/* 도구 모음: 공부 도구 + 매장 관리 도구를 한 화면에서 */}
+      <section aria-label="매장 관리 도구" data-store-tools className="grid gap-2">
+        <h2 className="text-xl font-black text-[#f3d9a4]">🏪 매장 관리 도구 <span className="text-sm font-bold text-[#b8ab98]">· 딜러 · 매니저용(회원 무료)</span></h2>
+        <ul className="grid gap-2 sm:grid-cols-3">
+          {STORE_TOOL_ITEMS.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} className="flex min-h-14 flex-col justify-center rounded-xl border border-white/10 bg-black/30 px-4 py-2 hover:border-[#c9a25c]/60">
+                <span className="text-base font-black text-white">{item.label}</span>
+                <span className="text-xs text-[#b8ab98]">{item.hint}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
       <div className="flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-[#d1c7b5]">
         <OniSticker name="idea" className="h-12" />
         <p>

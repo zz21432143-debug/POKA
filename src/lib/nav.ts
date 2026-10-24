@@ -44,12 +44,23 @@ export type SidebarGroup = {
   closed?: boolean;
 };
 
+/** 매장 관리 도구(회원 무료) — 사이드바 · 홀덤 공부 도구 모음에서 같이 씀 */
+export const STORE_TOOL_ITEMS: SidebarItem[] = [
+  { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
+  { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
+  { href: "/tools/shot-clock", label: "샷클락", hint: "플레이어 생각 시간", icon: "lantern" },
+  { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
+  { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
+];
+
 /** 홀덤 공부(무료 도구). 주소는 예전 그대로 두고 메뉴만 한곳에 모읍니다. */
 export const STUDY_ITEMS: SidebarItem[] = [
   // 읽을거리(가이드) 먼저, 그다음 차트 · 계산 도구, 문제 풀기 · 룰 자료
   { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
   { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
+  { href: "/study/glossary", label: "용어 사전", hint: "ㄱ~ㅎ 홀덤 · 딜러 용어", icon: "scroll" },
   { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위 · ICM", icon: "cards" },
+  { href: "/study/push-fold-quiz", label: "푸시폴드 퀴즈", hint: "올인? 폴드? 차트로 채점", icon: "cards" },
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
   { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
   { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
@@ -96,13 +107,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "매장 관리",
     hub: "/tools",
     icon: "noren",
-    items: [
-      { href: "/tools/rotation", label: "딜러 로테이션", hint: "교대 시간표", icon: "chips" },
-      { href: "/tools/board", label: "게임 현황판", hint: "토너먼트 시계 · TV", icon: "lantern" },
-      { href: "/tools/shot-clock", label: "샷클락", hint: "플레이어 생각 시간", icon: "lantern" },
-      { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
-      { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
-    ],
+    items: STORE_TOOL_ITEMS,
   },
   {
     // 가이드 · 무료 공부 · 계산 도구(로그인 없이)

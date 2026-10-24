@@ -93,6 +93,8 @@ export const SITEMAP_PATHS = [
   { path: "/info/guide", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/info/holdem", changeFrequency: "monthly" as const, priority: 0.7 },
   { path: "/study", changeFrequency: "monthly" as const, priority: 0.8 },
+  { path: "/study/glossary", changeFrequency: "monthly" as const, priority: 0.7 },
+  { path: "/study/push-fold-quiz", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/info/icm", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/info/push-fold", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/community/equity", changeFrequency: "monthly" as const, priority: 0.8 },
