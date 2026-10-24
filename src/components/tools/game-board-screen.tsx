@@ -163,7 +163,7 @@ export function GameBoardScreen({
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] py-[calc(var(--u)*0.8)] @[560px]:grid-cols-[0.82fr_2.6fr_0.86fr] @[560px]:grid-rows-[minmax(0,1fr)]">
+      <div data-main-grid className={cn("grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] @[560px]:grid-cols-[0.82fr_2.6fr_0.86fr] @[560px]:grid-rows-[minmax(0,1fr)]", ft.on ? "pt-[calc(var(--u)*1.8)] pb-[calc(var(--u)*0.6)]" : "py-[calc(var(--u)*0.8)]")}>
         {/* 가운데: 레벨 · 시계 · 블라인드(세로 화면은 맨 위) */}
         <section className="grid content-center justify-items-center gap-[calc(var(--u)*0.5)] text-center @[560px]:order-2">
           {/* 레벨 · (멈춤) 한 줄 — 시계 칸을 넓게 */}
@@ -319,7 +319,7 @@ export function GameBoardScreen({
               <circle cx="32" cy="32" r="3" fill="#ef4444" stroke="#7a4b0c" strokeWidth="1" />
             </svg>
             <span className="text-[clamp(22px,calc(var(--u)*4.4),96px)] font-black tracking-[0.35em] text-[#f5d76e]">CHAMPION</span>
-            <span className="max-w-[92cqw] truncate text-[clamp(44px,calc(var(--u)*13),300px)] leading-none font-black text-amber-200" style={{ animation: "ft-glow 1.8s ease-in-out infinite", textShadow: "0 0 calc(var(--u)*2) rgba(252,211,77,.7)" }}>
+            <span className="px-[calc(var(--u)*3)] py-[calc(var(--u)*1)] leading-none font-black whitespace-nowrap text-amber-200" style={{ fontSize: `clamp(36px, calc(var(--u) * ${(13 * Math.min(1, 6 / Math.max(1, [...ft.champion].length))).toFixed(2)}), 300px)`, animation: "ft-glow 1.8s ease-in-out infinite", textShadow: "0 0 calc(var(--u)*2) rgba(252,211,77,.7)" }}>
               {ft.champion}
             </span>
             <span className="text-[clamp(18px,calc(var(--u)*3.4),72px)] font-black text-zinc-100">{data.name}</span>
