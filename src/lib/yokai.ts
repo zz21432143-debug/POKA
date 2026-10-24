@@ -214,9 +214,10 @@ export function waitText(until: Date, now = new Date()) {
 }
 
 /** 오늘 밥 횟수: 기본 1 + 출석 · 퀴즈 정답 · 글 1개 · 댓글 1개 각 1 */
-export type FeedSources = { attended: boolean; quiz: boolean; posted: boolean; commented: boolean };
+/** 오늘 밥이 생기는 활동(answered: 오늘 내 답변이 「좋은 답변」으로 채택됨 · 보너스) */
+export type FeedSources = { attended: boolean; quiz: boolean; posted: boolean; commented: boolean; answered?: boolean };
 export function feedsAllowed(src: FeedSources) {
-  return 1 + Number(src.attended) + Number(src.quiz) + Number(src.posted) + Number(src.commented);
+  return 1 + Number(src.attended) + Number(src.quiz) + Number(src.posted) + Number(src.commented) + Number(Boolean(src.answered));
 }
 
 /** 기분(말풍선) */

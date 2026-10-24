@@ -265,6 +265,8 @@ model Comment {
   isAttendanceCheck Boolean  @default(false)
   authorIp          String?
   upvoteCount       Int      @default(0)
+  /// 글쓴이가 「좋은 답변」으로 채택한 시각(글 하나에 하나만 · DB 부분 유니크 인덱스로 막음)
+  acceptedAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -276,6 +278,7 @@ model Comment {
   @@index([postId, upvoteCount])
   @@index([authorId, isAttendanceCheck, createdAt])
   @@index([authorIp, createdAt])
+  @@index([authorId, acceptedAt])
 }
 
 /// 구인 공고에 사이트 안에서 지원한 기록. 한 공고에 한 번만 지원합니다.

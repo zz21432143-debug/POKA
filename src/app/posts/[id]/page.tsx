@@ -13,6 +13,7 @@ import { HandPoll } from "@/components/hand/hand-poll";
 import { POLL_CHOICES } from "@/lib/poll";
 import { CommentForm } from "@/components/posts/comment-form";
 import { CommentThread } from "@/components/posts/comment-thread";
+import { ACCEPT_BOARDS, ACCEPT_POINTS } from "@/lib/accept-answer";
 import { HireButton } from "@/components/jobs/hire-button";
 import { VoteButtons } from "@/components/posts/vote-buttons";
 import { prisma } from "@/lib/db";
@@ -662,6 +663,15 @@ export default async function PostDetailPage({
       {canRead ? (
       <section className="article-comments">
         <h2 className="text-lg font-bold text-white">댓글 {post.comments.length}</h2>
+        {ACCEPT_BOARDS.has(post.boardType) ? (
+          <p data-accept-hint className="rounded-lg border border-emerald-500/30 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-100">
+            {post.comments.some((c) => c.acceptedAt)
+              ? "✅ 글쓴이가 좋은 답변을 채택했어요."
+              : viewer?.id === post.authorId
+                ? `도움이 된 답변에 「채택」을 눌러 주세요. 답변자에게 +${ACCEPT_POINTS}P와 요괴 밥 1번이 가요(글 하나에 한 번).`
+                : `글쓴이가 좋은 답변을 채택하면 답변자에게 +${ACCEPT_POINTS}P와 요괴 밥 1번이 가요.`}
+          </p>
+        ) : null}
         {viewer ? (
           <CommentForm
             postId={post.id}
@@ -687,6 +697,14 @@ export default async function PostDetailPage({
               upvoteCount: comment.upvoteCount,
               author: comment.author,
               liked: Array.isArray(comment.votes) && comment.votes.length > 0,
+              accepted: Boolean(comment.acceptedAt),
+              acceptable:
+                ACCEPT_BOARDS.has(post.boardType) &&
+                Boolean(viewer) &&
+                viewer?.id === post.authorId &&
+                Boolean(comment.authorId) &&
+                comment.authorId !== viewer?.id &&
+                !post.comments.some((c) => c.acceptedAt),
             }))}
           />
         )}

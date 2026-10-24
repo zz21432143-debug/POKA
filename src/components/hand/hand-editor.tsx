@@ -8,6 +8,7 @@ import { useLocalDraft } from "@/lib/use-local-draft";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ACCEPT_POINTS, QUESTION_TEMPLATES } from "@/lib/accept-answer";
 import { CardSlot, PlayingCard } from "@/components/hand/playing-card";
 import { HandTable } from "@/components/hand/hand-table";
 import {
@@ -566,7 +567,17 @@ export function HandEditor() {
           />
         </div>
         <div className="mt-3 grid gap-3">
-          <Label htmlFor="notes" className="write-label">질문이나 생각한 라인</Label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label htmlFor="notes" className="write-label">질문이나 생각한 라인</Label>
+            <button
+              type="button"
+              data-question-template
+              onClick={() => setNotes((v) => (v.trim() ? `${v.trimEnd()}\n\n${QUESTION_TEMPLATES.HAND_REVIEW}` : (QUESTION_TEMPLATES.HAND_REVIEW ?? "")))}
+              className="min-h-10 rounded-lg border border-[#c9a25c]/60 px-3 text-xs font-black text-[#e7c98a]"
+            >
+              📝 질문 틀 넣기
+            </button>
+          </div>
           <Textarea
             id="notes"
             value={notes}
@@ -574,6 +585,7 @@ export function HandEditor() {
             placeholder="왜 이 라인을 택했는지, 확인하고 싶은 스팟을 적어 주세요."
             className="write-body-input"
           />
+          <p className="text-xs text-[#b8ab98]">도움이 된 댓글은 「채택」해 주세요. 답변자에게 +{ACCEPT_POINTS}P와 요괴 밥 1번이 가요.</p>
         </div>
         <button
           type="button"

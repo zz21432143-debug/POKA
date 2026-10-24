@@ -39,6 +39,8 @@ describe("요괴 마을 계산", () => {
     assert.equal(feedsAllowed({ attended: false, quiz: false, posted: false, commented: false }), 1);
     assert.equal(feedsAllowed({ attended: true, quiz: true, posted: true, commented: false }), 4);
     assert.equal(feedsAllowed({ attended: true, quiz: true, posted: true, commented: true }), 5);
+    // 답변 채택 보너스
+    assert.equal(feedsAllowed({ attended: true, quiz: true, posted: true, commented: true, answered: true }), 6);
   });
 
   it("배부르면 안 먹음 · 쓰다듬기 쉬는 시간 · 남은 시간 글", () => {

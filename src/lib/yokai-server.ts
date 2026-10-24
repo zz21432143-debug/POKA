@@ -119,7 +119,7 @@ const FREE_BOARDS = ["FREE", "RULE_QA", "SKETCH"] as const;
 async function feedSources(userId: string): Promise<FeedSources> {
   const day = todayKstDate();
   const since = new Date(Date.parse(`${day}T00:00:00+09:00`));
-  const [attended, quiz, posts, comments] = await Promise.all([
+  const [attended, quiz, posts, comments, accepted] = await Promise.all([
     prisma.dailyAttendance
       .count({ where: { userId, date: day } })
       .catch(() => 0),
@@ -144,12 +144,16 @@ async function feedSources(userId: string): Promise<FeedSources> {
         },
       })
       .catch(() => 0),
+    prisma.comment
+      .count({ where: { authorId: userId, acceptedAt: { gte: since } } })
+      .catch(() => 0),
   ]);
   return {
     attended: attended > 0,
     quiz: quiz > 0,
     posted: posts > 0,
     commented: comments > 0,
+    answered: accepted > 0,
   };
 }
 

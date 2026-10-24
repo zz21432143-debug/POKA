@@ -14,6 +14,7 @@ import { MoneyTitleHint } from "@/components/posts/money-title-hint";
 import { boardAllowsPhotos } from "@/lib/post-photos";
 import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
 import { cn } from "cn";
+import { QUESTION_TEMPLATES } from "@/lib/accept-answer";
 
 export type BoardCategory = { boardType: BoardType; label: string };
 
@@ -256,7 +257,22 @@ export function BoardWriteForm({
         </div>
       ) : null}
       <div className="grid gap-2">
-        <Label htmlFor="content" className="write-label">내용</Label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="content" className="write-label">내용</Label>
+          {QUESTION_TEMPLATES[boardType] ? (
+            <button
+              type="button"
+              data-question-template
+              onClick={() => {
+                const tpl = QUESTION_TEMPLATES[boardType] ?? "";
+                setContent((v) => (v.trim() ? `${v.trimEnd()}\n\n${tpl}` : tpl));
+              }}
+              className="min-h-10 rounded-lg border border-[#c9a25c]/60 px-3 text-xs font-black text-[#e7c98a]"
+            >
+              📝 질문 틀 넣기
+            </button>
+          ) : null}
+        </div>
         {boardType === "NOTICE" ? (
           // 공지사항은 종이 문서(A4) 모양으로 보이므로 서식 버튼·미리보기가 있는 편집기를 씁니다.
           <DocEditor id="content" title={title} value={content} onChange={setContent} placeholder="내용을 입력하세요" />

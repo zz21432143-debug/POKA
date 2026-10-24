@@ -834,6 +834,17 @@ export function YokaiVillage({
                       </Link>
                     ) : null}
                   </li>
+                  <li data-feed-answered>
+                    {yokai.feeds.sources.answered ? "✅" : "⬜"} 보너스: 내 답변이 「좋은 답변」으로 채택되기{" "}
+                    {!yokai.feeds.sources.answered ? (
+                      <Link
+                        href="/boards/hand-review"
+                        className="font-bold text-[#c9a25c] underline"
+                      >
+                        핸드리뷰 답하러 가기
+                      </Link>
+                    ) : null}
+                  </li>
                   <li className="flex flex-wrap items-center gap-1.5">
                     🍡 간식(포인트로 밥 1번 더) {yokai.snacks.used}/
                     {yokai.snacks.max}
