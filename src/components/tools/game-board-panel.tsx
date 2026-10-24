@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
-import { BOARD_LIMITS, FT_MAX, FT_NAME, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
+import { drawChampionImage } from "@/lib/champion-image";
+import { shareBlob } from "@/lib/share-image";
+import { BOARD_LIMITS, FT_MAX, FT_NAME, ftName, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
@@ -725,6 +727,27 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                   </li>
                 ))}
               </ul>
+              {(() => {
+                const alive = data.ftPlayers.map((x, k) => ({ x, k })).filter(({ x }) => !x.out);
+                if (data.ftPlayers.length < 2 || alive.length !== 1) return null;
+                const champ = ftName(alive[0].x, alive[0].k);
+                return (
+                  <button
+                    type="button"
+                    data-ft-share
+                    onClick={() =>
+                      void (async () => {
+                        const date = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());
+                        const blob = await drawChampionImage({ champion: champ, event: data.name, finalists: data.ftPlayers.map((x, k) => ftName(x, k)), date });
+                        await shareBlob(blob, { title: `${data.name} 우승 ${champ}`, url: "https://pokerwiki.co.kr/?from=share", fileName: "poka-champion" });
+                      })()
+                    }
+                    className="min-h-12 rounded-xl bg-[#FEE500] px-4 text-base font-black text-black"
+                  >
+                    🏆 우승 이미지 · 카톡 공유
+                  </button>
+                );
+              })()}
               <div className="flex flex-wrap gap-2">
                 {data.ftPlayers.length < FT_MAX ? (
                   <button type="button" onClick={() => onEdit({ ftPlayers: [...data.ftPlayers, { name: "", out: false }] })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
