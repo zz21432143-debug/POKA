@@ -51,30 +51,27 @@ export const STORE_TOOL_ITEMS: SidebarItem[] = [
   { href: "/tools/shot-clock", label: "샷클락", hint: "플레이어 생각 시간", icon: "lantern" },
   { href: "/tools/seat-draw", label: "싯드로우", hint: "칩 균형 좌석", icon: "cards" },
   { href: "/tools/pay", label: "급여 계산기", hint: "3.3% · 4대보험", icon: "coin" },
+  { href: "/tools/practice", label: "팟 계산 연습", hint: "사이드팟 계산기 · 연습 랭킹", icon: "chips", badge: "HOT" },
 ];
 
-/** 홀덤 공부(무료 도구). 주소는 예전 그대로 두고 메뉴만 한곳에 모읍니다. */
+/** 홀덤 공부 메뉴(자주 쓰는 7개 + 전체 보기). 나머지 도구 · 자료는 「홀덤 공부」 첫 화면에 모두 있음 */
 export const STUDY_ITEMS: SidebarItem[] = [
-  // 읽을거리(가이드) 먼저, 그다음 차트 · 계산 도구, 문제 풀기 · 룰 자료
   { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
   { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
-  { href: "/study/glossary", label: "용어 사전", hint: "ㄱ~ㅎ 홀덤 · 딜러 용어", icon: "scroll" },
-  { href: "/study/cheatsheet", label: "참고 표(인쇄)", hint: "족보 확률 · 아웃츠 · 팟 오즈", icon: "scroll" },
-  { href: "/study/floor-cases", label: "현장 판정 사례", hint: "미스딜 · 오버칩 · 언더레이즈", icon: "seal" },
+  { href: "/study#courses", label: "공부 코스", hint: "입문 · 실력 · 토너먼트 · 딜러 순서대로", icon: "scroll" },
   { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위 · ICM", icon: "cards" },
-  { href: "/study/push-fold-quiz", label: "푸시폴드 퀴즈", hint: "올인? 폴드? 차트로 채점", icon: "cards" },
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
-  { href: "/info/icm", label: "ICM 계산기", hint: "파이널 딜 · 상금 가치", icon: "coin" },
-  { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
-  { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
-  { href: "/tools/practice", label: "팟 계산", hint: "팟 계산 랭킹 · 사이드팟", icon: "chips", badge: "HOT" },
-  { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제 · 맞히면 포인트", icon: "seal" },
+  { href: "/quiz", label: "퀴즈", hint: "오늘의 퀴즈 · 푸시폴드 퀴즈", icon: "seal" },
   { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
+  { href: "/study", label: "계산기 · 자료 전체", hint: "ICM · 레인지 · 족보 · 참고 표 · 용어 · 판정 사례", icon: "scroll" },
 ];
+
+/** 홀덤 공부 묶음에 드는 주소(메뉴에 없는 도구도 · 위 메뉴 · 방문 통계에서 씀) */
+export const STUDY_PATHS = ["/study", "/info/holdem", "/info/guide", "/info/push-fold", "/community/equity", "/info/icm", "/community/hand-ranges", "/community/hand-rankings", "/quiz", "/boards/tda"];
 
 /** 위 메뉴에서 이 주소가 어느 칸인지(홀덤 공부 도구는 주소와 메뉴가 달라서 따로 매핑) */
 export function topNavPath(pathname: string) {
-  if (pathname === "/study" || STUDY_ITEMS.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))) return "/study";
+  if (STUDY_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return "/study";
   return pathname;
 }
 
@@ -116,6 +113,8 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     title: "홀덤 공부",
     hub: "/study",
     icon: "scroll",
+    // 메뉴에서 뺀 도구 · 자료도 이 묶음
+    match: ["/study", "/info/icm", "/community/hand-ranges", "/community/hand-rankings", "/info/holdem", "/info/guide"],
     items: STUDY_ITEMS,
   },
   {

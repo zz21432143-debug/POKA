@@ -27,7 +27,9 @@ const EXPECT: [string, string | null][] = [
   ["/tools/pay", "매장 관리"],
   // 홀덤 공부(주소가 /community · /info · /tools 아래여도)
   ["/study", "홀덤 공부"],
-  ["/tools/practice", "홀덤 공부"],
+  ["/tools/practice", "매장 관리"],
+  ["/study/glossary", "홀덤 공부"],
+  ["/study/floor-cases", "홀덤 공부"],
   ["/community/equity", "홀덤 공부"],
   ["/community/hand-ranges", "홀덤 공부"],
   ["/community/hand-rankings", "홀덤 공부"],
