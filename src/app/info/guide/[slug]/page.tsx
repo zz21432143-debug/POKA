@@ -59,7 +59,7 @@ export default async function GuideArticlePage({
   };
 
   return (
-    <article className="flex w-full max-w-3xl flex-col gap-4">
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/info/guide" className="text-[#E5E7EB] hover:text-[#C59B27]">

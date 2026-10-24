@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 /** 푸시폴드 상황 연습 문제 */
 export default function PushFoldQuizPage() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/study" className="text-[#E5E7EB] hover:text-[#C59B27]">
           홀덤 공부

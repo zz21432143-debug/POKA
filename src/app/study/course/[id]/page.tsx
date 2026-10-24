@@ -23,7 +23,7 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
   const course = courseViews().find((c) => c.id === id);
   if (!course) notFound();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/study#courses" className="text-[#E5E7EB] hover:text-[#C59B27]">
           홀덤 공부 · 코스

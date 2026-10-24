@@ -31,7 +31,7 @@ export default async function AttendancePage() {
   const next = nextStreakBonus(stats.myStreak);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <header>
         <h1 className="text-2xl font-semibold">출석체크</h1>
         <p className="mt-1 text-sm text-muted-foreground">

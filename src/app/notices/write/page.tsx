@@ -15,7 +15,7 @@ export default async function NoticeWritePage() {
   const allowed = canWriteBoard(viewer, "NOTICE");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       <BackToList href="/notices" className="self-start" />
       <header className="board-intro">
         <h1>공지사항 작성</h1>

@@ -47,7 +47,7 @@ export default async function HoldemGuidePage({ params }: { params: Promise<{ sl
     publisher: { "@type": "Organization", name: "POKA", logo: { "@type": "ImageObject", url: `${base}/icon.png` } },
   };
   return (
-    <article className="flex w-full max-w-3xl flex-col gap-4">
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/info/holdem" className="text-[#E5E7EB] hover:text-[#C59B27]">

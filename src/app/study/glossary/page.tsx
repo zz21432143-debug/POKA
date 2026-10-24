@@ -27,7 +27,7 @@ export default function GlossaryPage() {
     hasDefinedTerm: GLOSSARY.map((t) => ({ "@type": "DefinedTerm", name: t.term, alternateName: t.en, description: t.def })),
   };
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/study" className="text-[#E5E7EB] hover:text-[#C59B27]">

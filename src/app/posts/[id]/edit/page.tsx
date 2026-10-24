@@ -35,7 +35,7 @@ export default async function EditJobPage({
 
   if (post.boardType === "SCHEDULE") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <BackToList href={`/posts/${post.id}`} className="self-start" />
         <header>
           <h1 className="text-2xl font-semibold">대회 캘린더 수정</h1>
@@ -60,7 +60,7 @@ export default async function EditJobPage({
 
   if (post.boardType !== "JOBS" && post.boardType !== "TDA") {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <BackToList href={`/posts/${post.id}`} className="self-start" />
         <header>
           <h1 className="text-2xl font-semibold">{boardLabel} 글 수정</h1>

@@ -18,7 +18,7 @@ const pct = (v: number) => `${v.toFixed(1)}%`;
 /** 인쇄용 참고 표 한 장 */
 export default function CheatsheetPage() {
   return (
-    <div data-cheatsheet className="cheat flex flex-col gap-4">
+    <div data-cheatsheet className="cheat mx-auto flex w-full max-w-6xl flex-col gap-4">
       {/* 인쇄할 때: 사이트 메뉴 · 광고는 빼고 흰 종이에 검은 글씨 */}
       <style>{`@media print {
         header, nav, footer, aside, [data-site-chrome], [data-no-print] { display: none !important; }

@@ -19,7 +19,7 @@ export default async function FreeWritePage({ searchParams }: { searchParams: Pr
   const initial = CATEGORIES.find((category) => category.boardType === type)?.boardType ?? "FREE";
   return (
     <RequireLogin>
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <BackToList href="/boards/free" className="self-start" />
         <header className="board-intro">
           <h1>자유게시판 작성</h1>

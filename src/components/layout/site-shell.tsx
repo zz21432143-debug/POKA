@@ -1,11 +1,9 @@
 import { Suspense, type ReactNode } from "react";
-import { BoardNav } from "@/components/layout/board-nav";
 import { SiteFooter, SiteFooterFallback } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
-import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { LedTicker } from "@/components/home/led-ticker";
 import { InstallPwaButton } from "@/components/pwa/install-pwa-button";
 import { getCurrentUser } from "@/lib/current-user";
@@ -14,7 +12,7 @@ import { getSponsorCreative } from "@/lib/inventory";
 import { getSiteSettings } from "@/lib/site-settings";
 import { headers } from "next/headers";
 import { CrownProvider } from "@/components/honor/crowned-frame";
-import { SidebarRail } from "@/components/layout/sidebar-rail";
+import { SectionTabs } from "@/components/layout/section-tabs";
 import { AdOffProvider } from "@/components/ads/ad-toggle";
 import { getLatestNotices } from "@/lib/notices";
 import { nowMs } from "@/lib/dates";
@@ -101,7 +99,8 @@ async function ConnectedFeedAds() {
   return (
     <>
       <FeedAdRow />
-      <div className="mt-5 lg:hidden">
+      {/* 광고 문의 칸(예전 왼쪽 메뉴 아래) → 모든 화면에서 내용 아래 */}
+      <div className="mt-5">
         <ConnectedSidebarSponsor />
       </div>
     </>
@@ -133,21 +132,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <ConnectedNickNotice />
       </Suspense>
       <ConnectedAdOff>
+      {/* 사이트 메뉴는 위 메뉴 하나(왼쪽 메뉴 없음 · 화면을 넓게). 옆 광고 칸은 광고를 받기 시작하면 다시 정함 */}
       <div className="site-columns mx-auto flex w-full max-w-[1560px] flex-1 items-start gap-4 px-4 py-3 sm:px-5">
-        <SidebarRail>
-          <div className="wood-frame flex flex-col">
-            <BoardNav />
-          </div>
-          {/* 사이드 광고 자리(모든 페이지): 팔리면 배너, 비어 있으면 '광고 문의' 작은 칸 */}
-          <Suspense fallback={null}>
-            <ConnectedSidebarSponsor />
-          </Suspense>
-          {/* 구글 사이드 광고: 스크롤해도 화면에 남음(단위가 안 정해졌으면 안 보임) */}
-          <div className="sticky top-24">
-            <GoogleAdUnit placement="sidebar" media="(min-width: 1024px)" />
-          </div>
-        </SidebarRail>
         <main className="mobile-nav-pad min-w-0 flex-1 overflow-x-clip lg:pb-6">
+          <SectionTabs />
           {children}
           <Suspense fallback={null}>
             <ConnectedFeedAds />

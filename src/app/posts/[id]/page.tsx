@@ -371,7 +371,7 @@ export default async function PostDetailPage({
         : null;
 
   return (
-    <article className="flex flex-col gap-4">
+    <article className="mx-auto flex w-full max-w-5xl flex-col gap-4">
       {/* 메뉴: 이 글의 게시판 묶음에 불이 들어오게 */}
       <NavHint section={BOARD_SECTION[post.boardType as BoardType] ?? null} />
       {structured ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(structured) }} /> : null}

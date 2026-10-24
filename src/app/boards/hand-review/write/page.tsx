@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "핸드리뷰 작성", robots: { inde
 export default function HandReviewWritePage() {
   return (
     <RequireLogin>
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
         <BackToList href="/boards/hand-review" className="self-start" />
         <header className="board-intro">
           <h1>핸드리뷰 작성</h1>

@@ -48,7 +48,7 @@ export default async function BoardWritePage({
   const hint = WRITE_HINT[board.boardType] ?? board.title;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <BackToList href={`/boards/${slug}`} className="self-start" />
       <header className="board-intro">
         <h1>{board.title} 작성</h1>
