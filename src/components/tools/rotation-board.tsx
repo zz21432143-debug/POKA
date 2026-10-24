@@ -188,7 +188,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     index: number;
     value: string;
   } | null>(null);
-  const [view, setView] = useState<"table" | "dealer">("table");
+  const [view, setView] = useState<"table" | "dealer">("dealer");
   const [showAll, setShowAll] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -1030,7 +1030,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     const from = Math.max(0, current - 1);
     return all.slice(from, from + VISIBLE_COLS);
   }, [plan, current, showAll]);
-  const rowIndexes = rows.map((r) => r.index);
 
   const parsedLabels = parseTableLabels(labelsText);
 
@@ -1270,7 +1269,6 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     }
                     const goneHere = isGone(id, index);
                     // 앞 칸과 같은 딜러가 이어서 앉음(교대 아님) → 흐리게 · 새로 들어간 칸만 진하게
-                    const stays = Boolean(id) && index > 0 && plan.slots[index - 1]?.seats[t] === id && !goneHere;
                     // 출근 · 퇴근 줄에서 고른 딜러만 강조
                     const focus = quickId ? (id === quickId ? "on" : "off") : null;
                     return (
@@ -1299,9 +1297,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               : focus === "on"
                                 ? "bg-amber-400 text-black ring-2 ring-amber-200 hover:bg-amber-300"
                                 : id
-                                  ? stays
-                                    ? "bg-zinc-900 hover:bg-zinc-800"
-                                    : "bg-zinc-800 hover:bg-zinc-700"
+                                  ? "bg-zinc-800 hover:bg-zinc-700"
                                   : "border-2 border-dashed border-rose-500/70",
                             focus === "off" && "opacity-25",
                             cell?.slot === index &&
@@ -1327,13 +1323,12 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             </span>
                           ) : null}
                           <span
-                            data-stays={stays ? "" : undefined}
                             className={cn(
                               "truncate font-black",
-                              !id ? "text-lg text-rose-300" : focus === "on" ? "text-lg text-black" : stays ? "text-base text-zinc-500" : "text-lg text-white",
+                              !id ? "text-lg text-rose-300" : focus === "on" ? "text-lg text-black" : "text-lg text-white",
                             )}
                           >
-                            {id ? `${stays ? "→ " : ""}${name(id)}` : "비어 있음"}
+                            {id ? name(id) : "비어 있음"}
                           </span>
                         </button>
                       </td>
@@ -1379,51 +1374,90 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
         </table>
       </div>
     ) : (
-      <div className={cn("grid gap-1.5 overflow-auto", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
-        {state.dealers
-          .filter((d) => d.status !== "OFF")
-          .map((dealer) => {
-            const visible = new Set(rowIndexes);
-            const schedule = dealerSchedule(plan, dealer.id)
-              .map((row, index) => ({ ...row, index }))
-              .filter((row) => visible.has(row.index));
-            return (
-              <div
-                key={dealer.id}
-                data-schedule={dealer.name}
-                className="grid gap-1.5 rounded-xl border border-white/15 bg-zinc-950 p-2 sm:grid-cols-[7rem_1fr] sm:items-center"
-              >
-                <p className="flex items-center gap-1.5 text-base font-black">
-                  {dealer.name}{" "}
-                  <StatusChip status={dealer.status} />
-                </p>
-                <ul className="flex flex-wrap gap-1">
-                  {schedule.map((row) => (
-                    <li
-                      key={row.at}
-                      className={cn(
-                        "rounded-md px-2 py-1 text-sm font-black",
-                        row.table == null
-                          ? "bg-zinc-900 text-zinc-600"
-                          : row.table === 0
-                            ? "bg-amber-400 text-black"
-                            : "bg-emerald-600 text-white",
-                        row.index === current &&
-                          "ring-2 ring-white",
-                      )}
-                    >
-                      {formatClock(row.at)}{" "}
-                      {row.table == null
-                        ? "—"
-                        : row.table === 0
-                          ? "휴식"
-                          : tableTag(labels[row.table - 1])}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+      // 딜러별 표(기본): 줄 = 딜러(지금 앉은 테이블 순), 칸 = 그 시간 테이블 번호(T 없이) · 휴식
+      <div className={cn("overflow-auto rounded-xl border border-white/15", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
+        <table className="border-collapse">
+          <thead className="sticky top-0 z-20">
+            <tr>
+              <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">딜러 / 시간</th>
+              {rows.map(({ slot, index }) => (
+                <th
+                  key={slot.at}
+                  className={cn(
+                    "px-1 py-1.5 text-center",
+                    index === current ? "bg-emerald-700 text-white" : index === next ? "bg-amber-500 text-black" : "bg-zinc-900 text-white",
+                    index < current && "opacity-60",
+                  )}
+                >
+                  <span className="block min-w-[4rem] text-lg font-black">{formatClock(slot.at)}</span>
+                  <span className="block text-[11px] font-bold">{index === current ? "지금" : index === next ? "다음 교대" : " "}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(() => {
+              const at = Math.max(0, current);
+              const list = state.dealers
+                .filter((d) => d.status !== "OFF" && !d.staff)
+                .map((d) => ({ d, sched: dealerSchedule(plan, d.id) }))
+                .filter(({ sched }) => sched.some((r) => r.table != null));
+              const key = (t: number | null) => (t == null ? 2000 : t === 0 ? 1000 : t);
+              list.sort((a, b) => key(a.sched[at]?.table ?? null) - key(b.sched[at]?.table ?? null));
+              return list.map(({ d: dealer, sched }) => {
+                const focus = quickId ? (quickId === dealer.id ? "on" : "off") : null;
+                return (
+                  <tr key={dealer.id} data-schedule={dealer.name} className={cn("border-t-2 border-white/10", focus === "off" && "opacity-30")}>
+                    <th className={cn("sticky left-0 z-10 px-2 py-1 text-left whitespace-nowrap", focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-900")}>
+                      <button
+                        type="button"
+                        data-row-dealer={dealer.name}
+                        onClick={() => setQuickId(quickId === dealer.id ? null : dealer.id)}
+                        title="이 딜러만 보기"
+                        className="flex min-h-11 items-center gap-1.5 text-base font-black"
+                      >
+                        {dealer.name}
+                        {dealer.status !== "IN" ? <StatusChip status={dealer.status} /> : null}
+                      </button>
+                    </th>
+                    {rows.map(({ slot, index }) => {
+                      const t = sched[index]?.table ?? null;
+                      const label = t != null && t > 0 ? String(labels[t - 1]) : null;
+                      return (
+                        <td
+                          key={slot.at}
+                          className={cn(
+                            "px-1 py-1",
+                            index === current ? "bg-emerald-950" : index === next ? "bg-[#2a1d05]" : "bg-black",
+                            index < current && "opacity-50",
+                          )}
+                        >
+                          {label != null && t != null ? (
+                            <button
+                              type="button"
+                              data-dcell={`${formatClock(slot.at)}-${dealer.name}`}
+                              onClick={() => setCell({ slot: index, table: t - 1 })}
+                              className={cn(
+                                "grid min-h-11 w-full min-w-[4rem] place-items-center rounded-lg text-xl font-black",
+                                focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-800 text-white hover:bg-zinc-700",
+                              )}
+                            >
+                              {label}
+                            </button>
+                          ) : t === 0 ? (
+                            <span className="grid min-h-11 min-w-[4rem] place-items-center rounded-lg bg-[#3a2a0c] text-sm font-black text-amber-200">휴식</span>
+                          ) : (
+                            <span className="grid min-h-11 min-w-[4rem] place-items-center text-sm text-zinc-600">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              });
+            })()}
+          </tbody>
+        </table>
       </div>
     )
   );
@@ -2384,7 +2418,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               {plan ? (
                 <>
                   <div className="flex rounded-full border border-white/20 p-0.5">
-                    {(["table", "dealer"] as const).map((key) => (
+                    {(["dealer", "table"] as const).map((key) => (
                       <button
                         key={key}
                         type="button"
@@ -2396,7 +2430,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             : "text-zinc-300",
                         )}
                       >
-                        {key === "table" ? "시간별" : "딜러별"}
+                        {key === "table" ? "테이블별" : "딜러별"}
                       </button>
                     ))}
                   </div>
@@ -2532,7 +2566,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 ) : null}
                 {gridBody}
                 <p className="text-xs text-zinc-400">
-                  <b className="text-zinc-300">→ 이름</b> = 앞 칸과 같은 딜러(교대 없음) · 진한 칸이 새로 들어간 자리예요 · 위 <b className="text-zinc-300">출근 · 퇴근</b> 줄에서 이름을 누르면 그 딜러 자리만 밝게 보여요 · 칸을 누르면 딜러를 바꿔요
+                  {view === "dealer" ? "칸의 숫자 = 그 시간에 들어가는 테이블 번호 · 딜러 이름을 누르면 그 딜러만 밝게 보여요 · 숫자를 누르면 그 자리 딜러를 바꿔요 · 테이블 기준으로 보려면 「테이블별」" : "칸을 누르면 딜러를 바꿔요 · 위 출근 · 퇴근 줄에서 이름을 누르면 그 딜러 자리만 밝게 보여요"}
                 </p>
               </div>
             ) : (
@@ -2549,7 +2583,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-black max-sm:order-1 max-sm:text-base">📅 <span className="max-sm:hidden">전체 </span>시간표</h2>
                     <div className="flex rounded-full border border-white/20 p-0.5 max-sm:order-2">
-                      {(["table", "dealer"] as const).map((key) => (
+                      {(["dealer", "table"] as const).map((key) => (
                         <button
                           key={key}
                           type="button"
@@ -2561,7 +2595,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                               : "text-zinc-300",
                           )}
                         >
-                          {key === "table" ? "시간별" : "딜러별"}
+                          {key === "table" ? "테이블별" : "딜러별"}
                         </button>
                       ))}
                     </div>
