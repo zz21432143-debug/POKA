@@ -3,7 +3,7 @@
 import Link from "@/components/ui/link";
 import { usePathname } from "next/navigation";
 import { cn } from "cn";
-import { SIDEBAR_NAV, navItemActive, navSectionOf } from "@/lib/nav";
+import { BOXED_ITEM, SIDEBAR_NAV, navItemActive, navSectionOf } from "@/lib/nav";
 import { useNavHint } from "@/lib/nav-hint";
 
 /**
@@ -42,7 +42,7 @@ export function SectionTabs() {
             aria-current={on ? "page" : undefined}
             className={cn(
               "inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap",
-              on ? "bg-[#7a1c22] text-[#f6efe2]" : "text-[#d9cfbd] hover:bg-white/5 hover:text-[#f3d9a4]",
+              on ? "bg-[#7a1c22] text-[#f6efe2]" : item.boxed ? BOXED_ITEM : "text-[#d9cfbd] hover:bg-white/5 hover:text-[#f3d9a4]",
             )}
           >
             {item.label}

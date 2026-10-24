@@ -5,7 +5,7 @@ import Link from "@/components/ui/link";
 import { usePathname } from "next/navigation";
 import { cn } from "cn";
 import { ChevronDownIcon, ChevronRightIcon, StoreIcon } from "lucide-react";
-import { SIDEBAR_NAV, navItemActive, navSectionOf } from "@/lib/nav";
+import { BOXED_ITEM, SIDEBAR_NAV, navItemActive, navSectionOf } from "@/lib/nav";
 import { useNavHint } from "@/lib/nav-hint";
 
 /**
@@ -126,7 +126,7 @@ export function TopNav() {
                           <li key={item.href}>
                             <Link
                               href={item.href}
-                              className={cn("grid min-h-11 content-center rounded-lg px-2 py-1", on ? "bg-[#7a1c22] text-[#f6efe2]" : "text-[#ece3d3] hover:bg-[#2a2017]")}
+                              className={cn("grid min-h-11 content-center rounded-lg px-2 py-1", on ? "bg-[#7a1c22] text-[#f6efe2]" : item.boxed ? BOXED_ITEM : "text-[#ece3d3] hover:bg-[#2a2017]")}
                             >
                               <span className="flex items-center gap-1.5 text-sm font-bold">
                                 <span className="truncate">{item.label}</span>

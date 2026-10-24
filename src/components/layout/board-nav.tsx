@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "cn";
-import { SIDEBAR_NAV, navItemActive, sidebarGroupActive } from "@/lib/nav";
+import { BOXED_ITEM, SIDEBAR_NAV, navItemActive, sidebarGroupActive } from "@/lib/nav";
 import { useNavHint } from "@/lib/nav-hint";
 import { BrandIcon } from "@/components/brand/brand-icon";
 import {
@@ -270,7 +270,7 @@ export function BoardNav({
                           className={cn(
                             "touch-target flex items-center gap-2 rounded-lg px-2.5 font-semibold transition-colors",
                             inDrawer ? "min-h-11 text-[15px]" : "min-h-9 text-sm",
-                            active ? "bg-[#7a1c22] text-[#f6efe2]" : "text-[#d9cfbd] hover:bg-[#2a2017] hover:text-[#e7c98a]",
+                            active ? "bg-[#7a1c22] text-[#f6efe2]" : item.boxed ? BOXED_ITEM : "text-[#d9cfbd] hover:bg-[#2a2017] hover:text-[#e7c98a]",
                           )}
                         >
                           <NavIcon href={item.href} icon={item.icon} active={active} />

@@ -27,7 +27,9 @@ export const MOBILE_BOTTOM_NAV = [
 /** 왼쪽 메뉴 아이콘: 브랜드 아이콘(오니·동양 테마) 이름 */
 export type SidebarIcon = import("@/components/brand/brand-icon").BrandIconName;
 
-export type SidebarItem = NavItem & { icon: SidebarIcon; /** 메뉴 옆 작은 표시(새 기능 등) */ badge?: string };
+export type SidebarItem = NavItem & { icon: SidebarIcon; /** 메뉴 옆 작은 표시(새 기능 등) */ badge?: string; /** 색 상자로 눈에 띄게(TDA 룰) */ boxed?: boolean };
+/** 색 상자 메뉴 칸 모양(TDA 룰: 파란 상자) */
+export const BOXED_ITEM = "border border-[#5aa9ff]/80 bg-[#123a66] text-white hover:bg-[#184a82]";
 
 export type SidebarGroup = {
   title: string | null;
@@ -67,7 +69,7 @@ export const STUDY_ITEMS: SidebarItem[] = [
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
   { href: "/community/hand-ranges", label: "핸드 레인지 · 족보 순위", hint: "169개 시작 패 순위 · 족보 10가지 · 확률", icon: "cards" },
   { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제 · 맞히면 포인트", icon: "seal" },
-  { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
+  { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll", boxed: true },
 ];
 
 /** 홀덤 공부 묶음에 드는 주소(메뉴에 없는 도구도 · 위 메뉴 · 방문 통계에서 씀) */
