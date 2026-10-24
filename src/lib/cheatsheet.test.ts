@@ -28,3 +28,31 @@ describe("참고 표", () => {
     }
   });
 });
+
+describe("아웃츠 예시 카드를 직접 세기", () => {
+  const RANKS = "23456789TJQKA";
+  const deck = [...RANKS].flatMap((r) => [..."shdc"].map((s) => r + s));
+  const rankOf = (c: string) => RANKS.indexOf(c[0]) + 2;
+  const straight = (cards: string[]) => {
+    const set = new Set(cards.map(rankOf));
+    if (set.has(14)) set.add(1);
+    for (let hi = 14; hi >= 5; hi--) if ([0, 1, 2, 3, 4].every((d) => set.has(hi - d))) return true;
+    return false;
+  };
+  const flush = (cards: string[]) => [..."shdc"].some((s) => cards.filter((c) => c[1] === s).length >= 5);
+  const count = (hand: string, board: string, hit: (all: string[], c: string) => boolean) => {
+    const seen = new Set([...hand.split(" "), ...board.split(" ")]);
+    return deck.filter((c) => !seen.has(c) && hit([...hand.split(" "), ...board.split(" "), c], c)).length;
+  };
+  it("표에 적은 아웃츠 수와 같음", async () => {
+    const { OUTS_EXAMPLES } = await import("./cheatsheet");
+    const rule: Record<number, (all: string[], c: string, hand: string) => boolean> = {
+      2: (_a, c, hand) => c[0] === hand[0],
+      6: (_a, c, hand) => hand.split(" ").some((h) => h[0] === c[0]),
+    };
+    for (const e of OUTS_EXAMPLES) {
+      const n = count(e.hand, e.board, (all, c) => (rule[e.outs] ? rule[e.outs](all, c, e.hand) : straight(all) || flush(all)));
+      assert.equal(n, e.outs, `${e.label}: ${n}`);
+    }
+  });
+});

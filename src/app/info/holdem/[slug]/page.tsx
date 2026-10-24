@@ -6,6 +6,8 @@ import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
 import { CourseStepBox } from "@/components/study/course-progress";
 import { courseBoxProps } from "@/lib/course-titles";
+import { CardText } from "@/components/study/card-text";
+import { HOLDEM_STACK_NOTES, STACK_NOTE_BASE } from "@/lib/holdem-stack-notes";
 
 export function generateStaticParams() {
   return HOLDEM_GUIDES.map((row) => ({ slug: row.slug }));
@@ -68,8 +70,16 @@ export default async function HoldemGuidePage({ params }: { params: Promise<{ sl
         </p>
       </header>
       <div className="reading-panel">
-        <p className="reading-text whitespace-pre-line">{article.body}</p>
+        <p className="reading-text whitespace-pre-line"><CardText text={article.body} /></p>
       </div>
+      {/* 국내 매장 토너먼트에서 흔한 짧은 스택으로 다시 보기 */}
+      {HOLDEM_STACK_NOTES[article.slug] ? (
+        <section data-stack-note aria-label="스택이 25BB라면" className="reading-panel border-[#c9a25c]/40">
+          <h2 className="text-lg font-black text-[#f3d9a4]">📉 스택이 25BB라면?</h2>
+          <p className="mt-1 text-xs text-[#b8ab98]">국내 매장 토너먼트처럼 짧은 스택일 때 · {STACK_NOTE_BASE}</p>
+          <p className="reading-text mt-3 whitespace-pre-line"><CardText text={HOLDEM_STACK_NOTES[article.slug]} /></p>
+        </section>
+      ) : null}
       {article.tool ? (
         <Link
           href={article.tool.href}

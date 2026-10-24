@@ -11,14 +11,15 @@ export function outsRow(outs: number) {
   return { outs, turn, both, river };
 }
 
-export const OUTS_EXAMPLES: { outs: number; label: string }[] = [
-  { outs: 2, label: "포켓 페어 → 셋" },
-  { outs: 4, label: "거트샷(가운데 빈 스트레이트)" },
-  { outs: 6, label: "오버카드 2장" },
-  { outs: 8, label: "양방 스트레이트 드로우" },
-  { outs: 9, label: "플러시 드로우" },
-  { outs: 12, label: "플러시 드로우 + 거트샷" },
-  { outs: 15, label: "플러시 드로우 + 양방" },
+/** 아웃츠 예시(POKA가 만든 카드 · 계산식 · 테스트로 아웃츠 수를 직접 셈) */
+export const OUTS_EXAMPLES: { outs: number; label: string; hand: string; board: string; how: string }[] = [
+  { outs: 2, label: "포켓 페어 → 셋", hand: "7c 7d", board: "Ks Qh 4c", how: "남은 7 두 장" },
+  { outs: 4, label: "거트샷(가운데 빈 스트레이트)", hand: "Js Td", board: "9c 7h 2s", how: "8만 4장" },
+  { outs: 6, label: "오버카드 2장", hand: "Ac Kd", board: "9s 6h 2c", how: "A 3장 + K 3장" },
+  { outs: 8, label: "양방 스트레이트 드로우", hand: "Js Td", board: "9c 8h 2s", how: "Q 4장 + 7 4장" },
+  { outs: 9, label: "플러시 드로우", hand: "Ah 5h", board: "Kh 8h 3c", how: "하트 13장 − 보이는 4장" },
+  { outs: 12, label: "플러시 드로우 + 거트샷", hand: "Jh Th", board: "9h 7h 2s", how: "하트 9장 + 하트 아닌 8 3장" },
+  { outs: 15, label: "플러시 드로우 + 양방", hand: "Jh Th", board: "9h 8h 2s", how: "하트 9장 + 하트 아닌 Q · 7 6장" },
 ];
 
 /** 상대 벳 크기(팟 대비) → 콜에 필요한 승률(%) = 벳 ÷ (팟 + 벳 × 2) */

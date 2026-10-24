@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "@/components/ui/link";
 import { BET_FRACTIONS, HAND_FREQ, MATCHUPS, OUTS_EXAMPLES, outsRow, potOddsNeeded } from "@/lib/cheatsheet";
 import { PrintButton } from "@/components/study/print-button";
+import { CardText } from "@/components/study/card-text";
 
 const TITLE = "홀덤 참고 표 — 족보 확률 · 아웃츠 · 팟 오즈 · 프리플랍 맞대결 (인쇄용)";
 const DESCRIPTION = "한 장에 모은 홀덤 숫자: 족보가 나올 확률, 아웃츠별 완성 확률, 벳 크기별 필요한 승률, 대표 프리플랍 올인 승률. 인쇄 · PDF 저장 가능.";
@@ -79,25 +80,30 @@ export default function CheatsheetPage() {
 
         <section aria-label="아웃츠" className="rounded-2xl border border-white/15 bg-black/30 p-4 md:col-span-2">
           <h2 className="text-lg font-black text-[#f3d9a4]">3. 아웃츠별 완성 확률</h2>
-          <p className="text-xs text-[#b8ab98]">플랍 뒤 남은 47장 기준 · 어림: 한 장 ≈ 아웃츠 × 2, 두 장 ≈ 아웃츠 × 4(아웃츠가 많으면 실제보다 큼)</p>
+          <p className="text-xs text-[#b8ab98]">플랍 뒤 남은 47장 기준 · 어림: 한 장 ≈ 아웃츠 × 2, 두 장 ≈ 아웃츠 × 4(아웃츠가 많으면 실제보다 큼) · 아웃츠는 이미 보이는 카드를 빼고, 두 번 세지 않아요. 내 아웃츠가 상대를 더 좋게 만들면(예: 보드가 페어가 되어 상대 풀하우스) 빼고 세세요.</p>
           <div className="overflow-x-auto">
             <table className="mt-2 w-full min-w-[30rem] text-sm">
               <thead>
                 <tr className="text-left text-xs text-[#b8ab98]">
                   <th className="py-1">아웃츠</th>
-                  <th className="py-1">예</th>
+                  <th className="py-1">예 · 계산</th>
                   <th className="py-1 text-right">턴 한 장</th>
                   <th className="py-1 text-right">턴 + 리버(올인)</th>
                   <th className="py-1 text-right">리버 한 장</th>
                 </tr>
               </thead>
               <tbody>
-                {OUTS_EXAMPLES.map(({ outs, label }) => {
+                {OUTS_EXAMPLES.map(({ outs, label, hand, board, how }) => {
                   const r = outsRow(outs);
                   return (
                     <tr key={outs} className="border-t border-white/10">
                       <td className="py-1.5 font-black text-white">{outs}장</td>
-                      <td className="py-1.5 text-[#d1c7b5]">{label}</td>
+                      <td className="py-1.5 text-[#d1c7b5]">
+                        <b className="text-white">{label}</b>
+                        <span className="block text-xs">
+                          <CardText text={`손 [${hand}] · 보드 [${board}]`} /> → {how}
+                        </span>
+                      </td>
                       <td className="py-1.5 text-right tabular-nums text-[#e7c98a]">{pct(r.turn)}</td>
                       <td className="py-1.5 text-right tabular-nums text-[#e7c98a]">{pct(r.both)}</td>
                       <td className="py-1.5 text-right tabular-nums text-[#e7c98a]">{pct(r.river)}</td>
