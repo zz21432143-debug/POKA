@@ -2,6 +2,7 @@ import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { SITE_HOST } from "@/lib/site";
 import { BLOG_TOOL_POSTS } from "@/lib/blog-tool-posts";
+import { courseOf } from "@/lib/courses";
 
 /** 블로그에 붙는 링크는 늘 실제 사이트 주소 */
 const BASE = `https://${SITE_HOST}`;
@@ -93,6 +94,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
     `예시 · 계산까지 담은 전체 글은 POKA ${label}에서 볼 수 있어요.`,
     `👉 ${url}`,
     "",
+    ...relatedLinks(kind, g.slug),
     POKA_LINE,
   ]
     .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
@@ -131,6 +133,18 @@ function tagLine(tags: string[]) {
     .join(" ");
 }
 
+/** 함께 보면 좋은 POKA 페이지(블로그 → 새 페이지로 이어지게 · 네이버에 새 페이지를 알리는 데도 도움) */
+const TOURNAMENT_SLUGS = new Set(["tournament-stack-strategy", "short-stack-resteal", "icm-basics", "ante-effect", "tournament-phases", "heads-up-final-table"]);
+function relatedLinks(kind: "holdem" | "dealer", slug: string): string[] {
+  const out: string[] = [];
+  const hit = courseOf({ kind: kind === "holdem" ? "holdem" : "guide", slug });
+  if (hit) out.push(`📚 「${hit.course.title}」 코스 순서대로 읽기 👉 ${BASE}/study/course/${hit.course.id}?from=${BLOG_SOURCE}`);
+  if (kind === "holdem" && TOURNAMENT_SLUGS.has(slug)) out.push(`🎯 올인? 폴드? 푸시폴드 퀴즈로 연습 👉 ${BASE}/study/push-fold-quiz?from=${BLOG_SOURCE}`);
+  else if (kind === "holdem") out.push(`🧾 족보 확률 · 아웃츠 · 팟 오즈 한 장 정리 👉 ${BASE}/study/cheatsheet?from=${BLOG_SOURCE}`);
+  else out.push(`📖 헷갈리는 용어는 홀덤 용어 사전 👉 ${BASE}/study/glossary?from=${BLOG_SOURCE}`);
+  return ["함께 보면 좋아요", ...out, ""];
+}
+
 const POKA_LINE ="POKA는 딜러 구인 · 게임 현황판 · 딜러 로테이션 · 홀덤 공부 도구를 한곳에 모은 홀덤 커뮤니티예요.";
 
 /** 매장 관리 도구 소개 글(직접 쓴 글) */
@@ -144,8 +158,10 @@ function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
     POKA_LINE,
   ].join("\n");
   const category = t.category ?? "매장 관리";
-  const tags = tagLine([...t.tags, ...KIND_TAGS[category === "딜러 실무" ? "dealer" : "tool"]]);
-  return { key: `tool:${t.slug}`, kind: "tool", category, title: `${t.title} | ${category === "딜러 실무" ? "딜러 실무" : "매장 관리"}`, body, tags, url, photo: `${BASE}${t.path}` };
+  // 태그 · 제목 꼬리는 블로그 카테고리에 맞춤(홀덤 공부 글에 매장 관리 태그가 붙지 않게)
+  const kindTags = KIND_TAGS[category === "딜러 실무" ? "dealer" : category === "홀덤 공부" ? "holdem" : "tool"];
+  const tags = tagLine([...t.tags, ...kindTags]);
+  return { key: `tool:${t.slug}`, kind: "tool", category, title: `${t.title} | ${category}`, body, tags, url, photo: `${BASE}${t.path}` };
 }
 
 /** 올릴 순서: 홀덤 · 딜러 번갈아(하루 1편씩), 도구 소개는 5편마다 한 편 */
@@ -165,4 +181,4 @@ export function blogDrafts(): BlogDraft[] {
 }
 
 /** 블로그에 먼저 올릴 글감(검색어를 보고 바꿈) */
-export const BLOG_PRIORITY = ["holdem:add-on", "dealer:find-dealer-jobs", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "holdem:icm-basics", "holdem:rebuy-reentry", "dealer:showdown", "dealer:dealer-calls"];
+export const BLOG_PRIORITY = ["tool:cheatsheet", "tool:glossary", "tool:push-fold-quiz", "holdem:add-on", "dealer:find-dealer-jobs", "dealer:floor-role", "dealer:tda-core-rules", "tool:tda-rules", "dealer:tournament-terms", "holdem:icm-basics", "holdem:rebuy-reentry", "dealer:showdown", "dealer:dealer-calls"];
