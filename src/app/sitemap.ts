@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { JOB_REGIONS } from "@/lib/job-status";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
+import { COURSES } from "@/lib/courses";
 import { sitemapEntries } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 import { latestJobPerAuthor, postIsThin } from "@/lib/seo-quality";
@@ -84,5 +85,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...sitemapEntries(), ...guides, ...holdemGuides, ...regions, ...jobPosts, ...boardPosts];
+  const courses: MetadataRoute.Sitemap = COURSES.map((c) => ({
+    url: `${base}/study/course/${c.id}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...sitemapEntries(), ...guides, ...holdemGuides, ...courses, ...regions, ...jobPosts, ...boardPosts];
 }

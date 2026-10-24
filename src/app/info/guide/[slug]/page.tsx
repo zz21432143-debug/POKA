@@ -3,6 +3,8 @@ import { OperatorPosts } from "@/components/posts/operator-posts";
 import { notFound } from "next/navigation";
 import Link from "@/components/ui/link";
 import { GUIDE_ARTICLES, GUIDE_UPDATED_DEFAULT, getGuideArticle } from "@/lib/info-pages";
+import { CourseStepBox } from "@/components/study/course-progress";
+import { courseBoxProps } from "@/lib/course-titles";
 import { linkGuideTerms } from "@/lib/guide-links";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
@@ -90,6 +92,10 @@ export default async function GuideArticlePage({
           {article.tool.label} →
         </Link>
       ) : null}
+      {(() => {
+        const box = courseBoxProps({ kind: "guide", slug: article.slug });
+        return box ? <CourseStepBox {...box} /> : null;
+      })()}
       <section aria-label="다른 딜러 가이드" className="grid gap-2 rounded-2xl border border-white/10 p-4">
         <h2 className="text-base font-black text-[#f3d9a4]">다른 딜러 가이드</h2>
         <ul className="grid gap-1.5 sm:grid-cols-2">

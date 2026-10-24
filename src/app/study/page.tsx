@@ -6,6 +6,9 @@ import { ToolCard } from "@/components/tools/tool-card";
 import { StudyAd } from "@/components/ads/board-bottom-ad";
 import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { HOLDEM_GUIDES } from "@/lib/holdem-guides";
+import { CourseList } from "@/components/study/course-progress";
+import { courseViews } from "@/lib/course-titles";
+import { COURSE_POINTS } from "@/lib/courses";
 
 const TITLE = "홀덤 공부 — GTO 푸시폴드 · 승률 계산기 · ICM · 핸드 레인지 · 족보 (무료)";
 const DESCRIPTION =
@@ -36,6 +39,12 @@ export default function StudyHubPage() {
         <BoardTitle sticker={BOARD_STICKER.study}>홀덤 공부</BoardTitle>
         <p className="mt-2">전부 무료, 로그인 없이 써요. 숫자는 POKA가 직접 계산하고 검증했어요.</p>
       </header>
+      {/* 공부 코스: 어디서부터 읽을지 순서대로 */}
+      <section id="courses" aria-label="공부 코스" className="grid gap-2">
+        <h2 className="text-xl font-black text-[#f3d9a4]">📚 공부 코스 <span className="text-sm font-bold text-[#b8ab98]">· 나에게 맞는 코스부터 · 다 읽으면 코스마다 +{COURSE_POINTS}P</span></h2>
+        <CourseList courses={courseViews()} />
+      </section>
+      <h2 className="text-xl font-black text-[#f3d9a4]">🧮 공부 도구</h2>
       <ul className="grid gap-3 sm:grid-cols-2">
         {CARDS.map((card) => (
           <li key={card.href}>

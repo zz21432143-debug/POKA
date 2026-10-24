@@ -4,6 +4,8 @@ import Link from "@/components/ui/link";
 import { HOLDEM_GUIDES, getHoldemGuide } from "@/lib/holdem-guides";
 import { jsonLdString } from "@/lib/job-jsonld";
 import { siteUrl } from "@/lib/site";
+import { CourseStepBox } from "@/components/study/course-progress";
+import { courseBoxProps } from "@/lib/course-titles";
 
 export function generateStaticParams() {
   return HOLDEM_GUIDES.map((row) => ({ slug: row.slug }));
@@ -76,6 +78,10 @@ export default async function HoldemGuidePage({ params }: { params: Promise<{ sl
           {article.tool.label} →
         </Link>
       ) : null}
+      {(() => {
+        const box = courseBoxProps({ kind: "holdem", slug: article.slug });
+        return box ? <CourseStepBox {...box} /> : null;
+      })()}
       <section aria-label="다른 홀덤 가이드" className="grid gap-2 rounded-2xl border border-white/10 p-4">
         <h2 className="text-base font-black text-[#f3d9a4]">다른 홀덤 가이드</h2>
         <ul className="grid gap-1.5 sm:grid-cols-2">
