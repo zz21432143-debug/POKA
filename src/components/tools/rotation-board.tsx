@@ -203,6 +203,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [tableTools, setTableTools] = useState(false);
   /** 운영 화면 출근 · 퇴근 줄에서 누른 딜러 */
   const [quickId, setQuickId] = useState<string | null>(null);
+  /** 딜러별 표에서 누른 칸: 이 딜러를 이 시간에 몇 번 테이블로 */
+  const [dealerPick, setDealerPick] = useState<{ slot: number; dealerId: string } | null>(null);
   /** 출근 · 퇴근 줄: 출근 전 딜러만 보기(아침 출근 체크용) */
   const [quickWaitOnly, setQuickWaitOnly] = useState(false);
   /** 지난 게임 정리 창: 고른 게임 id(null이면 닫힘) */
@@ -978,7 +980,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     });
   }
 
-  function changeCell(dealerId: string | null) {
+  function changeCell(dealerId: string | null, target: { slot: number; table: number } | null = cell) {
+    const cell = target;
     if (!plan || !cell) return;
     // 바로 앞 칸에 다른 테이블에서 딜하던 딜러를 쉬지 않고 이 테이블로 옮기면 경고(실제로는 교대가 필요)
     const before = cell.slot > 0 ? plan.slots[cell.slot - 1] : null;
@@ -1001,6 +1004,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       plan: { ...plan, slots } satisfies RotationPlan,
     });
     setCell(null);
+  }
+
+  /** 딜러별 표: 고른 딜러를 이 시간 t번째 테이블로(그 자리 딜러와 맞바꿈) */
+  function pickTable(t: number) {
+    if (!dealerPick) return;
+    changeCell(dealerPick.dealerId, { slot: dealerPick.slot, table: t });
+    setDealerPick(null);
   }
 
   /** 📌 고정 풀기: 이 칸을 다시 Auto에 맡김 */
@@ -1078,6 +1088,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const quickWaitCount = quickAll.filter((d) => d.status === "WAIT").length;
   const quickList = quickWaitOnly && quickWaitCount ? quickAll.filter((d) => d.status === "WAIT") : quickAll;
   const quickPicked = state.dealers.find((d) => d.id === quickId) ?? null;
+  const pickSlot = plan && dealerPick ? (plan.slots[dealerPick.slot] ?? null) : null;
+  const pickCur = pickSlot && dealerPick ? pickSlot.seats.indexOf(dealerPick.dealerId) : -1;
   // 시간표 본문: 운영 탭에 바로 보이고, ⛶ 크게 보기 창에서도 같은 것을 씀
   const gridBody = !plan ? null : (
     view === "table" ? (
@@ -1375,11 +1387,11 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       </div>
     ) : (
       // 딜러별 표(기본): 줄 = 딜러(지금 앉은 테이블 순), 칸 = 그 시간 테이블 번호(T 없이) · 휴식
-      <div className={cn("overflow-auto rounded-xl border border-white/15", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
-        <table className="border-collapse">
+      <div className={cn("overflow-auto rounded-xl border border-white/15 bg-black", gridOpen ? "max-h-[80dvh]" : "max-h-[70dvh]")}>
+        <table className="w-full border-collapse">
           <thead className="sticky top-0 z-20">
             <tr>
-              <th className="sticky left-0 z-30 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">딜러 / 시간</th>
+              <th className="sticky left-0 z-30 w-28 bg-zinc-900 px-2 py-2 text-left text-sm font-black text-zinc-300">딜러 / 시간</th>
               {rows.map(({ slot, index }) => (
                 <th
                   key={slot.at}
@@ -1389,7 +1401,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     index < current && "opacity-60",
                   )}
                 >
-                  <span className="block min-w-[4rem] text-lg font-black">{formatClock(slot.at)}</span>
+                  <span className="block min-w-[3.25rem] text-lg font-black">{formatClock(slot.at)}</span>
                   <span className="block text-[11px] font-bold">{index === current ? "지금" : index === next ? "다음 교대" : " "}</span>
                 </th>
               ))}
@@ -1436,18 +1448,25 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             <button
                               type="button"
                               data-dcell={`${formatClock(slot.at)}-${dealer.name}`}
-                              onClick={() => setCell({ slot: index, table: t - 1 })}
+                              onClick={() => setDealerPick({ slot: index, dealerId: dealer.id })}
                               className={cn(
-                                "grid min-h-11 w-full min-w-[4rem] place-items-center rounded-lg text-xl font-black",
+                                "grid min-h-11 w-full min-w-[3.25rem] place-items-center rounded-lg text-xl font-black",
                                 focus === "on" ? "bg-amber-400 text-black" : "bg-zinc-800 text-white hover:bg-zinc-700",
                               )}
                             >
                               {label}
                             </button>
                           ) : t === 0 ? (
-                            <span className="grid min-h-11 min-w-[4rem] place-items-center rounded-lg bg-[#3a2a0c] text-sm font-black text-amber-200">휴식</span>
+                            <button
+                              type="button"
+                              data-dcell-rest
+                              onClick={() => setDealerPick({ slot: index, dealerId: dealer.id })}
+                              className="grid min-h-11 w-full min-w-[3.25rem] place-items-center rounded-lg border border-amber-400/25 bg-[#17120a] text-sm font-bold text-amber-300/90 hover:bg-[#241a0c]"
+                            >
+                              휴식
+                            </button>
                           ) : (
-                            <span className="grid min-h-11 min-w-[4rem] place-items-center text-sm text-zinc-600">—</span>
+                            <span className="grid min-h-11 min-w-[3.25rem] place-items-center text-sm text-zinc-600">—</span>
                           )}
                         </td>
                       );
@@ -2566,7 +2585,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                 ) : null}
                 {gridBody}
                 <p className="text-xs text-zinc-400">
-                  {view === "dealer" ? "칸의 숫자 = 그 시간에 들어가는 테이블 번호 · 딜러 이름을 누르면 그 딜러만 밝게 보여요 · 숫자를 누르면 그 자리 딜러를 바꿔요 · 테이블 기준으로 보려면 「테이블별」" : "칸을 누르면 딜러를 바꿔요 · 위 출근 · 퇴근 줄에서 이름을 누르면 그 딜러 자리만 밝게 보여요"}
+                  {view === "dealer" ? "칸의 숫자 = 그 시간에 들어가는 테이블 번호 · 딜러 이름을 누르면 그 딜러만 밝게 보여요 · 숫자나 휴식을 누르면 들어갈 테이블을 골라요 · 테이블 기준으로 보려면 「테이블별」" : "칸을 누르면 딜러를 바꿔요 · 위 출근 · 퇴근 줄에서 이름을 누르면 그 딜러 자리만 밝게 보여요"}
                 </p>
               </div>
             ) : (
@@ -3797,6 +3816,43 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
       ) : null}
 
       {/* 칸 바꾸기 */}
+      {plan && dealerPick && pickSlot ? (
+        <ToolDialog label="테이블 고르기" onClose={() => setDealerPick(null)} className="place-items-center p-4">
+          <div data-table-pick className="grid w-[min(92vw,30rem)] gap-3 rounded-2xl border border-white/20 bg-zinc-950 p-4">
+            <p className="text-lg font-black">
+              {name(dealerPick.dealerId)} · {formatClock(pickSlot.at)}
+            </p>
+            <p className="text-xs text-zinc-400">
+              들어갈 테이블 번호를 고르세요. 그 테이블 딜러와 자리를 맞바꿔요{pickCur < 0 ? "(지금 쉬는 중이라 그 테이블 딜러가 휴식으로 가요)" : ""}. 바꾼 칸은 📌 고정돼요.
+            </p>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+              {labels.map((label, t) =>
+                isClosedAt(t, pickSlot.at) || isBeforeOpen(t, pickSlot.at) ? null : (
+                  <button
+                    key={label}
+                    type="button"
+                    data-pick-table={String(label)}
+                    disabled={busy || t === pickCur}
+                    onClick={() => pickTable(t)}
+                    className={cn(
+                      "grid min-h-16 place-items-center rounded-xl py-1 text-2xl font-black",
+                      t === pickCur ? "bg-amber-400 text-black" : "bg-zinc-800 text-white hover:bg-zinc-700",
+                    )}
+                  >
+                    {String(label)}
+                    <span className="truncate text-[11px] font-bold opacity-70">
+                      {t === pickCur ? "지금 자리" : pickSlot.seats[t] ? name(pickSlot.seats[t] as string) : "빈 자리"}
+                    </span>
+                  </button>
+                ),
+              )}
+            </div>
+            <button type="button" onClick={() => setDealerPick(null)} className="min-h-11 rounded-lg border border-white/25 text-sm font-bold">
+              닫기
+            </button>
+          </div>
+        </ToolDialog>
+      ) : null}
       {plan && cell && candidates ? (
         <ToolDialog
           label="칸 바꾸기"
