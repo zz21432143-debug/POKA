@@ -1213,8 +1213,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         컨바인
                       </span>
                     ) : null}
+                    {/* 러닝 시각: 아직 안 열었거나 테이블 관리 중일 때만(이미 지난 「13:20 오픈」은 줄마다 남기지 않음) */}
                     {closedFrom[t] == null &&
-                    openedFrom[t] != null ? (
+                    openedFrom[t] != null &&
+                    (tableTools || (openedFrom[t] as number) > now) ? (
                       <button
                         type="button"
                         disabled={busy}
@@ -1267,6 +1269,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       );
                     }
                     const goneHere = isGone(id, index);
+                    // 앞 칸과 같은 딜러가 이어서 앉음(교대 아님) → 흐리게 · 새로 들어간 칸만 진하게
+                    const stays = Boolean(id) && index > 0 && plan.slots[index - 1]?.seats[t] === id && !goneHere;
+                    // 출근 · 퇴근 줄에서 고른 딜러만 강조
+                    const focus = quickId ? (id === quickId ? "on" : "off") : null;
                     return (
                       <td
                         key={slot.at}
@@ -1290,9 +1296,14 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             "grid w-full min-w-[5.5rem] gap-0.5 rounded-lg px-1.5 py-1.5 text-center",
                             goneHere
                               ? "bg-rose-700 hover:bg-rose-600"
-                              : id
-                                ? "bg-zinc-800 hover:bg-zinc-700"
-                                : "border-2 border-dashed border-rose-500/70",
+                              : focus === "on"
+                                ? "bg-amber-400 text-black ring-2 ring-amber-200 hover:bg-amber-300"
+                                : id
+                                  ? stays
+                                    ? "bg-zinc-900 hover:bg-zinc-800"
+                                    : "bg-zinc-800 hover:bg-zinc-700"
+                                  : "border-2 border-dashed border-rose-500/70",
+                            focus === "off" && "opacity-25",
                             cell?.slot === index &&
                               cell.table === t &&
                               "ring-2 ring-amber-300",
@@ -1316,12 +1327,13 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                             </span>
                           ) : null}
                           <span
+                            data-stays={stays ? "" : undefined}
                             className={cn(
-                              "truncate text-lg font-black",
-                              id ? "text-white" : "text-rose-300",
+                              "truncate font-black",
+                              !id ? "text-lg text-rose-300" : focus === "on" ? "text-lg text-black" : stays ? "text-base text-zinc-500" : "text-lg text-white",
                             )}
                           >
-                            {id ? name(id) : "비어 있음"}
+                            {id ? `${stays ? "→ " : ""}${name(id)}` : "비어 있음"}
                           </span>
                         </button>
                       </td>
@@ -1349,7 +1361,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                           key={id}
                           className={cn(
                             "rounded-md px-1.5 py-0.5 text-sm font-black",
-                            isGone(id, index) ? "bg-rose-700 text-white" : "bg-amber-500/20 text-amber-100",
+                            isGone(id, index) ? "bg-rose-700 text-white" : quickId === id ? "bg-amber-400 text-black ring-2 ring-amber-200" : "bg-amber-500/20 text-amber-100",
+                            quickId && quickId !== id && "opacity-25",
                           )}
                         >
                           {name(id)}
@@ -2365,7 +2378,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ) : null}
 
           {/* 시간표 */}
-          <section aria-label="시간표" hidden={!plan} className="poka-watermark grid gap-2">
+          <section aria-label="시간표" hidden={!plan} className="grid gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-black">📅 시간표</h2>
               {plan ? (
@@ -2509,8 +2522,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
               </p>
             ) : !gridOpen ? (
               <div data-grid-inline className="grid gap-1">
+                {quickPicked ? (
+                  <p data-grid-focus className="flex flex-wrap items-center gap-2 rounded-lg bg-amber-400/15 px-2 py-1.5 text-sm font-bold text-amber-100">
+                    🔎 <b>{quickPicked.name}</b> 자리만 보는 중
+                    <button type="button" onClick={() => setQuickId(null)} className="ml-auto min-h-9 rounded-lg border border-amber-300/60 px-3 text-xs font-black">
+                      모두 보기
+                    </button>
+                  </p>
+                ) : null}
                 {gridBody}
-                <p className="text-xs text-zinc-400">칸을 누르면 딜러를 바꿀 수 있어요 · 시간을 누르면 교대 시각을 바꿔요</p>
+                <p className="text-xs text-zinc-400">
+                  <b className="text-zinc-300">→ 이름</b> = 앞 칸과 같은 딜러(교대 없음) · 진한 칸이 새로 들어간 자리예요 · 위 <b className="text-zinc-300">출근 · 퇴근</b> 줄에서 이름을 누르면 그 딜러 자리만 밝게 보여요 · 칸을 누르면 딜러를 바꿔요
+                </p>
               </div>
             ) : (
               <ToolDialog
