@@ -1,3 +1,4 @@
+import { RangeRankTabs } from "@/components/study/range-rank-tabs";
 import type { Metadata } from "next";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 import Link from "@/components/ui/link";
@@ -84,6 +85,7 @@ export default function HandRankingsPage() {
   return (
     <article className="flex flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
+      <RangeRankTabs current="rankings" />
       <header className="board-intro">
         <Link href="/study" className="inline-flex min-h-10 items-center text-xs font-bold text-[#c9a25c]">
           ← 홀덤 공부

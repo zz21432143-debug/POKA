@@ -65,8 +65,7 @@ export const STUDY_ITEMS: SidebarItem[] = [
   { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위", icon: "cards" },
   { href: "/study/push-fold-quiz", label: "푸시폴드 퀴즈", hint: "올인? 폴드? 차트로 채점", icon: "cards" },
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },
-  { href: "/community/hand-ranges", label: "핸드 레인지 순위", hint: "169개 패 순위 · 상위 X%", icon: "cards" },
-  { href: "/community/hand-rankings", label: "족보 순위", hint: "카드로 보는 족보 · 확률", icon: "cards" },
+  { href: "/community/hand-ranges", label: "핸드 레인지 · 족보 순위", hint: "169개 시작 패 순위 · 족보 10가지 · 확률", icon: "cards" },
   { href: "/quiz", label: "오늘의 퀴즈", hint: "아침 · 저녁 9시 새 문제 · 맞히면 포인트", icon: "seal" },
   { href: "/boards/tda", label: "TDA 룰", hint: "토너먼트 공식 룰", icon: "scroll" },
 ];
@@ -121,7 +120,7 @@ export const SIDEBAR_NAV: SidebarGroup[] = [
     hub: "/study",
     icon: "scroll",
     // 메뉴에서 뺀 도구 · 자료도 이 묶음
-    match: ["/study", "/info/holdem", "/info/guide"],
+    match: ["/study", "/info/holdem", "/info/guide", "/community/hand-rankings"],
     items: STUDY_ITEMS,
   },
   {
