@@ -56,8 +56,8 @@ function HomeSection({ id, title, hint, className, children }: { id: string; tit
 function HomeColumns({ main, side }: { main: React.ReactNode; side: React.ReactNode }) {
   return (
     <div data-home-columns className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_24rem]">
-      <div data-home-main className="contents lg:grid lg:min-w-0 lg:content-start lg:gap-6">{main}</div>
-      <aside data-home-side className="contents lg:grid lg:min-w-0 lg:content-start lg:gap-6">{side}</aside>
+      <div data-home-main className="contents lg:grid lg:min-w-0 lg:content-start lg:gap-5">{main}</div>
+      <aside data-home-side className="contents lg:grid lg:min-w-0 lg:content-start lg:gap-5">{side}</aside>
     </div>
   );
 }
@@ -110,7 +110,7 @@ async function HomeCommunitySection() {
   const today = todayKstDate();
   const topicIndex = todayTopicIndex(today);
   return (
-    <HomeSection id="community" title="커뮤니티" hint="새 글 · 자유 · 핸드리뷰" className="order-4 lg:order-none">
+    <HomeSection id="community" title="커뮤니티" hint="새 글 · 자유 · 핸드리뷰" className="order-2 lg:order-none">
       <div id="home-latest" className="grid min-w-0 scroll-mt-24 content-start gap-2.5">
         <HomeLatest all={feed?.all ?? []} free={feed?.free ?? []} hands={feed?.hands ?? []} nativeSponsor={feed?.nativeSponsor ?? null} firstBonus={firstBonus} topic={{ index: topicIndex, text: TALK_TOPICS[topicIndex] }} />
         <GoogleAdUnit placement="infeed" />
@@ -130,8 +130,8 @@ async function HomePosters({ slot }: { slot: "wide" | "side" }) {
 
 /**
  * 홈 순서(PokerListings처럼 본문 | 오른쪽 칸): 대문 · 오늘 요약 → 바로가기 한 줄 →
- * [본문: 구인 · 빈자리 → 커뮤니티 | 오른쪽: 오늘(퀴즈 · 요괴 · 핸드 문제) → 미션] → 포스터 →
- * [본문: 매장 도구 · 홀덤 공부 → 딜러 가이드 | 오른쪽: 랭킹].
+ * [구인 · 빈자리 | 오늘(퀴즈 · 요괴 · 미션)] → 포스터 →
+ * [커뮤니티 → 매장 도구 · 홀덤 공부 → 딜러 가이드 | 핸드 문제 → 랭킹]. 두 칸 높이가 비슷하게 나눔.
  */
 export default async function HomePage() {
   return (
@@ -155,28 +155,21 @@ export default async function HomePage() {
         <UrgentAlertPrompt />
       </div>
 
+      {/* 위 묶음: 구인 | 오늘(퀴즈 · 요괴) — 두 칸 높이가 비슷해 빈칸이 없게 */}
       <HomeColumns
         main={
-          <>
-            <Suspense fallback={<HomePanelFallback className="order-2 h-56 lg:order-none" />}>
-              <HomeJobsSection />
-            </Suspense>
-            <Suspense fallback={<HomePanelFallback className="order-4 h-72 lg:order-none" />}>
-              <HomeCommunitySection />
-            </Suspense>
-          </>
+          <Suspense fallback={<HomePanelFallback className="order-2 h-56 lg:order-none" />}>
+            <HomeJobsSection />
+          </Suspense>
         }
         side={
           <>
-            <HomeSection id="today" title="오늘" hint="퀴즈 · 요괴 밥 · 핸드 문제" className="order-1 lg:order-none">
+            <HomeSection id="today" title="오늘" hint="퀴즈 · 요괴 밥" className="order-1 lg:order-none">
               <Suspense fallback={<HomePanelFallback className="h-40" />}>
                 <HomeQuiz />
               </Suspense>
               <Suspense fallback={<HomePanelFallback className="h-14" />}>
                 <HomeYokai />
-              </Suspense>
-              <Suspense fallback={null}>
-                <HomeHandWeek />
               </Suspense>
             </HomeSection>
             <div className="order-3 grid min-w-0 content-start gap-2.5 empty:hidden lg:order-none">
@@ -193,30 +186,41 @@ export default async function HomePage() {
       </Suspense>
       <GoogleAdUnit placement="home-mid" />
 
+      {/* 아래 묶음: 커뮤니티 · 도구 · 가이드 | 핸드 문제 · 랭킹 */}
       <HomeColumns
         main={
           <>
-            <HomeSection id="tools" title="매장 도구 · 홀덤 공부" hint="회원 무료 · 로그인 없이 쓰는 공부 도구" className="order-1 lg:order-none">
+            <Suspense fallback={<HomePanelFallback className="order-2 h-72 lg:order-none" />}>
+              <HomeCommunitySection />
+            </Suspense>
+            <HomeSection id="tools" title="매장 도구 · 홀덤 공부" hint="회원 무료 · 로그인 없이 쓰는 공부 도구" className="order-3 lg:order-none">
               <div data-home-shortcuts className="grid grid-cols-[minmax(0,1fr)] gap-2.5 xl:grid-cols-2 [&>*]:min-w-0">
                 <HomeDealerTools />
                 <HomeStudyTools />
               </div>
             </HomeSection>
             {/* 오늘의 딜러 가이드 3편(날마다 바뀜) */}
-            <div className="order-3 min-w-0 lg:order-none">
+            <div className="order-5 min-w-0 lg:order-none">
               <HomeGuides />
             </div>
           </>
         }
         side={
-          <div data-home-section="ranking" className="order-2 grid min-w-0 content-start gap-2.5 lg:order-none">
-            <Suspense fallback={<HomePanelFallback className="h-48" />}>
-              <HomeRankings />
-            </Suspense>
-            <Suspense fallback={null}>
-              <HomePosters slot="side" />
-            </Suspense>
-          </div>
+          <>
+            <HomeSection id="hand" title="핸드 문제" hint="이번 주 투표" className="order-1 lg:order-none [&:not(:has(>[data-home-hand-week]))]:hidden">
+              <Suspense fallback={null}>
+                <HomeHandWeek />
+              </Suspense>
+            </HomeSection>
+            <div data-home-section="ranking" className="order-4 grid min-w-0 content-start gap-2.5 lg:order-none">
+              <Suspense fallback={<HomePanelFallback className="h-48" />}>
+                <HomeRankings />
+              </Suspense>
+              <Suspense fallback={null}>
+                <HomePosters slot="side" />
+              </Suspense>
+            </div>
+          </>
         }
       />
 
