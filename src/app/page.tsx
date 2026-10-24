@@ -104,13 +104,13 @@ async function HomeFeedSections() {
   return (
     <>
       {/* 가장 급한 것부터: 급구(있을 때만 — 0건은 위 요약 칸에 보임) → 지원 · 대회 딜러 구인 */}
-      <HomeSection id="jobs" title="구인 · 빈자리" hint="오늘 일할 곳 · 급구" more={{ href: "/boards/jobs" }}>
+      <HomeSection id="jobs" title="구인 · 빈자리" hint="오늘 일할 곳 · 급구">
         {feed.urgent.length ? <HomeUrgentJobs jobs={feed.urgent} /> : null}
         <HomeJobs jobs={feed.jobs} />
       </HomeSection>
       <GoogleAdUnit placement="home-top" />
       {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히, 높이 맞춤) */}
-      <HomeSection id="tools" title="매장 도구 · 홀덤 공부" hint="회원 무료 · 로그인 없이 쓰는 공부 도구" more={{ href: "/study" }}>
+      <HomeSection id="tools" title="매장 도구 · 홀덤 공부" hint="회원 무료 · 로그인 없이 쓰는 공부 도구">
         <div data-home-shortcuts className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-2 [&>*]:min-w-0">
           <HomeDealerTools />
           <HomeStudyTools />
@@ -120,7 +120,7 @@ async function HomeFeedSections() {
       {promo.filled ? <HomePosterCarousel posters={promo.posters} /> : null}
       <GoogleAdUnit placement="home-mid" />
       {/* 아래는 PC 두 칸: 왼쪽 글(최신글 · 핸드) · 오른쪽 매일 할 것(미션 · 퀴즈 · 요괴 · 랭킹) — 칸마다 따로 쌓여 빈 공간이 없게 */}
-      <HomeSection id="community" title="커뮤니티" hint="새 글 · 핸드리뷰 · 오늘의 미션 · 랭킹" more={{ href: "/community" }}>
+      <HomeSection id="community" title="커뮤니티" hint="새 글 · 핸드리뷰 · 오늘의 미션 · 랭킹">
       <div data-home-columns className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <div id="home-latest" className="grid min-w-0 scroll-mt-24 content-start gap-2.5">
           <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} firstBonus={firstBonus} topic={{ index: topicIndex, text: TALK_TOPICS[topicIndex] }} />

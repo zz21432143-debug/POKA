@@ -165,7 +165,7 @@ export function GameBoardScreen({
 
       <div data-main-grid className={cn("grid min-h-0 flex-1 gap-[calc(var(--u)*1.5)] px-[calc(var(--u)*1.4)] @[560px]:grid-cols-[0.82fr_2.6fr_0.86fr] @[560px]:grid-rows-[minmax(0,1fr)]", ft.on ? "pt-[calc(var(--u)*1.8)] pb-[calc(var(--u)*0.6)]" : "py-[calc(var(--u)*0.8)]")}>
         {/* 가운데: 레벨 · 시계 · 블라인드(세로 화면은 맨 위) */}
-        <section className="grid content-center justify-items-center gap-[calc(var(--u)*0.5)] text-center @[560px]:order-2">
+        <section className={cn("grid content-center justify-items-center text-center @[560px]:order-2", ft.on ? "gap-[calc(var(--u)*0.3)]" : "gap-[calc(var(--u)*0.5)]")}>
           {/* 레벨 · (멈춤) 한 줄 — 시계 칸을 넓게 */}
           <span className="flex flex-wrap items-center justify-center gap-[calc(var(--u)*0.8)]">
             <span data-level className={cn("rounded-full px-[calc(var(--u)*2)] py-[calc(var(--u)*0.3)] text-[clamp(13px,calc(var(--u)*2),40px)] font-black tracking-wider", view.level.isBreak ? "bg-sky-500/25 text-sky-200" : "bg-amber-400/15 text-amber-300")}>
@@ -177,7 +177,7 @@ export function GameBoardScreen({
               </span>
             ) : null}
           </span>
-          <span data-timer className={cn("leading-[0.95] font-black tabular-nums", warn ? "text-rose-400" : !view.running ? "text-white/70" : "text-white", "text-[clamp(56px,calc(var(--u)*13.5),300px)]")}>
+          <span data-timer className={cn("leading-[0.95] font-black tabular-nums", warn ? "text-rose-400" : !view.running ? "text-white/70" : "text-white", ft.on ? "text-[clamp(48px,calc(var(--u)*11),250px)]" : "text-[clamp(56px,calc(var(--u)*13.5),300px)]")}>
             {clockText(view.remainingMs)}
           </span>
           <div className="h-[clamp(6px,calc(var(--u)*0.7),14px)] w-full max-w-[90%] overflow-hidden rounded-full bg-white/10">
@@ -187,7 +187,7 @@ export function GameBoardScreen({
             <span className="text-[clamp(18px,calc(var(--u)*3.4),64px)] font-black text-sky-200">TAKE A BREAK</span>
           ) : (
             <>
-              <span data-blinds className="flex items-baseline gap-[calc(var(--u)*0.6)] text-[clamp(26px,calc(var(--u)*5.2),110px)] leading-tight font-black text-amber-200 tabular-nums">
+              <span data-blinds className={cn("flex items-baseline gap-[calc(var(--u)*0.6)] leading-tight font-black text-amber-200 tabular-nums", ft.on ? "text-[clamp(22px,calc(var(--u)*4.4),96px)]" : "text-[clamp(26px,calc(var(--u)*5.2),110px)]")}>
                 <small className={BLIND_TAG}>SB</small>
                 {won(view.level.sb)}
                 <span className="text-amber-200/60">/</span>
