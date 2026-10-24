@@ -12,7 +12,7 @@ export function PokaMascot({ className }: { className?: string }) {
       )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/logo-flame.png" alt="POKA 마스코트" className="size-full rounded-[20%] object-cover" />
+      <img loading="lazy" decoding="async" src="/images/logo-flame.png" alt="POKA 마스코트" className="size-full rounded-[20%] object-cover" />
     </span>
   );
 }
@@ -20,7 +20,7 @@ export function PokaMascot({ className }: { className?: string }) {
 /** 브랜드 시안의 붓글씨 "POKA" 로고 */
 export function PokaBrush({ className }: { className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/brand/poka-brush.png" alt="POKA" className={cn("h-auto select-none", className)} draggable={false} />;
+  return <img loading="lazy" decoding="async" src="/brand/poka-brush.png" alt="POKA" className={cn("h-auto select-none", className)} draggable={false} />;
 }
 
 /** "무료 홍보 이벤트" 글자 + 밑에 깔린 빨간 붓 획 */

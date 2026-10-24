@@ -62,7 +62,7 @@ function crown(ctx: CanvasRenderingContext2D, cx: number, top: number, w: number
   }
 }
 
-export async function drawChampionImage(opts: { champion: string; event: string; finalists: string[]; date: string }) {
+export async function drawChampionImage(opts: { champion: string; event: string; finalists: string[]; date: string; stats?: string }) {
   try {
     await document.fonts?.ready;
   } catch {
@@ -134,7 +134,7 @@ export async function drawChampionImage(opts: { champion: string; event: string;
   yPos += eventSize * 0.4 + 46;
   ctx.font = `700 34px ${FONT}`;
   ctx.fillStyle = "#c9b99a";
-  ctx.fillText(opts.date, SIZE / 2, yPos);
+  ctx.fillText(opts.stats ? `${opts.date} · ${opts.stats}` : opts.date, SIZE / 2, yPos);
   // 파이널 테이블 이름
   if (opts.finalists.length) {
     const line = `FINAL TABLE · ${opts.finalists.join(" · ")}`;

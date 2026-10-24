@@ -170,7 +170,7 @@ export function PotTitleBadge({ nickname, className, max = 2, yokai = true }: { 
     <>
       {rep ? (
         // eslint-disable-next-line @next/next/no-img-element -- 대표 요괴(작은 도트 그림)
-        <img data-yokai-rep={rep.s} src={`/yokai/${rep.s}-${rep.st}.webp`} alt="" title="대표 요괴" className="inline-block size-5 shrink-0 object-contain align-middle" />
+        <img loading="lazy" decoding="async" data-yokai-rep={rep.s} src={`/yokai/${rep.s}-${rep.st}.webp`} alt="" title="대표 요괴" className="inline-block size-5 shrink-0 object-contain align-middle" />
       ) : null}
       {potFirst ? <PotOnlyBadge nickname={nickname} className={className} /> : null}
       {honorBadges.slice(0, 1)}

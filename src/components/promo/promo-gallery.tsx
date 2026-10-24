@@ -33,7 +33,7 @@ export function PromoGallery({ posts }: { posts: PromoCard[] }) {
             >
               <div className="flex aspect-[5/7] items-center justify-center bg-black">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={sizedImage(image, 720)} alt={post.title} className="h-full w-full object-contain" />
+                <img loading="lazy" decoding="async" src={sizedImage(image, 720)} alt={post.title} className="h-full w-full object-contain" />
               </div>
               <div className="p-3">
                 <h2 className="text-lg font-bold leading-snug text-white">{post.title}</h2>

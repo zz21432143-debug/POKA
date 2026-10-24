@@ -23,6 +23,7 @@ import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeBoardNav } from "@/components/home/home-board-nav";
 import { HomeGuides } from "@/components/home/home-guides";
+import { HomeHandWeek } from "@/components/home/home-hand-week";
 import { UrgentAlertPrompt } from "@/components/jobs/urgent-alert-prompt";
 import { FREE_PROMO } from "@/lib/free-promo";
 import { getCurrentUser } from "@/lib/current-user";
@@ -179,6 +180,9 @@ export default async function HomePage() {
           <HomeYokai />
         </Suspense>
       </div>
+      <Suspense fallback={null}>
+        <HomeHandWeek />
+      </Suspense>
       </HomeSection>
       {/* 게시판 · 매장 관리 바로가기 한 줄 */}
       <Suspense fallback={<HomePanelFallback className="h-10" />}>

@@ -15,7 +15,7 @@ export function SidebarSponsorCard({ unit }: { unit: DirectCreative | null }) {
           className="group relative block overflow-hidden rounded-xl border border-border bg-card shadow-sm"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <img loading="lazy" decoding="async"
             src={sizedImage(creative.imageUrl, 480)}
             alt={creative.title || creative.advertiser}
             width={300}

@@ -24,7 +24,7 @@ import { prisma } from "@/lib/db";
 import { sortTdaSections } from "@/lib/tda";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { escapeHtml } from "@/lib/doc-html";
-import { formatKstLabel } from "@/lib/dates";
+import { formatKstLabel, todayKstDate } from "@/lib/dates";
 import { BoardGuideBox } from "@/components/posts/board-guide-box";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
@@ -125,6 +125,12 @@ export default async function BoardPage({
   const scheduleEvents = viewer
     ? page.events
     : page.events.map((event) => ({ ...event, content: null }));
+  // 오늘 새 글 수(한국 날짜 0시부터 · 이 게시판 · 숨김 빼고)
+  const todayCount = gallery || calendar || tda
+    ? 0
+    : await prisma.post
+        .count({ where: { boardType: board.boardType, hidden: false, isAttendanceThread: false, createdAt: { gte: new Date(`${todayKstDate()}T00:00:00+09:00`) } } })
+        .catch(() => 0);
   const nativeSponsor =
     gallery || calendar
       ? null
@@ -139,7 +145,10 @@ export default async function BoardPage({
               ? "자유게시판"
               : board.title}
           </BoardTitle>
-          <p className="mt-2">{BOARD_DESCRIPTIONS[board.boardType]}</p>
+          <p className="mt-2">
+            {BOARD_DESCRIPTIONS[board.boardType]}
+            {todayCount ? <span data-today-count className="ml-2 inline-flex rounded-full bg-[#7a1c22] px-2 py-0.5 align-middle text-xs font-black text-white">오늘 새 글 {todayCount}</span> : null}
+          </p>
           {canWrite || !("masterOnly" in board && board.masterOnly) ? (
             <p className="mt-1.5 text-xs text-[#9CA3AF]">
               글 작성 시 {postRewardLine(board.boardType)}

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
 import { drawChampionImage } from "@/lib/champion-image";
+import { BoardChampions } from "@/components/tools/board-champions";
 import { BOARD_LIMITS, FT_MAX, FT_NAME, ftName, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
@@ -608,6 +609,8 @@ export function GameBoardPanel({
 
 function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now: number; onClock: (op: ClockOp) => void; onEdit: (c: Partial<GameBoardData>) => void }) {
   const view = clockView(data, now);
+  // 이달의 챔피언 목록 다시 읽기(우승 이미지를 저장하면 +1)
+  const [champRefresh, setChampRefresh] = useState(0);
   const running = data.clock.runningSince != null && !view.finished;
   const btn = "min-h-12 rounded-xl border border-white/20 bg-black px-3 text-base font-black text-white active:bg-white/10";
   return (
@@ -740,7 +743,13 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                     onClick={() =>
                       void (async () => {
                         const date = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());
-                        const blob = await drawChampionImage({ champion: champ, event: data.name, finalists: ftSeats.map((x, k) => ftName(x, k)), date });
+                        const run = clockView(data, now).runningMs;
+                        const stats = [data.entries ? `엔트리 ${data.entries}` : "", data.rebuys ? `리바인 ${data.rebuys}` : "", run > 0 ? `진행 ${Math.floor(run / 3_600_000)}시간 ${Math.floor((run % 3_600_000) / 60_000)}분` : ""].filter(Boolean).join(" · ");
+                        const blob = await drawChampionImage({ champion: champ, event: data.name, finalists: ftSeats.map((x, k) => ftName(x, k)), date, stats });
+                        // 이달의 챔피언 기록(한 번만)
+                        void fetch("/api/tools/game-board/champions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: champ, event: data.name, entries: data.entries }) })
+                          .then(() => setChampRefresh((v) => v + 1))
+                          .catch(() => undefined);
                         if (!blob) return;
                         const link = document.createElement("a");
                         link.href = URL.createObjectURL(blob);
@@ -755,6 +764,7 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                   </button>
                 );
               })()}
+              <BoardChampions refresh={champRefresh} />
               <div className="flex flex-wrap gap-2">
                 {ftSeats.length < FT_MAX ? (
                   <button type="button" onClick={() => onEdit({ ftPlayers: [...ftSeats, { name: "", out: false }] })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">

@@ -13,7 +13,7 @@ function DirectCard({ creative }: { creative: DirectCreative }) {
       className="group relative block overflow-hidden rounded-xl border border-border bg-card shadow-sm"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <img loading="lazy" decoding="async"
         src={sizedImage(creative.imageUrl, 720)}
         alt={creative.title || creative.advertiser}
         width={300}

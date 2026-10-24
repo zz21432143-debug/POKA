@@ -12,7 +12,7 @@ export function YokaiMarkFrame({
   return (
     <span className={cn("mark-image-wrapper yokai-mark-frame", dimmed && "is-dim")}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="mark-glyph" src={src} alt={alt} width={96} height={96} />
+      <img loading="lazy" decoding="async" className="mark-glyph" src={src} alt={alt} width={96} height={96} />
     </span>
   );
 }

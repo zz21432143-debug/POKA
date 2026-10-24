@@ -2732,6 +2732,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   <span className="text-sm font-black text-amber-300">
                     지금 {kstClock(clock)}
                   </span>
+                  <a href="/tools/pay" data-to-pay className="ml-auto text-xs font-bold text-[#e7c98a] underline underline-offset-4">💰 근무 기록으로 급여 계산 ›</a>
                   {/* 한 줄: 테이블 · 딜러 · 딜 중 · 휴게 · 스태프(딜 안 함, 따로) */}
                   <dl data-run-stats className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm font-bold">
                     {[
