@@ -139,7 +139,7 @@ export default async function HomePage() {
         <HomeMyStatus />
       </Suspense>
       {/* 처음 온 사람도 바로 한 번: 오늘의 퀴즈(펼쳐 둠) · 요괴 마을 — PC는 나란히, 휴대폰은 위아래 */}
-      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_15rem] lg:[&:has(>:only-child)]:grid-cols-1 [&>*]:min-w-0">
+      <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-start lg:[&:has(>:only-child)]:grid-cols-1 [&>*]:min-w-0">
         <Suspense fallback={<HomePanelFallback className="h-14" />}>
           <HomeQuiz />
         </Suspense>
