@@ -53,13 +53,13 @@ export const YOKAI = {
   ingeo: { name: "잉어", rarity: "starter", element: { label: "물", tone: "water" }, intro: "물결을 거슬러 오르는 잉어. 끝까지 키우면 용으로 승천해요.", stages: ["아기잉어", "금지느러미", "용꿈잉어", "등용", "창해청룡"], how: START },
   samdugumi: { name: "삼두구미", rarity: "starter", element: { label: "환술", tone: "illusion" }, intro: "자랄수록 머리가 늘어나는 여우. 언젠가 구미호를 만나는 게 꿈이에요.", stages: ["세싹여우", "쌍두여우", "삼두여우", "환영구미", "삼면천호"], how: START },
   // ── 일반
-  nudeogi: { name: "누덕이", rarity: "common", element: { label: "바람", tone: "wind" }, intro: "삿갓 쓰고 바람 따라 떠도는 이야기꾼 요괴.", stages: ["먼지령", "솔바람귀", "풍익귀", "폭풍나그네", "천공의 풍랑"], how: "자유게시판에 글 · 댓글을 20개 쓰면 찾아와요" },
-  samagwi: { name: "사마귀", rarity: "common", element: { label: "자연", tone: "nature" }, intro: "날카로운 낫 팔을 가진 숲의 무사.", stages: ["풀잎낫", "잎새검객", "청낫무사", "녹림장군", "천엽검성"], how: "댓글을 50개 남기면 찾아와요" },
-  eodukssini: { name: "어둑시니", rarity: "common", element: { label: "어둠", tone: "dark" }, intro: "바라볼수록 커지는 어둠의 요괴.", stages: ["그늘콩", "어둑이", "밤그림자", "거대암영", "심연의 어둑시니"], how: "핸드리뷰에 글을 쓰거나 투표를 10번 하면 찾아와요" },
+  nudeogi: { name: "누덕이", rarity: "common", element: { label: "바람", tone: "wind" }, intro: "삿갓 쓰고 바람 따라 떠도는 이야기꾼 요괴.", stages: ["먼지령", "솔바람귀", "풍익귀", "폭풍나그네", "천공의 풍랑"], how: "자유게시판에 글 · 댓글을 5개 쓰면 찾아와요" },
+  samagwi: { name: "사마귀", rarity: "common", element: { label: "자연", tone: "nature" }, intro: "날카로운 낫 팔을 가진 숲의 무사.", stages: ["풀잎낫", "잎새검객", "청낫무사", "녹림장군", "천엽검성"], how: "댓글을 15개 남기면 찾아와요" },
+  eodukssini: { name: "어둑시니", rarity: "common", element: { label: "어둠", tone: "dark" }, intro: "바라볼수록 커지는 어둠의 요괴.", stages: ["그늘콩", "어둑이", "밤그림자", "거대암영", "심연의 어둑시니"], how: "핸드리뷰에 글을 쓰거나 투표를 3번 하면 찾아와요" },
   noejeongwi: { name: "뇌전귀", rarity: "common", element: { label: "번개", tone: "thunder" }, intro: "귀와 꼬리에 번개를 모으는 토끼 요괴.", stages: ["찌릿콩", "번개토끼", "뇌전수", "천둥귀왕", "천뢰신수"], how: "급구 공고에 지원하거나 급구를 올리면 찾아와요" },
-  bulgasari: { name: "불가사리", rarity: "common", element: { label: "쇠", tone: "metal" }, intro: "쇳조각과 칩을 삼키며 자라는 별 모양 요괴.", stages: ["쇳가루", "쇠뭉치", "철갑별", "강철포식자", "불멸의 불가사리"], how: "팟 계산 연습을 50번 하면 찾아와요" },
-  hwaryong: { name: "화룡", rarity: "common", element: { label: "불", tone: "fire" }, intro: "불을 먹고 자라는 용. 분노할수록 더 뜨거워져요.", stages: ["불씨룡", "홍염룡", "작열룡", "폭염룡", "태양화룡"], how: "결과 이미지를 10일 공유하면 찾아와요(하루 한 번 셈)" },
-  bakjwigwi: { name: "박쥐귀", rarity: "common", element: { label: "밤", tone: "blood" }, intro: "붉은 달이 뜨는 밤에 깨어나는 박쥐 요괴.", stages: ["밤박쥐", "피빛박쥐", "야월귀", "혈월군주", "영원의 밤군주"], how: "새벽(0~5시)에 출석을 7번 하면 찾아와요" },
+  bulgasari: { name: "불가사리", rarity: "common", element: { label: "쇠", tone: "metal" }, intro: "쇳조각과 칩을 삼키며 자라는 별 모양 요괴.", stages: ["쇳가루", "쇠뭉치", "철갑별", "강철포식자", "불멸의 불가사리"], how: "팟 계산 연습을 15번 하면 찾아와요" },
+  hwaryong: { name: "화룡", rarity: "common", element: { label: "불", tone: "fire" }, intro: "불을 먹고 자라는 용. 분노할수록 더 뜨거워져요.", stages: ["불씨룡", "홍염룡", "작열룡", "폭염룡", "태양화룡"], how: "결과 이미지를 3일 공유하면 찾아와요(하루 한 번 셈)" },
+  bakjwigwi: { name: "박쥐귀", rarity: "common", element: { label: "밤", tone: "blood" }, intro: "붉은 달이 뜨는 밤에 깨어나는 박쥐 요괴.", stages: ["밤박쥐", "피빛박쥐", "야월귀", "혈월군주", "영원의 밤군주"], how: "새벽(0~5시)에 출석을 3번 하면 찾아와요" },
   deungbulgwi: { name: "등불귀", rarity: "common", element: { label: "빛", tone: "light" }, intro: "매장을 밝히는 한지 초롱 요괴. 혀를 쏙 내밀고 길을 비춰 줘요.", stages: ["반딧불령", "혼불등", "길잡이귀", "백귀등왕", "황천의 등불"], how: "매장 관리 도구(게임 현황판 · 딜러 로테이션)를 만들면 찾아와요" },
   // ── 희귀
   keunnuni: { name: "큰눈이", rarity: "rare", element: { label: "감지", tone: "seer" }, intro: "모든 것을 꿰뚫어 보는 커다란 외눈 요괴.", stages: ["눈알콩", "외눈도깨비", "천리안귀", "만안귀왕", "진실을 보는 자"], how: "오늘의 퀴즈를 14일 연속 맞히면 찾아와요" },
@@ -68,7 +68,7 @@ export const YOKAI = {
   yacha: { name: "야차", rarity: "rare", element: { label: "분노", tone: "blood" }, intro: "흰 가면 뒤에 불꽃 같은 승부욕을 숨긴 창의 귀신 무사.", stages: ["가면동자", "창야차", "홍염야차", "분노귀장", "천벌야차왕"], how: "주간 경험치 TOP 3에 들면 찾아와요" },
   gangcheori: { name: "강철이", rarity: "rare", element: { label: "강철", tone: "metal" }, intro: "강철 비늘로 몸을 두른 단단한 갑옷 드래곤.", stages: ["쇠비늘", "철갑도마뱀", "강철수", "강철룡", "재앙의 강철룡"], how: "레벨 40을 달성하면 찾아와요" },
   dueoksini: { name: "두억시니", rarity: "rare", element: { label: "괴력", tone: "might" }, intro: "거대한 몽둥이를 든 도깨비 일족의 수장.", stages: ["꼬마두억", "몽둥이두억", "염주거귀", "두억대장", "도깨비 대왕"], how: "도깨비를 5단계까지 키우면 찾아와요" },
-  sinroksu: { name: "신록수", rarity: "rare", element: { label: "자연", tone: "nature" }, intro: "뿔이 빛나는 나무로 자라는 숲과 빛의 신수.", stages: ["새싹사슴", "영각록", "월광록", "신수백록", "천계의 녹왕"], how: "내 글 · 댓글이 추천을 50개 받으면 찾아와요" },
+  sinroksu: { name: "신록수", rarity: "rare", element: { label: "자연", tone: "nature" }, intro: "뿔이 빛나는 나무로 자라는 숲과 빛의 신수.", stages: ["새싹사슴", "영각록", "월광록", "신수백록", "천계의 녹왕"], how: "내 글 · 댓글이 추천을 20개 받으면 찾아와요" },
   horibyeonggwi: { name: "호리병귀", rarity: "rare", element: { label: "봉인", tone: "seal" }, intro: "요괴를 봉인하는 호리병 속 꼬마 도깨비. 도감지기예요.", stages: ["빈병령", "요기병", "백귀호리", "봉인대호", "백팔귀의 그릇"], how: "도감에 요괴를 10종 모으면 찾아와요" },
   // ── 영웅(은테)
   sacheonwang: { name: "사천왕", rarity: "hero", element: { label: "수호", tone: "guard" }, intro: "동서남북 네 보물을 하나씩 모으는 천계의 수호 무장.", stages: ["수호콩", "방위수호", "사방장군", "사천왕", "천계수문장"], how: "월간 칭호를 3번 받으면 찾아와요" },

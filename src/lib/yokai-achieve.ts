@@ -29,14 +29,14 @@ export type YokaiStats = {
 export type OwnedStages = Partial<Record<YokaiSpecies, number>>;
 
 export const NEED = {
-  // 일반: 활동 시작 후 며칠 ~ 2주
-  nudeogi: 20,
-  samagwi: 50,
-  eodukssini: 10,
+  // 일반: 활동 시작 후 며칠(오픈 9일째 보유율 0~8% → 낮춤, 2026-10-24)
+  nudeogi: 5,
+  samagwi: 15,
+  eodukssini: 3,
   noejeongwi: 1,
-  bulgasari: 50,
-  hwaryong: 10,
-  bakjwigwi: 7,
+  bulgasari: 15,
+  hwaryong: 3,
+  bakjwigwi: 3,
   deungbulgwi: 1,
   // 희귀: 3주 ~ 2달
   keunnuni: 14,
@@ -44,7 +44,7 @@ export const NEED = {
   tamrang: 20000,
   yacha: 3,
   gangcheori: 40,
-  sinroksu: 50,
+  sinroksu: 20,
   horibyeonggwi: 10,
   // 영웅: 2 ~ 4달
   sacheonwang: 3,

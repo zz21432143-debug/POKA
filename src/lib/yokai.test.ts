@@ -61,12 +61,12 @@ describe("요괴가 찾아오는 조건", () => {
     assert.deepEqual(arrivals(ZERO, { dokkaebi: 1 }), []);
   });
 
-  it("활동 기록만큼 찾아옴(박쥐귀 새벽 출석 7번 · 해태 TDA 10번 · 설녀 출석 30일)", () => {
-    const got = arrivals({ ...ZERO, dawnAttend: 7, tdaCorrect: 10, attendDays: 30 }, { ingeo: 1 });
+  it("활동 기록만큼 찾아옴(박쥐귀 새벽 출석 3번 · 해태 TDA 10번 · 설녀 출석 30일)", () => {
+    const got = arrivals({ ...ZERO, dawnAttend: 3, tdaCorrect: 10, attendDays: 30 }, { ingeo: 1 });
     assert.equal(arrivals({ ...ZERO, pointsEarned: 19999 }, {}).length, 0);
     assert.deepEqual(arrivals({ ...ZERO, pointsEarned: 20000 }, {}), ["tamrang"]);
     assert.deepEqual(got.sort(), ["bakjwigwi", "haetae", "seolnyeo"]);
-    assert.equal(arrivals({ ...ZERO, dawnAttend: 6 }, {}).length, 0);
+    assert.equal(arrivals({ ...ZERO, dawnAttend: 2 }, {}).length, 0);
   });
 
   it("두억시니는 도깨비 5단계 · 호리병귀는 도감 10종(이어서 찾아오는 것까지)", () => {
