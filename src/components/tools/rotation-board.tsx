@@ -31,7 +31,6 @@ import {
   parseDealerLines,
   parseTableLabels,
   planDealers,
-  type DealerStatus,
   type RotationAction,
   type RotationStateView,
   blockedOf,
@@ -66,26 +65,6 @@ const POLL_MS = 2000;
 /** 시간표에서 기본으로 보여 줄 칸 수(바로 앞 칸 1개 + 지금 + 다음 …) */
 const VISIBLE_COLS = 12;
 const SETUP_CHOICES = [0, 15, 30, 45, 60] as const;
-
-const CHIP: Record<DealerStatus, string> = {
-  WAIT: "bg-zinc-600 text-white",
-  IN: "bg-emerald-500 text-black",
-  OFF: "bg-rose-500 text-white",
-  LEFT: "bg-slate-500 text-white",
-};
-
-function StatusChip({ status }: { status: DealerStatus }) {
-  return (
-    <span
-      className={cn(
-        "rounded px-1 py-0.5 text-[10px] font-black whitespace-nowrap",
-        CHIP[status],
-      )}
-    >
-      {STATUS_LABEL[status]}
-    </span>
-  );
-}
 
 /** "2026-10-13" 다음 날 */
 function nextDate(value: string) {
@@ -1090,6 +1069,16 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const quickPicked = state.dealers.find((d) => d.id === quickId) ?? null;
   const pickSlot = plan && dealerPick ? (plan.slots[dealerPick.slot] ?? null) : null;
   const pickCur = pickSlot && dealerPick ? pickSlot.seats.indexOf(dealerPick.dealerId) : -1;
+  // 딜러별 표 줄: 휴무 · 스태프 빼고 모두(출근 전 · 시간표에 아직 없는 딜러도 · 출근 버튼이 여기 있어서), 지금 앉은 테이블 순 → 휴식 → 나머지
+  const dealerRowsList = (() => {
+    if (!plan) return [];
+    const at = Math.max(0, current);
+    const key = (t: number | null) => (t == null ? 2000 : t === 0 ? 1000 : t);
+    return state.dealers
+      .filter((d) => d.status !== "OFF" && !d.staff)
+      .map((d) => ({ d, sched: dealerSchedule(plan, d.id) }))
+      .sort((a, b) => key(a.sched[at]?.table ?? null) - key(b.sched[at]?.table ?? null));
+  })();
   // 시간표 본문: 운영 탭에 바로 보이고, ⛶ 크게 보기 창에서도 같은 것을 씀
   const gridBody = !plan ? null : (
     view === "table" ? (
@@ -1408,15 +1397,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
             </tr>
           </thead>
           <tbody>
-            {(() => {
-              const at = Math.max(0, current);
-              const list = state.dealers
-                .filter((d) => d.status !== "OFF" && !d.staff)
-                .map((d) => ({ d, sched: dealerSchedule(plan, d.id) }))
-                .filter(({ sched }) => sched.some((r) => r.table != null));
-              const key = (t: number | null) => (t == null ? 2000 : t === 0 ? 1000 : t);
-              list.sort((a, b) => key(a.sched[at]?.table ?? null) - key(b.sched[at]?.table ?? null));
-              return list.map(({ d: dealer, sched }) => {
+            {dealerRowsList.map(({ d: dealer, sched }) => {
                 const focus = quickId ? (quickId === dealer.id ? "on" : "off") : null;
                 return (
                   <tr key={dealer.id} data-schedule={dealer.name} className={cn("border-t-2 border-white/10", focus === "off" && "opacity-30")}>
@@ -1426,11 +1407,35 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         data-row-dealer={dealer.name}
                         onClick={() => setQuickId(quickId === dealer.id ? null : dealer.id)}
                         title="이 딜러만 보기"
-                        className="flex min-h-11 items-center gap-1.5 text-base font-black"
+                        className="inline-flex min-h-11 items-center gap-1.5 align-middle text-base font-black"
                       >
                         {dealer.name}
-                        {dealer.status !== "IN" ? <StatusChip status={dealer.status} /> : null}
                       </button>
+                      {/* 출근 · 퇴근을 이름 옆에서 바로(예전 출근 · 퇴근 줄 대신) */}
+                      {dealer.status === "IN" ? (
+                        <button
+                          type="button"
+                          data-row-out={dealer.name}
+                          disabled={busy}
+                          onClick={() => void quickLeave(dealer)}
+                          className="ml-1.5 min-h-8 rounded-md border border-white/20 px-1.5 text-[11px] font-bold text-zinc-300 hover:bg-white/10"
+                        >
+                          퇴근
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          data-row-in={dealer.name}
+                          disabled={busy}
+                          onClick={() => void quickCheckIn(dealer)}
+                          className={cn(
+                            "ml-1.5 min-h-8 rounded-md px-1.5 text-[11px] font-black",
+                            dealer.status === "LEFT" ? "border border-rose-400/60 text-rose-200" : "bg-emerald-500 text-black",
+                          )}
+                        >
+                          {dealer.status === "LEFT" ? "다시 출근" : "출근"}
+                        </button>
+                      )}
                     </th>
                     {rows.map(({ slot, index }) => {
                       const t = sched[index]?.table ?? null;
@@ -1473,8 +1478,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                     })}
                   </tr>
                 );
-              });
-            })()}
+              })}
           </tbody>
         </table>
       </div>
@@ -2285,7 +2289,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ) : null}
 
           {/* 출근 · 퇴근: 딜러 탭에 안 가고 이름을 눌러 바로 */}
-          {plan && quickAll.length ? (
+          {/* 딜러별 표에서는 이름 옆에 출근 · 퇴근이 있어서 이 줄은 테이블별 보기에서만 */}
+          {plan && quickAll.length && view !== "dealer" ? (
               <section aria-label="출근 · 퇴근" data-quick-attend className="grid gap-1.5 rounded-2xl border border-white/15 bg-zinc-950 p-2">
                 <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
                   <span className="shrink-0 text-sm font-black text-zinc-200">👥 출근 · 퇴근</span>
