@@ -199,6 +199,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     setOrigin(window.location.origin);
   }, []);
   const [gameDialog, setGameDialog] = useState<GameDialog | null>(null);
+  /** 전체 시간표: 테이블 번호 · 못 넣는 딜러 · 삭제 버튼 보이기(평소엔 숨겨 깔끔하게) */
+  const [tableTools, setTableTools] = useState(false);
   /** 지난 게임 정리 창: 고른 게임 id(null이면 닫힘) */
   const [cleanup, setCleanup] = useState<string[] | null>(null);
   // 화면 탭: 운영(시간표) · 딜러 · 공유 · 설정. 딜러가 없으면 딜러 탭부터
@@ -2027,13 +2029,54 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                       />
                       지난 칸 포함
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setGridOpen(false)}
-                      className="ml-auto min-h-10 rounded-lg border border-white/30 px-4 text-sm font-black"
-                    >
-                      닫기 ✕
-                    </button>
+                    {view === "table" ? (
+                      <button
+                        type="button"
+                        data-grid-table-tools
+                        aria-pressed={tableTools}
+                        onClick={() => setTableTools((v) => !v)}
+                        className={cn("min-h-9 rounded-full border px-3 text-xs font-bold", tableTools ? "border-sky-300 bg-sky-900 text-white" : "border-white/25 text-zinc-300")}
+                      >
+                        🛠 테이블 관리
+                      </button>
+                    ) : null}
+                    {/* 색 안내 */}
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-300">
+                      <span className="rounded bg-emerald-700 px-1.5 text-white">지금</span>
+                      <span className="rounded bg-amber-500 px-1.5 text-black">다음 교대</span>
+                      <span className="rounded bg-rose-700 px-1.5 text-white">퇴근 · 빔</span>
+                    </span>
+                    <span className="ml-auto flex gap-1.5">
+                      {canUndo ? (
+                        <button
+                          type="button"
+                          data-grid-undo
+                          disabled={busy}
+                          onClick={() => void undoAuto()}
+                          title="방금 누른 Auto 전 시간표로 되돌립니다"
+                          className="min-h-10 rounded-lg border-2 border-white/40 px-3 text-sm font-black text-zinc-100 disabled:opacity-40"
+                        >
+                          ↩ 되돌리기
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        data-grid-auto
+                        disabled={busy || state.dealers.length === 0}
+                        onClick={runAuto}
+                        title="지금 칸 빈자리를 채우고, 다음 칸부터 딜 · 휴식 시간을 맞춰 자동으로 다시 짭니다"
+                        className="min-h-10 rounded-lg bg-amber-400 px-5 text-base font-black text-black disabled:opacity-40"
+                      >
+                        {manual ? "Auto 채우기" : "Auto"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGridOpen(false)}
+                        className="min-h-10 rounded-lg border border-white/30 px-4 text-sm font-black"
+                      >
+                        닫기 ✕
+                      </button>
+                    </span>
                   </div>
                   {view === "table" ? (
                     <div className="max-h-[80dvh] overflow-auto rounded-xl border border-white/15">
@@ -2126,7 +2169,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                         : "컨바인"}
                                     </button>
                                   </span>
-                                  <span className="mt-0.5 flex items-center gap-0.5">
+                                  <span className={cn("mt-0.5 items-center gap-0.5", tableTools ? "flex" : "hidden")}>
                                     <button
                                       type="button"
                                       disabled={busy}
@@ -2252,23 +2295,26 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                             "ring-2 ring-amber-300",
                                         )}
                                       >
+                                        {/* 테이블 · 시간은 왼쪽 · 위 머리에 있어 칸에는 꼭 필요할 때만(고정 · 늦은 오픈 · 퇴근) */}
+                                        {slot.fixed?.includes(t) || opensInSlot(t, slot.at) != null || goneHere ? (
+                                          <span
+                                            className={cn(
+                                              "text-[10px] font-black",
+                                              goneHere
+                                                ? "text-white"
+                                                : "text-emerald-300",
+                                            )}
+                                          >
+                                            {slot.fixed?.includes(t) ? "📌 고정 " : ""}
+                                            {opensInSlot(t, slot.at) != null ? `${formatClock(opensInSlot(t, slot.at) as number)}~ ` : ""}
+                                            {goneHere
+                                              ? goneLabel(id as string)
+                                              : ""}
+                                          </span>
+                                        ) : null}
                                         <span
                                           className={cn(
-                                            "text-[10px] font-black",
-                                            goneHere
-                                              ? "text-white"
-                                              : "text-emerald-300",
-                                          )}
-                                        >
-                                          {slot.fixed?.includes(t) ? "📌 " : ""}
-                                          {tableTag(label)} · {opensInSlot(t, slot.at) != null ? `${formatClock(opensInSlot(t, slot.at) as number)}~` : time}
-                                          {goneHere
-                                            ? ` · ${goneLabel(id as string)}`
-                                            : ""}
-                                        </span>
-                                        <span
-                                          className={cn(
-                                            "truncate text-base font-black",
+                                            "truncate text-lg font-black",
                                             id ? "text-white" : "text-rose-300",
                                           )}
                                         >
@@ -2293,20 +2339,23 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                                   index < current && "opacity-50",
                                 )}
                               >
-                                {slot.rest.length
-                                  ? slot.rest.map((id, i) => (
+                                {slot.rest.length ? (
+                                  <span className="flex flex-wrap gap-1">
+                                    {slot.rest.map((id) => (
                                       <span
                                         key={id}
                                         className={cn(
-                                          isGone(id, index) &&
-                                            "rounded bg-rose-700 px-1 text-white",
+                                          "rounded-md px-1.5 py-0.5 text-sm font-black",
+                                          isGone(id, index) ? "bg-rose-700 text-white" : "bg-amber-500/20 text-amber-100",
                                         )}
                                       >
-                                        {i ? ", " : ""}
                                         {name(id)}
                                       </span>
-                                    ))
-                                  : "—"}
+                                    ))}
+                                  </span>
+                                ) : (
+                                  "—"
+                                )}
                               </td>
                             ))}
                           </tr>
