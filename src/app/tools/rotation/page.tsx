@@ -27,7 +27,9 @@ export default async function RotationPage({ searchParams }: { searchParams: Pro
             ← 매장 관리
           </Link>
           <h1 className="text-2xl font-black text-white">딜러 로테이션</h1>
-          <p className="text-xs text-zinc-400">테이블 · 시작 시각 · 딜러 명단만 넣으면 교대표가 자동으로 만들어져요. 출근 · 퇴근을 누르면 알아서 다시 맞춰요.</p>
+          {initial.plan ? null : (
+            <p className="text-xs text-zinc-400">테이블 · 시작 시각 · 딜러 명단만 넣으면 교대표가 자동으로 만들어져요. 출근 · 퇴근을 누르면 알아서 다시 맞춰요.</p>
+          )}
         </div>
       </header>
       <RotationBoard initial={initial} />
