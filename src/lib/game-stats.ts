@@ -4,7 +4,6 @@ import { todayKstDate } from "@/lib/dates";
 /**
  * 게임 전적 · 랭킹(오목 · 윷놀이 · 체스 공통). 친구 대전 결과만(서버가 판정한 판).
  * 전적 · 랭킹 공개(GAME_STATS_PUBLIC=0이면 숨김) · 이긴 보상 켜짐(GAME_REWARDS=0이면 끔). 기권은 그냥 패.
- * 마스터는 /games/stats에서 미리 볼 수 있음(어디에도 링크 없음).
  */
 export type GameKind = "omok" | "yut" | "chess";
 export const GAME_LABEL: Record<GameKind, string> = {

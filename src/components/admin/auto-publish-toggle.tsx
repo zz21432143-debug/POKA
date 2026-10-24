@@ -18,7 +18,7 @@ export function AutoPublishToggle({ initialOn }: { initialOn: boolean }) {
       <span className="min-w-0 flex-1">
         <b className={on ? "text-emerald-300" : "text-zinc-300"}>{on ? "🤖 자동 발행 켜짐" : "자동 발행 꺼짐"}</b>
         <span className="block text-xs text-muted-foreground">
-          매일 낮 12시 · 밤 9시(5분쯤 뒤)에 그날 요일 계획 글 하나씩 POKA 계정으로 올려요. 사진 · 직접 그리는 핸드 · 〔 〕가 남은 글 · 「빼기」한 글은 건너뛰어요.
+          매일 낮 12시 · 밤 9시(5분쯤 뒤)에 그날 요일 계획 글 하나씩 POKA 계정으로 올려요. 그날 올릴 글이 없으면 「추가」 글(공지 · 이용 규칙 제외)을 순서대로 올려요. 사진 · 직접 그리는 핸드 · 〔 〕가 남은 글 · 「빼기」한 글은 건너뛰어요.
         </span>
       </span>
       <button

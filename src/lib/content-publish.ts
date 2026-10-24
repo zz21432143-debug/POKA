@@ -122,6 +122,14 @@ export async function loadPublishItems(user: { id: string }): Promise<PublishIte
   return items;
 }
 
+/**
+ * 그 요일 계획 글이 없거나 다 올렸을 때 대신 올릴 「추가」 글(순서대로).
+ * 공지(오픈 · 필독 안내)와 manualOnly 글은 올릴 때를 운영자가 고르므로 뺍니다.
+ */
+export const AUTO_QUEUE_IDS = new Set(
+  PLAN.filter((item) => item.day === "추가" && item.boardType !== "NOTICE" && !item.manualOnly).map((item) => item.id),
+);
+
 /** 자동 발행할 수 있는 글인지(사진 · 직접 그리는 핸드 · 〔 〕 · 빈 본문 · 빼기 · 이미 올림 제외) */
 export function autoPublishable(item: PublishItem) {
   return !item.publishedId && !item.skipped && !item.photos && !item.manualHand && item.content.trim() !== "" && !`${item.title}${item.content}`.includes(PLACEHOLDER);

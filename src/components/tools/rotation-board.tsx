@@ -2001,9 +2001,10 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                   data-grid-modal
                   className="grid max-h-[94dvh] w-[min(98vw,1600px)] gap-2 overflow-hidden rounded-2xl border border-white/20 bg-black p-3"
                 >
+                  {/* 휴대폰은 두 줄: 제목 · 보기 · 닫기 / 지난 칸 · 테이블 관리 · 되돌리기 · Auto */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-black">📅 전체 시간표</h2>
-                    <div className="flex rounded-full border border-white/20 p-0.5">
+                    <h2 className="text-lg font-black max-sm:order-1 max-sm:text-base">📅 <span className="max-sm:hidden">전체 </span>시간표</h2>
+                    <div className="flex rounded-full border border-white/20 p-0.5 max-sm:order-2">
                       {(["table", "dealer"] as const).map((key) => (
                         <button
                           key={key}
@@ -2020,7 +2021,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         </button>
                       ))}
                     </div>
-                    <label className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-300">
+                    <label className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-300 max-sm:order-4">
                       <input
                         type="checkbox"
                         checked={showAll}
@@ -2035,18 +2036,18 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         data-grid-table-tools
                         aria-pressed={tableTools}
                         onClick={() => setTableTools((v) => !v)}
-                        className={cn("min-h-9 rounded-full border px-3 text-xs font-bold", tableTools ? "border-sky-300 bg-sky-900 text-white" : "border-white/25 text-zinc-300")}
+                        className={cn("min-h-9 rounded-full border px-3 text-xs font-bold max-sm:order-5 max-sm:px-2.5", tableTools ? "border-sky-300 bg-sky-900 text-white" : "border-white/25 text-zinc-300")}
                       >
-                        🛠 테이블 관리
+                        🛠 <span className="max-sm:hidden">테이블 </span>관리
                       </button>
                     ) : null}
                     {/* 색 안내 */}
-                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-300">
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-300 max-sm:hidden">
                       <span className="rounded bg-emerald-700 px-1.5 text-white">지금</span>
                       <span className="rounded bg-amber-500 px-1.5 text-black">다음 교대</span>
                       <span className="rounded bg-rose-700 px-1.5 text-white">퇴근 · 빔</span>
                     </span>
-                    <span className="ml-auto flex gap-1.5">
+                    <span className="ml-auto flex gap-1.5 max-sm:order-6">
                       {canUndo ? (
                         <button
                           type="button"
@@ -2054,7 +2055,7 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                           disabled={busy}
                           onClick={() => void undoAuto()}
                           title="방금 누른 Auto 전 시간표로 되돌립니다"
-                          className="min-h-10 rounded-lg border-2 border-white/40 px-3 text-sm font-black text-zinc-100 disabled:opacity-40"
+                          className="min-h-10 rounded-lg border-2 border-white/40 px-3 text-sm font-black text-zinc-100 disabled:opacity-40 max-sm:px-2"
                         >
                           ↩ 되돌리기
                         </button>
@@ -2065,18 +2066,19 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
                         disabled={busy || state.dealers.length === 0}
                         onClick={runAuto}
                         title="지금 칸 빈자리를 채우고, 다음 칸부터 딜 · 휴식 시간을 맞춰 자동으로 다시 짭니다"
-                        className="min-h-10 rounded-lg bg-amber-400 px-5 text-base font-black text-black disabled:opacity-40"
+                        className="min-h-10 rounded-lg bg-amber-400 px-5 text-base font-black text-black disabled:opacity-40 max-sm:px-4"
                       >
                         {manual ? "Auto 채우기" : "Auto"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setGridOpen(false)}
-                        className="min-h-10 rounded-lg border border-white/30 px-4 text-sm font-black"
-                      >
-                        닫기 ✕
-                      </button>
                     </span>
+                    <button
+                      type="button"
+                      data-grid-close
+                      onClick={() => setGridOpen(false)}
+                      className="min-h-10 rounded-lg border border-white/30 px-4 text-sm font-black max-sm:order-3 max-sm:ml-auto max-sm:px-3"
+                    >
+                      닫기 ✕
+                    </button>
                   </div>
                   {view === "table" ? (
                     <div className="max-h-[80dvh] overflow-auto rounded-xl border border-white/15">

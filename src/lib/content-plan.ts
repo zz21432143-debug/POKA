@@ -1,6 +1,7 @@
 import type { BoardType } from "@/generated/prisma/enums";
 import { HAND_PLAN } from "@/lib/content-plan-hands";
 import { HAND_PLAN_2 } from "@/lib/content-plan-hands-2";
+import { EXTRA_PLAN_3 } from "@/lib/content-plan-extra-3";
 import type { PollChoice as PollChoiceId } from "@/lib/poll";
 import type { HandReviewData } from "@/lib/hand-review";
 
@@ -29,6 +30,8 @@ export type PlanItem = {
   photos?: boolean;
   /** 직접 핸드를 그려야 하는 글(실제 대회 핸드) */
   manualHand?: boolean;
+  /** 자동 발행 대기열에 넣지 않음(운영자가 직접 올릴 때를 고르는 글) */
+  manualOnly?: boolean;
 };
 
 export const PLACEHOLDER = "〔";
@@ -1067,6 +1070,7 @@ TV에서 한 번 화면을 눌러 줘야 소리가 켜집니다(브라우저 정
     boardType: "FREE",
     boardLabel: "자유게시판",
     title: "자유게시판 이용 규칙(꼭 읽어 주세요)",
+    manualOnly: true,
     content: `자유게시판은 딜러 · 홀덤인 누구나 편하게 이야기하는 곳이에요. 모두가 기분 좋게 쓰도록 몇 가지만 지켜 주세요.
 
 ━━━━━━━━━━
@@ -1094,8 +1098,8 @@ TV에서 한 번 화면을 눌러 줘야 소리가 켜집니다(브라우저 정
   },
 ];
 
-/** 추가 글 + 해설 핸드리뷰 4편 */
-export const EXTRA_PLAN: PlanItem[] = [...BASE_EXTRA_PLAN, ...HAND_PLAN, ...HAND_PLAN_2];
+/** 추가 글 + 해설 핸드리뷰 + 자동 발행 대기 글 */
+export const EXTRA_PLAN: PlanItem[] = [...BASE_EXTRA_PLAN, ...HAND_PLAN, ...HAND_PLAN_2, ...EXTRA_PLAN_3];
 
 export type ScheduleRow = {
   id: string;
