@@ -6,6 +6,7 @@ import { BUILD_ID } from "@/lib/build-id";
 import { unlockBoardSound } from "@/lib/board-sound";
 import type { SharedBoard } from "@/lib/game-board-server";
 import { GameBoardScreen, useServerNow } from "@/components/tools/game-board-screen";
+import { FullscreenButton, VolumeControl, useLockPageScroll } from "@/components/tools/board-tv-controls";
 
 const POLL_MS = 3000;
 const noop = () => () => {};
@@ -18,6 +19,8 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
   const [sound, setSound] = useState(false);
   const inBrowser = useSyncExternalStore(noop, () => true, () => false);
   const now = useServerNow(initial.serverNow, offset);
+  // 화면 가득 띄우는 동안 뒤 페이지 스크롤바가 안 보이게
+  useLockPageScroll(inBrowser);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 내 시계와 서버 시각 차이는 브라우저에서만 잴 수 있음
@@ -80,7 +83,13 @@ export function GameBoardViewer({ token, initial }: { token: string; initial: Sh
             <button type="button" onClick={() => void start()} className="absolute right-2 bottom-2 rounded-lg bg-amber-400/90 px-2.5 py-1 text-[11px] font-black text-black shadow-lg sm:right-3 sm:bottom-3 sm:px-4 sm:py-2 sm:text-sm">
               🔊 전체 화면 · 알림음
             </button>
-          ) : null}
+          ) : (
+            // 소리를 켠 뒤: 볼륨 · 전체 화면(평소엔 흐리게, 마우스를 올리면 또렷하게)
+            <div data-board-tv-bar className="absolute right-3 bottom-3 flex flex-wrap items-center justify-end gap-2 opacity-30 transition-opacity hover:opacity-100 focus-within:opacity-100">
+              <VolumeControl />
+              <FullscreenButton />
+            </div>
+          )}
         </>
       )}
     </div>,

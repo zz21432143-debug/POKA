@@ -7,6 +7,33 @@
 
 let audio: AudioContext | null = null;
 let out: AudioNode | null = null;
+let master: GainNode | null = null;
+
+/** 현황판 소리 크기(0~1) — 기기마다 기억(TV마다 스피커가 달라서) */
+const VOLUME_KEY = "poka-board-volume";
+let volume = 1;
+try {
+  if (typeof window !== "undefined") {
+    const saved = Number(window.localStorage.getItem(VOLUME_KEY));
+    if (window.localStorage.getItem(VOLUME_KEY) != null && Number.isFinite(saved)) volume = Math.max(0, Math.min(1, saved));
+  }
+} catch {
+  /* 저장소를 못 쓰면 기본 크기 */
+}
+
+export function getBoardVolume() {
+  return volume;
+}
+
+export function setBoardVolume(next: number) {
+  volume = Math.max(0, Math.min(1, next));
+  if (master) master.gain.value = volume;
+  try {
+    window.localStorage.setItem(VOLUME_KEY, String(volume));
+  } catch {
+    /* 무시 */
+  }
+}
 
 function context() {
   if (typeof window === "undefined") return null;
@@ -18,8 +45,8 @@ function context() {
     const comp = audio.createDynamicsCompressor();
     comp.threshold.value = -18;
     comp.ratio.value = 6;
-    const master = audio.createGain();
-    master.gain.value = 1;
+    master = audio.createGain();
+    master.gain.value = volume;
     comp.connect(master).connect(audio.destination);
     out = comp;
   }
@@ -55,6 +82,7 @@ function tone(freq: number, at: number, length: number, volume = 0.7, type: Osci
 }
 
 function say(text: string, delay = 0) {
+  if (volume <= 0) return;
   try {
     const synth = window.speechSynthesis;
     if (!synth) return;
@@ -62,7 +90,7 @@ function say(text: string, delay = 0) {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
       u.rate = 0.95;
-      u.volume = 1;
+      u.volume = volume;
       synth.cancel();
       synth.speak(u);
     }, delay);

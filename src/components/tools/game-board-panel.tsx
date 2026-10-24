@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { FullscreenButton, VolumeControl, useLockPageScroll } from "@/components/tools/board-tv-controls";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
 import { drawChampionImage } from "@/lib/champion-image";
@@ -261,6 +262,9 @@ export function GameBoardPanel({
     const json = await call({ action: "share", id: board.id, on }).catch((e: Error) => (setError(e.message), null));
     if (json?.board) take(json.board);
   }
+
+  // TV 화면이 떠 있으면 뒤 페이지 스크롤바가 안 보이게
+  useLockPageScroll(tv);
 
   // TV 화면: 스페이스 = 시작/멈춤, ← → = 레벨, Esc = 닫기
   const running = draft ? draft.clock.runningSince != null : false;
@@ -581,7 +585,9 @@ export function GameBoardPanel({
                       ⛶ 전체 화면 · 🔊 알림음 켜기
                     </button>
                   ) : null}
-                  <div className="absolute right-3 bottom-3 flex gap-2 opacity-30 transition-opacity hover:opacity-100 focus-within:opacity-100">
+                  <div data-board-tv-bar className="absolute right-3 bottom-3 flex flex-wrap items-center justify-end gap-2 opacity-30 transition-opacity hover:opacity-100 focus-within:opacity-100">
+                    <VolumeControl />
+                    <FullscreenButton />
                     <button type="button" onClick={() => void clock({ op: "prev" })} className="rounded-lg bg-white/15 px-3 py-2 text-sm font-black">
                       ◀ 이전
                     </button>
