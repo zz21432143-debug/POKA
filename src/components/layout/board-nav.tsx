@@ -177,6 +177,7 @@ export function BoardNav({
     );
   }
 
+  const anyGroupOpen = groups.some((group) => sidebarGroupActive(pathname, group, hint));
   return (
     <nav id={id} aria-label="전체 게시판" className="flex flex-col">
       <div className={inDrawer ? "pt-1" : "px-3 pt-3"}>
@@ -216,6 +217,8 @@ export function BoardNav({
       >
         {groups.map((group, index) => {
           const open = sidebarGroupActive(pathname, group, hint);
+          // PC 왼쪽 메뉴: 어느 묶음 안이면 그 묶음 세부 메뉴만(묶음 바꾸기는 위 메뉴와 같아서 겹치지 않게). 홈 · 휴대폰 서랍은 전체
+          if (!inDrawer && anyGroupOpen && !open) return null;
           const hub = group.hub ?? group.items[0].href;
           const hubActive = pathname === hub;
           // 매장 관리는 금색으로 돋보이게(위 메뉴와 같은 느낌)

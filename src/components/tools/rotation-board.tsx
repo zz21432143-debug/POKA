@@ -203,6 +203,8 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
   const [tableTools, setTableTools] = useState(false);
   /** 운영 화면 출근 · 퇴근 줄에서 누른 딜러 */
   const [quickId, setQuickId] = useState<string | null>(null);
+  /** 출근 · 퇴근 줄: 출근 전 딜러만 보기(아침 출근 체크용) */
+  const [quickWaitOnly, setQuickWaitOnly] = useState(false);
   /** 지난 게임 정리 창: 고른 게임 id(null이면 닫힘) */
   const [cleanup, setCleanup] = useState<string[] | null>(null);
   // 화면 탭: 운영(시간표) · 딜러 · 공유 · 설정. 딜러가 없으면 딜러 탭부터
@@ -1073,7 +1075,9 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
     return { text: "대기", tone: "border-white/25 bg-zinc-900 text-zinc-300" };
   };
   const order = { WAIT: 0, IN: 1, LEFT: 2, OFF: 3 } as const;
-  const quickList = state.dealers.filter((d) => d.status !== "OFF").sort((a, b) => order[a.status] - order[b.status]);
+  const quickAll = state.dealers.filter((d) => d.status !== "OFF").sort((a, b) => order[a.status] - order[b.status]);
+  const quickWaitCount = quickAll.filter((d) => d.status === "WAIT").length;
+  const quickList = quickWaitOnly && quickWaitCount ? quickAll.filter((d) => d.status === "WAIT") : quickAll;
   const quickPicked = state.dealers.find((d) => d.id === quickId) ?? null;
   // 시간표 본문: 운영 탭에 바로 보이고, ⛶ 크게 보기 창에서도 같은 것을 씀
   const gridBody = !plan ? null : (
@@ -2215,10 +2219,24 @@ export function RotationBoard({ initial }: { initial: RotationStateView }) {
           ) : null}
 
           {/* 출근 · 퇴근: 딜러 탭에 안 가고 이름을 눌러 바로 */}
-          {plan && quickList.length ? (
+          {plan && quickAll.length ? (
               <section aria-label="출근 · 퇴근" data-quick-attend className="grid gap-1.5 rounded-2xl border border-white/15 bg-zinc-950 p-2">
                 <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
                   <span className="shrink-0 text-sm font-black text-zinc-200">👥 출근 · 퇴근</span>
+                  {quickWaitCount ? (
+                    <button
+                      type="button"
+                      data-quick-wait-only
+                      aria-pressed={quickWaitOnly}
+                      onClick={() => setQuickWaitOnly((v) => !v)}
+                      className={cn(
+                        "min-h-10 shrink-0 rounded-lg border px-2 text-xs font-black",
+                        quickWaitOnly ? "border-white bg-white text-black" : "border-white/30 text-zinc-200",
+                      )}
+                    >
+                      {quickWaitOnly ? "모두 보기" : `출근 전 ${quickWaitCount}명만`}
+                    </button>
+                  ) : null}
                   {quickList.map((dealer) => {
                     const st = quickStatus(dealer);
                     return (

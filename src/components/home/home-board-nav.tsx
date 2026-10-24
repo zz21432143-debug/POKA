@@ -48,9 +48,8 @@ export async function HomeBoardNav() {
                 href={b.href}
                 className={cn(
                   "touch-target flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border px-1 text-[12.5px] font-black sm:w-auto sm:px-3.5 sm:text-sm",
-                  "tda" in b && b.tda
-                    ? "border-[#5aa9ff]/80 bg-[#123a66] text-white"
-                    : "store" in b && b.store
+                  // 색은 브랜드 3색(검정 · 금 · 적)만: 매장 관리 · 빈자리만 금색으로 돋보이게(예전 TDA 파란색은 빼서 통일)
+                  "store" in b && b.store
                       ? "border-[#e7c98a]/80 bg-[#c9a25c]/20 text-[#f3d9a4]"
                       : "hot" in b && b.hot
                         ? "border-[#ffcf4a]/80 bg-[#3a2a0c] text-[#ffe08a]"

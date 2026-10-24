@@ -3,7 +3,6 @@ import { BoardNav } from "@/components/layout/board-nav";
 import { SiteFooter, SiteFooterFallback } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
-import { SiteNoticeBanner } from "@/components/layout/site-notice-banner";
 import { SidebarSponsorCard } from "@/components/ads/sidebar-sponsor-card";
 import { FeedAdRow } from "@/components/ads/feed-ad-row";
 import { GoogleAdUnit } from "@/components/ads/google-ad-unit";
@@ -66,15 +65,14 @@ async function ConnectedNickNotice() {
   return <NickNotice from={notice.from} to={notice.to} reason={notice.reason} />;
 }
 
-/** PC · 태블릿 공지 띠(휴대폰은 위 전광판에 섞여 나와서 숨김) */
+/**
+ * 예전 PC 공지 띠: 위 전광판과 같은 공지가 두 번 나와서(맨 위 줄 3개 → 2개) 이제 전광판에만 섞어 보여 줌.
+ * 공지가 하나도 없을 때만 PC에 앱 받기 띠를 둠.
+ */
 async function ConnectedNotice() {
   const { banner, recent } = await noticeStrip();
   if (!banner && !recent.length) return <div className="hidden sm:block"><InstallPwaButton variant="strip" /></div>;
-  return (
-    <div className="hidden sm:block">
-      <SiteNoticeBanner text={banner} items={recent} leading={<InstallPwaButton variant="chip" />} />
-    </div>
-  );
+  return null;
 }
 
 /** 관리자가 끈 광고 구좌를 광고 칸에 알려 줌 */

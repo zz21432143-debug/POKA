@@ -29,7 +29,7 @@ export async function HomeSummary() {
       : { href: "/boards/jobs/available", icon: BellIcon, label: "빈자리 알림", value: "🔔 받기" as number | string, tone: "text-[15px] whitespace-nowrap text-[#ffcf4a]" },
     { href: "/boards/jobs", icon: BriefcaseIcon, label: "모집 중", value: counts.jobs, tone: "text-xl text-[#f3d9a4]" },
     { href: "/boards/jobs/urgent", icon: FlameIcon, label: "급구", value: counts.urgent, tone: "text-xl text-rose-300" },
-    { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-xl text-sky-200" },
+    { href: "/boards/schedule", icon: CalendarDaysIcon, label: "예정 대회", value: counts.events, tone: "text-xl text-[#f3d9a4]" },
   ];
   return (
     <section aria-label="오늘 요약" className="lounge-card grid content-center gap-2 rounded-[1.35rem] p-2 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-2.5 lg:grid-cols-1">
@@ -49,8 +49,8 @@ export async function HomeSummary() {
       <div className="grid min-w-0 gap-0.5">
       {counts.nextEvent ? (
         <Link href={`/posts/${counts.nextEvent.id}`} className="touch-target flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-2 hover:bg-black/35">
-          <CalendarDaysIcon className="size-4 shrink-0 text-sky-300" />
-          <span className="shrink-0 text-xs font-black text-sky-300">다음 대회</span>
+          <CalendarDaysIcon className="size-4 shrink-0 text-[#c9a25c]" />
+          <span className="shrink-0 text-xs font-black text-[#c9a25c]">다음 대회</span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#ece3d3]">{counts.nextEvent.title}</span>
           <span className="shrink-0 text-xs font-bold text-[#a89880] tabular-nums">{shortDate(counts.nextEvent.eventDate, counts.nextEvent.eventEndDate)}</span>
         </Link>

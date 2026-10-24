@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "@/components/ui/link";
 import { ChevronsUpIcon } from "lucide-react";
 
@@ -22,27 +22,17 @@ export type TickerItem = {
 const isHonorNews = (message: string) => /칭호를 받았습니다/.test(message);
 const HONOR_CLASS = "font-black text-[#f5d76e] drop-shadow-[0_0_6px_rgba(245,215,110,0.55)] md:text-base";
 
-/** 휴대폰(640px 아래)인지 — 휴대폰은 공지 띠를 따로 두지 않고 전광판에 섞어 보여 줌 */
-function useNarrow() {
-  return useSyncExternalStore(
-    (cb) => {
-      const m = window.matchMedia("(max-width: 639px)");
-      m.addEventListener("change", cb);
-      return () => m.removeEventListener("change", cb);
-    },
-    () => window.matchMedia("(max-width: 639px)").matches,
-    () => false,
-  );
-}
 
-export function LedTicker({ items, notices = [], leading = null }: { items: TickerItem[]; /** 공지(휴대폰에서만 소식 사이사이에) */ notices?: { text: string; href?: string }[]; /** 휴대폰 왼쪽(앱 받기) */ leading?: ReactNode }) {
-  const narrow = useNarrow();
+export function LedTicker({ items, notices = [], leading = null }: { items: TickerItem[]; /** 공지(소식 사이사이에 · PC도 따로 띠를 두지 않고 여기 섞음) */ notices?: { text: string; href?: string }[]; /** 휴대폰 왼쪽(앱 받기) */ leading?: ReactNode }) {
   const news: TickerItem[] =
     items.length > 0
       ? items
       : [{ id: "empty", message: "POKA 소식 — 글 작성 · 레벨업 · 마크 구매가 여기 나옵니다", href: "/" }];
-  // 휴대폰: 공지를 소식 두 개마다 하나씩 끼움(맨 앞은 공지)
-  const notes: TickerItem[] = narrow ? notices.map((n, k) => ({ id: `notice-${k}`, message: `📢 ${n.text}`, href: n.href ?? "/" })) : [];
+  // 공지를 소식 두 개마다 하나씩 끼움(맨 앞은 공지). 이미 소식 줄에 같은 공지가 있으면 빼서 두 번 안 나오게
+  const known = new Set(news.map((it) => it.href));
+  const notes: TickerItem[] = notices
+    .filter((n) => !n.href || !known.has(n.href))
+    .map((n, k) => ({ id: `notice-${k}`, message: `📢 ${n.text}`, href: n.href ?? "/" }));
   const source: TickerItem[] = notes.length
     ? news.reduce<TickerItem[]>((out, it, k) => (k % 2 === 0 ? [...out, notes[(k / 2) % notes.length], it] : [...out, it]), [])
     : news;
