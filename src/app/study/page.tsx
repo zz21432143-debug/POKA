@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 
 const CARDS = [
   { href: "/study/glossary", icon: BookOpenIcon, title: "홀덤 용어 사전", body: `넛 · 사이드팟 · c벳 · 3벳 · 리바인 · ICM · SPR … ㄱ~ㅎ ${GLOSSARY.length}개를 한 줄로. 자세한 가이드로 바로 이어져요.`, tag: "NEW" },
+  { href: "/study/cheatsheet", icon: ListOrderedIcon, title: "홀덤 참고 표(인쇄용)", body: "족보 확률 · 아웃츠별 완성 확률 · 벳 크기별 필요한 승률 · 프리플랍 맞대결을 한 장에. 인쇄 · PDF 저장.", tag: "NEW" },
   { href: "/study/push-fold-quiz", icon: TargetIcon, title: "푸시폴드 퀴즈", body: "5~15BB, 이 자리 · 이 패면 올인? 폴드? GTO 차트로 바로 채점 · 연속 정답 기록.", tag: "NEW" },
   { href: "/info/push-fold", icon: Grid3x3Icon, title: "GTO 푸시폴드 차트", body: "6인 · 9인 포지션별 올인 / 콜 범위, 헤즈업, 버블 · 파이널(ICM)까지.", tag: "인기" },
   { href: "/community/equity", icon: PercentIcon, title: "승률 계산기", body: "내 패 vs 상대 패(또는 상위 X% 범위) 프리플랍~리버 승률, 맞춰 보기, 팟 오즈 콜 판단.", tag: "인기" },

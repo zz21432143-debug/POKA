@@ -59,6 +59,7 @@ export const STUDY_ITEMS: SidebarItem[] = [
   { href: "/info/holdem", label: "홀덤 가이드", hint: "플레이어 전략 · 예시 핸드", icon: "scroll", badge: "NEW" },
   { href: "/info/guide", label: "딜러 가이드", hint: "딜러 실무 · 테이블 룰", icon: "seal" },
   { href: "/study/glossary", label: "용어 사전", hint: "ㄱ~ㅎ 홀덤 · 딜러 용어", icon: "scroll" },
+  { href: "/study/cheatsheet", label: "참고 표(인쇄)", hint: "족보 확률 · 아웃츠 · 팟 오즈", icon: "scroll" },
   { href: "/info/push-fold", label: "GTO 푸시폴드 차트", hint: "포지션별 올인 · 콜 범위 · ICM", icon: "cards" },
   { href: "/study/push-fold-quiz", label: "푸시폴드 퀴즈", hint: "올인? 폴드? 차트로 채점", icon: "cards" },
   { href: "/community/equity", label: "승률 계산기", hint: "내 패 vs 상대 · 스트리트별", icon: "cards" },

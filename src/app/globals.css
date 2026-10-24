@@ -4281,3 +4281,24 @@ aside[aria-label="광고"]:not(:has(ins.adsbygoogle[data-ad-status="filled"])) {
     background: #fff !important;
   }
 }
+
+/* 글 읽는 화면(가이드): 불투명한 차분한 바탕 · 한 줄 40자 안팎 · 넉넉한 줄 간격 — 눈 편하게 */
+.reading-panel {
+  background: #141112;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.25rem 1.1rem;
+}
+.reading-text {
+  max-width: 40rem;
+  font-size: 17px;
+  line-height: 1.95;
+  color: #e9e4db;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 640px) {
+  .reading-panel {
+    padding: 2rem 2.25rem;
+  }
+}

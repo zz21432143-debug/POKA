@@ -14,7 +14,8 @@ import { MoneyTitleHint } from "@/components/posts/money-title-hint";
 import { boardAllowsPhotos } from "@/lib/post-photos";
 import { PostPhotoPicker } from "@/components/posts/post-photo-picker";
 import { cn } from "cn";
-import { QUESTION_TEMPLATES } from "@/lib/accept-answer";
+import { HAND_OF_DAY_TAG, HAND_OF_DAY_TEMPLATE, QUESTION_TEMPLATES } from "@/lib/accept-answer";
+import { hasMoneyInTitle } from "@/components/posts/money-title-hint";
 
 export type BoardCategory = { boardType: BoardType; label: string };
 
@@ -211,6 +212,26 @@ export function BoardWriteForm({
           }
         />
         <MoneyTitleHint title={title} />
+        {boardType === "FREE" ? (
+          // 「오늘의 한 판」: 억울한 판 · 자랑하고 싶은 판(칩 · bb로만)
+          <div data-hand-of-day className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-bold text-zinc-400">태그</span>
+            <button
+              type="button"
+              data-hand-of-day-tag
+              aria-pressed={title.startsWith(HAND_OF_DAY_TAG)}
+              onClick={() => {
+                const on = title.startsWith(HAND_OF_DAY_TAG);
+                setTitle((t) => (on ? t.slice(HAND_OF_DAY_TAG.length).trimStart() : `${HAND_OF_DAY_TAG} ${t}`));
+                if (!on && !content.trim()) setContent(HAND_OF_DAY_TEMPLATE);
+              }}
+              className={`min-h-9 rounded-full border px-3 text-xs font-black ${title.startsWith(HAND_OF_DAY_TAG) ? "border-[#c9a25c] bg-[#c9a25c] text-[#1d1611]" : "border-white/20 text-zinc-200 hover:border-[#c9a25c]"}`}
+            >
+              🃏 오늘의 한 판
+            </button>
+            <span className="text-[11px] text-zinc-400">억울한 판 · 자랑하고 싶은 판을 칩 · bb로</span>
+          </div>
+        ) : null}
         {boardType === "NOTICE" ? (
           // 공지 말머리: 누르면 제목 앞에 [업데이트] 같은 태그가 붙고, 맨 위 공지 띠에 색 태그로 보여요
           <div data-notice-tags className="flex flex-wrap items-center gap-1.5">
@@ -285,6 +306,11 @@ export function BoardWriteForm({
             onChange={(e) => setContent(e.target.value)}
           />
         )}
+        {title.startsWith(HAND_OF_DAY_TAG) && hasMoneyInTitle(content) ? (
+          <p data-hand-of-day-money className="rounded-lg border border-amber-400/50 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-100">
+            💡 「오늘의 한 판」은 금액 대신 칩 · bb로 써 주세요. 상금 · 금액 이야기가 많으면 광고 심사에서 도박 관련 글로 볼 수 있어요.
+          </p>
+        ) : null}
         {/* 자유 · 질문 · 건의: 10자 이상(한두 글자 글 방지) */}
         {["FREE", "RULE_QA", "SUGGESTION"].includes(boardType) && content.replace(/\s+/g, "").length < 10 ? (
           <p data-write-min-hint className="text-xs text-[#e7c98a]">본문을 조금 더 자세히 써 주세요 · 10자 이상 ({content.replace(/\s+/g, "").length}/10)</p>

@@ -41,3 +41,7 @@ export const QUESTION_TEMPLATES: Partial<Record<BoardType, string>> = {
   RULE_QA: "📍 상황: (몇 명 · 누가 어떤 액션 · 칩 크기)\n⚖️ 실제로 어떻게 처리됐나요: \n❓ 궁금한 점: ",
   TDA: "📍 상황: (몇 명 · 누가 어떤 액션 · 칩 크기)\n⚖️ 실제로 어떻게 처리됐나요: \n❓ 궁금한 점(룰 번호를 알면 같이): ",
 };
+
+/** 자유게시판 「오늘의 한 판」: 제목 앞 태그 · 본문 틀(금액 대신 칩 · bb) */
+export const HAND_OF_DAY_TAG = "[오늘의 한 판]";
+export const HAND_OF_DAY_TEMPLATE = "🃏 상황: (블라인드 · 내 스택 몇 bb · 자리 · 내 패)\n🔥 어떻게 됐나요: \n💬 한 줄 소감: \n(금액 대신 칩 · bb로 써 주세요)";

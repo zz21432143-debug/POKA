@@ -59,7 +59,7 @@ export default async function GuideArticlePage({
   };
 
   return (
-    <article className="flex flex-col gap-4">
+    <article className="flex w-full max-w-3xl flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/info/guide" className="text-[#E5E7EB] hover:text-[#C59B27]">
@@ -80,9 +80,9 @@ export default async function GuideArticlePage({
           (딜러 경력 7년+ · 매장 운영 · 매니저) · 최종 수정 <time dateTime={updated}>{uy}년 {um}월 {ud}일</time> · 매장 하우스 룰이 있으면 그 룰이 우선입니다
         </p>
       </header>
-      <div className="ink-panel rounded-2xl px-4 py-5">
+      <div className="reading-panel">
         {/* 본문 용어는 관련 가이드로 이어짐(글마다 처음 나온 곳 하나) */}
-        <p className="whitespace-pre-line text-base leading-7 text-[#E5E7EB]">{linkGuideTerms(article.body, article.slug)}</p>
+        <p className="reading-text whitespace-pre-line">{linkGuideTerms(article.body, article.slug)}</p>
       </div>
       {article.tool ? (
         <Link

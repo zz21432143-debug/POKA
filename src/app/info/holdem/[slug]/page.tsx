@@ -47,7 +47,7 @@ export default async function HoldemGuidePage({ params }: { params: Promise<{ sl
     publisher: { "@type": "Organization", name: "POKA", logo: { "@type": "ImageObject", url: `${base}/icon.png` } },
   };
   return (
-    <article className="flex flex-col gap-4">
+    <article className="flex w-full max-w-3xl flex-col gap-4">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(ld) }} />
       <p className="text-sm text-[#9CA3AF]">
         <Link href="/info/holdem" className="text-[#E5E7EB] hover:text-[#C59B27]">
@@ -67,8 +67,8 @@ export default async function HoldemGuidePage({ params }: { params: Promise<{ sl
           (딜러 경력 7년+ · 매장 운영 · 매니저) · 최종 수정 <time dateTime={article.updated}>{uy}년 {um}월 {ud}일</time> · 예시 핸드와 숫자는 POKA가 직접 만든 것입니다
         </p>
       </header>
-      <div className="ink-panel rounded-2xl px-4 py-5">
-        <p className="whitespace-pre-line text-base leading-7 text-[#E5E7EB]">{article.body}</p>
+      <div className="reading-panel">
+        <p className="reading-text whitespace-pre-line">{article.body}</p>
       </div>
       {article.tool ? (
         <Link

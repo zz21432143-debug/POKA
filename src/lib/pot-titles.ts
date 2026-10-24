@@ -140,7 +140,9 @@ export async function getHonorInfo(): Promise<HonorInfo> {
       const isGame = def.tab === "omok" || def.tab === "yut" || def.tab === "chess";
       const rows = isGame
         ? await import("@/lib/game-stats").then((m) => m.gameRanking(def.tab as "omok", "month", 1)).catch(() => [])
-        : await getRanking(def.tab as "level", def.period).catch(() => []);
+        : def.tab === "answers" || def.tab === "bestPost"
+          ? await communityHonorRows(def.tab).catch(() => [])
+          : await getRanking(def.tab as "level", def.period).catch(() => []);
       owners[key] = rows
         .filter((r) => !excluded.has(r.nickname) && r.score >= (HONOR_DEFS[key].minScore ?? 0))
         // 미니게임은 1위 한 명만
@@ -176,6 +178,29 @@ export async function getHonorInfo(): Promise<HonorInfo> {
   // 새로 받은 칭호는 기록 · LIVE 띠(응답은 기다리지 않음)
   void recordAwards(info, config).catch(() => undefined);
   return info;
+}
+
+/**
+ * 커뮤니티 칭호 순위(이번 달 · 운영 계정 · 탈퇴 회원 제외)
+ * answers: 채택된 답변 수 / bestPost: 이번 달 쓴 글 중 가장 많이 받은 추천 수
+ */
+async function communityHonorRows(tab: "answers" | "bestPost"): Promise<{ nickname: string; score: number }[]> {
+  const since = monthStartKst();
+  const rows =
+    tab === "answers"
+      ? await prisma.$queryRaw<{ nickname: string; score: bigint }[]>`
+          SELECT u.nickname, COUNT(*)::bigint AS score
+          FROM "Comment" c JOIN "User" u ON u.id = c."authorId"
+          WHERE c."acceptedAt" >= ${since} AND u."isMaster" = false AND u."withdrawnAt" IS NULL
+          GROUP BY u.nickname ORDER BY score DESC, MIN(c."acceptedAt") ASC LIMIT 5`
+      : await prisma.$queryRaw<{ nickname: string; score: bigint }[]>`
+          SELECT u.nickname, MAX(p."upvoteCount")::bigint AS score
+          FROM "Post" p JOIN "User" u ON u.id = p."authorId"
+          WHERE p."createdAt" >= ${since} AND p.hidden = false AND p."isAttendanceThread" = false
+            AND p."boardType" IN (FREE, HAND_REVIEW, RULE_QA, SKETCH)
+            AND u."isMaster" = false AND u."withdrawnAt" IS NULL
+          GROUP BY u.nickname ORDER BY score DESC, MIN(p."createdAt") ASC LIMIT 5`;
+  return rows.map((r) => ({ nickname: r.nickname, score: Number(r.score) }));
 }
 
 /** ToolSaved 종류: 회원별 칭호 받은 기록(ownerId = 회원 id) */

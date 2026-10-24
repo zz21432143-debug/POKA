@@ -25,6 +25,7 @@ import { sortTdaSections } from "@/lib/tda";
 import { contentToDocHtml } from "@/lib/doc-sanitize";
 import { escapeHtml } from "@/lib/doc-html";
 import { formatKstLabel } from "@/lib/dates";
+import { BoardGuideBox } from "@/components/posts/board-guide-box";
 import { BOARD_STICKER, BoardTitle } from "@/components/brand/oni";
 
 /** ISO 시각 → 한국 날짜 YYYY-MM-DD */
@@ -190,6 +191,9 @@ export default async function BoardPage({
           ))}
         </nav>
       ) : null}
+
+      {/* 처음 왔다면: 게시판 쓰는 법(접어 둠) */}
+      <BoardGuideBox boardType={board.boardType} />
 
       {gallery ? (
         <PromoGallery posts={page.gallery} />

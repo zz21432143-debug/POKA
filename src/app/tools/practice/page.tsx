@@ -23,7 +23,7 @@ export default async function PracticePage() {
         <h1 className="text-2xl font-black text-white">팟 계산</h1>
         <p className="text-xs text-zinc-400">팟 계산 연습(풀이 · 기록 · 랭킹)과 현장에서 바로 쓰는 사이드팟 계산기.</p>
         </div>
-        <Oni pose="front" className="h-20 shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,.6)] sm:h-24" />
+        <Oni pose="front" className="hidden h-20 shrink-0 sm:block drop-shadow-[0_4px_10px_rgba(0,0,0,.6)] sm:h-24" />
       </header>
       <DealerPractice />
     </div>
