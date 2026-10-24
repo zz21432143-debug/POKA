@@ -35,6 +35,24 @@ function HomePanelFallback({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-2xl bg-white/[0.06] ${className}`} />;
 }
 
+/** 홈 구역 제목(시안 B): 제목 · 한 줄 설명 · 전체 보기 */
+function HomeSection({ id, title, hint, more, children }: { id: string; title: string; hint?: string; more?: { href: string; label?: string }; children: React.ReactNode }) {
+  return (
+    <section aria-label={title} data-home-section={id} className="grid gap-2.5">
+      <div className="flex items-baseline gap-2 px-1">
+        <h2 className="text-lg font-black text-[#f6efe2] sm:text-xl">{title}</h2>
+        {hint ? <p className="hidden truncate text-sm text-[#a89c88] sm:block">{hint}</p> : null}
+        {more ? (
+          <Link href={more.href} className="ml-auto shrink-0 text-sm font-bold text-[#e7c98a] hover:text-[#f3d9a4]">
+            {more.label ?? "전체 보기"} ›
+          </Link>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 /** 홍보 포스터 6구좌. 맡긴 포스터가 하나라도 있으면 넓게 돌리고, 모두 비어 있으면 큰 칸 대신 작은 안내 한 줄만 */
 async function homePosters() {
   const banners = await getPremiumBanners().catch(() => []);
@@ -86,18 +104,23 @@ async function HomeFeedSections() {
   return (
     <>
       {/* 가장 급한 것부터: 급구(있을 때만 — 0건은 위 요약 칸에 보임) → 지원 · 대회 딜러 구인 */}
-      {feed.urgent.length ? <HomeUrgentJobs jobs={feed.urgent} /> : null}
-      <HomeJobs jobs={feed.jobs} />
+      <HomeSection id="jobs" title="구인 · 빈자리" hint="오늘 일할 곳 · 급구" more={{ href: "/boards/jobs" }}>
+        {feed.urgent.length ? <HomeUrgentJobs jobs={feed.urgent} /> : null}
+        <HomeJobs jobs={feed.jobs} />
+      </HomeSection>
       <GoogleAdUnit placement="home-top" />
       {/* 매장 관리 · 홀덤 공부 도구(PC는 나란히, 높이 맞춤) */}
-      <div data-home-shortcuts className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-2 [&>*]:min-w-0">
-        <HomeDealerTools />
-        <HomeStudyTools />
-      </div>
+      <HomeSection id="tools" title="매장 도구 · 홀덤 공부" hint="회원 무료 · 로그인 없이 쓰는 공부 도구" more={{ href: "/study" }}>
+        <div data-home-shortcuts className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-2 [&>*]:min-w-0">
+          <HomeDealerTools />
+          <HomeStudyTools />
+        </div>
+      </HomeSection>
       {/* 홍보 포스터(유료 구좌): 맡긴 포스터가 있을 때만 넓게 */}
       {promo.filled ? <HomePosterCarousel posters={promo.posters} /> : null}
       <GoogleAdUnit placement="home-mid" />
       {/* 아래는 PC 두 칸: 왼쪽 글(최신글 · 핸드) · 오른쪽 매일 할 것(미션 · 퀴즈 · 요괴 · 랭킹) — 칸마다 따로 쌓여 빈 공간이 없게 */}
+      <HomeSection id="community" title="커뮤니티" hint="새 글 · 핸드리뷰 · 오늘의 미션 · 랭킹" more={{ href: "/community" }}>
       <div data-home-columns className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:items-start">
         <div id="home-latest" className="grid min-w-0 scroll-mt-24 content-start gap-2.5">
           <HomeLatest all={feed.all} free={feed.free} hands={feed.hands} nativeSponsor={feed.nativeSponsor} firstBonus={firstBonus} topic={{ index: topicIndex, text: TALK_TOPICS[topicIndex] }} />
@@ -115,8 +138,16 @@ async function HomeFeedSections() {
           {promo.filled ? null : <PromoSlotCard />}
         </div>
       </div>
+      </HomeSection>
       {/* 오늘의 딜러 가이드 3편(날마다 바뀜) — 두 칸 아래 넓게(두 칸 길이가 비슷하게) */}
       <HomeGuides />
+      {/* POKA 소개(검색 · 광고 심사용 몇 줄) */}
+      <section aria-label="POKA 소개" data-home-about className="grid gap-1.5 border-t border-white/10 px-1 pt-5">
+        <h2 className="text-base font-black text-[#d9cfbd]">POKA는</h2>
+        <p className="max-w-3xl text-sm leading-7 text-[#a89c88]">
+          딜러 구인구직, 매장 운영 도구(딜러 로테이션 · 게임 현황판 · 샷클락 · 싯드로우 · 급여 계산기), 홀덤 공부(가이드 · 공부 코스 · 용어 사전 · 푸시폴드 퀴즈 · 현장 판정 사례)를 한곳에 모은 홀덤 커뮤니티예요. 모두 무료이고, 돈을 거는 게임은 다루지 않아요.
+        </p>
+      </section>
     </>
   );
 }
@@ -127,7 +158,7 @@ async function HomeFeedSections() {
  */
 export default async function HomePage() {
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 [&>[data-home-section]]:mt-5">
       <div data-home-top className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-stretch">
         <HomeHero />
         <Suspense fallback={<HomePanelFallback className="h-28" />}>
@@ -139,6 +170,7 @@ export default async function HomePage() {
         <HomeMyStatus />
       </Suspense>
       {/* 처음 온 사람도 바로 한 번: 오늘의 퀴즈(펼쳐 둠) · 요괴 마을 — PC는 나란히, 휴대폰은 위아래 */}
+      <HomeSection id="today" title="오늘" hint="출석 · 퀴즈 · 요괴 밥 — 하루 1분">
       <div data-home-daily className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-start lg:[&:has(>:only-child)]:grid-cols-1 [&>*]:min-w-0">
         <Suspense fallback={<HomePanelFallback className="h-14" />}>
           <HomeQuiz />
@@ -147,6 +179,7 @@ export default async function HomePage() {
           <HomeYokai />
         </Suspense>
       </div>
+      </HomeSection>
       {/* 게시판 · 매장 관리 바로가기 한 줄 */}
       <Suspense fallback={<HomePanelFallback className="h-10" />}>
         <HomeBoardNav />
