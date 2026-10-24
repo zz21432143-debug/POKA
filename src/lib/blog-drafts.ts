@@ -3,6 +3,7 @@ import { GUIDE_ARTICLES } from "@/lib/info-pages";
 import { SITE_HOST } from "@/lib/site";
 import { BLOG_TOOL_POSTS } from "@/lib/blog-tool-posts";
 import { courseOf } from "@/lib/courses";
+import { GLOSSARY } from "@/lib/glossary";
 
 /** 블로그에 붙는 링크는 늘 실제 사이트 주소 */
 const BASE = `https://${SITE_HOST}`;
@@ -72,6 +73,18 @@ function faq(body: string): string[] {
   return ["자주 묻는 질문", `Q. ${m[1].trim()}`, `A. ${a.length > 160 ? `${a.slice(0, 159)}…` : a}`, ""];
 }
 
+/**
+ * 글 주제 태그: 제목에 나오는 홀덤 용어(용어 사전 기준)를 「용어」 · 「홀덤용어」로(실제로 검색하는 말) + 제목 앞부분.
+ * 예: 「포지션이 왜 중요한가」 → #포지션 #홀덤포지션 #포지션이왜중요한가
+ */
+function topicTags(title: string) {
+  const terms = GLOSSARY.map((t) => t.term)
+    .filter((t) => !t.includes("·") && t.length >= 2 && title.includes(t))
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 4);
+  return [...terms.flatMap((t) => [t, `홀덤${t}`]), titleTag(title)];
+}
+
 /** "셋 마이닝 — 작은 …" → "셋마이닝" */
 function titleTag(title: string) {
   return title.split(/\s[—-]\s/)[0].replace(/[^\p{L}\p{N}]/gu, "").slice(0, 20);
@@ -99,7 +112,7 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
   ]
     .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
     .join("\n");
-  const tags = tagLine([titleTag(g.title), ...KIND_TAGS[kind]]);
+  const tags = tagLine(topicTags(g.title), KIND_TAGS[kind]);
   return {
     key: `${kind}:${g.slug}`,
     kind,
@@ -118,19 +131,21 @@ function draft(kind: "holdem" | "dealer", g: { slug: string; title: string; summ
  */
 const COMMON_TAGS = ["홀덤", "텍사스홀덤", "포커", "홀덤토너먼트", "TDA", "TDA룰", "GTO", "홀덤펍", "POKA", "포카"];
 const KIND_TAGS: Record<BlogDraft["kind"], string[]> = {
-  holdem: ["홀덤전략", "홀덤공부", "포커공부", "포커전략", "홀덤팁", "홀덤초보", "GTO전략", "포커레인지", "팟오즈", ...COMMON_TAGS],
-  dealer: ["홀덤딜러", "포커딜러", "딜러가이드", "딜러실무", "딜러교육", "딜러구인", "홀덤딜러구인", "딜러알바", "홀덤매장", ...COMMON_TAGS],
+  holdem: ["홀덤전략", "홀덤공부", "포커공부", "포커전략", "홀덤팁", "홀덤초보", "GTO전략", "포커레인지", "팟오즈", "홀덤배우기", "홀덤규칙", "토너먼트전략", "포커게임", ...COMMON_TAGS],
+  dealer: ["홀덤딜러", "포커딜러", "딜러가이드", "딜러실무", "딜러교육", "딜러구인", "홀덤딜러구인", "딜러알바", "홀덤매장", "딜러되는법", "홀덤딜러되는법", "딜러취업", "홀덤룰", "포커룰", ...COMMON_TAGS],
   tool: ["매장관리", "홀덤매장", "홀덤펍운영", "딜러로테이션", "게임현황판", "샷클락", "블라인드타이머", "홀덤딜러", ...COMMON_TAGS],
 };
 const MAX_TAGS = 30;
 
-function tagLine(tags: string[]) {
-  return tags
-    .map((t) => t.replace(/[^\p{L}\p{N}]/gu, ""))
-    .filter((t, i, all) => t && all.indexOf(t) === i)
-    .slice(0, MAX_TAGS)
-    .map((t) => `#${t}`)
-    .join(" ");
+/**
+ * 태그 줄: 글 주제 태그 → 종류 태그 → 공통 태그 순서. 공통 태그(TDA · GTO · POKA 등)는 30개 안에 꼭 들어가게 자리를 먼저 잡음
+ * (예전엔 30개를 넘으면 뒤의 공통 태그부터 잘려 TDA · GTO가 빠질 수 있었음).
+ */
+function tagLine(topic: string[], kind: string[] = []) {
+  const clean = (list: string[]) => list.map((t) => t.replace(/[^\p{L}\p{N}]/gu, "")).filter(Boolean);
+  const common = [...new Set(clean(COMMON_TAGS))];
+  const lead = [...new Set(clean([...topic, ...kind]))].filter((t) => !common.includes(t)).slice(0, MAX_TAGS - common.length);
+  return [...lead, ...common].map((t) => `#${t}`).join(" ");
 }
 
 /** 함께 보면 좋은 POKA 페이지(블로그 → 새 페이지로 이어지게 · 네이버에 새 페이지를 알리는 데도 도움) */
@@ -160,7 +175,7 @@ function toolDraft(t: (typeof BLOG_TOOL_POSTS)[number]): BlogDraft {
   const category = t.category ?? "매장 관리";
   // 태그 · 제목 꼬리는 블로그 카테고리에 맞춤(홀덤 공부 글에 매장 관리 태그가 붙지 않게)
   const kindTags = KIND_TAGS[category === "딜러 실무" ? "dealer" : category === "홀덤 공부" ? "holdem" : "tool"];
-  const tags = tagLine([...t.tags, ...kindTags]);
+  const tags = tagLine(t.tags, kindTags);
   return { key: `tool:${t.slug}`, kind: "tool", category, title: `${t.title} | ${category}`, body, tags, url, photo: `${BASE}${t.path}` };
 }
 
