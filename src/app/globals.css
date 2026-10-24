@@ -487,8 +487,9 @@ select {
   position: relative;
 }
 
+/* 아래 메뉴 자리는 꼬리말이 비워 둠(본문은 조금만) */
 .mobile-nav-pad {
-  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 1.5rem;
 }
 
 @media (min-width: 1024px) {

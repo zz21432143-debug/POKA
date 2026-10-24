@@ -4,6 +4,8 @@ import { JOB_REGIONS } from "@/lib/job-status";
 export function formatWon(raw: string | null | undefined): string {
   const digits = String(raw ?? "").replace(/[^\d]/g, "");
   if (!digits) return "";
+  // 0원은 이상해 보여서 「협의」
+  if (!Number(digits)) return "협의";
   return `${Number(digits).toLocaleString("ko-KR")}원`;
 }
 

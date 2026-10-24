@@ -8,10 +8,13 @@ export function HandPoll({
   postId,
   initialCounts,
   initialChoice,
+  compact = false,
 }: {
   postId: string;
   initialCounts: Record<string, number>;
   initialChoice: string | null;
+  /** 홈 등 좁은 칸: 투표 전에는 결과 막대를 숨김 */
+  compact?: boolean;
 }) {
   const [counts, setCounts] = useState(initialCounts);
   const [mine, setMine] = useState<string | null>(initialChoice);
@@ -45,7 +48,7 @@ export function HandPoll({
         <h2 className="text-lg font-bold text-white">이 핸드라면?</h2>
         <p className="text-xs text-[#9CA3AF]">투표 {total}명</p>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className={compact ? "mt-3 grid grid-cols-2 gap-2" : "mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4"}>
         {POLL_CHOICES.map((choice) => (
           <Button
             key={choice.id}
@@ -60,6 +63,9 @@ export function HandPoll({
           </Button>
         ))}
       </div>
+      {compact && !mine ? (
+        <p className="mt-2 text-xs text-[#9CA3AF]">투표하면 다른 사람 선택이 보여요.</p>
+      ) : (
       <ul className="mt-4 grid gap-2">
         {bars.map((bar) => (
           <li key={bar.id}>
@@ -78,6 +84,7 @@ export function HandPoll({
           </li>
         ))}
       </ul>
+      )}
     </section>
   );
 }

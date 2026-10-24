@@ -2,6 +2,7 @@ import Link from "@/components/ui/link";
 import { BellIcon, BriefcaseIcon, CalendarCheckIcon, CalendarDaysIcon, ChevronRightIcon, FlameIcon } from "lucide-react";
 import { getHomeCounts } from "@/lib/home-data";
 import { ttlCache } from "@/lib/ttl-cache";
+import { todayKstDate } from "@/lib/dates";
 
 /** 오늘 날짜 빈자리 수(1분 캐시) */
 function todaySlotCount() {
@@ -50,7 +51,7 @@ export async function HomeSummary() {
       {counts.nextEvent ? (
         <Link href={`/posts/${counts.nextEvent.id}`} className="touch-target flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-2 hover:bg-black/35">
           <CalendarDaysIcon className="size-4 shrink-0 text-[#c9a25c]" />
-          <span className="shrink-0 text-xs font-black text-[#c9a25c]">다음 대회</span>
+          <span className="shrink-0 text-xs font-black text-[#c9a25c]">{counts.nextEvent.eventDate && counts.nextEvent.eventDate <= todayKstDate() ? "진행 중 대회" : "다음 대회"}</span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#ece3d3]">{counts.nextEvent.title}</span>
           <span className="shrink-0 text-xs font-bold text-[#a89880] tabular-nums">{shortDate(counts.nextEvent.eventDate, counts.nextEvent.eventEndDate)}</span>
         </Link>

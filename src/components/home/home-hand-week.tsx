@@ -50,7 +50,7 @@ export async function HomeHandWeek() {
         <span className="rounded-full bg-[#c9a25c] px-2.5 py-0.5 text-xs font-black text-[#1d1611]">이번 주의 핸드 문제</span>
         <span className="text-xs text-[#a89c88]">투표 {pick._count.pollVotes} · 댓글 {pick._count.comments}</span>
         <Link href={`/posts/${pick.id}`} className="ml-auto text-sm font-bold text-[#e7c98a]">
-          전체 핸드 · 해설 보기 ›
+          해설 ›
         </Link>
       </div>
       <Link href={`/posts/${pick.id}`} className="text-base font-black leading-snug text-white hover:text-[#f3d9a4]">
@@ -68,7 +68,7 @@ export async function HomeHandWeek() {
           </span>
         ) : null}
       </p>
-      <HandPoll postId={pick.id} initialCounts={counts} initialChoice={mine?.choice ?? null} />
+      <HandPoll postId={pick.id} initialCounts={counts} initialChoice={mine?.choice ?? null} compact />
     </section>
   );
 }

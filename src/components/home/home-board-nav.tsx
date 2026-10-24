@@ -47,7 +47,7 @@ export async function HomeBoardNav() {
               <Link
                 href={b.href}
                 className={cn(
-                  "touch-target flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border px-1 text-[12.5px] font-black sm:w-auto sm:px-3.5 sm:text-sm",
+                  "touch-target relative flex min-h-10 w-full items-center justify-center gap-1 whitespace-nowrap rounded-full border px-1 text-[12.5px] font-black sm:w-auto sm:px-3.5 sm:text-sm",
                   // 색은 브랜드 3색(검정 · 금 · 적)만: 매장 관리 · 빈자리만 금색으로 돋보이게(예전 TDA 파란색은 빼서 통일)
                   "store" in b && b.store
                       ? "border-[#e7c98a]/80 bg-[#c9a25c]/20 text-[#f3d9a4]"
@@ -58,7 +58,7 @@ export async function HomeBoardNav() {
               >
                 <Icon aria-hidden className="size-4 shrink-0" />
                 {b.label}
-                {n ? <span className="rounded-full bg-[#7a1c22] px-1.5 text-[11px] text-white">+{n}</span> : null}
+                {n ? <span className="absolute -top-1.5 -right-0.5 rounded-full bg-[#7a1c22] px-1 text-[10px] leading-4 text-white sm:static sm:px-1.5 sm:text-[11px] sm:leading-normal">+{n}</span> : null}
               </Link>
             </li>
           );

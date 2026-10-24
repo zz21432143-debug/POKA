@@ -1,12 +1,12 @@
 import Link from "@/components/ui/link";
-import { BarChart3Icon, CalculatorIcon, ChevronRightIcon, Grid3x3Icon, ListOrderedIcon, PercentIcon, PieChartIcon, ScrollTextIcon } from "lucide-react";
+import { BarChart3Icon, CalculatorIcon, ChevronRightIcon, Grid3x3Icon, PercentIcon, PieChartIcon, ScaleIcon, ScrollTextIcon } from "lucide-react";
 
 const TOOLS = [
   { href: "/info/push-fold", icon: Grid3x3Icon, title: "GTO 푸시폴드", body: "포지션별 올인 · 콜 범위 + ICM" },
   { href: "/community/equity", icon: PercentIcon, title: "승률 계산기", body: "내 패 vs 상대 · 스트리트별" },
   { href: "/info/icm", icon: PieChartIcon, title: "ICM 계산기", body: "파이널 딜 금액" },
-  { href: "/community/hand-ranges", icon: BarChart3Icon, title: "핸드 레인지 순위", body: "169개 패 · 상위 X%" },
-  { href: "/community/hand-rankings", icon: ListOrderedIcon, title: "족보 순위", body: "카드로 보는 족보 · 확률" },
+  { href: "/community/hand-ranges", icon: BarChart3Icon, title: "레인지 · 족보", body: "169개 패 순위 · 족보 10가지" },
+  { href: "/study/floor-cases", icon: ScaleIcon, title: "현장 판정 사례", body: "미스딜 · 오버칩 · 언더레이즈" },
   { href: "/tools/practice", icon: CalculatorIcon, title: "팟 계산 연습", body: "사이드팟 · 팟 계산 랭킹" },
 ];
 
