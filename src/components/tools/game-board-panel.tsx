@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { cn } from "cn";
 import { ToolDialog } from "@/components/tools/tool-dialog";
 import { drawChampionImage } from "@/lib/champion-image";
-import { shareBlob } from "@/lib/share-image";
 import { BOARD_LIMITS, FT_MAX, FT_NAME, ftName, NOTICE_EXAMPLE, QR_MODES, type BoardQrMode, PRIZE_COLORS, clockText, clockView, defaultPrizeColor, parseClockInput, makeStructure, newBoardData, type BoardLevel, type ClockOp, type GameBoardData, type BoardPreset, type BoardTemplate, type PrizeColor, type PrizeRow, BOARD_WARN_LEFT, MAX_BOARDS, MAX_PRESETS } from "@/lib/game-board";
 import { BUILD_ID } from "@/lib/build-id";
 import type { BoardState, BoardSummary } from "@/lib/game-board-server";
@@ -663,6 +662,11 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
           <span className="ml-auto text-xs font-bold text-zinc-500">끄면 화면 · 총 칩에서 빠짐</span>
         </label>
         {data.addonOn ? <Counter label="애드온" value={data.addons} onChange={(v) => onEdit({ addons: v })} /> : null}
+        {(() => {
+          // 이름 칸은 늘 펼쳐 둠: 저장된 자리가 없으면 남은 인원(없으면 9)만큼 빈 자리
+          const ftSeats = data.ftPlayers.length ? data.ftPlayers : Array.from({ length: Math.min(FT_MAX, Math.max(2, data.remaining > 1 && data.remaining <= FT_MAX ? data.remaining : 9)) }, () => ({ name: "", out: false }));
+          return (
+        <>
         {/* 파이널 테이블 간단 모드: 이름표만(스택 없음) · 이름을 누르면 탈락 · 1명 남으면 우승 화면 */}
         <div data-ft-panel className={cn("mt-2 grid gap-2 rounded-xl border p-3", data.ftOn ? "border-amber-400/60 bg-amber-950/30" : "border-white/10 bg-black/40")}>
           <div className="flex flex-wrap items-center gap-2">
@@ -687,20 +691,18 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                   onEdit({ ftOn: false });
                   return;
                 }
-                const n = Math.min(FT_MAX, Math.max(2, data.remaining || 9));
-                const players = data.ftPlayers.length ? data.ftPlayers : Array.from({ length: n }, () => ({ name: "", out: false }));
-                onEdit({ ftOn: true, ftPlayers: players });
+                onEdit({ ftOn: true, ftPlayers: ftSeats });
               }}
               className={cn("ml-auto min-h-10 rounded-lg px-3 text-sm font-black", data.ftOn ? "border border-white/25 text-zinc-200" : "bg-amber-400 text-black")}
             >
-              {data.ftOn ? "끄기" : "켜기"}
+              {data.ftOn ? "TV에서 끄기" : "TV에 띄우기"}
             </button>
           </div>
-          {data.ftOn ? (
+          {(
             <>
-              <p className="text-xs text-zinc-400">이름은 처음 한 번만 적으면 돼요(비우면 「1번」). 「탈락」을 누르면 TV 이름표가 사라지고 플레이 중이 −1 돼요. 1명 남으면 우승 화면이 나와요.</p>
+              <p className="text-xs text-zinc-400">이름을 미리 적어 두고 「TV에 띄우기」를 누르면 TV에 이름표가 나와요(비우면 「1번」). 「탈락」을 누르면 TV 이름표가 사라지고 플레이 중이 −1 돼요. 1명 남으면 우승 화면이 나와요.</p>
               <ul className="grid gap-1.5 sm:grid-cols-2">
-                {data.ftPlayers.map((p, i) => (
+                {ftSeats.map((p, i) => (
                   <li key={i} className={cn("flex items-center gap-1.5 rounded-lg bg-black/50 p-1.5", p.out && "opacity-50")}>
                     <span className="w-7 shrink-0 text-center text-xs font-black text-zinc-400">{i + 1}</span>
                     <input
@@ -708,7 +710,7 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                       value={p.name}
                       maxLength={FT_NAME}
                       placeholder={`${i + 1}번`}
-                      onChange={(e) => onEdit({ ftPlayers: data.ftPlayers.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)) })}
+                      onChange={(e) => onEdit({ ftPlayers: ftSeats.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)) })}
                       className="h-10 min-w-0 flex-1 rounded-md border border-white/15 bg-zinc-900 px-2 text-base font-bold text-white"
                     />
                     <button
@@ -716,7 +718,7 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                       data-ft-bust={i}
                       onClick={() =>
                         onEdit({
-                          ftPlayers: data.ftPlayers.map((x, k) => (k === i ? { ...x, out: !x.out } : x)),
+                          ftPlayers: ftSeats.map((x, k) => (k === i ? { ...x, out: !x.out } : x)),
                           remaining: Math.max(0, data.remaining + (p.out ? 1 : -1)),
                         })
                       }
@@ -728,8 +730,8 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                 ))}
               </ul>
               {(() => {
-                const alive = data.ftPlayers.map((x, k) => ({ x, k })).filter(({ x }) => !x.out);
-                if (data.ftPlayers.length < 2 || alive.length !== 1) return null;
+                const alive = ftSeats.map((x, k) => ({ x, k })).filter(({ x }) => !x.out);
+                if (ftSeats.length < 2 || alive.length !== 1) return null;
                 const champ = ftName(alive[0].x, alive[0].k);
                 return (
                   <button
@@ -738,31 +740,36 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                     onClick={() =>
                       void (async () => {
                         const date = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());
-                        const blob = await drawChampionImage({ champion: champ, event: data.name, finalists: data.ftPlayers.map((x, k) => ftName(x, k)), date });
-                        await shareBlob(blob, { title: `${data.name} 우승 ${champ}`, url: "https://pokerwiki.co.kr/?from=share", fileName: "poka-champion" });
+                        const blob = await drawChampionImage({ champion: champ, event: data.name, finalists: ftSeats.map((x, k) => ftName(x, k)), date });
+                        if (!blob) return;
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `poka-champion-${champ}.png`;
+                        link.click();
+                        window.setTimeout(() => URL.revokeObjectURL(link.href), 2000);
                       })()
                     }
                     className="min-h-12 rounded-xl bg-[#FEE500] px-4 text-base font-black text-black"
                   >
-                    🏆 우승 이미지 · 카톡 공유
+                    🏆 우승 이미지 저장
                   </button>
                 );
               })()}
               <div className="flex flex-wrap gap-2">
-                {data.ftPlayers.length < FT_MAX ? (
-                  <button type="button" onClick={() => onEdit({ ftPlayers: [...data.ftPlayers, { name: "", out: false }] })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
+                {ftSeats.length < FT_MAX ? (
+                  <button type="button" onClick={() => onEdit({ ftPlayers: [...ftSeats, { name: "", out: false }] })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
                     + 자리 추가
                   </button>
                 ) : null}
-                {data.ftPlayers.length > 2 ? (
-                  <button type="button" onClick={() => onEdit({ ftPlayers: data.ftPlayers.slice(0, -1) })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
+                {ftSeats.length > 2 ? (
+                  <button type="button" onClick={() => onEdit({ ftPlayers: ftSeats.slice(0, -1) })} className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-200">
                     − 마지막 자리 빼기
                   </button>
                 ) : null}
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm("파이널 테이블 이름 · 탈락 기록을 지울까요? (플레이 중 숫자는 그대로예요)")) onEdit({ ftPlayers: data.ftPlayers.map(() => ({ name: "", out: false })) });
+                    if (window.confirm("파이널 테이블 이름 · 탈락 기록을 지울까요? (플레이 중 숫자는 그대로예요)")) onEdit({ ftPlayers: ftSeats.map(() => ({ name: "", out: false })) });
                   }}
                   className="min-h-10 rounded-lg border border-white/20 px-3 text-xs font-bold text-zinc-400"
                 >
@@ -770,8 +777,11 @@ function PlayControls({ data, now, onClock, onEdit }: { data: GameBoardData; now
                 </button>
               </div>
             </>
-          ) : null}
+          )}
         </div>
+        </>
+          );
+        })()}
 
 
         <h3 className="mt-2 text-sm font-black text-white">칩(1명당) — 총 칩 · 평균 스택 계산</h3>
